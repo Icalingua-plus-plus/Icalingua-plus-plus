@@ -84,7 +84,7 @@
 
 					if (data.error) {
 						this.$notify.error({
-							title: '发送失败',
+							title: 'Failed to send',
 							message: data.error.message
 						});
 						return
@@ -92,6 +92,7 @@
 					const room = this.rooms.find(e => e.roomId == roomId)
 					room.lastMessage = {
 						content,
+						username: "You",
 						timestamp: new Date().format("hh:mm")
 					}
 					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
@@ -100,13 +101,13 @@
 						room.lastMessage.content += "[Image]"
 
 					message._id = data.data.message_id
-					db.update('messages.' + roomId, n => [...n, message])
-						.write()
 					this.messages = [...this.messages, message]
+					db.set('messages.' + roomId, this.messages).write()
 					db.set("rooms", this.rooms).write()
 				}
 				const message = {
 					sender_id: 0,
+					username: "You",
 					content,
 					timestamp: new Date().format("hh:mm")
 				}
@@ -115,7 +116,8 @@
 					message.replyMessage = {
 						_id: replyMessage._id,
 						content: replyMessage.content,
-						sender_id: replyMessage.sender_id
+						sender_id: replyMessage.sender_id,
+						username: replyMessage.username
 					}
 					if (replyMessage.file) {
 						message.replyMessage.file = replyMessage.file
@@ -160,6 +162,7 @@
 			},
 
 			fetchMessage(data) {
+				console.log("fetch")
 				data.room.unreadCount = 0
 				this.messages = db.get("messages." + data.room.roomId).value()
 				this.selectedRoom = data.room
@@ -168,12 +171,17 @@
 
 			onQQMessage(data) {
 				console.log(data)
+				const now = new Date()
 				const groupId = data.group_id
 				const senderId = data.user_id
 				const roomId = groupId ? -groupId : senderId
+				const senderName = groupId ?
+					(data.sender.card || data.sender.nickname) :
+					(data.sender.remark || data.sender.nickname)
 
 				const message = {
 					sender_id: roomId,
+					username: senderName,
 					content: "",
 					timestamp: new Date().format("hh:mm"),
 					_id: data.message_id
@@ -184,7 +192,7 @@
 					room = {
 						roomId,
 						roomName: groupId ?
-							data.group_name : (data.sender.remark || data.sender.nickname),
+							data.group_name : senderName,
 						avatar: groupId ?
 							`http://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
 							`http://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`,
@@ -195,26 +203,27 @@
 						},
 						users: [
 							{
-								_id: data.user_id,
-								username: data.sender.remark || data.sender.nickname,
-								avatar: `http://q1.qlogo.cn/g?b=qq&nk=${data.user_id}&s=640`
+								_id: roomId,
 							},
 							{
 								_id: 0,
-								username: "You",
-								avatar: "http://q1.qlogo.cn/g?b=qq&nk=2981882373&s=640"
 							}
 						]
 					}
-					this.rooms = [...this.rooms, room]
-					db.set('messages.' + data.user_id, []).write()
+					if (groupId) //recognize group
+						room.users.push({ _id: 233 })
+					this.rooms = [room, ...this.rooms]
+					db.set('messages.' + roomId, []).write()
 				}
-				//bring the room first
-				room.
+				else {
+					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
+				}//bring the room first
+
 				//begin process msg
 				room.lastMessage = {
 					content: "",
-					timestamp: new Date().format("hh:mm")
+					timestamp: now.format("hh:mm"),
+					username: senderName
 				}
 				data.message.forEach(m => {
 					switch (m.type) {
@@ -224,12 +233,14 @@
 							break
 						case "image":
 							room.lastMessage.content += "[Image]"
+							var url = m.data.url
+							if (groupId)
+								url = url.replace("http://", "nya://").replace("https://", "nya://")
 							message.file = {
 								name: "image",
-								size: 233,
 								type: "image/jpeg",
 								extension: "jpg",
-								url: m.data.url
+								url
 							}
 							break
 						case "share":
@@ -262,7 +273,7 @@
 					this.messages = [...this.messages, message]
 
 				db.set("rooms", this.rooms).write()
-				db.update('messages.' + data.user_id, n => [...n, message])
+				db.get('messages.' + roomId).push(message)
 					.write()
 
 			}
