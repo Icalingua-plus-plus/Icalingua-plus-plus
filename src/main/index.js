@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray } from 'electron'
+import { app, BrowserWindow, Menu, Tray, protocol } from 'electron'
 import path from 'path'
 
 /**
@@ -49,12 +49,18 @@ function createWindow() {
 }
 
 app.on('ready', () => {
+  protocol.registerHttpProtocol('nya', (req, cb) => {
+    cb({
+      url: req.url.replace("nya://", "https://")
+    })
+  })
   createWindow()
   tray = new Tray('build/icons/256x256.png')
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Open', type: 'normal', click: () => { mainWindow.show } }
+    { label: 'Open', type: 'normal', click: () => { mainWindow.show() } },
+    { label: 'Exit', type: 'normal', click: () => { mainWindow.close() } }
   ])
-  tray.setToolTip('This is my application.')
+  tray.setToolTip('Electron QQ')
   tray.setContextMenu(contextMenu)
   tray.on("click", () => { mainWindow.show() })
 })
