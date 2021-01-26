@@ -340,7 +340,7 @@
 <style>
 	@font-face {
 		font-family: "font";
-		src: url("/static/font.ttf");
+		src: url("~@/assets/font.ttf");
 	}
 	* {
 		font-family: "font";
