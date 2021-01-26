@@ -10,10 +10,13 @@
 			:show-audio="false"
 			:show-reaction-emojis="false"
 			:show-new-messages-divider="false"
+			:load-first-room="false"
 			accepted-files="image/*"
+			:menu-actions="menuActions"
 			@send-message="sendMessage"
 			@fetch-messages="fetchMessage"
 			@open-file="openImage"
+			@menu-action-handler="roomAction"
 		/>
 	</div>
 </template>
@@ -63,7 +66,6 @@
 	//download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
 	const http = require('http');
 	const fs = require('fs');
-
 	const download = function (url, dest, cb) {
 		const file = fs.createWriteStream(dest);
 		http.get(url, function (response) {
@@ -85,7 +87,17 @@
 			return {
 				rooms: db.get("rooms").value(),
 				messages: [],
-				selectedRoom: null
+				selectedRoom: null,
+				menuActions: [
+					{
+						name: 'mute',
+						title: 'Mute Chat'
+					},
+					{
+						name: 'pin',
+						title: 'Pin Chat'
+					}
+				]
 			}
 		},
 		created() {
@@ -186,10 +198,10 @@
 			},
 
 			fetchMessage(data) {
-				console.log("fetch")
 				data.room.unreadCount = 0
 				this.messages = db.get("messages." + data.room.roomId).value()
 				this.selectedRoom = data.room
+				this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
 				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},
 
@@ -330,6 +342,20 @@
 							message: downpath
 						});
 					})
+				}
+			},
+
+			roomAction(data) {
+				console.log(data)
+				if (data.action.name == "pin") {
+					const room = this.rooms.find(e => e.roomId == data.roomId)
+					if (room.index)
+						room.index = undefined
+					else
+						room.index = 1
+					this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
+					this.rooms = [...this.rooms]
+					db.set("rooms", this.rooms).write()
 				}
 			}
 		}
