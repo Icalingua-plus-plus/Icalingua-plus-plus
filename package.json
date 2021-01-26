@@ -46,9 +46,10 @@
     "element-ui": "^2.15.0",
     "lowdb": "^1.0.0",
     "oicq": "^1.13.0",
-    "vue": "^2.5.16",
+    "vue": "^2.6.12",
     "vue-advanced-chat": "^0.6.7",
-    "vue-electron": "^1.0.6"
+    "vue-electron": "^1.0.6",
+    "vue-router": "^3.5.0"
   },
   "devDependencies": {
     "ajv": "^6.5.0",

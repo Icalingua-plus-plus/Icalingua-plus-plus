@@ -42,7 +42,7 @@ function createWindow() {
 		}
 	})
 
-	mainWindow.loadURL(winURL)
+	mainWindow.loadURL(winURL+"#/chat")
 
 	mainWindow.on('close', function (e) {
 		e.preventDefault();
