@@ -93,14 +93,16 @@
 		},
 		created() {
 			const account = glodb.get("account").value()
-			this.form = {
-				username: account.username,
-				password: account.password,
-				protocol: account.protocol,
-				autologin: account.autologin
-			}
-
-			if (account.autologin)
+			if (account)
+				this.form = {
+					username: account.username,
+					password: account.password,
+					protocol: account.protocol,
+					autologin: account.autologin
+				}
+		},
+		mounted() {
+			if (this.form.autologin)
 				this.onSubmit("loginForm")
 		},
 		methods: {
@@ -134,6 +136,7 @@
 							bot.removeListener("system.login.captcha", captcha);
 							bot.removeListener("system.login.error", onErr);
 							bot.removeListener("system.online", onSucceed);
+							bot.removeListener("system.login.device", verify);
 							//save account info
 							glodb.set('account', this.form).write()
 
@@ -142,11 +145,27 @@
 							//close login window
 							remote.getCurrentWindow().destroy()
 						}
-
+						const verify = (data) => {
+							const veriWin = new remote.BrowserWindow({
+								height: 500,
+								width: 500,
+								webPreferences: {
+									nativeWindowOpen: true
+								}
+							})
+							veriWin.on("close", () => {
+								this.onSubmit("loginForm")
+							})
+							veriWin.webContents.on("did-finish-load", function () {
+								veriWin.webContents.executeJavaScript("mqq.invoke=function(a, b, c){if(b=='closeWebViews'){window.close();}}");
+							});
+							veriWin.loadURL(data.url)
+						}
 						bot.on("system.login.slider", slider);
 						bot.on("system.login.captcha", captcha);
 						bot.on("system.login.error", onErr);
 						bot.on("system.online", onSucceed);
+						bot.on("system.login.device", verify);
 						bot.login(this.form.password)
 					} else {
 						return false;
