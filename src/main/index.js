@@ -1,5 +1,8 @@
 import { app, BrowserWindow, Menu, Tray, protocol } from 'electron'
 import path from 'path'
+import Datastore from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync'
+import { createClient } from "oicq"
 
 /**
  * Set `__static` path to static files in production
@@ -11,30 +14,29 @@ if (process.env.NODE_ENV !== 'development') {
 
 const STORE_PATH = app.getPath('userData')
 if (process.platform == 'win32')
-	app.setAppUserModelId("com.clansty.electronqq")
-
-let mainWindow
-let tray
-
-const { createClient } = require("oicq");
-const uin = 2981882373; // your account
-global.bot = createClient(uin, {
-	platform: 2,
-	data_dir: path.join(STORE_PATH, '/data')
-});
-global.bot.login("e4c9f95776753cbaffa7ba53a1d0d317");
+	app.setAppUserModelId("Electron QQ")
 
 const winURL = process.env.NODE_ENV === 'development'
 	? `http://localhost:9080`
 	: `file://${__dirname}/index.html`
 
-function createWindow() {
-	/**
-	 * Initial window options
-	 */
+
+let loginWindow, tray, mainWindow
+//lowdb
+const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
+global.glodb = Datastore(adapter)
+
+
+global.createBot = function (form) {
+	global.bot = createClient(Number(form.username), {
+		platform: Number(form.protocol),
+		data_dir: path.join(STORE_PATH, '/data')
+	})
+}
+global.loadMainWindow = function () {
+	//start main window
 	mainWindow = new BrowserWindow({
 		height: 900,
-		useContentSize: true,
 		width: 1400,
 		webPreferences: {
 			nodeIntegration: true,
@@ -42,25 +44,13 @@ function createWindow() {
 		}
 	})
 
-	mainWindow.loadURL(winURL+"#/chat")
-
-	mainWindow.on('close', function (e) {
+	mainWindow.on('close', e => {
 		e.preventDefault();
 		mainWindow.hide();
 	})
 
-	mainWindow.on('closed', () => {
-		mainWindow = null
-	})
-}
+	mainWindow.loadURL(winURL + "#/main")
 
-app.on('ready', () => {
-	protocol.registerHttpProtocol('nya', (req, cb) => {
-		cb({
-			url: req.url.replace("nya://", "https://")
-		})
-	})
-	createWindow()
 	tray = new Tray(path.join(__static, '/256x256.png'))
 	const contextMenu = Menu.buildFromTemplate([
 		{ label: 'Open', type: 'normal', click: () => { mainWindow.show() } },
@@ -74,19 +64,36 @@ app.on('ready', () => {
 		else
 			mainWindow.show()
 	})
+
+}
+
+
+app.on('ready', () => {
+	protocol.registerHttpProtocol('nya', (req, cb) => {
+		cb({
+			url: req.url.replace("nya://", "https://")
+		})
+	})
+	//login window
+	loginWindow = new BrowserWindow({
+		height: 700,
+		width: 450,
+		webPreferences: {
+			nodeIntegration: true,
+			enableRemoteModule: true
+		}
+	})
+
+	loginWindow.loadURL(winURL + "#/login")
+
 })
 
 app.on('window-all-closed', () => {
-	global.bot.logout()	
+	if (global.bot)
+		global.bot.logout()
 	setTimeout(() => {
 		app.quit()
-	}, 1000); 
-})
-
-app.on('activate', () => {
-	if (mainWindow === null) {
-		createWindow()
-	}
+	}, 1000);
 })
 
 /**
