@@ -130,19 +130,25 @@
 					timestamp: new Date().format("hh:mm")
 				}
 
+				const chain = []
+
 				if (replyMessage) {
 					message.replyMessage = {
 						_id: replyMessage._id,
-						content: replyMessage.content,
-						sender_id: replyMessage.sender_id,
-						username: replyMessage.username
+						content: replyMessage.username + ": " + replyMessage.content
 					}
 					if (replyMessage.file) {
 						message.replyMessage.file = replyMessage.file
 					}
+
+					chain.push({
+						type: "reply",
+						data: {
+							id: replyMessage._id
+						}
+					})
 				}
 
-				const chain = []
 				if (content)
 					chain.push({
 						"type": "text",
@@ -265,7 +271,15 @@
 							room.lastMessage.content += "[Link]" + m.data.title
 							message.content += m.data.url
 							break
-
+						case "reply":
+							const replyMessage = db.get('messages.' + roomId)
+								.find({ _id: m.data.id }).value()
+							if (replyMessage)
+								message.replyMessage = {
+									_id: m.data.id,
+									content: replyMessage.username + ": " + replyMessage.content
+								}
+							break
 					}
 				});
 				//notification
