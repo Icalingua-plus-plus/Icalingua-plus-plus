@@ -61,7 +61,7 @@ app.on('ready', () => {
 		})
 	})
 	createWindow()
-	tray = new Tray('build/icons/256x256.png')
+	tray = new Tray(path.join(__static, '/256x256.png'))
 	const contextMenu = Menu.buildFromTemplate([
 		{ label: 'Open', type: 'normal', click: () => { mainWindow.show() } },
 		{ label: 'Exit', type: 'normal', click: () => { mainWindow.destroy() } }
