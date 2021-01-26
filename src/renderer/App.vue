@@ -61,12 +61,12 @@
 	}
 
 	//download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
-	var http = require('http');
-	var fs = require('fs');
+	const http = require('http');
+	const fs = require('fs');
 
-	var download = function (url, dest, cb) {
-		var file = fs.createWriteStream(dest);
-		var request = http.get(url, function (response) {
+	const download = function (url, dest, cb) {
+		const file = fs.createWriteStream(dest);
+		http.get(url, function (response) {
 			response.pipe(file);
 			file.on('finish', function () {
 				file.close(cb);  // close() is async, call cb after close completes.
@@ -202,6 +202,11 @@
 				const senderName = groupId ?
 					(data.sender.card || data.sender.nickname) :
 					(data.sender.remark || data.sender.nickname)
+				const avatar = groupId ?
+					`http://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
+					`http://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`
+				const roomName = groupId ?
+					data.group_name : senderName
 
 				const message = {
 					sender_id: roomId,
@@ -215,11 +220,8 @@
 				if (room == undefined) {
 					room = {
 						roomId,
-						roomName: groupId ?
-							data.group_name : senderName,
-						avatar: groupId ?
-							`http://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
-							`http://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`,
+						roomName,
+						avatar,
 						unreadCount: 0,
 						lastMessage: {
 							content: "",
@@ -286,14 +288,11 @@
 				if (!remote.getCurrentWindow().isFocused()) {
 					//notification
 					const notiopin = {
-						body: room.lastMessage.content,
-						icon: `http://q1.qlogo.cn/g?b=qq&nk=${data.user_id}&s=640`
+						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
+						icon: avatar
 					}
-					if (message.file)
-						notiopin.image = message.file.url
 
-
-					const notif = new Notification((data.sender.remark || data.sender.nickname) + ":", notiopin)
+					const notif = new Notification(roomName, notiopin)
 
 					notif.onclick = () => {
 						remote.getCurrentWindow().show()

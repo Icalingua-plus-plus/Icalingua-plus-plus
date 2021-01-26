@@ -29,3 +29,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - background image
 - sticker panel
 - login interaction
+- seperate datafile for different accounts
+- parse json cards
