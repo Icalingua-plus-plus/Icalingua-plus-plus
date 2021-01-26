@@ -11,7 +11,7 @@ if (process.env.NODE_ENV !== 'development') {
 
 const STORE_PATH = app.getPath('userData')
 if (process.platform == 'win32')
-	app.setAppUserModelId(process.execPath)
+	app.setAppUserModelId("com.clansty.electronqq")
 
 let mainWindow
 let tray

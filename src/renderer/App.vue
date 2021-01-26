@@ -13,6 +13,7 @@
 			accepted-files="image/*"
 			@send-message="sendMessage"
 			@fetch-messages="fetchMessage"
+			@open-file="openImage"
 		/>
 	</div>
 </template>
@@ -58,6 +59,23 @@
 		}
 		return fmt;
 	}
+
+	//download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
+	var http = require('http');
+	var fs = require('fs');
+
+	var download = function (url, dest, cb) {
+		var file = fs.createWriteStream(dest);
+		var request = http.get(url, function (response) {
+			response.pipe(file);
+			file.on('finish', function () {
+				file.close(cb);  // close() is async, call cb after close completes.
+			});
+		}).on('error', function (err) { // Handle errors
+			fs.unlink(dest); // Delete the file async. (But we don't check the result)
+			if (cb) cb(err.message);
+		});
+	};
 
 	export default {
 		components: {
@@ -276,17 +294,41 @@
 				db.get('messages.' + roomId).push(message)
 					.write()
 
+			},
+
+			openImage(data) {
+				if (data.action == "preview") {
+					var prev = new remote.BrowserWindow(
+						{
+							height: 800,
+							width: 800,
+							useContentSize: true
+						}
+					)
+					prev.loadURL(data.message.file.url)
+					prev.title = data.message.username + "'s image"
+				}
+				else if (data.action == "download") {
+					const downdir = remote.app.getPath("downloads")
+					const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
+					download(data.message.file.url.replace("nya://", "http://"), downpath, () => {
+						this.$notify.success({
+							title: 'Image Saved',
+							message: downpath
+						});
+					})
+				}
 			}
 		}
 	}
-  </script>
+</script>
 
 <style>
 	@font-face {
 		font-family: "font";
 		src: url("/static/font.ttf");
 	}
-	div#app {
+	* {
 		font-family: "font";
 	}
 </style>
