@@ -29,13 +29,9 @@
 	import path from 'path'
 	import { remote } from 'electron'
 	const STORE_PATH = remote.app.getPath('userData')
-	const adapter = new FileSync(path.join(STORE_PATH, '/chatdata.json'))
-	const db = Datastore(adapter)
-	db.defaults({
-		rooms: [],
-		messages: {},
-	})
-		.write()
+	const glodb = remote.getGlobal("glodb")
+
+	let db
 	//oicq
 	const bot = remote.getGlobal("bot")
 
@@ -83,14 +79,14 @@
 		},
 		data() {
 			return {
-				rooms: db.get("rooms").value(),
+				rooms: [],
 				messages: [],
 				selectedRoom: null,
 				menuActions: [
-					{
-						name: 'mute',
-						title: 'Mute Chat'
-					},
+					// {
+					// 	name: 'mute',
+					// 	title: 'Mute Chat'
+					// },
 					{
 						name: 'pin',
 						title: 'Pin Chat'
@@ -99,6 +95,14 @@
 			}
 		},
 		created() {
+			const adapter = new FileSync(path.join(STORE_PATH, `/chatdata${glodb.get('account').value().username}.json`))
+			db = Datastore(adapter)
+			db.defaults({
+				rooms: [],
+				messages: {},
+			})
+				.write()
+			this.rooms=db.get("rooms").value()
 			bot.on("message", data => this.onQQMessage(data));
 		},
 		methods: {
