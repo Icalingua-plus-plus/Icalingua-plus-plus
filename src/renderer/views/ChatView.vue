@@ -3,7 +3,7 @@
 		:current-user-id="0"
 		:rooms="rooms"
 		:messages="messages"
-		height="calc(100vh - 20px)"
+		height="100vh"
 		:rooms-loaded="true"
 		:messages-loaded="true"
 		:show-audio="false"
@@ -199,6 +199,8 @@
 				data.room.unreadCount = 0
 				this.messages = db.get("messages." + data.room.roomId).value()
 				this.selectedRoom = data.room
+				db.set("rooms", this.rooms).write()
+
 				this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
 				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},

@@ -6,9 +6,14 @@ Vue.use(Router)
 export default new Router({
   routes: [
     {
-      path: '/chat',
+      path: '/main',
       name: 'chat-page',
       component: require('@/views/ChatView').default
+    },
+    {
+      path: '/login',
+      name: 'login-page',
+      component: require('@/views/LoginView').default
     }
   ]
 })

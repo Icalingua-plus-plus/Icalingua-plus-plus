@@ -45,6 +45,7 @@
     "axios": "^0.18.0",
     "element-ui": "^2.15.0",
     "lowdb": "^1.0.0",
+    "md5": "^2.3.0",
     "oicq": "^1.13.0",
     "vue": "^2.6.12",
     "vue-advanced-chat": "^0.6.7",
@@ -52,6 +53,7 @@
     "vue-router": "^3.5.0"
   },
   "devDependencies": {
+    "@types/md5": "^2.2.1",
     "ajv": "^6.5.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
