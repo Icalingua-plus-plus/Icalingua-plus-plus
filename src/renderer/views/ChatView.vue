@@ -92,7 +92,11 @@
 						name: 'pin',
 						title: 'Pin Chat'
 					}
-				]
+				],
+				muteAllGroups: false,
+				dndMenuItem: null,
+				dnd: false,
+				tray: null
 			}
 		},
 		created() {
@@ -101,9 +105,63 @@
 			db.defaults({
 				rooms: [],
 				messages: {},
+				muteAllGroups: false,
+				dnd: false
 			})
 				.write()
 			this.rooms = db.get("rooms").value()
+			this.muteAllGroups = db.get("muteAllGroups").value()
+			this.dnd = db.get("dnd").value()
+			this.dndMenuItem = new remote.MenuItem({
+				label: 'Disable notifications', type: 'checkbox',
+				checked: this.dnd,
+				click: (menuItem, _browserWindow, _event) => {
+					this.dnd = menuItem.checked
+					db.set("dnd", menuItem.checked).write()
+				}
+			})
+
+			remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
+				{
+					label: 'System', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
+						{ label: 'Logout', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
+					])
+				},
+				{
+					label: 'Notification', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
+						{
+							label: 'Mute all groups', type: 'checkbox',
+							checked: this.muteAllGroups,
+							click: (menuItem, _browserWindow, _event) => {
+								this.muteAllGroups = menuItem.checked
+								db.set("muteAllGroups", menuItem.checked).write()
+							}
+						},
+						this.dndMenuItem
+					])
+				},
+				{
+					label: 'About', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
+						{ label: 'About', type: 'normal', role: 'about' },
+						{ label: 'Dev Tools', type: 'normal', role: 'toggleDevTools', accelerator: 'F12' }
+					])
+				},
+			]))
+
+			this.tray = new remote.Tray(path.join(__static, '/256x256.png'))
+			this.tray.setToolTip('Electron QQ')
+			this.tray.setContextMenu(remote.Menu.buildFromTemplate([
+				{ label: 'Open', type: 'normal', click: () => { remote.getCurrentWindow().show() } },
+				this.dndMenuItem,
+				{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
+			]))
+			this.tray.on("click", () => {
+				if (remote.getCurrentWindow().isFocused())
+					remote.getCurrentWindow().hide()
+				else
+					remote.getCurrentWindow().show()
+			})
+
 			bot.on("message", this.onQQMessage);
 			bot.on("notice.friend.recall", this.friendRecall)
 			bot.on("notice.group.recall", this.groupRecall)
@@ -304,7 +362,8 @@
 					}
 				});
 				//notification
-				if (!remote.getCurrentWindow().isFocused() && !groupId) {
+				if (!remote.getCurrentWindow().isFocused() && !this.dnd &&
+					!(groupId && this.muteAllGroups)) {
 					//notification
 					const notiopin = {
 						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
@@ -380,7 +439,7 @@
 					.find({ _id: data.message_id })
 					.assign({ deleted: new Date() }).write()
 				if (data.user_id == this.selectedRoom.roomId)
-					this.messages=db.get('messages.' + data.user_id).value()
+					this.messages = db.get('messages.' + data.user_id).value()
 			},
 
 			groupRecall(data) {
@@ -388,7 +447,7 @@
 					.find({ _id: data.message_id })
 					.assign({ deleted: new Date() }).write()
 				if (-data.group_id == this.selectedRoom.roomId)
-					this.messages=db.get('messages.' + -data.group_id).value()
+					this.messages = db.get('messages.' + -data.group_id).value()
 			}
 		}
 	}
