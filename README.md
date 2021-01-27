@@ -27,7 +27,7 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - delete message
 - background image
 - sticker panel
-- login interaction
-- seperate datafile for different accounts
 - parse json cards
 - custom menu
+- image drag and drop
+- image paste

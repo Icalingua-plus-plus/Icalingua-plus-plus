@@ -14,6 +14,7 @@
 		:menu-actions="menuActions"
 		@send-message="sendMessage"
 		@fetch-messages="fetchMessage"
+		@delete-message="deleteMessage"
 		@open-file="openImage"
 		@menu-action-handler="roomAction"
 	/>
@@ -102,8 +103,10 @@
 				messages: {},
 			})
 				.write()
-			this.rooms=db.get("rooms").value()
-			bot.on("message", data => this.onQQMessage(data));
+			this.rooms = db.get("rooms").value()
+			bot.on("message", this.onQQMessage);
+			bot.on("notice.friend.recall", this.friendRecall)
+			bot.on("notice.group.recall", this.groupRecall)
 		},
 		methods: {
 			async sendMessage({ content, roomId, file, replyMessage }) {
@@ -361,6 +364,31 @@
 					this.rooms = [...this.rooms]
 					db.set("rooms", this.rooms).write()
 				}
+			},
+
+			async deleteMessage(data) {
+				const message = this.messages.find(e => e._id == data.messageId)
+				const res = await bot.deleteMsg(data.messageId)
+				if (!res.error)
+					message.deleted = new Date()
+				this.messages = [...this.messages]
+				db.set('messages.' + this.selectedRoom.roomId, this.messages).write()
+			},
+
+			friendRecall(data) {
+				db.get('messages.' + data.user_id)
+					.find({ _id: data.message_id })
+					.assign({ deleted: new Date() }).write()
+				if (data.user_id == this.selectedRoom.roomId)
+					this.messages=db.get('messages.' + data.user_id).value()
+			},
+
+			groupRecall(data) {
+				db.get('messages.' + -data.group_id)
+					.find({ _id: data.message_id })
+					.assign({ deleted: new Date() }).write()
+				if (-data.group_id == this.selectedRoom.roomId)
+					this.messages=db.get('messages.' + -data.group_id).value()
 			}
 		}
 	}
