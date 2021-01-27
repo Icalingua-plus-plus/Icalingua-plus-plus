@@ -50,23 +50,7 @@ global.loadMainWindow = function () {
 	})
 
 	mainWindow.loadURL(winURL + "#/main")
-
-	tray = new Tray(path.join(__static, '/256x256.png'))
-	const contextMenu = Menu.buildFromTemplate([
-		{ label: 'Open', type: 'normal', click: () => { mainWindow.show() } },
-		{ label: 'Exit', type: 'normal', click: () => { mainWindow.destroy() } }
-	])
-	tray.setToolTip('Electron QQ')
-	tray.setContextMenu(contextMenu)
-	tray.on("click", () => {
-		if (mainWindow.isFocused())
-			mainWindow.hide()
-		else
-			mainWindow.show()
-	})
-
 }
-
 
 app.on('ready', () => {
 	protocol.registerHttpProtocol('nya', (req, cb) => {
@@ -78,12 +62,14 @@ app.on('ready', () => {
 	loginWindow = new BrowserWindow({
 		height: 700,
 		width: 450,
+		maximizable:false,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true
 		}
 	})
 
+	loginWindow.menuBarVisible=false
 	loginWindow.loadURL(winURL + "#/login")
 
 })
