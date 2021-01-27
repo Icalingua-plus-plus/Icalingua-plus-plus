@@ -304,7 +304,7 @@
 					}
 				});
 				//notification
-				if (!remote.getCurrentWindow().isFocused()) {
+				if (!remote.getCurrentWindow().isFocused() && !groupId) {
 					//notification
 					const notiopin = {
 						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
