@@ -24,10 +24,10 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 ## TODOS
 - DND settings
 - context menu
-- delete message
 - background image
 - sticker panel
 - parse json cards
 - custom menu
 - image drag and drop
 - image paste
+- sync mobile message

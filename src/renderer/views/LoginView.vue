@@ -10,7 +10,7 @@
 			class="login-box"
 		>
 			<center>
-				<h5>Version 0.1.0 Preview</h5>
+				<h5>Version 0.1.1 Preview</h5>
 			</center>
 			<h4 class="red nobottmar">Insider version</h4>
 			<h2 class="red notopmar">DO NOT DISTRIBUTE</h2>
