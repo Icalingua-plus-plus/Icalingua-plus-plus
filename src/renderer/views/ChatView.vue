@@ -84,10 +84,10 @@
 				messages: [],
 				selectedRoom: null,
 				menuActions: [
-					// {
-					// 	name: 'mute',
-					// 	title: 'Mute Chat'
-					// },
+					{
+						name: 'mute',
+						title: 'Mute Chat'
+					},
 					{
 						name: 'pin',
 						title: 'Pin Chat'
@@ -135,6 +135,10 @@
 							click: (menuItem, _browserWindow, _event) => {
 								this.muteAllGroups = menuItem.checked
 								db.set("muteAllGroups", menuItem.checked).write()
+								const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
+									(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
+									(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
+								this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
 							}
 						},
 						this.dndMenuItem
@@ -156,10 +160,7 @@
 				{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
 			]))
 			this.tray.on("click", () => {
-				if (remote.getCurrentWindow().isFocused())
-					remote.getCurrentWindow().hide()
-				else
-					remote.getCurrentWindow().show()
+				remote.getCurrentWindow().show()
 			})
 
 			bot.on("message", this.onQQMessage);
@@ -265,7 +266,10 @@
 				this.messages = db.get("messages." + data.room.roomId).value()
 				this.selectedRoom = data.room
 				db.set("rooms", this.rooms).write()
-
+				const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
+					(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
+					(data.room.roomId > 0 && data.room.mute)
+				this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
 				this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
 				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},
@@ -286,7 +290,7 @@
 					data.group_name : senderName
 
 				const message = {
-					sender_id: roomId,
+					sender_id: senderId,
 					username: senderName,
 					content: "",
 					timestamp: new Date().format("hh:mm"),
@@ -362,8 +366,11 @@
 					}
 				});
 				//notification
+				const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
+					(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
+					(room.roomId > 0 && room.mute)
 				if (!remote.getCurrentWindow().isFocused() && !this.dnd &&
-					!(groupId && this.muteAllGroups)) {
+					!muted) {
 					//notification
 					const notiopin = {
 						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
@@ -412,7 +419,6 @@
 			},
 
 			roomAction(data) {
-				console.log(data)
 				if (data.action.name == "pin") {
 					const room = this.rooms.find(e => e.roomId == data.roomId)
 					if (room.index)
@@ -420,6 +426,19 @@
 					else
 						room.index = 1
 					this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
+					this.rooms = [...this.rooms]
+					db.set("rooms", this.rooms).write()
+				}
+				else if (data.action.name == "mute") {
+					const room = this.rooms.find(e => e.roomId == data.roomId)
+					if (room.roomId < 0 && this.muteAllGroups)
+						room.unmute = !room.unmute
+					else
+						room.mute = !room.mute
+					const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
+						(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
+						(room.roomId > 0 && room.mute)
+					this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
 					this.rooms = [...this.rooms]
 					db.set("rooms", this.rooms).write()
 				}
