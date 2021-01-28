@@ -30,7 +30,7 @@
 	import Datastore from 'lowdb'
 	import FileSync from 'lowdb/adapters/FileSync'
 	import path from 'path'
-	import { remote, clipboard, nativeImage } from 'electron'
+	import { remote, clipboard, nativeImage, shell } from 'electron'
 	const STORE_PATH = remote.app.getPath('userData')
 	const glodb = remote.getGlobal("glodb")
 
@@ -207,12 +207,38 @@
 					})
 			});
 
+			//drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
+			document.addEventListener('drop', (event) => {
+				event.preventDefault();
+				event.stopPropagation();
+				for (const f of event.dataTransfer.files) {
+					// Using the path attribute to get absolute file path 
+					console.log('File Path of dragged files: ', f.path)
+					const index = f.path.lastIndexOf(".");
+					const ext = f.path.substr(index + 1).toLowerCase();
+					console.log(ext)
+					if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) && this.selectedRoom) {
+						console.log('nya')
+						this.sendMessage({
+							content: "",
+							room: this.selectedRoom,
+							imgpath: f.path
+						})
+					}
+				}
+			});
+
+			document.addEventListener('dragover', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+			});
+
 			bot.on("message", this.onQQMessage);
 			bot.on("notice.friend.recall", this.friendRecall)
 			bot.on("notice.group.recall", this.groupRecall)
 		},
 		methods: {
-			async sendMessage({ content, roomId, file, replyMessage, room, b64img }) {
+			async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath }) {
 				if (!roomId)
 					roomId = room.roomId
 				const sendchain = async () => {
@@ -238,7 +264,7 @@
 					}
 					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
 					//bring the room first
-					if (file)
+					if (file || b64img || imgpath)
 						room.lastMessage.content += "[Image]"
 
 					message._id = data.data.message_id
@@ -275,7 +301,6 @@
 						}
 					})
 				}
-
 				if (content)
 					chain.push({
 						"type": "text",
@@ -295,6 +320,20 @@
 					message.file = {
 						type: "image/jpeg",
 						url: b64img
+					}
+				}
+				if (imgpath) {
+					chain.push(
+						{
+							"type": "image",
+							"data": {
+								"file": imgpath
+							}
+						}
+					)
+					message.file = {
+						type: "image/jpeg",
+						url: imgpath
 					}
 				}
 				if (file) {
@@ -425,6 +464,24 @@
 									content: replyMessage.username + ": " + replyMessage.content
 								}
 							break
+						case "json":
+							const json = m.data.data
+							var appurl = null
+							const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
+							const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?""=]*)\??/
+							const jsonLinkRegex = /{.*""app"":""com.tencent.structmsg"".*""jumpUrl"":""(https?:\\?\/\\?\/[^"",]*)"".*}/
+							if (biliRegex.test(json))
+								appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
+							else if (zhihuRegex.test(json))
+								appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
+							else if (jsonLinkRegex.test(json))
+								appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
+
+							if (appurl) {
+								room.lastMessage.content = appurl
+								message.content = appurl
+							}
+							break
 					}
 				});
 				//notification
@@ -541,7 +598,7 @@
 					else
 						clipboard.writeText(data.message.content)
 				}
-			}
+			},
 		}
 	}
 </script>

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray, protocol } from 'electron'
+import { app, BrowserWindow, protocol, shell } from 'electron'
 import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
@@ -40,7 +40,8 @@ global.loadMainWindow = function () {
 		width: 1400,
 		webPreferences: {
 			nodeIntegration: true,
-			enableRemoteModule: true
+			enableRemoteModule: true,
+			webSecurity: false
 		}
 	})
 
@@ -62,14 +63,14 @@ app.on('ready', () => {
 	loginWindow = new BrowserWindow({
 		height: 700,
 		width: 450,
-		maximizable:false,
+		maximizable: false,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true
 		}
 	})
 
-	loginWindow.menuBarVisible=false
+	loginWindow.menuBarVisible = false
 	loginWindow.loadURL(winURL + "#/login")
 
 })
@@ -82,6 +83,12 @@ app.on('window-all-closed', () => {
 	}, 1000);
 })
 
+app.on('web-contents-created', (e, webContents) => {
+	webContents.on('new-window', (event, url) => {
+		event.preventDefault();
+		shell.openExternal(url);
+	});
+});
 /**
  * Auto Updater
  *
