@@ -12,11 +12,13 @@
 		:load-first-room="false"
 		accepted-files="image/*"
 		:menu-actions="menuActions"
+		:message-actions="messageActions"
 		@send-message="sendMessage"
 		@fetch-messages="fetchMessage"
 		@delete-message="deleteMessage"
 		@open-file="openImage"
 		@menu-action-handler="roomAction"
+		@message-action-handler="messageActionsHandler"
 	/>
 </template>
 
@@ -28,7 +30,7 @@
 	import Datastore from 'lowdb'
 	import FileSync from 'lowdb/adapters/FileSync'
 	import path from 'path'
-	import { remote } from 'electron'
+	import { remote, clipboard, nativeImage } from 'electron'
 	const STORE_PATH = remote.app.getPath('userData')
 	const glodb = remote.getGlobal("glodb")
 
@@ -74,6 +76,23 @@
 		});
 	};
 
+	//convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
+	function convertImgToBase64(url, callback, outputFormat) {
+		var canvas = document.createElement('CANVAS'),
+			ctx = canvas.getContext('2d'),
+			img = new Image;
+		img.crossOrigin = 'Anonymous';
+		img.onload = function () {
+			canvas.height = img.height;
+			canvas.width = img.width;
+			ctx.drawImage(img, 0, 0);
+			var dataURL = canvas.toDataURL(outputFormat || 'image/jpeg');
+			callback.call(this, dataURL);
+			canvas = null;
+		};
+		img.src = url;
+	}
+
 	export default {
 		components: {
 			ChatWindow
@@ -96,7 +115,22 @@
 				muteAllGroups: false,
 				dndMenuItem: null,
 				dnd: false,
-				tray: null
+				tray: null,
+				messageActions: [
+					{
+						name: 'copy',
+						title: 'Copy'
+					},
+					{
+						name: 'replyMessage',
+						title: 'Reply'
+					},
+					{
+						name: 'deleteMessage',
+						title: 'Delete Message',
+						onlyMe: true
+					}
+				]
 			}
 		},
 		created() {
@@ -471,6 +505,18 @@
 					.assign({ deleted: new Date() }).write()
 				if (-data.group_id == this.selectedRoom.roomId)
 					this.messages = db.get('messages.' + -data.group_id).value()
+			},
+
+			messageActionsHandler(data) {
+				if (data.action.name == "copy") {
+					if (data.message.file)
+						convertImgToBase64(data.message.file.url, function (base64Image) {
+							const image = nativeImage.createFromDataURL(base64Image)
+							clipboard.writeImage(image)
+						})
+					else
+						clipboard.writeText(data.message.content)
+				}
 			}
 		}
 	}
