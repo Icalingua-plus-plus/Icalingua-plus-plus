@@ -199,6 +199,10 @@
 					db.set('messages.' + roomId, this.messages).write()
 					db.set("rooms", this.rooms).write()
 				}
+
+				if (file && file.type == "image/webp")
+					content = ""
+
 				const message = {
 					sender_id: 0,
 					username: "You",
@@ -240,7 +244,7 @@
 						message.file = {
 							name: file.name,
 							size: file.size,
-							type: file.type,
+							type: "image/jpeg",
 							extension: file.extension,
 							url: reader.result
 						}
