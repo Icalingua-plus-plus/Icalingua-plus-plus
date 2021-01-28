@@ -1,6 +1,6 @@
 <template>
 	<chat-window
-		:current-user-id="0"
+		:current-user-id="account"
 		:rooms="rooms"
 		:messages="messages"
 		height="100vh"
@@ -130,11 +130,13 @@
 						title: 'Delete Message',
 						onlyMe: true
 					}
-				]
+				],
+				account: null
 			}
 		},
 		created() {
-			const adapter = new FileSync(path.join(STORE_PATH, `/chatdata${glodb.get('account').value().username}.json`))
+			this.account = glodb.get('account').value().username
+			const adapter = new FileSync(path.join(STORE_PATH, `/chatdata${this.account}.json`))
 			db = Datastore(adapter)
 			db.defaults({
 				rooms: [],
@@ -255,29 +257,30 @@
 						});
 						return
 					}
-					if (!room)
-						room = this.rooms.find(e => e.roomId == roomId)
-					room.lastMessage = {
-						content,
-						username: "You",
-						timestamp: new Date().format("hh:mm")
-					}
-					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
-					//bring the room first
-					if (file || b64img || imgpath)
-						room.lastMessage.content += "[Image]"
+					if (roomId > 0) {
+						if (!room)
+							room = this.rooms.find(e => e.roomId == roomId)
+						room.lastMessage = {
+							content,
+							timestamp: new Date().format("hh:mm")
+						}
+						this.rooms = [room, ...this.rooms.filter(item => item !== room)];
+						//bring the room first
+						if (file || b64img || imgpath)
+							room.lastMessage.content += "[Image]"
 
-					message._id = data.data.message_id
-					this.messages = [...this.messages, message]
-					db.set('messages.' + roomId, this.messages).write()
-					db.set("rooms", this.rooms).write()
+						message._id = data.data.message_id
+						this.messages = [...this.messages, message]
+						db.set('messages.' + roomId, this.messages).write()
+						db.set("rooms", this.rooms).write()
+					}
 				}
 
 				if (file && file.type == "image/webp")
 					content = ""
 
 				const message = {
-					sender_id: 0,
+					sender_id: this.account,
 					username: "You",
 					content,
 					timestamp: new Date().format("hh:mm")
@@ -341,13 +344,6 @@
 					reader.readAsDataURL(file.blob);
 					reader.onload = function () {
 						const b64 = reader.result.replace(/^data:.+;base64,/, '');
-						message.file = {
-							name: file.name,
-							size: file.size,
-							type: "image/jpeg",
-							extension: file.extension,
-							url: reader.result
-						}
 						chain.push(
 							{
 								"type": "image",
@@ -382,10 +378,12 @@
 				console.log(data)
 				const now = new Date()
 				const groupId = data.group_id
-				const senderId = data.user_id
-				const roomId = groupId ? -groupId : senderId
+				const senderId = data.sender.user_id
+				const roomId = groupId ? -groupId : data.user_id
+				const isSelfMsg = this.account == senderId
 				const senderName = groupId ?
-					(data.sender.card || data.sender.nickname) :
+					(isSelfMsg ? "You" :
+						(data.sender.card || data.sender.nickname)) :
 					(data.sender.remark || data.sender.nickname)
 				const avatar = groupId ?
 					`http://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
@@ -502,8 +500,12 @@
 						remote.getCurrentWindow().show()
 					}
 				}
-				if (room != this.selectedRoom)
-					room.unreadCount++
+				if (room != this.selectedRoom) {
+					if (isSelfMsg)
+						room.unreadCount = 0
+					else
+						room.unreadCount++
+				}
 				else
 					this.messages = [...this.messages, message]
 
