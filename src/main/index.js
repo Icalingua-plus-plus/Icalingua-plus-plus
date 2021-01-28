@@ -30,7 +30,8 @@ global.glodb = Datastore(adapter)
 global.createBot = function (form) {
 	global.bot = createClient(Number(form.username), {
 		platform: Number(form.protocol),
-		data_dir: path.join(STORE_PATH, '/data')
+		data_dir: path.join(STORE_PATH, '/data'),
+		ignore_self: false
 	})
 }
 global.loadMainWindow = function () {

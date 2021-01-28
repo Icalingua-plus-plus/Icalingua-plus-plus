@@ -10,7 +10,7 @@
 			class="login-box"
 		>
 			<center>
-				<h5>Version {{ver}} Preview</h5>
+				<h5>Version {{ ver }} Preview</h5>
 			</center>
 			<h4 class="red nobottmar">Insider version</h4>
 			<h2 class="red notopmar">DO NOT DISTRIBUTE</h2>
@@ -139,7 +139,12 @@
 							bot.removeListener("system.online", onSucceed);
 							bot.removeListener("system.login.device", verify);
 							//save account info
-							glodb.set('account', this.form).write()
+							glodb.set('account', {
+								username: Number(this.form.username),
+								password: this.form.password,
+								protocol: Number(this.form.protocol),
+								autologin: this.form.autologin
+							}).write()
 
 							const loadMainWindow = remote.getGlobal("loadMainWindow")
 							loadMainWindow()
