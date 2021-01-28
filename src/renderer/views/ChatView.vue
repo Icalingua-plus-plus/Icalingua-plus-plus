@@ -197,12 +197,24 @@
 				remote.getCurrentWindow().show()
 			})
 
+			window.addEventListener('paste', (event) => {
+				const nim = clipboard.readImage()
+				if (!nim.isEmpty() && this.selectedRoom)
+					this.sendMessage({
+						content: "",
+						room: this.selectedRoom,
+						b64img: nim.toDataURL()
+					})
+			});
+
 			bot.on("message", this.onQQMessage);
 			bot.on("notice.friend.recall", this.friendRecall)
 			bot.on("notice.group.recall", this.groupRecall)
 		},
 		methods: {
-			async sendMessage({ content, roomId, file, replyMessage }) {
+			async sendMessage({ content, roomId, file, replyMessage, room, b64img }) {
+				if (!roomId)
+					roomId = room.roomId
 				const sendchain = async () => {
 					let data
 					if (roomId > 0)
@@ -217,7 +229,8 @@
 						});
 						return
 					}
-					const room = this.rooms.find(e => e.roomId == roomId)
+					if (!room)
+						room = this.rooms.find(e => e.roomId == roomId)
 					room.lastMessage = {
 						content,
 						username: "You",
@@ -270,6 +283,20 @@
 							"text": content
 						}
 					})
+				if (b64img) {
+					chain.push(
+						{
+							"type": "image",
+							"data": {
+								"file": "base64://" + b64img.replace(/^data:.+;base64,/, '')
+							}
+						}
+					)
+					message.file = {
+						type: "image/jpeg",
+						url: b64img
+					}
+				}
 				if (file) {
 					const reader = new FileReader();
 					reader.readAsDataURL(file.blob);
@@ -379,12 +406,9 @@
 						case "image":
 							room.lastMessage.content += "[Image]"
 							var url = m.data.url
-							if (groupId)
-								url = url.replace("http://", "nya://").replace("https://", "nya://")
+							url = url.replace("http://", "nya://").replace("https://", "nya://")
 							message.file = {
-								name: "image",
 								type: "image/jpeg",
-								extension: "jpg",
 								url
 							}
 							break

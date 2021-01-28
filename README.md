@@ -27,7 +27,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - sticker panel
 - parse json cards
 - image drag and drop
-- image paste
 - sync mobile message
 - admin recall msg
-- message copy
