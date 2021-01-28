@@ -26,9 +26,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - background image
 - sticker panel
 - parse json cards
-- custom menu
 - image drag and drop
 - image paste
 - sync mobile message
-- fix webp
 - admin recall msg
+- message copy
