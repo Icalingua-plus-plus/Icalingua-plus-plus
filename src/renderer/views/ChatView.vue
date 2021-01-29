@@ -1,29 +1,40 @@
 <template>
-	<chat-window
-		:current-user-id="account"
-		:rooms="rooms"
-		:messages="messages"
-		height="100vh"
-		:rooms-loaded="true"
-		:messages-loaded="true"
-		:show-audio="false"
-		:show-reaction-emojis="false"
-		:show-new-messages-divider="false"
-		:load-first-room="false"
-		accepted-files="image/*"
-		:menu-actions="menuActions"
-		:message-actions="messageActions"
-		@send-message="sendMessage"
-		@fetch-messages="fetchMessage"
-		@delete-message="deleteMessage"
-		@open-file="openImage"
-		@menu-action-handler="roomAction"
-		@message-action-handler="messageActionsHandler"
-	/>
+	<el-row>
+		<!-- <el-col :span="6">
+			
+		</el-col> -->
+		<el-col :span="18">
+			<chat-window
+				:current-user-id="account"
+				:rooms="rooms"
+				:messages="messages"
+				height="100vh"
+				:rooms-loaded="true"
+				:messages-loaded="true"
+				:show-audio="false"
+				:show-reaction-emojis="false"
+				:show-new-messages-divider="false"
+				:load-first-room="false"
+				accepted-files="image/*"
+				:menu-actions="menuActions"
+				:message-actions="messageActions"
+				@send-message="sendMessage"
+				@fetch-messages="fetchMessage"
+				@delete-message="deleteMessage"
+				@open-file="openImage"
+				@menu-action-handler="roomAction"
+				@message-action-handler="messageActionsHandler"
+			/>
+		</el-col>
+		<el-col :span="6">
+			<Stickers @send="sendSticker" />
+		</el-col>
+	</el-row>
 </template>
 
 <script>
 	import ChatWindow from 'vue-advanced-chat'
+	import Stickers from '@/components/Stickers'
 	import 'vue-advanced-chat/dist/vue-advanced-chat.css'
 
 	//lowdb
@@ -95,7 +106,8 @@
 
 	export default {
 		components: {
-			ChatWindow
+			ChatWindow,
+			Stickers
 		},
 		data() {
 			return {
@@ -188,16 +200,23 @@
 				},
 			]))
 
-			this.tray = new remote.Tray(path.join(__static, '/256x256.png'))
-			this.tray.setToolTip('Electron QQ')
-			this.tray.setContextMenu(remote.Menu.buildFromTemplate([
-				{ label: 'Open', type: 'normal', click: () => { remote.getCurrentWindow().show() } },
-				this.dndMenuItem,
-				{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
-			]))
-			this.tray.on("click", () => {
-				remote.getCurrentWindow().show()
-			})
+			if (process.env.NODE_ENV === 'development')
+				document.title = "[DEBUG] Electron QQ"
+			if (process.env.NYA) {
+				document.title = "[DEBUG:UI] Electron QQ"
+			}
+			else {
+				this.tray = new remote.Tray(path.join(__static, '/256x256.png'))
+				this.tray.setToolTip('Electron QQ')
+				this.tray.setContextMenu(remote.Menu.buildFromTemplate([
+					{ label: 'Open', type: 'normal', click: () => { remote.getCurrentWindow().show() } },
+					this.dndMenuItem,
+					{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
+				]))
+				this.tray.on("click", () => {
+					remote.getCurrentWindow().show()
+				})
+			}
 
 			window.addEventListener('paste', (event) => {
 				const nim = clipboard.readImage()
@@ -218,9 +237,7 @@
 					console.log('File Path of dragged files: ', f.path)
 					const index = f.path.lastIndexOf(".");
 					const ext = f.path.substr(index + 1).toLowerCase();
-					console.log(ext)
 					if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) && this.selectedRoom) {
-						console.log('nya')
 						this.sendMessage({
 							content: "",
 							room: this.selectedRoom,
@@ -601,6 +618,15 @@
 						clipboard.writeText(data.message.content)
 				}
 			},
+
+			sendSticker(url) {
+				if (this.selectedRoom)
+					this.sendMessage({
+						content: "",
+						room: this.selectedRoom,
+						imgpath: url
+					})
+			}
 		}
 	}
 </script>

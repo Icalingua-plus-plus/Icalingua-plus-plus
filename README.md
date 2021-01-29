@@ -25,7 +25,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - context menu
 - background image
 - sticker panel
-- sync mobile message
 - admin recall msg
 - rebuild left menu
 - start chat
+- lazy loading
+- taskbar icon new msg

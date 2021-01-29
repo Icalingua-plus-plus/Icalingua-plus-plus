@@ -46,10 +46,11 @@ global.loadMainWindow = function () {
 		}
 	})
 
-	mainWindow.on('close', e => {
-		e.preventDefault();
-		mainWindow.hide();
-	})
+	if (!process.env.NYA)
+		mainWindow.on('close', e => {
+			e.preventDefault();
+			mainWindow.hide();
+		})
 
 	mainWindow.loadURL(winURL + "#/main")
 }
@@ -60,20 +61,34 @@ app.on('ready', () => {
 			url: req.url.replace("nya://", "https://")
 		})
 	})
-	//login window
-	loginWindow = new BrowserWindow({
-		height: 700,
-		width: 450,
-		maximizable: false,
-		webPreferences: {
-			nodeIntegration: true,
-			enableRemoteModule: true
+	if (process.env.NODE_ENV === 'development')
+		protocol.registerFileProtocol('file', (request, cb) => {
+			const pathname = request.url.replace('file:///', '')
+			cb(pathname)
+		});
+	if (process.env.NYA) {
+		//ui debug mode
+		global.bot = {
+			on() { },
+			logout() { }
 		}
-	})
+		global.loadMainWindow()
+	}
+	else {
+		//login window
+		loginWindow = new BrowserWindow({
+			height: 700,
+			width: 450,
+			maximizable: false,
+			webPreferences: {
+				nodeIntegration: true,
+				enableRemoteModule: true
+			}
+		})
 
-	loginWindow.menuBarVisible = false
-	loginWindow.loadURL(winURL + "#/login")
-
+		loginWindow.menuBarVisible = false
+		loginWindow.loadURL(winURL + "#/login")
+	}
 })
 
 app.on('window-all-closed', () => {
