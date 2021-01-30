@@ -10,7 +10,7 @@
 				:messages="messages"
 				height="100vh"
 				:rooms-loaded="true"
-				:messages-loaded="true"
+				:messages-loaded="messagesLoaded"
 				:show-audio="false"
 				:show-reaction-emojis="false"
 				:show-new-messages-divider="false"
@@ -143,7 +143,8 @@
 						onlyMe: true
 					}
 				],
-				account: null
+				account: null,
+				messagesLoaded: false
 			}
 		},
 		created() {
@@ -288,7 +289,7 @@
 
 						message._id = data.data.message_id
 						this.messages = [...this.messages, message]
-						db.set('messages.' + roomId, this.messages).write()
+						db.get('messages.' + roomId).push(message).write()
 						db.set("rooms", this.rooms).write()
 					}
 				}
@@ -366,7 +367,7 @@
 								}
 							}
 						)
-						message.file={
+						message.file = {
 							url: reader.result,
 							size: file.size,
 							type: file.type
@@ -381,15 +382,26 @@
 			},
 
 			fetchMessage(data) {
-				data.room.unreadCount = 0
-				this.messages = db.get("messages." + data.room.roomId).value()
-				this.selectedRoom = data.room
-				db.set("rooms", this.rooms).write()
-				const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
-					(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
-					(data.room.roomId > 0 && data.room.mute)
-				this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
-				this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
+				console.log(data)
+				if (data.options) {
+					this.messagesLoaded = false
+					this.messages = []
+					data.room.unreadCount = 0
+					this.selectedRoom = data.room
+					db.set("rooms", this.rooms).write()
+					const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
+						(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
+						(data.room.roomId > 0 && data.room.mute)
+					this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+					this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
+				}
+				const msgs2add = db.get("messages." + data.room.roomId)
+					.dropRightWhile(e => this.messages.includes(e))
+					.takeRight(10).value()
+				if (msgs2add.length)
+					this.messages = [...msgs2add, ...this.messages]
+				else
+					this.messagesLoaded = true
 				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},
 
@@ -590,23 +602,35 @@
 				if (!res.error)
 					message.deleted = new Date()
 				this.messages = [...this.messages]
-				db.set('messages.' + this.selectedRoom.roomId, this.messages).write()
+				db.get('messages.' + this.selectedRoom.roomId)
+					.find({ _id: data.messageId })
+					.assign({ deleted: new Date() }).write()
 			},
 
 			friendRecall(data) {
 				db.get('messages.' + data.user_id)
 					.find({ _id: data.message_id })
 					.assign({ deleted: new Date() }).write()
-				if (data.user_id == this.selectedRoom.roomId)
-					this.messages = db.get('messages.' + data.user_id).value()
+				if (data.user_id == this.selectedRoom.roomId) {
+					const message = this.messages.find(e => e._id == data.message_id)
+					if (message) {
+						message.deleted = new Date()
+						this.messages = [...this.messages]
+					}
+				}
 			},
 
 			groupRecall(data) {
 				db.get('messages.' + -data.group_id)
 					.find({ _id: data.message_id })
 					.assign({ deleted: new Date() }).write()
-				if (-data.group_id == this.selectedRoom.roomId)
-					this.messages = db.get('messages.' + -data.group_id).value()
+				if (-data.group_id == this.selectedRoom.roomId) {
+					const message = this.messages.find(e => e._id == data.message_id)
+					if (message) {
+						message.deleted = new Date()
+						this.messages = [...this.messages]
+					}
+				}
 			},
 
 			messageActionsHandler(data) {

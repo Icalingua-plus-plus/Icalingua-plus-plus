@@ -27,7 +27,6 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - rebuild left menu
 - start chat
-- lazy loading
 - taskbar icon new msg
 - timestamp for older msg
 - ignore group
