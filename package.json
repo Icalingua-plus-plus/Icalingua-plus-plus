@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": "clansty",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
@@ -47,7 +47,7 @@
     "element-ui": "^2.15.0",
     "lowdb": "^1.0.0",
     "md5": "^2.3.0",
-    "oicq": "^1.13.0",
+    "oicq": "^1.13.1",
     "vue": "^2.6.12",
     "vue-advanced-chat": "^0.7.0",
     "vue-electron": "^1.0.6",

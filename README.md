@@ -29,5 +29,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - start chat
 - taskbar icon new msg
 - timestamp for older msg
-- ignore group
 - custom stickers
