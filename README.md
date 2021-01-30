@@ -30,3 +30,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - taskbar icon new msg
 - timestamp for older msg
 - custom stickers
+- file download

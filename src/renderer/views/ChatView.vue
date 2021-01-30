@@ -544,7 +544,7 @@
 					(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
 					(room.roomId > 0 && room.mute)
 				if (!remote.getCurrentWindow().isFocused() && !this.dnd &&
-					!muted) {
+					!muted && !isSelfMsg) {
 					//notification
 					const notiopin = {
 						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
