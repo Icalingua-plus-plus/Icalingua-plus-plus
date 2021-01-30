@@ -193,7 +193,22 @@
 			remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
 				{
 					label: 'System', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
-						{ label: 'Logout', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
+						{
+							label: 'Reload',
+							type: 'normal',
+							click: () => {
+								bot.removeListener("message", this.onQQMessage);
+								bot.removeListener("notice.friend.recall", this.friendRecall)
+								bot.removeListener("notice.group.recall", this.groupRecall)
+								this.tray.destroy()
+								location.reload();
+							}
+						},
+						{
+							label: 'Logout',
+							type: 'normal',
+							click: () => remote.getCurrentWindow().destroy()
+						}
 					])
 				},
 				{
