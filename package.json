@@ -49,7 +49,7 @@
     "md5": "^2.3.0",
     "oicq": "^1.13.0",
     "vue": "^2.6.12",
-    "vue-advanced-chat": "^0.6.9",
+    "vue-advanced-chat": "^0.7.0",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.5.0"
   },

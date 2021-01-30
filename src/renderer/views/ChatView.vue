@@ -293,9 +293,6 @@
 					}
 				}
 
-				if (file && file.type == "image/webp")
-					content = ""
-
 				const message = {
 					sender_id: this.account,
 					username: "You",
@@ -369,6 +366,11 @@
 								}
 							}
 						)
+						message.file={
+							url: reader.result,
+							size: file.size,
+							type: file.type
+						}
 						sendchain()
 					} //now support image only
 				}

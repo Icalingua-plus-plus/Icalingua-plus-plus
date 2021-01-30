@@ -30,3 +30,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - lazy loading
 - taskbar icon new msg
 - timestamp for older msg
+- ignore group
+- custom stickers
