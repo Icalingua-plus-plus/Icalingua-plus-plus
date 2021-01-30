@@ -3,7 +3,7 @@
 		<!-- <el-col :span="6">
 			
 		</el-col> -->
-		<el-col :span="18">
+		<el-col :span="19">
 			<chat-window
 				:current-user-id="account"
 				:rooms="rooms"
@@ -26,7 +26,7 @@
 				@message-action-handler="messageActionsHandler"
 			/>
 		</el-col>
-		<el-col :span="6">
+		<el-col :span="5">
 			<Stickers @send="sendSticker" />
 		</el-col>
 	</el-row>
@@ -353,7 +353,7 @@
 					)
 					message.file = {
 						type: "image/jpeg",
-						url: imgpath
+						url: imgpath.replace(/\\/g, '/')
 					}
 				}
 				if (file) {

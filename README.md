@@ -24,9 +24,9 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 ## TODOS
 - context menu
 - background image
-- sticker panel
 - admin recall msg
 - rebuild left menu
 - start chat
 - lazy loading
 - taskbar icon new msg
+- timestamp for older msg
