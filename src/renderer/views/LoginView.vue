@@ -165,7 +165,7 @@
 							veriWin.webContents.on("did-finish-load", function () {
 								veriWin.webContents.executeJavaScript("mqq.invoke=function(a, b, c){if(b=='closeWebViews'){window.close();}}");
 							});
-							veriWin.loadURL(data.url)
+							veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
 						}
 						bot.on("system.login.slider", slider);
 						bot.on("system.login.captcha", captcha);
