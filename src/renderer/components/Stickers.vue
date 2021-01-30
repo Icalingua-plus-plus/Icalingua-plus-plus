@@ -1,7 +1,9 @@
 <template>
-	<div class="grid">
-		<div v-for="i in pics" :key="i">
-			<img :src="dir + i" @click="picClick(dir+i)"/>
+	<div class="bg" ondragstart="return false;">
+		<div class="grid">
+			<div v-for="i in pics" :key="i">
+				<img :src="dir + i" @click="picClick(dir + i)" />
+			</div>
 		</div>
 	</div>
 </template>
@@ -21,12 +23,12 @@
 			fs.readdir(path.join(__static, '/stickers/'), (err, files) => {
 				this.pics = files
 			})
-        },
-        methods: {
-            picClick(pic){
-                this.$emit('send', pic)
-            }
-        }
+		},
+		methods: {
+			picClick(pic) {
+				this.$emit('send', pic)
+			}
+		}
 	}
 </script>
 
@@ -36,17 +38,23 @@
 		height: 100vh;
 		overflow-y: auto;
 		grid-template-columns: 1fr 1fr 1fr 1fr;
+		grid-row-gap: 4px;
+		grid-column-gap: 4px;
 	}
 	.grid img {
 		object-fit: contain;
-        width:100%;
-        height:100%;
-        position:absolute;
+		width: 100%;
+		height: 100%;
+		position: absolute;
 	}
 	.grid > div {
 		width: 100%;
-            height:0px;
-    padding-bottom:100%;
-    position:relative;
+		height: 0px;
+		padding-bottom: 100%;
+		position: relative;
+		background-color: #fff;
+	}
+	.bg {
+		background-color: #fff;
 	}
 </style>
