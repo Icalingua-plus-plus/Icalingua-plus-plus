@@ -27,7 +27,13 @@
 			/>
 		</el-col>
 		<el-col :span="5">
-			<Stickers @send="sendSticker" />
+			<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+			<IgnoreManage
+				v-show="panel == 'ignore'"
+				:ignoredChats="ignoredChats"
+				@remove="rmIgnore"
+				@close="closePanel"
+			/>
 		</el-col>
 	</el-row>
 </template>
@@ -35,6 +41,7 @@
 <script>
 	import ChatWindow from 'vue-advanced-chat'
 	import Stickers from '@/components/Stickers'
+	import IgnoreManage from '@/components/IgnoreManage'
 	import 'vue-advanced-chat/dist/vue-advanced-chat.css'
 
 	//lowdb
@@ -107,7 +114,8 @@
 	export default {
 		components: {
 			ChatWindow,
-			Stickers
+			Stickers,
+			IgnoreManage
 		},
 		data() {
 			return {
@@ -122,6 +130,14 @@
 					{
 						name: 'pin',
 						title: 'Pin Chat'
+					},
+					{
+						name: 'del',
+						title: 'Delete Chat'
+					},
+					{
+						name: 'ignore',
+						title: 'Ignore Chat'
 					}
 				],
 				muteAllGroups: false,
@@ -144,7 +160,9 @@
 					}
 				],
 				account: null,
-				messagesLoaded: false
+				messagesLoaded: false,
+				ignoredChats: [],
+				panel: ''
 			}
 		},
 		created() {
@@ -155,12 +173,14 @@
 				rooms: [],
 				messages: {},
 				muteAllGroups: false,
-				dnd: false
+				dnd: false,
+				ignoredChats: []
 			})
 				.write()
 			this.rooms = db.get("rooms").value()
 			this.muteAllGroups = db.get("muteAllGroups").value()
 			this.dnd = db.get("dnd").value()
+			this.ignoredChats = db.get('ignoredChats').value()
 			this.dndMenuItem = new remote.MenuItem({
 				label: 'Disable notifications', type: 'checkbox',
 				checked: this.dnd,
@@ -190,7 +210,11 @@
 								this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
 							}
 						},
-						this.dndMenuItem
+						this.dndMenuItem,
+						{
+							label: 'Manage ignored chats',
+							click: () => this.panel = "ignore"
+						},
 					])
 				},
 				{
@@ -384,6 +408,7 @@
 			fetchMessage(data) {
 				console.log(data)
 				if (data.options) {
+					this.panel = 'stickers'
 					this.messagesLoaded = false
 					this.messages = []
 					data.room.unreadCount = 0
@@ -406,11 +431,12 @@
 			},
 
 			onQQMessage(data) {
-				console.log(data)
 				const now = new Date()
 				const groupId = data.group_id
 				const senderId = data.sender.user_id
 				const roomId = groupId ? -groupId : data.user_id
+				if (this.ignoredChats.find(e => e.id == roomId))
+					return
 				const isSelfMsg = this.account == senderId
 				const senderName = groupId ?
 					(isSelfMsg ? "You" :
@@ -594,6 +620,22 @@
 					this.rooms = [...this.rooms]
 					db.set("rooms", this.rooms).write()
 				}
+				else if (data.action.name == "ignore") {
+					const room = this.rooms.find(e => e.roomId == data.roomId)
+					this.ignoredChats.push({
+						id: data.roomId,
+						name: room.roomName
+					})
+					db.unset('messages.' + data.roomId).write()
+					this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+					db.set("rooms", this.rooms).write()
+					db.set("ignoredChats", this.ignoredChats).write()
+				}
+				else if (data.action.name == "del") {
+					db.unset('messages.' + data.roomId).write()
+					this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+					db.set("rooms", this.rooms).write()
+				}
 			},
 
 			async deleteMessage(data) {
@@ -652,6 +694,16 @@
 						room: this.selectedRoom,
 						imgpath: url
 					})
+			},
+
+			rmIgnore(chat) {
+				console.log(chat)
+				this.ignoredChats = this.ignoredChats.filter(item => item.id != chat.id)
+				db.set("ignoredChats", this.ignoredChats).write()
+			},
+
+			closePanel() {
+				this.panel = 'stickers'
 			}
 		}
 	}
