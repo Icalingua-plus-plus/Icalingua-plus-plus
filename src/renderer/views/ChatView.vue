@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<el-container>
-			<el-aside width="65px">
+			<el-aside width="65px" ondragstart="return false;">
 				<!-- sidebar -->
 				<el-popover
 					placement="right-end"
@@ -29,12 +29,13 @@
 			<el-main>
 				<el-row v-show="view == 'chats'">
 					<!-- main chat view -->
-					<el-col :span="5">
+					<el-col :span="5" ondragstart="return false;">
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
 							@chroom="chroom"
+							@contextmenu="roomContext"
 						/>
 					</el-col>
 					<el-col :span="13">
@@ -64,7 +65,7 @@
 							onContextmenu="contextMenu()"
 						/>
 					</el-col>
-					<el-col :span="6">
+					<el-col :span="6" ondragstart="return false;">
 						<transition name="el-zoom-in-top">
 							<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
 						</transition>
@@ -507,7 +508,7 @@
 						roomId,
 						roomName,
 						avatar,
-						index:0,
+						index: 0,
 						unreadCount: 0,
 						lastMessage: {
 							content: "",
@@ -639,7 +640,8 @@
 						room.index = 0
 					else
 						room.index = 1
-					this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
+					if (room == this.selectedRoom)
+						this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
 					this.rooms = [...this.rooms]
 					db.set("rooms", this.rooms).write()
 				}
@@ -649,10 +651,12 @@
 						room.unmute = !room.unmute
 					else
 						room.mute = !room.mute
-					const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-						(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-						(room.roomId > 0 && room.mute)
-					this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+					if (room == this.selectedRoom) {
+						const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
+							(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
+							(room.roomId > 0 && room.mute)
+						this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+					}
 					this.rooms = [...this.rooms]
 					db.set("rooms", this.rooms).write()
 				}
@@ -821,6 +825,34 @@
 
 			chroom(room) {
 				this.selectedRoom = room
+			},
+
+			roomContext(room) {
+				const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
+					(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
+					(room.roomId > 0 && room.mute)
+				const mutetitle = muted ? "Unmute Chat" : "Mute Chat"
+				const pintitle = room.index ? "Unpin Chat" : "Pin Chat"
+				const menu = remote.Menu.buildFromTemplate([
+					{
+						label: mutetitle, type: 'normal',
+						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'mute' } })
+					},
+					{
+						label: pintitle, type: 'normal',
+						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'pin' } })
+					},
+					{
+						label: 'Delete Chat', type: 'normal',
+						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'del' } })
+					},
+					{
+						label: 'Ignore Chat', type: 'normal',
+						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'ignore' } })
+					},
+				])
+				menu.popup({ window: remote.getCurrentWindow() })
+
 			}
 		}
 	}
@@ -840,7 +872,7 @@
 	.el-avatar {
 		cursor: pointer;
 	}
-	.el-col{
+	.el-col {
 		height: 100vh;
 		overflow: hidden;
 	}
