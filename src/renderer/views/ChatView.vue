@@ -6,7 +6,7 @@
 					placement="right-end"
 					:title="username"
 					trigger="hover"
-					:content="account"
+					:content="`${account}`"
 				>
 					<el-avatar
 						slot="reference"
@@ -51,6 +51,7 @@
 							@open-file="openImage"
 							@menu-action-handler="roomAction"
 							@message-action-handler="messageActionsHandler"
+							onContextmenu="contextMenu()"
 						/>
 					</el-col>
 					<el-col :span="5">
@@ -248,6 +249,8 @@
 					db.set("dnd", menuItem.checked).write()
 				}
 			})
+
+			window.contextMenu = this.contextMenu
 
 			remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
 				{
@@ -800,6 +803,16 @@
 				this.offlineReason = data.message
 				console.log(data)
 				this.offline = true
+			},
+
+			contextMenu() {
+				const sect = window.getSelection().toString()
+				if (sect) {
+					const menu = remote.Menu.buildFromTemplate([
+						{ label: 'Copy', type: 'normal', click: () => { clipboard.writeText(sect) } },
+					])
+					menu.popup({ window: remote.getCurrentWindow() })
+				}
 			}
 
 		}
