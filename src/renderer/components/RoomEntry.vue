@@ -110,7 +110,10 @@
 		color: #606266;
 		font-size: 12px;
 		text-overflow: ellipsis;
-		width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		width: 0;
+		flex: 1;
 	}
 	.icon {
 		color: #909399;
@@ -121,7 +124,10 @@
 		font-weight: bold;
 		color: #303133;
 		text-overflow: ellipsis;
-		width: 100%;
+		overflow: hidden;
+		white-space: nowrap;
+		width: 0;
+		flex: 1;
 		font-size: 16px;
 	}
 	.timestamp {
