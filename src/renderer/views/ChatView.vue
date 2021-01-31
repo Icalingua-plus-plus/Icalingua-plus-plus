@@ -1,44 +1,72 @@
 <template>
 	<div>
-		<el-row>
-			<!-- <el-col :span="6">
+		<el-container>
+			<el-aside width="65px">
+				<el-popover
+					placement="right-end"
+					:title="username"
+					trigger="hover"
+					:content="account"
+				>
+					<el-avatar
+						slot="reference"
+						:src="`http://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
+					></el-avatar>
+				</el-popover>
+				<SideBarIcon
+					icon="el-icon-chat-round"
+					name="Chats"
+					:selected="view == 'chats'"
+				/>
+				<SideBarIcon
+					icon="el-icon-user"
+					name="Contacts"
+					:selected="view == 'contacts'"
+				/>
+			</el-aside>
+			<el-main>
+				<el-row>
+					<!-- <el-col :span="6">
 			
-		</el-col> -->
-			<el-col :span="19">
-				<chat-window
-					:current-user-id="account"
-					:rooms="rooms"
-					:messages="messages"
-					height="100vh"
-					:rooms-loaded="true"
-					:messages-loaded="messagesLoaded"
-					:show-audio="false"
-					:show-reaction-emojis="false"
-					:show-new-messages-divider="false"
-					:load-first-room="false"
-					accepted-files="image/*"
-					:menu-actions="menuActions"
-					:message-actions="messageActions"
-					@send-message="sendMessage"
-					@fetch-messages="fetchMessage"
-					@delete-message="deleteMessage"
-					@open-file="openImage"
-					@menu-action-handler="roomAction"
-					@message-action-handler="messageActionsHandler"
-				/>
-			</el-col>
-			<el-col :span="5">
-				<transition name="el-zoom-in-top">
-					<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
-				</transition>
-				<IgnoreManage
-					v-show="panel == 'ignore'"
-					:ignoredChats="ignoredChats"
-					@remove="rmIgnore"
-					@close="closePanel"
-				/>
-			</el-col>
-		</el-row>
+					</el-col> -->
+					<el-col :span="19">
+						<chat-window
+							:current-user-id="account"
+							:rooms="rooms"
+							:messages="messages"
+							height="100vh"
+							:rooms-loaded="true"
+							:messages-loaded="messagesLoaded"
+							:show-audio="false"
+							:show-reaction-emojis="false"
+							:show-new-messages-divider="false"
+							:load-first-room="false"
+							accepted-files="image/*"
+							:menu-actions="menuActions"
+							:message-actions="messageActions"
+							:styles="styles"
+							@send-message="sendMessage"
+							@fetch-messages="fetchMessage"
+							@delete-message="deleteMessage"
+							@open-file="openImage"
+							@menu-action-handler="roomAction"
+							@message-action-handler="messageActionsHandler"
+						/>
+					</el-col>
+					<el-col :span="5">
+						<transition name="el-zoom-in-top">
+							<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+						</transition>
+						<IgnoreManage
+							v-show="panel == 'ignore'"
+							:ignoredChats="ignoredChats"
+							@remove="rmIgnore"
+							@close="closePanel"
+						/>
+					</el-col>
+				</el-row>
+			</el-main>
+		</el-container>
 		<el-dialog
 			title="You are offline"
 			:visible.sync="offline"
@@ -68,6 +96,7 @@
 	import FileSync from 'lowdb/adapters/FileSync'
 	import path from 'path'
 	import { remote, clipboard, nativeImage, shell } from 'electron'
+	import SideBarIcon from '../components/SideBarIcon.vue'
 	const STORE_PATH = remote.app.getPath('userData')
 	const glodb = remote.getGlobal("glodb")
 
@@ -134,7 +163,8 @@
 		components: {
 			ChatWindow,
 			Stickers,
-			IgnoreManage
+			IgnoreManage,
+			SideBarIcon
 		},
 		data() {
 			return {
@@ -184,7 +214,14 @@
 				panel: '',
 				offline: false,
 				offlineReason: "",
-				reconnecting: false
+				reconnecting: false,
+				styles: {
+					container: {
+						boxShadow: 'none'
+					}
+				},
+				view: 'chats',
+				username: ''
 			}
 		},
 		created() {
@@ -203,7 +240,6 @@
 			this.muteAllGroups = db.get("muteAllGroups").value()
 			this.dnd = db.get("dnd").value()
 			this.ignoredChats = db.get('ignoredChats').value()
-			this.offline = !bot.getStatus().data.online
 			this.dndMenuItem = new remote.MenuItem({
 				label: 'Disable notifications', type: 'checkbox',
 				checked: this.dnd,
@@ -271,6 +307,8 @@
 				document.title = "[DEBUG:UI] Electron QQ"
 			}
 			else {
+				this.offline = !bot.getStatus().data.online
+				this.username = bot.getLoginInfo().data.nickname
 				this.tray = new remote.Tray(path.join(__static, '/256x256.png'))
 				this.tray.setToolTip('Electron QQ')
 				this.tray.setContextMenu(remote.Menu.buildFromTemplate([
@@ -767,3 +805,15 @@
 		}
 	}
 </script>
+
+<style scoped>
+	.el-main {
+		padding: 0;
+	}
+	.el-aside {
+		background-color: #303133;
+		color: #eee;
+		text-align: center;
+		padding-top: 15px;
+	}
+</style>

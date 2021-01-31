@@ -31,5 +31,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - timestamp for older msg
 - custom stickers
 - file download
-- offline notice
 - add to stickers
