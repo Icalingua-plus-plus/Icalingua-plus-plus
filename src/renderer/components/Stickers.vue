@@ -1,5 +1,6 @@
 <template>
 	<div class="bg" ondragstart="return false;">
+		<div class="head"></div>
 		<div class="grid">
 			<div v-for="i in pics" :key="i">
 				<img :src="dir + i" @click="picClick(dir + i)" />
@@ -33,9 +34,17 @@
 </script>
 
 <style scoped>
+	div.head {
+		height: 64px;
+		min-height: 64px;
+		border-bottom: 1px solid #e1e4e8;
+		width: 100%;
+	}
+
 	.grid {
 		display: grid;
-		height: 100vh;
+		height: 100%;
+		width: 100%;
 		overflow-y: auto;
 		grid-template-columns: 1fr 1fr 1fr 1fr;
 	}
@@ -48,7 +57,7 @@
 		border-width: 1px;
 		border-style: solid;
 		background-color: #fff;
-		transition: border-color .5s
+		transition: border-color 0.5s;
 	}
 	.grid > div {
 		width: 100%;
@@ -62,5 +71,8 @@
 	}
 	.bg {
 		background-color: #fff;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
 	}
 </style>

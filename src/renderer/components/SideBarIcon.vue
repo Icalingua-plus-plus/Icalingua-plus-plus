@@ -1,6 +1,6 @@
 <template>
 	<a @click="$emit('click')">
-		<div :class="{selected}">
+		<div :class="{ selected }">
 			<i :class="icon"></i>
 			<br />
 			{{ name }}
@@ -20,9 +20,9 @@
 </script>
 
 <style scoped>
-    .selected{
-        color: #19bdd2
-    }
+	.selected {
+		color: #19bdd2;
+	}
 	a {
 		cursor: pointer;
 	}
