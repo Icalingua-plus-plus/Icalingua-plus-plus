@@ -2,6 +2,7 @@
 	<div>
 		<el-container>
 			<el-aside width="65px">
+				<!-- sidebar -->
 				<el-popover
 					placement="right-end"
 					:title="username"
@@ -16,19 +17,27 @@
 					icon="el-icon-chat-round"
 					name="Chats"
 					:selected="view == 'chats'"
+					@click="view = 'chats'"
 				/>
 				<SideBarIcon
 					icon="el-icon-user"
 					name="Contacts"
 					:selected="view == 'contacts'"
+					@click="view = 'contacts'"
 				/>
 			</el-aside>
 			<el-main>
-				<el-row>
-					<!-- <el-col :span="6">
-			
-					</el-col> -->
-					<el-col :span="19">
+				<el-row v-show="view == 'chats'">
+					<!-- main chat view -->
+					<el-col :span="5">
+						<TheRoomsPanel
+							:rooms="rooms"
+							:selected="selectedRoom"
+							:mute-all-groups="muteAllGroups"
+							@chroom="chroom"
+						/>
+					</el-col>
+					<el-col :span="13">
 						<chat-window
 							:current-user-id="account"
 							:rooms="rooms"
@@ -44,6 +53,8 @@
 							:menu-actions="menuActions"
 							:message-actions="messageActions"
 							:styles="styles"
+							:single-room="true"
+							:room-id="selectedRoom.roomId"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
@@ -53,7 +64,7 @@
 							onContextmenu="contextMenu()"
 						/>
 					</el-col>
-					<el-col :span="5">
+					<el-col :span="6">
 						<transition name="el-zoom-in-top">
 							<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
 						</transition>
@@ -97,6 +108,7 @@
 	import path from 'path'
 	import { remote, clipboard, nativeImage, shell } from 'electron'
 	import SideBarIcon from '../components/SideBarIcon.vue'
+	import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 	const STORE_PATH = remote.app.getPath('userData')
 	const glodb = remote.getGlobal("glodb")
 
@@ -164,13 +176,14 @@
 			ChatWindow,
 			Stickers,
 			IgnoreManage,
-			SideBarIcon
+			SideBarIcon,
+			TheRoomsPanel
 		},
 		data() {
 			return {
 				rooms: [],
 				messages: [],
-				selectedRoom: null,
+				selectedRoom: { roomId: 0 },
 				menuActions: [
 					{
 						name: 'mute',
@@ -489,10 +502,12 @@
 
 				var room = this.rooms.find(e => e.roomId == roomId)
 				if (room == undefined) {
+					// create room
 					room = {
 						roomId,
 						roomName,
 						avatar,
+						index:0,
 						unreadCount: 0,
 						lastMessage: {
 							content: "",
@@ -631,7 +646,7 @@
 				if (data.action.name == "pin") {
 					const room = this.rooms.find(e => e.roomId == data.roomId)
 					if (room.index)
-						room.index = undefined
+						room.index = 0
 					else
 						room.index = 1
 					this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
@@ -812,6 +827,10 @@
 
 				])
 				menu.popup({ window: remote.getCurrentWindow() })
+			},
+
+			chroom(room) {
+				this.selectedRoom = room
 			}
 		}
 	}
@@ -820,6 +839,7 @@
 <style scoped>
 	.el-main {
 		padding: 0;
+		height: 100vh;
 	}
 	.el-aside {
 		background-color: #303133;
@@ -829,5 +849,9 @@
 	}
 	.el-avatar {
 		cursor: pointer;
+	}
+	.el-col{
+		height: 100vh;
+		overflow: hidden;
 	}
 </style>
