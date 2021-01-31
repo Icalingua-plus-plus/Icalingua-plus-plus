@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, shell } from 'electron'
+import { app, BrowserWindow, protocol, shell, Menu } from 'electron'
 import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
@@ -66,6 +66,7 @@ app.on('ready', () => {
 			const pathname = request.url.replace('file:///', '')
 			cb(pathname)
 		});
+	Menu.setApplicationMenu(Menu.buildFromTemplate([]))
 	if (process.env.NYA) {
 		//ui debug mode
 		global.bot = {

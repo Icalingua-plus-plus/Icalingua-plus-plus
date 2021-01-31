@@ -8,10 +8,9 @@
 					trigger="hover"
 					:content="`${account}`"
 				>
-					<el-avatar
-						slot="reference"
-						:src="`http://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
-					></el-avatar>
+					<a @click="appMenu" slot="reference">
+						<el-avatar :src="`http://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`" />
+					</a>
 				</el-popover>
 				<SideBarIcon
 					icon="el-icon-chat-round"
@@ -251,58 +250,6 @@
 			})
 
 			window.contextMenu = this.contextMenu
-
-			remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
-				{
-					label: 'System', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
-						{
-							label: 'Reload',
-							type: 'normal',
-							click: () => {
-								bot.removeListener("message", this.onQQMessage);
-								bot.removeListener("notice.friend.recall", this.friendRecall)
-								bot.removeListener("notice.group.recall", this.groupRecall)
-								bot.removeListener('system.online', this.online)
-								bot.removeListener('system.offline', this.onOffline)
-								this.tray.destroy()
-								location.reload();
-							}
-						},
-						{
-							label: 'Logout',
-							type: 'normal',
-							click: () => remote.getCurrentWindow().destroy()
-						}
-					])
-				},
-				{
-					label: 'Notification', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
-						{
-							label: 'Mute all groups', type: 'checkbox',
-							checked: this.muteAllGroups,
-							click: (menuItem, _browserWindow, _event) => {
-								this.muteAllGroups = menuItem.checked
-								db.set("muteAllGroups", menuItem.checked).write()
-								const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
-									(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
-									(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
-								this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
-							}
-						},
-						this.dndMenuItem,
-						{
-							label: 'Manage ignored chats',
-							click: () => this.panel = "ignore"
-						},
-					])
-				},
-				{
-					label: 'About', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
-						{ label: 'About', type: 'normal', role: 'about' },
-						{ label: 'Dev Tools', type: 'normal', role: 'toggleDevTools', accelerator: 'F12' }
-					])
-				},
-			]))
 
 			if (process.env.NODE_ENV === 'development')
 				document.title = "[DEBUG] Electron QQ"
@@ -813,8 +760,59 @@
 					])
 					menu.popup({ window: remote.getCurrentWindow() })
 				}
-			}
+			},
 
+			appMenu() {
+				const menu = remote.Menu.buildFromTemplate([
+					{
+						label: 'Notification', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
+							{
+								label: 'Mute all groups', type: 'checkbox',
+								checked: this.muteAllGroups,
+								click: (menuItem, _browserWindow, _event) => {
+									this.muteAllGroups = menuItem.checked
+									db.set("muteAllGroups", menuItem.checked).write()
+									const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
+										(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
+										(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
+									this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+								}
+							},
+							this.dndMenuItem,
+							{
+								label: 'Manage ignored chats',
+								click: () => this.panel = "ignore"
+							},
+						])
+					},
+					{
+						label: 'Reload',
+						type: 'normal',
+						click: () => {
+							bot.removeListener("message", this.onQQMessage);
+							bot.removeListener("notice.friend.recall", this.friendRecall)
+							bot.removeListener("notice.group.recall", this.groupRecall)
+							bot.removeListener('system.online', this.online)
+							bot.removeListener('system.offline', this.onOffline)
+							this.tray.destroy()
+							location.reload();
+						}
+					},
+					{
+						label: 'Dev Tools',
+						type: 'normal',
+						role: 'toggleDevTools',
+						accelerator: 'F12'
+					},
+					{
+						label: 'Quit',
+						type: 'normal',
+						click: () => remote.getCurrentWindow().destroy()
+					},
+
+				])
+				menu.popup({ window: remote.getCurrentWindow() })
+			}
 		}
 	}
 </script>
@@ -828,5 +826,8 @@
 		color: #eee;
 		text-align: center;
 		padding-top: 15px;
+	}
+	.el-avatar {
+		cursor: pointer;
 	}
 </style>
