@@ -36,9 +36,15 @@
 	.root {
 		border-right: 1px solid #e1e4e8;
 		height: 100vh;
+		display: flex;
+		flex-direction: column;
 	}
 	div.head {
 		height: 64px;
+		min-height: 64px;
 		/* border-bottom: 1px solid #e1e4e8 */
+	}
+	.content {
+		overflow: auto;
 	}
 </style>
