@@ -14,11 +14,10 @@
     "dev:ui": "cross-env NYA=nya node .electron-vue/dev-runner.js",
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
-    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
-    "postinstall": ""
+    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
   },
   "build": {
-    "productName": "electron-qq",
+    "productName": "Electron QQ",
     "appId": "com.clansty.electronqq",
     "directories": {
       "output": "build"
