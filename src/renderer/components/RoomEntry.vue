@@ -46,7 +46,7 @@
 									(room.roomId < 0 && !muteAllGroups && room.mute) ||
 									(room.roomId > 0 && room.mute)
 										? 'info'
-										: ''
+										: undefined
 								"
 							/>
 						</div>

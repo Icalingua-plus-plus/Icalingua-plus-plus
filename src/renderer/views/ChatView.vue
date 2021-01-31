@@ -512,18 +512,8 @@
 						lastMessage: {
 							content: "",
 							timestamp: ""
-						},
-						users: [
-							{
-								_id: roomId,
-							},
-							{
-								_id: 0,
-							}
-						]
+						}
 					}
-					if (groupId) //recognize group
-						room.users.push({ _id: 233 })
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + roomId, []).write()
 				}
