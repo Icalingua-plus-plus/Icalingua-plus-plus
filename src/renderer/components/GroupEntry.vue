@@ -21,14 +21,14 @@
 <script>
 	export default {
 		name: "GroupEntry",
-		props: ['chat'],
+		props: ['chat']
 	};
 </script>
 
 <style scoped>
 	.card {
 		margin-bottom: 10px;
-        cursor: pointer;
+		cursor: pointer;
 	}
 	.left {
 		width: max-content;

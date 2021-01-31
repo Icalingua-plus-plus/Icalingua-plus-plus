@@ -9,6 +9,7 @@
 				:selected="room == selected"
 				:mute-all-groups="muteAllGroups"
 				@click="$emit('chroom', room)"
+				@contextmenu="$emit('contextmenu', room)"
 			/>
 		</div>
 	</div>
