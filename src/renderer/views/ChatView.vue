@@ -1,43 +1,60 @@
 <template>
-	<el-row>
-		<!-- <el-col :span="6">
+	<div>
+		<el-row>
+			<!-- <el-col :span="6">
 			
 		</el-col> -->
-		<el-col :span="19">
-			<chat-window
-				:current-user-id="account"
-				:rooms="rooms"
-				:messages="messages"
-				height="100vh"
-				:rooms-loaded="true"
-				:messages-loaded="messagesLoaded"
-				:show-audio="false"
-				:show-reaction-emojis="false"
-				:show-new-messages-divider="false"
-				:load-first-room="false"
-				accepted-files="image/*"
-				:menu-actions="menuActions"
-				:message-actions="messageActions"
-				@send-message="sendMessage"
-				@fetch-messages="fetchMessage"
-				@delete-message="deleteMessage"
-				@open-file="openImage"
-				@menu-action-handler="roomAction"
-				@message-action-handler="messageActionsHandler"
-			/>
-		</el-col>
-		<el-col :span="5">
-			<transition name="el-zoom-in-top">
-				<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
-			</transition>
-			<IgnoreManage
-				v-show="panel == 'ignore'"
-				:ignoredChats="ignoredChats"
-				@remove="rmIgnore"
-				@close="closePanel"
-			/>
-		</el-col>
-	</el-row>
+			<el-col :span="19">
+				<chat-window
+					:current-user-id="account"
+					:rooms="rooms"
+					:messages="messages"
+					height="100vh"
+					:rooms-loaded="true"
+					:messages-loaded="messagesLoaded"
+					:show-audio="false"
+					:show-reaction-emojis="false"
+					:show-new-messages-divider="false"
+					:load-first-room="false"
+					accepted-files="image/*"
+					:menu-actions="menuActions"
+					:message-actions="messageActions"
+					@send-message="sendMessage"
+					@fetch-messages="fetchMessage"
+					@delete-message="deleteMessage"
+					@open-file="openImage"
+					@menu-action-handler="roomAction"
+					@message-action-handler="messageActionsHandler"
+				/>
+			</el-col>
+			<el-col :span="5">
+				<transition name="el-zoom-in-top">
+					<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+				</transition>
+				<IgnoreManage
+					v-show="panel == 'ignore'"
+					:ignoredChats="ignoredChats"
+					@remove="rmIgnore"
+					@close="closePanel"
+				/>
+			</el-col>
+		</el-row>
+		<el-dialog
+			title="You are offline"
+			:visible.sync="offline"
+			width="30%"
+			:close-on-click-modal="false"
+			:close-on-press-escape="false"
+			:show-close="false"
+		>
+			<span>{{ offlineReason }}</span>
+			<span slot="footer" class="dialog-footer">
+				<el-button type="primary" @click="reconnect" :loading="reconnecting">
+					Reconnect now
+				</el-button>
+			</span>
+		</el-dialog>
+	</div>
 </template>
 
 <script>
@@ -164,7 +181,10 @@
 				account: null,
 				messagesLoaded: false,
 				ignoredChats: [],
-				panel: ''
+				panel: '',
+				offline: false,
+				offlineReason: "",
+				reconnecting: false
 			}
 		},
 		created() {
@@ -183,6 +203,7 @@
 			this.muteAllGroups = db.get("muteAllGroups").value()
 			this.dnd = db.get("dnd").value()
 			this.ignoredChats = db.get('ignoredChats').value()
+			this.offline = !bot.getStatus().data.online
 			this.dndMenuItem = new remote.MenuItem({
 				label: 'Disable notifications', type: 'checkbox',
 				checked: this.dnd,
@@ -202,6 +223,8 @@
 								bot.removeListener("message", this.onQQMessage);
 								bot.removeListener("notice.friend.recall", this.friendRecall)
 								bot.removeListener("notice.group.recall", this.groupRecall)
+								bot.removeListener('system.online', this.online)
+								bot.removeListener('system.offline', this.onOffline)
 								this.tray.destroy()
 								location.reload();
 							}
@@ -297,6 +320,8 @@
 			bot.on("message", this.onQQMessage);
 			bot.on("notice.friend.recall", this.friendRecall)
 			bot.on("notice.group.recall", this.groupRecall)
+			bot.on('system.online', this.online)
+			bot.on('system.offline', this.onOffline)
 		},
 		methods: {
 			async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath }) {
@@ -423,7 +448,6 @@
 			},
 
 			fetchMessage(data) {
-				console.log(data)
 				if (data.options) {
 					this.panel = 'stickers'
 					this.messagesLoaded = false
@@ -443,7 +467,9 @@
 				if (msgs2add.length)
 					this.messages = [...msgs2add, ...this.messages]
 				else
-					this.messagesLoaded = true
+					setTimeout(() => {
+						this.messagesLoaded = true
+					}, 100)
 				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},
 
@@ -721,7 +747,23 @@
 
 			closePanel() {
 				this.panel = 'stickers'
+			},
+
+			reconnect() {
+				this.reconnecting = true
+				bot.login(glodb.get('account.password').value())
+			},
+
+			online() {
+				this.reconnecting = this.offline = false
+			},
+
+			onOffline(data) {
+				this.offlineReason = data.message
+				console.log(data)
+				this.offline = true
 			}
+
 		}
 	}
 </script>
