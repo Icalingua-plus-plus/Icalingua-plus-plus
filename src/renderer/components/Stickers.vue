@@ -38,14 +38,17 @@
 		height: 100vh;
 		overflow-y: auto;
 		grid-template-columns: 1fr 1fr 1fr 1fr;
-		grid-row-gap: 4px;
-		grid-column-gap: 4px;
 	}
 	.grid img {
 		object-fit: contain;
-		width: 100%;
-		height: 100%;
+		width: 96%;
+		height: 96%;
 		position: absolute;
+		border-color: #fff;
+		border-width: 1px;
+		border-style: solid;
+		background-color: #fff;
+		transition: border-color .5s
 	}
 	.grid > div {
 		width: 100%;
@@ -53,6 +56,9 @@
 		padding-bottom: 100%;
 		position: relative;
 		background-color: #fff;
+	}
+	.grid > div img:hover {
+		border-color: #999;
 	}
 	.bg {
 		background-color: #fff;

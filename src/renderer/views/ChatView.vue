@@ -27,7 +27,9 @@
 			/>
 		</el-col>
 		<el-col :span="5">
-			<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+			<transition name="el-zoom-in-top">
+				<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+			</transition>
 			<IgnoreManage
 				v-show="panel == 'ignore'"
 				:ignoredChats="ignoredChats"
