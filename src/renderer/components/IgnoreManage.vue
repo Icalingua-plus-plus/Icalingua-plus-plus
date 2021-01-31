@@ -32,6 +32,7 @@
 	.bg {
 		background-color: #fff;
 		padding: 20px;
+		height: 100vh;
 		overflow-y: auto;
 	}
 
