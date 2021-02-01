@@ -21,6 +21,7 @@
 	html,body{
 		height: 100%;
 		width: 100%;
-		margin: 0
+		margin: 0;
+		color: #303133;
 	}
 </style>

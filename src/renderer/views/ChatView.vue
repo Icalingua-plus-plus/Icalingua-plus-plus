@@ -29,7 +29,7 @@
 			<el-main>
 				<el-row v-show="view == 'chats'">
 					<!-- main chat view -->
-					<el-col :span="5" ondragstart="return false;">
+					<el-col :span="5" ondragstart="return false;" class="nodrag">
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
@@ -63,9 +63,13 @@
 							@menu-action-handler="roomAction"
 							@message-action-handler="messageActionsHandler"
 							onContextmenu="contextMenu()"
-						/>
+						>
+							<template v-slot:menu-icon>
+								<i class="el-icon-more"></i>
+							</template>
+						</chat-window>
 					</el-col>
-					<el-col :span="6" ondragstart="return false;">
+					<el-col :span="6" ondragstart="return false;" class="nodrag">
 						<transition name="el-zoom-in-top">
 							<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
 						</transition>
@@ -868,6 +872,7 @@
 		color: #eee;
 		text-align: center;
 		padding-top: 15px;
+		-webkit-user-select: none;
 	}
 	.el-avatar {
 		cursor: pointer;
@@ -875,5 +880,9 @@
 	.el-col {
 		height: 100vh;
 		overflow: hidden;
+	}
+
+	.nodrag {
+		-webkit-user-select: none;
 	}
 </style>

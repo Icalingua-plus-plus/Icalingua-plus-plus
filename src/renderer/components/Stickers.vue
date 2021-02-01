@@ -1,7 +1,20 @@
 <template>
 	<div class="bg" ondragstart="return false;">
-		<div class="head"></div>
-		<div class="grid">
+		<div class="head">
+			<div class="title">Stickers</div>
+			<a @click="menu">
+				<div class="opinion">
+					<i class="el-icon-more"></i>
+				</div>
+			</a>
+		</div>
+		<center v-show="!pics.length">
+			<p>No stickers found</p>
+			<p>
+				<el-button @click="folder">Open stickers folder</el-button>
+			</p>
+		</center>
+		<div class="grid" v-show="pics.length">
 			<div v-for="i in pics" :key="i">
 				<img :src="dir + i" @click="picClick(dir + i)" />
 			</div>
@@ -10,24 +23,44 @@
 </template>
 
 <script>
+	import { remote, shell } from 'electron'
 	const fs = require('fs')
 	const path = require('path')
+	const STORE_PATH = remote.app.getPath('userData')
+
 	export default {
 		name: "Stickers",
 		data() {
 			return {
 				pics: [],
-				dir: path.join(__static, '/stickers/')
+				dir: path.join(STORE_PATH, '/stickers/')
 			}
 		},
 		created() {
-			fs.readdir(path.join(__static, '/stickers/'), (err, files) => {
+			if (!fs.existsSync(this.dir)) {
+				fs.mkdirSync(this.dir)
+			}
+			fs.watch(this.dir, () => {
+				fs.readdir(this.dir, (_err, files) => {
+					this.pics = files
+				})
+			})
+			fs.readdir(this.dir, (_err, files) => {
 				this.pics = files
 			})
 		},
 		methods: {
 			picClick(pic) {
 				this.$emit('send', pic)
+			},
+			folder() {
+				shell.openPath(this.dir)
+			},
+			menu() {
+				const menu = remote.Menu.buildFromTemplate([
+					{ label: 'Open stickers folder', type: 'normal', click: this.folder },
+				])
+				menu.popup({ window: remote.getCurrentWindow() })
 			}
 		}
 	}
@@ -38,9 +71,23 @@
 		height: 64px;
 		min-height: 64px;
 		border-bottom: 1px solid #e1e4e8;
+		display: flex;
+		align-items: center;
+		font-size: 17px;
+		padding: 0 16px;
+	}
+	.title {
 		width: 100%;
 	}
-
+	.opinion {
+		margin-left: 5px;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+	.opinion:hover {
+		transform: scale(1.1);
+		opacity: 0.7;
+	}
 	.grid {
 		display: grid;
 		height: 100%;
@@ -74,5 +121,6 @@
 		height: 100vh;
 		display: flex;
 		flex-direction: column;
+		border-left: 1px solid #e1e4e8;
 	}
 </style>
