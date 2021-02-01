@@ -87,7 +87,6 @@ app.on('ready', () => {
 			}
 		})
 
-		loginWindow.menuBarVisible = false
 		loginWindow.loadURL(winURL + "#/login")
 	}
 })

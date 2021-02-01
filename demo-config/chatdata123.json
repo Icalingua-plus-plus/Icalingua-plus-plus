@@ -10,6 +10,16 @@
         "timestamp": "18:15",
         "username": "Clansty"
       },
+      "users": [
+        {
+          "_id": 123,
+          "username": "Clansty"
+        },
+        {
+          "_id": 1233,
+          "username": "Clansty"
+        }
+      ],
       "mute": false,
       "index": 1
     },
@@ -23,6 +33,20 @@
         "timestamp": "18:15",
         "username": "You"
       },
+      "users": [
+        {
+          "_id": 123,
+          "username": "Clansty"
+        },
+        {
+          "_id": 1233,
+          "username": "Clansty"
+        },
+        {
+          "_id": 1423,
+          "username": "Clansty"
+        }
+      ],
       "mute": false,
       "index": 0,
       "unmute": true
