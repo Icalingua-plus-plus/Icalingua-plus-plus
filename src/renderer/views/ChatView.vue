@@ -522,11 +522,27 @@
 						avatar,
 						index: 0,
 						unreadCount: 0,
+						users: [
+							{
+								_id: 1,
+								username: '1'
+							},
+							{
+								_id: 2,
+								username: '2'
+							}
+						],
 						lastMessage: {
 							content: "",
 							timestamp: ""
 						}
 					}
+					if (groupId)
+						room.users.push({
+							_id: 3,
+							username: '3'
+						}
+						)
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + roomId, []).write()
 				}
