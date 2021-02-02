@@ -30,3 +30,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - send notice
 - add to stickers
 - search
+- show avatars
