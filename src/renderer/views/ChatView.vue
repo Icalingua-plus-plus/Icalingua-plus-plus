@@ -479,13 +479,12 @@
 				const msgs2add = db.get("messages." + data.room.roomId)
 					.dropRightWhile(e => this.messages.includes(e))
 					.takeRight(10).value()
-				if (msgs2add.length)
-					this.messages = [...msgs2add, ...this.messages]
-				else
-					setTimeout(() => {
+				setTimeout(() => {
+					if (msgs2add.length)
+						this.messages = [...msgs2add, ...this.messages]
+					else
 						this.messagesLoaded = true
-					}, 100)
-				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
+				}, 0)				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
 			},
 
 			onQQMessage(data) {
