@@ -571,6 +571,14 @@
 								url
 							}
 							break
+						case "bface":
+							room.lastMessage.content += "[Sticker]"+m.data.text
+							var url = `nya://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0,2)}/${m.data.file.substr(0,32)}/300x300.png`
+							message.file = {
+								type: "image/webp",
+								url
+							}
+							break
 						case "file":
 							room.lastMessage.content += "[File]" + m.data.name
 							message.content += m.data.name
