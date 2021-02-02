@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "author": "clansty",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
@@ -48,7 +48,7 @@
     "md5": "^2.3.0",
     "oicq": "^1.13.1",
     "vue": "^2.6.12",
-    "vue-advanced-chat": "^0.7.0",
+    "vue-advanced-chat": "https://github.com/antoine92190/vue-advanced-chat/tarball/master",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.5.0"
   },

@@ -59,6 +59,7 @@
 			menu() {
 				const menu = remote.Menu.buildFromTemplate([
 					{ label: 'Open stickers folder', type: 'normal', click: this.folder },
+					{ label: 'Close panel', type: 'normal', click: () => this.$emit('close') },
 				])
 				menu.popup({ window: remote.getCurrentWindow() })
 			}
