@@ -38,7 +38,7 @@
 							@contextmenu="roomContext"
 						/>
 					</el-col>
-					<el-col :span="13">
+					<el-col :span="panel ? 13 : 19">
 						<chat-window
 							:current-user-id="account"
 							:rooms="rooms"
@@ -69,15 +69,24 @@
 							</template>
 						</chat-window>
 					</el-col>
-					<el-col :span="6" ondragstart="return false;" class="nodrag">
+					<el-col
+						:span="6"
+						ondragstart="return false;"
+						class="nodrag"
+						v-show="panel"
+					>
 						<transition name="el-zoom-in-top">
-							<Stickers v-show="panel == 'stickers'" @send="sendSticker" />
+							<Stickers
+								v-show="panel == 'stickers'"
+								@send="sendSticker"
+								@close="panel = ''"
+							/>
 						</transition>
 						<IgnoreManage
 							v-show="panel == 'ignore'"
 							:ignoredChats="ignoredChats"
 							@remove="rmIgnore"
-							@close="closePanel"
+							@close="panel = 'stickers'"
 						/>
 					</el-col>
 				</el-row>
@@ -746,10 +755,6 @@
 				db.set("ignoredChats", this.ignoredChats).write()
 			},
 
-			closePanel() {
-				this.panel = 'stickers'
-			},
-
 			reconnect() {
 				this.reconnecting = true
 				bot.login(glodb.get('account.password').value())
@@ -778,25 +783,28 @@
 			appMenu() {
 				const menu = remote.Menu.buildFromTemplate([
 					{
-						label: 'Notification', type: 'submenu', submenu: remote.Menu.buildFromTemplate([
-							{
-								label: 'Mute all groups', type: 'checkbox',
-								checked: this.muteAllGroups,
-								click: (menuItem, _browserWindow, _event) => {
-									this.muteAllGroups = menuItem.checked
-									db.set("muteAllGroups", menuItem.checked).write()
-									const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
-										(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
-										(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
-									this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
-								}
-							},
-							this.dndMenuItem,
-							{
-								label: 'Manage ignored chats',
-								click: () => this.panel = "ignore"
-							},
-						])
+						label: 'Mute all groups', type: 'checkbox',
+						checked: this.muteAllGroups,
+						click: (menuItem, _browserWindow, _event) => {
+							this.muteAllGroups = menuItem.checked
+							db.set("muteAllGroups", menuItem.checked).write()
+							const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
+								(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
+								(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
+							this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+						}
+					},
+					this.dndMenuItem,
+					{
+						label: 'Manage ignored chats',
+						click: () => this.panel = "ignore"
+					},
+					{
+						type: 'separator'
+					},
+					{
+						label: remote.app.getVersion(),
+						enabled: false
 					},
 					{
 						label: 'Reload',
@@ -813,13 +821,10 @@
 					},
 					{
 						label: 'Dev Tools',
-						type: 'normal',
-						role: 'toggleDevTools',
-						accelerator: 'F12'
+						role: 'toggleDevTools'
 					},
 					{
 						label: 'Quit',
-						type: 'normal',
 						click: () => remote.getCurrentWindow().destroy()
 					},
 
