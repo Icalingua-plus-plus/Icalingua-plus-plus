@@ -82,6 +82,7 @@
 	}
 	.opinion {
 		margin-left: 5px;
+		font-size: 16px;
 		cursor: pointer;
 		transition: all 0.2s;
 	}
