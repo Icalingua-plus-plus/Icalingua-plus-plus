@@ -314,7 +314,6 @@
 				event.stopPropagation();
 				for (const f of event.dataTransfer.files) {
 					// Using the path attribute to get absolute file path 
-					console.log('File Path of dragged files: ', f.path)
 					const index = f.path.lastIndexOf(".");
 					const ext = f.path.substr(index + 1).toLowerCase();
 					if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) && this.selectedRoom) {
@@ -488,6 +487,7 @@
 			},
 
 			onQQMessage(data) {
+				console.log(data)
 				const now = new Date()
 				const groupId = data.group_id
 				const senderId = data.sender.user_id
@@ -571,6 +571,17 @@
 								url
 							}
 							break
+						case "file":
+							room.lastMessage.content += "[File]" + m.data.name
+							message.content += m.data.name
+							message._id = m.data.fileid
+							message.file = {
+								type: 'object/stream',
+								size: m.data.size,
+								url: m.data.url,
+								name: m.data.name
+							}
+							break
 						case "share":
 							room.lastMessage.content += "[Link]" + m.data.title
 							message.content += m.data.url
@@ -650,14 +661,19 @@
 					prev.title = data.message.username + "'s image"
 				}
 				else if (data.action == "download") {
-					const downdir = remote.app.getPath("downloads")
-					const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
-					download(data.message.file.url.replace("nya://", "http://"), downpath, () => {
-						this.$notify.success({
-							title: 'Image Saved',
-							message: downpath
-						});
-					})
+					if (data.message.file.type.includes('image')) {
+						const downdir = remote.app.getPath("downloads")
+						const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
+						download(data.message.file.url.replace("nya://", "http://"), downpath, () => {
+							this.$notify.success({
+								title: 'Image Saved',
+								message: downpath
+							});
+						})
+					}
+					else {
+						shell.openExternal(data.message.file.url)
+					}
 				}
 			},
 
