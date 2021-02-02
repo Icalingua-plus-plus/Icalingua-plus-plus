@@ -39,6 +39,7 @@
 						/>
 					</el-col>
 					<el-col :span="panel ? 13 : 19">
+						<div class="el-loading-spinner"></div>
 						<chat-window
 							:current-user-id="account"
 							:rooms="rooms"
@@ -855,6 +856,16 @@
 					{
 						label: 'Manage ignored chats',
 						click: () => this.panel = "ignore"
+					},
+					{
+						type: 'separator'
+					},
+					{
+						label: 'Auto login', type: 'checkbox',
+						checked: glodb.get('account.autologin').value(),
+						click: (menuItem, _browserWindow, _event) => {
+							glodb.set('account.autologin', menuItem.checked).write()
+						}
 					},
 					{
 						type: 'separator'
