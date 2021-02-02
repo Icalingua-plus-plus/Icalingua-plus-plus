@@ -336,6 +336,7 @@
 			bot.on("notice.group.recall", this.groupRecall)
 			bot.on('system.online', this.online)
 			bot.on('system.offline', this.onOffline)
+			bot.on('notice.friend.poke', this.poke)
 		},
 		methods: {
 			async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath }) {
@@ -559,10 +560,12 @@
 				data.message.forEach(m => {
 					switch (m.type) {
 						case "text":
+						case "at":
 							room.lastMessage.content += m.data.text
 							message.content += m.data.text
 							break
 						case "image":
+						case "flash":
 							room.lastMessage.content += "[Image]"
 							var url = m.data.url
 							url = url.replace("http://", "nya://").replace("https://", "nya://")
@@ -572,8 +575,8 @@
 							}
 							break
 						case "bface":
-							room.lastMessage.content += "[Sticker]"+m.data.text
-							var url = `nya://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0,2)}/${m.data.file.substr(0,32)}/300x300.png`
+							room.lastMessage.content += "[Sticker]" + m.data.text
+							var url = `nya://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(0, 32)}/300x300.png`
 							message.file = {
 								type: "image/webp",
 								url
@@ -607,15 +610,30 @@
 							const json = m.data.data
 							var appurl = null
 							const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
-							const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?""=]*)\??/
+							const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/
+							const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/
 							const jsonLinkRegex = /{.*""app"":""com.tencent.structmsg"".*""jumpUrl"":""(https?:\\?\/\\?\/[^"",]*)"".*}/
 							if (biliRegex.test(json))
 								appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
+							else if (biliRegex2.test(json))
+								appurl = json.match(biliRegex2)[1].replace(/\\\//g, '/')
 							else if (zhihuRegex.test(json))
 								appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
 							else if (jsonLinkRegex.test(json))
 								appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
-
+							if (appurl) {
+								room.lastMessage.content = appurl
+								message.content = appurl
+							}
+							break
+						case "xml":
+							if (m.data.data.includes('action="viewMultiMsg"')) {
+								room.lastMessage.content += '[Forward multiple messages]'
+								message.content += '[Forward multiple messages]'
+							}
+							const urlRegex = /url="([^"]+)"/
+							if (urlRegex.test(m.data.data))
+								appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
 							if (appurl) {
 								room.lastMessage.content = appurl
 								message.content = appurl
@@ -854,6 +872,7 @@
 							bot.removeListener("notice.group.recall", this.groupRecall)
 							bot.removeListener('system.online', this.online)
 							bot.removeListener('system.offline', this.onOffline)
+							bot.removeListener('notice.friend.poke', this.poke)
 							this.tray.destroy()
 							location.reload();
 						}
@@ -901,6 +920,10 @@
 				])
 				menu.popup({ window: remote.getCurrentWindow() })
 
+			},
+
+			poke(data) {
+				console.log(data)
 			}
 		}
 	}
