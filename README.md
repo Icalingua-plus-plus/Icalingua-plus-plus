@@ -27,6 +27,6 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - start chat
 - taskbar icon new msg
 - timestamp for older msg
-- file download
+- send notice
 - add to stickers
 - search
