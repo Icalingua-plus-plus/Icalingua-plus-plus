@@ -34,7 +34,7 @@
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
-							@chroom="this.selectedRoom = room"
+							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
 					</el-col>
@@ -969,6 +969,10 @@
 				}
 				this.selectedRoom = room
 				this.view='chats'
+			},
+
+			chroom(room){
+				this.selectedRoom = room
 			}
 		}
 	}

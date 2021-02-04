@@ -42,8 +42,20 @@
 			}
 		},
 		created() {
-			bot.getFriendList().data.forEach(e => this.friends.push(e))
-			bot.getGroupList().data.forEach(e => this.groups.push(e))
+			const friends = bot.getFriendList().data
+			if(friends.size>50){
+				console.log('Friend list is too long to load')
+			}
+			else{
+				friends.forEach(e => this.friends.push(e))
+			}
+			const groups = bot.getGroupList().data
+			if(this.groups.length>50){
+				console.log('Group list is too long to load')
+			}
+			else{
+				groups.forEach(e => this.groups.push(e))
+			}
 		}
 	}
 </script>

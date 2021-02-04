@@ -24,10 +24,9 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 ## TODOS
 - background image
 - admin recall msg
-- start chat
 - taskbar icon new msg
+- dark theme
 - timestamp for older msg
-- send notice
 - add to stickers
 - search
 - show avatars
