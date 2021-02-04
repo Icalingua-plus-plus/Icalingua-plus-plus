@@ -10,7 +10,7 @@
 					:content="`${account}`"
 				>
 					<a @click="appMenu" slot="reference">
-						<el-avatar :src="`http://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`" />
+						<el-avatar :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`" />
 					</a>
 				</el-popover>
 				<SideBarIcon
@@ -93,7 +93,7 @@
 				</el-row>
 				<el-row v-show="view == 'contacts'" type="flex" justify="center">
 					<el-col :span="8" ondragstart="return false;" class="nodrag">
-						<TheContactsPanel />
+						<TheContactsPanel @dblclick="startChat" />
 					</el-col>
 				</el-row>
 			</el-main>
@@ -257,7 +257,7 @@
 				},
 				view: 'chats',
 				username: '',
-				
+
 			}
 		},
 		created() {
@@ -510,8 +510,8 @@
 						(data.sender.card || data.sender.nickname)) :
 					(data.sender.remark || data.sender.nickname)
 				const avatar = groupId ?
-					`http://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
-					`http://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`
+					`https://p.qlogo.cn/gh/${groupId}/${groupId}/0` :
+					`https://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`
 				const roomName = groupId ?
 					data.group_name : senderName
 
@@ -940,6 +940,35 @@
 
 			poke(data) {
 				console.log(data)
+			},
+
+			startChat(id, name) {
+				var room = this.rooms.find(e => e.roomId == id)
+				const avatar = id < 0 ?
+					`https://p.qlogo.cn/gh/${-id}/${-id}/0` :
+					`https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
+
+				if (room == undefined) {
+					// create room
+					room = {
+						roomId: id,
+						roomName: name,
+						avatar,
+						index: 0,
+						unreadCount: 0,
+						users: [
+							{ _id: 1, username: '1' },
+							{ _id: 2, username: '2' }
+						],
+						lastMessage: { content: "", timestamp: "" }
+					}
+					if (id < 0)
+						room.users.push({ _id: 3, username: '3' })
+					this.rooms = [room, ...this.rooms]
+					db.set('messages.' + id, []).write()
+				}
+				this.selectedRoom = room
+				this.view='chats'
 			}
 		}
 	}

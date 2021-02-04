@@ -7,7 +7,7 @@
 					:src="
 						chat.id < 0
 							? 'https://p.qlogo.cn/gh/' + -chat.id + '/' + -chat.id + '/0'
-							: `http://q1.qlogo.cn/g?b=qq&nk=${chat.id}&s=640`
+							: `https://q1.qlogo.cn/g?b=qq&nk=${chat.id}&s=640`
 					"
 				></el-avatar>
 			</div>
