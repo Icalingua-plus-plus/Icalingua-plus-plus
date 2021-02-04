@@ -11,6 +11,7 @@
 				:id="i.user_id"
 				:remark="i.remark"
 				:name="i.nickname"
+				@dblclick="$emit('dblclick', i.user_id, i.remark)"
 			/>
 		</div>
 		<div v-show="activeName == 'groups'">
@@ -19,6 +20,7 @@
 				:key="i.group_id"
 				:id="-i.group_id"
 				:remark="i.group_name"
+				@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
 			/>
 		</div>
 	</div>

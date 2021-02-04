@@ -8,7 +8,7 @@
 						:src="
 							room.roomId < 0
 								? `https://p.qlogo.cn/gh/${-room.roomId}/${-room.roomId}/0`
-								: `http://q1.qlogo.cn/g?b=qq&nk=${room.roomId}&s=640`
+								: `https://q1.qlogo.cn/g?b=qq&nk=${room.roomId}&s=640`
 						"
 					/>
 				</div>

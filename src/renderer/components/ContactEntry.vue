@@ -1,5 +1,5 @@
 <template>
-	<a @click="$emit('click')" @click.right="$emit('contextmenu')">
+	<a @dblclick="$emit('dblclick')" @click.right="$emit('contextmenu')">
 		<div class="root">
 			<div class="entry">
 				<div class="left">
@@ -8,7 +8,7 @@
 						:src="
 							id < 0
 								? `https://p.qlogo.cn/gh/${-id}/${-id}/0`
-								: `http://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
+								: `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
 						"
 					/>
 				</div>
