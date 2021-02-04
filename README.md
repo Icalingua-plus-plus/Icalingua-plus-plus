@@ -25,10 +25,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - background image
 - admin recall msg
 - taskbar icon new msg
-- dark theme
-- timestamp for older msg
+- light theme
 - add to stickers
 - search
-- show avatars
 - poke
 - face

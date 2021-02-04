@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "clansty",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
@@ -78,6 +78,8 @@
     "mini-css-extract-plugin": "0.4.0",
     "multispinner": "^0.2.1",
     "node-loader": "^0.6.0",
+    "node-sass": "^5.0.0",
+    "sass-loader": "^10.1.1",
     "style-loader": "^0.21.0",
     "url-loader": "^1.0.1",
     "vue-html-loader": "^1.2.4",

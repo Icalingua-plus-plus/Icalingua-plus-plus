@@ -119,10 +119,9 @@
 </template>
 
 <script>
-	import ChatWindow from 'vue-advanced-chat'
+	import ChatWindow from '@/components/vac-mod/ChatWindow/index'
 	import Stickers from '@/components/Stickers'
 	import IgnoreManage from '@/components/IgnoreManage'
-	import 'vue-advanced-chat/dist/vue-advanced-chat.css'
 
 	//lowdb
 	import Datastore from 'lowdb'
@@ -983,6 +982,9 @@
 </script>
 
 <style scoped>
+	* {
+		-webkit-user-select: none;
+	}
 	.el-main {
 		padding: 0;
 		height: 100vh;
