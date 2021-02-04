@@ -33,6 +33,7 @@ global.createBot = function (form) {
 		data_dir: path.join(STORE_PATH, '/data'),
 		ignore_self: false
 	})
+	bot.setMaxListeners(233)
 }
 global.loadMainWindow = function () {
 	//start main window

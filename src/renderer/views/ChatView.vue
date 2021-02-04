@@ -91,6 +91,11 @@
 						/>
 					</el-col>
 				</el-row>
+				<el-row v-show="view == 'contacts'" type="flex" justify="center">
+					<el-col :span="8" ondragstart="return false;" class="nodrag">
+						<TheContactsPanel />
+					</el-col>
+				</el-row>
 			</el-main>
 		</el-container>
 		<el-dialog
@@ -124,6 +129,7 @@
 	import { remote, clipboard, nativeImage, shell } from 'electron'
 	import SideBarIcon from '../components/SideBarIcon.vue'
 	import TheRoomsPanel from '../components/TheRoomsPanel.vue'
+	import TheContactsPanel from '../components/TheContactsPanel.vue'
 	const STORE_PATH = remote.app.getPath('userData')
 	const glodb = remote.getGlobal("glodb")
 
@@ -192,7 +198,8 @@
 			Stickers,
 			IgnoreManage,
 			SideBarIcon,
-			TheRoomsPanel
+			TheRoomsPanel,
+			TheContactsPanel
 		},
 		data() {
 			return {
@@ -249,7 +256,8 @@
 					}
 				},
 				view: 'chats',
-				username: ''
+				username: '',
+				
 			}
 		},
 		created() {
