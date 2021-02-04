@@ -34,7 +34,7 @@
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
-							@chroom="chroom"
+							@chroom="this.selectedRoom = room"
 							@contextmenu="roomContext"
 						/>
 					</el-col>
@@ -658,6 +658,7 @@
 
 					notif.onclick = () => {
 						remote.getCurrentWindow().show()
+						this.selectedRoom = room
 					}
 				}
 				if (room != this.selectedRoom) {
@@ -899,10 +900,6 @@
 
 				])
 				menu.popup({ window: remote.getCurrentWindow() })
-			},
-
-			chroom(room) {
-				this.selectedRoom = room
 			},
 
 			roomContext(room) {

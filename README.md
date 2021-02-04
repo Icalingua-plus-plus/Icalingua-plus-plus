@@ -32,3 +32,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search
 - show avatars
 - poke
+- face
