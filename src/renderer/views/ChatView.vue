@@ -10,7 +10,9 @@
 					:content="`${account}`"
 				>
 					<a @click="appMenu" slot="reference">
-						<el-avatar :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`" />
+						<el-avatar
+							:src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
+						/>
 					</a>
 				</el-popover>
 				<SideBarIcon
@@ -388,7 +390,8 @@
 					sender_id: this.account,
 					username: "You",
 					content,
-					timestamp: new Date().format("hh:mm")
+					timestamp: new Date().format("hh:mm"),
+					date: new Date().format("dd/MM/yyyy"),
 				}
 
 				const chain = []
@@ -520,6 +523,7 @@
 					username: senderName,
 					content: "",
 					timestamp: new Date().format("hh:mm"),
+					date: new Date().format("dd/MM/yyyy"),
 					_id: data.message_id
 				}
 
@@ -968,10 +972,10 @@
 					db.set('messages.' + id, []).write()
 				}
 				this.selectedRoom = room
-				this.view='chats'
+				this.view = 'chats'
 			},
 
-			chroom(room){
+			chroom(room) {
 				this.selectedRoom = room
 			}
 		}
