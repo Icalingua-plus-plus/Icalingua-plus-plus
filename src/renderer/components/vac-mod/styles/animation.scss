@@ -1,0 +1,100 @@
+// Spinner animation
+.vac-fade-spinner-enter {
+	opacity: 0;
+}
+
+.vac-fade-spinner-enter-active {
+	transition: opacity 0.8s;
+}
+
+.vac-fade-spinner-leave-active {
+	transition: opacity 0.2s;
+	opacity: 0;
+}
+
+// Image hover animation
+.vac-fade-image-enter {
+	opacity: 0;
+}
+
+.vac-fade-image-enter-active {
+	transition: opacity 1s;
+}
+
+.vac-fade-image-leave-active {
+	transition: opacity 0.5s;
+	opacity: 0;
+}
+
+// Messages box and text animation
+.vac-fade-message-enter {
+	opacity: 0;
+}
+
+.vac-fade-message-enter-active {
+	transition: opacity 0.5s;
+}
+
+.vac-fade-message-leave-active {
+	transition: opacity 0.2s;
+	opacity: 0;
+}
+
+// Menu animation
+.vac-slide-left-enter-active,
+.vac-slide-right-enter-active {
+	transition: all 0.3s ease;
+	transition-property: transform, opacity;
+}
+
+.vac-slide-left-leave-active,
+.vac-slide-right-leave-active {
+	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+	transition-property: transform, opacity;
+}
+
+.vac-slide-left-enter,
+.vac-slide-left-leave-to {
+	transform: translateX(10px);
+	opacity: 0;
+}
+
+.vac-slide-right-enter,
+.vac-slide-right-leave-to {
+	transform: translateX(-10px);
+	opacity: 0;
+}
+
+// Reply message box animation
+.vac-slide-up-enter-active {
+	transition: all 0.3s ease;
+}
+.vac-slide-up-leave-active {
+	transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.vac-slide-up-enter,
+.vac-slide-up-leave-to {
+	transform: translateY(10px);
+	opacity: 0;
+}
+
+// Scroll down icon animation
+.vac-bounce-enter-active {
+	animation: vac-bounce-in 0.5s;
+}
+
+.vac-bounce-leave-active {
+	animation: vac-bounce-in 0.3s reverse;
+}
+
+@keyframes vac-bounce-in {
+	0% {
+		transform: scale(0);
+	}
+	50% {
+		transform: scale(1.05);
+	}
+	100% {
+		transform: scale(1);
+	}
+}

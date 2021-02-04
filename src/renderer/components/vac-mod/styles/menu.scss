@@ -1,0 +1,50 @@
+.vac-menu-list {
+	border-radius: 4px;
+	display: block;
+	cursor: pointer;
+	background: var(--chat-dropdown-bg-color);
+	padding: 6px 0;
+
+	:hover {
+		background: var(--chat-dropdown-bg-color-hover);
+		transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+	}
+
+	:not(:hover) {
+		transition: background-color 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+	}
+}
+
+.vac-menu-item {
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	-webkit-box-flex: 1;
+	-ms-flex: 1 1 100%;
+	flex: 1 1 100%;
+	min-height: 30px;
+	padding: 5px 16px;
+	position: relative;
+	white-space: nowrap;
+	line-height: 30px;
+}
+
+.vac-menu-options {
+	position: absolute;
+	right: 10px;
+	top: 20px;
+	z-index: 9999;
+	min-width: 150px;
+	display: inline-block;
+	border-radius: 4px;
+	font-size: 14px;
+	color: var(--chat-color);
+	overflow-y: auto;
+	overflow-x: hidden;
+	contain: content;
+	box-shadow: 0 2px 2px -4px rgba(0, 0, 0, 0.1),
+		0 2px 2px 1px rgba(0, 0, 0, 0.12), 0 1px 8px 1px rgba(0, 0, 0, 0.12);
+}
