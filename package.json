@@ -25,6 +25,7 @@
     "files": [
       "dist/electron/**/*"
     ],
+    "asar": false,
     "dmg": {
       "contents": [
         {
