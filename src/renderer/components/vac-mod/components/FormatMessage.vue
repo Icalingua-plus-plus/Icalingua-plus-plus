@@ -5,6 +5,7 @@
 				<component
 					:is="message.url ? 'a' : 'span'"
 					:key="i"
+					v-if="!message.face"
 					:class="{
 						'vac-text-ellipsis': singleLine,
 						'vac-text-bold': message.bold,
@@ -85,6 +86,7 @@ export default {
 				m.inline = this.checkType(m, 'inline-code')
 				m.multiline = this.checkType(m, 'multiline-code')
 				m.tag = this.checkType(m, 'tag')
+				m.face = this.checkType(m, 'face')
 				m.image = this.checkImageType(m)
 			})
 
