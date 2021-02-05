@@ -653,7 +653,7 @@
 							break
 						case "face":
 							message.content += `\$${m.data.id}\$`
-							room.lastMessage.content += `\$${m.data.id}\$`
+							room.lastMessage.content += `[Face: ${m.data.id}]`
 							break
 					}
 				});
