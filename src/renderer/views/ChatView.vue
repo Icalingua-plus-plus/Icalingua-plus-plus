@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div ondragstart="return false;">
 		<el-container>
 			<el-aside width="65px" ondragstart="return false;">
 				<!-- sidebar -->
@@ -650,6 +650,10 @@
 								room.lastMessage.content = appurl
 								message.content = appurl
 							}
+							break
+						case "face":
+							message.content += `\$${m.data.id}\$`
+							room.lastMessage.content += `\$${m.data.id}\$`
 							break
 					}
 				});

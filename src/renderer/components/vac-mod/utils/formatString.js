@@ -54,6 +54,11 @@ const pseudo_markdown = {
 		allowed_chars: '.',
 		type: 'inline-code'
 	},
+	'$': {
+		end: '$',
+		allowed_chars: '.',
+		type: 'face'
+	},
 	'<usertag>': {
 		allowed_chars: '.',
 		end: '</usertag>',
