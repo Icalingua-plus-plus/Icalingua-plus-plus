@@ -66,7 +66,7 @@
 							@menu-action-handler="roomAction"
 							@message-action-handler="messageActionsHandler"
 							@pokefriend="pokefriend"
-							onContextmenu="contextMenu()"
+							@msgctx="msgctx"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -269,8 +269,6 @@
 					db.set("dnd", menuItem.checked).write()
 				}
 			})
-
-			window.contextMenu = this.contextMenu
 
 			if (process.env.NODE_ENV === 'development')
 				document.title = "[DEBUG] Electron QQ"
@@ -700,7 +698,7 @@
 							useContentSize: true
 						}
 					)
-					prev.loadURL(data.message.file.url)
+					prev.loadURL(data.message.file.url.replace("nya://", "http://"))
 					prev.title = data.message.username + "'s image"
 				}
 				else if (data.action == "download") {
@@ -844,14 +842,29 @@
 				this.offline = true
 			},
 
-			contextMenu() {
+			msgctx(message) {
 				const sect = window.getSelection().toString()
+				const menu = remote.Menu.buildFromTemplate([
+					{
+						label: 'Copy', type: 'normal', click: () => {
+							if (message.file)
+								convertImgToBase64(data.message.file.url, function (base64Image) {
+									const image = nativeImage.createFromDataURL(base64Image)
+									clipboard.writeImage(image)
+								})
+							else
+								clipboard.writeText(message.content)
+						}
+					},
+				])
 				if (sect) {
-					const menu = remote.Menu.buildFromTemplate([
-						{ label: 'Copy', type: 'normal', click: () => { clipboard.writeText(sect) } },
-					])
-					menu.popup({ window: remote.getCurrentWindow() })
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Selection', type: 'normal',
+							click: () => { clipboard.writeText(sect) }
+						}))
 				}
+				menu.popup({ window: remote.getCurrentWindow() })
 			},
 
 			appMenu() {
@@ -1012,7 +1025,7 @@
 				this.selectedRoom = room
 			},
 
-			pokefriend(){
+			pokefriend() {
 				console.log('poke')
 			}
 		}
