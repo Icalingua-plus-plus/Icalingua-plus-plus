@@ -65,6 +65,7 @@
 							@open-file="openImage"
 							@menu-action-handler="roomAction"
 							@message-action-handler="messageActionsHandler"
+							@pokefriend="pokefriend"
 							onContextmenu="contextMenu()"
 						>
 							<template v-slot:menu-icon>
@@ -207,24 +208,7 @@
 				rooms: [],
 				messages: [],
 				selectedRoom: { roomId: 0 },
-				menuActions: [
-					{
-						name: 'mute',
-						title: 'Mute Chat'
-					},
-					{
-						name: 'pin',
-						title: 'Pin Chat'
-					},
-					{
-						name: 'del',
-						title: 'Delete Chat'
-					},
-					{
-						name: 'ignore',
-						title: 'Ignore Chat'
-					}
-				],
+				menuActions: [],
 				muteAllGroups: false,
 				dndMenuItem: null,
 				dnd: false,
@@ -346,7 +330,7 @@
 			bot.on("notice.group.recall", this.groupRecall)
 			bot.on('system.online', this.online)
 			bot.on('system.offline', this.onOffline)
-			bot.on('notice.friend.poke', this.poke)
+			bot.on('notice.friend.poke', this.friendpoke)
 		},
 		methods: {
 			async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath }) {
@@ -484,8 +468,24 @@
 					const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
 						(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
 						(data.room.roomId > 0 && data.room.mute)
-					this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
-					this.menuActions.find(e => e.name == "pin").title = data.room.index ? "Unpin Chat" : "Pin Chat"
+					this.menuActions = [
+						{
+							name: 'mute',
+							title: muted ? "Unmute Chat" : "Mute Chat"
+						},
+						{
+							name: 'pin',
+							title: data.room.index ? "Unpin Chat" : "Pin Chat"
+						},
+						{
+							name: 'del',
+							title: 'Delete Chat'
+						},
+						{
+							name: 'ignore',
+							title: 'Ignore Chat'
+						}
+					]
 				}
 				const msgs2add = db.get("messages." + data.room.roomId)
 					.dropRightWhile(e => this.messages.includes(e))
@@ -899,7 +899,7 @@
 							bot.removeListener("notice.group.recall", this.groupRecall)
 							bot.removeListener('system.online', this.online)
 							bot.removeListener('system.offline', this.onOffline)
-							bot.removeListener('notice.friend.poke', this.poke)
+							bot.removeListener('notice.friend.poke', this.friendpoke)
 							this.tray.destroy()
 							location.reload();
 						}
@@ -945,8 +945,38 @@
 
 			},
 
-			poke(data) {
+			friendpoke(data) {
 				console.log(data)
+				const room = this.rooms.find(e => e.roomId == data.operator_id)
+				if (room) {
+					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
+					var msg = room.roomName + " "
+					msg += data.action
+					if (data.user_id == data.operator_id) {
+						msg += " " + room.roomName
+						if (data.suffix)
+							msg += "'s "
+					}
+					else
+						msg += data.suffix ? " Your " : " You"
+					if (data.suffix)
+						msg += data.suffix
+					const message = {
+						content: msg,
+						sender_id: 0,
+						timestamp: new Date().format("hh:mm"),
+						date: new Date().format("dd/MM/yyyy"),
+						_id: new Date().getTime(),
+						system: true
+					}
+					if (room != this.selectedRoom) {
+						room.unreadCount++
+					}
+					else
+						this.messages = [...this.messages, message]
+					db.get('messages.' + data.operator_id).push(message)
+						.write()
+				}
 			},
 
 			startChat(id, name) {
@@ -980,6 +1010,10 @@
 
 			chroom(room) {
 				this.selectedRoom = room
+			},
+
+			pokefriend(){
+				console.log('poke')
 			}
 		}
 	}
@@ -1010,5 +1044,9 @@
 
 	.nodrag {
 		-webkit-user-select: none;
+	}
+
+	:focus {
+		outline: none;
 	}
 </style>
