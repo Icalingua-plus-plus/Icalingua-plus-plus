@@ -25,6 +25,7 @@
 			:menu-actions="menuActions"
 			:room="room"
 			@menu-action-handler="$emit('menu-action-handler', $event)"
+			@pokefriend="$emit('pokefriend')"
 		>
 			<template v-for="(index, name) in $scopedSlots" v-slot:[name]="data">
 				<slot :name="name" v-bind="data"></slot>
