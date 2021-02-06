@@ -94,7 +94,7 @@
 						/>
 					</el-col>
 				</el-row>
-				<el-row v-show="view == 'contacts'" type="flex" justify="center">
+				<el-row v-if="view == 'contacts'" type="flex" justify="center">
 					<el-col :span="8" ondragstart="return false;" class="nodrag">
 						<TheContactsPanel @dblclick="startChat" />
 					</el-col>

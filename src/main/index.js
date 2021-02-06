@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, shell, Menu } from 'electron'
+import { app, BrowserWindow, protocol, shell, Menu, screen } from 'electron'
 import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
@@ -37,9 +37,10 @@ global.createBot = function (form) {
 }
 global.loadMainWindow = function () {
 	//start main window
+	const size=screen.getPrimaryDisplay().size
 	mainWindow = new BrowserWindow({
-		height: 900,
-		width: 1400,
+		height: size.height-200,
+		width: size.width-300,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true,
