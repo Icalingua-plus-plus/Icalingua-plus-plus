@@ -1,6 +1,13 @@
 <template>
 	<div class="root">
-		<div class="head"></div>
+		<div class="head">
+			<el-input
+				v-model="input"
+				placeholder="Search"
+				prefix-icon="el-icon-search"
+				class="input"
+			/>
+		</div>
 		<div class="content">
 			<RoomEntry
 				v-for="room in sortedRooms"
@@ -22,14 +29,23 @@
 		components: { RoomEntry },
 		computed: {
 			sortedRooms() {
-				return [...this.rooms].sort((a, b) => b.index - a.index)
+				this.input=this.input.toUpperCase()
+				var tmpr = [...this.rooms]
+				if (this.input)
+					tmpr = tmpr.filter(e => e.roomName.toUpperCase().includes(this.input) || String(e.roomId).includes(this.input))
+				return tmpr.sort((a, b) => b.index - a.index)
 			}
 		},
 		props: [
 			'rooms',
 			'selected',
 			'muteAllGroups'
-		]
+		],
+		data() {
+			return {
+				input: '',
+			}
+		}
 	}
 </script>
 
@@ -43,9 +59,13 @@
 	div.head {
 		height: 64px;
 		min-height: 64px;
-		/* border-bottom: 1px solid #e1e4e8 */
+		display: flex;
+		align-items: center;
 	}
 	.content {
 		overflow: auto;
+	}
+	.input {
+		margin: 0 12px;
 	}
 </style>
