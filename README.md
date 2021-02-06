@@ -26,5 +26,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - taskbar icon new msg
 - light theme
-- add to stickers
-- search

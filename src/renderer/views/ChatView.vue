@@ -81,7 +81,7 @@
 					>
 						<transition name="el-zoom-in-top">
 							<Stickers
-								v-show="panel == 'stickers'"
+								v-if="panel == 'stickers'"
 								@send="sendSticker"
 								@close="panel = ''"
 							/>
@@ -162,11 +162,11 @@
 	}
 
 	//download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
-	const http = require('http');
+	const https = require('https');
 	const fs = require('fs');
 	const download = function (url, dest, cb) {
 		const file = fs.createWriteStream(dest);
-		http.get(url, function (response) {
+		https.get(url, function (response) {
 			response.pipe(file);
 			file.on('finish', function () {
 				file.close(cb);  // close() is async, call cb after close completes.
@@ -698,14 +698,14 @@
 							useContentSize: true
 						}
 					)
-					prev.loadURL(data.message.file.url.replace("nya://", "http://"))
+					prev.loadURL(data.message.file.url.replace("nya://", "https://"))
 					prev.title = data.message.username + "'s image"
 				}
 				else if (data.action == "download") {
 					if (data.message.file.type.includes('image')) {
 						const downdir = remote.app.getPath("downloads")
 						const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
-						download(data.message.file.url.replace("nya://", "http://"), downpath, () => {
+						download(data.message.file.url.replace("nya://", "https://"), downpath, () => {
 							this.$notify.success({
 								title: 'Image Saved',
 								message: downpath
@@ -847,7 +847,7 @@
 				const menu = remote.Menu.buildFromTemplate([
 					{
 						label: 'Copy', type: 'normal', click: () => {
-							if (message.file)
+							if (message.file && data.message.file.type.includes('image'))
 								convertImgToBase64(data.message.file.url, function (base64Image) {
 									const image = nativeImage.createFromDataURL(base64Image)
 									clipboard.writeImage(image)
@@ -862,6 +862,25 @@
 						{
 							label: 'Copy Selection', type: 'normal',
 							click: () => { clipboard.writeText(sect) }
+						}))
+				}
+				if (message.file && message.file.type.includes('image')) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Add to stickers', type: 'normal',
+							click: () => {
+								const downpath = path.join(STORE_PATH, '/stickers/', String(new Date().getTime()))
+								download(message.file.url.replace("nya://", "https://"), downpath, () => {
+									this.$notify.success({
+										title: 'Image Saved to stickers folder',
+										message: downpath
+									});
+									this.panel = 'refresh'
+									this.$nextTick(() => {
+										this.panel = 'stickers'
+									})
+								})
+							}
 						}))
 				}
 				menu.popup({ window: remote.getCurrentWindow() })
