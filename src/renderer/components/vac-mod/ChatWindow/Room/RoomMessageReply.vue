@@ -3,7 +3,7 @@
 		<div
 			v-if="messageReply"
 			class="vac-reply-container"
-			:style="{ bottom: `${roomFooterHeight}px` }"
+			:style="{ bottom: `${$parent.$refs.roomFooter.clientHeight}px` }"
 		>
 			<div class="vac-reply-box">
 				<img
@@ -50,7 +50,6 @@ export default {
 
 	props: {
 		room: { type: Object, required: true },
-		roomFooterHeight: { type: Number, required: true },
 		messageReply: { type: Object }
 	},
 
