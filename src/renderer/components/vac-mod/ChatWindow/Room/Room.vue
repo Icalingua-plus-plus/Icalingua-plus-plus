@@ -119,7 +119,6 @@
 		>
 			<room-message-reply
 				:room="room"
-				:room-footer-height="roomFooterHeight"
 				:message-reply="messageReply"
 				@reset-message="resetMessage"
 			>
@@ -129,7 +128,6 @@
 			</room-message-reply>
 
 			<room-users-tag
-				:room-footer-height="roomFooterHeight"
 				:filtered-users-tag="filteredUsersTag"
 				@select-user-tag="selectUserTag($event)"
 			></room-users-tag>
@@ -369,8 +367,7 @@
 				keepKeyboardOpen: false,
 				filteredUsersTag: [],
 				selectedUsersTag: [],
-				textareaCursorPosition: null,
-				roomFooterHeight: 0
+				textareaCursorPosition: null
 			}
 		},
 
@@ -428,9 +425,6 @@
 						this.message = this.roomMessage
 						setTimeout(() => this.onChangeInput(), 0)
 					}
-					setTimeout(() => {
-						this.roomFooterHeight = this.$refs['roomFooter'].clientHeight
-					}, 0)
 				}
 			},
 			roomMessage: {
@@ -625,7 +619,6 @@
 				this.editedMessage.file = null
 				this.file = null
 				this.focusTextarea()
-				setTimeout(() => this.resizeTextarea(), 0)
 			},
 			resetTextareaSize() {
 				if (!this.$refs['roomTextarea']) return
@@ -705,8 +698,8 @@
 				this.$emit('send-message-reaction', messageReaction)
 			},
 			replyMessage(message) {
-				this.resetMessage()
 				this.messageReply = message
+				this.focusTextarea()
 			},
 			editMessage(message) {
 				this.resetMessage()
@@ -715,14 +708,13 @@
 
 				if (isImageFile(this.file)) {
 					this.imageFile = message.file.url
+					setTimeout(() => this.onMediaLoad(), 0)
 				} else if (isVideoFile(this.file)) {
 					this.videoFile = message.file.url
 					setTimeout(() => this.onMediaLoad(), 50)
 				}
 
 				this.message = message.content
-
-				setTimeout(() => this.resizeTextarea(), 0)
 			},
 			scrollToBottom() {
 				const element = this.$refs.scrollContainer
@@ -745,10 +737,6 @@
 
 				el.style.height = 0
 				el.style.height = el.scrollHeight - padding * 2 + 'px'
-
-				setTimeout(() => {
-					this.roomFooterHeight = this.$refs['roomFooter'].clientHeight
-				}, 20)
 			},
 			addEmoji(emoji) {
 				this.message += emoji.icon
