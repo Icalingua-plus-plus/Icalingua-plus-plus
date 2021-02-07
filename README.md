@@ -1,5 +1,7 @@
 # Electron QQ
 
+![Build/release](https://github.com/Clansty/electron-qq/workflows/Build/release/badge.svg)
+
 > An electron-vue project
 
 #### Build Setup
