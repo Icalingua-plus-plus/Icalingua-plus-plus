@@ -662,18 +662,40 @@
 				if (!remote.getCurrentWindow().isFocused() && !this.dnd &&
 					!muted && !isSelfMsg) {
 					//notification
-					const notiopin = {
-						body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
-						icon: avatar
-					}
+					convertImgToBase64(avatar, b64img => {
+						const notif = new remote.Notification({
+							title: roomName,
+							body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
+							icon: nativeImage.createFromDataURL(b64img),
+							hasReply: true,
+							replyPlaceholder: 'Reply to ' + roomName,
+							urgency: 'critical'
+						})
+						notif.addListener('click', () => {
+							remote.getCurrentWindow().show()
+							this.selectedRoom = room
+						})
+						notif.addListener('reply', (e, r) => {
+							this.sendMessage({
+								content: r,
+								room
+							})
+						})
+						notif.show()
+					})
+					// const notiopin = {
+					// 	body: (groupId ? (senderName + ": ") : "") + room.lastMessage.content,
+					// 	icon: avatar
+					// }
 
-					const notif = new Notification(roomName, notiopin)
+					// const notif = new Notification(roomName, notiopin)
 
-					notif.onclick = () => {
-						remote.getCurrentWindow().show()
-						this.selectedRoom = room
-					}
+					// notif.onclick = () => {
+					// 	remote.getCurrentWindow().show()
+					// 	this.selectedRoom = room
+					// }
 				}
+
 				if (room != this.selectedRoom) {
 					if (isSelfMsg)
 						room.unreadCount = 0
