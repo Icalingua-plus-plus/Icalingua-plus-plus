@@ -8,6 +8,7 @@
 			:disabled="disabled"
 			label-position="top"
 			class="login-box"
+			v-show="view == 'login'"
 		>
 			<center>
 				<h5>Version {{ ver }} Preview</h5>
@@ -49,6 +50,29 @@
 				</el-button>
 			</el-form-item>
 		</el-form>
+		<el-form
+			:rules="rules"
+			:hide-required-asterisk="true"
+			label-position="top"
+			class="login-box"
+			v-show="view == 'captcha'"
+		>
+			<center>
+				<h4>验证码</h4>
+				<el-form-item prop="captchaimg">
+					<img :src="captchaimg" width="50%" />
+				</el-form-item>
+			</center>
+			<el-form-item prop="captcha">
+				<el-input type="text" placeholder="输入验证码" v-model="captcha" />
+			</el-form-item>
+			<p class="red">
+				{{ errmsg }}
+			</p>
+			<el-form-item align="center">
+				<el-button type="primary" @click="captchaLogin"> Login </el-button>
+			</el-form-item>
+		</el-form>
 	</div>
 </template>
 
@@ -56,6 +80,7 @@
 	import { remote } from 'electron'
 	const md5 = require('md5')
 	const path = require('path')
+	const fs = require('fs')
 
 	const glodb = remote.getGlobal('glodb')
 	glodb.defaults({
@@ -90,6 +115,9 @@
 
 				disabled: false,
 				errmsg: '',
+				view: 'login',
+				captcha: '',
+				captchaimg: ''
 			}
 		},
 		created() {
@@ -119,13 +147,34 @@
 
 						const slider = (data) => {
 							console.log(data)
-							this.errmsg = "Require slider captcha that is not supported"
-							this.disabled = false
+							const veriWin = new remote.BrowserWindow({
+								height: 500,
+								width: 500,
+								webPreferences: {
+									nativeWindowOpen: true,
+									nodeIntegration: true,
+									enableRemoteModule: true,
+								}
+							})
+							const inject = fs.readFileSync(path.join(__static, '/sliderinj.js'), 'utf-8')
+							console.log(inject)
+							veriWin.webContents.on("did-finish-load", function () {
+								veriWin.webContents.executeJavaScript(inject);
+							});
+							veriWin.loadURL(data.url, {
+								userAgent: "Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712"
+							})
 						}
-						const captcha = (data) => {
-							console.log(data)
-							this.errmsg = "Require captcha that is not supported"
-							this.disabled = false
+						const captcha = (nya) => {
+							console.log(nya)
+							this.view = 'captcha'
+							let bytes = new Uint8Array(nya.image);
+							let data = "";
+							let len = bytes.byteLength;
+							for (let i = 0; i < len; i++) {
+								data += String.fromCharCode(bytes[i]);
+							}
+							this.captchaimg = "data:image/png;base64," + window.btoa(data);
 						}
 						const onErr = (data) => {
 							console.log(data)
@@ -177,7 +226,13 @@
 						return false;
 					}
 				});
+			},
+			
+			captchaLogin() {
+				const bot = remote.getGlobal("bot")
+				bot.captchaLogin(this.captcha)
 			}
+
 		}
 	}
 </script>
