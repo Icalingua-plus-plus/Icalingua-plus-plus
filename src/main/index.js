@@ -3,7 +3,19 @@ import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import { createClient } from "oicq"
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"我所遗失的心啊";
 
+"我曾做过的梦啊";
+
+"随风飘散 被什么人 丢到哪里";
+
+"我所追求的生活";
+
+"我曾努力过的那些事";
+
+"都是笑话 不值一提 该放弃";
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
