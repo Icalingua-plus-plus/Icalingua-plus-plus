@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "clansty",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
@@ -26,9 +26,9 @@
       "dist/electron/**/*"
     ],
     "win": {
-      "target":[
+      "target": [
         {
-          "target": "7z" 
+          "target": "7z"
         }
       ]
     },
