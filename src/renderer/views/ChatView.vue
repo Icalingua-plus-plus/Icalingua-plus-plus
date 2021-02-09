@@ -278,7 +278,7 @@
 			else {
 				this.offline = !bot.getStatus().data.online
 				this.username = bot.getLoginInfo().data.nickname
-				this.tray = new remote.Tray(path.join(__static, '/256x256.png'))
+				this.tray = remote.getGlobal('tray')
 				this.tray.setToolTip('Electron QQ')
 				this.tray.setContextMenu(remote.Menu.buildFromTemplate([
 					{ label: 'Open', type: 'normal', click: () => { remote.getCurrentWindow().show() } },
@@ -958,7 +958,6 @@
 							bot.removeListener('system.online', this.online)
 							bot.removeListener('system.offline', this.onOffline)
 							bot.removeListener('notice.friend.poke', this.friendpoke)
-							this.tray.destroy()
 							location.reload();
 						}
 					},
