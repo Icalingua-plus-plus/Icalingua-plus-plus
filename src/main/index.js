@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, shell, Menu, screen } from 'electron'
+import { app, BrowserWindow, protocol, shell, Menu, screen, Tray } from 'electron'
 import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
@@ -18,7 +18,7 @@ import { createClient } from "oicq"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 const isFirstInstance = app.requestSingleInstanceLock()
-if(!isFirstInstance)
+if (!isFirstInstance)
 	app.quit()
 
 /**
@@ -38,7 +38,7 @@ const winURL = process.env.NODE_ENV === 'development'
 	: `file://${__dirname}/index.html`
 
 
-let loginWindow, tray, mainWindow
+let loginWindow, mainWindow
 //lowdb
 const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
 global.glodb = Datastore(adapter)
@@ -72,6 +72,8 @@ global.loadMainWindow = function () {
 		})
 
 	mainWindow.loadURL(winURL + "#/main")
+
+	global.tray = new Tray(path.join(__static, '/256x256.png'))
 }
 
 app.on('ready', () => {
@@ -129,7 +131,7 @@ app.on('second-instance', () => {
 	if (mainWindow) {
 		mainWindow.focus()
 	}
-	else if (loginWindow){
+	else if (loginWindow) {
 		loginWindow.focus()
 	}
 })
