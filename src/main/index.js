@@ -3,7 +3,7 @@ import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import { createClient } from "oicq"
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 "我所遗失的心啊";
 
 "我曾做过的梦啊";
@@ -16,6 +16,11 @@ import { createClient } from "oicq"
 
 "都是笑话 不值一提 该放弃";
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+const isFirstInstance = app.requestSingleInstanceLock()
+if(!isFirstInstance)
+	app.quit()
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -49,10 +54,10 @@ global.createBot = function (form) {
 }
 global.loadMainWindow = function () {
 	//start main window
-	const size=screen.getPrimaryDisplay().size
+	const size = screen.getPrimaryDisplay().size
 	mainWindow = new BrowserWindow({
-		height: size.height-200,
-		width: size.width-300,
+		height: size.height - 200,
+		width: size.width - 300,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true,
@@ -119,6 +124,16 @@ app.on('web-contents-created', (e, webContents) => {
 		shell.openExternal(url);
 	});
 });
+
+app.on('second-instance', () => {
+	if (mainWindow) {
+		mainWindow.focus()
+	}
+	else if (loginWindow){
+		loginWindow.focus()
+	}
+})
+
 /**
  * Auto Updater
  *
