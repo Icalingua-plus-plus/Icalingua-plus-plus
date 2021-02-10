@@ -1,8 +1,6 @@
 name: Build/release
 
-on: 
-  release: 
-    types: [created]
+on: release
 
 jobs:
   release:
