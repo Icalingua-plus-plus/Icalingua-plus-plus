@@ -9,9 +9,17 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        fail-fast: [false]
         
     steps:
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/cache
+            !~/cache/exclude
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+       
       - name: Check out Git repository
         uses: actions/checkout@v1
 
@@ -23,21 +31,5 @@ jobs:
       - name: npm install
         run: npm install
 
-      - name: Cache
-        uses: actions/cache@v2.1.4
-        with:
-          # A list of files, directories, and wildcard patterns to cache and restore
-          path: node_modules
-          # An explicit key for restoring and saving the cache
-          key: node_modules
-
-      - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: true
+      - name: yarn build
+        run: yarn build
