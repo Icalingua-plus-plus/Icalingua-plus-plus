@@ -1,6 +1,6 @@
 name: Build/release
 
-on: release
+on: push
 
 jobs:
   release:
@@ -23,6 +23,14 @@ jobs:
       - name: npm install
         run: npm install
 
+      - name: Cache
+        uses: actions/cache@v2.1.4
+        with:
+          # A list of files, directories, and wildcard patterns to cache and restore
+          path: node_modules
+          # An explicit key for restoring and saving the cache
+          key: node_modules
+
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:
@@ -32,4 +40,4 @@ jobs:
 
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          release: true
