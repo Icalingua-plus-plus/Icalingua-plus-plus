@@ -1,7 +1,7 @@
 {
   "name": "electron-qq",
-  "version": "1.0.2",
-  "author": "clansty",
+  "version": "1.0.3",
+  "author": "clansty <i@gao4.pw>",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
@@ -30,7 +30,32 @@
         {
           "target": "7z"
         }
-      ]
+      ],
+      "icon": "static/Project2.ico"
+    },
+    "mac": {
+      "icon": "static/Project3.icns"
+    },
+    "linux":{
+      "target": [
+        {
+          "target": "tar.xz"
+        },
+        {
+          "target": "AppImage"
+        },
+        {
+          "target": "deb"
+        },
+        {
+          "target": "rpm"
+        },
+        {
+          "target": "pacman"
+        }
+      ],
+      "executableName": "electron-qq",
+      "category": "Network"
     },
     "dmg": {
       "contents": [
