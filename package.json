@@ -50,9 +50,6 @@
         },
         {
           "target": "rpm"
-        },
-        {
-          "target": "pacman"
         }
       ],
       "executableName": "electron-qq",
