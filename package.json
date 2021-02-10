@@ -37,6 +37,7 @@
       "icon": "static/Project3.icns"
     },
     "linux":{
+      "icon": "static/512x512.png",
       "target": [
         {
           "target": "tar.xz"
