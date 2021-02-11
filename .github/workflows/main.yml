@@ -19,17 +19,12 @@ jobs:
             !~/cache/exclude
             **/node_modules
           key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-       
       - name: Check out Git repository
         uses: actions/checkout@v1
 
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Build/release Electron app
+        uses: samuelmeuli/action-electron-builder@v1
         with:
-          node-version: 15
-                    
-      - name: npm install
-        run: npm install
-
-      - name: yarn build
-        run: yarn build
+          github_token: ${{ secrets.github_token }}
+          release: true
+          build_script_name: build:ci
