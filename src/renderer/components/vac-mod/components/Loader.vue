@@ -1,21 +1,25 @@
 <template>
 	<transition name="vac-fade-spinner" appear>
 		<div
+			v-if="show"
 			:class="{
 				'vac-container-center': !infinite,
 				'vac-container-top': infinite
 			}"
-			v-if="show"
 		>
-			<div id="vac-circle"></div>
+			<div id="vac-circle" />
 		</div>
 	</transition>
 </template>
 
 <script>
 export default {
-	name: 'loader',
-	props: ['show', 'infinite']
+	name: 'Loader',
+
+	props: {
+		show: { type: Boolean, default: false },
+		infinite: { type: Boolean, default: false }
+	}
 }
 </script>
 

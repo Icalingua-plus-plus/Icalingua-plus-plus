@@ -1,11 +1,11 @@
 <template>
 	<div class="vac-wrapper">
-		<emoji-picker @emoji="append" :search="search">
+		<emoji-picker :search="search" @emoji="append">
 			<div
-				class="vac-svg-button"
-				:class="{ 'vac-button-reaction': emojiReaction }"
 				slot="emoji-invoker"
 				slot-scope="{ events: { click: clickEvent } }"
+				class="vac-svg-button"
+				:class="{ 'vac-button-reaction': emojiReaction }"
 				@click.stop="clickEvent"
 				@click="openEmoji"
 			>
@@ -14,9 +14,9 @@
 				</slot>
 			</div>
 			<div
+				v-if="emojiOpened"
 				slot="emoji-picker"
 				slot-scope="{ emojis, insert }"
-				v-if="emojiOpened"
 			>
 				<transition name="vac-slide-up" appear>
 					<div
@@ -30,17 +30,19 @@
 						}"
 					>
 						<div class="vac-emoji-picker__search">
-							<input type="text" v-model="search" />
+							<input v-model="search" type="text" />
 						</div>
 						<div>
 							<div v-for="(emojiGroup, category) in emojis" :key="category">
-								<h5 v-if="category !== 'Frequently used'">{{ category }}</h5>
-								<div class="vac-emojis" v-if="category !== 'Frequently used'">
+								<h5 v-if="category !== 'Frequently used'">
+									{{ category }}
+								</h5>
+								<div v-if="category !== 'Frequently used'" class="vac-emojis">
 									<span
 										v-for="(emoji, emojiName) in emojiGroup"
 										:key="emojiName"
-										@click="insert({ emoji, emojiName })"
 										:title="emojiName"
+										@click="insert({ emoji, emojiName })"
 									>
 										{{ emoji }}
 									</span>
@@ -64,13 +66,15 @@ export default {
 		EmojiPicker,
 		SvgIcon
 	},
-	props: [
-		'emojiOpened',
-		'emojiReaction',
-		'roomFooterRef',
-		'positionTop',
-		'positionRight'
-	],
+
+	props: {
+		emojiOpened: { type: Boolean, default: false },
+		emojiReaction: { type: Boolean, default: false },
+		roomFooterRef: { type: HTMLDivElement, default: null },
+		positionTop: { type: Boolean, default: false },
+		positionRight: { type: Boolean, default: false }
+	},
+
 	data() {
 		return {
 			search: '',
@@ -79,6 +83,7 @@ export default {
 			emojiPickerRight: ''
 		}
 	},
+
 	methods: {
 		append({ emoji, emojiName }) {
 			this.$emit('add-emoji', { icon: emoji, name: emojiName })
