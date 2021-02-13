@@ -197,8 +197,6 @@
 
 							const loadMainWindow = remote.getGlobal("loadMainWindow")
 							loadMainWindow()
-							//close login window
-							remote.getCurrentWindow().destroy()
 						}
 						const verify = (data) => {
 							const veriWin = new remote.BrowserWindow({

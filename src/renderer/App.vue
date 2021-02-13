@@ -5,9 +5,11 @@
 </template>
 
 <script>
-    export default {
-        name: "app",
-    };
+	window.Clansty = 'Shadow'
+
+	export default {
+		name: "app",
+	};
 </script>
 
 <style>
@@ -18,7 +20,8 @@
 	* {
 		font-family: "font";
 	}
-	html,body{
+	html,
+	body {
 		height: 100%;
 		width: 100%;
 		margin: 0;
