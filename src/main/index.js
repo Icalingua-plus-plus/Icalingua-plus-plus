@@ -36,6 +36,7 @@ const winURL = process.env.NODE_ENV === 'development'
 
 
 let loginWindow, mainWindow
+var isLoggingin = false
 //lowdb
 const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
 global.glodb = Datastore(adapter)
@@ -50,6 +51,8 @@ global.createBot = function (form) {
 	bot.setMaxListeners(233)
 }
 global.loadMainWindow = function () {
+	isLoggingin = true
+	loginWindow.destroy()
 	//start main window
 	const size = screen.getPrimaryDisplay().size
 	mainWindow = new BrowserWindow({
@@ -71,6 +74,7 @@ global.loadMainWindow = function () {
 	mainWindow.loadURL(winURL + "#/main")
 
 	global.tray = new Tray(path.join(__static, '/256x256.png'))
+	isLoggingin = false
 }
 
 app.on('ready', () => {
@@ -114,6 +118,8 @@ app.on('ready', () => {
 })
 
 app.on('window-all-closed', () => {
+	if (isLoggingin)
+		return
 	if (global.bot)
 		global.bot.logout()
 	setTimeout(() => {
