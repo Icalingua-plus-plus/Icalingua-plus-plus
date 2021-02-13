@@ -40,7 +40,7 @@
     },
     "appx": {
       "applicationId": "com.clansty.electronqq",
-      "backgroundColor": "#cff7ff",
+      "backgroundColor": "transparent",
       "displayName": "Electron QQ",
       "identityName": "com.clansty.electronqq",
       "publisher": "CN=凌莞",
