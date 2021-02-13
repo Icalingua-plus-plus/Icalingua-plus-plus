@@ -282,12 +282,20 @@
 				this.tray = remote.getGlobal('tray')
 				this.tray.setToolTip('Electron QQ')
 				this.tray.setContextMenu(remote.Menu.buildFromTemplate([
-					{ label: 'Open', type: 'normal', click: () => { remote.getCurrentWindow().show() } },
+					{
+						label: 'Open', type: 'normal', click: () => {
+							const window = remote.getCurrentWindow()
+							window.show()
+							window.focus()
+						}
+					},
 					this.dndMenuItem,
 					{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
 				]))
 				this.tray.on("click", () => {
-					remote.getCurrentWindow().show()
+					const window = remote.getCurrentWindow()
+					window.show()
+					window.focus()
 				})
 			}
 
@@ -674,7 +682,9 @@
 								urgency: 'critical'
 							})
 							notif.addListener('click', () => {
-								remote.getCurrentWindow().show()
+								const window = remote.getCurrentWindow()
+								window.show()
+								window.focus()
 								this.selectedRoom = room
 							})
 							notif.addListener('reply', (e, r) => {
@@ -695,7 +705,9 @@
 						const notif = new Notification(roomName, notiopin)
 
 						notif.onclick = () => {
-							remote.getCurrentWindow().show()
+							const window = remote.getCurrentWindow()
+							window.show()
+							window.focus()
 							this.selectedRoom = room
 						}
 					}
