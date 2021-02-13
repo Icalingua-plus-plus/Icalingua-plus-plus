@@ -18,11 +18,13 @@
 					@click="$emit('room-info', room)"
 				>
 					<slot name="room-header-avatar" v-bind="{ room }">
-						<div
-							v-if="room.avatar"
-							class="vac-room-avatar"
-							:style="{ 'background-image': `url('${room.avatar}')` }"
-						/>
+						<a @dblclick="$emit('pokefriend')">
+							<div
+								v-if="room.avatar"
+								class="vac-room-avatar"
+								:style="{ 'background-image': `url('${room.avatar}')` }"
+							/>
+						</a>
 					</slot>
 					<slot
 						name="room-header-info"
@@ -73,158 +75,158 @@
 </template>
 
 <script>
-import vClickOutside from 'v-click-outside'
+	import vClickOutside from 'v-click-outside'
 
-import SvgIcon from '../../components/SvgIcon'
+	import SvgIcon from '../../components/SvgIcon'
 
-import typingText from '../../utils/typingText'
+	import typingText from '../../utils/typingText'
 
-export default {
-	name: 'RoomHeader',
-	components: {
-		SvgIcon
-	},
-
-	directives: {
-		clickOutside: vClickOutside.directive
-	},
-
-	props: {
-		currentUserId: { type: [String, Number], required: true },
-		textMessages: { type: Object, required: true },
-		singleRoom: { type: Boolean, required: true },
-		showRoomsList: { type: Boolean, required: true },
-		isMobile: { type: Boolean, required: true },
-		roomInfo: { type: Function, default: null },
-		menuActions: { type: Array, required: true },
-		room: { type: Object, required: true }
-	},
-
-	data() {
-		return {
-			menuOpened: false
-		}
-	},
-
-	computed: {
-		typingUsers() {
-			return typingText(this.room, this.currentUserId, this.textMessages)
+	export default {
+		name: 'RoomHeader',
+		components: {
+			SvgIcon
 		},
-		userStatus() {
-			if (!this.room.users || this.room.users.length !== 2) return
 
-			const user = this.room.users.find(u => u._id !== this.currentUserId)
+		directives: {
+			clickOutside: vClickOutside.directive
+		},
 
-			if (!user.status) return
+		props: {
+			currentUserId: { type: [String, Number], required: true },
+			textMessages: { type: Object, required: true },
+			singleRoom: { type: Boolean, required: true },
+			showRoomsList: { type: Boolean, required: true },
+			isMobile: { type: Boolean, required: true },
+			roomInfo: { type: Function, default: null },
+			menuActions: { type: Array, required: true },
+			room: { type: Object, required: true }
+		},
 
-			let text = ''
-
-			if (user.status.state === 'online') {
-				text = this.textMessages.IS_ONLINE
-			} else if (user.status.lastChanged) {
-				text = this.textMessages.LAST_SEEN + user.status.lastChanged
+		data() {
+			return {
+				menuOpened: false
 			}
-
-			return text
-		}
-	},
-
-	methods: {
-		menuActionHandler(action) {
-			this.closeMenu()
-			this.$emit('menu-action-handler', action)
 		},
-		closeMenu() {
-			this.menuOpened = false
+
+		computed: {
+			typingUsers() {
+				return typingText(this.room, this.currentUserId, this.textMessages)
+			},
+			userStatus() {
+				if (!this.room.users || this.room.users.length !== 2) return
+
+				const user = this.room.users.find(u => u._id !== this.currentUserId)
+
+				if (!user.status) return
+
+				let text = ''
+
+				if (user.status.state === 'online') {
+					text = this.textMessages.IS_ONLINE
+				} else if (user.status.lastChanged) {
+					text = this.textMessages.LAST_SEEN + user.status.lastChanged
+				}
+
+				return text
+			}
+		},
+
+		methods: {
+			menuActionHandler(action) {
+				this.closeMenu()
+				this.$emit('menu-action-handler', action)
+			},
+			closeMenu() {
+				this.menuOpened = false
+			}
 		}
 	}
-}
 </script>
 
 <style lang="scss" scoped>
-.vac-room-header {
-	position: absolute;
-	display: flex;
-	align-items: center;
-	height: 64px;
-	width: 100%;
-	z-index: 10;
-	margin-right: 1px;
-	background: var(--chat-header-bg-color);
-	border-top-right-radius: var(--chat-container-border-radius);
-}
-
-.vac-room-wrapper {
-	display: flex;
-	align-items: center;
-	min-width: 0;
-	height: 100%;
-	width: 100%;
-	padding: 0 16px;
-}
-
-.vac-toggle-button {
-	margin-right: 15px;
-
-	svg {
-		height: 26px;
-		width: 26px;
-	}
-}
-
-.vac-rotate-icon {
-	transform: rotate(180deg) !important;
-}
-
-.vac-info-wrapper {
-	display: flex;
-	align-items: center;
-	min-width: 0;
-	width: 100%;
-	height: 100%;
-}
-
-.vac-room-name {
-	font-size: 17px;
-	font-weight: 500;
-	line-height: 22px;
-	color: var(--chat-header-color-name);
-}
-
-.vac-room-info {
-	font-size: 13px;
-	line-height: 18px;
-	color: var(--chat-header-color-info);
-}
-
-.vac-room-options {
-	margin-left: auto;
-}
-
-@media only screen and (max-width: 768px) {
 	.vac-room-header {
-		height: 50px;
+		position: absolute;
+		display: flex;
+		align-items: center;
+		height: 64px;
+		width: 100%;
+		z-index: 10;
+		margin-right: 1px;
+		background: var(--chat-header-bg-color);
+		border-top-right-radius: var(--chat-container-border-radius);
+	}
 
-		.vac-room-wrapper {
-			padding: 0 10px;
-		}
+	.vac-room-wrapper {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		height: 100%;
+		width: 100%;
+		padding: 0 16px;
+	}
 
-		.vac-room-name {
-			font-size: 16px;
-			line-height: 22px;
-		}
+	.vac-toggle-button {
+		margin-right: 15px;
 
-		.vac-room-info {
-			font-size: 12px;
-			line-height: 16px;
-		}
-
-		.vac-room-avatar {
-			height: 37px;
-			width: 37px;
-			min-height: 37px;
-			min-width: 37px;
+		svg {
+			height: 26px;
+			width: 26px;
 		}
 	}
-}
+
+	.vac-rotate-icon {
+		transform: rotate(180deg) !important;
+	}
+
+	.vac-info-wrapper {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.vac-room-name {
+		font-size: 17px;
+		font-weight: 500;
+		line-height: 22px;
+		color: var(--chat-header-color-name);
+	}
+
+	.vac-room-info {
+		font-size: 13px;
+		line-height: 18px;
+		color: var(--chat-header-color-info);
+	}
+
+	.vac-room-options {
+		margin-left: auto;
+	}
+
+	@media only screen and (max-width: 768px) {
+		.vac-room-header {
+			height: 50px;
+
+			.vac-room-wrapper {
+				padding: 0 10px;
+			}
+
+			.vac-room-name {
+				font-size: 16px;
+				line-height: 22px;
+			}
+
+			.vac-room-info {
+				font-size: 12px;
+				line-height: 16px;
+			}
+
+			.vac-room-avatar {
+				height: 37px;
+				width: 37px;
+				min-height: 37px;
+				min-width: 37px;
+			}
+		}
+	}
 </style>
