@@ -16,31 +16,31 @@ export default (text, doLinkify) => {
 	return result
 }
 
-const type_markdown = {
+const typeMarkdown = {
 	bold: '*',
 	italic: '_',
 	strike: '~',
 	underline: '°'
 }
 
-const pseudo_markdown = {
-	[type_markdown.bold]: {
-		end: '\\' + [type_markdown.bold],
+const pseudoMarkdown = {
+	[typeMarkdown.bold]: {
+		end: '\\' + [typeMarkdown.bold],
 		allowed_chars: '.',
 		type: 'bold'
 	},
-	[type_markdown.italic]: {
-		end: [type_markdown.italic],
+	[typeMarkdown.italic]: {
+		end: [typeMarkdown.italic],
 		allowed_chars: '.',
 		type: 'italic'
 	},
-	[type_markdown.strike]: {
-		end: [type_markdown.strike],
+	[typeMarkdown.strike]: {
+		end: [typeMarkdown.strike],
 		allowed_chars: '.',
 		type: 'strike'
 	},
-	[type_markdown.underline]: {
-		end: [type_markdown.underline],
+	[typeMarkdown.underline]: {
+		end: [typeMarkdown.underline],
 		allowed_chars: '.',
 		type: 'underline'
 	},
@@ -53,11 +53,6 @@ const pseudo_markdown = {
 		end: '`',
 		allowed_chars: '.',
 		type: 'inline-code'
-	},
-	'[Face: ': {
-		end: ']',
-		allowed_chars: '\\d',
-		type: 'face'
 	},
 	'<usertag>': {
 		allowed_chars: '.',
@@ -73,71 +68,71 @@ const pseudo_markdown = {
 
 function compileToJSON(str) {
 	let result = []
-	let min_index_of = -1
-	let min_index_of_key = null
+	let minIndexOf = -1
+	let minIndexOfKey = null
 
 	let links = linkify.find(str)
-	let min_index_from_link = false
+	let minIndexFromLink = false
 
 	if (links.length > 0) {
-		min_index_of = str.indexOf(links[0].value)
-		min_index_from_link = true
+		minIndexOf = str.indexOf(links[0].value)
+		minIndexFromLink = true
 	}
 
-	Object.keys(pseudo_markdown).forEach(starting_value => {
-		const io = str.indexOf(starting_value)
-		if (io >= 0 && (min_index_of < 0 || io < min_index_of)) {
-			min_index_of = io
-			min_index_of_key = starting_value
-			min_index_from_link = false
+	Object.keys(pseudoMarkdown).forEach(startingValue => {
+		const io = str.indexOf(startingValue)
+		if (io >= 0 && (minIndexOf < 0 || io < minIndexOf)) {
+			minIndexOf = io
+			minIndexOfKey = startingValue
+			minIndexFromLink = false
 		}
 	})
 
-	if (min_index_from_link && min_index_of_key !== -1) {
-		let str_left = str.substr(0, min_index_of)
-		let str_link = str.substr(min_index_of, links[0].value.length)
-		let str_right = str.substr(min_index_of + links[0].value.length)
-		result.push(str_left)
-		result.push(str_link)
-		result = result.concat(compileToJSON(str_right))
+	if (minIndexFromLink && minIndexOfKey !== -1) {
+		let strLeft = str.substr(0, minIndexOf)
+		let strLink = str.substr(minIndexOf, links[0].value.length)
+		let strRight = str.substr(minIndexOf + links[0].value.length)
+		result.push(strLeft)
+		result.push(strLink)
+		result = result.concat(compileToJSON(strRight))
 		return result
 	}
 
-	if (min_index_of_key) {
-		let str_left = str.substr(0, min_index_of)
-		const char = min_index_of_key
-		let str_right = str.substr(min_index_of + char.length)
+	if (minIndexOfKey) {
+		let strLeft = str.substr(0, minIndexOf)
+		const char = minIndexOfKey
+		let strRight = str.substr(minIndexOf + char.length)
 
-		const match = str_right.match(
+		const match = strRight.match(
 			new RegExp(
 				'^(' +
-					(pseudo_markdown[char].allowed_chars || '.') +
+					(pseudoMarkdown[char].allowed_chars || '.') +
 					'*' +
-					(pseudo_markdown[char].end ? '?' : '') +
+					(pseudoMarkdown[char].end ? '?' : '') +
 					')' +
-					(pseudo_markdown[char].end
-						? '(' + pseudo_markdown[char].end + ')'
+					(pseudoMarkdown[char].end
+						? '(' + pseudoMarkdown[char].end + ')'
 						: ''),
 				'm'
 			)
 		)
 		if (!match) {
-			str_left = str_left + char
-			result.push(str_left)
+			strLeft = strLeft + char
+			result.push(strLeft)
 		} else {
-			if (str_left) {
-				result.push(str_left)
+			if (strLeft) {
+				result.push(strLeft)
 			}
 			const object = {
 				start: char,
 				content: compileToJSON(match[1]),
 				end: match[2],
-				type: pseudo_markdown[char].type
+				type: pseudoMarkdown[char].type
 			}
 			result.push(object)
-			str_right = str_right.substr(match[0].length)
+			strRight = strRight.substr(match[0].length)
 		}
-		result = result.concat(compileToJSON(str_right))
+		result = result.concat(compileToJSON(strRight))
 		return result
 	} else {
 		if (str) {
@@ -152,10 +147,10 @@ function compileToHTML(json) {
 	const result = []
 
 	json.forEach(item => {
-		if (typeof item == 'string') {
+		if (typeof item === 'string') {
 			result.push({ types: [], value: item })
 		} else {
-			if (pseudo_markdown[item.start]) {
+			if (pseudoMarkdown[item.start]) {
 				result.push(parseContent(item))
 			}
 		}
@@ -168,14 +163,14 @@ function parseContent(item) {
 	const result = []
 
 	item.content.forEach(it => {
-		if (typeof it == 'string') {
+		if (typeof it === 'string') {
 			result.push({
 				types: [item.type],
 				value: it
 			})
 		} else {
 			it.content.forEach(i => {
-				if (typeof i == 'string') {
+				if (typeof i === 'string') {
 					result.push({
 						types: [it.type].concat([item.type]),
 						value: i
@@ -197,12 +192,12 @@ function flattenResult(array, types = []) {
 	const result = []
 
 	array.forEach(arr => {
-		if (typeof arr.value == 'string') {
+		if (typeof arr.value === 'string') {
 			arr.types = arr.types.concat(types)
 			result.push(arr)
 		} else {
 			arr.forEach(a => {
-				if (typeof a.value == 'string') {
+				if (typeof a.value === 'string') {
 					a.types = a.types.concat(types)
 					result.push(a)
 				} else {
@@ -229,7 +224,7 @@ function markdownResult(array) {
 			if (isInline || isMultiline) {
 				let value = array[i].value
 				array[i].types.forEach(type => {
-					const markdown = type_markdown[type] || ''
+					const markdown = typeMarkdown[type] || ''
 					value = markdown + value + markdown
 				})
 
