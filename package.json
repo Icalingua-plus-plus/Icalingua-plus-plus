@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "clansty <i@gao4.pw>",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
@@ -21,7 +21,8 @@
     "productName": "Electron QQ",
     "appId": "com.clansty.electronqq",
     "directories": {
-      "output": "build"
+      "output": "build",
+      "buildResources": "static"
     },
     "files": [
       "dist/electron/**/*"
@@ -30,14 +31,30 @@
       "target": [
         {
           "target": "7z"
+        },
+        {
+          "target": "appx"
         }
       ],
       "icon": "static/Project2.ico"
     },
+    "appx": {
+      "applicationId": "com.clansty.electronqq",
+      "backgroundColor": "#cff7ff",
+      "displayName": "Electron QQ",
+      "identityName": "com.clansty.electronqq",
+      "publisher": "CN=凌莞",
+      "publisherDisplayName": "Clansty",
+      "languages": [
+        "en-US"
+      ],
+      "addAutoLaunchExtension": true,
+      "showNameOnTiles": false
+    },
     "mac": {
       "icon": "static/Project3.icns"
     },
-    "linux":{
+    "linux": {
       "icon": "static/512x512.png",
       "target": [
         {
@@ -73,6 +90,7 @@
     }
   },
   "dependencies": {
+    "electron-winstore-auto-launch": "^2.0.3",
     "linkifyjs": "^2.1.9",
     "lowdb": "^1.0.0",
     "md5": "^2.3.0",

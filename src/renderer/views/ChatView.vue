@@ -129,6 +129,7 @@
 	import FileSync from 'lowdb/adapters/FileSync'
 	import path from 'path'
 	import { remote, clipboard, nativeImage, shell } from 'electron'
+	import { WindowsStoreAutoLaunch } from 'electron-winstore-auto-launch';
 	import SideBarIcon from '../components/SideBarIcon.vue'
 	import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 	import TheContactsPanel from '../components/TheContactsPanel.vue'
@@ -913,64 +914,79 @@
 			},
 
 			appMenu() {
-				const menu = remote.Menu.buildFromTemplate([
-					{
-						label: 'Mute all groups', type: 'checkbox',
-						checked: this.muteAllGroups,
+				const menu = new remote.Menu()
+				menu.append(new remote.MenuItem({
+					label: 'Mute all groups', type: 'checkbox',
+					checked: this.muteAllGroups,
+					click: (menuItem, _browserWindow, _event) => {
+						this.muteAllGroups = menuItem.checked
+						db.set("muteAllGroups", menuItem.checked).write()
+						const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
+							(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
+							(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
+						this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+					}
+				}))
+				menu.append(this.dndMenuItem)
+				menu.append(new remote.MenuItem({
+					label: 'Manage ignored chats',
+					click: () => this.panel = "ignore"
+				}))
+				menu.append(new remote.MenuItem({
+					type: 'separator'
+				}))
+				menu.append(new remote.MenuItem({
+					label: 'Auto login', type: 'checkbox',
+					checked: glodb.get('account.autologin').value(),
+					click: (menuItem, _browserWindow, _event) => {
+						glodb.set('account.autologin', menuItem.checked).write()
+					}
+				}))
+				if (process.windowsStore)
+					menu.append(new remote.MenuItem({
+						label: 'Launch when Windows starts', type: 'checkbox',
+						checked: WindowsStoreAutoLaunch.getStatus() == 2,
 						click: (menuItem, _browserWindow, _event) => {
-							this.muteAllGroups = menuItem.checked
-							db.set("muteAllGroups", menuItem.checked).write()
-							const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
-								(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
-								(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
-							this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
+							if (WindowsStoreAutoLaunch.getStatus() == 1) {
+								menuItem.checked = false
+								this.$notify.error({
+									title: 'Failed',
+									message: "You have manually disabled auto launch in TaskMgr."
+								});
+							}
+							else
+								WindowsStoreAutoLaunch.enable()
 						}
-					},
-					this.dndMenuItem,
-					{
-						label: 'Manage ignored chats',
-						click: () => this.panel = "ignore"
-					},
-					{
-						type: 'separator'
-					},
-					{
-						label: 'Auto login', type: 'checkbox',
-						checked: glodb.get('account.autologin').value(),
-						click: (menuItem, _browserWindow, _event) => {
-							glodb.set('account.autologin', menuItem.checked).write()
-						}
-					},
-					{
-						type: 'separator'
-					},
-					{
-						label: remote.app.getVersion(),
-						enabled: false
-					},
-					{
-						label: 'Reload',
-						type: 'normal',
-						click: () => {
-							bot.removeListener("message", this.onQQMessage);
-							bot.removeListener("notice.friend.recall", this.friendRecall)
-							bot.removeListener("notice.group.recall", this.groupRecall)
-							bot.removeListener('system.online', this.online)
-							bot.removeListener('system.offline', this.onOffline)
-							bot.removeListener('notice.friend.poke', this.friendpoke)
-							location.reload();
-						}
-					},
-					{
-						label: 'Dev Tools',
-						role: 'toggleDevTools'
-					},
-					{
-						label: 'Quit',
-						click: () => remote.getCurrentWindow().destroy()
-					},
+					}))
 
-				])
+				menu.append(new remote.MenuItem({
+					type: 'separator'
+				}))
+				menu.append(new remote.MenuItem({
+					label: remote.app.getVersion(),
+					enabled: false
+				}))
+				menu.append(new remote.MenuItem({
+					label: 'Reload',
+					type: 'normal',
+					click: () => {
+						bot.removeListener("message", this.onQQMessage);
+						bot.removeListener("notice.friend.recall", this.friendRecall)
+						bot.removeListener("notice.group.recall", this.groupRecall)
+						bot.removeListener('system.online', this.online)
+						bot.removeListener('system.offline', this.onOffline)
+						bot.removeListener('notice.friend.poke', this.friendpoke)
+						location.reload();
+					}
+				}))
+				menu.append(new remote.MenuItem({
+					label: 'Dev Tools',
+					role: 'toggleDevTools'
+				}))
+				menu.append(new remote.MenuItem({
+					label: 'Quit',
+					click: () => remote.getCurrentWindow().destroy()
+				}))
 				menu.popup({ window: remote.getCurrentWindow() })
 			},
 
