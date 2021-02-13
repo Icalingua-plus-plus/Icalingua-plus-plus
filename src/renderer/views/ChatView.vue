@@ -499,33 +499,7 @@
 				var room = this.rooms.find(e => e.roomId == roomId)
 				if (room == undefined) {
 					// create room
-					room = {
-						roomId,
-						roomName,
-						avatar,
-						index: 0,
-						unreadCount: 0,
-						users: [
-							{
-								_id: 1,
-								username: '1'
-							},
-							{
-								_id: 2,
-								username: '2'
-							}
-						],
-						lastMessage: {
-							content: "",
-							timestamp: ""
-						}
-					}
-					if (groupId)
-						room.users.push({
-							_id: 3,
-							username: '3'
-						}
-						)
+					room = createRoom(roomId, roomName, avatar)
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + roomId, []).write()
 				}
@@ -957,20 +931,7 @@
 
 				if (room == undefined) {
 					// create room
-					room = {
-						roomId: id,
-						roomName: name,
-						avatar,
-						index: 0,
-						unreadCount: 0,
-						users: [
-							{ _id: 1, username: '1' },
-							{ _id: 2, username: '2' }
-						],
-						lastMessage: { content: "", timestamp: "" }
-					}
-					if (id < 0)
-						room.users.push({ _id: 3, username: '3' })
+					room = createRoom(id, name, avatar)
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + id, []).write()
 				}
@@ -984,6 +945,25 @@
 
 			pokefriend() {
 				console.log('poke')
+			},
+
+			createRoom(roomId, roomName, avatar) {
+				const room = {
+					roomId,
+					roomName,
+					avatar,
+					index: 0,
+					unreadCount: 0,
+					mute: false,
+					users: [
+						{ _id: 1, username: '1' },
+						{ _id: 2, username: '2' }
+					],
+					lastMessage: { content: "", timestamp: "" }
+				}
+				if (id < 0)
+					room.users.push({ _id: 3, username: '3' })
+				return room
 			}
 		}
 	}
