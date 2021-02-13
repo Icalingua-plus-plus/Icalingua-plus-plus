@@ -65,6 +65,7 @@
 				@typing-message="typingMessage"
 				@textarea-action-handler="textareaActionHandler"
 				@pokefriend="$emit('pokefriend')"
+				@room-menu="$emit('room-menu')"
 			>
 				<template v-for="(index, name) in $scopedSlots" #[name]="data">
 					<slot :name="name" v-bind="data" />

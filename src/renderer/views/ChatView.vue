@@ -54,7 +54,6 @@
 							:show-new-messages-divider="false"
 							:load-first-room="false"
 							accepted-files="image/*"
-							:menu-actions="menuActions"
 							:message-actions="[]"
 							:styles="styles"
 							:single-room="true"
@@ -63,8 +62,8 @@
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
 							@open-file="openImage"
-							@menu-action-handler="roomAction"
 							@pokefriend="pokefriend"
+							@room-menu="roomContext(selectedRoom)"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -207,7 +206,6 @@
 				rooms: [],
 				messages: [],
 				selectedRoom: { roomId: 0 },
-				menuActions: [],
 				muteAllGroups: false,
 				dndMenuItem: null,
 				dnd: false,
@@ -458,24 +456,6 @@
 					const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
 						(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
 						(data.room.roomId > 0 && data.room.mute)
-					this.menuActions = [
-						{
-							name: 'mute',
-							title: muted ? "Unmute Chat" : "Mute Chat"
-						},
-						{
-							name: 'pin',
-							title: data.room.index ? "Unpin Chat" : "Pin Chat"
-						},
-						{
-							name: 'del',
-							title: 'Delete Chat'
-						},
-						{
-							name: 'ignore',
-							title: 'Ignore Chat'
-						}
-					]
 				}
 				const msgs2add = db.get("messages." + data.room.roomId)
 					.dropRightWhile(e => this.messages.includes(e))
@@ -740,51 +720,6 @@
 				}
 			},
 
-			roomAction(data) {
-				if (data.action.name == "pin") {
-					const room = this.rooms.find(e => e.roomId == data.roomId)
-					if (room.index)
-						room.index = 0
-					else
-						room.index = 1
-					if (room == this.selectedRoom)
-						this.menuActions.find(e => e.name == "pin").title = room.index ? "Unpin Chat" : "Pin Chat"
-					this.rooms = [...this.rooms]
-					db.set("rooms", this.rooms).write()
-				}
-				else if (data.action.name == "mute") {
-					const room = this.rooms.find(e => e.roomId == data.roomId)
-					if (room.roomId < 0 && this.muteAllGroups)
-						room.unmute = !room.unmute
-					else
-						room.mute = !room.mute
-					if (room == this.selectedRoom) {
-						const muted = (room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-							(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-							(room.roomId > 0 && room.mute)
-						this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
-					}
-					this.rooms = [...this.rooms]
-					db.set("rooms", this.rooms).write()
-				}
-				else if (data.action.name == "ignore") {
-					const room = this.rooms.find(e => e.roomId == data.roomId)
-					this.ignoredChats.push({
-						id: data.roomId,
-						name: room.roomName
-					})
-					db.unset('messages.' + data.roomId).write()
-					this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
-					db.set("rooms", this.rooms).write()
-					db.set("ignoredChats", this.ignoredChats).write()
-				}
-				else if (data.action.name == "del") {
-					db.unset('messages.' + data.roomId).write()
-					this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
-					db.set("rooms", this.rooms).write()
-				}
-			},
-
 			async deleteMessage(data) {
 				const message = this.messages.find(e => e._id == data.messageId)
 				const res = await bot.deleteMsg(data.messageId)
@@ -860,10 +795,6 @@
 					click: (menuItem, _browserWindow, _event) => {
 						this.muteAllGroups = menuItem.checked
 						db.set("muteAllGroups", menuItem.checked).write()
-						const muted = (this.selectedRoom.roomId < 0 && this.muteAllGroups && !this.selectedRoom.unmute) ||
-							(this.selectedRoom.roomId < 0 && !this.muteAllGroups && this.selectedRoom.mute) ||
-							(this.selectedRoom.roomId > 0 && this.selectedRoom.mute)
-						this.menuActions.find(e => e.name == "mute").title = muted ? "Unmute Chat" : "Mute Chat"
 					}
 				}))
 				menu.append(this.dndMenuItem)
@@ -937,20 +868,47 @@
 				const pintitle = room.index ? "Unpin Chat" : "Pin Chat"
 				const menu = remote.Menu.buildFromTemplate([
 					{
-						label: mutetitle, type: 'normal',
-						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'mute' } })
+						label: mutetitle,
+						click: () => {
+							if (room.roomId < 0 && this.muteAllGroups)
+								room.unmute = !room.unmute
+							else
+								room.mute = !room.mute
+							this.rooms = [...this.rooms]
+							db.set("rooms", this.rooms).write()
+						}
 					},
 					{
-						label: pintitle, type: 'normal',
-						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'pin' } })
+						label: pintitle,
+						click: () => {
+							if (room.index)
+								room.index = 0
+							else
+								room.index = 1
+							this.rooms = [...this.rooms]
+							db.set("rooms", this.rooms).write()
+						}
 					},
 					{
-						label: 'Delete Chat', type: 'normal',
-						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'del' } })
+						label: 'Delete Chat',
+						click: () => {
+							db.unset('messages.' + data.roomId).write()
+							this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+							db.set("rooms", this.rooms).write()
+						}
 					},
 					{
-						label: 'Ignore Chat', type: 'normal',
-						click: () => this.roomAction({ roomId: room.roomId, action: { name: 'ignore' } })
+						label: 'Ignore Chat',
+						click: () => {
+							this.ignoredChats.push({
+								id: data.roomId,
+								name: room.roomName
+							})
+							db.unset('messages.' + data.roomId).write()
+							this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+							db.set("rooms", this.rooms).write()
+							db.set("ignoredChats", this.ignoredChats).write()
+						}
 					},
 				])
 				menu.popup({ window: remote.getCurrentWindow() })

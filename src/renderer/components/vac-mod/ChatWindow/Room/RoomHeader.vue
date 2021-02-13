@@ -45,9 +45,8 @@
 				</div>
 				<slot v-if="room.roomId" name="room-options">
 					<div
-						v-if="menuActions.length"
 						class="vac-svg-button vac-room-options"
-						@click="menuOpened = !menuOpened"
+						@click="$emit('room-menu')"
 					>
 						<slot name="menu-icon">
 							<svg-icon name="menu" />
