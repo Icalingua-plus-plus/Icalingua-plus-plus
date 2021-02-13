@@ -3,6 +3,7 @@ import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
 import { createClient } from "oicq"
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 "我所遗失的心啊";
 
@@ -16,10 +17,6 @@ import { createClient } from "oicq"
 
 "都是笑话 不值一提 该放弃";
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-const isFirstInstance = app.requestSingleInstanceLock()
-if (!isFirstInstance)
-	app.quit()
 
 /**
  * Set `__static` path to static files in production
@@ -77,6 +74,10 @@ global.loadMainWindow = function () {
 }
 
 app.on('ready', () => {
+	const isFirstInstance = app.requestSingleInstanceLock()
+	if (!isFirstInstance)
+		app.quit()
+
 	protocol.registerHttpProtocol('nya', (req, cb) => {
 		cb({
 			url: req.url.replace("nya://", "https://")
@@ -129,10 +130,10 @@ app.on('web-contents-created', (e, webContents) => {
 
 app.on('second-instance', () => {
 	if (mainWindow) {
-		mainWindow.focus()
+		mainWindow.show()
 	}
 	else if (loginWindow) {
-		loginWindow.focus()
+		loginWindow.show()
 	}
 })
 
