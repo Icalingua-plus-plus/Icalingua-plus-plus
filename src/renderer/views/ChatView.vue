@@ -360,7 +360,7 @@
 				}
 
 				const message = {
-					sender_id: this.account,
+					senderId: this.account,
 					username: "You",
 					content,
 					timestamp: new Date().format("hh:mm"),
@@ -508,7 +508,7 @@
 					data.group_name : senderName
 
 				const message = {
-					sender_id: senderId,
+					senderId: senderId,
 					username: senderName,
 					content: "",
 					timestamp: new Date().format("hh:mm"),
@@ -975,7 +975,7 @@
 						msg += data.suffix
 					const message = {
 						content: msg,
-						sender_id: 0,
+						senderId: 0,
 						timestamp: new Date().format("hh:mm"),
 						date: new Date().format("dd/MM/yyyy"),
 						_id: new Date().getTime(),
