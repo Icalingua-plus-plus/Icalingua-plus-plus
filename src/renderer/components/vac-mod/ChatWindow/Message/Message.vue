@@ -19,17 +19,17 @@
 			:class="{ 'vac-offset-current': message.senderId === currentUserId }"
 		>
 			<slot name="message" v-bind="{ message }">
+				<el-avatar
+					size="medium"
+					:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
+					v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
+				/>
 				<div
 					class="vac-message-container"
 					:class="{
 						'vac-message-container-offset': messageOffset,
 					}"
 				>
-					<el-avatar
-						size="medium"
-						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.sender_id}&s=640`"
-						v-if="roomUsers.length > 2 && message.sender_id !== currentUserId"
-					/>
 					<div
 						class="vac-message-card"
 						:class="{
