@@ -55,7 +55,7 @@
 							:load-first-room="false"
 							accepted-files="image/*"
 							:menu-actions="menuActions"
-							:message-actions="messageActions"
+							:message-actions="[]"
 							:styles="styles"
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
@@ -64,9 +64,7 @@
 							@delete-message="deleteMessage"
 							@open-file="openImage"
 							@menu-action-handler="roomAction"
-							@message-action-handler="messageActionsHandler"
 							@pokefriend="pokefriend"
-							@msgctx="msgctx"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -214,21 +212,6 @@
 				dndMenuItem: null,
 				dnd: false,
 				tray: null,
-				messageActions: [
-					{
-						name: 'copy',
-						title: 'Copy'
-					},
-					{
-						name: 'replyMessage',
-						title: 'Reply'
-					},
-					{
-						name: 'deleteMessage',
-						title: 'Delete Message',
-						onlyMe: true
-					}
-				],
 				account: null,
 				messagesLoaded: false,
 				ignoredChats: [],
@@ -839,18 +822,6 @@
 				}
 			},
 
-			messageActionsHandler(data) {
-				if (data.action.name == "copy") {
-					if (data.message.file)
-						convertImgToBase64(data.message.file.url, function (base64Image) {
-							const image = nativeImage.createFromDataURL(base64Image)
-							clipboard.writeImage(image)
-						})
-					else
-						clipboard.writeText(data.message.content)
-				}
-			},
-
 			sendSticker(url) {
 				if (this.selectedRoom)
 					this.sendMessage({
@@ -879,50 +850,6 @@
 				this.offlineReason = data.message
 				console.log(data)
 				this.offline = true
-			},
-
-			msgctx(message) {
-				const sect = window.getSelection().toString()
-				const menu = remote.Menu.buildFromTemplate([
-					{
-						label: 'Copy', type: 'normal', click: () => {
-							if (message.file && data.message.file.type.includes('image'))
-								convertImgToBase64(data.message.file.url, function (base64Image) {
-									const image = nativeImage.createFromDataURL(base64Image)
-									clipboard.writeImage(image)
-								})
-							else
-								clipboard.writeText(message.content)
-						}
-					},
-				])
-				if (sect) {
-					menu.append(new remote.MenuItem(
-						{
-							label: 'Copy Selection', type: 'normal',
-							click: () => { clipboard.writeText(sect) }
-						}))
-				}
-				if (message.file && message.file.type.includes('image')) {
-					menu.append(new remote.MenuItem(
-						{
-							label: 'Add to stickers', type: 'normal',
-							click: () => {
-								const downpath = path.join(STORE_PATH, '/stickers/', String(new Date().getTime()))
-								download(message.file.url.replace("nya://", "https://"), downpath, () => {
-									this.$notify.success({
-										title: 'Image Saved to stickers folder',
-										message: downpath
-									});
-									this.panel = 'refresh'
-									this.$nextTick(() => {
-										this.panel = 'stickers'
-									})
-								})
-							}
-						}))
-				}
-				menu.popup({ window: remote.getCurrentWindow() })
 			},
 
 			appMenu() {
