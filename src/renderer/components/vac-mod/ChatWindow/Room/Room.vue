@@ -64,11 +64,7 @@
 						</infinite-loading>
 					</transition>
 					<transition-group :key="roomId" name="vac-fade-message">
-						<a
-							v-for="(m, i) in messages"
-							:key="m._id"
-							@click.right="$emit('msgctx', m)"
-						>
+						<a v-for="(m, i) in messages" :key="m._id" @click.right="msgctx(m)">
 							<message
 								:current-user-id="currentUserId"
 								:message="m"
@@ -85,7 +81,6 @@
 								:text-formatting="textFormatting"
 								:emojis-list="emojisList"
 								:hide-options="hideOptions"
-								@message-action-handler="messageActionHandler"
 								@open-file="openFile"
 								@open-user-tag="openUserTag"
 								@add-new-message="addNewMessage"
@@ -300,6 +295,8 @@
 	const { messagesValid } = require('../../utils/roomValidation')
 	const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
 	const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
+
+	import { remote } from 'electron'
 
 	export default {
 		name: 'Room',
@@ -785,7 +782,66 @@
 			},
 			textareaActionHandler() {
 				this.$emit('textarea-action-handler', this.message)
-			}
+			},
+			msgctx(message) {
+				if(message.deleted)
+					return
+				const sect = window.getSelection().toString()
+				const menu = remote.Menu.buildFromTemplate([
+					{
+						label: 'Copy', type: 'normal', click: () => {
+							if (message.file && data.message.file.type.includes('image'))
+								convertImgToBase64(data.message.file.url, function (base64Image) {
+									const image = nativeImage.createFromDataURL(base64Image)
+									clipboard.writeImage(image)
+								})
+							else
+								clipboard.writeText(message.content)
+						}
+					}
+				])
+				if (sect) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Selection', type: 'normal',
+							click: () => { clipboard.writeText(sect) }
+						}))
+				}
+				if (message.file && message.file.type.includes('image')) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Add to stickers', type: 'normal',
+							click: () => {
+								const downpath = path.join(STORE_PATH, '/stickers/', String(new Date().getTime()))
+								download(message.file.url.replace("nya://", "https://"), downpath, () => {
+									this.$notify.success({
+										title: 'Image Saved to stickers folder',
+										message: downpath
+									});
+									this.panel = 'refresh'
+									this.$nextTick(() => {
+										this.panel = 'stickers'
+									})
+								})
+							}
+						}))
+				}
+				menu.append(new remote.MenuItem({
+					label: 'Reply',
+					click: () => {
+						this.replyMessage(message)
+					}
+				}))
+				if (message.senderId === this.currentUserId) {
+					menu.append(new remote.MenuItem({
+						label: 'Delete',
+						click: () => {
+							this.$emit('delete-message', message._id)
+						}
+					}))
+				}
+				menu.popup({ window: remote.getCurrentWindow() })
+			},
 		}
 	}
 </script>
