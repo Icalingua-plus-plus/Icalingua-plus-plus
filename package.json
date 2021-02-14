@@ -89,7 +89,6 @@
     }
   },
   "dependencies": {
-    "electron-winstore-auto-launch": "^2.0.3",
     "linkifyjs": "^2.1.9",
     "lowdb": "^1.0.0",
     "md5": "^2.3.0",

@@ -11,7 +11,7 @@
 			v-show="view == 'login'"
 		>
 			<center>
-				<h5>Version {{ ver }} Preview</h5>
+				<h5>Version {{ ver }}</h5>
 			</center>
 			<h4 class="red nobottmar">Insider version</h4>
 			<h2 class="red notopmar">DO NOT DISTRIBUTE</h2>
