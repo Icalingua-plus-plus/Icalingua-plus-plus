@@ -126,11 +126,10 @@
 	import FileSync from 'lowdb/adapters/FileSync'
 	import path from 'path'
 	import { remote, clipboard, nativeImage, shell } from 'electron'
-	import { WindowsStoreAutoLaunch } from 'electron-winstore-auto-launch';
 	import SideBarIcon from '../components/SideBarIcon.vue'
 	import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 	import TheContactsPanel from '../components/TheContactsPanel.vue'
-	const STORE_PATH = remote.app.getPath('userData')
+	const STORE_PATH = remote.getGlobal('STORE_PATH')
 	const glodb = remote.getGlobal("glodb")
 
 	let db
@@ -229,7 +228,7 @@
 		},
 		created() {
 			this.account = glodb.get('account').value().username
-			const adapter = new FileSync(path.join(STORE_PATH, `/chatdata${this.account}.json`))
+			const adapter = new FileSync(path.join(STORE_PATH, `/chatdata${this.account}v2.json`))
 			db = Datastore(adapter)
 			db.defaults({
 				rooms: [],
@@ -499,7 +498,7 @@
 				var room = this.rooms.find(e => e.roomId == roomId)
 				if (room == undefined) {
 					// create room
-					room = createRoom(roomId, roomName, avatar)
+					room = this.createRoom(roomId, roomName, avatar)
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + roomId, []).write()
 				}
@@ -787,40 +786,6 @@
 					}
 				}))
 				if (process.windowsStore) {
-					menu.append(new remote.MenuItem({
-						label: 'Launch when Windows starts', type: 'checkbox',
-						checked: WindowsStoreAutoLaunch.getStatus() == 2,
-						click: (menuItem, _browserWindow, _event) => {
-							console.log(WindowsStoreAutoLaunch.getStatus())
-							if (WindowsStoreAutoLaunch.getStatus() == 1) {
-								menuItem.checked = false
-								this.$notify.error({
-									title: 'Failed',
-									message: "You have manually disabled auto launch in TaskMgr."
-								});
-							}
-							else if (menuItem.checked)
-								WindowsStoreAutoLaunch.enable()
-							else
-								WindowsStoreAutoLaunch.disable()
-						}
-					}))
-					menu.append(new remote.MenuItem({
-						label: 'Show test notification',
-						click: (menuItem, _browserWindow, _event) => {
-							const notiopin = {
-								body: 'test'
-							}
-
-							const notif = new Notification('test', notiopin)
-
-							notif.onclick = () => {
-								const window = remote.getCurrentWindow()
-								window.show()
-								window.focus()
-							}
-						}
-					}))
 				}
 
 				menu.append(new remote.MenuItem({
@@ -951,7 +916,7 @@
 
 				if (room == undefined) {
 					// create room
-					room = createRoom(id, name, avatar)
+					room = this.createRoom(id, name, avatar)
 					this.rooms = [room, ...this.rooms]
 					db.set('messages.' + id, []).write()
 				}

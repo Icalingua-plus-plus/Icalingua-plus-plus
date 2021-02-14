@@ -28,7 +28,11 @@ if (process.env.NODE_ENV !== 'development') {
 	global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
-const STORE_PATH = app.getPath('userData')
+if (process.windowsStore)
+	global.STORE_PATH = process.env.LOCALAPPDATA
+else
+	global.STORE_PATH = app.getPath('userData')
+const STORE_PATH = global.STORE_PATH
 
 const winURL = process.env.NODE_ENV === 'development'
 	? `http://localhost:9080`
@@ -74,17 +78,14 @@ global.loadMainWindow = function () {
 }
 
 app.on('ready', () => {
-	dialog.showMessageBoxSync({
-		title: "argv", 
-		message: process.argv.toString()
-	})
 	const isFirstInstance = app.requestSingleInstanceLock()
 	if (!isFirstInstance)
 		app.quit()
 	else {
-		// if (process.windowsStore)
-		// 	app.setAppUserModelId("com.clansty.electronqq")
-		if (process.platform == 'win32')
+		app.allowRendererProcessReuse = false
+		if (process.windowsStore)
+			app.setAppUserModelId("com.clansty.electronqq")
+		else if (process.platform == 'win32')
 			app.setAppUserModelId("Electron QQ")
 		const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
 		global.glodb = Datastore(adapter)
