@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, shell, Menu, screen, Tray } from 'electron'
+import { app, BrowserWindow, protocol, shell, Menu, screen, Tray, dialog } from 'electron'
 import path from 'path'
 import Datastore from 'lowdb'
 import FileSync from 'lowdb/adapters/FileSync'
@@ -18,6 +18,8 @@ import { createClient } from "oicq"
 "都是笑话 不值一提 该放弃";
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+console.log(process.argv)
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -27,8 +29,6 @@ if (process.env.NODE_ENV !== 'development') {
 }
 
 const STORE_PATH = app.getPath('userData')
-if (process.platform == 'win32')
-	app.setAppUserModelId("Electron QQ")
 
 const winURL = process.env.NODE_ENV === 'development'
 	? `http://localhost:9080`
@@ -37,10 +37,6 @@ const winURL = process.env.NODE_ENV === 'development'
 
 let loginWindow, mainWindow
 var isLoggingin = false
-//lowdb
-const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
-global.glodb = Datastore(adapter)
-
 
 global.createBot = function (form) {
 	global.bot = createClient(Number(form.username), {
@@ -78,42 +74,53 @@ global.loadMainWindow = function () {
 }
 
 app.on('ready', () => {
+	dialog.showMessageBoxSync({
+		title: "argv", 
+		message: process.argv.toString()
+	})
 	const isFirstInstance = app.requestSingleInstanceLock()
 	if (!isFirstInstance)
 		app.quit()
-
-	protocol.registerHttpProtocol('nya', (req, cb) => {
-		cb({
-			url: req.url.replace("nya://", "https://")
-		})
-	})
-	if (process.env.NODE_ENV === 'development')
-		protocol.registerFileProtocol('file', (request, cb) => {
-			const pathname = request.url.replace('file:///', '')
-			cb(pathname)
-		});
-	Menu.setApplicationMenu(Menu.buildFromTemplate([]))
-	if (process.env.NYA) {
-		//ui debug mode
-		global.bot = {
-			on() { },
-			logout() { }
-		}
-		global.loadMainWindow()
-	}
 	else {
-		//login window
-		loginWindow = new BrowserWindow({
-			height: 700,
-			width: 450,
-			maximizable: false,
-			webPreferences: {
-				nodeIntegration: true,
-				enableRemoteModule: true
-			}
+		// if (process.windowsStore)
+		// 	app.setAppUserModelId("com.clansty.electronqq")
+		if (process.platform == 'win32')
+			app.setAppUserModelId("Electron QQ")
+		const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
+		global.glodb = Datastore(adapter)
+		protocol.registerHttpProtocol('nya', (req, cb) => {
+			cb({
+				url: req.url.replace("nya://", "https://")
+			})
 		})
+		if (process.env.NODE_ENV === 'development')
+			protocol.registerFileProtocol('file', (request, cb) => {
+				const pathname = request.url.replace('file:///', '')
+				cb(pathname)
+			});
+		Menu.setApplicationMenu(new Menu())
+		if (process.env.NYA) {
+			//ui debug mode
+			global.bot = {
+				on() { },
+				logout() { }
+			}
+			global.loadMainWindow()
+		}
+		else {
+			//login window
+			loginWindow = new BrowserWindow({
+				height: 700,
+				width: 450,
+				maximizable: false,
+				webPreferences: {
+					nodeIntegration: true,
+					enableRemoteModule: true
+				}
+			})
 
-		loginWindow.loadURL(winURL + "#/login")
+			loginWindow.loadURL(winURL + "#/login")
+		}
 	}
 })
 
