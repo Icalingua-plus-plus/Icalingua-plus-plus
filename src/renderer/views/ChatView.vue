@@ -786,11 +786,12 @@
 						glodb.set('account.autologin', menuItem.checked).write()
 					}
 				}))
-				if (process.windowsStore)
+				if (process.windowsStore) {
 					menu.append(new remote.MenuItem({
 						label: 'Launch when Windows starts', type: 'checkbox',
 						checked: WindowsStoreAutoLaunch.getStatus() == 2,
 						click: (menuItem, _browserWindow, _event) => {
+							console.log(WindowsStoreAutoLaunch.getStatus())
 							if (WindowsStoreAutoLaunch.getStatus() == 1) {
 								menuItem.checked = false
 								this.$notify.error({
@@ -798,10 +799,29 @@
 									message: "You have manually disabled auto launch in TaskMgr."
 								});
 							}
-							else
+							else if (menuItem.checked)
 								WindowsStoreAutoLaunch.enable()
+							else
+								WindowsStoreAutoLaunch.disable()
 						}
 					}))
+					menu.append(new remote.MenuItem({
+						label: 'Show test notification',
+						click: (menuItem, _browserWindow, _event) => {
+							const notiopin = {
+								body: 'test'
+							}
+
+							const notif = new Notification('test', notiopin)
+
+							notif.onclick = () => {
+								const window = remote.getCurrentWindow()
+								window.show()
+								window.focus()
+							}
+						}
+					}))
+				}
 
 				menu.append(new remote.MenuItem({
 					type: 'separator'
