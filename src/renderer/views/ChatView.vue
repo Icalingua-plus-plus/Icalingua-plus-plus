@@ -64,6 +64,7 @@
 							@open-file="openImage"
 							@pokefriend="pokefriend"
 							@room-menu="roomContext(selectedRoom)"
+							@add-to-stickers="addToStickers"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -954,6 +955,20 @@
 				if (roomId < 0)
 					room.users.push({ _id: 3, username: '3' })
 				return room
+			},
+
+			addToStickers(message) {
+				const downpath = path.join(STORE_PATH, '/stickers/', String(new Date().getTime()))
+				download(message.file.url.replace("http://", "https://"), downpath, () => {
+					this.$notify.success({
+						title: 'Image Saved to stickers folder',
+						message: downpath
+					});
+					this.panel = 'refresh'
+					this.$nextTick(() => {
+						this.panel = 'stickers'
+					})
+				})
 			}
 		}
 	}

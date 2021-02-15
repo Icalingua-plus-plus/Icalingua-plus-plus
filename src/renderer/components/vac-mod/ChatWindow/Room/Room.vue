@@ -833,19 +833,7 @@
 					menu.append(new remote.MenuItem(
 						{
 							label: 'Add to stickers', type: 'normal',
-							click: () => {
-								const downpath = path.join(STORE_PATH, '/stickers/', String(new Date().getTime()))
-								download(message.file.url.replace("nya://", "https://"), downpath, () => {
-									this.$notify.success({
-										title: 'Image Saved to stickers folder',
-										message: downpath
-									});
-									this.panel = 'refresh'
-									this.$nextTick(() => {
-										this.panel = 'stickers'
-									})
-								})
-							}
+							click: () => this.$emit('add-to-stickers', message)
 						}))
 					menu.append(new remote.MenuItem(
 						{
