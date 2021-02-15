@@ -65,8 +65,9 @@
 						</infinite-loading>
 					</transition>
 					<transition-group :key="roomId" name="vac-fade-message">
-						<a v-for="(m, i) in messages" :key="m._id" @click.right="msgctx(m)">
+						<template v-for="(m, i) in messages">
 							<message
+								:key="m._id"
 								:current-user-id="currentUserId"
 								:message="m"
 								:index="i"
@@ -87,12 +88,13 @@
 								@add-new-message="addNewMessage"
 								@send-message-reaction="sendMessageReaction"
 								@hide-options="hideOptions = $event"
+								@ctx="msgctx(m)"
 							>
 								<template v-for="(index, name) in $scopedSlots" #[name]="data">
 									<slot :name="name" v-bind="data" />
 								</template>
 							</message>
-						</a>
+						</template>
 					</transition-group>
 				</div>
 			</div>
@@ -785,7 +787,7 @@
 				this.$emit('textarea-action-handler', this.message)
 			},
 			msgctx(message) {
-				if(message.deleted)
+				if (message.deleted)
 					return
 				const sect = window.getSelection().toString()
 				const menu = remote.Menu.buildFromTemplate([
