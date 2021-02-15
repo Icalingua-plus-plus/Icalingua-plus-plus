@@ -1,40 +1,42 @@
 <template>
 	<div class="root">
 		<el-tabs v-model="activeName" :stretch="true">
-			<el-tab-pane label="Friends" name="friends"></el-tab-pane>
-			<el-tab-pane label="Groups" name="groups"></el-tab-pane>
+			<el-tab-pane label="Friends" name="friends">
+				<div
+					class="panel"
+					v-show="activeName == 'friends'"
+					v-infinite-scroll="loadF"
+					:infinite-scroll-disabled="friendsLoaded"
+					:infinite-scroll-distance="20"
+				>
+					<ContactEntry
+						v-for="i in friends"
+						:key="i.user_id"
+						:id="i.user_id"
+						:remark="i.remark"
+						:name="i.nickname"
+						@dblclick="$emit('dblclick', i.user_id, i.remark)"
+					/>
+				</div>
+			</el-tab-pane>
+			<el-tab-pane label="Groups" name="groups">
+				<div
+					class="panel"
+					v-show="activeName == 'groups'"
+					v-infinite-scroll="loadG"
+					:infinite-scroll-disabled="groupsLoaded"
+					:infinite-scroll-distance="20"
+				>
+					<ContactEntry
+						v-for="i in groups"
+						:key="i.group_id"
+						:id="-i.group_id"
+						:remark="i.group_name"
+						@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
+					/>
+				</div>
+			</el-tab-pane>
 		</el-tabs>
-		<div
-			class="panel"
-			v-show="activeName == 'friends'"
-			v-infinite-scroll="loadF"
-			:infinite-scroll-disabled="friendsLoaded"
-			:infinite-scroll-distance="20"
-		>
-			<ContactEntry
-				v-for="i in friends"
-				:key="i.user_id"
-				:id="i.user_id"
-				:remark="i.remark"
-				:name="i.nickname"
-				@dblclick="$emit('dblclick', i.user_id, i.remark)"
-			/>
-		</div>
-		<div
-			class="panel"
-			v-show="activeName == 'groups'"
-			v-infinite-scroll="loadG"
-			:infinite-scroll-disabled="groupsLoaded"
-			:infinite-scroll-distance="20"
-		>
-			<ContactEntry
-				v-for="i in groups"
-				:key="i.group_id"
-				:id="-i.group_id"
-				:remark="i.group_name"
-				@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
-			/>
-		</div>
 	</div>
 </template>
 
@@ -70,10 +72,10 @@
 				this.groupsAll.push(t.value)
 				t = groups.next();
 			}
-			this.groups.push(...this.groupsAll.slice(0, 10))
-			this.groupsAll = this.groupsAll.slice(10)
-			this.friends.push(...this.friendsAll.slice(0, 10))
-			this.friendsAll = this.friendsAll.slice(10)
+			this.groups.push(...this.groupsAll.slice(0, 20))
+			this.groupsAll = this.groupsAll.slice(20)
+			this.friends.push(...this.friendsAll.slice(0, 20))
+			this.friendsAll = this.friendsAll.slice(20)
 		},
 		methods: {
 			loadF() {
