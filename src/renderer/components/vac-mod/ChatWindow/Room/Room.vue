@@ -828,6 +828,11 @@
 								})
 							}
 						}))
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Download',
+							click: () => this.$emit('open-file', {action: 'download', message})
+						}))
 				}
 				menu.append(new remote.MenuItem({
 					label: 'Reply',
