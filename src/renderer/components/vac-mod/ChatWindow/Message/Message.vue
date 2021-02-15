@@ -24,149 +24,154 @@
 					:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
 					v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
 				/>
-				<div
-					class="vac-message-container"
-					:class="{
-						'vac-message-container-offset': messageOffset,
-					}"
-				>
+				<a @click.right="$emit('ctx')">
 					<div
-						class="vac-message-card"
+						class="vac-message-container"
 						:class="{
-							'vac-message-highlight': isMessageHover,
-							'vac-message-current': message.senderId === currentUserId,
-							'vac-message-deleted': message.deleted,
+							'vac-message-container-offset': messageOffset,
 						}"
-						@mouseover="onHoverMessage"
-						@mouseleave="onLeaveMessage"
 					>
 						<div
-							v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
-							class="vac-text-username"
+							class="vac-message-card"
 							:class="{
-								'vac-username-reply': !message.deleted && message.replyMessage,
+								'vac-message-highlight': isMessageHover,
+								'vac-message-current': message.senderId === currentUserId,
+								'vac-message-deleted': message.deleted,
 							}"
+							@mouseover="onHoverMessage"
+							@mouseleave="onLeaveMessage"
 						>
-							<span>{{ message.username }}</span>
-						</div>
+							<div
+								v-if="
+									roomUsers.length > 2 && message.senderId !== currentUserId
+								"
+								class="vac-text-username"
+								:class="{
+									'vac-username-reply':
+										!message.deleted && message.replyMessage,
+								}"
+							>
+								<span>{{ message.username }}</span>
+							</div>
 
-						<message-reply
-							v-if="!message.deleted && message.replyMessage"
-							:message="message"
-							:room-users="roomUsers"
-						/>
+							<message-reply
+								v-if="!message.deleted && message.replyMessage"
+								:message="message"
+								:room-users="roomUsers"
+							/>
 
-						<div v-if="message.deleted">
-							<slot name="deleted-icon">
-								<svg-icon name="deleted" class="vac-icon-deleted" />
-							</slot>
-							<span>{{ textMessages.MESSAGE_DELETED }}</span>
-						</div>
+							<div v-if="message.deleted">
+								<slot name="deleted-icon">
+									<svg-icon name="deleted" class="vac-icon-deleted" />
+								</slot>
+								<span>{{ textMessages.MESSAGE_DELETED }}</span>
+							</div>
 
-						<format-message
-							v-else-if="!message.file"
-							:content="message.content"
-							:users="roomUsers"
-							:text-formatting="textFormatting"
-							@open-user-tag="openUserTag"
-						>
-							<template #deleted-icon="data">
-								<slot name="deleted-icon" v-bind="data" />
-							</template>
-						</format-message>
+							<format-message
+								v-else-if="!message.file"
+								:content="message.content"
+								:users="roomUsers"
+								:text-formatting="textFormatting"
+								@open-user-tag="openUserTag"
+							>
+								<template #deleted-icon="data">
+									<slot name="deleted-icon" v-bind="data" />
+								</template>
+							</format-message>
 
-						<message-image
-							v-else-if="isImage"
-							:current-user-id="currentUserId"
-							:message="message"
-							:room-users="roomUsers"
-							:text-formatting="textFormatting"
-							:image-hover="imageHover"
-							@open-file="openFile"
-						>
-							<template v-for="(i, name) in $scopedSlots" #[name]="data">
-								<slot :name="name" v-bind="data" />
-							</template>
-						</message-image>
+							<message-image
+								v-else-if="isImage"
+								:current-user-id="currentUserId"
+								:message="message"
+								:room-users="roomUsers"
+								:text-formatting="textFormatting"
+								:image-hover="imageHover"
+								@open-file="openFile"
+							>
+								<template v-for="(i, name) in $scopedSlots" #[name]="data">
+									<slot :name="name" v-bind="data" />
+								</template>
+							</message-image>
 
-						<div v-else-if="isVideo" class="vac-video-container">
-							<video width="100%" height="100%" controls>
-								<source :src="message.file.url" />
-							</video>
-						</div>
-
-						<div v-else-if="message.file.audio" class="vac-audio-message">
-							<div id="vac-audio-player">
-								<audio v-if="message.file.audio" controls>
+							<div v-else-if="isVideo" class="vac-video-container">
+								<video width="100%" height="100%" controls>
 									<source :src="message.file.url" />
-								</audio>
+								</video>
 							</div>
-						</div>
 
-						<div v-else class="vac-file-message">
-							<div
-								class="vac-svg-button vac-icon-file"
-								@click.stop="openFile('download')"
+							<div v-else-if="message.file.audio" class="vac-audio-message">
+								<div id="vac-audio-player">
+									<audio v-if="message.file.audio" controls>
+										<source :src="message.file.url" />
+									</audio>
+								</div>
+							</div>
+
+							<div v-else class="vac-file-message">
+								<div
+									class="vac-svg-button vac-icon-file"
+									@click.stop="openFile('download')"
+								>
+									<slot name="document-icon">
+										<svg-icon name="document" />
+									</slot>
+								</div>
+								<span>{{ message.content }}</span>
+							</div>
+
+							<div class="vac-text-timestamp">
+								<div
+									v-if="message.edited && !message.deleted"
+									class="vac-icon-edited"
+								>
+									<slot name="pencil-icon">
+										<svg-icon name="pencil" />
+									</slot>
+								</div>
+								<span>{{ message.timestamp }}</span>
+								<span v-if="isCheckmarkVisible">
+									<slot name="checkmark-icon" v-bind="{ message }">
+										<svg-icon
+											:name="
+												message.distributed ? 'double-checkmark' : 'checkmark'
+											"
+											:param="message.seen ? 'seen' : ''"
+											class="vac-icon-check"
+										/>
+									</slot>
+								</span>
+							</div>
+
+							<message-actions
+								:current-user-id="currentUserId"
+								:message="message"
+								:message-actions="messageActions"
+								:room-footer-ref="roomFooterRef"
+								:show-reaction-emojis="showReactionEmojis"
+								:hide-options="hideOptions"
+								:message-hover="messageHover"
+								:hover-message-id="hoverMessageId"
+								@hide-options="$emit('hide-options', false)"
+								@update-message-hover="messageHover = $event"
+								@update-options-opened="optionsOpened = $event"
+								@update-emoji-opened="emojiOpened = $event"
+								@message-action-handler="messageActionHandler"
+								@send-message-reaction="sendMessageReaction($event)"
 							>
-								<slot name="document-icon">
-									<svg-icon name="document" />
-								</slot>
-							</div>
-							<span>{{ message.content }}</span>
+								<template v-for="(i, name) in $scopedSlots" #[name]="data">
+									<slot :name="name" v-bind="data" />
+								</template>
+							</message-actions>
 						</div>
 
-						<div class="vac-text-timestamp">
-							<div
-								v-if="message.edited && !message.deleted"
-								class="vac-icon-edited"
-							>
-								<slot name="pencil-icon">
-									<svg-icon name="pencil" />
-								</slot>
-							</div>
-							<span>{{ message.timestamp }}</span>
-							<span v-if="isCheckmarkVisible">
-								<slot name="checkmark-icon" v-bind="{ message }">
-									<svg-icon
-										:name="
-											message.distributed ? 'double-checkmark' : 'checkmark'
-										"
-										:param="message.seen ? 'seen' : ''"
-										class="vac-icon-check"
-									/>
-								</slot>
-							</span>
-						</div>
-
-						<message-actions
+						<message-reactions
 							:current-user-id="currentUserId"
 							:message="message"
-							:message-actions="messageActions"
-							:room-footer-ref="roomFooterRef"
-							:show-reaction-emojis="showReactionEmojis"
-							:hide-options="hideOptions"
-							:message-hover="messageHover"
-							:hover-message-id="hoverMessageId"
-							@hide-options="$emit('hide-options', false)"
-							@update-message-hover="messageHover = $event"
-							@update-options-opened="optionsOpened = $event"
-							@update-emoji-opened="emojiOpened = $event"
-							@message-action-handler="messageActionHandler"
+							:emojis-list="emojisList"
 							@send-message-reaction="sendMessageReaction($event)"
-						>
-							<template v-for="(i, name) in $scopedSlots" #[name]="data">
-								<slot :name="name" v-bind="data" />
-							</template>
-						</message-actions>
+						/>
 					</div>
-
-					<message-reactions
-						:current-user-id="currentUserId"
-						:message="message"
-						:emojis-list="emojisList"
-						@send-message-reaction="sendMessageReaction($event)"
-					/>
-				</div>
+				</a>
 			</slot>
 		</div>
 	</div>
