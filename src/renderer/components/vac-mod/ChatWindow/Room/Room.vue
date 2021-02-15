@@ -65,9 +65,12 @@
 						</infinite-loading>
 					</transition>
 					<transition-group :key="roomId" name="vac-fade-message">
-						<template v-for="(m, i) in messages">
+						<a
+							v-for="(m, i) in messages"
+							:key="m._id"
+							@dblclick="replyMessage(m)"
+						>
 							<message
-								:key="m._id"
 								:current-user-id="currentUserId"
 								:message="m"
 								:index="i"
@@ -94,7 +97,7 @@
 									<slot :name="name" v-bind="data" />
 								</template>
 							</message>
-						</template>
+						</a>
 					</transition-group>
 				</div>
 			</div>
@@ -831,7 +834,7 @@
 					menu.append(new remote.MenuItem(
 						{
 							label: 'Download',
-							click: () => this.$emit('open-file', {action: 'download', message})
+							click: () => this.$emit('open-file', { action: 'download', message })
 						}))
 				}
 				menu.append(new remote.MenuItem({
