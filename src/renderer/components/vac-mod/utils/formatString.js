@@ -108,16 +108,20 @@ function compileToJSON(str) {
 		const char = minIndexOfKey
 		let strRight = str.substr(minIndexOf + char.length)
 
+		if (str.replace(/\s/g, '').length === char.length * 2) {
+			return [str]
+		}
+
 		const match = strRight.match(
 			new RegExp(
 				'^(' +
-					(pseudoMarkdown[char].allowed_chars || '.') +
-					'*' +
-					(pseudoMarkdown[char].end ? '?' : '') +
-					')' +
-					(pseudoMarkdown[char].end
-						? '(' + pseudoMarkdown[char].end + ')'
-						: ''),
+				(pseudoMarkdown[char].allowed_chars || '.') +
+				'*' +
+				(pseudoMarkdown[char].end ? '?' : '') +
+				')' +
+				(pseudoMarkdown[char].end
+					? '(' + pseudoMarkdown[char].end + ')'
+					: ''),
 				'm'
 			)
 		)

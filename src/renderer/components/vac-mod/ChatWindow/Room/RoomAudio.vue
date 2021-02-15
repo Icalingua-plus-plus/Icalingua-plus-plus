@@ -1,7 +1,7 @@
 <template>
 	<div class="vac-icon-textarea-left">
-		<div class="vac-svg-button" @click="recordAudio">
-			<slot v-if="recorder.state === 'recording'" name="microphone-off-icon">
+		<div class="vac-svg-button" @click="toggleRecorder">
+			<slot v-if="recorder.isRecording" name="microphone-off-icon">
 				<svg-icon name="microphone-off" class="vac-icon-microphone-off" />
 			</slot>
 			<slot v-else name="microphone-icon">
@@ -14,66 +14,72 @@
 <script>
 import SvgIcon from '../../components/SvgIcon'
 
+import Recorder from '../../utils/recorder'
+
 export default {
 	name: 'RoomAudio',
 	components: {
 		SvgIcon
 	},
 
+	props: {
+		bitRate: { type: Number, default: 128 },
+		sampleRate: { type: Number, default: 44100 },
+		format: { type: String, default: 'wav' },
+		micFailed: { type: Function, default: null },
+		beforeRecording: { type: Function, default: null },
+		pauseRecording: { type: Function, default: null },
+		afterRecording: { type: Function, default: null }
+	},
+
 	data() {
 		return {
-			recorder: {},
-			recordedChunks: [],
-			audioDuration: 0
+			recorder: this._initRecorder()
 		}
 	},
 
+	beforeDestroy() {
+		this.stopRecorder()
+	},
+
 	methods: {
-		async recordAudio() {
-			if (this.recorder.state === 'recording') {
-				this.recorder.stop()
-			} else {
-				this.$emit('update-file', null)
-				this.recordedChunk = await this.startRecording()
-			}
+		_initRecorder() {
+			return new Recorder({
+				beforeRecording: this.beforeRecording,
+				afterRecording: this.afterRecording,
+				pauseRecording: this.pauseRecording,
+				micFailed: this.micFailed,
+				bitRate: this.bitRate,
+				sampleRate: this.sampleRate,
+				format: this.format
+			})
 		},
-		async startRecording() {
-			this.audioDuration = new Date().getTime()
+		toggleRecorder() {
+			if (!this.recorder.isRecording) {
+				this.recorder.start()
+			} else {
+				this.recorder.stop()
 
-			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: true,
-				video: false
-			})
-
-			this.recorder = new MediaRecorder(stream)
-
-			this.recorder.ondataavailable = e => this.recordedChunks.push(e.data)
-			this.recorder.start()
-
-			const stopped = new Promise((resolve, reject) => {
-				this.recorder.onstop = resolve
-				this.recorder.onerror = event => reject(event.name)
-			})
-
-			stopped.then(async () => {
-				stream.getTracks().forEach(track => track.stop())
-
-				const blob = new Blob(this.recordedChunks, {
-					type: 'audio/ogg; codecs="opus"'
-				})
-
-				const duration = (new Date().getTime() - this.audioDuration) / 1000
+				const record = this.recorder.records[0]
 
 				this.$emit('update-file', {
-					blob: blob,
-					name: 'audio',
-					size: blob.size,
-					duration: parseFloat(duration.toFixed(2)),
-					type: blob.type,
+					blob: record.blob,
+					name: `audio.${this.format}`,
+					size: record.blob.size,
+					duration: record.duration,
+					type: record.blob.type,
 					audio: true,
-					localUrl: URL.createObjectURL(blob)
+					localUrl: URL.createObjectURL(record.blob)
 				})
-			})
+
+				this.recorder = this._initRecorder()
+			}
+		},
+		stopRecorder() {
+			if (this.recorder.isRecording) {
+				this.recorder.stop()
+				this.recorder = this._initRecorder()
+			}
 		}
 	}
 }
@@ -96,6 +102,15 @@ export default {
 
 .vac-icon-microphone-off {
 	animation: vac-scaling 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes vac-scaling {
+	0% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(1.2);
+	}
 }
 
 @media only screen and (max-width: 768px) {

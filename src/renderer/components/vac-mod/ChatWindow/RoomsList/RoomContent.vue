@@ -74,7 +74,10 @@
 						{{ typingUsers }}
 					</div>
 					<div class="vac-room-options-container">
-						<div v-if="room.unreadCount" class="vac-room-badge">
+						<div
+							v-if="room.unreadCount"
+							class="vac-badge-counter vac-room-badge"
+						>
 							{{ room.unreadCount }}
 						</div>
 						<slot name="room-list-options" v-bind="{ room }">
@@ -216,6 +219,7 @@ export default {
 	display: flex;
 	flex: 1;
 	align-items: center;
+	width: 100%;
 }
 
 .vac-name-container {
@@ -297,17 +301,7 @@ export default {
 .vac-room-badge {
 	background-color: var(--chat-room-bg-color-badge);
 	color: var(--chat-room-color-badge);
-	font-size: 11px;
-	font-weight: 500;
-	height: 13px;
-	width: auto;
-	min-width: 13px;
 	margin-left: 5px;
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 3px;
 }
 
 .vac-list-room-options {
