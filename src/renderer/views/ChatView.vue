@@ -856,8 +856,8 @@
 					{
 						label: 'Delete Chat',
 						click: () => {
-							db.unset('messages.' + data.roomId).write()
-							this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+							db.unset('messages.' + room.roomId).write()
+							this.rooms = this.rooms.filter(item => item != room)
 							db.set("rooms", this.rooms).write()
 						}
 					},
@@ -865,11 +865,11 @@
 						label: 'Ignore Chat',
 						click: () => {
 							this.ignoredChats.push({
-								id: data.roomId,
+								id: room.roomId,
 								name: room.roomName
 							})
-							db.unset('messages.' + data.roomId).write()
-							this.rooms = this.rooms.filter(item => item.roomId != data.roomId)
+							db.unset('messages.' + room.roomId).write()
+							this.rooms = this.rooms.filter(item => item != room)
 							db.set("rooms", this.rooms).write()
 							db.set("ignoredChats", this.ignoredChats).write()
 						}
