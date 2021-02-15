@@ -34,7 +34,11 @@
 			</template>
 		</room-header>
 
-		<div ref="scrollContainer" class="vac-container-scroll">
+		<div
+			ref="scrollContainer"
+			class="vac-container-scroll"
+			@scroll="containerScroll"
+		>
 			<loader :show="loadingMessages" />
 			<div class="vac-messages-container">
 				<div :class="{ 'vac-messages-hidden': loadingMessages }">
@@ -105,6 +109,14 @@
 		<div v-if="!loadingMessages">
 			<transition name="vac-bounce">
 				<div v-if="scrollIcon" class="vac-icon-scroll" @click="scrollToBottom">
+					<transition name="vac-bounce">
+						<div
+							v-if="scrollMessagesCount"
+							class="vac-badge-counter vac-messages-count"
+						>
+							{{ scrollMessagesCount }}
+						</div>
+					</transition>
 					<slot name="scroll-icon">
 						<svg-icon name="dropdown" param="scroll" />
 					</slot>
@@ -126,10 +138,10 @@
 				</template>
 			</room-message-reply>
 
-			<room-users-tag
+			<!-- <room-users-tag
 				:filtered-users-tag="filteredUsersTag"
 				@select-user-tag="selectUserTag($event)"
-			/>
+			/> -->
 
 			<div
 				class="vac-box-footer"
@@ -180,7 +192,9 @@
 							<svg-icon name="file" />
 						</slot>
 					</div>
-					<div v-if="file && file.audio" class="vac-file-message">audio</div>
+					<div v-if="file && file.audio" class="vac-file-message">
+						{{ file.name }}
+					</div>
 					<div v-else class="vac-file-message">
 						{{ message }}
 					</div>
@@ -366,6 +380,7 @@
 				emojiOpened: false,
 				hideOptions: true,
 				scrollIcon: false,
+				scrollMessagesCount: 0,
 				newMessages: [],
 				keepKeyboardOpen: false,
 				filteredUsersTag: [],
@@ -407,6 +422,7 @@
 				if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
 					this.loadingMessages = true
 					this.scrollIcon = false
+					this.scrollMessagesCount = 0
 					this.resetMessage(true)
 					if (this.roomMessage) {
 						this.message = this.roomMessage
@@ -435,15 +451,23 @@
 				if (oldVal && newVal && oldVal.length === newVal.length - 1) {
 					this.loadingMessages = false
 
-					return setTimeout(() => {
-						const options = { top: element.scrollHeight, behavior: 'smooth' }
-						element.scrollTo(options)
-					}, 50)
+					if (
+						newVal[newVal.length - 1].senderId === this.currentUserId ||
+						this.getBottomScroll(element) < 60
+					) {
+						return setTimeout(() => {
+							const options = { top: element.scrollHeight, behavior: 'smooth' }
+							element.scrollTo(options)
+						}, 50)
+					} else {
+						this.scrollIcon = true
+						return this.scrollMessagesCount++
+					}
 				}
 
 				if (this.infiniteState) {
 					this.infiniteState.loaded()
-				} else if (newVal.length) {
+				} else if (newVal.length && !this.scrollIcon) {
 					setTimeout(() => {
 						element.scrollTo({ top: element.scrollHeight })
 						this.loadingMessages = false
@@ -483,18 +507,6 @@
 			this.$refs['roomTextarea'].addEventListener('blur', () => {
 				this.resetUsersTag()
 				if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0)
-			})
-
-			this.$refs.scrollContainer.addEventListener('scroll', e => {
-				this.hideOptions = true
-				setTimeout(() => {
-					if (!e.target) return
-
-					const { scrollHeight, clientHeight, scrollTop } = e.target
-					const bottomScroll = scrollHeight - clientHeight - scrollTop
-
-					this.scrollIcon = bottomScroll > 1000
-				}, 200)
 			})
 		},
 
@@ -721,6 +733,10 @@
 
 				this.message = message.content
 			},
+			getBottomScroll(element) {
+				const { scrollHeight, clientHeight, scrollTop } = element
+				return scrollHeight - clientHeight - scrollTop
+			},
 			scrollToBottom() {
 				const element = this.$refs.scrollContainer
 				element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
@@ -853,6 +869,17 @@
 				}
 				menu.popup({ window: remote.getCurrentWindow() })
 			},
+			containerScroll(e) {
+				this.hideOptions = true
+				console.log(e)
+				setTimeout(() => {
+					if (!e.target) return
+
+					const bottomScroll = this.getBottomScroll(e.target)
+					if (bottomScroll < 60) this.scrollMessagesCount = 0
+					this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
+				}, 200)
+			}
 		}
 	}
 </script>
@@ -934,6 +961,14 @@
 		}
 	}
 
+	.vac-messages-count {
+		position: absolute;
+		top: -8px;
+		left: 11px;
+		background-color: var(--chat-message-bg-color-scroll-counter);
+		color: var(--chat-message-color-scroll-counter);
+	}
+
 	.vac-room-footer {
 		width: 100%;
 		border-bottom-right-radius: 4px;
@@ -983,15 +1018,6 @@
 		svg,
 		.vac-wrapper {
 			margin: 0 7px;
-		}
-	}
-
-	@keyframes vac-scaling {
-		0% {
-			transform: scale(1);
-		}
-		100% {
-			transform: scale(1.2);
 		}
 	}
 
