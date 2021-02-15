@@ -299,7 +299,7 @@
 	const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
 	const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
 
-	import { remote } from 'electron'
+	import { remote, clipboard } from 'electron'
 
 	export default {
 		name: 'Room',

@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "1.1.0",
+  "version": "1.1.1-dev",
   "author": "clansty <i@gao4.pw>",
   "description": "An electron-vue project",
   "license": "GPL-3.0",
