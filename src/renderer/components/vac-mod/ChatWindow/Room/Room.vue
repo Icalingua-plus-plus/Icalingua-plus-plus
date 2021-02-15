@@ -859,6 +859,19 @@
 						this.replyMessage(message)
 					}
 				}))
+				menu.append(new remote.MenuItem({
+					label: '+1',
+					click: () => {
+						const msgToSend = {
+							content: message.content,
+							replyMessage: message.replyMessage
+						}
+						if (message.file) {
+							msgToSend.imgpath = this.file.url
+						}
+						this.$emit('send-message', msgToSend)
+					}
+				}))
 				if (message.senderId === this.currentUserId) {
 					menu.append(new remote.MenuItem({
 						label: 'Delete',
@@ -871,7 +884,6 @@
 			},
 			containerScroll(e) {
 				this.hideOptions = true
-				console.log(e)
 				setTimeout(() => {
 					if (!e.target) return
 
