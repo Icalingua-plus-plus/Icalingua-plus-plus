@@ -31,9 +31,6 @@
       "target": [
         {
           "target": "7z"
-        },
-        {
-          "target": "appx"
         }
       ],
       "icon": "static/Project2.ico"
