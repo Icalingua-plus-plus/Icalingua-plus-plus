@@ -369,7 +369,8 @@
 				if (replyMessage) {
 					message.replyMessage = {
 						_id: replyMessage._id,
-						content: replyMessage.username + ": " + replyMessage.content
+						username: replyMessage.username,
+						content: replyMessage.content
 					}
 					if (replyMessage.file) {
 						message.replyMessage.file = replyMessage.file
@@ -555,11 +556,16 @@
 						case "reply":
 							const replyMessage = db.get('messages.' + roomId)
 								.find({ _id: m.data.id }).value()
-							if (replyMessage)
+							if (replyMessage) {
 								message.replyMessage = {
 									_id: m.data.id,
-									content: replyMessage.username + ": " + replyMessage.content
+									username: replyMessage.username,
+									content: replyMessage.content
 								}
+								if (replyMessage.file) {
+									message.replyMessage.file = replyMessage.file
+								}
+							}
 							break
 						case "json":
 							const json = m.data.data
@@ -946,7 +952,7 @@
 					],
 					lastMessage: { content: "", timestamp: "" }
 				}
-				if (id < 0)
+				if (roomId < 0)
 					room.users.push({ _id: 3, username: '3' })
 				return room
 			}

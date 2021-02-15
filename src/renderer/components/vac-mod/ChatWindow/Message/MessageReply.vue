@@ -1,7 +1,7 @@
 <template>
 	<div class="vac-reply-message">
-		<div class="vac-reply-username">
-			{{ replyUsername }}
+		<div class="vac-reply-username" v-if="message.replyMessage.username">
+			{{ message.replyMessage.username }}
 		</div>
 
 		<div v-if="isImage" class="vac-image-reply-container">
@@ -39,11 +39,6 @@ export default {
 	},
 
 	computed: {
-		replyUsername() {
-			const { senderId } = this.message.replyMessage
-			const replyUser = this.roomUsers.find(user => user._id === senderId)
-			return replyUser ? replyUser.username : ''
-		},
 		isImage() {
 			return isImageFile(this.message.replyMessage.file)
 		}
@@ -63,6 +58,7 @@ export default {
 		font-size: 12px;
 		line-height: 15px;
 		margin-bottom: 2px;
+		white-space: nowrap;
 	}
 
 	.vac-image-reply-container {
