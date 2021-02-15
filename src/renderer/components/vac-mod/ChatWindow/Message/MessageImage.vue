@@ -2,7 +2,7 @@
 	<div
 		ref="imageRef"
 		class="vac-image-container"
-		:class="{ 'vac-image-container-loading': isImageLoading }"
+		:class="{ 'vac-image-container-loading': isImageLoading || err }"
 	>
 		<loader
 			:style="{ top: `${imageResponsive.loaderTop}px` }"
@@ -12,6 +12,7 @@
 			class="vac-message-image-mod"
 			:class="{
 				'vac-image-loading': isImageLoading,
+				'vac-image-err': err,
 			}"
 			:style="{
 				//'background-image': `url('${message.file.url}')`,
@@ -24,6 +25,10 @@
 				fit="cover"
 				referrer-policy="no-referrer"
 				@load="imageLoading = false"
+				@error="
+					imageLoading = false;
+					err = true;
+				"
 			>
 				<div slot="error" class="image-slot">
 					<i class="el-icon-picture-outline"></i>
@@ -81,7 +86,8 @@
 		data() {
 			return {
 				imageLoading: true,
-				imageResponsive: ''
+				imageResponsive: '',
+				err: false
 			}
 		},
 
@@ -137,6 +143,20 @@
 		height: 250px;
 	}
 
+	.vac-image-err {
+		height: 250px;
+	}
+
+	::v-deep .image-slot {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 100%;
+		height: 100%;
+		font-size: 30px;
+		color: #909399;
+	}
+
 	.vac-message-image-mod {
 		position: relative;
 		background-color: var(--chat-message-bg-color-image) !important;
@@ -154,6 +174,8 @@
 
 	.el-image {
 		vertical-align: top;
+		height: -webkit-fill-available;
+		width: -webkit-fill-available;
 	}
 
 	::v-deep img {

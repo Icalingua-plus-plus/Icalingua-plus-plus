@@ -524,7 +524,6 @@
 						case "flash":
 							room.lastMessage.content += "[Image]"
 							var url = m.data.url
-							url = url.replace("http://", "nya://").replace("https://", "nya://")
 							message.file = {
 								type: "image/jpeg",
 								url
@@ -532,7 +531,7 @@
 							break
 						case "bface":
 							room.lastMessage.content += "[Sticker]" + m.data.text
-							var url = `nya://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(0, 32)}/300x300.png`
+							var url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(0, 32)}/300x300.png`
 							message.file = {
 								type: "image/webp",
 								url
@@ -679,14 +678,14 @@
 							useContentSize: true
 						}
 					)
-					prev.loadURL(data.message.file.url.replace("nya://", "https://"))
+					prev.loadURL(data.message.file.url)
 					prev.title = data.message.username + "'s image"
 				}
 				else if (data.action == "download") {
 					if (data.message.file.type.includes('image')) {
 						const downdir = remote.app.getPath("downloads")
 						const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
-						download(data.message.file.url.replace("nya://", "https://"), downpath, () => {
+						download(data.message.file.url, downpath, () => {
 							this.$notify.success({
 								title: 'Image Saved',
 								message: downpath
