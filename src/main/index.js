@@ -89,11 +89,6 @@ app.on('ready', () => {
 			app.setAppUserModelId("Electron QQ")
 		const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
 		global.glodb = Datastore(adapter)
-		protocol.registerHttpProtocol('nya', (req, cb) => {
-			cb({
-				url: req.url.replace("nya://", "https://")
-			})
-		})
 		if (process.env.NODE_ENV === 'development')
 			protocol.registerFileProtocol('file', (request, cb) => {
 				const pathname = request.url.replace('file:///', '')
