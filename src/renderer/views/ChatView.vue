@@ -455,9 +455,6 @@
 					data.room.unreadCount = 0
 					this.selectedRoom = data.room
 					db.set("rooms", this.rooms).write()
-					const muted = (data.room.roomId < 0 && this.muteAllGroups && !data.room.unmute) ||
-						(data.room.roomId < 0 && !this.muteAllGroups && data.room.mute) ||
-						(data.room.roomId > 0 && data.room.mute)
 				}
 				const msgs2add = db.get("messages." + data.room.roomId)
 					.dropRightWhile(e => this.messages.includes(e))
@@ -984,7 +981,12 @@
 			},
 
 			getUnreadCount() {
-				return this.rooms.filter(e => e.unreadCount).length
+				return this.rooms.filter(e => {
+					const muted = (e.roomId < 0 && this.muteAllGroups && !e.unmute) ||
+						(e.roomId < 0 && !this.muteAllGroups && e.mute) ||
+						(e.roomId > 0 && e.mute)
+					return e.unreadCount && !muted
+				}).length
 			},
 
 			clearCurrentRoomUnread() {
