@@ -92,7 +92,6 @@
 	}
 	.grid {
 		display: grid;
-		height: 100%;
 		width: 100%;
 		overflow-y: auto;
 		grid-template-columns: 1fr 1fr 1fr 1fr;
