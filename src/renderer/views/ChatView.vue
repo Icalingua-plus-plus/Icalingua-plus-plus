@@ -319,6 +319,7 @@
 			bot.on('system.online', this.online)
 			bot.on('system.offline', this.onOffline)
 			bot.on('notice.friend.poke', this.friendpoke)
+			remote.getCurrentWindow().on('focus', this.clearCurrentRoomUnread)
 		},
 		methods: {
 			async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath }) {
@@ -569,7 +570,7 @@
 							break
 						case "json":
 							const json = m.data.data
-							var appurl = null
+							let appurl
 							const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
 							const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/
 							const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/
@@ -586,18 +587,26 @@
 								room.lastMessage.content = appurl
 								message.content = appurl
 							}
+							else {
+								room.lastMessage.content = '[JSON]'
+								message.content = '[JSON]'
+							}
 							break
 						case "xml":
+							const urlRegex = /url="([^"]+)"/
+							if (urlRegex.test(m.data.data))
+								appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
 							if (m.data.data.includes('action="viewMultiMsg"')) {
 								room.lastMessage.content += '[Forward multiple messages]'
 								message.content += '[Forward multiple messages]'
 							}
-							const urlRegex = /url="([^"]+)"/
-							if (urlRegex.test(m.data.data))
-								appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
-							if (appurl) {
+							else if (appurl) {
 								room.lastMessage.content = appurl
 								message.content = appurl
+							}
+							else {
+								room.lastMessage.content += '[XML]'
+								message.content += '[XML]'
 							}
 							break
 						case "face":
@@ -655,13 +664,13 @@
 					}
 				}
 
-				if (room != this.selectedRoom) {
+				if (room != this.selectedRoom || !remote.getCurrentWindow().isFocused()) {
 					if (isSelfMsg)
 						room.unreadCount = 0
 					else
 						room.unreadCount++
 				}
-				else
+				if (room == this.selectedRoom)
 					this.messages = [...this.messages, message]
 
 				db.set("rooms", this.rooms).write()
@@ -811,6 +820,7 @@
 						bot.removeListener('system.online', this.online)
 						bot.removeListener('system.offline', this.onOffline)
 						bot.removeListener('notice.friend.poke', this.friendpoke)
+						remote.getCurrentWindow().removeListener('focus', this.clearCurrentRoomUnread)
 						location.reload();
 					}
 				}))
@@ -969,6 +979,14 @@
 						this.panel = 'stickers'
 					})
 				})
+			},
+
+			getUnreadCount() {
+				return this.rooms.filter(e => e.unreadCount).length
+			},
+
+			clearCurrentRoomUnread() {
+				this.selectedRoom.unreadCount = 0
 			}
 		}
 	}
