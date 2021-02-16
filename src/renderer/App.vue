@@ -15,7 +15,7 @@
 <style>
 	@font-face {
 		font-family: "font";
-		src: url("~@/assets/font.ttf");
+		src: url("~@/assets/msyh.ttf");
 	}
 	* {
 		font-family: "font";
