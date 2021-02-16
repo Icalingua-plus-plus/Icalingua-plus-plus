@@ -468,6 +468,7 @@
 					else
 						this.messagesLoaded = true
 				}, 0)				// db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
+				this.updateTrayIcon()
 			},
 
 			onQQMessage(data) {
@@ -672,6 +673,7 @@
 				}
 				if (room == this.selectedRoom)
 					this.messages = [...this.messages, message]
+				this.updateTrayIcon()
 
 				db.set("rooms", this.rooms).write()
 				db.get('messages.' + roomId).push(message)
@@ -987,6 +989,16 @@
 
 			clearCurrentRoomUnread() {
 				this.selectedRoom.unreadCount = 0
+				this.updateTrayIcon()
+			},
+
+			updateTrayIcon() {
+				let p
+				if (this.getUnreadCount())
+					p = path.join(__static, 'newmsg.png')
+				else
+					p = path.join(__static, '256x256.png')
+				this.tray.setImage(p)
 			}
 		}
 	}
