@@ -224,7 +224,7 @@
 				},
 				view: 'chats',
 				username: '',
-
+				darkTaskIcon: false
 			}
 		},
 		created() {
@@ -236,12 +236,14 @@
 				messages: {},
 				muteAllGroups: false,
 				dnd: false,
-				ignoredChats: []
+				ignoredChats: [],
+				darkTaskIcon: false
 			})
 				.write()
 			this.rooms = db.get("rooms").value()
 			this.muteAllGroups = db.get("muteAllGroups").value()
 			this.dnd = db.get("dnd").value()
+			this.darkTaskIcon = db.get("darkTaskIcon").value()
 			this.ignoredChats = db.get('ignoredChats').value()
 			this.dndMenuItem = new remote.MenuItem({
 				label: 'Disable notifications', type: 'checkbox',
@@ -271,6 +273,29 @@
 						}
 					},
 					this.dndMenuItem,
+					{
+						label: 'Icon theme',
+						submenu: [
+							{
+								label: 'Dark', type: 'radio',
+								checked: this.darkTaskIcon,
+								click: () => {
+									this.darkTaskIcon = true
+									this.updateTrayIcon()
+									db.set("darkTaskIcon", true).write()
+								}
+							},
+							{
+								label: 'Light', type: 'radio',
+								checked: !this.darkTaskIcon,
+								click: () => {
+									this.darkTaskIcon = false
+									this.updateTrayIcon()
+									db.set("darkTaskIcon", false).write()
+								}
+							}
+						]
+					},
 					{ label: 'Exit', type: 'normal', click: () => { remote.getCurrentWindow().destroy() } }
 				]))
 				this.tray.on("click", () => {
@@ -997,9 +1022,9 @@
 			updateTrayIcon() {
 				let p
 				if (this.getUnreadCount())
-					p = path.join(__static, 'newmsg.png')
+					p = path.join(__static, this.darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')
 				else
-					p = path.join(__static, '256x256.png')
+					p = path.join(__static, this.darkTaskIcon ? 'dark.png' : '256x256.png')
 				this.tray.setImage(p)
 			}
 		}
