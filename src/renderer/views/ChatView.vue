@@ -529,6 +529,7 @@
 					db.set('messages.' + roomId, []).write()
 				}
 				else {
+					room.roomName = roomName
 					this.rooms = [room, ...this.rooms.filter(item => item !== room)];
 				}//bring the room first
 
