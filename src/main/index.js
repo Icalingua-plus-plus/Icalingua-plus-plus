@@ -62,7 +62,8 @@ global.loadMainWindow = function () {
 			nodeIntegration: true,
 			enableRemoteModule: true,
 			webSecurity: false
-		}
+		},
+		icon: path.join(__static, '/512x512.png')
 	})
 
 	if (!process.env.NYA)
@@ -112,7 +113,8 @@ app.on('ready', () => {
 				webPreferences: {
 					nodeIntegration: true,
 					enableRemoteModule: true
-				}
+				},
+				icon: path.join(__static, '/512x512.png')
 			})
 
 			loginWindow.loadURL(winURL + "#/login")
@@ -140,9 +142,11 @@ app.on('web-contents-created', (e, webContents) => {
 app.on('second-instance', () => {
 	if (mainWindow) {
 		mainWindow.show()
+		mainWindow.focus()
 	}
 	else if (loginWindow) {
 		loginWindow.show()
+		loginWindow.focus()
 	}
 })
 
