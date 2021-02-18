@@ -705,22 +705,11 @@
 			},
 
 			openImage(data) {
-				if (data.action == "preview") {
-					var prev = new remote.BrowserWindow(
-						{
-							height: 800,
-							width: 800,
-							useContentSize: true
-						}
-					)
-					prev.loadURL(data.message.file.url)
-					prev.title = data.message.username + "'s image"
-				}
-				else if (data.action == "download") {
+				if (data.action == "download") {
 					if (data.message.file.type.includes('image')) {
 						const downdir = remote.app.getPath("downloads")
 						const downpath = path.join(downdir, "QQ_Image_" + new Date().getTime() + ".jpg")
-						download(data.message.file.url, downpath, () => {
+						download(data.message.file.url.replace('http://', 'https://'), downpath, () => {
 							this.$notify.success({
 								title: 'Image Saved',
 								message: downpath
