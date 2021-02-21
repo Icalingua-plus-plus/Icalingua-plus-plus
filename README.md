@@ -29,3 +29,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search contacts
 - more faces
 - @me @all
+- &amp
