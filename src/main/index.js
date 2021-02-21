@@ -55,9 +55,12 @@ global.loadMainWindow = function () {
 	loginWindow.destroy()
 	//start main window
 	const size = screen.getPrimaryDisplay().size
+	var width = size.width - 300
+	if (width > 1440)
+		width = 1440
 	mainWindow = new BrowserWindow({
 		height: size.height - 200,
-		width: size.width - 300,
+		width,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true,

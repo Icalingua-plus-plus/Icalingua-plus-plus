@@ -1,8 +1,8 @@
 {
   "name": "electron-qq",
-  "version": "1.2.1",
+  "version": "1.2.2-dev",
   "author": "clansty <i@gao4.pw>",
-  "description": "An electron-vue project",
+  "description": "A cross-plantform QQ made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "scripts": {
