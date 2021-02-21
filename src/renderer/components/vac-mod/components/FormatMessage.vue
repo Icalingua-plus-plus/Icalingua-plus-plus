@@ -13,7 +13,8 @@
 						'vac-text-strike': message.strike,
 						'vac-text-underline': message.underline,
 						'vac-text-inline-code': !singleLine && message.inline,
-						'vac-text-multiline-code': !singleLine && message.multiline,
+						'vac-text-multiline-code':
+							!singleLine && message.multiline,
 						'vac-text-tag': !singleLine && !reply && message.tag,
 					}"
 					:href="message.href"
@@ -21,7 +22,11 @@
 					@click="openTag(message)"
 				>
 					<slot name="deleted-icon" v-bind="{ deleted }">
-						<svg-icon v-if="deleted" name="deleted" class="vac-icon-deleted" />
+						<svg-icon
+							v-if="deleted"
+							name="deleted"
+							class="vac-icon-deleted"
+						/>
 					</slot>
 					<template v-if="message.url && message.image">
 						<div class="vac-image-link-container">
@@ -44,7 +49,7 @@
 				<img
 					v-if="message.face"
 					:key="i"
-					:src="facepath + message.value + '.gif'"
+					:src="facepath + 's' + message.value + '.gif'"
 					:alt="message.value"
 				/>
 			</template>
@@ -56,152 +61,161 @@
 </template>
 
 <script>
-	import SvgIcon from './SvgIcon'
+import SvgIcon from "./SvgIcon";
 
-	const path = require('path')
+const path = require("path");
 
-	import formatString from '../utils/formatString'
-	import { IMAGE_TYPES } from '../utils/constants'
+import formatString from "../utils/formatString";
+import { IMAGE_TYPES } from "../utils/constants";
 
-	export default {
-		name: 'FormatMessage',
-		components: { SvgIcon },
+export default {
+	name: "FormatMessage",
+	components: { SvgIcon },
 
-		props: {
-			content: { type: [String, Number], required: true },
-			deleted: { type: Boolean, default: false },
-			users: { type: Array, default: () => [] },
-			linkify: { type: Boolean, default: true },
-			singleLine: { type: Boolean, default: false },
-			reply: { type: Boolean, default: false },
-			textFormatting: { type: Boolean, required: true }
+	props: {
+		content: { type: [String, Number], required: true },
+		deleted: { type: Boolean, default: false },
+		users: { type: Array, default: () => [] },
+		linkify: { type: Boolean, default: true },
+		singleLine: { type: Boolean, default: false },
+		reply: { type: Boolean, default: false },
+		textFormatting: { type: Boolean, required: true },
+	},
+
+	data() {
+		return {
+			facepath: path.join(__static, "/sysface_res/gif/"),
+		};
+	},
+
+	computed: {
+		linkifiedMessage() {
+			const message = formatString(
+				this.formatTags(this.content),
+				this.linkify
+			);
+
+			message.forEach((m) => {
+				m.url = this.checkType(m, "url");
+				m.bold = this.checkType(m, "bold");
+				m.italic = this.checkType(m, "italic");
+				m.strike = this.checkType(m, "strike");
+				m.underline = this.checkType(m, "underline");
+				m.inline = this.checkType(m, "inline-code");
+				m.multiline = this.checkType(m, "multiline-code");
+				m.tag = this.checkType(m, "tag");
+				m.face = this.checkType(m, "face");
+				m.image = this.checkImageType(m);
+			});
+
+			return message;
 		},
+		formattedContent() {
+			return this.formatTags(this.content);
+		},
+	},
 
-		data() {
-			return {
-				facepath: path.join(__static, '/qq-face/')
+	methods: {
+		checkType(message, type) {
+			return message.types.indexOf(type) !== -1;
+		},
+		checkImageType(message) {
+			let index = message.value.lastIndexOf(".");
+			const slashIndex = message.value.lastIndexOf("/");
+			if (slashIndex > index) index = -1;
+
+			const type = message.value.substring(
+				index + 1,
+				message.value.length
+			);
+
+			const isMedia =
+				index > 0 &&
+				IMAGE_TYPES.some((t) => type.toLowerCase().includes(t));
+
+			if (isMedia) this.setImageSize(message);
+
+			return isMedia;
+		},
+		setImageSize(message) {
+			const image = new Image();
+			image.src = message.value;
+
+			image.addEventListener("load", onLoad);
+
+			function onLoad(img) {
+				const ratio = img.path[0].width / 150;
+				message.height = Math.round(img.path[0].height / ratio) + "px";
+				image.removeEventListener("load", onLoad);
 			}
 		},
+		formatTags(content) {
+			this.users.forEach((user) => {
+				const index = content.indexOf(user._id);
+				const isTag =
+					content.substring(index - 9, index) === "<usertag>";
+				if (isTag)
+					content = content.replace(user._id, `@${user.username}`);
+			});
 
-		computed: {
-			linkifiedMessage() {
-				const message = formatString(this.formatTags(this.content), this.linkify)
-
-				message.forEach(m => {
-					m.url = this.checkType(m, 'url')
-					m.bold = this.checkType(m, 'bold')
-					m.italic = this.checkType(m, 'italic')
-					m.strike = this.checkType(m, 'strike')
-					m.underline = this.checkType(m, 'underline')
-					m.inline = this.checkType(m, 'inline-code')
-					m.multiline = this.checkType(m, 'multiline-code')
-					m.tag = this.checkType(m, 'tag')
-					m.face = this.checkType(m, 'face')
-					m.image = this.checkImageType(m)
-				})
-
-				return message
-			},
-			formattedContent() {
-				return this.formatTags(this.content)
+			return content;
+		},
+		openTag(message) {
+			if (!this.singleLine && this.checkType(message, "tag")) {
+				const user = this.users.find(
+					(u) => message.value.indexOf(u.username) !== -1
+				);
+				this.$emit("open-user-tag", user);
 			}
 		},
-
-		methods: {
-			checkType(message, type) {
-				return message.types.indexOf(type) !== -1
-			},
-			checkImageType(message) {
-				let index = message.value.lastIndexOf('.')
-				const slashIndex = message.value.lastIndexOf('/')
-				if (slashIndex > index) index = -1
-
-				const type = message.value.substring(index + 1, message.value.length)
-
-				const isMedia =
-					index > 0 && IMAGE_TYPES.some(t => type.toLowerCase().includes(t))
-
-				if (isMedia) this.setImageSize(message)
-
-				return isMedia
-			},
-			setImageSize(message) {
-				const image = new Image()
-				image.src = message.value
-
-				image.addEventListener('load', onLoad)
-
-				function onLoad(img) {
-					const ratio = img.path[0].width / 150
-					message.height = Math.round(img.path[0].height / ratio) + 'px'
-					image.removeEventListener('load', onLoad)
-				}
-			},
-			formatTags(content) {
-				this.users.forEach(user => {
-					const index = content.indexOf(user._id)
-					const isTag = content.substring(index - 9, index) === '<usertag>'
-					if (isTag) content = content.replace(user._id, `@${user.username}`)
-				})
-
-				return content
-			},
-			openTag(message) {
-				if (!this.singleLine && this.checkType(message, 'tag')) {
-					const user = this.users.find(
-						u => message.value.indexOf(u.username) !== -1
-					)
-					this.$emit('open-user-tag', user)
-				}
-			}
-		}
-	}
+	},
+};
 </script>
 
 <style scoped>
-	.vac-icon-deleted {
-		height: 14px;
-		width: 14px;
-		vertical-align: middle;
-		margin: -3px 1px 0 0;
-		fill: var(--chat-room-color-message);
-	}
+.vac-icon-deleted {
+	height: 14px;
+	width: 14px;
+	vertical-align: middle;
+	margin: -3px 1px 0 0;
+	fill: var(--chat-room-color-message);
+}
 
-	.vac-text-ellipsis {
-		width: 100%;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
+.vac-text-ellipsis {
+	width: 100%;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
-	.vac-image-link-container {
-		background-color: var(--chat-message-bg-color-media);
-		padding: 8px;
-		margin: 2px auto;
-		border-radius: 4px;
-	}
+.vac-image-link-container {
+	background-color: var(--chat-message-bg-color-media);
+	padding: 8px;
+	margin: 2px auto;
+	border-radius: 4px;
+}
 
-	.vac-image-link {
-		position: relative;
-		background-color: var(--chat-message-bg-color-image) !important;
-		background-size: contain;
-		background-position: center center !important;
-		background-repeat: no-repeat !important;
-		height: 150px;
-		width: 150px;
-		max-width: 100%;
-		border-radius: 4px;
-		margin: 0 auto;
-	}
+.vac-image-link {
+	position: relative;
+	background-color: var(--chat-message-bg-color-image) !important;
+	background-size: contain;
+	background-position: center center !important;
+	background-repeat: no-repeat !important;
+	height: 150px;
+	width: 150px;
+	max-width: 100%;
+	border-radius: 4px;
+	margin: 0 auto;
+}
 
-	.vac-image-link-message {
-		max-width: 166px;
-		font-size: 12px;
-	}
+.vac-image-link-message {
+	max-width: 166px;
+	font-size: 12px;
+}
 
-	img {
-		width: 18px;
-		height: 18px;
-		margin-bottom: -4px;
-	}
+img {
+	width: 18px;
+	height: 18px;
+	margin-bottom: -4px;
+}
 </style>
