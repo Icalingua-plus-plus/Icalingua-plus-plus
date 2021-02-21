@@ -142,7 +142,7 @@
 								</span>
 							</div>
 
-							<message-actions
+							<!-- <message-actions
 								:current-user-id="currentUserId"
 								:message="message"
 								:message-actions="messageActions"
@@ -161,7 +161,7 @@
 								<template v-for="(i, name) in $scopedSlots" #[name]="data">
 									<slot :name="name" v-bind="data" />
 								</template>
-							</message-actions>
+							</message-actions> -->
 						</div>
 
 						<message-reactions

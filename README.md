@@ -30,5 +30,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - more faces
 - @me @all
 - fix selection corner
-- window size
-- zoom
