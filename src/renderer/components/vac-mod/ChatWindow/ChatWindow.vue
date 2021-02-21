@@ -346,7 +346,6 @@
 
 		* {
 			font-family: inherit;
-			overflow: inherit;
 		}
 
 		a {
