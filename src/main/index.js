@@ -76,6 +76,7 @@ global.loadMainWindow = function () {
 		})
 
 	mainWindow.loadURL(winURL + "#/main")
+	mainWindow.webContents.setVisualZoomLevelLimits(1, 3)
 
 	global.tray = new Tray(path.join(__static, '/256x256.png'))
 	isLoggingin = false
