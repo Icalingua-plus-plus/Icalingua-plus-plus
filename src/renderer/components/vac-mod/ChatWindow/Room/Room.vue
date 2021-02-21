@@ -69,7 +69,7 @@
 						</infinite-loading>
 					</transition>
 					<transition-group :key="roomId" name="vac-fade-message">
-						<a
+						<div
 							v-for="(m, i) in messages"
 							:key="m._id"
 							@dblclick="replyMessage(m)"
@@ -101,7 +101,7 @@
 									<slot :name="name" v-bind="data" />
 								</template>
 							</message>
-						</a>
+						</div>
 					</transition-group>
 				</div>
 			</div>
