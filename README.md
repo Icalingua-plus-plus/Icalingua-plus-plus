@@ -29,4 +29,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search contacts
 - @me @all
 - custom font
-- task bar number

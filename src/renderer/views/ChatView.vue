@@ -1,5 +1,5 @@
 <template>
-	<div ondragstart="return false;">
+	<div ondragstart="return false;" :style="{ fontFamily }">
 		<el-container>
 			<el-aside width="65px" ondragstart="return false;">
 				<!-- sidebar -->
@@ -45,7 +45,6 @@
 						/>
 					</el-col>
 					<el-col :span="panel ? 13 : 19">
-						<div class="el-loading-spinner"></div>
 						<chat-window
 							:current-user-id="account"
 							:rooms="rooms"
@@ -248,6 +247,7 @@ export default {
 			view: "chats",
 			username: "",
 			darkTaskIcon: false,
+			fontFamily: "font, CircularSpotifyTxT Book Web, msyh"
 		};
 	},
 	created() {
@@ -385,6 +385,14 @@ export default {
 			e.preventDefault();
 			e.stopPropagation();
 		});
+
+		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
+			console.log('nya')
+			var myFonts = new FontFace('font', `url(${path.join(STORE_PATH, 'font.ttf')})`, {});
+			myFonts.load().then(function (loadFace) {
+				document.fonts.add(loadFace);
+			});
+		}
 
 		bot.on("message", this.onQQMessage);
 		bot.on("notice.friend.recall", this.friendRecall);
@@ -1149,14 +1157,13 @@ export default {
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-				document.title=`Electron QQ (${unread})`
-			} 
-			else {
+				document.title = `Electron QQ (${unread})`;
+			} else {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "dark.png" : "256x256.png"
 				);
-				document.title=`Electron QQ`
+				document.title = `Electron QQ`;
 			}
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
@@ -1166,6 +1173,8 @@ export default {
 </script>
 
 <style scoped>
+@import url("~@/assets/stylesheet.css");
+
 * {
 	-webkit-user-select: none;
 }
