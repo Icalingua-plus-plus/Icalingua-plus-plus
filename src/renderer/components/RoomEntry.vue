@@ -6,11 +6,7 @@
 					<el-badge value="@" :type="room.at=='all'?'warning':undefined" :hidden="!room.at">
 						<el-avatar
 							size="large"
-							:src="
-								room.roomId < 0
-									? `https://p.qlogo.cn/gh/${-room.roomId}/${-room.roomId}/0`
-									: `https://q1.qlogo.cn/g?b=qq&nk=${room.roomId}&s=640`
-							"
+							:src="room.avatar"
 						/>
 					</el-badge>
 				</div>
