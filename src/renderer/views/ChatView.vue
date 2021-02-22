@@ -539,6 +539,7 @@ export default {
 				this.messagesLoaded = false;
 				this.messages = [];
 				data.room.unreadCount = 0;
+				data.room.at=false
 				this.selectedRoom = data.room;
 				db.set("rooms", this.rooms).write();
 			}
@@ -608,6 +609,10 @@ export default {
 					case "at":
 						room.lastMessage.content += m.data.text;
 						message.content += m.data.text;
+						if (m.data.qq == "all")
+							room.at = 'all'
+						else if (m.data.qq == this.account)
+							room.at = 'me'
 						break;
 					case "image":
 					case "flash":
