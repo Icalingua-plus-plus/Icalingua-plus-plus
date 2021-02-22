@@ -1,6 +1,6 @@
 # Maintainer: Clansty <i@gao4.pw>
 pkgname=electron-qq
-pkgver=1.2.3
+pkgver=1.2.4_rc3
 pkgrel=1
 pkgdesc='A cross-plantform QQ made with Electron'
 license=('GPL')
@@ -16,6 +16,6 @@ package() {
   install -Dm644 "app.asar" "${pkgdir}/usr/lib/${pkgname}.asar"
 } 
 
-md5sums=('7bd2a1ed982baad11ae69325e73b8549'
+md5sums=('795abe8188dad85f0a5245f27fb24ca4'
          'f6edfa276c96b746048458413b8c26ce'
-         '7ffe25882fc2b6cefd469bafaacc33f2')
+         '43e1a2cfd1456d1fb977c9c07d5e7777')
