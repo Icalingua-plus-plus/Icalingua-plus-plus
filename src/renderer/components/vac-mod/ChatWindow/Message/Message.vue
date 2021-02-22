@@ -21,14 +21,16 @@
 			}"
 		>
 			<slot name="message" v-bind="{ message }">
-				<el-avatar
-					size="medium"
-					:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
-					v-if="
-						roomUsers.length > 2 &&
-						message.senderId !== currentUserId
-					"
-				/>
+				<div @click.right="avatarctx">
+					<el-avatar
+						size="medium"
+						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
+						v-if="
+							roomUsers.length > 2 &&
+							message.senderId !== currentUserId
+						"
+					/>
+				</div>
 				<div
 					class="vac-message-container"
 					:class="{
@@ -208,6 +210,8 @@ import MessageReactions from "./MessageReactions";
 
 const { isImageFile } = require("../../utils/mediaFile");
 
+import { remote, clipboard } from 'electron'
+
 export default {
 	name: "Message",
 	components: {
@@ -351,6 +355,32 @@ export default {
 			});
 			this.messageHover = false;
 		},
+		avatarctx() {
+			const menu = new remote.Menu.buildFromTemplate([
+				{
+					label: `Copy "${this.message.username}"`,
+					click: () => {
+						clipboard.writeText(this.message.username)
+					}
+				},
+				{
+					label: `Copy "${this.message.senderId}"`,
+					click: () => {
+						clipboard.writeText(this.message.senderId.toString())
+					}
+				}
+			])
+			if (this.message.replyMessage) {
+				menu.append(new remote.MenuItem({
+					label: `Copy "${this.message.replyMessage.username}"`,
+					click: () => {
+						clipboard.writeText(this.message.replyMessage.username)
+					}
+				}))
+			}
+			menu.popup({ window: remote.getCurrentWindow() });
+
+		}
 	},
 };
 </script>

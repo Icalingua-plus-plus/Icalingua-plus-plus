@@ -1043,6 +1043,18 @@ export default {
 						db.set("ignoredChats", this.ignoredChats).write();
 					},
 				},
+				{
+					label: "Copy Name",
+					click: () => {
+						clipboard.writeText(room.roomName)
+					},
+				},
+				{
+					label: "Copy ID",
+					click: () => {
+						clipboard.writeText(Math.abs(room.roomId))
+					},
+				},
 			]);
 			menu.popup({ window: remote.getCurrentWindow() });
 		},
