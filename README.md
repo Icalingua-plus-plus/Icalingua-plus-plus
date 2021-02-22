@@ -28,4 +28,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - search contacts
 - @me @all
-- custom font
