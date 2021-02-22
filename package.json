@@ -5,6 +5,7 @@
   "description": "A cross-plantform QQ made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
+  "desktopName": "electron-qq.desktop",
   "scripts": {
     "build": "node .electron-vue/build.js && electron-builder",
     "build:ci": "node .electron-vue/build.js",

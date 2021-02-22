@@ -1143,17 +1143,23 @@ export default {
 
 		updateTrayIcon() {
 			let p;
-			if (this.getUnreadCount())
+			const unread = this.getUnreadCount();
+			if (unread) {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-			else
+				document.title=`Electron QQ (${unread})`
+			} 
+			else {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "dark.png" : "256x256.png"
 				);
+				document.title=`Electron QQ`
+			}
 			this.tray.setImage(p);
+			remote.app.setBadgeCount(unread);
 		},
 	},
 };
