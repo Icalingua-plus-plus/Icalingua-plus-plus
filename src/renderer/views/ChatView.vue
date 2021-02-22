@@ -539,7 +539,7 @@ export default {
 				this.messagesLoaded = false;
 				this.messages = [];
 				data.room.unreadCount = 0;
-				data.room.at=false
+				data.room.at = false
 				this.selectedRoom = data.room;
 				db.set("rooms", this.rooms).write();
 			}
@@ -603,16 +603,21 @@ export default {
 				timestamp: now.format("hh:mm"),
 				username: senderName,
 			};
+			let at
 			data.message.forEach((m) => {
 				switch (m.type) {
 					case "text":
 					case "at":
 						room.lastMessage.content += m.data.text;
 						message.content += m.data.text;
-						if (m.data.qq == "all")
+						if (m.data.qq == "all") {
 							room.at = 'all'
-						else if (m.data.qq == this.account)
+							at = true
+						}
+						else if (m.data.qq == this.account) {
 							room.at = 'me'
+							at = true
+						}
 						break;
 					case "image":
 					case "flash":
@@ -729,7 +734,7 @@ export default {
 			if (
 				!remote.getCurrentWindow().isFocused() &&
 				!this.dnd &&
-				!muted &&
+				(!muted || at) &&
 				!isSelfMsg
 			) {
 				//notification
