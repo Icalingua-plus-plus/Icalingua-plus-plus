@@ -49,7 +49,7 @@
 				<img
 					v-if="message.face"
 					:key="i"
-					:src="facepath + 's' + message.value + '.gif'"
+					:src="facepath + message.value"
 					:alt="message.value"
 				/>
 			</template>
@@ -84,7 +84,7 @@ export default {
 
 	data() {
 		return {
-			facepath: path.join(__static, "/sysface_res/gif/"),
+			facepath: path.join(__static, "/face/"),
 		};
 	},
 
