@@ -14,11 +14,8 @@
 
 <style>
 	@font-face {
-		font-family: "font";
+		font-family: "msyh";
 		src: url("~@/assets/msyh.ttf");
-	}
-	* {
-		font-family: "font";
 	}
 	html,
 	body {
