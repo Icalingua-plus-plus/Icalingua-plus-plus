@@ -61,6 +61,7 @@
 							:styles="styles"
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
+							:show-footer="selectedRoom.roomId != 'teachers'"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
@@ -143,6 +144,8 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
+
+const isTeacher = require('../utils/isTeacher')
 
 let db;
 //oicq
@@ -603,7 +606,9 @@ export default {
 				timestamp: now.format("hh:mm"),
 				username: senderName,
 			};
-			let at
+			let at, teacher
+			if (isTeacher(senderId) && groupId)
+				teacher = true
 			data.message.forEach((m) => {
 				switch (m.type) {
 					case "text":
@@ -734,7 +739,7 @@ export default {
 			if (
 				!remote.getCurrentWindow().isFocused() &&
 				!this.dnd &&
-				(!muted || at) &&
+				(!muted || at || teacher) &&
 				!isSelfMsg
 			) {
 				//notification
@@ -792,8 +797,11 @@ export default {
 			}
 			if (room == this.selectedRoom)
 				this.messages = [...this.messages, message];
-			this.updateTrayIcon();
 
+			if (teacher)
+				this.saveTeacherMsg(roomName, message)
+
+			this.updateTrayIcon();
 			db.set("rooms", this.rooms).write();
 			db.get("messages." + roomId)
 				.push(message)
@@ -1190,6 +1198,41 @@ export default {
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
 		},
+
+		saveTeacherMsg(group, messageobj) {
+			const message = Object.assign({}, messageobj)
+			var room = this.rooms.find((e) => e.roomId == 'teachers');
+			if (room == undefined) {
+				// create room
+				room = this.createRoom(-1, '老师消息聚合', path.join(__static, 'school.svg'));
+				room.roomId = 'teachers'
+				room.index = 1
+				this.rooms = [room, ...this.rooms];
+				db.set("messages.teachers", []).write();
+			} else {
+				this.rooms = [
+					room,
+					...this.rooms.filter((item) => item !== room),
+				];
+			} //bring the room first
+			message.username = message.username + '@' + group
+			room.lastMessage = {
+				content: message.content,
+				timestamp: message.timestamp,
+				username: message.username,
+			};
+			if (
+				room != this.selectedRoom ||
+				!remote.getCurrentWindow().isFocused()
+			) {
+				room.unreadCount++;
+			}
+			if (room == this.selectedRoom)
+				this.messages = [...this.messages, message];
+			db.get("messages.teachers")
+				.push(message)
+				.write();
+		}
 	},
 };
 </script>
