@@ -1,13 +1,13 @@
 # Maintainer: Clansty <i@gao4.pw>
 pkgname=electron-qq
-pkgver=1.2.2
+pkgver=1.2.3
 pkgrel=1
 pkgdesc='A cross-plantform QQ made with Electron'
 license=('GPL')
 depends=('electron')
 arch=('any')
-source=(app.asar
-        512x512.png
+source=(build/linux-unpacked/resources/app.asar
+        static/512x512.png
         electron-qq.desktop)
 
 package() {
