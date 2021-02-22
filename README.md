@@ -28,3 +28,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - search contacts
 - combine teacher
+- send face
