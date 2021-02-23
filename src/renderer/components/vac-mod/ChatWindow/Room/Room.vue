@@ -812,8 +812,8 @@
 				const menu = remote.Menu.buildFromTemplate([
 					{
 						label: 'Copy', type: 'normal', click: () => {
-							if (message.file && data.message.file.type.includes('image'))
-								convertImgToBase64(data.message.file.url, function (base64Image) {
+							if (message.file && message.file.type.includes('image'))
+								convertImgToBase64(message.file.url, function (base64Image) {
 									const image = nativeImage.createFromDataURL(base64Image)
 									clipboard.writeImage(image)
 								})
