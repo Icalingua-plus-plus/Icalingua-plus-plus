@@ -27,6 +27,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - background image
 - admin recall msg
 - search contacts
-- combine teacher
 - send face
 - group poke
