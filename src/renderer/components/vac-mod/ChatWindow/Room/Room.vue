@@ -253,6 +253,7 @@
 						}px`,
 					}"
 					@input="onChangeInput"
+					@click.right="textctx"
 					@keydown.esc="escapeTextarea"
 					@keydown.enter.exact.prevent=""
 				/>
@@ -932,6 +933,15 @@ export default {
 				if (bottomScroll < 60) this.scrollMessagesCount = 0
 				this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 			}, 200)
+		},
+		textctx(){
+			const menu=remote.Menu.buildFromTemplate([
+				{
+					label: "Paste",
+					role: "paste"
+				}
+			])
+			menu.popup({ window: remote.getCurrentWindow() })
 		}
 	}
 }
