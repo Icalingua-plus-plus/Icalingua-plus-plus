@@ -551,7 +551,7 @@ export default {
 
 		fetchMessage(data) {
 			if (data.options) {
-				this.panel = "stickers";
+				this.panel = data.room.roomId == 'teachers' ? '' : "stickers";
 				this.messagesLoaded = false;
 				this.messages = [];
 				data.room.unreadCount = 0;
