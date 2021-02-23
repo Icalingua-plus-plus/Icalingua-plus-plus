@@ -29,3 +29,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search contacts
 - send face
 - group poke
+- school group atall

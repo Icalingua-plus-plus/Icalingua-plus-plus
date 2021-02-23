@@ -27,9 +27,16 @@
 					:selected="view == 'contacts'"
 					@click="view = 'contacts'"
 				/>
+				<SideBarIcon
+					v-if="nuist"
+					icon="el-icon-school"
+					name="NUIST"
+					:selected="view == 'nuist'"
+					@click="view = 'nuist'"
+				/>
 			</el-aside>
 			<el-main>
-				<el-row v-show="view == 'chats'">
+				<el-row v-show="view == 'chats' || view == 'nuist'">
 					<!-- main chat view -->
 					<el-col
 						:span="5"
@@ -40,6 +47,7 @@
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
+							:filter-nuist="view == 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
@@ -146,6 +154,7 @@ const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
 const isTeacher = require('../utils/isTeacher')
+const isSchoolGroup = require('../utils/isSchoolGroup')
 
 let db;
 //oicq
@@ -250,7 +259,8 @@ export default {
 			view: "chats",
 			username: "",
 			darkTaskIcon: false,
-			fontFamily: "font, CircularSpotifyTxT Book Web, msyh"
+			fontFamily: "font, CircularSpotifyTxT Book Web, msyh",
+			nuist: false
 		};
 	},
 	created() {
@@ -343,6 +353,9 @@ export default {
 				window.focus();
 			});
 		}
+
+		if (this.rooms.find(e => e.roomId == -1057087079))
+			this.nuist = true
 
 		window.addEventListener("paste", (event) => {
 			const nim = clipboard.readImage();
@@ -731,6 +744,9 @@ export default {
 						break;
 				}
 			});
+			//school groups' at all consider as teacher
+			if (at && isSchoolGroup(groupId))
+				teacher = true
 			//notification
 			const muted =
 				(room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
