@@ -58,6 +58,7 @@
 						class="vac-card-window"
 					>
 						<Room
+							ref="room"
 							:current-user-id="account"
 							:rooms="rooms"
 							:messages="messages"
@@ -106,6 +107,7 @@
 								v-if="panel == 'stickers'"
 								@send="sendSticker"
 								@close="panel = ''"
+								@selectEmoji="$refs.room.message+=$event.data;$refs.room.focusTextarea()"
 							/>
 						</transition>
 						<IgnoreManage

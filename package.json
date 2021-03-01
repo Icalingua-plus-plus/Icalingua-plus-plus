@@ -29,9 +29,11 @@
             "dist/electron/**/*"
         ],
         "win": {
-            "target": [{
-                "target": "7z"
-            }],
+            "target": [
+                {
+                    "target": "7z"
+                }
+            ],
             "icon": "static/Project2.ico"
         },
         "appx": {
@@ -49,13 +51,16 @@
         },
         "mac": {
             "icon": "static/Project3.icns",
-            "target": [{
-                "target": "dmg"
-            }]
+            "target": [
+                {
+                    "target": "dmg"
+                }
+            ]
         },
         "linux": {
             "icon": "static/512x512.png",
-            "target": [{
+            "target": [
+                {
                     "target": "tar.xz"
                 },
                 {
@@ -66,7 +71,8 @@
             "category": "Network"
         },
         "dmg": {
-            "contents": [{
+            "contents": [
+                {
                     "x": 410,
                     "y": 150,
                     "type": "link",
@@ -86,6 +92,7 @@
         "md5": "^2.3.0",
         "oicq": "^1.13.1",
         "v-click-outside": "^3.1.2",
+        "v-emoji-picker": "^2.3.3",
         "vue-emoji-picker": "^1.0.1",
         "vue-infinite-loading": "^2.4.5"
     },
