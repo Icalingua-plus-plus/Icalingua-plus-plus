@@ -90,6 +90,9 @@
 							@pokefriend="pokefriend"
 							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
+							@stickers-panel="
+								panel = panel == 'stickers' ? '' : 'stickers'
+							"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -107,7 +110,10 @@
 								v-if="panel == 'stickers'"
 								@send="sendSticker"
 								@close="panel = ''"
-								@selectEmoji="$refs.room.message+=$event.data;$refs.room.focusTextarea()"
+								@selectEmoji="
+									$refs.room.message += $event.data;
+									$refs.room.focusTextarea();
+								"
 							/>
 						</transition>
 						<IgnoreManage
@@ -572,7 +578,8 @@ export default {
 
 		fetchMessage(reset) {
 			if (reset) {
-				this.panel = this.selectedRoom.roomId == 'teachers' ? '' : "stickers";
+				if (this.selectedRoom.roomId == 'teachers')
+					this.panel = '';
 				this.messagesLoaded = false;
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;

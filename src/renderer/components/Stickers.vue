@@ -34,7 +34,6 @@
 		</div>
 		<div v-show="panel == 'emojis'">
 			<VEmojiPicker
-				style="height: 100%"
 				@select="$emit('selectEmoji', $event)"
 			/>
 		</div>
