@@ -357,9 +357,9 @@ export default {
 		if (this.rooms.find(e => e.roomId == -1057087079))
 			this.nuist = true
 
-		window.addEventListener("paste", (event) => {
+		window.addEventListener("paste", () => {
 			const nim = clipboard.readImage();
-			if (!nim.isEmpty() && this.selectedRoom)
+			if (!nim.isEmpty() && this.selectedRoom.roomId)
 				this.sendMessage({
 					content: "",
 					room: this.selectedRoom,
@@ -391,6 +391,7 @@ export default {
 					this.sendMessage({
 						content: "",
 						room: this.selectedRoom,
+
 						imgpath: f.path,
 					});
 				}

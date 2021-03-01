@@ -28,5 +28,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - search contacts
 - send face
-- group poke
-- school group atall
+- poke
+- download with aria
+- always hide stickers panel
+- anonymous message
+- notify privoxy
