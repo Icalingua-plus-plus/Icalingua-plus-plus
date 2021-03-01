@@ -52,8 +52,12 @@
 							@contextmenu="roomContext"
 						/>
 					</el-col>
-					<el-col :span="panel ? 13 : 19">
-						<chat-window
+					<el-col
+						:span="panel ? 13 : 19"
+						:style="[cssVars]"
+						class="vac-card-window"
+					>
+						<Room
 							:current-user-id="account"
 							:rooms="rooms"
 							:messages="messages"
@@ -70,6 +74,14 @@
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
 							:show-footer="selectedRoom.roomId != 'teachers'"
+							:show-rooms-list="false"
+							:is-mobile="false"
+							:menu-actions="[]"
+							:show-send-icon="true"
+							:show-files="true"
+							:show-emojis="true"
+							:loading-rooms="false"
+							:text-formatting="true"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
@@ -81,7 +93,7 @@
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
 							</template>
-						</chat-window>
+						</Room>
 					</el-col>
 					<el-col
 						:span="6"
@@ -138,9 +150,11 @@
 </template>
 
 <script>
-import ChatWindow from "@/components/vac-mod/ChatWindow/index";
+import Room from "@/components/vac-mod/ChatWindow/Room/Room";
 import Stickers from "@/components/Stickers";
 import IgnoreManage from "@/components/IgnoreManage";
+import { defaultThemeStyles, cssThemeVars } from '../components/vac-mod/themes'
+
 
 //lowdb
 import Datastore from "lowdb";
@@ -228,7 +242,7 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 export default {
 	components: {
-		ChatWindow,
+		Room,
 		Stickers,
 		IgnoreManage,
 		SideBarIcon,
@@ -429,6 +443,10 @@ export default {
 			b64img,
 			imgpath,
 		}) {
+			if (!room & !roomId) {
+				room = this.selectedRoom
+				roomId = room.roomId
+			}
 			if (!roomId) roomId = room.roomId;
 			const sendchain = async () => {
 				let data;
@@ -550,18 +568,18 @@ export default {
 			}
 		},
 
-		fetchMessage(data) {
-			if (data.options) {
-				this.panel = data.room.roomId == 'teachers' ? '' : "stickers";
+		fetchMessage(reset) {
+			if (reset) {
+				this.panel = this.selectedRoom.roomId == 'teachers' ? '' : "stickers";
 				this.messagesLoaded = false;
 				this.messages = [];
-				data.room.unreadCount = 0;
-				data.room.at = false
-				this.selectedRoom = data.room;
+				this.selectedRoom.unreadCount = 0;
+				this.selectedRoom.at = false
+				this.selectedRoom = this.selectedRoom;
 				db.set("rooms", this.rooms).write();
 			}
 			const msgs2add = db
-				.get("messages." + data.room.roomId)
+				.get("messages." + this.selectedRoom.roomId)
 				.dropRightWhile((e) => this.messages.includes(e))
 				.takeRight(10)
 				.value();
@@ -1135,6 +1153,7 @@ export default {
 
 		chroom(room) {
 			this.selectedRoom = room;
+			this.fetchMessage(true)
 		},
 
 		pokefriend() {
@@ -1251,6 +1270,21 @@ export default {
 				.write();
 		}
 	},
+	computed: {
+		cssVars() {
+			const defaultStyles = defaultThemeStyles['light']
+			const customStyles = {}
+
+			Object.keys(defaultStyles).map(key => {
+				customStyles[key] = {
+					...defaultStyles[key],
+					...(this.styles[key] || {})
+				}
+			})
+
+			return cssThemeVars(customStyles)
+		},
+	}
 };
 </script>
 
@@ -1285,5 +1319,46 @@ export default {
 
 :focus {
 	outline: none;
+}
+</style>
+
+<style lang="scss">
+@import "../components/vac-mod/styles/index.scss";
+
+.vac-card-window {
+	display: block;
+	background: var(--chat-content-bg-color);
+	color: var(--chat-color);
+	overflow-wrap: break-word;
+	position: relative;
+	white-space: normal;
+	border: var(--chat-container-border);
+	border-radius: var(--chat-container-border-radius);
+	box-shadow: var(--chat-container-box-shadow);
+	-webkit-tap-highlight-color: transparent;
+
+	* {
+		font-family: inherit;
+	}
+
+	a {
+		color: #0d579c;
+		font-weight: 500;
+	}
+
+	.vac-chat-container {
+		height: 100%;
+		display: flex;
+
+		input {
+			min-width: 10px;
+		}
+
+		textarea,
+		input[type="text"],
+		input[type="search"] {
+			-webkit-appearance: none;
+		}
+	}
 }
 </style>

@@ -33,3 +33,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - always hide stickers panel
 - anonymous message
 - notify privoxy
+- headless server
