@@ -269,17 +269,12 @@
 						</slot>
 					</div>
 
-					<emoji-picker
-						v-if="showEmojis && (!file || imageFile || videoFile)"
-						:emoji-opened="emojiOpened"
-						:position-top="true"
-						@add-emoji="addEmoji"
-						@open-emoji="emojiOpened = $event"
+					<div
+						class="vac-svg-button"
+						@click="$emit('stickers-panel')"
 					>
-						<template #emoji-picker-icon>
-							<slot name="emoji-picker-icon" />
-						</template>
-					</emoji-picker>
+						<svg-icon name="emoji" />
+					</div>
 
 					<div
 						v-if="showFiles"
