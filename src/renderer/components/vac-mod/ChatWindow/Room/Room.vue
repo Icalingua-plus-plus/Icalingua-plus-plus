@@ -909,7 +909,7 @@ export default {
 							replyMessage: message.replyMessage
 						}
 						if (message.file) {
-							msgToSend.imgpath = this.file.url
+							msgToSend.imgpath = message.file.url
 						}
 						this.$emit('send-message', msgToSend)
 					}
