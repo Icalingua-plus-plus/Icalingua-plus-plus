@@ -32,13 +32,17 @@
 				</div>
 			</div>
 		</div>
-		<div v-show="panel=='emojis'">
-			
+		<div v-show="panel == 'emojis'">
+			<VEmojiPicker
+				style="height: 100%"
+				@select="$emit('selectEmoji', $event)"
+			/>
 		</div>
 	</div>
 </template>
 
 <script>
+import { VEmojiPicker } from 'v-emoji-picker'
 import { remote, shell } from 'electron'
 const fs = require('fs')
 const path = require('path')
@@ -46,6 +50,7 @@ const STORE_PATH = remote.app.getPath('userData')
 
 export default {
 	name: "Stickers",
+	components: { VEmojiPicker },
 	data() {
 		return {
 			pics: [],
@@ -150,4 +155,19 @@ div.head {
 .title a:hover:not(.selected) {
 	color: rgb(102, 177, 255);
 }
+</style>
+
+<style scoped>
+.emoji-picker {
+	--ep-color-bg: #fff !important;
+	--ep-color-border: #fff !important;
+	--ep-color-sbg: #fff !important;
+	--ep-color-active: #409eff !important;
+	width: 100% !important;
+	border: none !important;
+}
+::v-deep .container-emoji {
+	height: calc(100vh - 147px) !important;
+}
+
 </style>
