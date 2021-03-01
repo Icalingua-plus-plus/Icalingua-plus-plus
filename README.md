@@ -29,7 +29,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search contacts
 - send face
 - poke
-- download with aria
 - anonymous message
 - notify privoxy
 - headless server
+- crlf
+- auto download teachers' files
