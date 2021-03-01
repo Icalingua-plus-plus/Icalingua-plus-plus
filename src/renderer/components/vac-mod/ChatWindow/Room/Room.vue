@@ -344,6 +344,7 @@ import RoomUsersTag from './RoomUsersTag'
 import RoomAudio from './RoomAudio'
 import Message from '../Message/Message'
 
+
 import filteredUsers from '../../utils/filterItems'
 const { messagesValid } = require('../../utils/roomValidation')
 const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
@@ -387,7 +388,6 @@ export default {
 
 	props: {
 		currentUserId: { type: [String, Number], required: true },
-		textMessages: { type: Object, required: true },
 		singleRoom: { type: Boolean, required: true },
 		showRoomsList: { type: Boolean, required: true },
 		isMobile: { type: Boolean, required: true },
@@ -434,7 +434,8 @@ export default {
 			keepKeyboardOpen: false,
 			filteredUsersTag: [],
 			selectedUsersTag: [],
-			textareaCursorPosition: null
+			textareaCursorPosition: null,
+			textMessages: require('../../locales').default
 		}
 	},
 
@@ -934,8 +935,8 @@ export default {
 				this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 			}, 200)
 		},
-		textctx(){
-			const menu=remote.Menu.buildFromTemplate([
+		textctx() {
+			const menu = remote.Menu.buildFromTemplate([
 				{
 					label: "Paste",
 					role: "paste"
@@ -1248,3 +1249,4 @@ export default {
 	}
 }
 </style>
+
