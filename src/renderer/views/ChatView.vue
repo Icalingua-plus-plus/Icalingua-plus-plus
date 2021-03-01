@@ -324,7 +324,8 @@ export default {
 				secret: '',
 				path: '/jsonrpc'
 			},
-			dialogAriaVisible: false
+			dialogAriaVisible: false,
+			aria
 		};
 	},
 	created() {
@@ -914,7 +915,7 @@ export default {
 						downdir,
 						"QQ_Image_" + new Date().getTime() + ".jpg"
 					);
-					download(
+					this.download(
 						data.message.file.url.replace("http://", "https://"),
 						downpath,
 						() => {
@@ -925,7 +926,10 @@ export default {
 						}
 					);
 				} else {
-					shell.openExternal(data.message.file.url);
+					if (this.aria2.enabled)
+						this.download(data.message.file.url, null, () => { this.$message('Pushed to Aria2 JSONRPC') }, data.message.content)
+					else
+						shell.openExternal(data.message.file.url);
 				}
 			}
 		},
@@ -1346,14 +1350,37 @@ export default {
 				this.startAria()
 		},
 
-		startAria(){
-			aria = new Aria2(this.aria2)
-			aria.open()
-			.then(this.$message('Aria2 RPC connected'))
-			.catch(err=>{
-				console.log(err)
-				this.$message('Aria2 failed')
-			})
+		startAria() {
+			this.aria = new Aria2(this.aria2)
+			this.aria.open()
+				.then(this.$message('Aria2 RPC connected'))
+				.catch(err => {
+					console.log(err)
+					this.$message('Aria2 failed')
+				})
+		},
+
+		download(url, dest, cb, out, dir) {
+			if (this.aria2.enabled) {
+				const opt = {}
+				if (out)
+					opt.out = out
+				if (dir)
+					opt.dir = dir
+				else if (dest) {
+					opt.dir = path.dirname(dest)
+					opt.out = path.basename(dest)
+				}
+				console.log([url, opt])
+				this.aria.call('aria2.addUri', [url], opt)
+					.then(cb)
+					.catch(err => {
+						console.log(err)
+						this.$message('Aria2 failed')
+					})
+			}
+			else
+				download(url, dest, cb)
 		}
 	},
 	computed: {
