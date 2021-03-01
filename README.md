@@ -30,7 +30,6 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - send face
 - poke
 - download with aria
-- always hide stickers panel
 - anonymous message
 - notify privoxy
 - headless server

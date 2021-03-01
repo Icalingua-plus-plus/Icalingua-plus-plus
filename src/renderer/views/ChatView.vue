@@ -154,6 +154,37 @@
 				</el-button>
 			</span>
 		</el-dialog>
+		<el-dialog
+			title="Aria2 config"
+			:visible.sync="dialogAriaVisible"
+			:show-close="false"
+			:close-on-press-escape="false"
+			:close-on-click-modal="false"
+		>
+			<el-form v-model="aria2" label-width="100px">
+				<el-form-item label="enabled">
+					<el-switch v-model="aria2.enabled" />
+				</el-form-item>
+				<el-form-item label="host">
+					<el-input v-model="aria2.host" />
+				</el-form-item>
+				<el-form-item label="port">
+					<el-input-number v-model.number="aria2.port" />
+				</el-form-item>
+				<el-form-item label="secure">
+					<el-switch v-model="aria2.secure" />
+				</el-form-item>
+				<el-form-item label="secret">
+					<el-input v-model="aria2.secret" />
+				</el-form-item>
+				<el-form-item label="path">
+					<el-input v-model="aria2.path" />
+				</el-form-item>
+			</el-form>
+			<div slot="footer" class="dialog-footer">
+				<el-button type="primary" @click="closeAria">Close</el-button>
+			</div>
+		</el-dialog>
 	</div>
 </template>
 
@@ -175,10 +206,12 @@ import TheContactsPanel from "../components/TheContactsPanel.vue";
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
+const Aria2 = require("aria2");
+
 const isTeacher = require('../utils/isTeacher')
 const isSchoolGroup = require('../utils/isSchoolGroup')
 
-let db;
+let db, aria
 //oicq
 const bot = remote.getGlobal("bot");
 
@@ -282,7 +315,16 @@ export default {
 			username: "",
 			darkTaskIcon: false,
 			fontFamily: "font, CircularSpotifyTxT Book Web, msyh",
-			nuist: false
+			nuist: false,
+			aria2: {
+				enabled: false,
+				host: '127.0.0.1',
+				port: 6800,
+				secure: false,
+				secret: '',
+				path: '/jsonrpc'
+			},
+			dialogAriaVisible: false
 		};
 	},
 	created() {
@@ -298,12 +340,21 @@ export default {
 			dnd: false,
 			ignoredChats: [],
 			darkTaskIcon: false,
+			aria2: {
+				enabled: false,
+				host: '127.0.0.1',
+				port: 6800,
+				secure: false,
+				secret: '',
+				path: '/jsonrpc'
+			}
 		}).write();
 		this.rooms = db.get("rooms").value();
 		this.muteAllGroups = db.get("muteAllGroups").value();
 		this.dnd = db.get("dnd").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
+		this.aria2 = db.get("aria2").value();
 		this.dndMenuItem = new remote.MenuItem({
 			label: "Disable notifications",
 			type: "checkbox",
@@ -432,6 +483,9 @@ export default {
 				document.fonts.add(loadFace);
 			});
 		}
+
+		if (this.aria2.enabled)
+			this.startAria()
 
 		bot.on("message", this.onQQMessage);
 		bot.on("notice.friend.recall", this.friendRecall);
@@ -973,6 +1027,12 @@ export default {
 			);
 			menu.append(
 				new remote.MenuItem({
+					label: 'Aria2 download options',
+					click: () => this.dialogAriaVisible = true
+				})
+			)
+			menu.append(
+				new remote.MenuItem({
 					type: "separator",
 				})
 			);
@@ -1277,6 +1337,23 @@ export default {
 			db.get("messages.teachers")
 				.push(message)
 				.write();
+		},
+
+		closeAria() {
+			this.dialogAriaVisible = false
+			db.set('aria2', this.aria2).write()
+			if (this.aria2.enabled)
+				this.startAria()
+		},
+
+		startAria(){
+			aria = new Aria2(this.aria2)
+			aria.open()
+			.then(this.$message('Aria2 RPC connected'))
+			.catch(err=>{
+				console.log(err)
+				this.$message('Aria2 failed')
+			})
 		}
 	},
 	computed: {
