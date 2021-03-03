@@ -929,7 +929,7 @@ export default {
 						}
 					);
 				} else {
-					if (this.aria2.enabled)
+					if (this.aria2.enabled && data.message.file.url.startsWith('http'))
 						this.download(data.message.file.url, null, () => { this.$message('Pushed to Aria2 JSONRPC') }, data.message.content)
 					else
 						shell.openExternal(data.message.file.url);
@@ -1341,6 +1341,24 @@ export default {
 			}
 			if (room == this.selectedRoom)
 				this.messages = [...this.messages, message];
+			//auto download file
+			if (message.file) {
+				const dir = '/home/clansty/data/Downloads/teacher/'
+				var out = ''
+				if (message.file.name) {
+					out = message.file.name
+				}
+				else if (message.content) {
+					out = message.content
+				}
+				else {
+					out = new Date().format('MM-dd hh:mm:ss')
+				}
+				out = message.username + ' ' + out
+				this.download(message.file.url, undefined, () => {
+					message.file.url = path.join(dir, out)
+				}, out, dir)
+			}
 			db.get("messages.teachers")
 				.push(message)
 				.write();
@@ -1366,10 +1384,10 @@ export default {
 		download(url, dest, cb, out, dir) {
 			if (this.aria2.enabled) {
 				const opt = {}
-				if (out)
-					opt.out = out
 				if (dir)
 					opt.dir = dir
+				if (out)
+					opt.out = out
 				else if (dest) {
 					opt.dir = path.dirname(dest)
 					opt.out = path.basename(dest)
@@ -1383,7 +1401,7 @@ export default {
 					})
 			}
 			else
-				download(url, dest, cb)
+				download(url, dest ? dest : path.join(dir, cb), cb)
 		}
 	},
 	computed: {
