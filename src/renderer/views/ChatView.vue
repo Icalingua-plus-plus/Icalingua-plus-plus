@@ -1228,6 +1228,7 @@ export default {
 		},
 
 		chroom(room) {
+			this.selectedRoom.at = false
 			this.selectedRoom = room;
 			this.fetchMessage(true)
 		},
