@@ -663,11 +663,14 @@ export default {
 			const roomId = groupId ? -groupId : data.user_id;
 			if (this.ignoredChats.find((e) => e.id == roomId)) return;
 			const isSelfMsg = this.account == senderId;
-			const senderName = groupId
-				? isSelfMsg
-					? "You"
-					: data.sender.card || data.sender.nickname
-				: data.sender.remark || data.sender.nickname;
+			const senderName =
+				groupId
+					? data.anonymous
+						? data.anonymous.name
+						: isSelfMsg
+							? "You"
+							: data.sender.card || data.sender.nickname
+					: data.sender.remark || data.sender.nickname;
 			const avatar = groupId
 				? `https://p.qlogo.cn/gh/${groupId}/${groupId}/0`
 				: `https://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`;
