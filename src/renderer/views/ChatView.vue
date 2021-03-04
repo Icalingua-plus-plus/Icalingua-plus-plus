@@ -210,7 +210,7 @@ const Aria2 = require("aria2");
 
 const isTeacher = require('../utils/isTeacher')
 const isSchoolGroup = require('../utils/isSchoolGroup')
-
+const _ = require('lodash');
 let db, aria
 //oicq
 const bot = remote.getGlobal("bot");
@@ -331,7 +331,9 @@ export default {
 	created() {
 		this.account = glodb.get("account").value().username;
 		const adapter = new FileSync(
-			path.join(STORE_PATH, `/chatdata${this.account}v2.json`)
+			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),{
+				serialize: (data) => JSON.stringify(data,null,false),
+			}
 		);
 		db = Datastore(adapter);
 		db.defaults({
@@ -415,9 +417,7 @@ export default {
 					{
 						label: "Exit",
 						type: "normal",
-						click: () => {
-							remote.getCurrentWindow().destroy();
-						},
+						click: this.exit,
 					},
 				])
 			);
@@ -861,7 +861,7 @@ export default {
 							const window = remote.getCurrentWindow();
 							window.show();
 							window.focus();
-							this.selectedRoom = room;
+							this.chroom(room)
 						});
 						notif.addListener("reply", (e, r) => {
 							this.sendMessage({
@@ -885,7 +885,7 @@ export default {
 						const window = remote.getCurrentWindow();
 						window.show();
 						window.focus();
-						this.selectedRoom = room;
+						this.chroom(room)
 					};
 				}
 			}
@@ -1108,7 +1108,7 @@ export default {
 			menu.append(
 				new remote.MenuItem({
 					label: "Quit",
-					click: () => remote.getCurrentWindow().destroy(),
+					click: this.exit,
 				})
 			);
 			menu.popup({ window: remote.getCurrentWindow() });
@@ -1228,6 +1228,7 @@ export default {
 		},
 
 		chroom(room) {
+			if (this.selectedRoom == room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room;
 			this.fetchMessage(true)
@@ -1403,6 +1404,13 @@ export default {
 			}
 			else
 				download(url, dest ? dest : path.join(dir, cb), cb)
+		},
+
+		exit() {
+			db.get('messages').forEach((v, i) => {
+				db.set('messages.' + [i], _.takeRight(v, 1000)).write()
+			}).value()
+			remote.getCurrentWindow().destroy();
 		}
 	},
 	computed: {
