@@ -1,6 +1,7 @@
 <template>
 	<div ondragstart="return false;" :style="{ fontFamily }">
 		<el-container>
+			<!--			sidebar-->
 			<el-aside width="65px" ondragstart="return false;">
 				<!-- sidebar -->
 				<el-popover
@@ -107,7 +108,7 @@
 					>
 						<transition name="el-zoom-in-top">
 							<Stickers
-								v-if="panel == 'stickers'"
+								v-if="panel === 'stickers'"
 								@send="sendSticker"
 								@close="panel = ''"
 								@selectEmoji="
@@ -117,20 +118,20 @@
 							/>
 						</transition>
 						<IgnoreManage
-							v-show="panel == 'ignore'"
+							v-show="panel === 'ignore'"
 							:ignoredChats="ignoredChats"
 							@remove="rmIgnore"
 							@close="panel = 'stickers'"
 						/>
 					</el-col>
 				</el-row>
-				<el-row v-if="view == 'contacts'" type="flex" justify="center">
+				<el-row v-if="view === 'contacts'" type="flex" justify="center">
 					<el-col
 						:span="8"
 						ondragstart="return false;"
 						class="nodrag"
 					>
-						<TheContactsPanel @dblclick="startChat" />
+						<TheContactsPanel @dblclick="startChat"/>
 					</el-col>
 				</el-row>
 			</el-main>
@@ -163,22 +164,22 @@
 		>
 			<el-form v-model="aria2" label-width="100px">
 				<el-form-item label="enabled">
-					<el-switch v-model="aria2.enabled" />
+					<el-switch v-model="aria2.enabled"/>
 				</el-form-item>
 				<el-form-item label="host">
-					<el-input v-model="aria2.host" />
+					<el-input v-model="aria2.host"/>
 				</el-form-item>
 				<el-form-item label="port">
-					<el-input-number v-model.number="aria2.port" />
+					<el-input-number v-model.number="aria2.port"/>
 				</el-form-item>
 				<el-form-item label="secure">
-					<el-switch v-model="aria2.secure" />
+					<el-switch v-model="aria2.secure"/>
 				</el-form-item>
 				<el-form-item label="secret">
-					<el-input v-model="aria2.secret" />
+					<el-input v-model="aria2.secret"/>
 				</el-form-item>
 				<el-form-item label="path">
-					<el-input v-model="aria2.path" />
+					<el-input v-model="aria2.path"/>
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
@@ -192,17 +193,18 @@
 import Room from "@/components/vac-mod/ChatWindow/Room/Room";
 import Stickers from "@/components/Stickers";
 import IgnoreManage from "@/components/IgnoreManage";
-import { defaultThemeStyles, cssThemeVars } from '../components/vac-mod/themes'
+import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 
 
 //lowdb
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import path from "path";
-import { remote, clipboard, nativeImage, shell } from "electron";
+import {remote, clipboard, nativeImage, shell} from "electron";
 import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
+
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
@@ -236,7 +238,7 @@ Date.prototype.format = function (fmt) {
 		if (new RegExp("(" + k + ")").test(fmt)) {
 			fmt = fmt.replace(
 				RegExp.$1,
-				RegExp.$1.length == 1
+				RegExp.$1.length === 1
 					? o[k]
 					: ("00" + o[k]).substr(("" + o[k]).length)
 			);
@@ -294,7 +296,7 @@ export default {
 		return {
 			rooms: [],
 			messages: [],
-			selectedRoom: { roomId: 0 },
+			selectedRoom: {roomId: 0},
 			muteAllGroups: false,
 			dndMenuItem: null,
 			dnd: false,
@@ -331,8 +333,8 @@ export default {
 	created() {
 		this.account = glodb.get("account").value().username;
 		const adapter = new FileSync(
-			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),{
-				serialize: (data) => JSON.stringify(data,null,false),
+			path.join(STORE_PATH, `/chatdata${this.account}v2.json`), {
+				serialize: (data) => JSON.stringify(data, null, false),
 			}
 		);
 		db = Datastore(adapter);
@@ -498,14 +500,14 @@ export default {
 	},
 	methods: {
 		async sendMessage({
-			content,
-			roomId,
-			file,
-			replyMessage,
-			room,
-			b64img,
-			imgpath,
-		}) {
+			                  content,
+			                  roomId,
+			                  file,
+			                  replyMessage,
+			                  room,
+			                  b64img,
+			                  imgpath,
+		                  }) {
 			if (!room & !roomId) {
 				room = this.selectedRoom
 				roomId = room.roomId
@@ -526,7 +528,7 @@ export default {
 				}
 				if (roomId > 0) {
 					if (!room)
-						room = this.rooms.find((e) => e.roomId == roomId);
+						room = this.rooms.find((e) => e.roomId === roomId);
 					room.lastMessage = {
 						content,
 						timestamp: new Date().format("hh:mm"),
@@ -666,10 +668,10 @@ export default {
 			const senderName =
 				groupId
 					? data.anonymous
-						? data.anonymous.name
-						: isSelfMsg
-							? "You"
-							: data.sender.card || data.sender.nickname
+					? data.anonymous.name
+					: isSelfMsg
+						? "You"
+						: data.sender.card || data.sender.nickname
 					: data.sender.remark || data.sender.nickname;
 			const avatar = groupId
 				? `https://p.qlogo.cn/gh/${groupId}/${groupId}/0`
@@ -717,8 +719,7 @@ export default {
 						if (m.data.qq == "all") {
 							room.at = 'all'
 							at = true
-						}
-						else if (m.data.qq == this.account) {
+						} else if (m.data.qq == this.account) {
 							room.at = 'me'
 							at = true
 						}
@@ -761,7 +762,7 @@ export default {
 					case "reply":
 						const replyMessage = db
 							.get("messages." + roomId)
-							.find({ _id: m.data.id })
+							.find({_id: m.data.id})
 							.value();
 						if (replyMessage) {
 							message.replyMessage = {
@@ -930,7 +931,9 @@ export default {
 					);
 				} else {
 					if (this.aria2.enabled && data.message.file.url.startsWith('http'))
-						this.download(data.message.file.url, null, () => { this.$message('Pushed to Aria2 JSONRPC') }, data.message.content)
+						this.download(data.message.file.url, null, () => {
+							this.$message('Pushed to Aria2 JSONRPC')
+						}, data.message.content)
 					else
 						shell.openExternal(data.message.file.url);
 				}
@@ -943,15 +946,15 @@ export default {
 			if (!res.error) message.deleted = new Date();
 			this.messages = [...this.messages];
 			db.get("messages." + this.selectedRoom.roomId)
-				.find({ _id: data.messageId })
-				.assign({ deleted: new Date() })
+				.find({_id: data.messageId})
+				.assign({deleted: new Date()})
 				.write();
 		},
 
 		friendRecall(data) {
 			db.get("messages." + data.user_id)
-				.find({ _id: data.message_id })
-				.assign({ deleted: new Date() })
+				.find({_id: data.message_id})
+				.assign({deleted: new Date()})
 				.write();
 			if (data.user_id == this.selectedRoom.roomId) {
 				const message = this.messages.find(
@@ -966,8 +969,8 @@ export default {
 
 		groupRecall(data) {
 			db.get("messages." + -data.group_id)
-				.find({ _id: data.message_id })
-				.assign({ deleted: new Date() })
+				.find({_id: data.message_id})
+				.assign({deleted: new Date()})
 				.write();
 			if (-data.group_id == this.selectedRoom.roomId) {
 				const message = this.messages.find(
@@ -1111,7 +1114,7 @@ export default {
 					click: this.exit,
 				})
 			);
-			menu.popup({ window: remote.getCurrentWindow() });
+			menu.popup({window: remote.getCurrentWindow()});
 		},
 
 		roomContext(room) {
@@ -1175,7 +1178,7 @@ export default {
 					},
 				},
 			]);
-			menu.popup({ window: remote.getCurrentWindow() });
+			menu.popup({window: remote.getCurrentWindow()});
 		},
 
 		friendpoke(data) {
@@ -1247,12 +1250,12 @@ export default {
 				unreadCount: 0,
 				mute: false,
 				users: [
-					{ _id: 1, username: "1" },
-					{ _id: 2, username: "2" },
+					{_id: 1, username: "1"},
+					{_id: 2, username: "2"},
 				],
-				lastMessage: { content: "", timestamp: "" },
+				lastMessage: {content: "", timestamp: ""},
 			};
-			if (roomId < 0) room.users.push({ _id: 3, username: "3" });
+			if (roomId < 0) room.users.push({_id: 3, username: "3"});
 			return room;
 		},
 
@@ -1349,11 +1352,9 @@ export default {
 				var out = ''
 				if (message.file.name) {
 					out = message.file.name
-				}
-				else if (message.content) {
+				} else if (message.content) {
 					out = message.content
-				}
-				else {
+				} else {
 					out = new Date().format('MM-dd hh:mm:ss')
 				}
 				out = message.username + ' ' + out
@@ -1401,12 +1402,12 @@ export default {
 						console.log(err)
 						this.$message('Aria2 failed')
 					})
-			}
-			else
+			} else
 				download(url, dest ? dest : path.join(dir, cb), cb)
 		},
 
 		exit() {
+      remote.getCurrentWindow().hide()
 			db.get('messages').forEach((v, i) => {
 				db.set('messages.' + [i], _.takeRight(v, 1000)).write()
 			}).value()
@@ -1437,10 +1438,12 @@ export default {
 * {
 	-webkit-user-select: none;
 }
+
 .el-main {
 	padding: 0;
 	height: 100vh;
 }
+
 .el-aside {
 	background-color: #303133;
 	color: #eee;
@@ -1448,9 +1451,11 @@ export default {
 	padding-top: 15px;
 	-webkit-user-select: none;
 }
+
 .el-avatar {
 	cursor: pointer;
 }
+
 .el-col {
 	height: 100vh;
 	overflow: hidden;
