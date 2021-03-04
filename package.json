@@ -8,6 +8,7 @@
     "desktopName": "electron-qq.desktop",
     "scripts": {
         "build": "node .electron-vue/build.js && electron-builder",
+        "build:win": "electron-builder --win",
         "build:ci": "node .electron-vue/build.js",
         "build:dir": "node .electron-vue/build.js && electron-builder --dir",
         "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
@@ -89,13 +90,14 @@
     "dependencies": {
         "aria2": "^4.1.2",
         "linkifyjs": "^2.1.9",
+        "lodash": "^4.17.21",
         "lowdb": "^1.0.0",
         "md5": "^2.3.0",
         "oicq": "^1.13.3",
         "v-click-outside": "^3.1.2",
         "v-emoji-picker": "^2.3.3",
-        "vue-emoji-picker": "^1.0.1",
         "vue": "^2.6.12",
+        "vue-emoji-picker": "^1.0.1",
         "vue-infinite-loading": "^2.4.5"
     },
     "devDependencies": {
