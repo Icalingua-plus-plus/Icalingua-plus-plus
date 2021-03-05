@@ -836,6 +836,10 @@ export default {
 							url: m.data.url
 						}
 						break
+					case "record":
+						message.content = '[Audio]';
+						room.lastMessage.content = `[Audio]`;
+						break
 				}
 			});
 			//school groups' at all consider as teacher
