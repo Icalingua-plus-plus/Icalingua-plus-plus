@@ -31,3 +31,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - poke
 - notify privoxy
 - headless server
+- video

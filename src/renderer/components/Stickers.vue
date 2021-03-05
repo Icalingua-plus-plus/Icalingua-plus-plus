@@ -4,12 +4,12 @@
 			<div class="title">
 				<a
 					@click="panel = 'stickers'"
-					:class="{ selected: panel == 'stickers' }"
+					:class="{ selected: panel === 'stickers' }"
 					>Stickers</a
 				>
 				<a
 					@click="panel = 'emojis'"
-					:class="{ selected: panel == 'emojis' }"
+					:class="{ selected: panel === 'emojis' }"
 					>Emojis</a
 				>
 			</div>
@@ -19,7 +19,7 @@
 				</div>
 			</a>
 		</div>
-		<div v-show="panel == 'stickers'">
+		<div v-show="panel === 'stickers'" style="overflow: auto;">
 			<center v-show="!pics.length">
 				<p>No stickers found</p>
 				<p>
@@ -32,7 +32,7 @@
 				</div>
 			</div>
 		</div>
-		<div v-show="panel == 'emojis'">
+		<div v-show="panel === 'emojis'">
 			<VEmojiPicker
 				@select="$emit('selectEmoji', $event)"
 			/>
