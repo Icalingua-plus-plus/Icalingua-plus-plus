@@ -9,7 +9,8 @@ const teachers = [
     5341654,//web
     35985574,//廖灵芝 老师
     964472822,//英语-王玲
-    564457509
+    564457509,//web
+    16767193,//eng
 ]
 
 module.exports = (uin) => teachers.includes(uin)

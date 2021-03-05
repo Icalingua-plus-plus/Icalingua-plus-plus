@@ -16,6 +16,7 @@ const schoolGroups = [
     1020928496,//赶尸群（DEV）
     954226654,//计算机与软件学院2020级新生群
     593764793,//20软工2班划水
+    772638184,//英语
 ]
 
 module.exports = (group) => schoolGroups.includes(group)
