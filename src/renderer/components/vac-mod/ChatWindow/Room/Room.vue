@@ -31,7 +31,7 @@
 			@room-menu="$emit('room-menu')"
 		>
 			<template v-for="(index, name) in $scopedSlots" #[name]="data">
-				<slot :name="name" v-bind="data" />
+				<slot :name="name" v-bind="data"/>
 			</template>
 		</room-header>
 
@@ -40,7 +40,7 @@
 			class="vac-container-scroll"
 			@scroll="containerScroll"
 		>
-			<loader :show="loadingMessages" />
+			<loader :show="loadingMessages"/>
 			<div class="vac-messages-container">
 				<div :class="{ 'vac-messages-hidden': loadingMessages }">
 					<transition name="vac-fade-message">
@@ -67,10 +67,10 @@
 							@infinite="loadMoreMessages"
 						>
 							<div slot="spinner">
-								<loader :show="true" :infinite="true" />
+								<loader :show="true" :infinite="true"/>
 							</div>
-							<div slot="no-results" />
-							<div slot="no-more" />
+							<div slot="no-results"/>
+							<div slot="no-more"/>
 						</infinite-loading>
 					</transition>
 					<transition-group :key="roomId" name="vac-fade-message">
@@ -108,7 +108,7 @@
 									v-for="(index, name) in $scopedSlots"
 									#[name]="data"
 								>
-									<slot :name="name" v-bind="data" />
+									<slot :name="name" v-bind="data"/>
 								</template>
 							</message>
 						</div>
@@ -132,7 +132,7 @@
 						</div>
 					</transition>
 					<slot name="scroll-icon">
-						<svg-icon name="dropdown" param="scroll" />
+						<svg-icon name="dropdown" param="scroll"/>
 					</slot>
 				</div>
 			</transition>
@@ -148,7 +148,7 @@
 				@reset-message="resetMessage"
 			>
 				<template v-for="(index, name) in $scopedSlots" #[name]="data">
-					<slot :name="name" v-bind="data" />
+					<slot :name="name" v-bind="data"/>
 				</template>
 			</room-message-reply>
 
@@ -169,7 +169,7 @@
 						v-for="(index, name) in $scopedSlots"
 						#[name]="data"
 					>
-						<slot :name="name" v-bind="data" />
+						<slot :name="name" v-bind="data"/>
 					</template>
 				</room-audio>
 
@@ -179,7 +179,7 @@
 						@click="resetMediaFile"
 					>
 						<slot name="image-close-icon">
-							<svg-icon name="close" param="image" />
+							<svg-icon name="close" param="image"/>
 						</slot>
 					</div>
 					<div class="vac-media-file">
@@ -197,14 +197,14 @@
 						@click="resetMediaFile"
 					>
 						<slot name="image-close-icon">
-							<svg-icon name="close" param="image" />
+							<svg-icon name="close" param="image"/>
 						</slot>
 					</div>
 					<div ref="mediaFile" class="vac-media-file">
 						<video width="100%" height="100%" controls>
-							<source :src="videoFile" type="video/mp4" />
-							<source :src="videoFile" type="video/ogg" />
-							<source :src="videoFile" type="video/webm" />
+							<source :src="videoFile" type="video/mp4"/>
+							<source :src="videoFile" type="video/ogg"/>
+							<source :src="videoFile" type="video/webm"/>
 						</video>
 					</div>
 				</div>
@@ -216,7 +216,7 @@
 				>
 					<div class="vac-icon-file">
 						<slot name="file-icon">
-							<svg-icon name="file" />
+							<svg-icon name="file"/>
 						</slot>
 					</div>
 					<div v-if="file && file.audio" class="vac-file-message">
@@ -230,7 +230,7 @@
 						@click="resetMessage(null, true)"
 					>
 						<slot name="file-close-icon">
-							<svg-icon name="close" />
+							<svg-icon name="close"/>
 						</slot>
 					</div>
 				</div>
@@ -265,7 +265,7 @@
 						@click="resetMessage"
 					>
 						<slot name="edit-close-icon">
-							<svg-icon name="close-outline" />
+							<svg-icon name="close-outline"/>
 						</slot>
 					</div>
 
@@ -273,7 +273,7 @@
 						class="vac-svg-button"
 						@click="$emit('stickers-panel')"
 					>
-						<svg-icon name="emoji" />
+						<svg-icon name="emoji"/>
 					</div>
 
 					<div
@@ -282,7 +282,7 @@
 						@click="launchFilePicker"
 					>
 						<slot name="paperclip-icon">
-							<svg-icon name="paperclip" />
+							<svg-icon name="paperclip"/>
 						</slot>
 					</div>
 
@@ -292,7 +292,7 @@
 						@click="textareaActionHandler"
 					>
 						<slot name="custom-action-icon">
-							<svg-icon name="deleted" />
+							<svg-icon name="deleted"/>
 						</slot>
 					</div>
 
@@ -341,11 +341,13 @@ import Message from '../Message/Message'
 
 
 import filteredUsers from '../../utils/filterItems'
-const { messagesValid } = require('../../utils/roomValidation')
-const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
-const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
 
-import { remote, clipboard, nativeImage } from 'electron'
+const {messagesValid} = require('../../utils/roomValidation')
+const {detectMobile, iOSDevice} = require('../../utils/mobileDetection')
+const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
+
+import {remote, clipboard, nativeImage} from 'electron'
+
 //convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
 function convertImgToBase64(url, callback, outputFormat) {
 	var canvas = document.createElement("CANVAS"),
@@ -382,30 +384,30 @@ export default {
 	},
 
 	props: {
-		currentUserId: { type: [String, Number], required: true },
-		singleRoom: { type: Boolean, required: true },
-		showRoomsList: { type: Boolean, required: true },
-		isMobile: { type: Boolean, required: true },
-		rooms: { type: Array, required: true },
-		roomId: { type: [String, Number], required: true },
-		loadFirstRoom: { type: Boolean, required: true },
-		messages: { type: Array, required: true },
-		roomMessage: { type: String, default: null },
-		messagesLoaded: { type: Boolean, required: true },
-		menuActions: { type: Array, required: true },
-		messageActions: { type: Array, required: true },
-		showSendIcon: { type: Boolean, required: true },
-		showFiles: { type: Boolean, required: true },
-		showAudio: { type: Boolean, required: true },
-		showEmojis: { type: Boolean, required: true },
-		showReactionEmojis: { type: Boolean, required: true },
-		showNewMessagesDivider: { type: Boolean, required: true },
-		showFooter: { type: Boolean, required: true },
-		acceptedFiles: { type: String, required: true },
-		textFormatting: { type: Boolean, required: true },
-		loadingRooms: { type: Boolean, required: true },
-		roomInfo: { type: Function, default: null },
-		textareaAction: { type: Function, default: null }
+		currentUserId: {type: [String, Number], required: true},
+		singleRoom: {type: Boolean, required: true},
+		showRoomsList: {type: Boolean, required: true},
+		isMobile: {type: Boolean, required: true},
+		rooms: {type: Array, required: true},
+		roomId: {type: [String, Number], required: true},
+		loadFirstRoom: {type: Boolean, required: true},
+		messages: {type: Array, required: true},
+		roomMessage: {type: String, default: null},
+		messagesLoaded: {type: Boolean, required: true},
+		menuActions: {type: Array, required: true},
+		messageActions: {type: Array, required: true},
+		showSendIcon: {type: Boolean, required: true},
+		showFiles: {type: Boolean, required: true},
+		showAudio: {type: Boolean, required: true},
+		showEmojis: {type: Boolean, required: true},
+		showReactionEmojis: {type: Boolean, required: true},
+		showNewMessagesDivider: {type: Boolean, required: true},
+		showFooter: {type: Boolean, required: true},
+		acceptedFiles: {type: String, required: true},
+		textFormatting: {type: Boolean, required: true},
+		loadingRooms: {type: Boolean, required: true},
+		roomInfo: {type: Function, default: null},
+		textareaAction: {type: Function, default: null}
 	},
 
 	data() {
@@ -501,7 +503,7 @@ export default {
 					this.getBottomScroll(element) < 60
 				) {
 					return setTimeout(() => {
-						const options = { top: element.scrollHeight, behavior: 'smooth' }
+						const options = {top: element.scrollHeight, behavior: 'smooth'}
 						element.scrollTo(options)
 					}, 50)
 				} else {
@@ -514,7 +516,7 @@ export default {
 				this.infiniteState.loaded()
 			} else if (newVal.length && !this.scrollIcon) {
 				setTimeout(() => {
-					element.scrollTo({ top: element.scrollHeight })
+					element.scrollTo({top: element.scrollHeight})
 					this.loadingMessages = false
 				}, 0)
 			}
@@ -575,7 +577,7 @@ export default {
 				position > 0 &&
 				this.message.charAt(position - 1) !== '@' &&
 				this.message.charAt(position - 1) !== ' '
-			) {
+				) {
 				position--
 			}
 
@@ -613,7 +615,7 @@ export default {
 			while (
 				this.message.charAt(endPosition) &&
 				this.message.charAt(endPosition).trim()
-			) {
+				) {
 				endPosition++
 			}
 
@@ -627,7 +629,7 @@ export default {
 				space +
 				this.message.substr(endPosition, this.message.length - 1)
 
-			this.selectedUsersTag = [...this.selectedUsersTag, { ...user }]
+			this.selectedUsersTag = [...this.selectedUsersTag, {...user}]
 
 			this.focusTextarea()
 		},
@@ -744,7 +746,7 @@ export default {
 				iOSDevice() ? 500 : 0
 			)
 		},
-		messageActionHandler({ action, message }) {
+		messageActionHandler({action, message}) {
 			switch (action.name) {
 				case 'replyMessage':
 					return this.replyMessage(message)
@@ -753,7 +755,7 @@ export default {
 				case 'deleteMessage':
 					return this.$emit('delete-message', message._id)
 				default:
-					return this.$emit('message-action-handler', { action, message })
+					return this.$emit('message-action-handler', {action, message})
 			}
 		},
 		sendMessageReaction(messageReaction) {
@@ -765,7 +767,7 @@ export default {
 		},
 		editMessage(message) {
 			this.resetMessage()
-			this.editedMessage = { ...message }
+			this.editedMessage = {...message}
 			this.file = message.file
 
 			if (isImageFile(this.file)) {
@@ -779,12 +781,12 @@ export default {
 			this.message = message.content
 		},
 		getBottomScroll(element) {
-			const { scrollHeight, clientHeight, scrollTop } = element
+			const {scrollHeight, clientHeight, scrollTop} = element
 			return scrollHeight - clientHeight - scrollTop
 		},
 		scrollToBottom() {
 			const element = this.$refs.scrollContainer
-			element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
+			element.scrollTo({top: element.scrollHeight, behavior: 'smooth'})
 		},
 		onChangeInput() {
 			this.keepKeyboardOpen = true
@@ -841,8 +843,8 @@ export default {
 
 			setTimeout(() => (this.fileDialog = false), 500)
 		},
-		openFile({ message, action }) {
-			this.$emit('open-file', { message, action })
+		openFile({message, action}) {
+			this.$emit('open-file', {message, action})
 		},
 		openUserTag(user) {
 			this.$emit('open-user-tag', user)
@@ -865,7 +867,9 @@ export default {
 				menu.append(new remote.MenuItem(
 					{
 						label: 'Copy Selection', type: 'normal',
-						click: () => { clipboard.writeText(sect) }
+						click: () => {
+							clipboard.writeText(sect)
+						}
 					}))
 			}
 			if (message.file && message.file.type.includes('image')) {
@@ -883,32 +887,35 @@ export default {
 						label: 'Add to stickers', type: 'normal',
 						click: () => this.$emit('add-to-stickers', message)
 					}))
+			}
+			if (message.file) {
 				menu.append(new remote.MenuItem(
 					{
 						label: 'Download',
-						click: () => this.$emit('open-file', { action: 'download', message })
+						click: () => this.$emit('open-file', {action: 'download', message})
 					}))
 			}
-			if (this.roomId != 'teachers') {
+			if (this.roomId !== 'teachers') {
 				menu.append(new remote.MenuItem({
 					label: 'Reply',
 					click: () => {
 						this.replyMessage(message)
 					}
 				}))
-				menu.append(new remote.MenuItem({
-					label: '+1',
-					click: () => {
-						const msgToSend = {
-							content: message.content,
-							replyMessage: message.replyMessage
+				if (!message.file)
+					menu.append(new remote.MenuItem({
+						label: '+1',
+						click: () => {
+							const msgToSend = {
+								content: message.content,
+								replyMessage: message.replyMessage
+							}
+							if (message.file) {
+								msgToSend.imgpath = message.file.url
+							}
+							this.$emit('send-message', msgToSend)
 						}
-						if (message.file) {
-							msgToSend.imgpath = message.file.url
-						}
-						this.$emit('send-message', msgToSend)
-					}
-				}))
+					}))
 			}
 			if (message.senderId === this.currentUserId) {
 				menu.append(new remote.MenuItem({
@@ -918,7 +925,7 @@ export default {
 					}
 				}))
 			}
-			menu.popup({ window: remote.getCurrentWindow() })
+			menu.popup({window: remote.getCurrentWindow()})
 		},
 		containerScroll(e) {
 			this.hideOptions = true
@@ -937,7 +944,7 @@ export default {
 					role: "paste"
 				}
 			])
-			menu.popup({ window: remote.getCurrentWindow() })
+			menu.popup({window: remote.getCurrentWindow()})
 		}
 	}
 }
@@ -1009,7 +1016,7 @@ export default {
 	background: var(--chat-bg-scroll-icon);
 	border-radius: 50%;
 	box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2),
-		0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+	0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
 	display: flex;
 	cursor: pointer;
 	z-index: 10;

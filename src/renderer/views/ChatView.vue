@@ -467,7 +467,6 @@ export default {
 					this.sendMessage({
 						content: "",
 						room: this.selectedRoom,
-
 						imgpath: f.path,
 					});
 				}
@@ -829,6 +828,14 @@ export default {
 						message.content += `[Face: ${m.data.id}]`;
 						room.lastMessage.content += `[Face: ${m.data.id}]`;
 						break;
+					case "video":
+						message.content = '';
+						room.lastMessage.content = `[Video]`;
+						message.file = {
+							type: 'video/mp4',
+							url: m.data.url
+						}
+						break
 				}
 			});
 			//school groups' at all consider as teacher
@@ -1407,7 +1414,7 @@ export default {
 		},
 
 		exit() {
-      remote.getCurrentWindow().hide()
+			remote.getCurrentWindow().hide()
 			db.get('messages').forEach((v, i) => {
 				db.set('messages.' + [i], _.takeRight(v, 1000)).write()
 			}).value()
@@ -1464,10 +1471,6 @@ export default {
 .nodrag {
 	-webkit-user-select: none;
 }
-
-:focus {
-	outline: none;
-}
 </style>
 
 <style lang="scss">
@@ -1508,5 +1511,11 @@ export default {
 			-webkit-appearance: none;
 		}
 	}
+}
+</style>
+
+<style>
+:focus {
+	outline: none;
 }
 </style>
