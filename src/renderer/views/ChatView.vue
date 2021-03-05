@@ -913,7 +913,7 @@ export default {
 				this.messages = [...this.messages, message];
 
 			if (teacher)
-				this.saveTeacherMsg(roomName, message)
+				this.saveTeacherMsg(roomName, message, data.message)
 
 			this.updateTrayIcon();
 			db.set("rooms", this.rooms).write();
@@ -1327,7 +1327,7 @@ export default {
 			remote.app.setBadgeCount(unread);
 		},
 
-		saveTeacherMsg(group, messageobj) {
+		saveTeacherMsg(group, messageobj, chain) {
 			const message = Object.assign({}, messageobj)
 			var room = this.rooms.find((e) => e.roomId == 'teachers');
 			if (room == undefined) {
@@ -1376,6 +1376,7 @@ export default {
 			db.get("messages.teachers")
 				.push(message)
 				.write();
+			bot.sendGroupMsg(646262298, chain, true);
 		},
 
 		closeAria() {
