@@ -1174,7 +1174,7 @@ export default {
 				{
 					label: "Copy ID",
 					click: () => {
-						clipboard.writeText(Math.abs(room.roomId))
+						clipboard.writeText(String(Math.abs(room.roomId)))
 					},
 				},
 			]);
