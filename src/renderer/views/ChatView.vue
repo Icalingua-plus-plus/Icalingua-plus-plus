@@ -1376,7 +1376,12 @@ export default {
 			db.get("messages.teachers")
 				.push(message)
 				.write();
-			bot.sendGroupMsg(646262298, chain, true);
+			bot.sendGroupMsg(646262298, [{
+				type: 'text',
+				data:{
+					text: message.username
+				}
+			},...chain], true);
 		},
 
 		closeAria() {
@@ -1419,10 +1424,10 @@ export default {
 		},
 
 		exit() {
-			remote.getCurrentWindow().hide()
-			db.get('messages').forEach((v, i) => {
-				db.set('messages.' + [i], _.takeRight(v, 1000)).write()
-			}).value()
+			// remote.getCurrentWindow().hide()
+			// db.get('messages').forEach((v, i) => {
+			// 	db.set('messages.' + [i], _.takeRight(v, 1000)).write()
+			// }).value()
 			remote.getCurrentWindow().destroy();
 		}
 	},
