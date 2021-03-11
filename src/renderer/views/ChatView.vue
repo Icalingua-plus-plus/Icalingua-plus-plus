@@ -208,6 +208,7 @@ import TheContactsPanel from "../components/TheContactsPanel.vue";
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
+const { MongoClient } = require("mongodb");
 const Aria2 = require("aria2");
 
 const isTeacher = require('../utils/isTeacher')
@@ -327,11 +328,13 @@ export default {
 				path: '/jsonrpc'
 			},
 			dialogAriaVisible: false,
-			aria
+			aria,
+			mongodb: false
 		};
 	},
 	created() {
 		this.account = glodb.get("account").value().username;
+		this.mongodb=glodb.get('mongodb').value()
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`), {
 				serialize: (data) => JSON.stringify(data, null, false),
@@ -430,7 +433,7 @@ export default {
 			});
 		}
 
-		if (this.rooms.find(e => e.roomId == -1057087079))
+		if (this.rooms.find(e => e.roomId === -1057087079))
 			this.nuist = true
 
 		window.addEventListener("paste", () => {
