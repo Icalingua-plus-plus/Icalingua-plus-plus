@@ -430,7 +430,7 @@ export default {
 			});
 		}
 
-		if (this.rooms.find(e => e.roomId == -1057087079))
+		if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
 			this.nuist = true
 
 		window.addEventListener("paste", () => {
