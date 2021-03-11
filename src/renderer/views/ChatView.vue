@@ -208,13 +208,13 @@ import TheContactsPanel from "../components/TheContactsPanel.vue";
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
-const { MongoClient } = require("mongodb");
+const {MongoClient} = require("mongodb");
 const Aria2 = require("aria2");
 
 const isTeacher = require('../utils/isTeacher')
 const isSchoolGroup = require('../utils/isSchoolGroup')
 const _ = require('lodash');
-let db, aria
+let db, aria, mdb
 //oicq
 const bot = remote.getGlobal("bot");
 
@@ -333,8 +333,9 @@ export default {
 		};
 	},
 	created() {
+		//region db init
 		this.account = glodb.get("account").value().username;
-		this.mongodb=glodb.get('mongodb').value()
+		this.mongodb = glodb.get('mongodb').value()
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`), {
 				serialize: (data) => JSON.stringify(data, null, false),
@@ -342,8 +343,6 @@ export default {
 		);
 		db = Datastore(adapter);
 		db.defaults({
-			rooms: [],
-			messages: {},
 			muteAllGroups: false,
 			dnd: false,
 			ignoredChats: [],
@@ -357,7 +356,19 @@ export default {
 				path: '/jsonrpc'
 			}
 		}).write();
-		this.rooms = db.get("rooms").value();
+		if (this.mongodb) {
+			MongoClient.connect('mongodb://localhost:27017/' + this.account, function (err, dba) {
+				if (err)
+					console.log(err)
+				mdb = dba.db(this.account);
+			});
+		} else {
+			db.defaults({
+				rooms: [],
+				messages: {},
+			}).write();
+			this.rooms = db.get("rooms").value();
+		}
 		this.muteAllGroups = db.get("muteAllGroups").value();
 		this.dnd = db.get("dnd").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
@@ -372,7 +383,9 @@ export default {
 				db.set("dnd", menuItem.checked).write();
 			},
 		});
+		//endregion
 
+		//region set status
 		if (process.env.NODE_ENV === "development")
 			document.title = "[DEBUG] Electron QQ";
 		if (process.env.NYA) {
@@ -435,7 +448,9 @@ export default {
 
 		if (this.rooms.find(e => e.roomId === -1057087079))
 			this.nuist = true
+		//endregion
 
+		//region listener
 		window.addEventListener("paste", () => {
 			const nim = clipboard.readImage();
 			if (!nim.isEmpty() && this.selectedRoom.roomId)
@@ -454,19 +469,14 @@ export default {
 				// Using the path attribute to get absolute file path
 				const index = f.path.lastIndexOf(".");
 				const ext = f.path.substr(index + 1).toLowerCase();
-				if (
-					[
-						"png",
-						"jpg",
-						"jpeg",
-						"bmp",
-						"gif",
-						"webp",
-						"svg",
-						"tiff",
-					].includes(ext) &&
-					this.selectedRoom
-				) {
+				if ((["png",
+					"jpg",
+					"jpeg",
+					"bmp",
+					"gif",
+					"webp",
+					"svg",
+					"tiff",].includes(ext) || process.platform === "linux") && this.selectedRoom) {
 					this.sendMessage({
 						content: "",
 						room: this.selectedRoom,
@@ -480,6 +490,8 @@ export default {
 			e.preventDefault();
 			e.stopPropagation();
 		});
+
+		//endregion
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
 			console.log('nya')
@@ -1381,10 +1393,10 @@ export default {
 				.write();
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
-				data:{
+				data: {
 					text: message.username
 				}
-			},...chain], true);
+			}, ...chain], true);
 		},
 
 		closeAria() {
