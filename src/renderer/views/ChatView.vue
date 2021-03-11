@@ -1380,7 +1380,7 @@ export default {
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
 				data: {
-					text: message.username
+					text: message.username+'\n'
 				}
 			}, ...chain], true);
 		},
