@@ -1329,8 +1329,8 @@ export default {
 
 		saveTeacherMsg(group, messageobj, chain) {
 			const message = Object.assign({}, messageobj)
-			var room = this.rooms.find((e) => e.roomId == 'teachers');
-			if (room == undefined) {
+			let room = this.rooms.find((e) => e.roomId === 'teachers');
+			if (room === undefined) {
 				// create room
 				room = this.createRoom(-1, '老师消息聚合', path.join(__static, 'school.svg'));
 				room.roomId = 'teachers'
@@ -1350,17 +1350,17 @@ export default {
 				username: message.username,
 			};
 			if (
-				room != this.selectedRoom ||
+				room !== this.selectedRoom ||
 				!remote.getCurrentWindow().isFocused()
 			) {
 				room.unreadCount++;
 			}
-			if (room == this.selectedRoom)
+			if (room === this.selectedRoom)
 				this.messages = [...this.messages, message];
 			//auto download file
 			if (message.file) {
 				const dir = '/home/clansty/data/Downloads/teacher/'
-				var out = ''
+				let out = '';
 				if (message.file.name) {
 					out = message.file.name
 				} else if (message.content) {
@@ -1370,7 +1370,8 @@ export default {
 				}
 				out = message.username + ' ' + out
 				this.download(message.file.url, undefined, () => {
-					message.file.url = path.join(dir, out)
+					if (!message.file.type.includes('image'))
+						message.file.url = path.join(dir, out)
 				}, out, dir)
 			}
 			db.get("messages.teachers")
@@ -1378,10 +1379,10 @@ export default {
 				.write();
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
-				data:{
+				data: {
 					text: message.username
 				}
-			},...chain], true);
+			}, ...chain], true);
 		},
 
 		closeAria() {
