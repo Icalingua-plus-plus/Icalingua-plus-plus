@@ -32,4 +32,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - notify privoxy
 - headless server
 - video
-- copy json
+- tab to go to unread chat
+- notify not opened chat
