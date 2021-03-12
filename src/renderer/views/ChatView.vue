@@ -19,25 +19,25 @@
 				<SideBarIcon
 					icon="el-icon-chat-round"
 					name="Chats"
-					:selected="view == 'chats'"
+					:selected="view === 'chats'"
 					@click="view = 'chats'"
 				/>
 				<SideBarIcon
 					icon="el-icon-user"
 					name="Contacts"
-					:selected="view == 'contacts'"
+					:selected="view === 'contacts'"
 					@click="view = 'contacts'"
 				/>
 				<SideBarIcon
 					v-if="nuist"
 					icon="el-icon-school"
 					name="NUIST"
-					:selected="view == 'nuist'"
+					:selected="view === 'nuist'"
 					@click="view = 'nuist'"
 				/>
 			</el-aside>
 			<el-main>
-				<el-row v-show="view == 'chats' || view == 'nuist'">
+				<el-row v-show="view === 'chats' || view === 'nuist'">
 					<!-- main chat view -->
 					<el-col
 						:span="5"
@@ -48,7 +48,7 @@
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
-							:filter-nuist="view == 'nuist'"
+							:filter-nuist="view === 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
@@ -75,7 +75,7 @@
 							:styles="styles"
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
-							:show-footer="selectedRoom.roomId != 'teachers'"
+							:show-footer="selectedRoom.roomId !== 'teachers'"
 							:show-rooms-list="false"
 							:is-mobile="false"
 							:menu-actions="[]"
@@ -92,7 +92,7 @@
 							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
 							@stickers-panel="
-								panel = panel == 'stickers' ? '' : 'stickers'
+								panel = panel === 'stickers' ? '' : 'stickers'
 							"
 						>
 							<template v-slot:menu-icon>
@@ -208,15 +208,16 @@ import TheContactsPanel from "../components/TheContactsPanel.vue";
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
+const {MongoClient} = require("mongodb");
 const Aria2 = require("aria2");
 
 const isTeacher = require('../utils/isTeacher')
 const isSchoolGroup = require('../utils/isSchoolGroup')
-const _ = require('lodash');
-let db, aria
+let db, aria, mdb
 //oicq
 const bot = remote.getGlobal("bot");
 
+//region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
 Date.prototype.format = function (fmt) {
 	var o = {
@@ -283,6 +284,8 @@ function convertImgToBase64(url, callback, outputFormat) {
 	img.src = url;
 }
 
+//endregion
+
 export default {
 	components: {
 		Room,
@@ -327,11 +330,14 @@ export default {
 				path: '/jsonrpc'
 			},
 			dialogAriaVisible: false,
-			aria
+			aria,
+			mongodb: false
 		};
 	},
 	created() {
+		//region db init
 		this.account = glodb.get("account").value().username;
+		this.mongodb = glodb.get('mongodb').value()
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`), {
 				serialize: (data) => JSON.stringify(data, null, false),
@@ -339,8 +345,6 @@ export default {
 		);
 		db = Datastore(adapter);
 		db.defaults({
-			rooms: [],
-			messages: {},
 			muteAllGroups: false,
 			dnd: false,
 			ignoredChats: [],
@@ -354,7 +358,30 @@ export default {
 				path: '/jsonrpc'
 			}
 		}).write();
-		this.rooms = db.get("rooms").value();
+		if (this.mongodb) {
+			const loading = this.$loading({
+				lock: true,
+			});
+			MongoClient.connect('mongodb://localhost', (err, dba) => {
+				if (err)
+					console.log(err)
+				mdb = dba.db('eqq' + this.account);
+				loading.close()
+				bot.on("message", this.onQQMessage);
+				bot.on("notice.friend.recall", this.friendRecall);
+				bot.on("notice.group.recall", this.groupRecall);
+				bot.on("system.online", this.online);
+				bot.on("system.offline", this.onOffline);
+				bot.on("notice.friend.poke", this.friendpoke);
+				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+			});
+		} else {
+			db.defaults({
+				rooms: [],
+				messages: {},
+			}).write();
+			this.rooms = db.get("rooms").value();
+		}
 		this.muteAllGroups = db.get("muteAllGroups").value();
 		this.dnd = db.get("dnd").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
@@ -369,7 +396,9 @@ export default {
 				db.set("dnd", menuItem.checked).write();
 			},
 		});
+		//endregion
 
+		//region set status
 		if (process.env.NODE_ENV === "development")
 			document.title = "[DEBUG] Electron QQ";
 		if (process.env.NYA) {
@@ -432,7 +461,9 @@ export default {
 
 		if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
 			this.nuist = true
+		//endregion
 
+		//region listener
 		window.addEventListener("paste", () => {
 			const nim = clipboard.readImage();
 			if (!nim.isEmpty() && this.selectedRoom.roomId)
@@ -451,19 +482,14 @@ export default {
 				// Using the path attribute to get absolute file path
 				const index = f.path.lastIndexOf(".");
 				const ext = f.path.substr(index + 1).toLowerCase();
-				if (
-					[
-						"png",
-						"jpg",
-						"jpeg",
-						"bmp",
-						"gif",
-						"webp",
-						"svg",
-						"tiff",
-					].includes(ext) &&
-					this.selectedRoom
-				) {
+				if ((["png",
+					"jpg",
+					"jpeg",
+					"bmp",
+					"gif",
+					"webp",
+					"svg",
+					"tiff",].includes(ext) || process.platform === "linux") && this.selectedRoom) {
 					this.sendMessage({
 						content: "",
 						room: this.selectedRoom,
@@ -478,6 +504,8 @@ export default {
 			e.stopPropagation();
 		});
 
+		//endregion
+
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
 			console.log('nya')
 			var myFonts = new FontFace('font', `url(${path.join(STORE_PATH, 'font.ttf')})`, {});
@@ -489,13 +517,15 @@ export default {
 		if (this.aria2.enabled)
 			this.startAria()
 
-		bot.on("message", this.onQQMessage);
-		bot.on("notice.friend.recall", this.friendRecall);
-		bot.on("notice.group.recall", this.groupRecall);
-		bot.on("system.online", this.online);
-		bot.on("system.offline", this.onOffline);
-		bot.on("notice.friend.poke", this.friendpoke);
-		remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+		if (!this.mongodb) {
+			bot.on("message", this.onQQMessage);
+			bot.on("notice.friend.recall", this.friendRecall);
+			bot.on("notice.group.recall", this.groupRecall);
+			bot.on("system.online", this.online);
+			bot.on("system.offline", this.onOffline);
+			bot.on("notice.friend.poke", this.friendpoke);
+			remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+		}
 	},
 	methods: {
 		async sendMessage({
@@ -507,7 +537,7 @@ export default {
 			                  b64img,
 			                  imgpath,
 		                  }) {
-			if (!room & !roomId) {
+			if (!room && !roomId) {
 				room = this.selectedRoom
 				roomId = room.roomId
 			}
@@ -542,10 +572,15 @@ export default {
 
 					message._id = data.data.message_id;
 					this.messages = [...this.messages, message];
-					db.get("messages." + roomId)
-						.push(message)
-						.write();
-					db.set("rooms", this.rooms).write();
+					if (this.mongodb) {
+						message.time = new Date().getTime()
+						mdb.collection('msg' + roomId).insertOne(message)
+					} else {
+						db.get("messages." + roomId)
+							.push(message)
+							.write();
+						db.set("rooms", this.rooms).write();
+					}
 				}
 			};
 
@@ -634,27 +669,44 @@ export default {
 
 		fetchMessage(reset) {
 			if (reset) {
-				if (this.selectedRoom.roomId == 'teachers')
+				if (this.selectedRoom.roomId === 'teachers')
 					this.panel = '';
 				this.messagesLoaded = false;
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false
-				this.selectedRoom = this.selectedRoom;
-				db.set("rooms", this.rooms).write();
+				if (this.mongodb) {
+
+				} else
+					db.set("rooms", this.rooms).write();
 			}
-			const msgs2add = db
-				.get("messages." + this.selectedRoom.roomId)
-				.dropRightWhile((e) => this.messages.includes(e))
-				.takeRight(10)
-				.value();
-			setTimeout(() => {
-				if (msgs2add.length)
-					this.messages = [...msgs2add, ...this.messages];
-				else this.messagesLoaded = true;
-			}, 0); // db.get("messages." + data.room.roomId).last().assign({seen:true}).write()
+			if (this.mongodb) {
+				mdb.collection('msg' + this.selectedRoom.roomId).find({}, {
+					sort: [['time', -1]],
+					skip: this.messages.length,
+					limit: 10
+				}).toArray().then(msgs2add => {
+					setTimeout(() => {
+						if (msgs2add.length) {
+							msgs2add.reverse()
+							this.messages = [...msgs2add, ...this.messages];
+						} else this.messagesLoaded = true;
+					}, 0);
+				})
+			} else {
+				const msgs2add = db
+					.get("messages." + this.selectedRoom.roomId)
+					.dropRightWhile((e) => this.messages.includes(e))
+					.takeRight(10)
+					.value();
+				setTimeout(() => {
+					if (msgs2add.length)
+						this.messages = [...msgs2add, ...this.messages];
+					else this.messagesLoaded = true;
+				}, 0);
+			}
 			this.updateTrayIcon();
-		},
+		},//ok
 
 		onQQMessage(data) {
 			console.log(data);
@@ -691,7 +743,8 @@ export default {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
-				db.set("messages." + roomId, []).write();
+				if (!this.mongodb)
+					db.set("messages." + roomId, []).write();
 			} else {
 				room.roomName = roomName;
 				this.rooms = [
@@ -924,10 +977,15 @@ export default {
 				this.saveTeacherMsg(roomName, message, data.message)
 
 			this.updateTrayIcon();
-			db.set("rooms", this.rooms).write();
-			db.get("messages." + roomId)
-				.push(message)
-				.write();
+			if (this.mongodb) {
+				message.time = new Date().getTime()
+				mdb.collection('msg' + roomId).insertOne(message)
+			} else {
+				db.set("rooms", this.rooms).write();
+				db.get("messages." + roomId)
+					.push(message)
+					.write();
+			}
 		},
 
 		openImage(data) {
@@ -959,31 +1017,39 @@ export default {
 			}
 		},
 
-		async deleteMessage(data) {
-			const message = this.messages.find((e) => e._id == data.messageId);
-			const res = await bot.deleteMsg(data.messageId);
-			if (!res.error) message.deleted = new Date();
-			this.messages = [...this.messages];
-			db.get("messages." + this.selectedRoom.roomId)
-				.find({_id: data.messageId})
-				.assign({deleted: new Date()})
-				.write();
-		},
+		async deleteMessage(messageId) {
+			const message = this.messages.find((e) => e._id === messageId);
+			const res = await bot.deleteMsg(messageId);
+			console.log(res)
+			if (!res.error) {
+				message.deleted = new Date();
+				this.messages = [...this.messages];
+				if (this.mongodb)
+					mdb.collection('msg' + this.selectedRoom.roomId)
+						.updateOne({_id: messageId}, {$set: {deleted: new Date()}})
+				else
+					db.get("messages." + this.selectedRoom.roomId)
+						.find({_id: messageId})
+						.assign({deleted: new Date()})
+						.write();
+			}
+		},//ok
 
 		friendRecall(data) {
-			db.get("messages." + data.user_id)
-				.find({_id: data.message_id})
-				.assign({deleted: new Date()})
-				.write();
 			if (data.user_id == this.selectedRoom.roomId) {
-				const message = this.messages.find(
-					(e) => e._id == data.message_id
-				);
+				const message = this.messages.find((e) => e._id == data.message_id);
 				if (message) {
 					message.deleted = new Date();
 					this.messages = [...this.messages];
 				}
 			}
+			if (this.mongodb)
+				mdb.collection('msg' + data.user_id).updateOne({_id: data.message_id}, {$set: {deleted: new Date()}})
+			else
+				db.get("messages." + data.user_id)
+					.find({_id: data.message_id})
+					.assign({deleted: new Date()})
+					.write();
 		},
 
 		groupRecall(data) {
@@ -1239,11 +1305,12 @@ export default {
 					? `https://p.qlogo.cn/gh/${-id}/${-id}/0`
 					: `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`;
 
-			if (room == undefined) {
+			if (room === undefined) {
 				// create room
 				room = this.createRoom(id, name, avatar);
 				this.rooms = [room, ...this.rooms];
-				db.set("messages." + id, []).write();
+				if (!this.mongodb)
+					db.set("messages." + id, []).write();
 			}
 			this.selectedRoom = room;
 			this.view = "chats";
@@ -1382,9 +1449,12 @@ export default {
 						message.file.url = path.join(dir, out)
 				}, out, dir)
 			}
-			db.get("messages.teachers")
-				.push(message)
-				.write();
+			if (this.mongodb) {
+				mdb.collection('msgteachers').insertOne(message)
+			} else
+				db.get("messages.teachers")
+					.push(message)
+					.write();
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
 				data: {

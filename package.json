@@ -93,6 +93,7 @@
         "lodash": "^4.17.21",
         "lowdb": "^1.0.0",
         "md5": "^2.3.0",
+        "mongodb": "^3.6.4",
         "oicq": "^1.13.3",
         "v-click-outside": "^3.1.2",
         "v-emoji-picker": "^2.3.3",
