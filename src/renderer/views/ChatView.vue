@@ -459,7 +459,7 @@ export default {
 			});
 		}
 
-		if (this.rooms.find(e => e.roomId === -1057087079))
+		if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
 			this.nuist = true
 		//endregion
 
@@ -762,6 +762,7 @@ export default {
 			let at, teacher
 			if (isTeacher(senderId) && groupId)
 				teacher = true
+			let appurl;
 			data.message.forEach((m) => {
 				switch (m.type) {
 					case "text":
@@ -829,11 +830,11 @@ export default {
 						break;
 					case "json":
 						const json = m.data.data;
-						let appurl;
+						message.code = json
 						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
-						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/;
-						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?""=]*)\??/;
-						const jsonLinkRegex = /{.*""app"":""com.tencent.structmsg"".*""jumpUrl"":""(https?:\\?\/\\?\/[^"",]*)"".*}/;
+						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
+						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
+						const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/;
 						if (biliRegex.test(json))
 							appurl = json
 								.match(biliRegex)[1]
@@ -859,6 +860,7 @@ export default {
 						}
 						break;
 					case "xml":
+						message.code = m.data.data
 						const urlRegex = /url="([^"]+)"/;
 						if (urlRegex.test(m.data.data))
 							appurl = m.data.data
@@ -910,7 +912,7 @@ export default {
 				!isSelfMsg
 			) {
 				//notification
-				if (process.platform == "darwin") {
+				if (process.platform === "darwin") {
 					convertImgToBase64(avatar, (b64img) => {
 						const notif = new remote.Notification({
 							title: roomName,
@@ -926,7 +928,10 @@ export default {
 							const window = remote.getCurrentWindow();
 							window.show();
 							window.focus();
-							this.chroom(room)
+							if (teacher)
+								this.chroom(this.rooms.find(e => e.roomId === 'teachers'))
+							else
+								this.chroom(room)
 						});
 						notif.addListener("reply", (e, r) => {
 							this.sendMessage({
@@ -950,19 +955,22 @@ export default {
 						const window = remote.getCurrentWindow();
 						window.show();
 						window.focus();
-						this.chroom(room)
+						if (teacher)
+							this.chroom(this.rooms.find(e => e.roomId === 'teachers'))
+						else
+							this.chroom(room)
 					};
 				}
 			}
 
 			if (
-				room != this.selectedRoom ||
+				room !== this.selectedRoom ||
 				!remote.getCurrentWindow().isFocused()
 			) {
 				if (isSelfMsg) room.unreadCount = 0;
 				else room.unreadCount++;
 			}
-			if (room == this.selectedRoom)
+			if (room === this.selectedRoom)
 				this.messages = [...this.messages, message];
 
 			if (teacher)
@@ -1396,7 +1404,7 @@ export default {
 
 		saveTeacherMsg(group, messageobj, chain) {
 			const message = Object.assign({}, messageobj)
-			var room = this.rooms.find((e) => e.roomId === 'teachers');
+			let room = this.rooms.find((e) => e.roomId === 'teachers');
 			if (room === undefined) {
 				// create room
 				room = this.createRoom(-1, '老师消息聚合', path.join(__static, 'school.svg'));
@@ -1427,7 +1435,7 @@ export default {
 			//auto download file
 			if (message.file) {
 				const dir = '/home/clansty/data/Downloads/teacher/'
-				var out = ''
+				let out = '';
 				if (message.file.name) {
 					out = message.file.name
 				} else if (message.content) {
@@ -1437,7 +1445,8 @@ export default {
 				}
 				out = message.username + ' ' + out
 				this.download(message.file.url, undefined, () => {
-					message.file.url = path.join(dir, out)
+					if (!message.file.type.includes('image'))
+						message.file.url = path.join(dir, out)
 				}, out, dir)
 			}
 			if (this.mongodb) {
@@ -1449,10 +1458,10 @@ export default {
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
 				data: {
-					text: message.username
+					text: message.username + '\n'
 				}
 			}, ...chain], true);
-		},//ok
+		},
 
 		closeAria() {
 			this.dialogAriaVisible = false
