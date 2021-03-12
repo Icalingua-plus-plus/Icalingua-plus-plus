@@ -364,6 +364,8 @@ export default {
 				if (err)
 					console.log(err)
 				mdb = dba.db('eqq' + this.account);
+				mdb.collection('rooms').find({}, {sort: [['utime', -1]]}).toArray()
+					.then(e => this.rooms = e)
 				loading.close()
 				bot.on("message", this.onQQMessage);
 				bot.on("notice.friend.recall", this.friendRecall);
@@ -613,6 +615,8 @@ export default {
 					if (this.mongodb) {
 						message.time = new Date().getTime()
 						mdb.collection('msg' + roomId).insertOne(message)
+						room.utime = new Date().getTime()
+						mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 					} else {
 						db.get("messages." + roomId)
 							.push(message)
@@ -714,7 +718,7 @@ export default {
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false
 				if (this.mongodb) {
-
+					mdb.collection('rooms').updateOne({roomId: this.selectedRoom.roomId}, {$set: this.selectedRoom})
 				} else
 					db.set("rooms", this.rooms).write();
 			}
@@ -781,7 +785,9 @@ export default {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (!this.mongodb)
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
 					db.set("messages." + roomId, []).write();
 			} else {
 				room.roomName = roomName;
@@ -789,6 +795,8 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
+				if (this.mongodb)
+					room.utime = new Date().getTime()
 			} //bring the room first
 
 			//begin process msg
@@ -1012,6 +1020,7 @@ export default {
 			this.updateTrayIcon();
 			if (this.mongodb) {
 				message.time = new Date().getTime()
+				mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 				mdb.collection('msg' + roomId).insertOne(message)
 			} else {
 				db.set("rooms", this.rooms).write();
@@ -1086,10 +1095,6 @@ export default {
 		},
 
 		groupRecall(data) {
-			db.get("messages." + -data.group_id)
-				.find({_id: data.message_id})
-				.assign({deleted: new Date()})
-				.write();
 			if (-data.group_id == this.selectedRoom.roomId) {
 				const message = this.messages.find(
 					(e) => e._id == data.message_id
@@ -1099,6 +1104,13 @@ export default {
 					this.messages = [...this.messages];
 				}
 			}
+			if (this.mongodb)
+				mdb.collection('msg' + -data.group_id).updateOne({_id: data.message_id}, {$set: {deleted: new Date()}})
+			else
+				db.get("messages." + -data.group_id)
+					.find({_id: data.message_id})
+					.assign({deleted: new Date()})
+					.write();
 		},
 
 		sendSticker(url) {
@@ -1293,7 +1305,10 @@ export default {
 						if (room.index) room.index = 0;
 						else room.index = 1;
 						this.rooms = [...this.rooms];
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
+						else
+							db.set("rooms", this.rooms).write();
 					},
 				},
 				{
@@ -1301,7 +1316,10 @@ export default {
 					click: () => {
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').findOneAndDelete({roomId: room.roomId})
+						else
+							db.set("rooms", this.rooms).write();
 					},
 				},
 				{
@@ -1313,7 +1331,10 @@ export default {
 						});
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').findOneAndDelete({roomId: room.roomId})
+						else
+							db.set("rooms", this.rooms).write();
 						db.set("ignoredChats", this.ignoredChats).write();
 					},
 				},
@@ -1341,7 +1362,9 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				var msg = room.roomName + " ";
+				if (this.mongodb)
+					room.utime = new Date().getTime()
+				let msg = room.roomName + " ";
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
 					msg += " " + room.roomName;
@@ -1355,13 +1378,17 @@ export default {
 					date: new Date().format("dd/MM/yyyy"),
 					_id: new Date().getTime(),
 					system: true,
+					time: new Date().getTime()
 				};
 				if (room != this.selectedRoom) {
 					room.unreadCount++;
 				} else this.messages = [...this.messages, message];
-				db.get("messages." + data.operator_id)
-					.push(message)
-					.write();
+				if (this.mongodb)
+					mdb.collection('msg' + room.roomId).insertOne(message)
+				else
+					db.get("messages." + data.operator_id)
+						.push(message)
+						.write();
 			}
 		},
 
@@ -1376,7 +1403,9 @@ export default {
 				// create room
 				room = this.createRoom(id, name, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (!this.mongodb)
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
 					db.set("messages." + id, []).write();
 			}
 			this.selectedRoom = room;
@@ -1475,7 +1504,10 @@ export default {
 				room.roomId = 'teachers'
 				room.index = 1
 				this.rooms = [room, ...this.rooms];
-				db.set("messages.teachers", []).write();
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
+					db.set("messages.teachers", []).write();
 			} else {
 				this.rooms = [
 					room,
@@ -1514,6 +1546,8 @@ export default {
 				}, out, dir)
 			}
 			if (this.mongodb) {
+				room.utime = new Date().getTime()
+				mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
 				mdb.collection('msgteachers').insertOne(message)
 			} else
 				db.get("messages.teachers")

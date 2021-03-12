@@ -17,15 +17,7 @@
 						</div>
 						<div
 							class="icon"
-							v-show="
-								(room.roomId < 0 &&
-									muteAllGroups &&
-									!room.unmute) ||
-								(room.roomId < 0 &&
-									!muteAllGroups &&
-									room.mute) ||
-								(room.roomId > 0 && room.mute)
-							"
+							v-show="room.priority <= priority"
 						>
 							<i class="el-icon-close-notification"></i>
 						</div>
