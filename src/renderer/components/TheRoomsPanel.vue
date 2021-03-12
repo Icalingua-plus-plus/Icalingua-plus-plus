@@ -13,8 +13,8 @@
 				v-for="room in sortedRooms"
 				:key="room.roomId"
 				:room="room"
-				:selected="room == selected"
-				:mute-all-groups="muteAllGroups"
+				:selected="room === selected"
+				:priority="priority"
 				@click="$emit('chroom', room)"
 				@contextmenu="$emit('contextmenu', room)"
 			/>
@@ -31,18 +31,18 @@ export default {
 	computed: {
 		sortedRooms() {
 			this.input = this.input.toUpperCase()
-			var tmpr = [...this.rooms]
+			let tmpr = [...this.rooms];
 			if (this.input)
 				tmpr = tmpr.filter(e => e.roomName.toUpperCase().includes(this.input) || String(e.roomId).includes(this.input))
 			if (this.filterNuist)
-				tmpr = tmpr.filter(e => isSchoolGroup(-e.roomId) || e.roomId == 'teachers')
+				tmpr = tmpr.filter(e => isSchoolGroup(-e.roomId) || e.roomId === 'teachers')
 			return tmpr.sort((a, b) => b.index - a.index)
 		}
 	},
 	props: [
 		'rooms',
 		'selected',
-		'muteAllGroups',
+		'priority',
 		'filterNuist'
 	],
 	data() {
