@@ -47,7 +47,7 @@
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
-							:mute-all-groups="muteAllGroups"
+							:priority="priority"
 							:filter-nuist="view === 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
@@ -300,9 +300,7 @@ export default {
 			rooms: [],
 			messages: [],
 			selectedRoom: {roomId: 0},
-			muteAllGroups: false,
-			dndMenuItem: null,
-			dnd: false,
+			notifyMenuItem: null,
 			tray: null,
 			account: null,
 			messagesLoaded: false,
@@ -331,7 +329,8 @@ export default {
 			},
 			dialogAriaVisible: false,
 			aria,
-			mongodb: false
+			mongodb: false,
+			priority: 1,
 		};
 	},
 	created() {
@@ -345,8 +344,6 @@ export default {
 		);
 		db = Datastore(adapter);
 		db.defaults({
-			muteAllGroups: false,
-			dnd: false,
 			ignoredChats: [],
 			darkTaskIcon: false,
 			aria2: {
@@ -356,7 +353,8 @@ export default {
 				secure: false,
 				secret: '',
 				path: '/jsonrpc'
-			}
+			},
+			priority: 1,
 		}).write();
 		if (this.mongodb) {
 			const loading = this.$loading({
@@ -382,19 +380,59 @@ export default {
 			}).write();
 			this.rooms = db.get("rooms").value();
 		}
-		this.muteAllGroups = db.get("muteAllGroups").value();
-		this.dnd = db.get("dnd").value();
+		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
 		this.aria2 = db.get("aria2").value();
-		this.dndMenuItem = new remote.MenuItem({
-			label: "Disable notifications",
-			type: "checkbox",
-			checked: this.dnd,
-			click: (menuItem, _browserWindow, _event) => {
-				this.dnd = menuItem.checked;
-				db.set("dnd", menuItem.checked).write();
-			},
+		this.notifyMenuItem = new remote.MenuItem({
+			label: "Notification Priority",
+			submenu: [
+				{
+					type: "radio",
+					label: '1',
+					checked: this.priority === 1,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 1
+						db.set("priority", 1).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '2',
+					checked: this.priority === 2,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 2
+						db.set("priority", 2).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '3',
+					checked: this.priority === 3,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 3
+						db.set("priority", 3).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '4',
+					checked: this.priority === 4,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 4
+						db.set("priority", 4).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '5',
+					checked: this.priority === 5,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 5
+						db.set("priority", 5).write();
+					},
+				},
+			],
 		});
 		//endregion
 
@@ -419,7 +457,7 @@ export default {
 							window.focus();
 						},
 					},
-					this.dndMenuItem,
+					this.notifyMenuItem,
 					{
 						label: "Icon theme",
 						submenu: [
@@ -901,14 +939,9 @@ export default {
 			if (at && isSchoolGroup(groupId))
 				teacher = true
 			//notification
-			const muted =
-				(room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-				(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-				(room.roomId > 0 && room.mute);
 			if (
 				!remote.getCurrentWindow().isFocused() &&
-				!this.dnd &&
-				(!muted || at || teacher) &&
+				(room.priority >= this.priority || at || teacher) &&
 				!isSelfMsg
 			) {
 				//notification
@@ -1102,18 +1135,7 @@ export default {
 
 		appMenu() {
 			const menu = new remote.Menu();
-			menu.append(
-				new remote.MenuItem({
-					label: "Mute all groups",
-					type: "checkbox",
-					checked: this.muteAllGroups,
-					click: (menuItem, _browserWindow, _event) => {
-						this.muteAllGroups = menuItem.checked;
-						db.set("muteAllGroups", menuItem.checked).write();
-					},
-				})
-			);
-			menu.append(this.dndMenuItem);
+			menu.append(this.notifyMenuItem);
 			menu.append(
 				new remote.MenuItem({
 					label: "Manage ignored chats",
@@ -1203,22 +1225,67 @@ export default {
 		},
 
 		roomContext(room) {
-			const muted =
-				(room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-				(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-				(room.roomId > 0 && room.mute);
-			const mutetitle = muted ? "Unmute Chat" : "Mute Chat";
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const menu = remote.Menu.buildFromTemplate([
 				{
-					label: mutetitle,
-					click: () => {
-						if (room.roomId < 0 && this.muteAllGroups)
-							room.unmute = !room.unmute;
-						else room.mute = !room.mute;
-						this.rooms = [...this.rooms];
-						db.set("rooms", this.rooms).write();
-					},
+					label: "Notification Priority",
+					submenu: [
+						{
+							type: "radio",
+							label: '1',
+							checked: room.priority === 1,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 1
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 1}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '2',
+							checked: room.priority === 2,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 2
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 2}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '3',
+							checked: room.priority === 3,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 3
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 3}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '4',
+							checked: room.priority === 4,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 4
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 4}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '5',
+							checked: room.priority === 5,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 5
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 5}})
+								}
+							},
+						},
+					],
 				},
 				{
 					label: pintitle,
@@ -1317,7 +1384,7 @@ export default {
 		},
 
 		chroom(room) {
-			if (this.selectedRoom == room) return
+			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room;
 			this.fetchMessage(true)
@@ -1334,7 +1401,8 @@ export default {
 				avatar,
 				index: 0,
 				unreadCount: 0,
-				mute: false,
+				priority: roomId > 0 ? 4 : 2,
+				utime: new Date().getTime(),
 				users: [
 					{_id: 1, username: "1"},
 					{_id: 2, username: "2"},
@@ -1369,11 +1437,7 @@ export default {
 
 		getUnreadCount() {
 			return this.rooms.filter((e) => {
-				const muted =
-					(e.roomId < 0 && this.muteAllGroups && !e.unmute) ||
-					(e.roomId < 0 && !this.muteAllGroups && e.mute) ||
-					(e.roomId > 0 && e.mute);
-				return e.unreadCount && !muted;
+				return e.unreadCount && e.priority >= this.priority;
 			}).length;
 		},
 
