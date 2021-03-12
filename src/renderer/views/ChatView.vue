@@ -19,25 +19,25 @@
 				<SideBarIcon
 					icon="el-icon-chat-round"
 					name="Chats"
-					:selected="view == 'chats'"
+					:selected="view === 'chats'"
 					@click="view = 'chats'"
 				/>
 				<SideBarIcon
 					icon="el-icon-user"
 					name="Contacts"
-					:selected="view == 'contacts'"
+					:selected="view === 'contacts'"
 					@click="view = 'contacts'"
 				/>
 				<SideBarIcon
 					v-if="nuist"
 					icon="el-icon-school"
 					name="NUIST"
-					:selected="view == 'nuist'"
+					:selected="view === 'nuist'"
 					@click="view = 'nuist'"
 				/>
 			</el-aside>
 			<el-main>
-				<el-row v-show="view == 'chats' || view == 'nuist'">
+				<el-row v-show="view === 'chats' || view === 'nuist'">
 					<!-- main chat view -->
 					<el-col
 						:span="5"
@@ -48,7 +48,7 @@
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:mute-all-groups="muteAllGroups"
-							:filter-nuist="view == 'nuist'"
+							:filter-nuist="view === 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
@@ -75,7 +75,7 @@
 							:styles="styles"
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
-							:show-footer="selectedRoom.roomId != 'teachers'"
+							:show-footer="selectedRoom.roomId !== 'teachers'"
 							:show-rooms-list="false"
 							:is-mobile="false"
 							:menu-actions="[]"
@@ -92,7 +92,7 @@
 							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
 							@stickers-panel="
-								panel = panel == 'stickers' ? '' : 'stickers'
+								panel = panel === 'stickers' ? '' : 'stickers'
 							"
 						>
 							<template v-slot:menu-icon>
@@ -213,7 +213,6 @@ const Aria2 = require("aria2");
 
 const isTeacher = require('../utils/isTeacher')
 const isSchoolGroup = require('../utils/isSchoolGroup')
-const _ = require('lodash');
 let db, aria, mdb
 //oicq
 const bot = remote.getGlobal("bot");
@@ -538,7 +537,7 @@ export default {
 			                  b64img,
 			                  imgpath,
 		                  }) {
-			if (!room & !roomId) {
+			if (!room && !roomId) {
 				room = this.selectedRoom
 				roomId = room.roomId
 			}
@@ -670,7 +669,7 @@ export default {
 
 		fetchMessage(reset) {
 			if (reset) {
-				if (this.selectedRoom.roomId == 'teachers')
+				if (this.selectedRoom.roomId === 'teachers')
 					this.panel = '';
 				this.messagesLoaded = false;
 				this.messages = [];
@@ -707,7 +706,7 @@ export default {
 				}, 0);
 			}
 			this.updateTrayIcon();
-		},
+		},//ok
 
 		onQQMessage(data) {
 			console.log(data);
@@ -1017,31 +1016,32 @@ export default {
 			if (!res.error) {
 				message.deleted = new Date();
 				this.messages = [...this.messages];
-				if (this.mongodb) {
+				if (this.mongodb)
 					mdb.collection('msg' + this.selectedRoom.roomId)
-						.findAndModify({_id: messageId},[], {deleted: new Date()})
-				} else
+						.updateOne({_id: messageId}, {$set: {deleted: new Date()}})
+				else
 					db.get("messages." + this.selectedRoom.roomId)
 						.find({_id: messageId})
 						.assign({deleted: new Date()})
 						.write();
 			}
-		},
+		},//ok
 
 		friendRecall(data) {
-			db.get("messages." + data.user_id)
-				.find({_id: data.message_id})
-				.assign({deleted: new Date()})
-				.write();
 			if (data.user_id == this.selectedRoom.roomId) {
-				const message = this.messages.find(
-					(e) => e._id == data.message_id
-				);
+				const message = this.messages.find((e) => e._id == data.message_id);
 				if (message) {
 					message.deleted = new Date();
 					this.messages = [...this.messages];
 				}
 			}
+			if (this.mongodb)
+				mdb.collection('msg' + data.user_id).updateOne({_id: data.message_id}, {$set: {deleted: new Date()}})
+			else
+				db.get("messages." + data.user_id)
+					.find({_id: data.message_id})
+					.assign({deleted: new Date()})
+					.write();
 		},
 
 		groupRecall(data) {
@@ -1396,8 +1396,8 @@ export default {
 
 		saveTeacherMsg(group, messageobj, chain) {
 			const message = Object.assign({}, messageobj)
-			var room = this.rooms.find((e) => e.roomId == 'teachers');
-			if (room == undefined) {
+			var room = this.rooms.find((e) => e.roomId === 'teachers');
+			if (room === undefined) {
 				// create room
 				room = this.createRoom(-1, '老师消息聚合', path.join(__static, 'school.svg'));
 				room.roomId = 'teachers'
@@ -1417,12 +1417,12 @@ export default {
 				username: message.username,
 			};
 			if (
-				room != this.selectedRoom ||
+				room !== this.selectedRoom ||
 				!remote.getCurrentWindow().isFocused()
 			) {
 				room.unreadCount++;
 			}
-			if (room == this.selectedRoom)
+			if (room === this.selectedRoom)
 				this.messages = [...this.messages, message];
 			//auto download file
 			if (message.file) {
@@ -1440,16 +1440,19 @@ export default {
 					message.file.url = path.join(dir, out)
 				}, out, dir)
 			}
-			db.get("messages.teachers")
-				.push(message)
-				.write();
+			if (this.mongodb) {
+				mdb.collection('msgteachers').insertOne(message)
+			} else
+				db.get("messages.teachers")
+					.push(message)
+					.write();
 			bot.sendGroupMsg(646262298, [{
 				type: 'text',
 				data: {
 					text: message.username
 				}
 			}, ...chain], true);
-		},
+		},//ok
 
 		closeAria() {
 			this.dialogAriaVisible = false
