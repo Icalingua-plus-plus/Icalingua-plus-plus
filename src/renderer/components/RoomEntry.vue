@@ -17,7 +17,7 @@
 						</div>
 						<div
 							class="icon"
-							v-show="room.priority <= priority"
+							v-show="room.priority < priority"
 						>
 							<i class="el-icon-close-notification"></i>
 						</div>
@@ -37,7 +37,7 @@
 								style="font-family: msyh"
 								:value="room.unreadCount"
 								:type="
-									room.priority <= priority
+									room.priority < priority
 										? 'info'
 										: undefined
 								"
