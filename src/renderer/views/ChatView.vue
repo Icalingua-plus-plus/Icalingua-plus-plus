@@ -947,6 +947,9 @@ export default {
 			if (at && isSchoolGroup(groupId))
 				teacher = true
 			//notification
+			if (!room.priority) {
+				room.priority = groupId ? 2 : 4
+			}
 			if (
 				!remote.getCurrentWindow().isFocused() &&
 				(room.priority >= this.priority || at || teacher) &&
