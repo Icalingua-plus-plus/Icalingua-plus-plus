@@ -365,7 +365,11 @@ export default {
 					console.log(err)
 				mdb = dba.db('eqq' + this.account);
 				mdb.collection('rooms').find({}, {sort: [['utime', -1]]}).toArray()
-					.then(e => this.rooms = e)
+					.then(e => {
+						this.rooms = e
+						if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
+							this.nuist = true
+					})
 				loading.close()
 				bot.on("message", this.onQQMessage);
 				bot.on("notice.friend.recall", this.friendRecall);
@@ -381,6 +385,8 @@ export default {
 				messages: {},
 			}).write();
 			this.rooms = db.get("rooms").value();
+			if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
+				this.nuist = true
 		}
 		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
@@ -499,8 +505,6 @@ export default {
 			});
 		}
 
-		if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
-			this.nuist = true
 		//endregion
 
 		//region listener
