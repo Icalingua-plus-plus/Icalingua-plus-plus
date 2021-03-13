@@ -47,7 +47,7 @@
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
-							:mute-all-groups="muteAllGroups"
+							:priority="priority"
 							:filter-nuist="view === 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
@@ -121,7 +121,7 @@
 							v-show="panel === 'ignore'"
 							:ignoredChats="ignoredChats"
 							@remove="rmIgnore"
-							@close="panel = 'stickers'"
+							@close="panel = ''"
 						/>
 					</el-col>
 				</el-row>
@@ -300,9 +300,7 @@ export default {
 			rooms: [],
 			messages: [],
 			selectedRoom: {roomId: 0},
-			muteAllGroups: false,
-			dndMenuItem: null,
-			dnd: false,
+			notifyMenuItem: null,
 			tray: null,
 			account: null,
 			messagesLoaded: false,
@@ -331,7 +329,8 @@ export default {
 			},
 			dialogAriaVisible: false,
 			aria,
-			mongodb: false
+			mongodb: false,
+			priority: 1,
 		};
 	},
 	created() {
@@ -345,8 +344,6 @@ export default {
 		);
 		db = Datastore(adapter);
 		db.defaults({
-			muteAllGroups: false,
-			dnd: false,
 			ignoredChats: [],
 			darkTaskIcon: false,
 			aria2: {
@@ -356,7 +353,8 @@ export default {
 				secure: false,
 				secret: '',
 				path: '/jsonrpc'
-			}
+			},
+			priority: 1,
 		}).write();
 		if (this.mongodb) {
 			const loading = this.$loading({
@@ -366,6 +364,8 @@ export default {
 				if (err)
 					console.log(err)
 				mdb = dba.db('eqq' + this.account);
+				mdb.collection('rooms').find({}, {sort: [['utime', -1]]}).toArray()
+					.then(e => this.rooms = e)
 				loading.close()
 				bot.on("message", this.onQQMessage);
 				bot.on("notice.friend.recall", this.friendRecall);
@@ -382,19 +382,59 @@ export default {
 			}).write();
 			this.rooms = db.get("rooms").value();
 		}
-		this.muteAllGroups = db.get("muteAllGroups").value();
-		this.dnd = db.get("dnd").value();
+		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
 		this.aria2 = db.get("aria2").value();
-		this.dndMenuItem = new remote.MenuItem({
-			label: "Disable notifications",
-			type: "checkbox",
-			checked: this.dnd,
-			click: (menuItem, _browserWindow, _event) => {
-				this.dnd = menuItem.checked;
-				db.set("dnd", menuItem.checked).write();
-			},
+		this.notifyMenuItem = new remote.MenuItem({
+			label: "Notification Priority",
+			submenu: [
+				{
+					type: "radio",
+					label: '1',
+					checked: this.priority === 1,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 1
+						db.set("priority", 1).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '2',
+					checked: this.priority === 2,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 2
+						db.set("priority", 2).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '3',
+					checked: this.priority === 3,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 3
+						db.set("priority", 3).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '4',
+					checked: this.priority === 4,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 4
+						db.set("priority", 4).write();
+					},
+				},
+				{
+					type: "radio",
+					label: '5',
+					checked: this.priority === 5,
+					click: (menuItem, _browserWindow, _event) => {
+						this.priority = 5
+						db.set("priority", 5).write();
+					},
+				},
+			],
 		});
 		//endregion
 
@@ -419,7 +459,7 @@ export default {
 							window.focus();
 						},
 					},
-					this.dndMenuItem,
+					this.notifyMenuItem,
 					{
 						label: "Icon theme",
 						submenu: [
@@ -575,6 +615,8 @@ export default {
 					if (this.mongodb) {
 						message.time = new Date().getTime()
 						mdb.collection('msg' + roomId).insertOne(message)
+						room.utime = new Date().getTime()
+						mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 					} else {
 						db.get("messages." + roomId)
 							.push(message)
@@ -676,7 +718,7 @@ export default {
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false
 				if (this.mongodb) {
-
+					mdb.collection('rooms').updateOne({roomId: this.selectedRoom.roomId}, {$set: this.selectedRoom})
 				} else
 					db.set("rooms", this.rooms).write();
 			}
@@ -743,7 +785,9 @@ export default {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (!this.mongodb)
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
 					db.set("messages." + roomId, []).write();
 			} else {
 				room.roomName = roomName;
@@ -751,6 +795,8 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
+				if (this.mongodb)
+					room.utime = new Date().getTime()
 			} //bring the room first
 
 			//begin process msg
@@ -901,14 +947,12 @@ export default {
 			if (at && isSchoolGroup(groupId))
 				teacher = true
 			//notification
-			const muted =
-				(room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-				(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-				(room.roomId > 0 && room.mute);
+			if (!room.priority) {
+				room.priority = groupId ? 2 : 4
+			}
 			if (
 				!remote.getCurrentWindow().isFocused() &&
-				!this.dnd &&
-				(!muted || at || teacher) &&
+				(room.priority >= this.priority || at || teacher) &&
 				!isSelfMsg
 			) {
 				//notification
@@ -979,6 +1023,7 @@ export default {
 			this.updateTrayIcon();
 			if (this.mongodb) {
 				message.time = new Date().getTime()
+				mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 				mdb.collection('msg' + roomId).insertOne(message)
 			} else {
 				db.set("rooms", this.rooms).write();
@@ -1053,10 +1098,6 @@ export default {
 		},
 
 		groupRecall(data) {
-			db.get("messages." + -data.group_id)
-				.find({_id: data.message_id})
-				.assign({deleted: new Date()})
-				.write();
 			if (-data.group_id == this.selectedRoom.roomId) {
 				const message = this.messages.find(
 					(e) => e._id == data.message_id
@@ -1066,6 +1107,13 @@ export default {
 					this.messages = [...this.messages];
 				}
 			}
+			if (this.mongodb)
+				mdb.collection('msg' + -data.group_id).updateOne({_id: data.message_id}, {$set: {deleted: new Date()}})
+			else
+				db.get("messages." + -data.group_id)
+					.find({_id: data.message_id})
+					.assign({deleted: new Date()})
+					.write();
 		},
 
 		sendSticker(url) {
@@ -1102,18 +1150,7 @@ export default {
 
 		appMenu() {
 			const menu = new remote.Menu();
-			menu.append(
-				new remote.MenuItem({
-					label: "Mute all groups",
-					type: "checkbox",
-					checked: this.muteAllGroups,
-					click: (menuItem, _browserWindow, _event) => {
-						this.muteAllGroups = menuItem.checked;
-						db.set("muteAllGroups", menuItem.checked).write();
-					},
-				})
-			);
-			menu.append(this.dndMenuItem);
+			menu.append(this.notifyMenuItem);
 			menu.append(
 				new remote.MenuItem({
 					label: "Manage ignored chats",
@@ -1203,22 +1240,67 @@ export default {
 		},
 
 		roomContext(room) {
-			const muted =
-				(room.roomId < 0 && this.muteAllGroups && !room.unmute) ||
-				(room.roomId < 0 && !this.muteAllGroups && room.mute) ||
-				(room.roomId > 0 && room.mute);
-			const mutetitle = muted ? "Unmute Chat" : "Mute Chat";
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const menu = remote.Menu.buildFromTemplate([
 				{
-					label: mutetitle,
-					click: () => {
-						if (room.roomId < 0 && this.muteAllGroups)
-							room.unmute = !room.unmute;
-						else room.mute = !room.mute;
-						this.rooms = [...this.rooms];
-						db.set("rooms", this.rooms).write();
-					},
+					label: "Notification Priority",
+					submenu: [
+						{
+							type: "radio",
+							label: '1',
+							checked: room.priority === 1,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 1
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 1}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '2',
+							checked: room.priority === 2,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 2
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 2}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '3',
+							checked: room.priority === 3,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 3
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 3}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '4',
+							checked: room.priority === 4,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 4
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 4}})
+								}
+							},
+						},
+						{
+							type: "radio",
+							label: '5',
+							checked: room.priority === 5,
+							click: (menuItem, _browserWindow, _event) => {
+								room.priority = 5
+								if (this.mongodb) {
+									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 5}})
+								}
+							},
+						},
+					],
 				},
 				{
 					label: pintitle,
@@ -1226,7 +1308,10 @@ export default {
 						if (room.index) room.index = 0;
 						else room.index = 1;
 						this.rooms = [...this.rooms];
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
+						else
+							db.set("rooms", this.rooms).write();
 					},
 				},
 				{
@@ -1234,7 +1319,10 @@ export default {
 					click: () => {
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').findOneAndDelete({roomId: room.roomId})
+						else
+							db.set("rooms", this.rooms).write();
 					},
 				},
 				{
@@ -1246,7 +1334,10 @@ export default {
 						});
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						db.set("rooms", this.rooms).write();
+						if (this.mongodb)
+							mdb.collection('rooms').findOneAndDelete({roomId: room.roomId})
+						else
+							db.set("rooms", this.rooms).write();
 						db.set("ignoredChats", this.ignoredChats).write();
 					},
 				},
@@ -1274,7 +1365,9 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				var msg = room.roomName + " ";
+				if (this.mongodb)
+					room.utime = new Date().getTime()
+				let msg = room.roomName + " ";
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
 					msg += " " + room.roomName;
@@ -1288,13 +1381,17 @@ export default {
 					date: new Date().format("dd/MM/yyyy"),
 					_id: new Date().getTime(),
 					system: true,
+					time: new Date().getTime()
 				};
 				if (room != this.selectedRoom) {
 					room.unreadCount++;
 				} else this.messages = [...this.messages, message];
-				db.get("messages." + data.operator_id)
-					.push(message)
-					.write();
+				if (this.mongodb)
+					mdb.collection('msg' + room.roomId).insertOne(message)
+				else
+					db.get("messages." + data.operator_id)
+						.push(message)
+						.write();
 			}
 		},
 
@@ -1309,7 +1406,9 @@ export default {
 				// create room
 				room = this.createRoom(id, name, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (!this.mongodb)
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
 					db.set("messages." + id, []).write();
 			}
 			this.selectedRoom = room;
@@ -1317,7 +1416,7 @@ export default {
 		},
 
 		chroom(room) {
-			if (this.selectedRoom == room) return
+			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room;
 			this.fetchMessage(true)
@@ -1334,7 +1433,8 @@ export default {
 				avatar,
 				index: 0,
 				unreadCount: 0,
-				mute: false,
+				priority: roomId > 0 ? 4 : 2,
+				utime: new Date().getTime(),
 				users: [
 					{_id: 1, username: "1"},
 					{_id: 2, username: "2"},
@@ -1369,11 +1469,7 @@ export default {
 
 		getUnreadCount() {
 			return this.rooms.filter((e) => {
-				const muted =
-					(e.roomId < 0 && this.muteAllGroups && !e.unmute) ||
-					(e.roomId < 0 && !this.muteAllGroups && e.mute) ||
-					(e.roomId > 0 && e.mute);
-				return e.unreadCount && !muted;
+				return e.unreadCount && e.priority >= this.priority;
 			}).length;
 		},
 
@@ -1411,7 +1507,10 @@ export default {
 				room.roomId = 'teachers'
 				room.index = 1
 				this.rooms = [room, ...this.rooms];
-				db.set("messages.teachers", []).write();
+				if (this.mongodb)
+					mdb.collection('rooms').insertOne(room)
+				else
+					db.set("messages.teachers", []).write();
 			} else {
 				this.rooms = [
 					room,
@@ -1450,6 +1549,8 @@ export default {
 				}, out, dir)
 			}
 			if (this.mongodb) {
+				room.utime = new Date().getTime()
+				mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
 				mdb.collection('msgteachers').insertOne(message)
 			} else
 				db.get("messages.teachers")

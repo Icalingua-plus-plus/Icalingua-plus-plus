@@ -17,15 +17,7 @@
 						</div>
 						<div
 							class="icon"
-							v-show="
-								(room.roomId < 0 &&
-									muteAllGroups &&
-									!room.unmute) ||
-								(room.roomId < 0 &&
-									!muteAllGroups &&
-									room.mute) ||
-								(room.roomId > 0 && room.mute)
-							"
+							v-show="room.priority < priority"
 						>
 							<i class="el-icon-close-notification"></i>
 						</div>
@@ -45,13 +37,7 @@
 								style="font-family: msyh"
 								:value="room.unreadCount"
 								:type="
-									(room.roomId < 0 &&
-										muteAllGroups &&
-										!room.unmute) ||
-									(room.roomId < 0 &&
-										!muteAllGroups &&
-										room.mute) ||
-									(room.roomId > 0 && room.mute)
+									room.priority < priority
 										? 'info'
 										: undefined
 								"
@@ -70,11 +56,11 @@ export default {
 	props: {
 		room: Object,
 		selected: Boolean,
-		muteAllGroups: Boolean
+		priority: Number
 	},
 	computed: {
 		desc() {
-			var d = ""
+			let d = "";
 			if (this.room.roomId < 0) {
 				d += this.room.lastMessage.username + ': '
 			}
@@ -91,9 +77,11 @@ export default {
 	transition: background-color 0.3s;
 	cursor: default;
 }
+
 .root:not(.selected):hover {
 	background-color: #f2f6fc;
 }
+
 div.entry {
 	padding: 10px 0;
 	height: 50px;
@@ -101,18 +89,22 @@ div.entry {
 	align-items: center;
 	border-bottom: 1px solid #e4e7ed;
 }
+
 .left {
 	width: max-content;
 	float: left;
 	padding-top: 5px;
 }
+
 .right {
 	margin-left: 15px;
 	width: 100%;
 }
+
 a {
 	text-decoration: none;
 }
+
 .desc {
 	color: #606266;
 	font-size: 12px;
@@ -122,11 +114,13 @@ a {
 	width: 0;
 	flex: 1;
 }
+
 .icon {
 	color: #909399;
 	font-size: 11px;
 	margin-left: 2px;
 }
+
 .name {
 	font-weight: bold;
 	color: #303133;
@@ -137,25 +131,31 @@ a {
 	flex: 1;
 	font-size: 16px;
 }
+
 .timestamp {
 	margin-left: 5px;
 	color: #606266;
 	font-size: 11px;
 }
+
 .withoutdesc {
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
+
 .flex {
 	display: flex;
 	height: 18px;
 }
+
 .l1 {
 	height: 25px;
 }
+
 .selected {
 	background-color: #e5effa;
 }
+
 .el-badge {
 	margin-top: -2px;
 	margin-left: 2px;
