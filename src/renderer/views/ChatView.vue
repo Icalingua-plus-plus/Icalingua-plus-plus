@@ -121,7 +121,7 @@
 							v-show="panel === 'ignore'"
 							:ignoredChats="ignoredChats"
 							@remove="rmIgnore"
-							@close="panel = 'stickers'"
+							@close="panel = ''"
 						/>
 					</el-col>
 				</el-row>
