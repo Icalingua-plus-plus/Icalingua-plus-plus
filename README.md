@@ -31,6 +31,5 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - poke
 - headless server
 - tab to go to unread chat
-- notify not opened chat
 - drag picture to add
 - ctrl + w minimize
