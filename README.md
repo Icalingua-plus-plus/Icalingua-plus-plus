@@ -32,4 +32,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - headless server
 - tab to go to unread chat
 - drag picture to add
-- ctrl + w minimize
