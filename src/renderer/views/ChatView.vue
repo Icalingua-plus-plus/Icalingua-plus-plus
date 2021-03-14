@@ -752,7 +752,7 @@ export default {
 				}, 0);
 			}
 			this.updateTrayIcon();
-		},//ok
+		},
 
 		onQQMessage(data) {
 			console.log(data);
@@ -1011,11 +1011,11 @@ export default {
 				}
 			}
 
-			if (
-				room !== this.selectedRoom ||
-				!remote.getCurrentWindow().isFocused()
-			) {
-				if (isSelfMsg) room.unreadCount = 0;
+			if (room !== this.selectedRoom || !remote.getCurrentWindow().isFocused()) {
+				if (isSelfMsg) {
+					room.unreadCount = 0
+					room.at=false
+				}
 				else room.unreadCount++;
 			}
 			if (room === this.selectedRoom)
@@ -1082,7 +1082,7 @@ export default {
 						.assign({deleted: new Date()})
 						.write();
 			}
-		},//ok
+		},
 
 		friendRecall(data) {
 			if (data.user_id == this.selectedRoom.roomId) {
