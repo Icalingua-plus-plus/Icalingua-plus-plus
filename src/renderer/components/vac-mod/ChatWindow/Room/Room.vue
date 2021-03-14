@@ -888,7 +888,7 @@ export default {
 						click: () => this.$emit('add-to-stickers', message)
 					}))
 			}
-			if(message.code){
+			if (message.code) {
 				menu.append(new remote.MenuItem(
 					{
 						label: 'Copy Code', type: 'normal',

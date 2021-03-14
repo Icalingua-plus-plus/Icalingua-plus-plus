@@ -944,6 +944,7 @@ export default {
 					case "record":
 						message.content = '[Audio]';
 						room.lastMessage.content = `[Audio]`;
+						message._id=data.time//https://github.com/takayama-lily/oicq/issues/142
 						break
 				}
 			});
@@ -955,7 +956,7 @@ export default {
 				room.priority = groupId ? 2 : 4
 			}
 			if (
-				!remote.getCurrentWindow().isFocused() &&
+				(!remote.getCurrentWindow().isFocused()) &&
 				(room.priority >= this.priority || at || teacher) &&
 				!isSelfMsg
 			) {
