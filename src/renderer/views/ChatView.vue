@@ -552,6 +552,10 @@ export default {
 		document.addEventListener('keyup', e => {
 			if (e.key === 'w' && e.ctrlKey === true) {
 				remote.getCurrentWindow().minimize()
+			} else if (e.key === 'Tab') {
+				const unreadRoom = this.rooms.find(e => e.unreadCount)
+				if (unreadRoom)
+					this.chroom(unreadRoom)
 			}
 		})
 		//endregion

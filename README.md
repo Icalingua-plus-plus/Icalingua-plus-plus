@@ -30,5 +30,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - send face
 - poke
 - headless server
-- tab to go to unread chat
 - drag picture to add
