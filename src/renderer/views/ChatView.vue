@@ -548,6 +548,12 @@ export default {
 			e.stopPropagation();
 		});
 
+		//keyboard
+		document.addEventListener('keyup', e => {
+			if (e.key === 'w' && e.ctrlKey === true) {
+				remote.getCurrentWindow().minimize()
+			}
+		})
 		//endregion
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
@@ -944,7 +950,7 @@ export default {
 					case "record":
 						message.content = '[Audio]';
 						room.lastMessage.content = `[Audio]`;
-						message._id=data.time//https://github.com/takayama-lily/oicq/issues/142
+						message._id = data.time//https://github.com/takayama-lily/oicq/issues/142
 						break
 				}
 			});
@@ -956,7 +962,7 @@ export default {
 				room.priority = groupId ? 2 : 4
 			}
 			if (
-				(!remote.getCurrentWindow().isFocused() || room!==this.selectedRoom) &&
+				(!remote.getCurrentWindow().isFocused() || room !== this.selectedRoom) &&
 				(room.priority >= this.priority || at || teacher) &&
 				!isSelfMsg
 			) {
@@ -1015,9 +1021,8 @@ export default {
 			if (room !== this.selectedRoom || !remote.getCurrentWindow().isFocused()) {
 				if (isSelfMsg) {
 					room.unreadCount = 0
-					room.at=false
-				}
-				else room.unreadCount++;
+					room.at = false
+				} else room.unreadCount++;
 			}
 			if (room === this.selectedRoom)
 				this.messages = [...this.messages, message];
