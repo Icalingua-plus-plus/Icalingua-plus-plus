@@ -29,8 +29,9 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - search contacts
 - send face
 - poke
-- notify privoxy
 - headless server
-- video
 - tab to go to unread chat
 - notify not opened chat
+- drag picture to add
+- ctrl + w minimize
+- voice bug
