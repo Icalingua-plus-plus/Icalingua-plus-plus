@@ -34,4 +34,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - notify not opened chat
 - drag picture to add
 - ctrl + w minimize
-- voice bug
