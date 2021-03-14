@@ -956,7 +956,7 @@ export default {
 				room.priority = groupId ? 2 : 4
 			}
 			if (
-				(!remote.getCurrentWindow().isFocused()) &&
+				(!remote.getCurrentWindow().isFocused() || room!==this.selectedRoom) &&
 				(room.priority >= this.priority || at || teacher) &&
 				!isSelfMsg
 			) {
