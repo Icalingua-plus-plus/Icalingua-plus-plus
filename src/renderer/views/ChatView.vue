@@ -554,7 +554,9 @@ export default {
 			if (e.key === 'w' && e.ctrlKey === true) {
 				remote.getCurrentWindow().minimize()
 			} else if (e.key === 'Tab') {
-				const unreadRoom = this.rooms.find(e => e.unreadCount)
+				let unreadRoom = this.rooms.find(e => e.unreadCount&&e.priority>=this.priority)
+				if(!unreadRoom)
+					unreadRoom = this.rooms.find(e => e.unreadCount)
 				if (unreadRoom)
 					this.chroom(unreadRoom)
 			}
