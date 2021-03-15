@@ -3,7 +3,7 @@
 		<div class="root" :class="{ selected }">
 			<div class="entry">
 				<div class="left">
-					<el-badge value="@" :type="room.at=='all'?'warning':undefined" :hidden="!room.at">
+					<el-badge value="@" :type="room.at==='all'?'warning':undefined" :hidden="!room.at">
 						<el-avatar
 							size="large"
 							:src="room.avatar"
@@ -21,18 +21,18 @@
 						>
 							<i class="el-icon-close-notification"></i>
 						</div>
-						<div class="icon" v-show="room.index == 1">
+						<div class="icon" v-show="room.index === 1">
 							<i class="el-icon-arrow-up"></i>
 						</div>
 						<div class="timestamp">
-							{{ room.lastMessage.timestamp }}
+							{{ timestamp }}
 						</div>
 					</div>
 					<div class="flex">
 						<div class="desc">
 							{{ desc }}
 						</div>
-						<div v-show="room.unreadCount != 0">
+						<div v-show="room.unreadCount !== 0">
 							<el-badge
 								style="font-family: msyh"
 								:value="room.unreadCount"
@@ -66,6 +66,22 @@ export default {
 			}
 			d += this.room.lastMessage.content
 			return d
+		},
+		timestamp() {
+			const now = new Date()
+			const time = new Date(this.room.utime)
+			if (now.getFullYear() === time.getFullYear() &&
+				now.getMonth() === time.getMonth() &&
+				now.getDate() === time.getDate())
+				return this.room.lastMessage.timestamp
+
+			now.setTime(now.getTime() - 24 * 60 * 60 * 1000)
+			if (now.getFullYear() === time.getFullYear() &&
+				now.getMonth() === time.getMonth() &&
+				now.getDate() === time.getDate())
+				return 'Yesterday'
+			else
+				return time.getDate() + '/' + (time.getMonth() + 1)
 		}
 	}
 }
