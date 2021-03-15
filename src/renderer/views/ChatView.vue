@@ -550,12 +550,12 @@ export default {
 
 		//keyboard
 		document.addEventListener('keydown', e => {
-			if(e.repeat) return
+			if (e.repeat) return
 			if (e.key === 'w' && e.ctrlKey === true) {
 				remote.getCurrentWindow().minimize()
 			} else if (e.key === 'Tab') {
-				let unreadRoom = this.rooms.find(e => e.unreadCount&&e.priority>=this.priority)
-				if(!unreadRoom)
+				let unreadRoom = this.rooms.find(e => e.unreadCount && e.priority >= this.priority)
+				if (!unreadRoom)
 					unreadRoom = this.rooms.find(e => e.unreadCount)
 				if (unreadRoom)
 					this.chroom(unreadRoom)
@@ -1567,6 +1567,7 @@ export default {
 			}
 			if (this.mongodb) {
 				room.utime = new Date().getTime()
+				message.time = room.utime
 				mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
 				mdb.collection('msgteachers').insertOne(message)
 			} else
