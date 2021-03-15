@@ -549,7 +549,8 @@ export default {
 		});
 
 		//keyboard
-		document.addEventListener('keyup', e => {
+		document.addEventListener('keydown', e => {
+			if(e.repeat) return
 			if (e.key === 'w' && e.ctrlKey === true) {
 				remote.getCurrentWindow().minimize()
 			} else if (e.key === 'Tab') {
