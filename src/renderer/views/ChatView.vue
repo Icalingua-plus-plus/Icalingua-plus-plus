@@ -1,5 +1,5 @@
 <template>
-	<div ondragstart="return false;" :style="{ fontFamily }">
+	<div ondragstart="return false;">
 		<el-container>
 			<!--			sidebar-->
 			<el-aside width="65px" ondragstart="return false;">
@@ -317,7 +317,6 @@ export default {
 			view: "chats",
 			username: "",
 			darkTaskIcon: false,
-			fontFamily: "font, CircularSpotifyTxT Book Web, msyh",
 			nuist: false,
 			aria2: {
 				enabled: false,
@@ -629,10 +628,10 @@ export default {
 
 					message._id = data.data.message_id;
 					this.messages = [...this.messages, message];
+					room.utime = new Date().getTime()
 					if (this.mongodb) {
 						message.time = new Date().getTime()
 						mdb.collection('msg' + roomId).insertOne(message)
-						room.utime = new Date().getTime()
 						mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 					} else {
 						db.get("messages." + roomId)
@@ -812,8 +811,7 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				if (this.mongodb)
-					room.utime = new Date().getTime()
+				room.utime = new Date().getTime()
 			} //bring the room first
 
 			//begin process msg
@@ -1382,8 +1380,7 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				if (this.mongodb)
-					room.utime = new Date().getTime()
+				room.utime = new Date().getTime()
 				let msg = room.roomName + " ";
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
@@ -1565,8 +1562,8 @@ export default {
 						message.file.url = path.join(dir, out)
 				}, out, dir)
 			}
+			room.utime = new Date().getTime()
 			if (this.mongodb) {
-				room.utime = new Date().getTime()
 				message.time = room.utime
 				mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
 				mdb.collection('msgteachers').insertOne(message)
@@ -1725,5 +1722,9 @@ export default {
 <style>
 :focus {
 	outline: none;
+}
+
+*{
+	font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
 }
 </style>
