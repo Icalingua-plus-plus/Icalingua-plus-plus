@@ -1569,12 +1569,13 @@ export default {
 				db.get("messages.teachers")
 					.push(message)
 					.write();
-			bot.sendGroupMsg(646262298, [{
-				type: 'text',
-				data: {
-					text: message.username + '\n'
-				}
-			}, ...chain], true);
+			if (message.senderId != 16767193) //Ignore Yang yang   ——Luna
+				bot.sendGroupMsg(646262298, [{
+					type: 'text',
+					data: {
+						text: message.username + '\n'
+					}
+				}, ...chain], true);
 		},
 
 		closeAria() {
