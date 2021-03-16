@@ -91,9 +91,8 @@
 							@pokefriend="pokefriend"
 							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
-							@stickers-panel="
-								panel = panel === 'stickers' ? '' : 'stickers'
-							"
+							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
+							@download-image="downloadImage"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -1056,23 +1055,9 @@ export default {
 		},
 
 		openImage(data) {
-			if (data.action == "download") {
+			if (data.action === "download") {
 				if (data.message.file.type.includes("image")) {
-					const downdir = remote.app.getPath("downloads");
-					const downpath = path.join(
-						downdir,
-						"QQ_Image_" + new Date().getTime() + ".jpg"
-					);
-					this.download(
-						data.message.file.url.replace("http://", "https://"),
-						downpath,
-						() => {
-							this.$notify.success({
-								title: "Image Saved",
-								message: downpath,
-							});
-						}
-					);
+					this.downloadImage(data.message.file.url)
 				} else {
 					if (this.aria2.enabled && data.message.file.url.startsWith('http'))
 						this.download(data.message.file.url, null, () => {
@@ -1387,7 +1372,7 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				room.utime = data.time*1000
+				room.utime = data.time * 1000
 				let msg = room.roomName + " ";
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
@@ -1614,7 +1599,6 @@ export default {
 					opt.dir = path.dirname(dest)
 					opt.out = path.basename(dest)
 				}
-				console.log([url, opt])
 				this.aria.call('aria2.addUri', [url], opt)
 					.then(cb)
 					.catch(err => {
@@ -1631,6 +1615,24 @@ export default {
 			// 	db.set('messages.' + [i], _.takeRight(v, 1000)).write()
 			// }).value()
 			remote.getCurrentWindow().destroy();
+		},
+
+		downloadImage(url) {
+			const downdir = remote.app.getPath("downloads");
+			const downpath = path.join(
+				downdir,
+				"QQ_Image_" + new Date().getTime() + ".jpg"
+			);
+			this.download(
+				url.replace("http://", "https://"),
+				downpath,
+				() => {
+					this.$notify.success({
+						title: "Image Saved",
+						message: downpath,
+					});
+				}
+			);
 		}
 	},
 	computed: {
