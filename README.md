@@ -31,4 +31,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - poke
 - headless server
 - drag picture to add
-- tab switch unmuted first
