@@ -612,6 +612,7 @@ export default {
 					return;
 				}
 				if (roomId > 0) {
+					console.log(data)
 					if (!room)
 						room = this.rooms.find((e) => e.roomId === roomId);
 					room.lastMessage = {
@@ -766,7 +767,7 @@ export default {
 			this.updateTrayIcon();
 		},
 
-		onQQMessage(data) {
+		async onQQMessage(data) {
 			console.log(data);
 			const now = new Date();
 			const groupId = data.group_id;
@@ -811,7 +812,7 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				room.utime = new Date().getTime()
+				room.utime = data.time * 1000
 			} //bring the room first
 
 			//begin process msg
@@ -823,8 +824,10 @@ export default {
 			let at, teacher
 			if (isTeacher(senderId) && groupId)
 				teacher = true
-			let appurl;
-			data.message.forEach((m) => {
+
+			for (const m of data.message) {
+				let appurl;
+				let url;
 				switch (m.type) {
 					case "text":
 					case "at":
@@ -841,7 +844,7 @@ export default {
 					case "image":
 					case "flash":
 						room.lastMessage.content += "[Image]";
-						var url = m.data.url;
+						url = m.data.url;
 						message.file = {
 							type: "image/jpeg",
 							url,
@@ -849,7 +852,7 @@ export default {
 						break;
 					case "bface":
 						room.lastMessage.content += "[Sticker]" + m.data.text;
-						var url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
+						url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
 							0,
 							2
 						)}/${m.data.file.substr(0, 32)}/300x300.png`;
@@ -874,10 +877,14 @@ export default {
 						message.content += m.data.url;
 						break;
 					case "reply":
-						const replyMessage = db
-							.get("messages." + roomId)
-							.find({_id: m.data.id})
-							.value();
+						let replyMessage
+						if (this.mongodb)
+							replyMessage = await mdb.collection('msg' + roomId).findOne({_id: m.data.id})
+						else
+							replyMessage = db
+								.get("messages." + roomId)
+								.find({_id: m.data.id})
+								.value();
 						if (replyMessage) {
 							message.replyMessage = {
 								_id: m.data.id,
@@ -958,7 +965,7 @@ export default {
 						message._id = data.time//https://github.com/takayama-lily/oicq/issues/142
 						break
 				}
-			});
+			}
 			//school groups' at all consider as teacher
 			if (at && isSchoolGroup(groupId))
 				teacher = true
@@ -1037,7 +1044,7 @@ export default {
 
 			this.updateTrayIcon();
 			if (this.mongodb) {
-				message.time = new Date().getTime()
+				message.time = data.time * 1000
 				mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 				mdb.collection('msg' + roomId).insertOne(message)
 			} else {
@@ -1380,7 +1387,7 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				room.utime = new Date().getTime()
+				room.utime = data.time*1000
 				let msg = room.roomName + " ";
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
@@ -1393,11 +1400,11 @@ export default {
 					senderId: 0,
 					timestamp: new Date().format("hh:mm"),
 					date: new Date().format("dd/MM/yyyy"),
-					_id: new Date().getTime(),
+					_id: data.time,
 					system: true,
-					time: new Date().getTime()
+					time: data.time * 1000
 				};
-				if (room != this.selectedRoom) {
+				if (room !== this.selectedRoom) {
 					room.unreadCount++;
 				} else this.messages = [...this.messages, message];
 				if (this.mongodb)
@@ -1724,7 +1731,7 @@ export default {
 	outline: none;
 }
 
-*{
+* {
 	font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
 }
 </style>
