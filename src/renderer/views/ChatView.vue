@@ -1360,6 +1360,12 @@ export default {
 						clipboard.writeText(String(Math.abs(room.roomId)))
 					},
 				},
+				{
+					label: "Download Avatar",
+					click: () => {
+						this.downloadImage(room.avatar)
+					},
+				},
 			]);
 			menu.popup({window: remote.getCurrentWindow()});
 		},
