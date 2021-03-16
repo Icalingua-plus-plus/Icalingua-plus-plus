@@ -87,7 +87,7 @@
 							@open-user-tag="openUserTag"
 						>
 							<template #deleted-icon="data">
-								<slot name="deleted-icon" v-bind="data" />
+								<slot name="deleted-icon" v-bind="data"/>
 							</template>
 						</format-message>
 
@@ -104,13 +104,13 @@
 								v-for="(i, name) in $scopedSlots"
 								#[name]="data"
 							>
-								<slot :name="name" v-bind="data" />
+								<slot :name="name" v-bind="data"/>
 							</template>
 						</message-image>
 
 						<div v-else-if="isVideo" class="vac-video-container">
 							<video width="100%" height="100%" controls>
-								<source :src="message.file.url" />
+								<source :src="message.file.url"/>
 							</video>
 						</div>
 
@@ -120,7 +120,7 @@
 						>
 							<div id="vac-audio-player">
 								<audio v-if="message.file.audio" controls>
-									<source :src="message.file.url" />
+									<source :src="message.file.url"/>
 								</audio>
 							</div>
 						</div>
@@ -131,7 +131,7 @@
 								@click.stop="openFile('download')"
 							>
 								<slot name="document-icon">
-									<svg-icon name="document" />
+									<svg-icon name="document"/>
 								</slot>
 							</div>
 							<span>{{ message.content }}</span>
@@ -143,7 +143,7 @@
 								class="vac-icon-edited"
 							>
 								<slot name="pencil-icon">
-									<svg-icon name="pencil" />
+									<svg-icon name="pencil"/>
 								</slot>
 							</div>
 							<span>{{ message.timestamp }}</span>
@@ -208,9 +208,9 @@ import MessageImage from "./MessageImage";
 import MessageActions from "./MessageActions";
 import MessageReactions from "./MessageReactions";
 
-const { isImageFile } = require("../../utils/mediaFile");
+const {isImageFile} = require("../../utils/mediaFile");
 
-import { remote, clipboard } from 'electron'
+import {remote, clipboard} from 'electron'
 
 export default {
 	name: "Message",
@@ -224,21 +224,21 @@ export default {
 	},
 
 	props: {
-		currentUserId: { type: [String, Number], required: true },
-		textMessages: { type: Object, required: true },
-		index: { type: Number, required: true },
-		message: { type: Object, required: true },
-		messages: { type: Array, required: true },
-		editedMessage: { type: Object, required: true },
-		roomUsers: { type: Array, default: () => [] },
-		messageActions: { type: Array, required: true },
-		roomFooterRef: { type: HTMLDivElement, default: null },
-		newMessages: { type: Array, default: () => [] },
-		showReactionEmojis: { type: Boolean, required: true },
-		showNewMessagesDivider: { type: Boolean, required: true },
-		textFormatting: { type: Boolean, required: true },
-		emojisList: { type: Object, required: true },
-		hideOptions: { type: Boolean, required: true },
+		currentUserId: {type: [String, Number], required: true},
+		textMessages: {type: Object, required: true},
+		index: {type: Number, required: true},
+		message: {type: Object, required: true},
+		messages: {type: Array, required: true},
+		editedMessage: {type: Object, required: true},
+		roomUsers: {type: Array, default: () => []},
+		messageActions: {type: Array, required: true},
+		roomFooterRef: {type: HTMLDivElement, default: null},
+		newMessages: {type: Array, default: () => []},
+		showReactionEmojis: {type: Boolean, required: true},
+		showNewMessagesDivider: {type: Boolean, required: true},
+		textFormatting: {type: Boolean, required: true},
+		emojisList: {type: Object, required: true},
+		hideOptions: {type: Boolean, required: true},
 	},
 
 	data() {
@@ -325,10 +325,10 @@ export default {
 			this.hoverMessageId = null;
 		},
 		openFile(action) {
-			this.$emit("open-file", { message: this.message, action });
+			this.$emit("open-file", {message: this.message, action});
 		},
 		openUserTag(user) {
-			this.$emit("open-user-tag", { user });
+			this.$emit("open-user-tag", {user});
 		},
 		messageActionHandler(action) {
 			this.messageHover = false;
@@ -344,10 +344,10 @@ export default {
 		checkVideoType(file) {
 			if (!file) return;
 			const videoTypes = ["video/mp4", "video/ogg", "video/webm"];
-			const { type } = file;
+			const {type} = file;
 			return videoTypes.some((t) => type.toLowerCase().includes(t));
 		},
-		sendMessageReaction({ emoji, reaction }) {
+		sendMessageReaction({emoji, reaction}) {
 			this.$emit("send-message-reaction", {
 				messageId: this.message._id,
 				reaction: emoji,
@@ -378,8 +378,13 @@ export default {
 					}
 				}))
 			}
-			menu.popup({ window: remote.getCurrentWindow() });
-
+			menu.append(new remote.MenuItem({
+				label: `Download Avatar`,
+				click: () => {
+					this.$emit('download-image', `https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`)
+				}
+			}))
+			menu.popup({window: remote.getCurrentWindow()});
 		}
 	},
 };
@@ -403,7 +408,7 @@ export default {
 	position: relative;
 	white-space: normal;
 	box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1),
-		0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
+	0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
 }
 
 .vac-card-date {
@@ -483,13 +488,13 @@ export default {
 	transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
 	will-change: box-shadow;
 	box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1),
-		0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
+	0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
 	-webkit-user-select: text;
 }
 
 .vac-message-highlight {
 	box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1),
-		0 1px 2px -1px rgba(0, 0, 0, 0.11), 0 1px 5px -1px rgba(0, 0, 0, 0.11);
+	0 1px 2px -1px rgba(0, 0, 0, 0.11), 0 1px 5px -1px rgba(0, 0, 0, 0.11);
 }
 
 .vac-message-current {

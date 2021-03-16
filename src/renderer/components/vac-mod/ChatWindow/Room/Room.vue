@@ -103,6 +103,7 @@
 								@send-message-reaction="sendMessageReaction"
 								@hide-options="hideOptions = $event"
 								@ctx="msgctx(m)"
+								@download-image="$emit('download-image', $event)"
 							>
 								<template
 									v-for="(index, name) in $scopedSlots"
