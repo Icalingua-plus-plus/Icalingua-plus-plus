@@ -863,6 +863,12 @@ export default {
 						clipboard.writeText(message.content)
 					}
 				}))
+			if (message.replyMessage && message.replyMessage.content)
+				menu.append(new remote.MenuItem({
+					label: 'Copy Reply Message', type: 'normal', click: () => {
+						clipboard.writeText(message.replyMessage.content)
+					}
+				}))
 			if (sect) {
 				menu.append(new remote.MenuItem(
 					{
