@@ -43,7 +43,13 @@
 				<el-switch
 					v-model="form.autologin"
 					:style="{ marginLeft: '5px' }"
-				></el-switch>
+				/>
+				<br>
+				<span class="el-form-item__label">Use MongoDB on localhost</span>
+				<el-switch
+					v-model="mongodb"
+					:style="{ marginLeft: '5px' }"
+				/>
 			</el-form-item>
 			<p class="red">
 				{{ errmsg }}
@@ -59,12 +65,12 @@
 			:hide-required-asterisk="true"
 			label-position="top"
 			class="login-box"
-			v-show="view == 'captcha'"
+			v-show="view === 'captcha'"
 		>
 			<center>
 				<h4>验证码</h4>
 				<el-form-item prop="captchaimg">
-					<img :src="captchaimg" width="50%" />
+					<img :src="captchaimg" width="50%"/>
 				</el-form-item>
 			</center>
 			<el-form-item prop="captcha">
@@ -87,7 +93,8 @@
 </template>
 
 <script>
-import { remote } from "electron";
+import {remote} from "electron";
+
 const md5 = require("md5");
 const path = require("path");
 const fs = require("fs");
@@ -116,8 +123,8 @@ export default {
 			},
 
 			rules: {
-				username: [{ required: true, trigger: "blur" }],
-				password: [{ required: true, trigger: "blur" }],
+				username: [{required: true, trigger: "blur"}],
+				password: [{required: true, trigger: "blur"}],
 			},
 
 			disabled: false,
@@ -125,6 +132,8 @@ export default {
 			view: "login",
 			captcha: "",
 			captchaimg: "",
+
+			mongodb: false
 		};
 	},
 	created() {
@@ -136,6 +145,7 @@ export default {
 				protocol: account.protocol,
 				autologin: account.autologin,
 			};
+		this.mongodb = glodb.get('mongodb').value()
 	},
 	mounted() {
 		if (this.form.autologin) this.onSubmit("loginForm");
@@ -145,6 +155,7 @@ export default {
 			this.$refs[formName].validate((valid) => {
 				if (valid) {
 					this.disabled = true;
+					glodb.set('mongodb', this.mongodb).write()
 					const createBot = remote.getGlobal("createBot");
 					createBot(this.form);
 					const bot = remote.getGlobal("bot");
@@ -265,15 +276,19 @@ div#login {
 	background-image: url("~@/assets/loginbg.jpg");
 	font-family: "CircularSpotifyTxT Light Web";
 }
+
 .login-box {
 	margin: 15px;
 }
+
 .red {
 	color: red;
 }
+
 .nobottmar {
 	margin-bottom: 0;
 }
+
 .notopmar {
 	margin-top: 0;
 }

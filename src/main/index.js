@@ -93,7 +93,7 @@ app.on('ready', () => {
 		app.allowRendererProcessReuse = false
 		if (process.windowsStore)
 			app.setAppUserModelId("com.clansty.electronqq")
-		else if (process.platform == 'win32')
+		else if (process.platform === 'win32')
 			app.setAppUserModelId("Electron QQ")
 		const adapter = new FileSync(path.join(STORE_PATH, '/data.json'))
 		global.glodb = Datastore(adapter)
@@ -114,7 +114,7 @@ app.on('ready', () => {
 		else {
 			//login window
 			loginWindow = new BrowserWindow({
-				height: 700,
+				height: 720,
 				width: 450,
 				maximizable: false,
 				webPreferences: {
