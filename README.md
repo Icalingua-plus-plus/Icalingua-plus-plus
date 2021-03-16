@@ -28,6 +28,8 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - admin recall msg
 - search contacts
 - send face
-- poke
+- poke*
 - headless server
 - drag picture to add
+- rm yang yang
+- reveal recalled message
