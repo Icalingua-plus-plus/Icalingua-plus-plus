@@ -1371,20 +1371,19 @@ export default {
 		},
 
 		friendpoke(data) {
-			console.log(data);
-			const room = this.rooms.find((e) => e.roomId == data.operator_id);
+			const roomId = data.operator_id == this.account ? data.user_id : data.operator_id
+			const room = this.rooms.find(e => e.roomId == roomId);
 			if (room) {
 				this.rooms = [
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
 				room.utime = data.time * 1000
-				let msg = room.roomName + " ";
+				let msg = room.roomName;
 				msg += data.action;
 				if (data.user_id == data.operator_id) {
-					msg += " " + room.roomName;
-					if (data.suffix) msg += "'s ";
-				} else msg += data.suffix ? " Your " : " You";
+					msg += room.roomName;
+				} else msg += "你";
 				if (data.suffix) msg += data.suffix;
 				const message = {
 					content: msg,
@@ -1395,13 +1394,13 @@ export default {
 					system: true,
 					time: data.time * 1000
 				};
-				if (room !== this.selectedRoom) {
-					room.unreadCount++;
-				} else this.messages = [...this.messages, message];
-				if (this.mongodb)
-					mdb.collection('msg' + room.roomId).insertOne(message)
-				else
-					db.get("messages." + data.operator_id)
+				if (room === this.selectedRoom)
+					this.messages = [...this.messages, message];
+				if (this.mongodb) {
+					mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
+					mdb.collection('msg' + roomId).insertOne(message)
+				} else
+					db.get("messages." + roomId)
 						.push(message)
 						.write();
 			}
@@ -1435,7 +1434,9 @@ export default {
 		},
 
 		pokefriend() {
-			console.log("poke");
+			console.log('poke')
+			if (this.selectedRoom.roomId > 0)
+				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 		},
 
 		createRoom(roomId, roomName, avatar) {
