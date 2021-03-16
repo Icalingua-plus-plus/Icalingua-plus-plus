@@ -375,6 +375,7 @@ export default {
 				bot.on("system.online", this.online);
 				bot.on("system.offline", this.onOffline);
 				bot.on("notice.friend.poke", this.friendpoke);
+				bot.on("notice.group.poke", this.grouppoke);
 				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 			});
 		} else {
@@ -579,6 +580,7 @@ export default {
 			bot.on("system.online", this.online);
 			bot.on("system.offline", this.onOffline);
 			bot.on("notice.friend.poke", this.friendpoke);
+			bot.on("notice.group.poke", this.grouppoke);
 			remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 		}
 	},
@@ -1379,12 +1381,20 @@ export default {
 					...this.rooms.filter((item) => item !== room),
 				];
 				room.utime = data.time * 1000
-				let msg = room.roomName;
-				msg += data.action;
-				if (data.user_id == data.operator_id) {
+				let msg = '';
+				if (data.operator_id != this.account)
 					msg += room.roomName;
-				} else msg += "你";
+				else
+					msg += "你";
+				msg += data.action;
+				if (data.user_id != this.account)
+					msg += room.roomName;
+				else if (data.operator_id == this.account)
+					msg += '自己'
+				else
+					msg += "你";
 				if (data.suffix) msg += data.suffix;
+				room.lastMessage.content = msg
 				const message = {
 					content: msg,
 					senderId: 0,
@@ -1641,6 +1651,61 @@ export default {
 					});
 				}
 			);
+		},
+
+		async grouppoke(data) {
+			console.log(data)
+			const room = this.rooms.find(e => e.roomId == -data.group_id);
+			if (room) {
+				this.rooms = [
+					room,
+					...this.rooms.filter((item) => item !== room),
+				];
+				room.utime = data.time * 1000
+				let operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id, false)).data
+				operator = operator.card ? operator.card : operator.nickname
+				let user = (await bot.getGroupMemberInfo(data.group_id, data.user_id, false)).data
+				user = user.card ? user.card : user.nickname
+				let msg = '';
+				if (data.operator_id != this.account)
+					msg += operator
+			else
+				msg += "你";
+				msg += data.action;
+				if (data.user_id != this.account)
+					msg += user
+				else if (data.operator_id == this.account)
+					msg += '自己'
+				else
+					msg += "你";
+				if (data.suffix) msg += data.suffix;
+				room.lastMessage = {
+					content: msg,
+					username: null
+				}
+				const message = {
+					content: msg,
+					senderId: 0,
+					timestamp: new Date().format("hh:mm"),
+					date: new Date().format("dd/MM/yyyy"),
+					_id: data.time,
+					system: true,
+					time: data.time * 1000
+				};
+				if (room === this.selectedRoom)
+					this.messages = [...this.messages, message];
+				if (this.mongodb) {
+					mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
+					mdb.collection('msg' + room.roomId).insertOne(message)
+				} else
+					db.get("messages." + room.roomId)
+						.push(message)
+						.write();
+			}
+		},
+
+		pokegroup(uin) {
+
 		}
 	},
 	computed: {
@@ -1657,7 +1722,7 @@ export default {
 
 			return cssThemeVars(customStyles)
 		},
-	}
+	},
 };
 </script>
 

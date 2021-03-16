@@ -61,7 +61,7 @@ export default {
 	computed: {
 		desc() {
 			let d = "";
-			if (this.room.roomId < 0) {
+			if (this.room.roomId < 0 && this.room.lastMessage.username) {
 				d += this.room.lastMessage.username + ': '
 			}
 			d += this.room.lastMessage.content
