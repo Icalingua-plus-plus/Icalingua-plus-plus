@@ -30,5 +30,4 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - send face
 - headless server
 - drag picture to add
-- reveal recalled message
 - full group name
