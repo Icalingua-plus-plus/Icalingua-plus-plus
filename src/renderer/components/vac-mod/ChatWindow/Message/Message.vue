@@ -21,7 +21,7 @@
 			}"
 		>
 			<slot name="message" v-bind="{ message }">
-				<div @click.right="avatarctx">
+				<div @click.right="avatarctx" @dblclick="$emit('poke')">
 					<el-avatar
 						size="medium"
 						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
@@ -385,7 +385,7 @@ export default {
 				}
 			}))
 			menu.popup({window: remote.getCurrentWindow()});
-		}
+		},
 	},
 };
 </script>

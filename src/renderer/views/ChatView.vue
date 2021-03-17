@@ -93,6 +93,7 @@
 							@add-to-stickers="addToStickers"
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
+							@pokegroup="pokegroup"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -1669,8 +1670,8 @@ export default {
 				let msg = '';
 				if (data.operator_id != this.account)
 					msg += operator
-			else
-				msg += "你";
+				else
+					msg += "你";
 				msg += data.action;
 				if (data.user_id != this.account)
 					msg += user
@@ -1705,7 +1706,8 @@ export default {
 		},
 
 		pokegroup(uin) {
-
+			const group = -this.selectedRoom.roomId
+			bot.sendGroupPoke(group, uin)
 		}
 	},
 	computed: {
