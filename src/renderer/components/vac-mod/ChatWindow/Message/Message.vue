@@ -57,19 +57,19 @@
 							class="vac-text-username"
 							:class="{
 								'vac-username-reply':
-									!message.deleted && message.replyMessage,
+									(!message.deleted || message.reveal) && message.replyMessage,
 							}"
 						>
 							<span>{{ message.username }}</span>
 						</div>
 
 						<message-reply
-							v-if="!message.deleted && message.replyMessage"
+							v-if="(!message.deleted || message.reveal) && message.replyMessage"
 							:message="message"
 							:room-users="roomUsers"
 						/>
 
-						<div v-if="message.deleted">
+						<div v-if="message.deleted && !message.reveal">
 							<slot name="deleted-icon">
 								<svg-icon
 									name="deleted"

@@ -94,6 +94,7 @@
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
 							@pokegroup="pokegroup"
+							@reveal-message="revealMessage"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -1708,6 +1709,18 @@ export default {
 		pokegroup(uin) {
 			const group = -this.selectedRoom.roomId
 			bot.sendGroupPoke(group, uin)
+		},
+
+		revealMessage(message){
+			message.reveal = true
+			this.messages=[...this.messages]
+			if (this.mongodb)
+				mdb.collection('msg' + this.selectedRoom.roomId).updateOne({_id: message._id}, {$set: {reveal: true}})
+			else
+				db.get("messages." + this.selectedRoom.roomId)
+					.find({_id: message._id})
+					.assign({reveal: true})
+					.write();
 		}
 	},
 	computed: {
