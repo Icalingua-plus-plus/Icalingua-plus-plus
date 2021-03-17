@@ -369,6 +369,7 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 export default {
 	name: 'Room',
+
 	components: {
 		InfiniteLoading,
 		Loader,
@@ -763,8 +764,8 @@ export default {
 		sendMessageReaction(messageReaction) {
 			this.$emit('send-message-reaction', messageReaction)
 		},
-		replyMessage(message,e) {
-			if(e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
+		replyMessage(message, e) {
+			if (e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
 			if (message.system) return
 			this.messageReply = message
 			this.focusTextarea()
@@ -857,99 +858,105 @@ export default {
 			this.$emit('textarea-action-handler', this.message)
 		},
 		msgctx(message) {
-			if (message.deleted)
-				return
 			const sect = window.getSelection().toString()
 			const menu = new remote.Menu()
-			if (message.content)
+			if (message.deleted && !message.reveal)
 				menu.append(new remote.MenuItem({
-					label: 'Copy Text', type: 'normal', click: () => {
-						clipboard.writeText(message.content)
+					label: 'Reveal', type: 'normal', click: () => {
+						this.$emit('reveal-message', message)
 					}
 				}))
-			if (message.replyMessage && message.replyMessage.content)
-				menu.append(new remote.MenuItem({
-					label: 'Copy Reply Message', type: 'normal', click: () => {
-						clipboard.writeText(message.replyMessage.content)
-					}
-				}))
-			if (sect) {
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Copy Selection', type: 'normal',
-						click: () => {
-							clipboard.writeText(sect)
-						}
-					}))
-			}
-			if (message.file && message.file.type.includes('image')) {
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Copy Image', type: 'normal',
-						click: () =>
-							convertImgToBase64(message.file.url, function (base64Image) {
-								const image = nativeImage.createFromDataURL(base64Image)
-								clipboard.writeImage(image)
-							})
-					}))
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Add to stickers', type: 'normal',
-						click: () => this.$emit('add-to-stickers', message)
-					}))
-			}
-			if (message.code) {
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Copy Code', type: 'normal',
-						click: () => {
-							clipboard.writeText(message.code)
-						}
-					}))
-			}
-			if (message.file) {
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Copy Url', type: 'normal',
-						click: () => {
-							clipboard.writeText(message.file.url)
-						}
-					}))
-				menu.append(new remote.MenuItem(
-					{
-						label: 'Download',
-						click: () => this.$emit('open-file', {action: 'download', message})
-					}))
-			}
-			if (this.roomId !== 'teachers') {
-				menu.append(new remote.MenuItem({
-					label: 'Reply',
-					click: () => {
-						this.replyMessage(message)
-					}
-				}))
-				if (!message.file)
+			else {
+				if (message.content)
 					menu.append(new remote.MenuItem({
-						label: '+1',
-						click: () => {
-							const msgToSend = {
-								content: message.content,
-								replyMessage: message.replyMessage
-							}
-							if (message.file) {
-								msgToSend.imgpath = message.file.url
-							}
-							this.$emit('send-message', msgToSend)
+						label: 'Copy Text', type: 'normal', click: () => {
+							clipboard.writeText(message.content)
 						}
 					}))
-			}
-			if (message.senderId === this.currentUserId) {
-				menu.append(new remote.MenuItem({
-					label: 'Delete',
-					click: () => {
-						this.$emit('delete-message', message._id)
-					}
-				}))
+				if (message.replyMessage && message.replyMessage.content)
+					menu.append(new remote.MenuItem({
+						label: 'Copy Reply Message', type: 'normal', click: () => {
+							clipboard.writeText(message.replyMessage.content)
+						}
+					}))
+				if (sect) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Selection', type: 'normal',
+							click: () => {
+								clipboard.writeText(sect)
+							}
+						}))
+				}
+				if (message.file && message.file.type.includes('image')) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Image', type: 'normal',
+							click: () =>
+								convertImgToBase64(message.file.url, function (base64Image) {
+									const image = nativeImage.createFromDataURL(base64Image)
+									clipboard.writeImage(image)
+								})
+						}))
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Add to stickers', type: 'normal',
+							click: () => this.$emit('add-to-stickers', message)
+						}))
+				}
+				if (message.code) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Code', type: 'normal',
+							click: () => {
+								clipboard.writeText(message.code)
+							}
+						}))
+				}
+				if (message.file) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Url', type: 'normal',
+							click: () => {
+								clipboard.writeText(message.file.url)
+							}
+						}))
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Download',
+							click: () => this.$emit('open-file', {action: 'download', message})
+						}))
+				}
+				if (this.roomId !== 'teachers') {
+					menu.append(new remote.MenuItem({
+						label: 'Reply',
+						click: () => {
+							this.replyMessage(message)
+						}
+					}))
+					if (!message.file)
+						menu.append(new remote.MenuItem({
+							label: '+1',
+							click: () => {
+								const msgToSend = {
+									content: message.content,
+									replyMessage: message.replyMessage
+								}
+								if (message.file) {
+									msgToSend.imgpath = message.file.url
+								}
+								this.$emit('send-message', msgToSend)
+							}
+						}))
+				}
+				if (message.senderId === this.currentUserId) {
+					menu.append(new remote.MenuItem({
+						label: 'Delete',
+						click: () => {
+							this.$emit('delete-message', message._id)
+						}
+					}))
+				}
 			}
 			menu.popup({window: remote.getCurrentWindow()})
 		},
