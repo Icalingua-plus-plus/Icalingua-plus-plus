@@ -77,7 +77,7 @@
 						<div
 							v-for="(m, i) in messages"
 							:key="m._id"
-							@dblclick="replyMessage(m)"
+							@dblclick="replyMessage(m,$event)"
 						>
 							<message
 								:current-user-id="currentUserId"
@@ -104,6 +104,7 @@
 								@hide-options="hideOptions = $event"
 								@ctx="msgctx(m)"
 								@download-image="$emit('download-image', $event)"
+								@poke="$emit('pokegroup', m.senderId)"
 							>
 								<template
 									v-for="(index, name) in $scopedSlots"
@@ -762,7 +763,8 @@ export default {
 		sendMessageReaction(messageReaction) {
 			this.$emit('send-message-reaction', messageReaction)
 		},
-		replyMessage(message) {
+		replyMessage(message,e) {
+			if(e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
 			if (message.system) return
 			this.messageReply = message
 			this.focusTextarea()
