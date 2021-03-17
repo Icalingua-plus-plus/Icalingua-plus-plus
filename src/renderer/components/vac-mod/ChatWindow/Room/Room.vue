@@ -763,6 +763,7 @@ export default {
 			this.$emit('send-message-reaction', messageReaction)
 		},
 		replyMessage(message) {
+			if (message.system) return
 			this.messageReply = message
 			this.focusTextarea()
 		},
