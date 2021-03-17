@@ -31,4 +31,3 @@ This project was generated with [electron-vue](https://github.com/SimulatedGREG/
 - headless server
 - drag picture to add
 - reveal recalled message
-- fix message count font

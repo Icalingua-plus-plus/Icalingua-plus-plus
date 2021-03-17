@@ -736,9 +736,9 @@ export default {
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false
-				if (this.mongodb) {
+				if (this.mongodb)
 					mdb.collection('rooms').updateOne({roomId: this.selectedRoom.roomId}, {$set: this.selectedRoom})
-				} else
+				else
 					db.set("rooms", this.rooms).write();
 			}
 			if (this.mongodb) {

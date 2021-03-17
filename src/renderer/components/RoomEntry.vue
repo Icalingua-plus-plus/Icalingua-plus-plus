@@ -34,7 +34,6 @@
 						</div>
 						<div v-show="room.unreadCount !== 0">
 							<el-badge
-								style="font-family: msyh"
 								:value="room.unreadCount"
 								:type="
 									room.priority < priority
@@ -175,5 +174,9 @@ a {
 .el-badge {
 	margin-top: -2px;
 	margin-left: 2px;
+}
+
+::v-deep .el-badge * {
+	font-family: msyh
 }
 </style>
