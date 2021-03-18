@@ -278,7 +278,7 @@ function convertImgToBase64(url, callback, outputFormat) {
 		canvas.height = img.height;
 		canvas.width = img.width;
 		ctx.drawImage(img, 0, 0);
-		var dataURL = canvas.toDataURL(outputFormat || "image/jpeg");
+		var dataURL = canvas.toDataURL(outputFormat || "image/png");
 		callback.call(this, dataURL);
 		canvas = null;
 	};
@@ -1446,7 +1446,11 @@ export default {
 			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room;
+			this.updateTrayIcon()
 			this.fetchMessage(true)
+			convertImgToBase64(room.avatar,(b64)=>{
+				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64))
+			})
 		},
 
 		pokefriend() {
@@ -1515,13 +1519,13 @@ export default {
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-				document.title = `Electron QQ (${unread})`;
+				document.title = `(${unread}) ${this.selectedRoom.roomName}`;
 			} else {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "dark.png" : "256x256.png"
 				);
-				document.title = `Electron QQ`;
+				document.title = this.selectedRoom.roomName;
 			}
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
