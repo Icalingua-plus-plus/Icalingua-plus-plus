@@ -15,4 +15,3 @@
 - group temp message
 - trans pride theme
 - voice
-- title bar username
