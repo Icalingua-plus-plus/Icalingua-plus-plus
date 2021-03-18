@@ -1396,7 +1396,11 @@ export default {
 				else
 					msg += "你";
 				if (data.suffix) msg += data.suffix;
-				room.lastMessage.content = msg
+				room.lastMessage = {
+					content: msg,
+					username: null,
+					timestamp: new Date().format("hh:mm")
+				}
 				const message = {
 					content: msg,
 					senderId: 0,
@@ -1683,7 +1687,8 @@ export default {
 				if (data.suffix) msg += data.suffix;
 				room.lastMessage = {
 					content: msg,
-					username: null
+					username: null,
+					timestamp: new Date().format("hh:mm")
 				}
 				const message = {
 					content: msg,
