@@ -15,3 +15,5 @@
 - group temp message
 - trans pride theme
 - voice
+- reply to nonexist message
+- cross chat reply

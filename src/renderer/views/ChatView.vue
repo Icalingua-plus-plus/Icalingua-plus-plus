@@ -890,6 +890,14 @@ export default {
 								.get("messages." + roomId)
 								.find({_id: m.data.id})
 								.value();
+						if (!replyMessage) {
+							//get the message
+							const getRet = await bot.getMsg(m.data.id)
+							if (getRet.data) {
+								replyMessage = await this.onQQMessage(getRet.data, true)
+								//todo: refresh view
+							}
+						}
 						if (replyMessage) {
 							message.replyMessage = {
 								_id: m.data.id,
@@ -1062,6 +1070,7 @@ export default {
 					.push(message)
 					.write();
 			}
+			return message
 		},
 
 		openImage(data) {
