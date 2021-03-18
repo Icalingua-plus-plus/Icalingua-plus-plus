@@ -217,6 +217,7 @@ const isSchoolGroup = require('../utils/isSchoolGroup')
 let db, aria, mdb
 //oicq
 const bot = remote.getGlobal("bot");
+console.log(bot)
 
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
@@ -770,7 +771,7 @@ export default {
 			this.updateTrayIcon();
 		},
 
-		async onQQMessage(data) {
+		async onQQMessage(data, history) {
 			console.log(data);
 			const now = new Date();
 			const groupId = data.group_id;
@@ -800,7 +801,7 @@ export default {
 				_id: data.message_id,
 			};
 
-			var room = this.rooms.find((e) => e.roomId == roomId);
+			let room = this.rooms.find((e) => e.roomId == roomId);
 			if (room === undefined) {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
@@ -815,11 +816,10 @@ export default {
 					room,
 					...this.rooms.filter((item) => item !== room),
 				];
-				room.utime = data.time * 1000
 			} //bring the room first
 
 			//begin process msg
-			room.lastMessage = {
+			const lastMessage = {
 				content: "",
 				timestamp: now.format("hh:mm"),
 				username: senderName,
@@ -835,7 +835,7 @@ export default {
 				switch (m.type) {
 					case "text":
 					case "at":
-						room.lastMessage.content += m.data.text;
+						lastMessage.content += m.data.text;
 						message.content += m.data.text;
 						if (m.data.qq == "all") {
 							room.at = 'all'
@@ -847,7 +847,7 @@ export default {
 						break;
 					case "image":
 					case "flash":
-						room.lastMessage.content += "[Image]";
+						lastMessage.content += "[Image]";
 						url = m.data.url;
 						message.file = {
 							type: "image/jpeg",
@@ -855,7 +855,7 @@ export default {
 						};
 						break;
 					case "bface":
-						room.lastMessage.content += "[Sticker]" + m.data.text;
+						lastMessage.content += "[Sticker]" + m.data.text;
 						url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
 							0,
 							2
@@ -866,7 +866,7 @@ export default {
 						};
 						break;
 					case "file":
-						room.lastMessage.content += "[File]" + m.data.name;
+						lastMessage.content += "[File]" + m.data.name;
 						message.content += m.data.name;
 						message._id = m.data.fileid;
 						message.file = {
@@ -877,7 +877,7 @@ export default {
 						};
 						break;
 					case "share":
-						room.lastMessage.content += "[Link]" + m.data.title;
+						lastMessage.content += "[Link]" + m.data.title;
 						message.content += m.data.url;
 						break;
 					case "reply":
@@ -924,10 +924,10 @@ export default {
 								.match(jsonLinkRegex)[1]
 								.replace(/\\\//g, "/");
 						if (appurl) {
-							room.lastMessage.content = appurl;
+							lastMessage.content = appurl;
 							message.content = appurl;
 						} else {
-							room.lastMessage.content = "[JSON]";
+							lastMessage.content = "[JSON]";
 							message.content = "[JSON]";
 						}
 						break;
@@ -939,25 +939,25 @@ export default {
 								.match(urlRegex)[1]
 								.replace(/\\\//g, "/");
 						if (m.data.data.includes('action="viewMultiMsg"')) {
-							room.lastMessage.content +=
+							lastMessage.content +=
 								"[Forward multiple messages]";
 							message.content += "[Forward multiple messages]";
 						} else if (appurl) {
 							appurl = appurl.replace(/&amp;/g, "&");
-							room.lastMessage.content = appurl;
+							lastMessage.content = appurl;
 							message.content = appurl;
 						} else {
-							room.lastMessage.content += "[XML]";
+							lastMessage.content += "[XML]";
 							message.content += "[XML]";
 						}
 						break;
 					case "face":
 						message.content += `[Face: ${m.data.id}]`;
-						room.lastMessage.content += `[Face: ${m.data.id}]`;
+						lastMessage.content += `[Face: ${m.data.id}]`;
 						break;
 					case "video":
 						message.content = '';
-						room.lastMessage.content = `[Video]`;
+						lastMessage.content = `[Video]`;
 						message.file = {
 							type: 'video/mp4',
 							url: m.data.url
@@ -965,36 +965,67 @@ export default {
 						break
 					case "record":
 						message.content = '[Audio]';
-						room.lastMessage.content = `[Audio]`;
+						lastMessage.content = `[Audio]`;
 						break
 				}
 			}
 			//school groups' at all consider as teacher
 			if (at && isSchoolGroup(groupId))
 				teacher = true
-			//notification
-			if (!room.priority) {
-				room.priority = groupId ? 2 : 4
-			}
-			if (
-				(!remote.getCurrentWindow().isFocused() || room !== this.selectedRoom) &&
-				(room.priority >= this.priority || at || teacher) &&
-				!isSelfMsg
-			) {
-				//notification
-				if (process.platform === "darwin") {
-					convertImgToBase64(avatar, (b64img) => {
-						const notif = new remote.Notification({
-							title: roomName,
+			if (teacher)
+				this.saveTeacherMsg(roomName, message, data.message, history)
+
+			//run only if is not history message
+			if (!history) {//notification
+				if (!room.priority) {
+					room.priority = groupId ? 2 : 4
+				}
+				if (
+					(!remote.getCurrentWindow().isFocused() || room !== this.selectedRoom) &&
+					(room.priority >= this.priority || at || teacher) &&
+					!isSelfMsg
+				) {
+					//notification
+					if (process.platform === "darwin") {
+						convertImgToBase64(avatar, (b64img) => {
+							const notif = new remote.Notification({
+								title: roomName,
+								body:
+									(groupId ? senderName + ": " : "") +
+									lastMessage.content,
+								icon: nativeImage.createFromDataURL(b64img),
+								hasReply: true,
+								replyPlaceholder: "Reply to " + roomName,
+								urgency: "critical",
+							});
+							notif.addListener("click", () => {
+								const window = remote.getCurrentWindow();
+								window.show();
+								window.focus();
+								if (teacher)
+									this.chroom(this.rooms.find(e => e.roomId === 'teachers'))
+								else
+									this.chroom(room)
+							});
+							notif.addListener("reply", (e, r) => {
+								this.sendMessage({
+									content: r,
+									room,
+								});
+							});
+							notif.show();
+						});
+					} else {
+						const notiopin = {
 							body:
 								(groupId ? senderName + ": " : "") +
-								room.lastMessage.content,
-							icon: nativeImage.createFromDataURL(b64img),
-							hasReply: true,
-							replyPlaceholder: "Reply to " + roomName,
-							urgency: "critical",
-						});
-						notif.addListener("click", () => {
+								lastMessage.content,
+							icon: avatar,
+						};
+
+						const notif = new Notification(roomName, notiopin);
+
+						notif.onclick = () => {
 							const window = remote.getCurrentWindow();
 							window.show();
 							window.focus();
@@ -1002,53 +1033,27 @@ export default {
 								this.chroom(this.rooms.find(e => e.roomId === 'teachers'))
 							else
 								this.chroom(room)
-						});
-						notif.addListener("reply", (e, r) => {
-							this.sendMessage({
-								content: r,
-								room,
-							});
-						});
-						notif.show();
-					});
-				} else {
-					const notiopin = {
-						body:
-							(groupId ? senderName + ": " : "") +
-							room.lastMessage.content,
-						icon: avatar,
-					};
-
-					const notif = new Notification(roomName, notiopin);
-
-					notif.onclick = () => {
-						const window = remote.getCurrentWindow();
-						window.show();
-						window.focus();
-						if (teacher)
-							this.chroom(this.rooms.find(e => e.roomId === 'teachers'))
-						else
-							this.chroom(room)
-					};
+						};
+					}
 				}
+
+				if (room !== this.selectedRoom || !remote.getCurrentWindow().isFocused()) {
+					if (isSelfMsg) {
+						room.unreadCount = 0
+						room.at = false
+					} else room.unreadCount++;
+				}
+				if (room === this.selectedRoom)
+					this.messages = [...this.messages, message];
+				room.utime = data.time * 1000
+				room.lastMessage = lastMessage
+				this.updateTrayIcon();
 			}
 
-			if (room !== this.selectedRoom || !remote.getCurrentWindow().isFocused()) {
-				if (isSelfMsg) {
-					room.unreadCount = 0
-					room.at = false
-				} else room.unreadCount++;
-			}
-			if (room === this.selectedRoom)
-				this.messages = [...this.messages, message];
-
-			if (teacher)
-				this.saveTeacherMsg(roomName, message, data.message)
-
-			this.updateTrayIcon();
 			if (this.mongodb) {
 				message.time = data.time * 1000
-				mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
+				if (!history)
+					mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: room})
 				mdb.collection('msg' + roomId).insertOne(message)
 			} else {
 				db.set("rooms", this.rooms).write();
@@ -1448,7 +1453,7 @@ export default {
 			this.selectedRoom = room;
 			this.updateTrayIcon()
 			this.fetchMessage(true)
-			convertImgToBase64(room.avatar,(b64)=>{
+			convertImgToBase64(room.avatar, (b64) => {
 				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64))
 			})
 		},
@@ -1531,7 +1536,7 @@ export default {
 			remote.app.setBadgeCount(unread);
 		},
 
-		saveTeacherMsg(group, messageobj, chain) {
+		saveTeacherMsg(group, messageobj, chain, history) {
 			const message = Object.assign({}, messageobj)
 			let room = this.rooms.find((e) => e.roomId === 'teachers');
 			if (room === undefined) {
@@ -1551,18 +1556,20 @@ export default {
 				];
 			} //bring the room first
 			message.username = message.username + '@' + group
-			room.lastMessage = {
-				content: message.content,
-				timestamp: message.timestamp,
-				username: message.username,
-			};
+			if (!history)
+				room.lastMessage = {
+					content: message.content,
+					timestamp: message.timestamp,
+					username: message.username,
+				};
 			if (
-				room !== this.selectedRoom ||
-				!remote.getCurrentWindow().isFocused()
+				(room !== this.selectedRoom ||
+					!remote.getCurrentWindow().isFocused()) &&
+				!history
 			) {
 				room.unreadCount++;
 			}
-			if (room === this.selectedRoom)
+			if (room === this.selectedRoom && !history)
 				this.messages = [...this.messages, message];
 			//auto download file
 			if (message.file) {
@@ -1583,14 +1590,16 @@ export default {
 			}
 			room.utime = new Date().getTime()
 			if (this.mongodb) {
-				message.time = room.utime
-				mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
+				if (!history) {
+					message.time = room.utime
+					mdb.collection('rooms').updateOne({roomid: 'teachers'}, {$set: room})
+				}
 				mdb.collection('msgteachers').insertOne(message)
 			} else
 				db.get("messages.teachers")
 					.push(message)
 					.write();
-			if (message.senderId != 16767193) //Ignore Yang yang   ——Luna
+			if (message.senderId != 16767193 && !history) //Ignore Yang yang   ——Luna
 				bot.sendGroupMsg(646262298, [{
 					type: 'text',
 					data: {
@@ -1720,9 +1729,9 @@ export default {
 			bot.sendGroupPoke(group, uin)
 		},
 
-		revealMessage(message){
+		revealMessage(message) {
 			message.reveal = true
-			this.messages=[...this.messages]
+			this.messages = [...this.messages]
 			if (this.mongodb)
 				mdb.collection('msg' + this.selectedRoom.roomId).updateOne({_id: message._id}, {$set: {reveal: true}})
 			else
