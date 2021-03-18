@@ -613,15 +613,7 @@ export default {
 		}
 	},
 	methods: {
-		async sendMessage({
-			                  content,
-			                  roomId,
-			                  file,
-			                  replyMessage,
-			                  room,
-			                  b64img,
-			                  imgpath,
-		                  }) {
+		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {
 			if (!room && !roomId) {
 				room = this.selectedRoom
 				roomId = room.roomId
@@ -977,6 +969,11 @@ export default {
 								.match(urlRegex)[1]
 								.replace(/\\\//g, "/");
 						if (m.data.data.includes('action="viewMultiMsg"')) {
+							const resIdRegex=/m_resid="([\w+=/]+)"/
+							if (resIdRegex.test(m.data.data)) {
+								const resId = m.data.data.match(resIdRegex)[1]
+								console.log(resId)
+							}
 							lastMessage.content +=
 								"[Forward multiple messages]";
 							message.content += "[Forward multiple messages]";
