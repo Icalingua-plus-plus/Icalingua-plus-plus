@@ -473,7 +473,7 @@ export default {
 				this.loadingMessages = true
 				this.scrollIcon = false
 				this.scrollMessagesCount = 0
-				this.resetMessage(true)
+				//this.resetMessage(true)
 				if (this.roomMessage) {
 					this.message = this.roomMessage
 					setTimeout(() => this.onChangeInput(), 0)
