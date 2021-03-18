@@ -793,7 +793,9 @@ export default {
 			const now = new Date();
 			const groupId = data.group_id;
 			const senderId = data.sender.user_id;
-			const roomId = groupId ? -groupId : data.user_id;
+			let roomId = groupId ? -groupId : data.user_id;
+			if (typeof history === "number")
+				roomId = history
 			if (this.ignoredChats.find((e) => e.id == roomId)) return;
 			const isSelfMsg = this.account == senderId;
 			const senderName =
@@ -1717,7 +1719,7 @@ export default {
 							//get the message
 							const getRet = await bot.getMsg(m.data.id)
 							if (getRet.data) {
-								replyMessage = await this.onQQMessage(getRet.data, true)
+								replyMessage = await this.onQQMessage(getRet.data, roomId)
 								//todo: refresh view
 							}
 						}
