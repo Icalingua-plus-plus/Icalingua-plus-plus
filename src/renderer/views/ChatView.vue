@@ -828,6 +828,7 @@ export default {
 			if (isTeacher(senderId) && groupId)
 				teacher = true
 
+			////process message////
 			for (const m of data.message) {
 				let appurl;
 				let url;
@@ -965,7 +966,6 @@ export default {
 					case "record":
 						message.content = '[Audio]';
 						room.lastMessage.content = `[Audio]`;
-						message._id = data.time//https://github.com/takayama-lily/oicq/issues/142
 						break
 				}
 			}
