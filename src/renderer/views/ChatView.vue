@@ -1428,18 +1428,19 @@ export default {
 		updateTrayIcon() {
 			let p;
 			const unread = this.getUnreadCount();
+			const title = this.selectedRoom.roomName ? this.selectedRoom.roomName : 'Electron QQ'
 			if (unread) {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-				document.title = `(${unread}) ${this.selectedRoom.roomName}`;
+				document.title = `(${unread}) ${title}`;
 			} else {
 				p = path.join(
 					__static,
 					this.darkTaskIcon ? "dark.png" : "256x256.png"
 				);
-				document.title = this.selectedRoom.roomName;
+				document.title = title
 			}
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
