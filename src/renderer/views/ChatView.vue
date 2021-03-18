@@ -937,6 +937,7 @@ export default {
 						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
 						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
 						const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/;
+						const jsonAppLinkRegex= /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
 						if (biliRegex.test(json))
 							appurl = json
 								.match(biliRegex)[1]
@@ -952,6 +953,10 @@ export default {
 						else if (jsonLinkRegex.test(json))
 							appurl = json
 								.match(jsonLinkRegex)[1]
+								.replace(/\\\//g, "/");
+						else if (jsonAppLinkRegex.test(json))
+							appurl = json
+								.match(jsonAppLinkRegex)[1]
 								.replace(/\\\//g, "/");
 						if (appurl) {
 							lastMessage.content = appurl;
