@@ -9,7 +9,6 @@
 - send face
 - headless server
 - paste picture to add
-- full group name
 - forward mutiple msg
 - chat history
 - group temp message

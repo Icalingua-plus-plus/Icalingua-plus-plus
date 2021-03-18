@@ -339,10 +339,22 @@ export default {
 			aria,
 			mongodb: false,
 			priority: 1,
-			theme: 'default'
+			theme: 'default',
+			groups: []
 		};
 	},
 	created() {
+		const loading = this.$loading({
+			lock: true,
+		});
+		//region load group
+		const groups = bot.getGroupList().data.values()
+		let t = groups.next();
+		while (!t.done) {
+			this.groups.push(t.value)
+			t = groups.next();
+		}
+		//endregion
 		//region db init
 		this.account = glodb.get("account").value().username;
 		this.mongodb = glodb.get('mongodb').value()
@@ -366,9 +378,6 @@ export default {
 			priority: 1,
 		}).write();
 		if (this.mongodb) {
-			const loading = this.$loading({
-				lock: true,
-			});
 			MongoClient.connect('mongodb://localhost', (err, dba) => {
 				if (err)
 					console.log(err)
@@ -378,8 +387,16 @@ export default {
 						this.rooms = e
 						if (this.rooms.find(e => isSchoolGroup(-e.roomId)))
 							this.nuist = true
+						this.rooms.forEach(e => {
+							if (e.roomId > -1)
+								return
+							const group = this.groups.find(f => f.group_id == -e.roomId)
+							if (group && group.group_name !== e.roomName) {
+								e.roomName = group.group_name
+								mdb.collection('rooms').updateOne({roomId: e.roomId}, {$set: {roomName: group.group_name}})
+							}
+						})
 					})
-				loading.close()
 				bot.on("message", this.onQQMessage);
 				bot.on("notice.friend.recall", this.friendRecall);
 				bot.on("notice.group.recall", this.groupRecall);
@@ -388,6 +405,7 @@ export default {
 				bot.on("notice.friend.poke", this.friendpoke);
 				bot.on("notice.group.poke", this.grouppoke);
 				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+				loading.close()
 			});
 		} else {
 			db.defaults({
@@ -453,7 +471,6 @@ export default {
 			],
 		});
 		//endregion
-
 		//region set status
 		if (process.env.NODE_ENV === "development")
 			document.title = "[DEBUG] Electron QQ";
@@ -516,7 +533,6 @@ export default {
 		}
 
 		//endregion
-
 		//region listener
 		window.addEventListener("paste", () => {
 			const nim = clipboard.readImage();
@@ -593,6 +609,7 @@ export default {
 			bot.on("notice.friend.poke", this.friendpoke);
 			bot.on("notice.group.poke", this.grouppoke);
 			remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+			loading.close()
 		}
 	},
 	methods: {
@@ -798,7 +815,7 @@ export default {
 			const avatar = groupId
 				? `https://p.qlogo.cn/gh/${groupId}/${groupId}/0`
 				: `https://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`;
-			const roomName = groupId ? data.group_name : senderName;
+			let roomName = groupId ? data.group_name : senderName;
 
 			const message = {
 				senderId: senderId,
@@ -811,6 +828,9 @@ export default {
 
 			let room = this.rooms.find((e) => e.roomId == roomId);
 			if (room === undefined) {
+				const group = this.groups.find(e => e.group_id == groupId)
+				if (group && group.group_name !== roomName)
+					roomName = group.group_name
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
@@ -819,7 +839,8 @@ export default {
 				else
 					db.set("messages." + roomId, []).write();
 			} else {
-				room.roomName = roomName;
+				if (!room.roomName.startsWith(roomName))
+					room.roomName = roomName;
 				if (!history)
 					this.rooms = [
 						room,
