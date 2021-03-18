@@ -1,7 +1,7 @@
 <template>
 	<div ondragstart="return false;">
 		<el-container>
-			<!--			sidebar-->
+			<!-- sidebar -->
 			<el-aside width="65px" ondragstart="return false;">
 				<!-- sidebar -->
 				<el-popover
@@ -135,6 +135,13 @@
 						<TheContactsPanel @dblclick="startChat"/>
 					</el-col>
 				</el-row>
+				<div v-show="view === 'kench'">
+					<div style="background-color: #5bcffa; height: 20vh"/>
+					<div style="background-color: #f5abb9; height: 20vh"/>
+					<div style="background-color: #ffffff; height: 20vh"/>
+					<div style="background-color: #f5abb9; height: 20vh"/>
+					<div style="background-color: #5bcffa; height: 20vh"/>
+				</div>
 			</el-main>
 		</el-container>
 		<el-dialog
@@ -332,6 +339,7 @@ export default {
 			aria,
 			mongodb: false,
 			priority: 1,
+			theme: 'default'
 		};
 	},
 	created() {
@@ -1149,6 +1157,7 @@ export default {
 					room: this.selectedRoom,
 					imgpath: url,
 				});
+			this.$refs.room.focusTextarea();
 		},
 
 		rmIgnore(chat) {
@@ -1191,11 +1200,6 @@ export default {
 			)
 			menu.append(
 				new remote.MenuItem({
-					type: "separator",
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
 					label: "Auto login",
 					type: "checkbox",
 					checked: glodb.get("account.autologin").value(),
@@ -1206,6 +1210,32 @@ export default {
 					},
 				})
 			);
+			// menu.append(
+			// 	new remote.MenuItem({
+			// 		label: "Theme",
+			// 		submenu: [
+			// 			{
+			// 				type: "radio",
+			// 				label: 'Default',
+			// 				checked: this.theme === 'default',
+			// 				click: (menuItem, _browserWindow, _event) => {
+			// 					this.theme = 'default'
+			// 					// db.set("priority", 1).write();
+			// 				},
+			// 			},
+			// 			{
+			// 				type: "radio",
+			// 				label: 'Trans Pride',
+			// 				checked: this.theme === 'trans',
+			// 				click: (menuItem, _browserWindow, _event) => {
+			// 					this.theme = 'trans'
+			// 					// db.set("priority", 2).write();
+			// 				},
+			// 			},
+			// 		],
+			// 	})
+			// )
+
 			if (process.windowsStore) {
 			}
 
@@ -1472,6 +1502,7 @@ export default {
 			console.log('poke')
 			if (this.selectedRoom.roomId > 0)
 				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
+			this.$refs.room.focusTextarea();
 		},
 
 		createRoom(roomId, roomName, avatar) {
@@ -1737,6 +1768,7 @@ export default {
 		pokegroup(uin) {
 			const group = -this.selectedRoom.roomId
 			bot.sendGroupPoke(group, uin)
+			this.$refs.room.focusTextarea();
 		},
 
 		revealMessage(message) {
