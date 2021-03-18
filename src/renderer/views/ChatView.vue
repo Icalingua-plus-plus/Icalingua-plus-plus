@@ -942,7 +942,7 @@ export default {
 						const json = m.data.data;
 						message.code = json
 						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
-						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
+						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
 						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
 						const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/;
 						if (biliRegex.test(json))
