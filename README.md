@@ -16,3 +16,5 @@
 - group temp message
 - trans pride theme
 - voice
+- fix poke lastmessage time
+- title bar username
