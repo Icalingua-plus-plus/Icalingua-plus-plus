@@ -5,17 +5,19 @@ import FileSync from 'lowdb/adapters/FileSync'
 import { createClient } from "oicq"
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-"我所遗失的心啊";
+(()=> {
+	"我所遗失的心啊";
 
-"我曾做过的梦啊";
+	"我曾做过的梦啊";
 
-"随风飘散 被什么人 丢到哪里";
+	"随风飘散 被什么人 丢到哪里";
 
-"我所追求的生活";
+	"我所追求的生活";
 
-"我曾努力过的那些事";
+	"我曾努力过的那些事";
 
-"都是笑话 不值一提 该放弃";
+	"都是笑话 不值一提 该放弃";
+})()
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 console.log(process.argv)
@@ -46,7 +48,8 @@ global.createBot = function (form) {
 	global.bot = createClient(Number(form.username), {
 		platform: Number(form.protocol),
 		data_dir: path.join(STORE_PATH, '/data'),
-		ignore_self: false
+		ignore_self: false,
+		brief: true
 	})
 	bot.setMaxListeners(233)
 }
