@@ -851,164 +851,9 @@ export default {
 				teacher = true
 
 			////process message////
-			for (const m of data.message) {
-				let appurl;
-				let url;
-				switch (m.type) {
-					case "text":
-					case "at":
-						lastMessage.content += m.data.text;
-						message.content += m.data.text;
-						if (m.data.qq == "all") {
-							room.at = 'all'
-							at = true
-						} else if (m.data.qq == this.account) {
-							room.at = 'me'
-							at = true
-						}
-						break;
-					case "image":
-					case "flash":
-						lastMessage.content += "[Image]";
-						url = m.data.url;
-						message.file = {
-							type: "image/jpeg",
-							url,
-						};
-						break;
-					case "bface":
-						lastMessage.content += "[Sticker]" + m.data.text;
-						url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
-							0,
-							2
-						)}/${m.data.file.substr(0, 32)}/300x300.png`;
-						message.file = {
-							type: "image/webp",
-							url,
-						};
-						break;
-					case "file":
-						lastMessage.content += "[File]" + m.data.name;
-						message.content += m.data.name;
-						message._id = m.data.fileid;
-						message.file = {
-							type: "object/stream",
-							size: m.data.size,
-							url: m.data.url,
-							name: m.data.name,
-						};
-						break;
-					case "share":
-						lastMessage.content += "[Link]" + m.data.title;
-						message.content += m.data.url;
-						break;
-					case "reply":
-						let replyMessage
-						if (this.mongodb)
-							replyMessage = await mdb.collection('msg' + roomId).findOne({_id: m.data.id})
-						else
-							replyMessage = db
-								.get("messages." + roomId)
-								.find({_id: m.data.id})
-								.value();
-						if (!replyMessage) {
-							//get the message
-							const getRet = await bot.getMsg(m.data.id)
-							if (getRet.data) {
-								replyMessage = await this.onQQMessage(getRet.data, true)
-								//todo: refresh view
-							}
-						}
-						if (replyMessage) {
-							message.replyMessage = {
-								_id: m.data.id,
-								username: replyMessage.username,
-								content: replyMessage.content,
-							};
-							if (replyMessage.file) {
-								message.replyMessage.file = replyMessage.file;
-							}
-						}
-						break;
-					case "json":
-						const json = m.data.data;
-						message.code = json
-						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
-						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
-						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
-						const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/;
-						const jsonAppLinkRegex= /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
-						if (biliRegex.test(json))
-							appurl = json
-								.match(biliRegex)[1]
-								.replace(/\\\//g, "/");
-						else if (biliRegex2.test(json))
-							appurl = json
-								.match(biliRegex2)[1]
-								.replace(/\\\//g, "/");
-						else if (zhihuRegex.test(json))
-							appurl = json
-								.match(zhihuRegex)[1]
-								.replace(/\\\//g, "/");
-						else if (jsonLinkRegex.test(json))
-							appurl = json
-								.match(jsonLinkRegex)[1]
-								.replace(/\\\//g, "/");
-						else if (jsonAppLinkRegex.test(json))
-							appurl = json
-								.match(jsonAppLinkRegex)[1]
-								.replace(/\\\//g, "/");
-						if (appurl) {
-							lastMessage.content = appurl;
-							message.content = appurl;
-						} else {
-							lastMessage.content = "[JSON]";
-							message.content = "[JSON]";
-						}
-						break;
-					case "xml":
-						message.code = m.data.data
-						const urlRegex = /url="([^"]+)"/;
-						if (urlRegex.test(m.data.data))
-							appurl = m.data.data
-								.match(urlRegex)[1]
-								.replace(/\\\//g, "/");
-						if (m.data.data.includes('action="viewMultiMsg"')) {
-							const resIdRegex=/m_resid="([\w+=/]+)"/
-							if (resIdRegex.test(m.data.data)) {
-								const resId = m.data.data.match(resIdRegex)[1]
-								console.log(resId)
-							}
-							lastMessage.content +=
-								"[Forward multiple messages]";
-							message.content += "[Forward multiple messages]";
-						} else if (appurl) {
-							appurl = appurl.replace(/&amp;/g, "&");
-							lastMessage.content = appurl;
-							message.content = appurl;
-						} else {
-							lastMessage.content += "[XML]";
-							message.content += "[XML]";
-						}
-						break;
-					case "face":
-						message.content += `[Face: ${m.data.id}]`;
-						lastMessage.content += `[Face: ${m.data.id}]`;
-						break;
-					case "video":
-						message.content = '';
-						lastMessage.content = `[Video]`;
-						message.file = {
-							type: 'video/mp4',
-							url: m.data.url
-						}
-						break
-					case "record":
-						message.content = '[Audio]';
-						lastMessage.content = `[Audio]`;
-						break
-				}
-			}
+			await this.processMessage(data.message, message, lastMessage, roomId)
+			at = message.at
+			room.at = at
 			//school groups' at all consider as teacher
 			if (at && isSchoolGroup(groupId))
 				teacher = true
@@ -1804,6 +1649,168 @@ export default {
 					.find({_id: message._id})
 					.assign({reveal: true})
 					.write();
+		},
+
+		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
+			for (const m of oicqMessage) {
+				let appurl;
+				let url;
+				switch (m.type) {
+					case "text":
+					case "at":
+						lastMessage.content += m.data.text;
+						message.content += m.data.text;
+						if (m.data.qq == "all") {
+							message.at = 'all'
+						} else if (m.data.qq == this.account) {
+							message.at = true
+						}
+						break;
+					case "image":
+					case "flash":
+						lastMessage.content += "[Image]";
+						url = m.data.url;
+						message.file = {
+							type: "image/jpeg",
+							url,
+						};
+						break;
+					case "bface":
+						lastMessage.content += "[Sticker]" + m.data.text;
+						url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
+							0,
+							2
+						)}/${m.data.file.substr(0, 32)}/300x300.png`;
+						message.file = {
+							type: "image/webp",
+							url,
+						};
+						break;
+					case "file":
+						lastMessage.content += "[File]" + m.data.name;
+						message.content += m.data.name;
+						message._id = m.data.fileid;
+						message.file = {
+							type: "object/stream",
+							size: m.data.size,
+							url: m.data.url,
+							name: m.data.name,
+						};
+						break;
+					case "share":
+						lastMessage.content += "[Link]" + m.data.title;
+						message.content += m.data.url;
+						break;
+					case "reply":
+						let replyMessage
+						if (roomId) {
+							if (this.mongodb)
+								replyMessage = await mdb.collection('msg' + roomId).findOne({_id: m.data.id})
+							else
+								replyMessage = db
+									.get("messages." + roomId)
+									.find({_id: m.data.id})
+									.value();
+						}
+						if (!replyMessage) {
+							//get the message
+							const getRet = await bot.getMsg(m.data.id)
+							if (getRet.data) {
+								replyMessage = await this.onQQMessage(getRet.data, true)
+								//todo: refresh view
+							}
+						}
+						if (replyMessage) {
+							message.replyMessage = {
+								_id: m.data.id,
+								username: replyMessage.username,
+								content: replyMessage.content,
+							};
+							if (replyMessage.file) {
+								message.replyMessage.file = replyMessage.file;
+							}
+						}
+						break;
+					case "json":
+						const json = m.data.data;
+						message.code = json
+						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
+						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
+						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
+						const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/;
+						const jsonAppLinkRegex = /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
+						if (biliRegex.test(json))
+							appurl = json
+								.match(biliRegex)[1]
+								.replace(/\\\//g, "/");
+						else if (biliRegex2.test(json))
+							appurl = json
+								.match(biliRegex2)[1]
+								.replace(/\\\//g, "/");
+						else if (zhihuRegex.test(json))
+							appurl = json
+								.match(zhihuRegex)[1]
+								.replace(/\\\//g, "/");
+						else if (jsonLinkRegex.test(json))
+							appurl = json
+								.match(jsonLinkRegex)[1]
+								.replace(/\\\//g, "/");
+						else if (jsonAppLinkRegex.test(json))
+							appurl = json
+								.match(jsonAppLinkRegex)[1]
+								.replace(/\\\//g, "/");
+						if (appurl) {
+							lastMessage.content = appurl;
+							message.content = appurl;
+						} else {
+							lastMessage.content = "[JSON]";
+							message.content = "[JSON]";
+						}
+						break;
+					case "xml":
+						message.code = m.data.data
+						const urlRegex = /url="([^"]+)"/;
+						if (urlRegex.test(m.data.data))
+							appurl = m.data.data
+								.match(urlRegex)[1]
+								.replace(/\\\//g, "/");
+						if (m.data.data.includes('action="viewMultiMsg"')) {
+							const resIdRegex = /m_resid="([\w+=/]+)"/
+							if (resIdRegex.test(m.data.data)) {
+								const resId = m.data.data.match(resIdRegex)[1]
+								console.log(resId)
+							}
+							lastMessage.content +=
+								"[Forward multiple messages]";
+							message.content += "[Forward multiple messages]";
+						} else if (appurl) {
+							appurl = appurl.replace(/&amp;/g, "&");
+							lastMessage.content = appurl;
+							message.content = appurl;
+						} else {
+							lastMessage.content += "[XML]";
+							message.content += "[XML]";
+						}
+						break;
+					case "face":
+						message.content += `[Face: ${m.data.id}]`;
+						lastMessage.content += `[Face: ${m.data.id}]`;
+						break;
+					case "video":
+						message.content = '';
+						lastMessage.content = `[Video]`;
+						message.file = {
+							type: 'video/mp4',
+							url: m.data.url
+						}
+						break
+					case "record":
+						message.content = '[Audio]';
+						lastMessage.content = `[Audio]`;
+						break
+				}
+				return {message, lastMessage}
+			}
 		}
 	},
 	computed: {
