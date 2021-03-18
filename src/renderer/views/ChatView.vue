@@ -341,7 +341,7 @@ export default {
 			priority: 1,
 			theme: 'default',
 			groups: [],
-			menu:[]
+			menu: []
 		};
 	},
 	created() {
@@ -590,7 +590,7 @@ export default {
 		})
 		//endregion
 		//region build menu
-		this.menu=[
+		this.menu = [
 			this.notifyMenuItem,
 			[
 				new remote.MenuItem({
@@ -655,17 +655,8 @@ export default {
 				})
 			]
 		]
-		remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
-			this.menu[0],
-			{
-				label: 'Options',
-				submenu: this.menu[1]
-			},
-			{
-				label: 'System',
-				submenu: this.menu[2]
-			}
-		]))
+		this.updateAppMenu()
+
 		// menu.append(
 		// 	new remote.MenuItem({
 		// 		label: "Theme",
@@ -691,6 +682,7 @@ export default {
 		// 		],
 		// 	})
 		// )
+
 		//endregion
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
@@ -1160,17 +1152,17 @@ export default {
 		appMenu() {
 			const menu = new remote.Menu();
 			menu.append(this.menu[0]);
-			for (let i=0;i<this.menu[1].length;i++)
+			for (let i = 0; i < this.menu[1].length; i++)
 				menu.append(this.menu[1][i])
 			menu.append(new remote.MenuItem({
 				type: 'separator'
 			}))
-			for (let i=0;i<this.menu[2].length;i++)
+			for (let i = 0; i < this.menu[2].length; i++)
 				menu.append(this.menu[2][i])
 			menu.popup({window: remote.getCurrentWindow()});
 		},
 
-		roomContext(room) {
+		roomContext(room, build) {
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const menu = remote.Menu.buildFromTemplate([
 				{
@@ -1291,6 +1283,8 @@ export default {
 					},
 				},
 			]);
+			if (build)
+				return menu
 			menu.popup({window: remote.getCurrentWindow()});
 		},
 
@@ -1368,6 +1362,7 @@ export default {
 			this.selectedRoom = room;
 			this.updateTrayIcon()
 			this.fetchMessage(true)
+			this.updateAppMenu(room)
 			convertImgToBase64(room.avatar, (b64) => {
 				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64))
 			})
@@ -1819,6 +1814,26 @@ export default {
 				}
 				return {message, lastMessage}
 			}
+		},
+
+		updateAppMenu(room) {
+			const menu = remote.Menu.buildFromTemplate([
+				{
+					label: 'Electron QQ',
+					submenu: this.menu[2]
+				},
+				this.menu[0],
+				{
+					label: 'Options',
+					submenu: this.menu[1]
+				}
+			])
+			if (room)
+				menu.append(new remote.MenuItem({
+					label: room.roomName,
+					submenu: this.roomContext(room, true)
+				}))
+			remote.Menu.setApplicationMenu(menu)
 		}
 	},
 	computed: {
