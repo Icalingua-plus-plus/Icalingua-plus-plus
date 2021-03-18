@@ -309,7 +309,6 @@ export default {
 			rooms: [],
 			messages: [],
 			selectedRoom: {roomId: 0},
-			notifyMenuItem: null,
 			tray: null,
 			account: null,
 			messagesLoaded: false,
@@ -421,56 +420,6 @@ export default {
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
 		this.aria2 = db.get("aria2").value();
-		this.notifyMenuItem = new remote.MenuItem({
-			label: "Notification Priority",
-			submenu: [
-				{
-					type: "radio",
-					label: '1',
-					checked: this.priority === 1,
-					click: (menuItem, _browserWindow, _event) => {
-						this.priority = 1
-						db.set("priority", 1).write();
-					},
-				},
-				{
-					type: "radio",
-					label: '2',
-					checked: this.priority === 2,
-					click: (menuItem, _browserWindow, _event) => {
-						this.priority = 2
-						db.set("priority", 2).write();
-					},
-				},
-				{
-					type: "radio",
-					label: '3',
-					checked: this.priority === 3,
-					click: (menuItem, _browserWindow, _event) => {
-						this.priority = 3
-						db.set("priority", 3).write();
-					},
-				},
-				{
-					type: "radio",
-					label: '4',
-					checked: this.priority === 4,
-					click: (menuItem, _browserWindow, _event) => {
-						this.priority = 4
-						db.set("priority", 4).write();
-					},
-				},
-				{
-					type: "radio",
-					label: '5',
-					checked: this.priority === 5,
-					click: (menuItem, _browserWindow, _event) => {
-						this.priority = 5
-						db.set("priority", 5).write();
-					},
-				},
-			],
-		});
 		//endregion
 		//region set status
 		if (process.env.NODE_ENV === "development")
@@ -482,50 +431,6 @@ export default {
 			this.username = bot.getLoginInfo().data.nickname;
 			this.tray = remote.getGlobal("tray");
 			this.tray.setToolTip("Electron QQ");
-			this.tray.setContextMenu(
-				remote.Menu.buildFromTemplate([
-					{
-						label: "Open",
-						type: "normal",
-						click: () => {
-							const window = remote.getCurrentWindow();
-							window.show();
-							window.focus();
-						},
-					},
-					this.notifyMenuItem,
-					{
-						label: "Icon theme",
-						submenu: [
-							{
-								label: "Dark",
-								type: "radio",
-								checked: this.darkTaskIcon,
-								click: () => {
-									this.darkTaskIcon = true;
-									this.updateTrayIcon();
-									db.set("darkTaskIcon", true).write();
-								},
-							},
-							{
-								label: "Light",
-								type: "radio",
-								checked: !this.darkTaskIcon,
-								click: () => {
-									this.darkTaskIcon = false;
-									this.updateTrayIcon();
-									db.set("darkTaskIcon", false).write();
-								},
-							},
-						],
-					},
-					{
-						label: "Exit",
-						type: "normal",
-						click: this.exit,
-					},
-				])
-			);
 			this.tray.on("click", () => {
 				const window = remote.getCurrentWindow();
 				window.show();
@@ -590,8 +495,47 @@ export default {
 		})
 		//endregion
 		//region build menu
+		const updatePriority = (lev) => {
+			this.priority = lev
+			db.set("priority", lev).write()
+			this.updateAppMenu()
+		}
 		this.menu = [
-			this.notifyMenuItem,
+			new remote.MenuItem({
+				label: "Notification Priority",
+				submenu: [
+					{
+						type: "radio",
+						label: '1',
+						checked: this.priority === 1,
+						click: () => updatePriority(1),
+					},
+					{
+						type: "radio",
+						label: '2',
+						checked: this.priority === 2,
+						click: () => updatePriority(2),
+					},
+					{
+						type: "radio",
+						label: '3',
+						checked: this.priority === 3,
+						click: () => updatePriority(3),
+					},
+					{
+						type: "radio",
+						label: '4',
+						checked: this.priority === 4,
+						click: () => updatePriority(4),
+					},
+					{
+						type: "radio",
+						label: '5',
+						checked: this.priority === 5,
+						click: () => updatePriority(5),
+					},
+				],
+			}),
 			[
 				new remote.MenuItem({
 					label: "Manage ignored chats",
@@ -656,6 +600,50 @@ export default {
 			]
 		]
 		this.updateAppMenu()
+		this.tray.setContextMenu(
+			remote.Menu.buildFromTemplate([
+				{
+					label: "Open",
+					type: "normal",
+					click: () => {
+						const window = remote.getCurrentWindow();
+						window.show();
+						window.focus();
+					},
+				},
+				this.menu[0],
+				{
+					label: "Icon theme",
+					submenu: [
+						{
+							label: "Dark",
+							type: "radio",
+							checked: this.darkTaskIcon,
+							click: () => {
+								this.darkTaskIcon = true;
+								this.updateTrayIcon();
+								db.set("darkTaskIcon", true).write();
+							},
+						},
+						{
+							label: "Light",
+							type: "radio",
+							checked: !this.darkTaskIcon,
+							click: () => {
+								this.darkTaskIcon = false;
+								this.updateTrayIcon();
+								db.set("darkTaskIcon", false).write();
+							},
+						},
+					],
+				},
+				{
+					label: "Exit",
+					type: "normal",
+					click: this.exit,
+				},
+			])
+		);
 
 		// menu.append(
 		// 	new remote.MenuItem({
@@ -1164,6 +1152,13 @@ export default {
 
 		roomContext(room, build) {
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
+			const updatePriority = (lev) => {
+				room.priority = lev
+				if (this.mongodb) {
+					mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: lev}})
+				}
+				this.updateAppMenu()
+			}
 			const menu = remote.Menu.buildFromTemplate([
 				{
 					label: "Notification Priority",
@@ -1172,56 +1167,31 @@ export default {
 							type: "radio",
 							label: '1',
 							checked: room.priority === 1,
-							click: (menuItem, _browserWindow, _event) => {
-								room.priority = 1
-								if (this.mongodb) {
-									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 1}})
-								}
-							},
+							click: () => updatePriority(1),
 						},
 						{
 							type: "radio",
 							label: '2',
 							checked: room.priority === 2,
-							click: (menuItem, _browserWindow, _event) => {
-								room.priority = 2
-								if (this.mongodb) {
-									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 2}})
-								}
-							},
+							click: () => updatePriority(2),
 						},
 						{
 							type: "radio",
 							label: '3',
 							checked: room.priority === 3,
-							click: (menuItem, _browserWindow, _event) => {
-								room.priority = 3
-								if (this.mongodb) {
-									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 3}})
-								}
-							},
+							click: () => updatePriority(3),
 						},
 						{
 							type: "radio",
 							label: '4',
 							checked: room.priority === 4,
-							click: (menuItem, _browserWindow, _event) => {
-								room.priority = 4
-								if (this.mongodb) {
-									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 4}})
-								}
-							},
+							click: () => updatePriority(4),
 						},
 						{
 							type: "radio",
 							label: '5',
 							checked: room.priority === 5,
-							click: (menuItem, _browserWindow, _event) => {
-								room.priority = 5
-								if (this.mongodb) {
-									mdb.collection('rooms').updateOne({roomId: room.roomId}, {$set: {priority: 5}})
-								}
-							},
+							click: () => updatePriority(5),
 						},
 					],
 				},
@@ -1362,7 +1332,7 @@ export default {
 			this.selectedRoom = room;
 			this.updateTrayIcon()
 			this.fetchMessage(true)
-			this.updateAppMenu(room)
+			this.updateAppMenu()
 			convertImgToBase64(room.avatar, (b64) => {
 				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64))
 			})
@@ -1816,7 +1786,7 @@ export default {
 			}
 		},
 
-		updateAppMenu(room) {
+		updateAppMenu() {
 			const menu = remote.Menu.buildFromTemplate([
 				{
 					label: 'Electron QQ',
@@ -1828,10 +1798,10 @@ export default {
 					submenu: this.menu[1]
 				}
 			])
-			if (room)
+			if (this.selectedRoom)
 				menu.append(new remote.MenuItem({
-					label: room.roomName,
-					submenu: this.roomContext(room, true)
+					label: this.selectedRoom.roomName,
+					submenu: this.roomContext(this.selectedRoom, true)
 				}))
 			remote.Menu.setApplicationMenu(menu)
 		}
