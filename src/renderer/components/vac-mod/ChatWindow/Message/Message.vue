@@ -379,6 +379,12 @@ export default {
 				}))
 			}
 			menu.append(new remote.MenuItem({
+				label: `Copy Message Id`,
+				click: () => {
+					clipboard.writeText(this.message._id)
+				}
+			}))
+			menu.append(new remote.MenuItem({
 				label: `Download Avatar`,
 				click: () => {
 					this.$emit('download-image', `https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`)
