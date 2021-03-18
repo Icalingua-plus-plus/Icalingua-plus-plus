@@ -72,8 +72,8 @@ global.loadMainWindow = function () {
 		icon: path.join(__static, '/512x512.png')
 	})
 
-	// if (process.env.NODE_ENV === 'development')
-	// 	mainWindow.webContents.session.loadExtension('/usr/lib/node_modules/vue-devtools/vender/')
+	if (process.env.NODE_ENV === 'development')
+		mainWindow.webContents.session.loadExtension('/usr/lib/node_modules/vue-devtools/vender/')
 
 	if (!process.env.NYA)
 		mainWindow.on('close', e => {

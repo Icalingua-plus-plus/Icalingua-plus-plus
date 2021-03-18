@@ -812,10 +812,11 @@ export default {
 					db.set("messages." + roomId, []).write();
 			} else {
 				room.roomName = roomName;
-				this.rooms = [
-					room,
-					...this.rooms.filter((item) => item !== room),
-				];
+				if (!history)
+					this.rooms = [
+						room,
+						...this.rooms.filter((item) => item !== room),
+					];
 			} //bring the room first
 
 			//begin process msg
@@ -1549,7 +1550,7 @@ export default {
 					mdb.collection('rooms').insertOne(room)
 				else
 					db.set("messages.teachers", []).write();
-			} else {
+			} else if (!history) {
 				this.rooms = [
 					room,
 					...this.rooms.filter((item) => item !== room),
