@@ -64,6 +64,7 @@ global.loadMainWindow = function () {
 	mainWindow = new BrowserWindow({
 		height: size.height - 200,
 		width,
+		autoHideMenuBar: true,
 		webPreferences: {
 			nodeIntegration: true,
 			enableRemoteModule: true,
