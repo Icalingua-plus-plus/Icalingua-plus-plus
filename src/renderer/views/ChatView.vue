@@ -340,7 +340,8 @@ export default {
 			mongodb: false,
 			priority: 1,
 			theme: 'default',
-			groups: []
+			groups: [],
+			menu:[]
 		};
 	},
 	created() {
@@ -587,6 +588,109 @@ export default {
 					this.chroom(unreadRoom)
 			}
 		})
+		//endregion
+		//region build menu
+		this.menu=[
+			this.notifyMenuItem,
+			[
+				new remote.MenuItem({
+					label: "Manage ignored chats",
+					click: () => (this.panel = "ignore"),
+				}),
+				new remote.MenuItem({
+					label: 'Aria2 download options',
+					click: () => this.dialogAriaVisible = true
+				}),
+				new remote.MenuItem({
+					label: "Auto login",
+					type: "checkbox",
+					checked: glodb.get("account.autologin").value(),
+					click: (menuItem, _browserWindow, _event) => {
+						glodb
+							.set("account.autologin", menuItem.checked)
+							.write();
+					},
+				})
+			],
+			[
+				new remote.MenuItem({
+					label: remote.app.getVersion(),
+					enabled: false,
+				}),
+				new remote.MenuItem({
+					label: "Reload",
+					type: "normal",
+					click: () => {
+						bot.removeListener("message", this.onQQMessage);
+						bot.removeListener(
+							"notice.friend.recall",
+							this.friendRecall
+						);
+						bot.removeListener(
+							"notice.group.recall",
+							this.groupRecall
+						);
+						bot.removeListener("system.online", this.online);
+						bot.removeListener("system.offline", this.onOffline);
+						bot.removeListener(
+							"notice.friend.poke",
+							this.friendpoke
+						);
+						remote
+							.getCurrentWindow()
+							.removeListener(
+								"focus",
+								this.clearCurrentRoomUnread
+							);
+						location.reload();
+					},
+				}),
+				new remote.MenuItem({
+					label: "Dev Tools",
+					role: "toggleDevTools",
+				}),
+				new remote.MenuItem({
+					label: "Quit",
+					click: this.exit,
+				})
+			]
+		]
+		remote.Menu.setApplicationMenu(remote.Menu.buildFromTemplate([
+			this.menu[0],
+			{
+				label: 'Options',
+				submenu: this.menu[1]
+			},
+			{
+				label: 'System',
+				submenu: this.menu[2]
+			}
+		]))
+		// menu.append(
+		// 	new remote.MenuItem({
+		// 		label: "Theme",
+		// 		submenu: [
+		// 			{
+		// 				type: "radio",
+		// 				label: 'Default',
+		// 				checked: this.theme === 'default',
+		// 				click: (menuItem, _browserWindow, _event) => {
+		// 					this.theme = 'default'
+		// 					// db.set("priority", 1).write();
+		// 				},
+		// 			},
+		// 			{
+		// 				type: "radio",
+		// 				label: 'Trans Pride',
+		// 				checked: this.theme === 'trans',
+		// 				click: (menuItem, _browserWindow, _event) => {
+		// 					this.theme = 'trans'
+		// 					// db.set("priority", 2).write();
+		// 				},
+		// 			},
+		// 		],
+		// 	})
+		// )
 		//endregion
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
@@ -1055,113 +1159,14 @@ export default {
 
 		appMenu() {
 			const menu = new remote.Menu();
-			menu.append(this.notifyMenuItem);
-			menu.append(
-				new remote.MenuItem({
-					label: "Manage ignored chats",
-					click: () => (this.panel = "ignore"),
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: 'Aria2 download options',
-					click: () => this.dialogAriaVisible = true
-				})
-			)
-			menu.append(
-				new remote.MenuItem({
-					label: "Auto login",
-					type: "checkbox",
-					checked: glodb.get("account.autologin").value(),
-					click: (menuItem, _browserWindow, _event) => {
-						glodb
-							.set("account.autologin", menuItem.checked)
-							.write();
-					},
-				})
-			);
-			// menu.append(
-			// 	new remote.MenuItem({
-			// 		label: "Theme",
-			// 		submenu: [
-			// 			{
-			// 				type: "radio",
-			// 				label: 'Default',
-			// 				checked: this.theme === 'default',
-			// 				click: (menuItem, _browserWindow, _event) => {
-			// 					this.theme = 'default'
-			// 					// db.set("priority", 1).write();
-			// 				},
-			// 			},
-			// 			{
-			// 				type: "radio",
-			// 				label: 'Trans Pride',
-			// 				checked: this.theme === 'trans',
-			// 				click: (menuItem, _browserWindow, _event) => {
-			// 					this.theme = 'trans'
-			// 					// db.set("priority", 2).write();
-			// 				},
-			// 			},
-			// 		],
-			// 	})
-			// )
-
-			if (process.windowsStore) {
-			}
-
-			menu.append(
-				new remote.MenuItem({
-					type: "separator",
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: remote.app.getVersion(),
-					enabled: false,
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: "Reload",
-					type: "normal",
-					click: () => {
-						bot.removeListener("message", this.onQQMessage);
-						bot.removeListener(
-							"notice.friend.recall",
-							this.friendRecall
-						);
-						bot.removeListener(
-							"notice.group.recall",
-							this.groupRecall
-						);
-						bot.removeListener("system.online", this.online);
-						bot.removeListener("system.offline", this.onOffline);
-						bot.removeListener(
-							"notice.friend.poke",
-							this.friendpoke
-						);
-						remote
-							.getCurrentWindow()
-							.removeListener(
-								"focus",
-								this.clearCurrentRoomUnread
-							);
-						location.reload();
-					},
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: "Dev Tools",
-					role: "toggleDevTools",
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: "Quit",
-					click: this.exit,
-				})
-			);
+			menu.append(this.menu[0]);
+			for (let i=0;i<this.menu[1].length;i++)
+				menu.append(this.menu[1][i])
+			menu.append(new remote.MenuItem({
+				type: 'separator'
+			}))
+			for (let i=0;i<this.menu[2].length;i++)
+				menu.append(this.menu[2][i])
 			menu.popup({window: remote.getCurrentWindow()});
 		},
 
