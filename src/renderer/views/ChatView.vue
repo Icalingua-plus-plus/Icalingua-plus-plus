@@ -84,6 +84,7 @@
 							:show-emojis="true"
 							:loading-rooms="false"
 							:text-formatting="true"
+							:mongodb="mongodb"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
@@ -95,6 +96,7 @@
 							@download-image="downloadImage"
 							@pokegroup="pokegroup"
 							@reveal-message="revealMessage"
+							@get-history="getHistory"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -939,7 +941,8 @@ export default {
 			////process message////
 			await this.processMessage(data.message, message, lastMessage, roomId)
 			at = message.at
-			room.at = at
+			if (!history)
+				room.at = at
 			//school groups' at all consider as teacher
 			if (at && isSchoolGroup(groupId))
 				teacher = true
@@ -1689,7 +1692,7 @@ export default {
 							//get the message
 							const getRet = await bot.getMsg(m.data.id)
 							if (getRet.data) {
-								replyMessage = await this.onQQMessage(getRet.data, roomId)
+								replyMessage = await this.onQQMessage(getRet.data, roomId ? roomId : true)
 								//todo: refresh view
 							}
 						}
@@ -1804,6 +1807,52 @@ export default {
 					submenu: this.roomContext(this.selectedRoom, true)
 				}))
 			remote.Menu.setApplicationMenu(menu)
+		},
+
+		async getHistory(message) {
+			const history = await bot.getChatHistory(message._id)
+			console.log(history)
+			if (history.error) {
+				console.log(history.error)
+				return
+			}
+			const messages = []
+			for (let i = 0; i < history.data.length; i++) {
+				const data = history.data[i]
+				const message = {
+					senderId: data.sender.user_id,
+					username: data.group_id
+						? data.anonymous
+							? data.anonymous.name
+							: data.sender.card || data.sender.nickname
+						: data.sender.remark || data.sender.nickname,
+					content: "",
+					timestamp: new Date().format("hh:mm"),
+					date: new Date().format("dd/MM/yyyy"),
+					_id: data.message_id,
+					time: data.time * 1000
+				};
+				await this.processMessage(data.message, message, {}, this.selectedRoom.roomId)
+				messages.push(message)
+			}
+			console.log(messages)
+			if (this.mongodb) {
+				message.historyGot = true
+				mdb.collection('msg' + this.selectedRoom.roomId).updateOne({_id: message._id}, {$set: {historyGot: true}})
+				mdb.collection('msg' + this.selectedRoom.roomId).insertMany(messages, {}, () => {
+					mdb.collection('msg' + this.selectedRoom.roomId).find({}, {
+						sort: [['time', -1]],
+						limit: this.messages.length
+					}).toArray()
+						.then(msgs2add => {
+							setTimeout(() => {
+								msgs2add.reverse()
+								this.messages = msgs2add
+								this.fetchMessage()
+							}, 0);
+						})
+				})
+			}
 		}
 	},
 	computed: {
