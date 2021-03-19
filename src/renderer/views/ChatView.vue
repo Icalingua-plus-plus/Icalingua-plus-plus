@@ -1665,7 +1665,6 @@ export default {
 					case "file":
 						lastMessage.content += "[File]" + m.data.name;
 						message.content += m.data.name;
-						message._id = m.data.fileid;
 						message.file = {
 							type: "object/stream",
 							size: m.data.size,
