@@ -4,7 +4,7 @@
 			<template v-for="(message, i) in linkifiedMessage">
 				<component
 					:is="message.url ? 'a' : 'span'"
-					v-if="!message.face"
+					v-if="!message.face&&!message.forward"
 					:key="i"
 					:class="{
 						'vac-text-ellipsis': singleLine,
@@ -52,6 +52,13 @@
 					:src="facepath + message.value"
 					:alt="message.value"
 				/>
+				<a
+					v-if="message.forward"
+					style="cursor: pointer"
+					@click="openForward(message)"
+				>
+					View Forwarded Messages
+				</a>
 			</template>
 		</div>
 		<div v-else>
@@ -105,6 +112,7 @@ export default {
 				m.multiline = this.checkType(m, "multiline-code");
 				m.tag = this.checkType(m, "tag");
 				m.face = this.checkType(m, "face");
+				m.forward = this.checkType(m, "forward");
 				m.image = this.checkImageType(m);
 			});
 
@@ -168,6 +176,10 @@ export default {
 				this.$emit("open-user-tag", user);
 			}
 		},
+		openForward(message) {
+			if (!message.forward) return
+			this.$emit('open-forward', message.value)
+		}
 	},
 };
 </script>
