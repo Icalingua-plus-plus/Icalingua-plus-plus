@@ -9,7 +9,7 @@
 - send face
 - headless server
 - paste picture to add
-- forward mutiple msg
 - group temp message
 - trans pride theme
 - voice
+- reply in forward

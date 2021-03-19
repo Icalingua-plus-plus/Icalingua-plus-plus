@@ -407,6 +407,7 @@ export default {
 		showReactionEmojis: {type: Boolean, required: true},
 		showNewMessagesDivider: {type: Boolean, required: true},
 		showFooter: {type: Boolean, required: true},
+		showHeader: {type: Boolean, default: true},
 		acceptedFiles: {type: String, required: true},
 		textFormatting: {type: Boolean, required: true},
 		loadingRooms: {type: Boolean, required: true},
