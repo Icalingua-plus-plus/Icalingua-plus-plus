@@ -391,6 +391,12 @@ export default {
 					this.$emit('download-image', `https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`)
 				}
 			}))
+			menu.append(new remote.MenuItem({
+				label: `Private Chat`,
+				click: () => {
+					this.$emit('start-chat', this.message.senderId, this.message.username)
+				}
+			}))
 			menu.popup({window: remote.getCurrentWindow()});
 		},
 	},

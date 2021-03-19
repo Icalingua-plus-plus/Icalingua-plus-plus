@@ -98,6 +98,7 @@
 							@reveal-message="revealMessage"
 							@get-history="getHistory"
 							@open-forward="openForward"
+							@start-chat="startChat"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -1326,7 +1327,7 @@ export default {
 				else
 					db.set("messages." + id, []).write();
 			}
-			this.selectedRoom = room;
+			this.chroom(room)
 			this.view = "chats";
 		},
 
