@@ -5,23 +5,35 @@
 </template>
 
 <script>
-	window.Clansty = 'Shadow'
+window.Clansty = 'Shadow'
 
-	export default {
-		name: "app",
-	};
+export default {
+	name: "app",
+};
 </script>
 
 <style>
-	@font-face {
-		font-family: "msyh";
-		src: url("~@/assets/msyh.ttf");
-	}
-	html,
-	body {
-		height: 100%;
-		width: 100%;
-		margin: 0;
-		color: #303133;
-	}
+@import url("~@/assets/stylesheet.css");
+
+@font-face {
+	font-family: "msyh";
+	src: url("~@/assets/msyh.ttf");
+}
+
+html,
+body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	color: #303133;
+}
+
+* {
+	-webkit-user-select: none;
+	font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
+}
+
+:focus {
+	outline: none;
+}
 </style>

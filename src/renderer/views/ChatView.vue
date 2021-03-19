@@ -211,7 +211,7 @@ import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import path from "path";
-import {remote, clipboard, nativeImage, shell} from "electron";
+import {remote, clipboard, nativeImage, shell, screen} from "electron";
 import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
@@ -877,7 +877,7 @@ export default {
 
 		async onQQMessage(data, history) {
 			console.log(data);
-			const now = new Date();
+			const now = new Date(data.time * 1000);
 			const groupId = data.group_id;
 			const senderId = data.sender.user_id;
 			let roomId = groupId ? -groupId : data.user_id;
@@ -902,8 +902,8 @@ export default {
 				senderId: senderId,
 				username: senderName,
 				content: "",
-				timestamp: new Date().format("hh:mm"),
-				date: new Date().format("dd/MM/yyyy"),
+				timestamp: now.format("hh:mm"),
+				date: now.format("dd/MM/yyyy"),
 				_id: data.message_id,
 			};
 
@@ -1827,8 +1827,8 @@ export default {
 							: data.sender.card || data.sender.nickname
 						: data.sender.remark || data.sender.nickname,
 					content: "",
-					timestamp: new Date().format("hh:mm"),
-					date: new Date().format("dd/MM/yyyy"),
+					timestamp: new Date(data.time * 1000).format("hh:mm"),
+					date: new Date(data.time * 1000).format("dd/MM/yyyy"),
 					_id: data.message_id,
 					time: data.time * 1000
 				};
@@ -1855,8 +1855,50 @@ export default {
 			}
 		},
 
-		openForward(resId) {
-			console.log(resId)
+		async openForward(resId) {
+			const history=await bot.getForwardMsg(resId)
+			console.log(history)
+			if (history.error) {
+				console.log(history.error)
+				return
+			}
+			const messages = []
+			for (let i = 0; i < history.data.length; i++) {
+				const data = history.data[i]
+				const message = {
+					senderId: data.user_id,
+					username: data.nickname,
+					content: "",
+					timestamp: new Date(data.time * 1000).format("hh:mm"),
+					date: new Date(data.time * 1000).format("dd/MM/yyyy"),
+					_id: i,
+					time: data.time * 1000
+				};
+				await this.processMessage(data.message, message, {}, this.selectedRoom.roomId)
+				messages.push(message)
+			}
+			console.log(messages)
+			const size = remote.screen.getPrimaryDisplay().size
+			let width = size.width - 300;
+			if (width > 1440)
+				width = 900
+			const win=new remote.BrowserWindow({
+				height: size.height - 200,
+				width,
+				autoHideMenuBar: true,
+				webPreferences: {
+					nodeIntegration: true,
+					enableRemoteModule: true,
+					webSecurity: false
+				},
+			})
+			const winURL = process.env.NODE_ENV === 'development'
+				? `http://localhost:9080`
+				: `file://${__dirname}/index.html`
+			win.loadURL(winURL + "#/history")
+			win.webContents.on("did-finish-load", function () {
+				win.webContents.send('loadMessages', messages)
+			});
 		}
 	},
 	computed: {
@@ -1878,12 +1920,6 @@ export default {
 </script>
 
 <style scoped>
-@import url("~@/assets/stylesheet.css");
-
-* {
-	-webkit-user-select: none;
-}
-
 .el-main {
 	padding: 0;
 	height: 100vh;
@@ -1904,10 +1940,6 @@ export default {
 .el-col {
 	height: 100vh;
 	overflow: hidden;
-}
-
-.nodrag {
-	-webkit-user-select: none;
 }
 </style>
 
@@ -1949,15 +1981,5 @@ export default {
 			-webkit-appearance: none;
 		}
 	}
-}
-</style>
-
-<style>
-:focus {
-	outline: none;
-}
-
-* {
-	font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
 }
 </style>
