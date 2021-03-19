@@ -10,7 +10,6 @@
 - headless server
 - paste picture to add
 - forward mutiple msg
-- chat history
 - group temp message
 - trans pride theme
 - voice

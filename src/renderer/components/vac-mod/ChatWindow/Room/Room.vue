@@ -409,6 +409,7 @@ export default {
 		acceptedFiles: {type: String, required: true},
 		textFormatting: {type: Boolean, required: true},
 		loadingRooms: {type: Boolean, required: true},
+		mongodb: {type: Boolean, default: false},
 		roomInfo: {type: Function, default: null},
 		textareaAction: {type: Function, default: null}
 	},
@@ -888,6 +889,15 @@ export default {
 							}
 						}))
 				}
+				if (message.code) {
+					menu.append(new remote.MenuItem(
+						{
+							label: 'Copy Code', type: 'normal',
+							click: () => {
+								clipboard.writeText(message.code)
+							}
+						}))
+				}
 				if (message.file && message.file.type.includes('image')) {
 					menu.append(new remote.MenuItem(
 						{
@@ -902,15 +912,6 @@ export default {
 						{
 							label: 'Add to stickers', type: 'normal',
 							click: () => this.$emit('add-to-stickers', message)
-						}))
-				}
-				if (message.code) {
-					menu.append(new remote.MenuItem(
-						{
-							label: 'Copy Code', type: 'normal',
-							click: () => {
-								clipboard.writeText(message.code)
-							}
 						}))
 				}
 				if (message.file) {
@@ -947,6 +948,11 @@ export default {
 								}
 								this.$emit('send-message', msgToSend)
 							}
+						}))
+					if (!message.historyGot&&this.mongodb)
+						menu.append(new remote.MenuItem({
+							label: 'Get Historical Messages',
+							click: () => this.$emit('get-history', message)
 						}))
 				}
 				if (message.senderId === this.currentUserId) {
