@@ -106,6 +106,7 @@
 								@download-image="$emit('download-image', $event)"
 								@poke="$emit('pokegroup', m.senderId)"
 								@open-forward="$emit('open-forward',$event)"
+								@start-chat="(e,f)=>$emit('start-chat',e,f)"
 							>
 								<template
 									v-for="(index, name) in $scopedSlots"
