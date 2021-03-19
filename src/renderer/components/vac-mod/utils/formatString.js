@@ -24,51 +24,16 @@ const typeMarkdown = {
 }
 
 const pseudoMarkdown = {
-	[typeMarkdown.bold]: {
-		end: '\\' + [typeMarkdown.bold],
-		allowed_chars: '.',
-		type: 'bold'
-	},
-	[typeMarkdown.italic]: {
-		end: [typeMarkdown.italic],
-		allowed_chars: '.',
-		type: 'italic'
-	},
-	[typeMarkdown.strike]: {
-		end: [typeMarkdown.strike],
-		allowed_chars: '.',
-		type: 'strike'
-	},
-	[typeMarkdown.underline]: {
-		end: [typeMarkdown.underline],
-		allowed_chars: '.',
-		type: 'underline'
-	},
-	'```': {
-		end: '```',
-		allowed_chars: '(.|\n)',
-		type: 'multiline-code'
-	},
-	'`': {
-		end: '`',
-		allowed_chars: '.',
-		type: 'inline-code'
-	},
 	'[Face: ': {
 		end: ']',
 		allowed_chars: '\\d',
 		type: 'face'
 	},
-	'<usertag>': {
+	'[Forward: ': {
+		end: ']',
 		allowed_chars: '.',
-		end: '</usertag>',
-		type: 'tag'
+		type: 'forward'
 	}
-	// ':': {
-	// 	allowed_chars: '[a-z_]',
-	// 	end: ':',
-	// 	object: child => <Emojione type={child[0]} />
-	// }
 }
 
 function compileToJSON(str) {

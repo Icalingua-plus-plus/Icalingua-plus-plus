@@ -105,6 +105,7 @@
 								@ctx="msgctx(m)"
 								@download-image="$emit('download-image', $event)"
 								@poke="$emit('pokegroup', m.senderId)"
+								@open-forward="$emit('open-forward',$event)"
 							>
 								<template
 									v-for="(index, name) in $scopedSlots"

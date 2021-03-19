@@ -85,6 +85,7 @@
 							:users="roomUsers"
 							:text-formatting="textFormatting"
 							@open-user-tag="openUserTag"
+							@open-forward="$emit('open-forward',$event)"
 						>
 							<template #deleted-icon="data">
 								<slot name="deleted-icon" v-bind="data"/>
@@ -487,7 +488,7 @@ export default {
 	border-radius: 8px;
 	font-size: 14px;
 	padding: 6px 9px 3px;
-	white-space: pre-line;
+	//white-space: pre-line;3/19 删的，解决链接间距问题
 	max-width: 100%;
 	-webkit-transition-property: box-shadow, opacity;
 	transition-property: box-shadow, opacity;

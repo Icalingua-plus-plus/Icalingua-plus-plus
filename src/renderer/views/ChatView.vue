@@ -97,6 +97,7 @@
 							@pokegroup="pokegroup"
 							@reveal-message="revealMessage"
 							@get-history="getHistory"
+							@open-forward="openForward"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -1750,14 +1751,14 @@ export default {
 								.match(urlRegex)[1]
 								.replace(/\\\//g, "/");
 						if (m.data.data.includes('action="viewMultiMsg"')) {
+							lastMessage.content += "[Forward multiple messages]";
+							message.content += "[Forward multiple messages]";
 							const resIdRegex = /m_resid="([\w+=/]+)"/
 							if (resIdRegex.test(m.data.data)) {
 								const resId = m.data.data.match(resIdRegex)[1]
 								console.log(resId)
+								message.content = `[Forward: ${resId}]`
 							}
-							lastMessage.content +=
-								"[Forward multiple messages]";
-							message.content += "[Forward multiple messages]";
 						} else if (appurl) {
 							appurl = appurl.replace(/&amp;/g, "&");
 							lastMessage.content = appurl;
@@ -1852,6 +1853,10 @@ export default {
 						})
 				})
 			}
+		},
+
+		openForward(resId) {
+			console.log(resId)
 		}
 	},
 	computed: {
