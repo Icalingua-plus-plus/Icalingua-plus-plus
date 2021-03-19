@@ -1630,7 +1630,8 @@ export default {
 		},
 
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
-			for (const m of oicqMessage) {
+			for (let i=0;i<oicqMessage.length;i++) {
+				const m=oicqMessage[i]
 				let appurl;
 				let url;
 				switch (m.type) {
@@ -1786,8 +1787,8 @@ export default {
 						lastMessage.content = `[Audio]`;
 						break
 				}
-				return {message, lastMessage}
 			}
+			return {message, lastMessage}
 		},
 
 		updateAppMenu() {
