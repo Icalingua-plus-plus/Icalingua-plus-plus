@@ -1840,7 +1840,9 @@ export default {
 			if (this.mongodb) {
 				message.historyGot = true
 				mdb.collection('msg' + this.selectedRoom.roomId).updateOne({_id: message._id}, {$set: {historyGot: true}})
-				mdb.collection('msg' + this.selectedRoom.roomId).insertMany(messages, {}, () => {
+				mdb.collection('msg' + this.selectedRoom.roomId).insertMany(messages, {ordered: false}, (err, res) => {
+					console.log(err)
+					console.log(res)
 					mdb.collection('msg' + this.selectedRoom.roomId).find({}, {
 						sort: [['time', -1]],
 						limit: this.messages.length
