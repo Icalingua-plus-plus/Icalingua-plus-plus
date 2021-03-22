@@ -769,7 +769,7 @@ export default {
 			this.$emit('send-message-reaction', messageReaction)
 		},
 		replyMessage(message, e) {
-			if (e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
+			if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
 			if (message.system) return
 			this.messageReply = message
 			this.focusTextarea()
@@ -952,7 +952,7 @@ export default {
 								this.$emit('send-message', msgToSend)
 							}
 						}))
-					if (!message.historyGot&&this.mongodb)
+					if (!message.historyGot && this.mongodb)
 						menu.append(new remote.MenuItem({
 							label: 'Get Historical Messages',
 							click: () => this.$emit('get-history', message)
