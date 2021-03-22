@@ -29,11 +29,14 @@ body {
 }
 
 * {
-	-webkit-user-select: none;
 	font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
 }
 
 :focus {
 	outline: none;
+}
+
+div#app {
+	-webkit-user-select: none;
 }
 </style>

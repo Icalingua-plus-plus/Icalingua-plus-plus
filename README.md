@@ -12,3 +12,6 @@
 - trans pride theme
 - voice
 - reply in forward
+- 被禁言没有通知喵~
+- reply bug
+- selection bug
