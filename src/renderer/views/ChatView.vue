@@ -949,7 +949,7 @@ export default {
 			if (at && isSchoolGroup(groupId))
 				teacher = true
 			if (teacher)
-				this.saveTeacherMsg(roomName, message, data.message, history)
+				this.saveTeacherMsg(room.roomName, message, data.message, history)
 
 			//run only if is not history message
 			if (!history) {//notification
