@@ -904,6 +904,7 @@ export default {
 				timestamp: now.format("hh:mm"),
 				date: now.format("dd/MM/yyyy"),
 				_id: data.message_id,
+				role: data.sender.role
 			};
 
 			let room = this.rooms.find((e) => e.roomId == roomId);
