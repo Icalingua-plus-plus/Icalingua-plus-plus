@@ -834,7 +834,6 @@ export default {
 				sendchain();
 			}
 		},
-
 		fetchMessage(reset) {
 			if (reset) {
 				if (this.selectedRoom.roomId === 'teachers')
@@ -875,7 +874,6 @@ export default {
 			}
 			this.updateTrayIcon();
 		},
-
 		async onQQMessage(data, history) {
 			console.log(data);
 			const now = new Date(data.time * 1000);
@@ -965,7 +963,7 @@ export default {
 					if (process.platform === "darwin") {
 						convertImgToBase64(avatar, (b64img) => {
 							const notif = new remote.Notification({
-								title: roomName,
+								title: room.roomName,
 								body:
 									(groupId ? senderName + ": " : "") +
 									lastMessage.content,
@@ -999,7 +997,7 @@ export default {
 							icon: avatar,
 						};
 
-						const notif = new Notification(roomName, notiopin);
+						const notif = new Notification(room.roomName, notiopin);
 
 						notif.onclick = () => {
 							const window = remote.getCurrentWindow();
@@ -1039,7 +1037,6 @@ export default {
 			}
 			return message
 		},
-
 		openImage(data) {
 			if (data.action === "download") {
 				if (data.message.file.type.includes("image")) {
@@ -1054,7 +1051,6 @@ export default {
 				}
 			}
 		},
-
 		async deleteMessage(messageId) {
 			const message = this.messages.find((e) => e._id === messageId);
 			const res = await bot.deleteMsg(messageId);
@@ -1072,7 +1068,6 @@ export default {
 						.write();
 			}
 		},
-
 		friendRecall(data) {
 			if (data.user_id == this.selectedRoom.roomId) {
 				const message = this.messages.find((e) => e._id == data.message_id);
@@ -1089,7 +1084,6 @@ export default {
 					.assign({deleted: new Date()})
 					.write();
 		},
-
 		groupRecall(data) {
 			if (-data.group_id == this.selectedRoom.roomId) {
 				const message = this.messages.find(
@@ -1108,7 +1102,6 @@ export default {
 					.assign({deleted: new Date()})
 					.write();
 		},
-
 		sendSticker(url) {
 			if (this.selectedRoom)
 				this.sendMessage({
@@ -1118,7 +1111,6 @@ export default {
 				});
 			this.$refs.room.focusTextarea();
 		},
-
 		rmIgnore(chat) {
 			console.log(chat);
 			this.ignoredChats = this.ignoredChats.filter(
@@ -1126,22 +1118,18 @@ export default {
 			);
 			db.set("ignoredChats", this.ignoredChats).write();
 		},
-
 		reconnect() {
 			this.reconnecting = true;
 			bot.login(glodb.get("account.password").value());
 		},
-
 		online() {
 			this.reconnecting = this.offline = false;
 		},
-
 		onOffline(data) {
 			this.offlineReason = data.message;
 			console.log(data);
 			this.offline = true;
 		},
-
 		appMenu() {
 			const menu = new remote.Menu();
 			menu.append(this.menu[0]);
@@ -1154,7 +1142,6 @@ export default {
 				menu.append(this.menu[2][i])
 			menu.popup({window: remote.getCurrentWindow()});
 		},
-
 		roomContext(room, build) {
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const updatePriority = (lev) => {
@@ -1262,7 +1249,6 @@ export default {
 				return menu
 			menu.popup({window: remote.getCurrentWindow()});
 		},
-
 		friendpoke(data) {
 			const roomId = data.operator_id == this.account ? data.user_id : data.operator_id
 			const room = this.rooms.find(e => e.roomId == roomId);
@@ -1310,7 +1296,6 @@ export default {
 						.write();
 			}
 		},
-
 		startChat(id, name) {
 			var room = this.rooms.find((e) => e.roomId == id);
 			const avatar =
@@ -1330,7 +1315,6 @@ export default {
 			this.chroom(room)
 			this.view = "chats";
 		},
-
 		chroom(room) {
 			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
@@ -1342,14 +1326,12 @@ export default {
 				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64))
 			})
 		},
-
 		pokefriend() {
 			console.log('poke')
 			if (this.selectedRoom.roomId > 0)
 				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 			this.$refs.room.focusTextarea();
 		},
-
 		createRoom(roomId, roomName, avatar) {
 			const room = {
 				roomId,
@@ -1368,7 +1350,6 @@ export default {
 			if (roomId < 0) room.users.push({_id: 3, username: "3"});
 			return room;
 		},
-
 		addToStickers(message) {
 			const downpath = path.join(
 				STORE_PATH,
@@ -1390,18 +1371,15 @@ export default {
 				}
 			);
 		},
-
 		getUnreadCount() {
 			return this.rooms.filter((e) => {
 				return e.unreadCount && e.priority >= this.priority;
 			}).length;
 		},
-
 		clearCurrentRoomUnread() {
 			this.selectedRoom.unreadCount = 0;
 			this.updateTrayIcon();
 		},
-
 		updateTrayIcon() {
 			let p;
 			const unread = this.getUnreadCount();
@@ -1422,7 +1400,6 @@ export default {
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
 		},
-
 		saveTeacherMsg(group, messageobj, chain, history) {
 			const message = Object.assign({}, messageobj)
 			let room = this.rooms.find((e) => e.roomId === 'teachers');
@@ -1494,14 +1471,12 @@ export default {
 					}
 				}, ...chain], true);
 		},
-
 		closeAria() {
 			this.dialogAriaVisible = false
 			db.set('aria2', this.aria2).write()
 			if (this.aria2.enabled)
 				this.startAria()
 		},
-
 		startAria() {
 			this.aria = new Aria2(this.aria2)
 			this.aria.open()
@@ -1511,7 +1486,6 @@ export default {
 					this.$message('Aria2 failed')
 				})
 		},
-
 		download(url, dest, cb, out, dir) {
 			if (this.aria2.enabled) {
 				const opt = {}
@@ -1532,7 +1506,6 @@ export default {
 			} else
 				download(url, dest ? dest : path.join(dir, cb), cb)
 		},
-
 		exit() {
 			// remote.getCurrentWindow().hide()
 			// db.get('messages').forEach((v, i) => {
@@ -1540,7 +1513,6 @@ export default {
 			// }).value()
 			remote.getCurrentWindow().destroy();
 		},
-
 		downloadImage(url) {
 			const downdir = remote.app.getPath("downloads");
 			const downpath = path.join(
@@ -1558,7 +1530,6 @@ export default {
 				}
 			);
 		},
-
 		async grouppoke(data) {
 			console.log(data)
 			const room = this.rooms.find(e => e.roomId == -data.group_id);
@@ -1610,13 +1581,11 @@ export default {
 						.write();
 			}
 		},
-
 		pokegroup(uin) {
 			const group = -this.selectedRoom.roomId
 			bot.sendGroupPoke(group, uin)
 			this.$refs.room.focusTextarea();
 		},
-
 		revealMessage(message) {
 			message.reveal = true
 			this.messages = [...this.messages]
@@ -1628,7 +1597,6 @@ export default {
 					.assign({reveal: true})
 					.write();
 		},
-
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
 			for (let i=0;i<oicqMessage.length;i++) {
 				const m=oicqMessage[i]
@@ -1790,7 +1758,6 @@ export default {
 			}
 			return {message, lastMessage}
 		},
-
 		updateAppMenu() {
 			const menu = remote.Menu.buildFromTemplate([
 				{
@@ -1810,7 +1777,6 @@ export default {
 				}))
 			remote.Menu.setApplicationMenu(menu)
 		},
-
 		async getHistory(message) {
 			const history = await bot.getChatHistory(message._id)
 			console.log(history)
@@ -1858,7 +1824,6 @@ export default {
 				})
 			}
 		},
-
 		async openForward(resId) {
 			const history=await bot.getForwardMsg(resId)
 			console.log(history)
