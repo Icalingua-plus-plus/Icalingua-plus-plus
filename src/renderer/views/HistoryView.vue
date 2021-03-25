@@ -27,6 +27,7 @@
 		:loading-rooms="false"
 		:text-formatting="true"
 		:style="[cssVars]"
+		@open-forward="openForward"
 	/>
 </template>
 
@@ -34,6 +35,7 @@
 import {cssThemeVars, defaultThemeStyles} from "../components/vac-mod/themes";
 import Room from "../components/vac-mod/ChatWindow/Room/Room";
 import {ipcRenderer, remote} from 'electron'
+let mainWindowId
 
 export default {
 	name: "HistoryView",
@@ -58,9 +60,10 @@ export default {
 		};
 	},
 	created() {
-		ipcRenderer.on('loadMessages', (event, args) => {
+		ipcRenderer.on('loadMessages', (event, args, id) => {
 			console.log(args)
 			this.messages = [...args]
+			mainWindowId=id
 		})
 		document.addEventListener('keydown', e => {
 			if (e.repeat) return
@@ -88,6 +91,11 @@ export default {
 			return cssThemeVars(customStyles)
 		},
 	},
+	methods:{
+		openForward(resId){
+			remote.BrowserWindow.fromId(mainWindowId).webContents.send('openForward', resId)
+		}
+	}
 }
 </script>
 

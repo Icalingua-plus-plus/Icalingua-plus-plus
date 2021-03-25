@@ -212,7 +212,7 @@ import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import path from "path";
-import {remote, clipboard, nativeImage, shell, screen} from "electron";
+import {remote, clipboard, nativeImage, shell, screen, ipcRenderer} from "electron";
 import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
@@ -497,6 +497,8 @@ export default {
 					this.chroom(unreadRoom)
 			}
 		})
+
+		ipcRenderer.on('openForward', (e,resId) => this.openForward(resId))
 		//endregion
 		//region build menu
 		const updatePriority = (lev) => {
@@ -1599,8 +1601,8 @@ export default {
 					.write();
 		},
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
-			for (let i=0;i<oicqMessage.length;i++) {
-				const m=oicqMessage[i]
+			for (let i = 0; i < oicqMessage.length; i++) {
+				const m = oicqMessage[i]
 				let appurl;
 				let url;
 				switch (m.type) {
@@ -1826,7 +1828,7 @@ export default {
 			}
 		},
 		async openForward(resId) {
-			const history=await bot.getForwardMsg(resId)
+			const history = await bot.getForwardMsg(resId)
 			console.log(history)
 			if (history.error) {
 				console.log(history.error)
@@ -1847,12 +1849,11 @@ export default {
 				await this.processMessage(data.message, message, {}, this.selectedRoom.roomId)
 				messages.push(message)
 			}
-			console.log(messages)
 			const size = remote.screen.getPrimaryDisplay().size
 			let width = size.width - 300;
 			if (width > 1440)
 				width = 900
-			const win=new remote.BrowserWindow({
+			const win = new remote.BrowserWindow({
 				height: size.height - 200,
 				width,
 				autoHideMenuBar: true,
@@ -1867,7 +1868,7 @@ export default {
 				: `file://${__dirname}/index.html`
 			win.loadURL(winURL + "#/history")
 			win.webContents.on("did-finish-load", function () {
-				win.webContents.send('loadMessages', messages)
+				win.webContents.send('loadMessages', messages, remote.getCurrentWindow().id)
 			});
 		}
 	},
