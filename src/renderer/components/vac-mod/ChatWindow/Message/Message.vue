@@ -59,8 +59,13 @@
 								'vac-username-reply':
 									(!message.deleted || message.reveal) && message.replyMessage,
 							}"
+							style="display: flex"
 						>
-							<span>{{ message.username }}</span>
+							<span style="width: 100%">{{ message.username }}</span>
+							<span v-show="message.role&&message.role!=='member'"
+							      style="margin-left: 10px;">
+								{{ message.role }}
+							</span>
 						</div>
 
 						<message-reply
