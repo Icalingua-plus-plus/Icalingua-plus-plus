@@ -33,7 +33,7 @@
 <script>
 import {cssThemeVars, defaultThemeStyles} from "../components/vac-mod/themes";
 import Room from "../components/vac-mod/ChatWindow/Room/Room";
-import {ipcRenderer} from 'electron'
+import {ipcRenderer, remote} from 'electron'
 
 export default {
 	name: "HistoryView",
@@ -62,6 +62,13 @@ export default {
 			console.log(args)
 			this.messages = [...args]
 		})
+		document.addEventListener('keydown', e => {
+			if (e.repeat) return
+			if (e.key === 'w' && e.ctrlKey === true) {
+				remote.getCurrentWindow().destroy()
+			}
+		})
+
 	},
 	components: {
 		Room

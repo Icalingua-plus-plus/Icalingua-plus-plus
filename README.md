@@ -14,4 +14,3 @@
 - reply in forward
 - 被禁言没有通知喵~
 - nested forward
-- ctrl+w close reply message view
