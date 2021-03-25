@@ -13,5 +13,6 @@
 - voice
 - reply in forward
 - 被禁言没有通知喵~
-- reply bug
-- selection bug
+- admin bubble style
+- nested forward
+- ctrl+w close reply message view
