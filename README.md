@@ -13,3 +13,7 @@
 - voice
 - reply in forward
 - 被禁言没有通知喵~
+
+---
+- 分离数据库函数
+- 添加IndexedDB
