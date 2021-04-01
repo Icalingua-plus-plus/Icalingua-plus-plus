@@ -13,6 +13,7 @@
 - voice
 - reply in forward
 - 被禁言没有通知喵~
+- prevents shutdown
 
 ---
 - 分离数据库函数
