@@ -91,6 +91,7 @@
         }
     },
     "dependencies": {
+        "@electron/remote": "*",
         "aria2": "^4.1.2",
         "linkifyjs": "^2.1.9",
         "lodash": "^4.17.21",

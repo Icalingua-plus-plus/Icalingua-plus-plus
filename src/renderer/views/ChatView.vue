@@ -77,6 +77,7 @@
 							:show-send-icon="true"
 							:show-files="true"
 							:show-emojis="true"
+							:show-footer="true"
 							:loading-rooms="false"
 							:text-formatting="true"
 							:mongodb="mongodb"
@@ -199,7 +200,6 @@ import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import path from "path";
 import {
-	remote,
 	clipboard,
 	nativeImage,
 	shell,
@@ -211,6 +211,7 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 
 const _ = require('lodash');
+const remote=require('@electron/remote')
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
@@ -1770,6 +1771,7 @@ export default {
 					nodeIntegration: true,
 					enableRemoteModule: true,
 					webSecurity: false,
+					contextIsolation: false
 				},
 			});
 			const winURL =
