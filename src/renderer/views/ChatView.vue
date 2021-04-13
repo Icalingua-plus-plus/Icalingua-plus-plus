@@ -71,7 +71,6 @@
 							:styles="styles"
 							:single-room="true"
 							:room-id="selectedRoom.roomId"
-							:show-footer="selectedRoom.roomId !== 'teachers'"
 							:show-rooms-list="false"
 							:is-mobile="false"
 							:menu-actions="[]"
@@ -218,8 +217,6 @@ const glodb = remote.getGlobal("glodb");
 const {MongoClient} = require("mongodb");
 const Aria2 = require("aria2");
 
-const isTeacher = require("../utils/isTeacher");
-const isSchoolGroup = require("../utils/isSchoolGroup");
 let db, aria, mdb;
 //oicq
 const bot = remote.getGlobal("bot");
@@ -387,8 +384,6 @@ export default {
 					.toArray()
 					.then((e) => {
 						this.rooms = e;
-						if (this.rooms.find((e) => isSchoolGroup(-e.roomId)))
-							this.nuist = true;
 						this.rooms.forEach((e) => {
 							if (e.roomId > -1) return;
 							const group = this.groups.find((f) => f.group_id == -e.roomId);
@@ -419,7 +414,6 @@ export default {
 				messages: {},
 			}).write();
 			this.rooms = db.get("rooms").value();
-			if (this.rooms.find((e) => isSchoolGroup(-e.roomId))) this.nuist = true;
 		}
 		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
@@ -821,7 +815,6 @@ export default {
 		},
 		fetchMessage(reset) {
 			if (reset) {
-				if (this.selectedRoom.roomId === "teachers") this.panel = "";
 				this.messagesLoaded = false;
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;
@@ -920,17 +913,12 @@ export default {
 				timestamp: now.format("hh:mm"),
 				username: senderName,
 			};
-			let at, teacher;
-			if (isTeacher(senderId) && groupId) teacher = true;
+			let at
 
 			////process message////
 			await this.processMessage(data.message, message, lastMessage, roomId);
 			at = message.at;
 			if (!history) room.at = at;
-			//school groups' at all consider as teacher
-			if (at && isSchoolGroup(groupId)) teacher = true;
-			if (teacher)
-				this.saveTeacherMsg(room.roomName, message, data.message, history);
 
 			//run only if is not history message
 			if (!history) {
@@ -941,7 +929,7 @@ export default {
 				if (
 					(!remote.getCurrentWindow().isFocused() ||
 						room !== this.selectedRoom) &&
-					(room.priority >= this.priority || at || teacher) &&
+					(room.priority >= this.priority || at) &&
 					!isSelfMsg
 				) {
 					//notification
@@ -959,9 +947,7 @@ export default {
 								const window = remote.getCurrentWindow();
 								window.show();
 								window.focus();
-								if (teacher)
-									this.chroom(this.rooms.find((e) => e.roomId === "teachers"));
-								else this.chroom(room);
+								this.chroom(room);
 							});
 							notif.addListener("reply", (e, r) => {
 								this.sendMessage({
@@ -983,9 +969,7 @@ export default {
 							const window = remote.getCurrentWindow();
 							window.show();
 							window.focus();
-							if (teacher)
-								this.chroom(this.rooms.find((e) => e.roomId === "teachers"));
-							else this.chroom(room);
+							this.chroom(room);
 						};
 					}
 				}
@@ -1390,112 +1374,6 @@ export default {
 			}
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
-		},
-		saveTeacherMsg(group, messageobj, chain, history) {
-			const message = Object.assign({}, messageobj);
-			let room = this.rooms.find((e) => e.roomId === "teachers");
-			if (room === undefined) {
-				// create room
-				room = this.createRoom(
-					-1,
-					"老师消息聚合",
-					path.join(__static, "school.svg")
-				);
-				room.roomId = "teachers";
-				room.index = 1;
-				this.rooms = [room, ...this.rooms];
-				if (this.mongodb) mdb.collection("rooms").insertOne(room);
-				else db.set("messages.teachers", []).write();
-			} else if (!history) {
-				this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
-			} //bring the room first
-			message.username = message.username + "@" + group;
-			if (!history)
-				room.lastMessage = {
-					content: message.content,
-					timestamp: message.timestamp,
-					username: message.username,
-				};
-			if (
-				(room !== this.selectedRoom ||
-					!remote.getCurrentWindow().isFocused()) &&
-				!history
-			) {
-				room.unreadCount++;
-			}
-			if (room === this.selectedRoom && !history)
-				this.messages = [...this.messages, message];
-			//auto download file
-			if (message.file) {
-				const dir = "/home/clansty/data/Downloads/teacher/";
-				let out = "";
-				if (message.file.name) {
-					out = message.file.name;
-				} else if (message.content) {
-					out = message.content;
-				} else {
-					out = new Date().format("MM-dd hh:mm:ss");
-				}
-				out = message.username + " " + out;
-				this.download(
-					message.file.url,
-					undefined,
-					() => {
-						if (!message.file.type.includes("image"))
-							message.file.url = path.join(dir, out);
-					},
-					out,
-					dir
-				);
-			}
-			room.utime = new Date().getTime();
-			if (this.mongodb) {
-				if (!history) {
-					message.time = room.utime;
-					mdb
-						.collection("rooms")
-						.updateOne({roomid: "teachers"}, {$set: room});
-				}
-				mdb.collection("msgteachers").insertOne(message);
-			} else db.get("messages.teachers").push(message).write();
-
-			for (let i = 0; i < chain.length; i++) {
-				if (chain[i].type === 'text' && chain[i].data.text.includes('投票'))
-					return
-				else if (chain[i].type === 'at')
-					chain[i].type = 'text'
-				else if (chain[i].type === 'file') {
-					const now = new Date();
-					if (now - lastFileTime < 10 * 60 * 1000)
-						return
-					else {
-						lastFileTime = now
-						chain = [{
-							type: "text",
-							data: {
-								text: chain[i].data.name + '\nhttps://oc.lwqwq.com/s/i0yaTBWrHWDMgkn?path=%2FGroupFiles'
-							}
-						}]
-						break
-					}
-				}
-			}
-			chain = [
-				{
-					type: "text",
-					data: {
-						text: message.username + ":\n\n",
-					},
-				},
-				...chain,
-			]
-			if (message.senderId != 16767193 && !history)
-				//Ignore Yang yang   ——Luna
-				bot.sendGroupMsg(
-					646262298,
-					chain,
-					true
-				);
 		},
 		closeAria() {
 			this.dialogAriaVisible = false;

@@ -920,7 +920,7 @@ export default {
             })
           );
         }
-        if (this.roomId !== "teachers" && this.$route.name!=='history-page') {
+        if (this.$route.name!=='history-page') {
           menu.append(
             new remote.MenuItem({
               label: "Reply",
