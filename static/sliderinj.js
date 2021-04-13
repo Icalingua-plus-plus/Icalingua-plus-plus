@@ -18,7 +18,7 @@
                     let obj = JSON.parse(content);
                     console.log(obj);
                     window.miraiSeleniumComplete = content;
-                    const remote=require('electron').remote
+                    const remote=require('@electron/remote')
                     const bot=remote.getGlobal('bot')
                     bot.sliderLogin(obj.ticket);
                     remote.getCurrentWindow().destroy()

@@ -24,6 +24,8 @@ import { createClient } from "oicq";
   "我曾努力过的那些事";
 
   "都是笑话 不值一提 该放弃";
+
+  require('@electron/remote/main').initialize()
 })();
 
 console.log(process.argv);
@@ -72,6 +74,7 @@ global.loadMainWindow = function () {
       nodeIntegration: true,
       enableRemoteModule: true,
       webSecurity: false,
+      contextIsolation: false
     },
     icon: path.join(__static, "/512x512.png"),
   });
@@ -125,6 +128,7 @@ app.on("ready", () => {
         webPreferences: {
           nodeIntegration: true,
           enableRemoteModule: true,
+          contextIsolation: false
         },
         icon: path.join(__static, "/512x512.png"),
       });
