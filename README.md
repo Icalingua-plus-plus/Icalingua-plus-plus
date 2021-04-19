@@ -1,6 +1,6 @@
 # Electron QQ
 
-![Build/release](https://github.com/Clansty/electron-qq/workflows/Build/release/badge.svg)
+[![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)]
 
 ## TODOS
 - background image
