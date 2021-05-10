@@ -210,7 +210,7 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 
 const _ = require('lodash');
-const remote=require('@electron/remote')
+const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
@@ -1039,6 +1039,11 @@ export default {
 						.find({_id: messageId})
 						.assign({deleted: new Date()})
 						.write();
+			} else {
+				this.$notify.error({
+					title: "Failed to delete message",
+					message: res.error.message,
+				});
 			}
 		},
 		friendRecall(data) {
