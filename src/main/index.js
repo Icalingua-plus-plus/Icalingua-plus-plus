@@ -166,6 +166,18 @@ app.on("second-instance", () => {
   }
 });
 
+app.on('before-quit', ()=>{
+  if (mainWindow) mainWindow.destroy()
+  if (global.bot) global.bot.logout();
+})
+
+app.on('will-quit', ()=>{
+  if (mainWindow) mainWindow.destroy()
+  if (global.bot) global.bot.logout();
+})
+
+
+
 /**
  * Auto Updater
  *
