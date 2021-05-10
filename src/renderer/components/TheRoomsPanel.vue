@@ -24,7 +24,6 @@
 
 <script>
 import RoomEntry from "./RoomEntry.vue";
-const isSchoolGroup = require("../utils/isSchoolGroup");
 export default {
   name: "TheRoomsPanel",
   components: { RoomEntry },
@@ -38,14 +37,10 @@ export default {
             e.roomName.toUpperCase().includes(this.input) ||
             String(e.roomId).includes(this.input)
         );
-      if (this.filterNuist)
-        tmpr = tmpr.filter(
-          (e) => isSchoolGroup(-e.roomId) || e.roomId === "teachers"
-        );
       return tmpr.sort((a, b) => b.index - a.index);
     },
   },
-  props: ["rooms", "selected", "priority", "filterNuist"],
+  props: ["rooms", "selected", "priority"],
   data() {
     return {
       input: "",
