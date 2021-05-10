@@ -37,14 +37,13 @@
 				/>
 			</el-aside>
 			<el-main>
-				<el-row v-show="view === 'chats' || view === 'nuist'">
+				<el-row v-show="view === 'chats'">
 					<!-- main chat view -->
 					<el-col :span="5" ondragstart="return false;" class="nodrag">
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
 							:priority="priority"
-							:filter-nuist="view === 'nuist'"
 							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
