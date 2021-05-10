@@ -84,12 +84,12 @@
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
 							@open-file="openImage"
-							@pokefriend="pokefriend"
+							@pokefriend="pokeFriend"
 							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
-							@pokegroup="pokegroup"
+							@pokegroup="pokeGroup"
 							@reveal-message="revealMessage"
 							@get-history="getHistory"
 							@open-forward="openForward"
@@ -403,8 +403,8 @@ export default {
 				bot.on("notice.group.recall", this.groupRecall);
 				bot.on("system.online", this.online);
 				bot.on("system.offline", this.onOffline);
-				bot.on("notice.friend.poke", this.friendpoke);
-				bot.on("notice.group.poke", this.grouppoke);
+				bot.on("notice.friend.poke", this.friendPoke);
+				bot.on("notice.group.poke", this.groupPoke);
 				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 				loading.close();
 			});
@@ -568,7 +568,7 @@ export default {
 						bot.removeListener("notice.group.recall", this.groupRecall);
 						bot.removeListener("system.online", this.online);
 						bot.removeListener("system.offline", this.onOffline);
-						bot.removeListener("notice.friend.poke", this.friendpoke);
+						bot.removeListener("notice.friend.poke", this.friendPoke);
 						remote
 							.getCurrentWindow()
 							.removeListener("focus", this.clearCurrentRoomUnread);
@@ -679,8 +679,8 @@ export default {
 			bot.on("notice.group.recall", this.groupRecall);
 			bot.on("system.online", this.online);
 			bot.on("system.offline", this.onOffline);
-			bot.on("notice.friend.poke", this.friendpoke);
-			bot.on("notice.group.poke", this.grouppoke);
+			bot.on("notice.friend.poke", this.friendPoke);
+			bot.on("notice.group.poke", this.groupPoke);
 			remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 			loading.close();
 		}
@@ -1232,7 +1232,7 @@ export default {
 			if (build) return menu;
 			menu.popup({window: remote.getCurrentWindow()});
 		},
-		friendpoke(data) {
+		friendPoke(data) {
 			const roomId =
 				data.operator_id == this.account ? data.user_id : data.operator_id;
 			const room = this.rooms.find((e) => e.roomId == roomId);
@@ -1302,7 +1302,7 @@ export default {
 				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64));
 			});
 		},
-		pokefriend() {
+		pokeFriend() {
 			console.log("poke");
 			if (this.selectedRoom.roomId > 0)
 				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId);
@@ -1428,7 +1428,7 @@ export default {
 				});
 			});
 		},
-		async grouppoke(data) {
+		async groupPoke(data) {
 			console.log(data);
 			const room = this.rooms.find((e) => e.roomId == -data.group_id);
 			if (room) {
@@ -1477,7 +1477,7 @@ export default {
 						.write();
 			}
 		},
-		pokegroup(uin) {
+		pokeGroup(uin) {
 			const group = -this.selectedRoom.roomId;
 			bot.sendGroupPoke(group, uin);
 			this.$refs.room.focusTextarea();
