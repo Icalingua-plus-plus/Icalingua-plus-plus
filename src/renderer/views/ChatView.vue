@@ -222,8 +222,6 @@ let db, aria, mdb;
 const bot = remote.getGlobal("bot");
 console.log(bot);
 
-let lastFileTime = 0
-
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
 Date.prototype.format = function (fmt) {
@@ -1003,8 +1001,8 @@ export default {
 				room.utime = data.time * 1000;
 				room.lastMessage = lastMessage;
 				this.updateTrayIcon();
-				if(message.file&&message.file.name&&room.autoDownload){
-					this.download(message.file.url,null,()=>console.log(message.file.name),message.file.name,room.downloadPath)
+				if (message.file && message.file.name && room.autoDownload) {
+					this.download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
 				}
 			}
 
@@ -1276,14 +1274,14 @@ export default {
 						{
 							label: "Set download path",
 							click: () => {
-								const selection=remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
+								const selection = remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
 									title: 'Select download path',
 									properties: ['openDirectory'],
 									defaultPath: room.downloadPath
 								})
 								console.log(selection)
-								if(selection && selection.length){
-									room.downloadPath=selection[0]
+								if (selection && selection.length) {
+									room.downloadPath = selection[0]
 									if (this.mongodb)
 										mdb
 											.collection("rooms")
@@ -1570,6 +1568,8 @@ export default {
 					.write();
 		},
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
+			if (!Array.isArray(oicqMessage))
+				oicqMessage = [oicqMessage]
 			for (let i = 0; i < oicqMessage.length; i++) {
 				const m = oicqMessage[i];
 				let appurl;
