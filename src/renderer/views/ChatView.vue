@@ -444,16 +444,6 @@ export default {
 
 		//endregion
 		//region listener
-		window.addEventListener("paste", () => {
-			const nim = clipboard.readImage();
-			if (!nim.isEmpty() && this.selectedRoom.roomId)
-				this.sendMessage({
-					content: "",
-					room: this.selectedRoom,
-					b64img: nim.toDataURL(),
-				});
-		});
-
 		document.addEventListener("dragover", (e) => {
 			e.preventDefault();
 			e.stopPropagation();
@@ -643,7 +633,7 @@ export default {
 
 		if (fs.existsSync(path.join(STORE_PATH, "font.ttf"))) {
 			console.log("nya");
-			var myFonts = new FontFace(
+			const myFonts = new FontFace(
 				"font",
 				`url(${path.join(STORE_PATH, "font.ttf")})`,
 				{}

@@ -524,14 +524,30 @@ export default {
 			if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0);
 		});
 
+
+		window.addEventListener("paste", (event) => {
+			console.log(event.clipboardData.files)
+			if (event.clipboardData.files) {
+				// Using the path attribute to get absolute file path
+				const f = event.clipboardData.files[0]
+				const index = f.name.lastIndexOf(".");
+				const ext = f.name.substr(index + 1).toLowerCase();
+				if (["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext)) {
+					this.onFileChange(event.clipboardData.files)
+				}
+			}
+		});
+
 		//drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
 		document.addEventListener("drop", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			for (const f of event.dataTransfer.files) {
+			console.log(event)
+			if (event.dataTransfer.files.length) {
 				// Using the path attribute to get absolute file path
-				const index = f.path.lastIndexOf(".");
-				const ext = f.path.substr(index + 1).toLowerCase();
+				const f = event.dataTransfer.files[0]
+				const index = f.name.lastIndexOf(".");
+				const ext = f.name.substr(index + 1).toLowerCase();
 				if (["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext) ||
 					process.platform === "linux") {
 					this.onFileChange(event.dataTransfer.files)
