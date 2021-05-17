@@ -376,7 +376,12 @@ export default {
 		}).write();
 		if (this.mongodb) {
 			MongoClient.connect("mongodb://localhost", (err, dba) => {
-				if (err) console.log(err);
+				if (err) {
+					console.log(err);
+					glodb.set("account.autologin", false).write()
+					alert('Error connecting to localhost MongoDB database')
+					remote.getCurrentWindow().destroy()
+				}
 				mdb = dba.db("eqq" + this.account);
 				mdb
 					.collection("rooms")
