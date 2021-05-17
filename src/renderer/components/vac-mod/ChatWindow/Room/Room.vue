@@ -336,7 +336,6 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 export default {
 	name: "Room",
-
 	components: {
 		InfiniteLoading,
 		Loader,
@@ -348,11 +347,9 @@ export default {
 		RoomAudio,
 		Message,
 	},
-
 	directives: {
 		clickOutside: vClickOutside.directive,
 	},
-
 	props: {
 		currentUserId: {type: [String, Number], required: true},
 		singleRoom: {type: Boolean, required: true},
@@ -381,7 +378,6 @@ export default {
 		roomInfo: {type: Function, default: null},
 		textareaAction: {type: Function, default: null},
 	},
-
 	data() {
 		return {
 			message: "",
@@ -407,7 +403,6 @@ export default {
 			textMessages: require("../../locales").default,
 		};
 	},
-
 	computed: {
 		emojisList() {
 			const emojisTable = Object.keys(emojis).map((key) => emojis[key]);
@@ -431,7 +426,6 @@ export default {
 			return !this.file && !this.message.trim();
 		},
 	},
-
 	watch: {
 		loadingMessages(val) {
 			if (val) this.infiniteState = null;
@@ -478,7 +472,8 @@ export default {
 						const options = {top: element.scrollHeight, behavior: "smooth"};
 						element.scrollTo(options);
 					}, 50);
-				} else {
+				}
+				else {
 					this.scrollIcon = true;
 					return this.scrollMessagesCount++;
 				}
@@ -486,7 +481,8 @@ export default {
 
 			if (this.infiniteState) {
 				this.infiniteState.loaded();
-			} else if (newVal.length && !this.scrollIcon) {
+			}
+			else if (newVal.length && !this.scrollIcon) {
 				setTimeout(() => {
 					element.scrollTo({top: element.scrollHeight});
 					this.loadingMessages = false;
@@ -500,7 +496,6 @@ export default {
 			if (this.infiniteState) this.infiniteState.complete();
 		},
 	},
-
 	mounted() {
 		this.newMessages = [];
 		const isMobile = detectMobile();
@@ -510,7 +505,8 @@ export default {
 				if (isMobile) {
 					this.message = this.message + "\n";
 					setTimeout(() => this.onChangeInput(), 0);
-				} else {
+				}
+				else {
 					this.sendMessage();
 				}
 			}
@@ -526,6 +522,21 @@ export default {
 		this.$refs["roomTextarea"].addEventListener("blur", () => {
 			this.resetUsersTag();
 			if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0);
+		});
+
+		//drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
+		document.addEventListener("drop", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			for (const f of event.dataTransfer.files) {
+				// Using the path attribute to get absolute file path
+				const index = f.path.lastIndexOf(".");
+				const ext = f.path.substr(index + 1).toLowerCase();
+				if (["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext) ||
+					process.platform === "linux") {
+					this.onFileChange(event.dataTransfer.files)
+				}
+			}
 		});
 	},
 
@@ -571,7 +582,8 @@ export default {
 					query,
 					true
 				).filter((user) => user._id !== this.currentUserId);
-			} else {
+			}
+			else {
 				this.resetUsersTag();
 			}
 		},
@@ -690,7 +702,8 @@ export default {
 						usersTag: this.selectedUsersTag,
 					});
 				}
-			} else {
+			}
+			else {
 				this.$emit("send-message", {
 					content: message,
 					file: this.file,
@@ -747,7 +760,8 @@ export default {
 			if (isImageFile(this.file)) {
 				this.imageFile = message.file.url;
 				setTimeout(() => this.onMediaLoad(), 0);
-			} else if (isVideoFile(this.file)) {
+			}
+			else if (isVideoFile(this.file)) {
 				this.videoFile = message.file.url;
 				setTimeout(() => this.onMediaLoad(), 50);
 			}
@@ -808,10 +822,12 @@ export default {
 
 			if (isImageFile(this.file)) {
 				this.imageFile = fileURL;
-			} else if (isVideoFile(this.file)) {
+			}
+			else if (isVideoFile(this.file)) {
 				this.videoFile = fileURL;
 				setTimeout(() => this.onMediaLoad(), 50);
-			} else {
+			}
+			else {
 				this.message = file.name;
 			}
 

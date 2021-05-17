@@ -454,30 +454,6 @@ export default {
 				});
 		});
 
-		//drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
-		document.addEventListener("drop", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			for (const f of event.dataTransfer.files) {
-				// Using the path attribute to get absolute file path
-				const index = f.path.lastIndexOf(".");
-				const ext = f.path.substr(index + 1).toLowerCase();
-				if (
-					(["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(
-						ext
-						) ||
-						process.platform === "linux") &&
-					this.selectedRoom
-				) {
-					this.sendMessage({
-						content: "",
-						room: this.selectedRoom,
-						imgpath: f.path,
-					});
-				}
-			}
-		});
-
 		document.addEventListener("dragover", (e) => {
 			e.preventDefault();
 			e.stopPropagation();
