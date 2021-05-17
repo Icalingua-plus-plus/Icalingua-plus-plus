@@ -413,7 +413,8 @@ export default {
 				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 				loading.close();
 			});
-		} else {
+		}
+		else {
 			db.defaults({
 				rooms: [],
 				messages: {},
@@ -430,7 +431,8 @@ export default {
 			document.title = "[DEBUG] Electron QQ";
 		if (process.env.NYA) {
 			document.title = "[DEBUG:UI] Electron QQ";
-		} else {
+		}
+		else {
 			this.offline = !bot.getStatus().data.online;
 			this.username = bot.getLoginInfo().data.nickname;
 			this.tray = remote.getGlobal("tray");
@@ -488,7 +490,8 @@ export default {
 			if (e.repeat) return;
 			if (e.key === "w" && e.ctrlKey === true) {
 				remote.getCurrentWindow().minimize();
-			} else if (e.key === "Tab") {
+			}
+			else if (e.key === "Tab") {
 				let unreadRoom = this.rooms.find(
 					(e) => e.unreadCount && e.priority >= this.priority
 				);
@@ -554,7 +557,7 @@ export default {
 					label: "Auto login",
 					type: "checkbox",
 					checked: glodb.get("account.autologin").value(),
-					click: (menuItem, _browserWindow, _event) => {
+					click: (menuItem) => {
 						glodb.set("account.autologin", menuItem.checked).write();
 					},
 				}),
@@ -729,7 +732,8 @@ export default {
 						mdb
 							.collection("rooms")
 							.updateOne({roomId: room.roomId}, {$set: room});
-					} else {
+					}
+					else {
 						db.get("messages." + roomId)
 							.push(message)
 							.write();
@@ -814,7 +818,8 @@ export default {
 					};
 					sendchain();
 				}; //now support image only
-			} else {
+			}
+			else {
 				sendchain();
 			}
 		},
@@ -850,10 +855,12 @@ export default {
 							if (msgs2add.length) {
 								msgs2add.reverse();
 								this.messages = [...msgs2add, ...this.messages];
-							} else this.messagesLoaded = true;
+							}
+							else this.messagesLoaded = true;
 						}, 0);
 					});
-			} else {
+			}
+			else {
 				const msgs2add = db
 					.get("messages." + this.selectedRoom.roomId)
 					.dropRightWhile((e) => this.messages.includes(e))
@@ -906,7 +913,8 @@ export default {
 				this.rooms = [room, ...this.rooms];
 				if (this.mongodb) mdb.collection("rooms").insertOne(room);
 				else db.set("messages." + roomId, []).write();
-			} else {
+			}
+			else {
 				if (!room.roomName.startsWith(roomName)) room.roomName = roomName;
 				if (!history)
 					this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
@@ -962,7 +970,8 @@ export default {
 							});
 							notif.show();
 						});
-					} else {
+					}
+					else {
 						const notiopin = {
 							body: (groupId ? senderName + ": " : "") + lastMessage.content,
 							icon: avatar,
@@ -986,13 +995,17 @@ export default {
 					if (isSelfMsg) {
 						room.unreadCount = 0;
 						room.at = false;
-					} else room.unreadCount++;
+					}
+					else room.unreadCount++;
 				}
 				if (room === this.selectedRoom)
 					this.messages = [...this.messages, message];
 				room.utime = data.time * 1000;
 				room.lastMessage = lastMessage;
 				this.updateTrayIcon();
+				if(message.file&&message.file.name&&room.autoDownload){
+					this.download(message.file.url,null,()=>console.log(message.file.name),message.file.name,room.downloadPath)
+				}
 			}
 
 			if (this.mongodb) {
@@ -1002,7 +1015,8 @@ export default {
 						.collection("rooms")
 						.updateOne({roomId: room.roomId}, {$set: room});
 				mdb.collection("msg" + roomId).insertOne(message);
-			} else {
+			}
+			else {
 				db.set("rooms", this.rooms).write();
 				db.get("messages." + roomId)
 					.push(message)
@@ -1014,7 +1028,8 @@ export default {
 			if (data.action === "download") {
 				if (data.message.file.type.includes("image")) {
 					this.downloadImage(data.message.file.url);
-				} else {
+				}
+				else {
 					if (this.aria2.enabled && data.message.file.url.startsWith("http"))
 						this.download(
 							data.message.file.url,
@@ -1044,7 +1059,8 @@ export default {
 						.find({_id: messageId})
 						.assign({deleted: new Date()})
 						.write();
-			} else {
+			}
+			else {
 				this.$notify.error({
 					title: "Failed to delete message",
 					message: res.error.message,
@@ -1238,6 +1254,50 @@ export default {
 						this.downloadImage(room.avatar);
 					},
 				},
+				{
+					label: 'Auto Download',
+					submenu: [
+						{
+							type: "checkbox",
+							label: "Files in this chat",
+							checked: !!room.autoDownload,
+							click: (menuItem) => {
+								room.autoDownload = menuItem.checked
+								if (this.mongodb)
+									mdb
+										.collection("rooms")
+										.updateOne(
+											{roomId: room.roomId},
+											{$set: room}
+										);
+								else db.set("rooms", this.rooms).write();
+							},
+						},
+						{
+							label: "Set download path",
+							click: () => {
+								const selection=remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
+									title: 'Select download path',
+									properties: ['openDirectory'],
+									defaultPath: room.downloadPath
+								})
+								console.log(selection)
+								if(selection && selection.length){
+									room.downloadPath=selection[0]
+									if (this.mongodb)
+										mdb
+											.collection("rooms")
+											.updateOne(
+												{roomId: room.roomId},
+												{$set: room}
+											);
+									else db.set("rooms", this.rooms).write();
+								}
+							},
+						},
+					],
+				},
+
 			]);
 			if (build) return menu;
 			menu.popup({window: remote.getCurrentWindow()});
@@ -1278,7 +1338,8 @@ export default {
 						.collection("rooms")
 						.updateOne({roomId: room.roomId}, {$set: room});
 					mdb.collection("msg" + roomId).insertOne(message);
-				} else
+				}
+				else
 					db.get("messages." + roomId)
 						.push(message)
 						.write();
@@ -1378,7 +1439,8 @@ export default {
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
 				document.title = `(${unread}) ${title}`;
-			} else {
+			}
+			else {
 				p = path.join(__static, this.darkTaskIcon ? "dark.png" : "256x256.png");
 				document.title = title;
 			}
@@ -1416,7 +1478,8 @@ export default {
 						console.log(err);
 						this.$message("Aria2 failed");
 					});
-			} else download(url, dest ? dest : path.join(dir, cb), cb);
+			}
+			else download(url, dest ? dest : path.join(dir, cb), cb);
 		},
 		exit() {
 			// remote.getCurrentWindow().hide()
@@ -1481,7 +1544,8 @@ export default {
 						.collection("rooms")
 						.updateOne({roomId: room.roomId}, {$set: room});
 					mdb.collection("msg" + room.roomId).insertOne(message);
-				} else
+				}
+				else
 					db.get("messages." + room.roomId)
 						.push(message)
 						.write();
@@ -1517,7 +1581,8 @@ export default {
 						message.content += m.data.text;
 						if (m.data.qq === "all") {
 							message.at = "all";
-						} else if (m.data.qq == this.account) {
+						}
+						else if (m.data.qq == this.account) {
 							message.at = true;
 						}
 						break;
@@ -1611,7 +1676,8 @@ export default {
 						if (appurl) {
 							lastMessage.content = appurl;
 							message.content = appurl;
-						} else {
+						}
+						else {
 							lastMessage.content = "[JSON]";
 							message.content = "[JSON]";
 						}
@@ -1630,11 +1696,13 @@ export default {
 								console.log(resId);
 								message.content = `[Forward: ${resId}]`;
 							}
-						} else if (appurl) {
+						}
+						else if (appurl) {
 							appurl = appurl.replace(/&amp;/g, "&");
 							lastMessage.content = appurl;
 							message.content = appurl;
-						} else {
+						}
+						else {
 							lastMessage.content += "[XML]";
 							message.content += "[XML]";
 						}
