@@ -20,5 +20,5 @@ jobs:
         uses: samuelmeuli/action-electron-builder@v1
         with:
           github_token: ${{ secrets.github_token }}
-          release: ${{ github.ref == 'refs/heads/main' }}
+          release: ${{ startsWith(github.ref, 'refs/heads/main') }}
           build_script_name: build:ci
