@@ -1,5 +1,6 @@
 <template>
 	<div ondragstart="return false;">
+		<div class="pace-activity" v-show="loading"/>
 		<el-container>
 			<!-- sidebar -->
 			<el-aside width="65px" ondragstart="return false;">
@@ -335,6 +336,7 @@ export default {
 			theme: "default",
 			groups: [],
 			menu: [],
+			loading: false
 		};
 	},
 	created() {
@@ -659,6 +661,7 @@ export default {
 	},
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
+			this.loading=true
 			if (!room && !roomId) {
 				room = this.selectedRoom;
 				roomId = room.roomId;
@@ -669,6 +672,7 @@ export default {
 				if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true);
 				else data = await bot.sendGroupMsg(-roomId, chain, true);
 
+				this.loading=false
 				if (data.error) {
 					this.$notify.error({
 						title: "Failed to send",
@@ -1871,6 +1875,30 @@ export default {
 .el-col {
 	height: 100vh;
 	overflow: hidden;
+}
+
+@keyframes pace-spinner {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.pace-activity {
+	display: block;
+	position: fixed;
+	z-index: 2000;
+	bottom: 66px;
+	right: 15px;
+	width: 14px;
+	height: 14px;
+	border: solid 2px transparent;
+	border-top-color: #29d;
+	border-left-color: #29d;
+	border-radius: 10px;
+	animation: pace-spinner 400ms linear infinite;
 }
 </style>
 
