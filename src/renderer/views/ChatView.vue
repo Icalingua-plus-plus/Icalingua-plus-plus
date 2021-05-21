@@ -879,7 +879,7 @@ export default {
 				else db.set("messages." + roomId, []).write();
 			}
 			else {
-				if (!room.roomName.startsWith(roomName)) room.roomName = roomName;
+				if (!history && !room.roomName.startsWith(roomName)) room.roomName = roomName;
 				if (!history)
 					this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
 			} //bring the room first
