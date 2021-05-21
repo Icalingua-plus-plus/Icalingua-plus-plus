@@ -342,7 +342,7 @@ export default {
 			lock: true,
 		});
 		//region load group
-		const groups = bot.getGroupList().data.values();
+		const groups = bot.gl.values();
 		let t = groups.next();
 		while (!t.done) {
 			this.groups.push(t.value);
@@ -1267,6 +1267,7 @@ export default {
 			menu.popup({window: remote.getCurrentWindow()});
 		},
 		friendPoke(data) {
+			console.log(data)
 			const roomId =
 				data.operator_id == this.account ? data.user_id : data.operator_id;
 			const room = this.rooms.find((e) => e.roomId == roomId);
@@ -1277,8 +1278,8 @@ export default {
 				if (data.operator_id != this.account) msg += room.roomName;
 				else msg += "你";
 				msg += data.action;
-				if (data.user_id != this.account) msg += room.roomName;
-				else if (data.operator_id == this.account) msg += "自己";
+				if (data.operator_id == data.target_id) msg += "自己";
+				else if (data.target_id != this.account) msg += room.roomName;
 				else msg += "你";
 				if (data.suffix) msg += data.suffix;
 				room.lastMessage = {
