@@ -1585,6 +1585,7 @@ export default {
 							size: m.data.size,
 							url: m.data.url,
 							name: m.data.name,
+							fid: m.data.fileid
 						};
 						break;
 					case "share":
