@@ -801,8 +801,8 @@ export default {
 				if (this.selectedRoom.roomId < 0) {
 					const gid = -this.selectedRoom.roomId
 					const group = bot.gl.get(gid)
-					if(group)
-					this.isShutUp = group.shutup_time_me
+					if (group)
+						this.isShutUp = group.shutup_time_me
 					else {
 						this.isShutUp = true
 						this.$message('你已经不是群成员了')
@@ -998,12 +998,16 @@ export default {
 			}
 			return message;
 		},
-		openImage(data) {
+		async openImage(data) {
 			if (data.action === "download") {
 				if (data.message.file.type.includes("image")) {
 					this.downloadImage(data.message.file.url);
 				}
 				else {
+					if (this.selectedRoom.roomId < 0 && data.message.file.fid) {
+						const gfs = bot.acquireGfs(-this.selectedRoom.roomId)
+						data.message.file.url = (await gfs.download(data.message.file.fid)).url
+					}
 					if (this.aria2.enabled && data.message.file.url.startsWith("http"))
 						this.download(
 							data.message.file.url,
