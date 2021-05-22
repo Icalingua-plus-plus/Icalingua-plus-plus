@@ -19,7 +19,10 @@ let mainConfig = {
     rules: [
       {
         test: /\.js$/,
-        use: 'babel-loader',
+        use: [
+            'thread-loader',
+            'babel-loader'
+        ],
         exclude: /node_modules/
       },
       {
@@ -62,7 +65,6 @@ if (process.env.NODE_ENV !== 'production') {
  */
 if (process.env.NODE_ENV === 'production') {
   mainConfig.plugins.push(
-    new MinifyPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': '"production"'
     })
