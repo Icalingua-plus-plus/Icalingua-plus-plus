@@ -159,7 +159,6 @@ if (process.env.NODE_ENV === 'production') {
   rendererConfig.devtool = ''
 
   rendererConfig.plugins.push(
-    new MinifyPlugin(),
     new CopyWebpackPlugin([
       {
         from: path.join(__dirname, '../static'),
@@ -171,7 +170,7 @@ if (process.env.NODE_ENV === 'production') {
       'process.env.NODE_ENV': '"production"'
     }),
     new webpack.LoaderOptionsPlugin({
-      minimize: true
+      minimize: false
     })
   )
 }
