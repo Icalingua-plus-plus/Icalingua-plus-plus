@@ -77,7 +77,7 @@
 							:show-send-icon="true"
 							:show-files="true"
 							:show-emojis="true"
-							:show-footer="true"
+							:show-footer="!isShutUp"
 							:loading-rooms="false"
 							:text-formatting="true"
 							:mongodb="mongodb"
@@ -334,23 +334,15 @@ export default {
 			mongodb: false,
 			priority: 1,
 			theme: "default",
-			groups: [],
 			menu: [],
-			loading: false
+			loading: false,
+			isShutUp: false
 		};
 	},
 	created() {
 		const loading = this.$loading({
 			lock: true,
 		});
-		//region load group
-		const groups = bot.gl.values();
-		let t = groups.next();
-		while (!t.done) {
-			this.groups.push(t.value);
-			t = groups.next();
-		}
-		//endregion
 		//region db init
 		this.account = glodb.get("account").value().username;
 		this.mongodb = glodb.get("mongodb").value();
@@ -391,7 +383,7 @@ export default {
 						this.rooms = e;
 						this.rooms.forEach((e) => {
 							if (e.roomId > -1) return;
-							const group = this.groups.find((f) => f.group_id == -e.roomId);
+							const group = bot.gl.get(-e.roomId)
 							if (group && group.group_name !== e.roomName) {
 								e.roomName = group.group_name;
 								mdb
@@ -661,7 +653,7 @@ export default {
 	},
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
-			this.loading=true
+			this.loading = true
 			if (!room && !roomId) {
 				room = this.selectedRoom;
 				roomId = room.roomId;
@@ -672,7 +664,7 @@ export default {
 				if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true);
 				else data = await bot.sendGroupMsg(-roomId, chain, true);
 
-				this.loading=false
+				this.loading = false
 				if (data.error) {
 					this.$notify.error({
 						title: "Failed to send",
@@ -805,6 +797,20 @@ export default {
 							{$set: this.selectedRoom}
 						);
 				else db.set("rooms", this.rooms).write();
+
+				if (this.selectedRoom.roomId < 0) {
+					const gid = -this.selectedRoom.roomId
+					const group = bot.gl.get(gid)
+					if(group)
+					this.isShutUp = group.shutup_time_me
+					else {
+						this.isShutUp = true
+						this.$message('你已经不是群成员了')
+					}
+				}
+				else {
+					this.isShutUp = false
+				}
 			}
 			if (this.mongodb) {
 				mdb
@@ -874,7 +880,7 @@ export default {
 
 			let room = this.rooms.find((e) => e.roomId == roomId);
 			if (room === undefined) {
-				const group = this.groups.find((e) => e.group_id == groupId);
+				const group = bot.gl.get(groupId)
 				if (group && group.group_name !== roomName) roomName = group.group_name;
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
