@@ -1,6 +1,12 @@
 <template>
   <div class="root">
-    <el-tabs v-model="activeName" :stretch="true">
+    <el-input
+      placeholder="Enter Name"
+      v-model="searchContext"
+      @change="searchContextChanged"
+    ></el-input>
+
+    <el-tabs v-model="activeName" :stretch="true" v-if="!showSearchResults">
       <el-tab-pane label="Friends" name="friends">
         <div
           class="panel"
@@ -37,6 +43,32 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <el-tabs v-model="activeName" :stretch="true" v-if="showSearchResults">
+      <el-tab-pane label="Friends" name="friends">
+        <div class="panel" v-show="activeName == 'friends'">
+          <ContactEntry
+            v-for="i in searchedFriends"
+            :key="i.user_id"
+            :id="i.user_id"
+            :remark="i.remark"
+            :name="i.nickname"
+            @dblclick="$emit('dblclick', i.user_id, i.remark)"
+          />
+        </div>
+      </el-tab-pane>
+      <el-tab-pane label="Groups" name="groups">
+        <div class="panel" v-show="activeName == 'groups'">
+          <ContactEntry
+            v-for="i in searchedGroups"
+            :key="i.group_id"
+            :id="-i.group_id"
+            :remark="i.group_name"
+            @dblclick="$emit('dblclick', -i.group_id, i.group_name)"
+          />
+        </div>
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
@@ -57,6 +89,10 @@ export default {
       friendsAll: [],
       friendsLoaded: false,
       groupsLoaded: false,
+      searchContext: "",
+      showSearchResults: false,
+      searchedFriends: [],
+      searchedGroups: [],
     };
   },
   created() {
@@ -87,6 +123,25 @@ export default {
       this.groups.push(...this.groupsAll.slice(0, 10));
       this.groupsAll = this.groupsAll.slice(10);
       this.groupsLoaded = this.groupsAll.length == 0;
+    },
+    searchFriends(value) {
+      this.searchedFriends = this.friendsAll.filter((friend) => {
+        return friend.nickname.indexOf(value) != -1;
+      });
+    },
+    searchGroups(value) {
+      this.searchedGroups = this.groupsAll.filter((group) => {
+        return group.group_name.indexOf(value) != -1;
+      });
+    },
+    searchContextChanged(value) {
+      if (value != "") {
+        this.showSearchResults = true;
+      } else {
+        this.showSearchResults = false;
+      }
+      this.searchFriends(value);
+      this.searchGroups(value);
     },
   },
 };
