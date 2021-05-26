@@ -13,8 +13,6 @@
 			<center>
 				<h5>Version {{ ver }}</h5>
 			</center>
-			<h4 class="red nobottmar">Insider version</h4>
-			<h2 class="red notopmar">DO NOT DISTRIBUTE</h2>
 			<el-form-item prop="username">
 				<el-input type="text" placeholder="QQ ID" v-model="form.username"/>
 			</el-form-item>
