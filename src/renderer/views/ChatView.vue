@@ -367,7 +367,7 @@ export default {
 			priority: 1,
 		}).write();
 		if (this.mongodb) {
-			MongoClient.connect("mongodb://localhost", (err, dba) => {
+			MongoClient.connect(glodb.get("connStr").value(), (err, dba) => {
 				if (err) {
 					console.log(err);
 					glodb.set("account.autologin", false).write()
