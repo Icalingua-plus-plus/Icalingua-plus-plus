@@ -36,8 +36,15 @@
 				<span class="el-form-item__label">Auto login</span>
 				<el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }"/>
 				<br/>
-				<span class="el-form-item__label">Use MongoDB on localhost</span>
+				<span class="el-form-item__label">Use MongoDB</span>
 				<el-switch v-model="mongodb" :style="{ marginLeft: '5px' }"/>
+			</el-form-item>
+			<el-form-item prop="connStr" v-show="mongodb">
+				<el-input
+					:show-password="connStr.includes('@')"
+					placeholder="MongoDB connect string"
+					v-model="connStr"
+				/>
 			</el-form-item>
 			<p class="red">
 				{{ errmsg }}
@@ -116,6 +123,7 @@ export default {
 			captchaimg: "",
 
 			mongodb: false,
+			connStr: ''
 		};
 	},
 	created() {
@@ -128,6 +136,7 @@ export default {
 				autologin: account.autologin,
 			};
 		this.mongodb = glodb.get("mongodb").value();
+		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
 	},
 	mounted() {
 		if (this.form.autologin) this.onSubmit("loginForm");
@@ -137,7 +146,7 @@ export default {
 			this.$refs[formName].validate((valid) => {
 				if (valid) {
 					this.disabled = true;
-					glodb.set("mongodb", this.mongodb).write();
+					glodb.set("mongodb", this.mongodb).set("connStr", this.connStr).write();
 					const createBot = remote.getGlobal("createBot");
 					createBot(this.form);
 					const bot = remote.getGlobal("bot");
@@ -228,7 +237,8 @@ export default {
 					bot.on("system.online", onSucceed);
 					bot.on("system.login.device", verify);
 					bot.login(this.form.password);
-				} else {
+				}
+				else {
 					return false;
 				}
 			});
