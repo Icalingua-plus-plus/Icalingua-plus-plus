@@ -1,6 +1,5 @@
 <template>
 	<div ondragstart="return false;">
-		<div class="pace-activity" v-show="loading"/>
 		<el-container>
 			<!-- sidebar -->
 			<el-aside width="65px" ondragstart="return false;">
@@ -54,6 +53,7 @@
 						:style="[cssVars]"
 						class="vac-card-window"
 					>
+						<div class="pace-activity" v-show="loading"/>
 						<Room
 							ref="room"
 							:current-user-id="account"
@@ -1899,7 +1899,7 @@ export default {
 
 .pace-activity {
 	display: block;
-	position: fixed;
+	position: absolute;
 	z-index: 2000;
 	bottom: 66px;
 	right: 15px;
