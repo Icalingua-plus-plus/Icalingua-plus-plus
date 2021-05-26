@@ -1,153 +1,157 @@
 {
-    "name": "electron-qq",
-    "version": "1.4.7",
-    "author": "clansty <i@gao4.pw>",
-    "description": "A cross-platform QQ made with Electron",
-    "license": "GPL-3.0",
-    "main": "./dist/electron/main.js",
-    "desktopName": "electron-qq.desktop",
-    "scripts": {
-        "build": "node .electron-vue/build.js && electron-builder",
-        "build:win": "electron-builder --win",
-        "build:ci": "node .electron-vue/build.js",
-        "build:dir": "node .electron-vue/build.js && electron-builder --dir",
-        "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
-        "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-        "dev": "node .electron-vue/dev-runner.js",
-        "dev:ui": "cross-env NYA=nya node .electron-vue/dev-runner.js",
-        "pack": "npm run pack:main && npm run pack:renderer",
-        "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
-        "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
+  "name": "electron-qq",
+  "version": "1.4.7",
+  "author": "clansty <i@gao4.pw>",
+  "description": "A cross-platform QQ made with Electron",
+  "license": "GPL-3.0",
+  "main": "./dist/electron/main.js",
+  "desktopName": "electron-qq.desktop",
+  "scripts": {
+    "build": "node .electron-vue/build.js && electron-builder",
+    "build:win": "electron-builder --win",
+    "build:ci": "node .electron-vue/build.js",
+    "build:dir": "node .electron-vue/build.js && electron-builder --dir",
+    "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
+    "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
+    "dev": "node .electron-vue/dev-runner.js",
+    "dev:ui": "cross-env NYA=nya node .electron-vue/dev-runner.js",
+    "pack": "npm run pack:main && npm run pack:renderer",
+    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
+    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
+  },
+  "build": {
+    "productName": "Electron QQ",
+    "appId": "com.clansty.electronqq",
+    "directories": {
+      "output": "build",
+      "buildResources": "static"
     },
-    "build": {
-        "productName": "Electron QQ",
-        "appId": "com.clansty.electronqq",
-        "directories": {
-            "output": "build",
-            "buildResources": "static"
-        },
-        "files": [
-            "dist/electron/**/*"
-        ],
-        "win": {
-            "target": [
-                {
-                    "target": "7z"
-                }
-            ],
-            "icon": "static/Project2.ico"
-        },
-        "appx": {
-            "applicationId": "com.clansty.electronqq",
-            "backgroundColor": "transparent",
-            "displayName": "Electron QQ",
-            "identityName": "com.clansty.electronqq",
-            "publisher": "CN=凌莞",
-            "publisherDisplayName": "Clansty",
-            "languages": [
-                "en-US"
-            ],
-            "addAutoLaunchExtension": true,
-            "showNameOnTiles": false
-        },
-        "mac": {
-            "icon": "static/Project3.icns",
-            "target": [
-                {
-                    "target": "dmg"
-                }
-            ]
-        },
-        "linux": {
-            "icon": "static/512x512.png",
-            "target": [
-                {
-                    "target": "tar.xz"
-                },
-                {
-                    "target": "deb"
-                },
-                {
-                    "target": "AppImage"
-                }
-            ],
-            "executableName": "electron-qq",
-            "category": "Network"
-        },
-        "dmg": {
-            "contents": [
-                {
-                    "x": 410,
-                    "y": 150,
-                    "type": "link",
-                    "path": "/Applications"
-                },
-                {
-                    "x": 130,
-                    "y": 150,
-                    "type": "file"
-                }
-            ]
+    "files": [
+      "dist/electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "7z"
         }
+      ],
+      "icon": "static/Project2.ico"
     },
-    "dependencies": {
-        "@electron/remote": "*",
-        "aria2": "^4.1.2",
-        "linkifyjs": "^2.1.9",
-        "lodash": "^4.17.21",
-        "lowdb": "^1.0.0",
-        "md5": "^2.3.0",
-        "mongodb": "^3.6.6",
-        "oicq": "^1.17.1",
-        "v-click-outside": "^3.1.2",
-        "v-emoji-picker": "^2.3.3",
-        "vue": "^2.6.12",
-        "vue-emoji-picker": "^1.0.1",
-        "vue-infinite-loading": "^2.4.5"
+    "appx": {
+      "applicationId": "com.clansty.electronqq",
+      "backgroundColor": "transparent",
+      "displayName": "Electron QQ",
+      "identityName": "com.clansty.electronqq",
+      "publisher": "CN=凌莞",
+      "publisherDisplayName": "Clansty",
+      "languages": [
+        "en-US"
+      ],
+      "addAutoLaunchExtension": true,
+      "showNameOnTiles": false
     },
-    "devDependencies": {
-        "@types/md5": "^2.3.0",
-        "ajv": "^6.5.0",
-        "axios": "^0.21.1",
-        "babel-core": "^6.26.3",
-        "babel-loader": "^7.1.4",
-        "babel-minify-webpack-plugin": "^0.3.1",
-        "babel-plugin-transform-runtime": "^6.23.0",
-        "babel-preset-env": "^1.7.0",
-        "babel-preset-stage-0": "^6.24.1",
-        "babel-register": "^6.26.0",
-        "cfonts": "^2.1.2",
-        "chalk": "^2.4.1",
-        "copy-webpack-plugin": "^4.5.1",
-        "cross-env": "^5.1.6",
-        "css-loader": "^0.28.11",
-        "del": "^3.0.0",
-        "devtron": "^1.4.0",
-        "electron": "^12.0.7",
-        "electron-builder": "^22.10.5",
-        "electron-debug": "^3.2.0",
-        "electron-devtools-installer": "^3.1.1",
-        "element-ui": "^2.15.1",
-        "file-loader": "^1.1.11",
-        "html-webpack-plugin": "^3.2.0",
-        "mini-css-extract-plugin": "0.4.0",
-        "multispinner": "^0.2.1",
-        "node-loader": "^0.6.0",
-        "node-sass": "^5.0.0",
-        "sass-loader": "^10.1.1",
-        "style-loader": "^0.21.0",
-        "thread-loader": "^3.0.4",
-        "url-loader": "^1.0.1",
-        "vue-electron": "^1.0.6",
-        "vue-html-loader": "^1.2.4",
-        "vue-loader": "^15.2.4",
-        "vue-router": "^3.5.0",
-        "vue-style-loader": "^4.1.0",
-        "vue-template-compiler": "^2.5.16",
-        "webpack": "^4.15.1",
-        "webpack-cli": "^3.0.8",
-        "webpack-dev-server": "^3.1.4",
-        "webpack-hot-middleware": "^2.22.2",
-        "webpack-merge": "^4.1.3"
+    "mac": {
+      "icon": "static/Project3.icns",
+      "target": [
+        {
+          "target": "dmg"
+        }
+      ]
+    },
+    "linux": {
+      "icon": "static/512x512.png",
+      "target": [
+        {
+          "target": "tar.xz"
+        },
+        {
+          "target": "deb"
+        },
+        {
+          "target": "AppImage"
+        }
+      ],
+      "executableName": "electron-qq",
+      "category": "Network"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
     }
+  },
+  "dependencies": {
+    "@electron/remote": "*",
+    "aria2": "^4.1.2",
+    "linkifyjs": "^2.1.9",
+    "lodash": "^4.17.21",
+    "lowdb": "^1.0.0",
+    "md5": "^2.3.0",
+    "mongodb": "^3.6.6",
+    "oicq": "^1.17.1",
+    "v-click-outside": "^3.1.2",
+    "v-emoji-picker": "^2.3.3",
+    "vue": "^2.6.12",
+    "vue-emoji-picker": "^1.0.1",
+    "vue-infinite-loading": "^2.4.5"
+  },
+  "devDependencies": {
+    "@types/md5": "^2.3.0",
+    "ajv": "^6.5.0",
+    "axios": "^0.21.1",
+    "babel-core": "^6.26.3",
+    "babel-loader": "^7.1.4",
+    "babel-minify-webpack-plugin": "^0.3.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-stage-0": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "cfonts": "^2.1.2",
+    "chalk": "^2.4.1",
+    "copy-webpack-plugin": "^4.5.1",
+    "cross-env": "^5.1.6",
+    "css-loader": "^0.28.11",
+    "del": "^3.0.0",
+    "devtron": "^1.4.0",
+    "electron": "^12.0.7",
+    "electron-builder": "^22.10.5",
+    "electron-debug": "^3.2.0",
+    "electron-devtools-installer": "^3.1.1",
+    "element-ui": "^2.15.1",
+    "file-loader": "^1.1.11",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "0.4.0",
+    "multispinner": "^0.2.1",
+    "node-loader": "^0.6.0",
+    "node-sass": "^5.0.0",
+    "sass-loader": "^10.1.1",
+    "style-loader": "^0.21.0",
+    "thread-loader": "^3.0.4",
+    "ts-loader": "^8.3.0",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.2.4",
+    "url-loader": "^1.0.1",
+    "vue-electron": "^1.0.6",
+    "vue-html-loader": "^1.2.4",
+    "vue-loader": "^15.2.4",
+    "vue-router": "^3.5.0",
+    "vue-style-loader": "^4.1.0",
+    "vue-template-compiler": "^2.5.16",
+    "webpack": "^4.15.1",
+    "webpack-cli": "^3.0.8",
+    "webpack-dev-server": "^3.1.4",
+    "webpack-hot-middleware": "^2.22.2",
+    "webpack-merge": "^4.1.3"
+  }
 }
