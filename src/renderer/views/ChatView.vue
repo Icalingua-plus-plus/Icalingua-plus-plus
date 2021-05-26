@@ -1551,6 +1551,7 @@ export default {
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
 			if (!Array.isArray(oicqMessage))
 				oicqMessage = [oicqMessage]
+			let lastType
 			for (let i = 0; i < oicqMessage.length; i++) {
 				const m = oicqMessage[i];
 				let appurl;
@@ -1558,6 +1559,8 @@ export default {
 				switch (m.type) {
 					case "text":
 					case "at":
+						if (lastType === 'reply')
+							break
 						lastMessage.content += m.data.text;
 						message.content += m.data.text;
 						if (m.data.qq === "all") {
@@ -1706,6 +1709,7 @@ export default {
 						lastMessage.content = `[Audio]`;
 						break;
 				}
+				lastType = m.type
 			}
 			return {message, lastMessage};
 		},
