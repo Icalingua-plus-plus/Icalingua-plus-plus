@@ -1557,10 +1557,10 @@ export default {
 				let appurl;
 				let url;
 				switch (m.type) {
-					case "text":
 					case "at":
 						if (lastType === 'reply')
 							break
+					case "text":
 						lastMessage.content += m.data.text;
 						message.content += m.data.text;
 						if (m.data.qq === "all") {
