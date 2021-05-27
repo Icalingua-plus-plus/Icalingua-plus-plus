@@ -976,7 +976,7 @@ export default {
 					this.messages = [...this.messages, message];
 				room.utime = data.time * 1000;
 				room.lastMessage = lastMessage;
-				this.updateTrayIcon();
+				this.updateTrayIcon(room.roomName);
 				if (message.file && message.file.name && room.autoDownload) {
 					this.download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
 				}
@@ -1406,7 +1406,7 @@ export default {
 			this.selectedRoom.unreadCount = 0;
 			this.updateTrayIcon();
 		},
-		updateTrayIcon() {
+		updateTrayIcon(name) {
 			let p;
 			const unread = this.getUnreadCount();
 			const title = this.selectedRoom.roomName
@@ -1417,7 +1417,8 @@ export default {
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-				document.title = `(${unread}) ${title}`;
+				const extra = name ? ` : ${name}` : ''
+				document.title = `(${unread}${extra}) ${title}`;
 			}
 			else {
 				p = path.join(__static, this.darkTaskIcon ? "dark.png" : "256x256.png");
