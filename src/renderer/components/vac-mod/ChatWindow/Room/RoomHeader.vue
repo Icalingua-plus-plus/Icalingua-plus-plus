@@ -142,7 +142,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .vac-room-header {
   position: absolute;
   display: flex;

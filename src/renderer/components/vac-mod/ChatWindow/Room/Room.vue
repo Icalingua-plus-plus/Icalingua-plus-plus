@@ -301,12 +301,9 @@ import emojis from "vue-emoji-picker/src/emojis";
 
 import Loader from "../../components/Loader";
 import SvgIcon from "../../components/SvgIcon";
-import EmojiPicker from "../../components/EmojiPicker";
 
 import RoomHeader from "./RoomHeader";
 import RoomMessageReply from "./RoomMessageReply";
-import RoomUsersTag from "./RoomUsersTag";
-import RoomAudio from "./RoomAudio";
 import Message from "../Message/Message";
 
 import filteredUsers from "../../utils/filterItems";
@@ -340,11 +337,8 @@ export default {
 		InfiniteLoading,
 		Loader,
 		SvgIcon,
-		EmojiPicker,
 		RoomHeader,
 		RoomMessageReply,
-		RoomUsersTag,
-		RoomAudio,
 		Message,
 	},
 	directives: {
@@ -1040,7 +1034,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .vac-container-center {
 	height: 100%;
 	width: 100%;

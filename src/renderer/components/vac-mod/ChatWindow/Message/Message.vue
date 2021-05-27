@@ -153,27 +153,6 @@
                 </slot>
               </span>
             </div>
-
-            <!-- <message-actions
-								:current-user-id="currentUserId"
-								:message="message"
-								:message-actions="messageActions"
-								:room-footer-ref="roomFooterRef"
-								:show-reaction-emojis="showReactionEmojis"
-								:hide-options="hideOptions"
-								:message-hover="messageHover"
-								:hover-message-id="hoverMessageId"
-								@hide-options="$emit('hide-options', false)"
-								@update-message-hover="messageHover = $event"
-								@update-options-opened="optionsOpened = $event"
-								@update-emoji-opened="emojiOpened = $event"
-								@message-action-handler="messageActionHandler"
-								@send-message-reaction="sendMessageReaction($event)"
-							>
-								<template v-for="(i, name) in $scopedSlots" #[name]="data">
-									<slot :name="name" v-bind="data" />
-								</template>
-							</message-actions> -->
           </div>
 
           <message-reactions
@@ -194,8 +173,6 @@ import FormatMessage from "../../components/FormatMessage";
 
 import MessageReply from "./MessageReply";
 import MessageImage from "./MessageImage";
-import MessageActions from "./MessageActions";
-import MessageReactions from "./MessageReactions";
 
 const { isImageFile } = require("../../utils/mediaFile");
 
@@ -208,8 +185,6 @@ export default {
     FormatMessage,
     MessageReply,
     MessageImage,
-    MessageActions,
-    MessageReactions,
   },
 
   props: {
@@ -220,7 +195,6 @@ export default {
     messages: { type: Array, required: true },
     editedMessage: { type: Object, required: true },
     roomUsers: { type: Array, default: () => [] },
-    messageActions: { type: Array, required: true },
     roomFooterRef: { type: HTMLDivElement, default: null },
     newMessages: { type: Array, default: () => [] },
     showReactionEmojis: { type: Boolean, required: true },
@@ -400,8 +374,8 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.el-avatar {
+<style lang="scss">
+.vac-message-box .el-avatar {
   min-width: max-content;
   margin-left: 3px;
   margin-bottom: 2px;
