@@ -753,9 +753,6 @@ export default {
 					return this.$emit("message-action-handler", {action, message});
 			}
 		},
-		sendMessageReaction(messageReaction) {
-			this.$emit("send-message-reaction", messageReaction);
-		},
 		replyMessage(message, e) {
 			if (e && e.path[1].classList.contains("el-avatar")) return; // prevent avatar dblclick
 			if (message.system) return;

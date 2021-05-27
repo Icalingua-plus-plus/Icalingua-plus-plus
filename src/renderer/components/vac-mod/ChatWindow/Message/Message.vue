@@ -154,13 +154,6 @@
               </span>
             </div>
           </div>
-
-          <message-reactions
-            :current-user-id="currentUserId"
-            :message="message"
-            :emojis-list="emojisList"
-            @send-message-reaction="sendMessageReaction($event)"
-          />
         </div>
       </slot>
     </div>
@@ -303,14 +296,6 @@ export default {
       const videoTypes = ["video/mp4", "video/ogg", "video/webm"];
       const { type } = file;
       return videoTypes.some((t) => type.toLowerCase().includes(t));
-    },
-    sendMessageReaction({ emoji, reaction }) {
-      this.$emit("send-message-reaction", {
-        messageId: this.message._id,
-        reaction: emoji,
-        remove: reaction && reaction.indexOf(this.currentUserId) !== -1,
-      });
-      this.messageHover = false;
     },
     avatarctx() {
       const menu = new remote.Menu.buildFromTemplate([
