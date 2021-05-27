@@ -4,6 +4,7 @@
 			placeholder="Search Name"
 			v-model="searchContext"
 			style="margin-top:5px"
+			clearable
 		/>
 
 		<el-tabs v-model="activeName" :stretch="true">
