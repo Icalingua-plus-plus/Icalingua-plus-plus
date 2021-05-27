@@ -41,7 +41,7 @@
 			</el-form-item>
 			<el-form-item prop="connStr" v-show="mongodb">
 				<el-input
-					:show-password="connStr.includes('@')"
+					:show-password="connStr.split(':').length>2"
 					placeholder="MongoDB connect string"
 					v-model="connStr"
 				/>
