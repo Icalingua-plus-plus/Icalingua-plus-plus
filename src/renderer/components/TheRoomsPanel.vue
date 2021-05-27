@@ -6,6 +6,7 @@
 				placeholder="Search"
 				prefix-icon="el-icon-search"
 				class="input"
+				clearable
 			/>
 		</div>
 		<div class="content">
