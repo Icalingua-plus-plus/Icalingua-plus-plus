@@ -89,7 +89,7 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .vac-image-container {
 	// width: 250px;
 	max-width: 250px;
@@ -128,13 +128,14 @@ export default {
 	margin: 4px auto 5px;
 	transition: 0.4s filter linear;
 	overflow: hidden;
+	width: fit-content;
+	.el-image {
+		vertical-align: top;
+		height: -webkit-fill-available;
+		width: -webkit-fill-available;
+	}
 }
 
-.el-image {
-	vertical-align: top;
-	height: -webkit-fill-available;
-	width: -webkit-fill-available;
-}
 
 ::v-deep img {
 	max-height: 232px;
