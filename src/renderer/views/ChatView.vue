@@ -66,7 +66,7 @@
 							:show-reaction-emojis="false"
 							:show-new-messages-divider="false"
 							:load-first-room="false"
-							accepted-files="image/*"
+							:accepted-files="selectedRoom.roomId>0?'image/*':'*'"
 							:message-actions="[]"
 							:styles="styles"
 							:single-room="true"
@@ -761,23 +761,35 @@ export default {
 				};
 			}
 			if (file) {
-				const reader = new FileReader();
-				reader.readAsDataURL(file.blob);
-				reader.onload = function () {
-					const b64 = reader.result.replace(/^data:.+;base64,/, "");
-					chain.push({
-						type: "image",
-						data: {
-							file: "base64://" + b64,
-						},
-					});
-					message.file = {
-						url: reader.result,
-						size: file.size,
-						type: file.type,
-					};
-					sendchain();
-				}; //now support image only
+				if (file.type && file.type.includes('image')) {
+					const reader = new FileReader();
+					reader.readAsDataURL(file.blob);
+					reader.onload = function () {
+						const b64 = reader.result.replace(/^data:.+;base64,/, "");
+						chain.push({
+							type: "image",
+							data: {
+								file: "base64://" + b64,
+							},
+						});
+						message.file = {
+							url: reader.result,
+							size: file.size,
+							type: file.type,
+						};
+						sendchain();
+					}
+				}
+				else{
+					//is a group file
+					if(roomId>0) {
+						this.$message('暂时无法向好友发送文件')
+						return
+					}
+					const gfs=bot.acquireGfs(-roomId)
+					gfs.upload(file.path)
+					this.$message('文件上传中')
+				}
 			}
 			else {
 				sendchain();

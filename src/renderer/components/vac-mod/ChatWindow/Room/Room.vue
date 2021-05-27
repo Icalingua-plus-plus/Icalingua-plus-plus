@@ -94,7 +94,6 @@
 								@open-file="openFile"
 								@open-user-tag="openUserTag"
 								@add-new-message="addNewMessage"
-								@send-message-reaction="sendMessageReaction"
 								@hide-options="hideOptions = $event"
 								@ctx="msgctx(m)"
 								@download-image="$emit('download-image', $event)"
@@ -825,6 +824,7 @@ export default {
 				type: file.type,
 				extension: file.name.substring(typeIndex + 1),
 				localUrl: fileURL,
+				path: file.path,
 			};
 
 			if (isImageFile(this.file)) {
