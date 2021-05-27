@@ -371,7 +371,7 @@ export default {
 				if (err) {
 					console.log(err);
 					glodb.set("account.autologin", false).write()
-					alert('Error connecting to localhost MongoDB database')
+					alert('Error connecting to MongoDB database')
 					remote.getCurrentWindow().destroy()
 				}
 				mdb = dba.db("eqq" + this.account);
