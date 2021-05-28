@@ -359,9 +359,8 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .el-avatar {
-  min-width: max-content;
   margin-left: 3px;
   margin-bottom: 2px;
 }
