@@ -780,13 +780,13 @@ export default {
 						sendchain();
 					}
 				}
-				else{
+				else {
 					//is a group file
-					if(roomId>0) {
+					if (roomId > 0) {
 						this.$message('暂时无法向好友发送文件')
 						return
 					}
-					const gfs=bot.acquireGfs(-roomId)
+					const gfs = bot.acquireGfs(-roomId)
 					gfs.upload(file.path)
 					this.$message('文件上传中')
 				}
@@ -1474,11 +1474,14 @@ export default {
 			else download(url, dest ? dest : path.join(dir, cb), cb);
 		},
 		exit() {
-			// remote.getCurrentWindow().hide()
-			// db.get('messages').forEach((v, i) => {
-			// 	db.set('messages.' + [i], _.takeRight(v, 1000)).write()
-			// }).value()
-			remote.getCurrentWindow().destroy();
+			const win = remote.getCurrentWindow()
+			const size = win.getSize()
+			remote.getGlobal('glodb').set('winSize', {
+				width: size[0],
+				height: size[1],
+				max: win.isMaximized()
+			}).write()
+			win.destroy();
 		},
 		downloadImage(url) {
 			const downdir = remote.app.getPath("downloads");
