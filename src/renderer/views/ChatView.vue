@@ -1418,7 +1418,7 @@ export default {
 			this.selectedRoom.unreadCount = 0;
 			this.updateTrayIcon();
 		},
-		updateTrayIcon(name) {
+		updateTrayIcon() {
 			let p;
 			const unread = this.getUnreadCount();
 			const title = this.selectedRoom.roomName
@@ -1429,7 +1429,10 @@ export default {
 					__static,
 					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
 				);
-				const extra = name ? ` : ${name}` : ''
+				const newMsgRoom = this.rooms.find(
+					(e) => e.unreadCount && e.priority >= this.priority
+				)
+				const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
 				document.title = `(${unread}${extra}) ${title}`;
 			}
 			else {
