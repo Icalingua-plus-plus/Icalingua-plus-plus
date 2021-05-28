@@ -7,7 +7,7 @@
 		<loader
 			:style="{ top: `${imageResponsive.loaderTop}px` }"
 			:show="isImageLoading"
-			v-if="!message.content.trim().startsWith('!hide')"
+			v-if="!isHidden"
 		/>
 		<div
 			class="vac-message-image-mod"
@@ -18,7 +18,7 @@
 			:style="{
 		        'max-height': `${imageResponsive.maxHeight}px`,
 		    }"
-			v-if="!message.content.trim().startsWith('!hide')"
+			v-if="!isHidden"
 		>
 			<el-image
 				:src="message.file.url"
@@ -38,19 +38,19 @@
 		</div>
 		<format-message
 			:content="message.content"
-			v-if="!message.content.trim().startsWith('!hide')"
+			v-if="!isHidden"
 			:users="roomUsers"
 			:text-formatting="textFormatting"
 			@open-user-tag="$emit('open-user-tag')"
 		/>
 
-		<details v-if="message.content.trim().startsWith('!hide')">
-			<summary v-if="!message.content.trim().substring(5)" style="cursor:pointer">
+		<details v-if="isHidden">
+			<summary v-if="!summary" style="cursor:pointer">
 				Hidden image
 			</summary>
-			<summary v-if="message.content.trim().substring(5)" style="cursor:pointer">
+			<summary v-if="summary" style="cursor:pointer">
 				<format-message
-					:content="message.content.trim().substring(5)"
+					:content="summary"
 					:users="roomUsers"
 					:text-formatting="textFormatting"
 					@open-user-tag="$emit('open-user-tag')"
@@ -121,6 +121,12 @@ export default {
 				this.message.file.url.indexOf("blob:http") !== -1 || this.imageLoading
 			);
 		},
+		isHidden() {
+			return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.message.content)
+		},
+		summary(){
+			return this.message.content.replace(/[!！] *[Hh] *[Ii] *[Dd] *[Ee]/, '').trim()
+		}
 	},
 
 	mounted() {
@@ -173,6 +179,7 @@ export default {
 	transition: 0.4s filter linear;
 	overflow: hidden;
 	width: fit-content;
+
 	.el-image {
 		vertical-align: top;
 		height: -webkit-fill-available;
