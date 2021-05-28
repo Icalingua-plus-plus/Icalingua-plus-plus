@@ -196,10 +196,10 @@
 							<svg-icon name="file"/>
 						</slot>
 					</div>
-					<div v-if="file && file.audio" class="vac-file-message">
+					<div v-if="file && file.audio" class="vac-file-message-room">
 						{{ file.name }}
 					</div>
-					<div v-else class="vac-file-message">
+					<div v-else class="vac-file-message-room">
 						{{ message }}
 					</div>
 					<div
@@ -525,7 +525,7 @@ export default {
 				const f = event.clipboardData.files[0]
 				const index = f.name.lastIndexOf(".");
 				const ext = f.name.substr(index + 1).toLowerCase();
-				if (["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext)) {
+				if (this.roomId < 0 || ["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext)) {
 					this.onFileChange(event.clipboardData.files)
 				}
 			}
@@ -1235,7 +1235,7 @@ export default {
 	width: calc(100% - 150px);
 }
 
-.vac-file-message {
+.vac-file-message-room {
 	max-width: calc(100% - 75px);
 	white-space: nowrap;
 	overflow: hidden;
