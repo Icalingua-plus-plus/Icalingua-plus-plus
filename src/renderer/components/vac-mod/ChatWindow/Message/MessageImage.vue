@@ -7,17 +7,18 @@
 		<loader
 			:style="{ top: `${imageResponsive.loaderTop}px` }"
 			:show="isImageLoading"
+			v-if="!message.content.trim().startsWith('!hide')"
 		/>
 		<div
 			class="vac-message-image-mod"
 			:class="{
-        'vac-image-loading': isImageLoading,
-        'vac-image-err': err,
-      }"
+		        'vac-image-loading': isImageLoading,
+		        'vac-image-err': err,
+		    }"
 			:style="{
-        //'background-image': `url('${message.file.url}')`,
-        'max-height': `${imageResponsive.maxHeight}px`,
-      }"
+		        'max-height': `${imageResponsive.maxHeight}px`,
+		    }"
+			v-if="!message.content.trim().startsWith('!hide')"
 		>
 			<el-image
 				:src="message.file.url"
@@ -26,9 +27,9 @@
 				referrer-policy="no-referrer"
 				@load="imageLoading = false"
 				@error="
-          imageLoading = false;
-          err = true;
-        "
+		          imageLoading = false;
+		          err = true;
+		        "
 			>
 				<div slot="error" class="image-slot">
 					<i class="el-icon-picture-outline"></i>
@@ -37,10 +38,55 @@
 		</div>
 		<format-message
 			:content="message.content"
+			v-if="!message.content.trim().startsWith('!hide')"
 			:users="roomUsers"
 			:text-formatting="textFormatting"
 			@open-user-tag="$emit('open-user-tag')"
 		/>
+
+		<details v-if="message.content.trim().startsWith('!hide')">
+			<summary v-if="!message.content.trim().substring(5)" style="cursor:pointer">
+				Hidden image
+			</summary>
+			<summary v-if="message.content.trim().substring(5)" style="cursor:pointer">
+				<format-message
+					:content="message.content.trim().substring(5)"
+					:users="roomUsers"
+					:text-formatting="textFormatting"
+					@open-user-tag="$emit('open-user-tag')"
+				/>
+			</summary>
+			<loader
+				:style="{ top: `${imageResponsive.loaderTop}px` }"
+				:show="isImageLoading"
+			/>
+			<div
+				class="vac-message-image-mod"
+				:class="{
+		        'vac-image-loading': isImageLoading,
+		        'vac-image-err': err,
+		    }"
+				:style="{
+		        'max-height': `${imageResponsive.maxHeight}px`,
+		    }"
+			>
+				<el-image
+					:src="message.file.url"
+					:preview-src-list="[message.file.url]"
+					fit="cover"
+					referrer-policy="no-referrer"
+					@load="imageLoading = false"
+					@error="
+		          imageLoading = false;
+		          err = true;
+		        "
+				>
+					<div slot="error" class="image-slot">
+						<i class="el-icon-picture-outline"></i>
+					</div>
+				</el-image>
+			</div>
+		</details>
 	</div>
 </template>
 
@@ -48,8 +94,6 @@
 import Loader from "../../components/Loader";
 import SvgIcon from "../../components/SvgIcon";
 import FormatMessage from "../../components/FormatMessage";
-
-const {isImageFile} = require("../../utils/mediaFile");
 
 export default {
 	name: "MessageImage",
