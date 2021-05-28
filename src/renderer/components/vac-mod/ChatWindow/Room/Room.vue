@@ -191,7 +191,7 @@
 					class="vac-file-container"
 					:class="{ 'vac-file-container-edit': editedMessage._id }"
 				>
-					<div class="vac-icon-file">
+					<div class="vac-icon-file-room">
 						<slot name="file-icon">
 							<svg-icon name="file"/>
 						</slot>
@@ -1242,7 +1242,7 @@ export default {
 	text-overflow: ellipsis;
 }
 
-.vac-icon-file {
+.vac-icon-file-room {
 	display: flex;
 	margin: 0 8px 0 15px;
 }

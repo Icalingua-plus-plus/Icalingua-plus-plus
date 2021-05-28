@@ -360,7 +360,7 @@ export default {
 </script>
 
 <style lang="scss">
-.vac-message-box .el-avatar {
+.el-avatar {
   min-width: max-content;
   margin-left: 3px;
   margin-bottom: 2px;

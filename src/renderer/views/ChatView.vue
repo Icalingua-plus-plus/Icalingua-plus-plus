@@ -787,7 +787,7 @@ export default {
 						return
 					}
 					const gfs = bot.acquireGfs(-roomId)
-					gfs.upload(file.path)
+					gfs.upload(file.path).then(() => this.loading = false)
 					this.$message('文件上传中')
 				}
 			}
