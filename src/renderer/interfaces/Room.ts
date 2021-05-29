@@ -12,6 +12,6 @@ export default interface Room {
     lastMessage: {
         content: string,
         timestamp: string,
-        username: string | undefined
+        username?: string
     }
 }
