@@ -689,8 +689,7 @@ export default {
 					if (this.mongodb) {
 						message.time = new Date().getTime();
 						mdb.collection("msg" + roomId).insertOne(message);
-						mdb
-							.collection("rooms")
+						mdb.collection("rooms")
 							.updateOne({roomId: room.roomId}, {$set: room});
 					}
 					else {
