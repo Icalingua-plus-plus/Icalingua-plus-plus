@@ -1713,7 +1713,7 @@ export default {
 						break;
 					case "face":
 						message.content += `[Face: ${m.data.id}]`;
-						lastMessage.content += `[Face: ${m.data.id}]`;
+						lastMessage.content += m.data.text
 						break;
 					case "video":
 						message.content = "";
