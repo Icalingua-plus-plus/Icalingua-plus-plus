@@ -14,4 +14,6 @@ export default interface Room {
         timestamp: string,
         username?: string
     }
+    autoDownload?: boolean
+    downloadPath?: string
 }

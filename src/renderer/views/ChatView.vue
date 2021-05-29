@@ -210,15 +210,20 @@ import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 
+import MongoStorageProvider from "../providers/MongoStorageProvider";
+
 const _ = require('lodash');
 const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal("STORE_PATH");
 const glodb = remote.getGlobal("glodb");
 
-const {MongoClient} = require("mongodb");
 const Aria2 = require("aria2");
 
-let db, aria, mdb;
+let db, aria, mdb
+/**
+ * @type StorageProvider
+ */
+let storage
 //oicq
 const bot = remote.getGlobal("bot");
 console.log(bot);
@@ -367,44 +372,38 @@ export default {
 			priority: 1,
 		}).write();
 		if (this.mongodb) {
-			MongoClient.connect(glodb.get("connStr").value(), (err, dba) => {
-				if (err) {
-					console.log(err);
-					glodb.set("account.autologin", false).write()
-					alert('Error connecting to MongoDB database')
-					remote.getCurrentWindow().destroy()
-				}
-				mdb = dba.db("eqq" + this.account);
-				mdb
-					.collection("rooms")
-					.find({}, {sort: [["utime", -1]]})
-					.toArray()
-					.then((e) => {
+			storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
+			storage.connect()
+				.then(() => {
+					storage.getAllRooms()
+						.then((e) => {
 						this.rooms = e;
 						this.rooms.forEach((e) => {
+							//更新群的名称
 							if (e.roomId > -1) return;
 							const group = bot.gl.get(-e.roomId)
 							if (group && group.group_name !== e.roomName) {
 								e.roomName = group.group_name;
-								mdb
-									.collection("rooms")
-									.updateOne(
-										{roomId: e.roomId},
-										{$set: {roomName: group.group_name}}
-									);
+								storage.updateRoom(e.roomId, {roomName: group.group_name})
 							}
 						});
 					});
-				bot.on("message", this.onQQMessage);
-				bot.on("notice.friend.recall", this.friendRecall);
-				bot.on("notice.group.recall", this.groupRecall);
-				bot.on("system.online", this.online);
-				bot.on("system.offline", this.onOffline);
-				bot.on("notice.friend.poke", this.friendPoke);
-				bot.on("notice.group.poke", this.groupPoke);
-				remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
-				loading.close();
-			});
+					bot.on("message", this.onQQMessage);
+					bot.on("notice.friend.recall", this.friendRecall);
+					bot.on("notice.group.recall", this.groupRecall);
+					bot.on("system.online", this.online);
+					bot.on("system.offline", this.onOffline);
+					bot.on("notice.friend.poke", this.friendPoke);
+					bot.on("notice.group.poke", this.groupPoke);
+					remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
+					loading.close();
+				})
+				.catch(() => {
+					console.log(err);
+					glodb.set("account.autologin", false).write()
+					alert('Error connecting to MongoDB database')
+					remote.getCurrentWindow().destroy()
+				})
 		}
 		else {
 			db.defaults({
@@ -688,9 +687,8 @@ export default {
 					room.utime = new Date().getTime();
 					if (this.mongodb) {
 						message.time = new Date().getTime();
-						mdb.collection("msg" + roomId).insertOne(message);
-						mdb.collection("rooms")
-							.updateOne({roomId: room.roomId}, {$set: room});
+						storage.addMessage(roomId, message)
+						storage.updateRoom(room.roomId, room)
 					}
 					else {
 						db.get("messages." + roomId)
@@ -801,12 +799,7 @@ export default {
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false;
 				if (this.mongodb)
-					mdb
-						.collection("rooms")
-						.updateOne(
-							{roomId: this.selectedRoom.roomId},
-							{$set: this.selectedRoom}
-						);
+					storage.updateRoom(this.selectedRoom.roomId, this.selectedRoom)
 				else db.set("rooms", this.rooms).write();
 
 				if (this.selectedRoom.roomId < 0) {
@@ -824,17 +817,7 @@ export default {
 				}
 			}
 			if (this.mongodb) {
-				mdb
-					.collection("msg" + this.selectedRoom.roomId)
-					.find(
-						{},
-						{
-							sort: [["time", -1]],
-							skip: this.messages.length,
-							limit: 10,
-						}
-					)
-					.toArray()
+				storage.fetchMessages(this.selectedRoom.roomId, this.messages.length, 20)
 					.then((msgs2add) => {
 						setTimeout(() => {
 							if (msgs2add.length) {
@@ -896,7 +879,7 @@ export default {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (this.mongodb) mdb.collection("rooms").insertOne(room);
+				if (this.mongodb) storage.addRoom(room);
 				else db.set("messages." + roomId, []).write();
 			}
 			else {
@@ -996,10 +979,8 @@ export default {
 			if (this.mongodb) {
 				message.time = data.time * 1000;
 				if (!history)
-					mdb
-						.collection("rooms")
-						.updateOne({roomId: room.roomId}, {$set: room});
-				mdb.collection("msg" + roomId).insertOne(message);
+					storage.updateRoom(roomId, room)
+				storage.addMessage(roomId, message)
 			}
 			else {
 				db.set("rooms", this.rooms).write();
@@ -1040,9 +1021,7 @@ export default {
 				message.deleted = new Date();
 				this.messages = [...this.messages];
 				if (this.mongodb)
-					mdb
-						.collection("msg" + this.selectedRoom.roomId)
-						.updateOne({_id: messageId}, {$set: {deleted: new Date()}});
+					storage.updateMessage(this.selectedRoom.roomId, messageId, {deleted: new Date()})
 				else
 					db.get("messages." + this.selectedRoom.roomId)
 						.find({_id: messageId})

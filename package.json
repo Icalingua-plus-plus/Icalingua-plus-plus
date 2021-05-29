@@ -107,6 +107,7 @@
   },
   "devDependencies": {
     "@types/md5": "^2.3.0",
+    "@types/mongodb": "^3.6.17",
     "ajv": "^6.5.0",
     "axios": "^0.21.1",
     "babel-core": "^6.26.3",
