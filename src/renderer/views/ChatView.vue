@@ -190,9 +190,9 @@
 </template>
 
 <script>
-import Room from "@/components/vac-mod/ChatWindow/Room/Room";
-import Stickers from "@/components/Stickers";
-import IgnoreManage from "@/components/IgnoreManage";
+import Room from "../components/vac-mod/ChatWindow/Room/Room";
+import Stickers from "../components/Stickers";
+import IgnoreManage from "../components/IgnoreManage";
 import {defaultThemeStyles, cssThemeVars} from "../components/vac-mod/themes";
 
 //lowdb
@@ -203,7 +203,6 @@ import {
 	clipboard,
 	nativeImage,
 	shell,
-	screen,
 	ipcRenderer,
 } from "electron";
 import SideBarIcon from "../components/SideBarIcon.vue";
@@ -595,34 +594,6 @@ export default {
 				},
 			])
 		);
-
-		// menu.append(
-		// 	new remote.MenuItem({
-		// 		label: "Theme",
-		// 		submenu: [
-		// 			{
-		// 				type: "radio",
-		// 				label: 'Default',
-		// 				checked: this.theme === 'default',
-		// 				click: (menuItem, _browserWindow, _event) => {
-		// 					this.theme = 'default'
-		// 					// db.set("priority", 1).write();
-		// 				},
-		// 			},
-		// 			{
-		// 				type: "radio",
-		// 				label: 'Trans Pride',
-		// 				checked: this.theme === 'trans',
-		// 				click: (menuItem, _browserWindow, _event) => {
-		// 					this.theme = 'trans'
-		// 					// db.set("priority", 2).write();
-		// 				},
-		// 			},
-		// 		],
-		// 	})
-		// )
-
-		//endregion
 
 		if (fs.existsSync(path.join(STORE_PATH, "font.ttf"))) {
 			console.log("nya");
