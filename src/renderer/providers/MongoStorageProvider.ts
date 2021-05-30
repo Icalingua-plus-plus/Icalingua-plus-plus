@@ -25,21 +25,21 @@ export default class MongoStorageProvider implements StorageProvider {
         this.mdb = dba.db("eqq" + this.id);
     }
 
-    addMessage(roomId: string, message: object): Promise<void> {
+    addMessage(roomId: number, message: object): Promise<any> {
         return this.mdb.collection("msg" + roomId).insertOne(message);
     }
 
-    addRoom(room: object): Promise<void> {
+    addRoom(room: object): Promise<any> {
         return this.mdb.collection("rooms").insertOne(room)
     }
 
-    updateMessage(roomId: string, messageId: string, message: object): Promise<void> {
+    updateMessage(roomId: number, messageId: string, message: object): Promise<any> {
         return this.mdb
             .collection("msg" + roomId)
             .updateOne({_id: messageId}, {$set: message});
     }
 
-    async fetchMessages(roomId: string, skip: number, limit: number): Promise<Message[]> {
+    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
         const arr = await this.mdb
             .collection("msg" + roomId)
             .find(
@@ -54,10 +54,33 @@ export default class MongoStorageProvider implements StorageProvider {
         return arr.reverse()
     }
 
-    removeRoom(roomId: string): void {
+    removeRoom(roomId: number): Promise<any> {
+        return this.mdb.collection("rooms").findOneAndDelete({roomId: roomId});
     }
 
-    updateRoom(roomId: string, room: object): void {
+    updateRoom(roomId: number, room: object): Promise<any> {
+        return this.mdb
+            .collection("rooms")
+            .updateOne(
+                {roomId: roomId},
+                {$set: room}
+            );
     }
 
+    getMessage(roomId: number, messageId: string): Promise<Message> {
+        return this.mdb
+            .collection("msg" + roomId)
+            .findOne({_id: messageId})
+    }
+
+    async addMessages(roomId: number, messages: object[]): Promise<any> {
+        try {
+            return await this.mdb
+                .collection("msg" + roomId)
+                .insertMany(messages, {ordered: false})
+        }
+        catch(e){
+            return e
+        }
+    }
 }
