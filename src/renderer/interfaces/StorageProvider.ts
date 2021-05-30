@@ -4,17 +4,19 @@ import Message from "./Message";
 export default interface StorageProvider {
     connect():Promise<void>
 
-    updateRoom(roomId: string, room: object): void
+    updateRoom(roomId: number, room: object): void
 
-    addMessage(roomId: string, message: object): void
+    addMessage(roomId: number, message: object): void
 
     addRoom(room: object): void
 
-    removeRoom(roomId: string): void
+    removeRoom(roomId: number): void
 
-    updateMessage(roomId: string, messageId: string, message: object): void
+    updateMessage(roomId: number, messageId: string, message: object): void
 
-    fetchMessages(roomId: string, skip: number, limit: number): Promise<Message[]>
+    fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
+
+    getMessage(roomId: number, messageId: string): Promise<Message>
 
     getAllRooms(): Promise<Room[]>
 }

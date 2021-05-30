@@ -219,7 +219,7 @@ const glodb = remote.getGlobal("glodb");
 
 const Aria2 = require("aria2");
 
-let db, aria, mdb
+let db, aria
 /**
  * @type StorageProvider
  */
@@ -377,17 +377,17 @@ export default {
 				.then(() => {
 					storage.getAllRooms()
 						.then((e) => {
-						this.rooms = e;
-						this.rooms.forEach((e) => {
-							//更新群的名称
-							if (e.roomId > -1) return;
-							const group = bot.gl.get(-e.roomId)
-							if (group && group.group_name !== e.roomName) {
-								e.roomName = group.group_name;
-								storage.updateRoom(e.roomId, {roomName: group.group_name})
-							}
+							this.rooms = e;
+							this.rooms.forEach((e) => {
+								//更新群的名称
+								if (e.roomId > -1) return;
+								const group = bot.gl.get(-e.roomId)
+								if (group && group.group_name !== e.roomName) {
+									e.roomName = group.group_name;
+									storage.updateRoom(e.roomId, {roomName: group.group_name})
+								}
+							});
 						});
-					});
 					bot.on("message", this.onQQMessage);
 					bot.on("notice.friend.recall", this.friendRecall);
 					bot.on("notice.group.recall", this.groupRecall);
@@ -1044,12 +1044,7 @@ export default {
 				}
 			}
 			if (this.mongodb)
-				mdb
-					.collection("msg" + data.user_id)
-					.updateOne(
-						{_id: data.message_id},
-						{$set: {deleted: new Date()}}
-					);
+				storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
 			else
 				db.get("messages." + data.user_id)
 					.find({_id: data.message_id})
@@ -1065,12 +1060,7 @@ export default {
 				}
 			}
 			if (this.mongodb)
-				mdb
-					.collection("msg" + -data.group_id)
-					.updateOne(
-						{_id: data.message_id},
-						{$set: {deleted: new Date()}}
-					);
+				storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
 			else
 				db.get("messages." + -data.group_id)
 					.find({_id: data.message_id})
@@ -1124,9 +1114,7 @@ export default {
 			const updatePriority = (lev) => {
 				room.priority = lev;
 				if (this.mongodb) {
-					mdb
-						.collection("rooms")
-						.updateOne({roomId: room.roomId}, {$set: {priority: lev}});
+					storage.updateRoom(room.roomId, {priority: lev})
 				}
 				this.updateAppMenu();
 			};
@@ -1173,9 +1161,7 @@ export default {
 						else room.index = 1;
 						this.rooms = [...this.rooms];
 						if (this.mongodb)
-							mdb
-								.collection("rooms")
-								.updateOne({roomId: room.roomId}, {$set: room});
+							storage.updateRoom(room.roomId, room)
 						else db.set("rooms", this.rooms).write();
 					},
 				},
@@ -1185,7 +1171,7 @@ export default {
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
 						if (this.mongodb)
-							mdb.collection("rooms").findOneAndDelete({roomId: room.roomId});
+							storage.removeRoom(room.roomId)
 						else db.set("rooms", this.rooms).write();
 					},
 				},
@@ -1199,7 +1185,7 @@ export default {
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
 						if (this.mongodb)
-							mdb.collection("rooms").findOneAndDelete({roomId: room.roomId});
+							storage.removeRoom(room.roomId)
 						else db.set("rooms", this.rooms).write();
 						db.set("ignoredChats", this.ignoredChats).write();
 					},
@@ -1232,12 +1218,7 @@ export default {
 							click: (menuItem) => {
 								room.autoDownload = menuItem.checked
 								if (this.mongodb)
-									mdb
-										.collection("rooms")
-										.updateOne(
-											{roomId: room.roomId},
-											{$set: room}
-										);
+									storage.updateRoom(room.roomId, room)
 								else db.set("rooms", this.rooms).write();
 							},
 						},
@@ -1253,12 +1234,7 @@ export default {
 								if (selection && selection.length) {
 									room.downloadPath = selection[0]
 									if (this.mongodb)
-										mdb
-											.collection("rooms")
-											.updateOne(
-												{roomId: room.roomId},
-												{$set: room}
-											);
+										storage.updateRoom(room.roomId, room)
 									else db.set("rooms", this.rooms).write();
 								}
 							},
@@ -1303,10 +1279,8 @@ export default {
 				if (room === this.selectedRoom)
 					this.messages = [...this.messages, message];
 				if (this.mongodb) {
-					mdb
-						.collection("rooms")
-						.updateOne({roomId: room.roomId}, {$set: room});
-					mdb.collection("msg" + roomId).insertOne(message);
+					storage.updateRoom(room.roomId, room)
+					storage.addMessage(roomId, message)
 				}
 				else
 					db.get("messages." + roomId)
@@ -1325,7 +1299,7 @@ export default {
 				// create room
 				room = this.createRoom(id, name, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (this.mongodb) mdb.collection("rooms").insertOne(room);
+				if (this.mongodb) storage.addRoom(room);
 				else db.set("messages." + id, []).write();
 			}
 			this.chroom(room);
@@ -1516,10 +1490,8 @@ export default {
 				if (room === this.selectedRoom)
 					this.messages = [...this.messages, message];
 				if (this.mongodb) {
-					mdb
-						.collection("rooms")
-						.updateOne({roomId: room.roomId}, {$set: room});
-					mdb.collection("msg" + room.roomId).insertOne(message);
+					storage.updateRoom(room.roomId, room)
+					storage.addMessage(room.roomId, message);
 				}
 				else
 					db.get("messages." + room.roomId)
@@ -1536,9 +1508,7 @@ export default {
 			message.reveal = true;
 			this.messages = [...this.messages];
 			if (this.mongodb)
-				mdb
-					.collection("msg" + this.selectedRoom.roomId)
-					.updateOne({_id: message._id}, {$set: {reveal: true}});
+				storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 			else
 				db.get("messages." + this.selectedRoom.roomId)
 					.find({_id: message._id})
@@ -1606,9 +1576,7 @@ export default {
 						let replyMessage;
 						if (roomId) {
 							if (this.mongodb)
-								replyMessage = await mdb
-									.collection("msg" + roomId)
-									.findOne({_id: m.data.id});
+								replyMessage = await storage.getMessage(m.data.id);
 							else
 								replyMessage = db
 									.get("messages." + roomId)
@@ -1765,32 +1733,14 @@ export default {
 			console.log(messages);
 			if (this.mongodb) {
 				message.historyGot = true;
-				mdb
-					.collection("msg" + this.selectedRoom.roomId)
-					.updateOne({_id: message._id}, {$set: {historyGot: true}});
-				mdb
-					.collection("msg" + this.selectedRoom.roomId)
-					.insertMany(messages, {ordered: false}, (err, res) => {
-						console.log(err);
-						console.log(res);
-						mdb
-							.collection("msg" + this.selectedRoom.roomId)
-							.find(
-								{},
-								{
-									sort: [["time", -1]],
-									limit: this.messages.length,
-								}
-							)
-							.toArray()
-							.then((msgs2add) => {
-								setTimeout(() => {
-									msgs2add.reverse();
-									this.messages = msgs2add;
-									this.fetchMessage();
-								}, 0);
-							});
-					});
+				storage.updateMessage(this.selectedRoom.roomId, message._id, {historyGot: true})
+				storage.addMessages(this.selectedRoom.roomId, messages)
+					.then(() => storage.fetchMessages(this.selectedRoom.roomId, 0, this.messages.length))
+					.then(msgs2add => setTimeout(() => {
+						console.log('ok')
+						this.messages = msgs2add;
+						this.fetchMessage();
+					}, 0))
 			}
 		},
 		async openForward(resId) {
