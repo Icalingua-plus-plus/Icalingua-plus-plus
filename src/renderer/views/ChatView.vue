@@ -1214,6 +1214,13 @@ export default {
 				},
 
 			]);
+			if (room === this.selectedRoom)
+				menu.append(new remote.MenuItem({
+					label: 'Get History',
+					click: () => {
+						this.getLatestHistory(room.roomId)
+					}
+				}))
 			if (build) return menu;
 			menu.popup({window: remote.getCurrentWindow()});
 		},
@@ -1713,6 +1720,18 @@ export default {
 						this.fetchMessage();
 					}, 0))
 			}
+		},
+		getLatestHistory(roomId) {
+			let buffer
+			if (roomId < 0) {
+				buffer = Buffer.alloc(21)
+				roomId = -roomId
+			}
+			else buffer = Buffer.alloc(17)
+			buffer.writeUInt32BE(roomId, 0)
+			this.getHistory({
+				_id: buffer.toString('base64')
+			})
 		},
 		async openForward(resId) {
 			const history = await bot.getForwardMsg(resId);
