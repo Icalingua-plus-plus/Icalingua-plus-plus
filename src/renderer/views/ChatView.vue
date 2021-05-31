@@ -792,7 +792,6 @@ export default {
 					.then((msgs2add) => {
 						setTimeout(() => {
 							if (msgs2add.length) {
-								msgs2add.reverse();
 								this.messages = [...msgs2add, ...this.messages];
 							}
 							else this.messagesLoaded = true;
