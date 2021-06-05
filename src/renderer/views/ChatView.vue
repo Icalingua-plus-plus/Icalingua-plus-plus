@@ -1677,48 +1677,57 @@ export default {
 			remote.Menu.setApplicationMenu(menu);
 		},
 		async getHistory(message) {
-			const history = await bot.getChatHistory(message._id);
-			console.log(history);
-			if (history.error) {
-				console.log(history.error);
-				return;
-			}
 			const messages = [];
-			for (let i = 0; i < history.data.length; i++) {
-				const data = history.data[i];
-				const message = {
-					senderId: data.sender.user_id,
-					username: data.group_id
-						? data.anonymous
-							? data.anonymous.name
-							: data.sender.card || data.sender.nickname
-						: data.sender.remark || data.sender.nickname,
-					content: "",
-					timestamp: new Date(data.time * 1000).format("hh:mm"),
-					date: new Date(data.time * 1000).format("dd/MM/yyyy"),
-					_id: data.message_id,
-					time: data.time * 1000,
-				};
-				await this.processMessage(
-					data.message,
-					message,
-					{},
-					this.selectedRoom.roomId
-				);
-				messages.push(message);
+			while (true) {
+				const history = await bot.getChatHistory(message._id);
+				console.log(history);
+				if (history.error) {
+					console.log(history.error);
+					this.$message.error('错误：' + history.error.message)
+					break
+				}
+				if (!history.data.length) break
+				const newMsgs = []
+				for (let i = 0; i < history.data.length; i++) {
+					const data = history.data[i];
+					const message = {
+						senderId: data.sender.user_id,
+						username: data.group_id
+							? data.anonymous
+								? data.anonymous.name
+								: data.sender.card || data.sender.nickname
+							: data.sender.remark || data.sender.nickname,
+						content: "",
+						timestamp: new Date(data.time * 1000).format("hh:mm"),
+						date: new Date(data.time * 1000).format("dd/MM/yyyy"),
+						_id: data.message_id,
+						time: data.time * 1000,
+					};
+					await this.processMessage(
+						data.message,
+						message,
+						{},
+						this.selectedRoom.roomId
+					);
+					messages.push(message);
+					newMsgs.push(message)
+				}
+				message = newMsgs[0]
+				const firstOwnMsg = this.selectedRoom.roomId < 0 ?
+					newMsgs[0] : //群的话只要第一条消息就行
+					newMsgs.find(e => e.senderId == this.account)
+				if (firstOwnMsg && await storage.getMessage(this.selectedRoom.roomId, firstOwnMsg._id)) break
 			}
 			console.log(messages);
-			if (this.mongodb) {
-				message.historyGot = true;
-				storage.updateMessage(this.selectedRoom.roomId, message._id, {historyGot: true})
-				storage.addMessages(this.selectedRoom.roomId, messages)
-					.then(() => storage.fetchMessages(this.selectedRoom.roomId, 0, this.messages.length))
-					.then(msgs2add => setTimeout(() => {
-						console.log('ok')
-						this.messages = msgs2add;
-						this.fetchMessage();
-					}, 0))
-			}
+			message.historyGot = true;
+			storage.updateMessage(this.selectedRoom.roomId, message._id, {historyGot: true})
+			storage.addMessages(this.selectedRoom.roomId, messages)
+				.then(() => storage.fetchMessages(this.selectedRoom.roomId, 0, this.messages.length))
+				.then(msgs2add => setTimeout(() => {
+					console.log('ok')
+					this.messages = msgs2add;
+					this.fetchMessage();
+				}, 0))
 		},
 		getLatestHistory(roomId) {
 			let buffer
