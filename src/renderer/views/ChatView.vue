@@ -209,7 +209,7 @@ import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 
-import MongoStorageProvider from "../providers/MongoStorageProvider";
+import MongoStorageProvider from "../providers/IndexedStorageProvider";
 
 const _ = require('lodash');
 const remote = require('@electron/remote')
@@ -397,7 +397,7 @@ export default {
 					remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
 					loading.close();
 				})
-				.catch(() => {
+				.catch((err) => {
 					console.log(err);
 					glodb.set("account.autologin", false).write()
 					alert('Error connecting to MongoDB database')
