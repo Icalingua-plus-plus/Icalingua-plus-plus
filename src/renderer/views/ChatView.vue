@@ -1213,7 +1213,7 @@ export default {
 				},
 
 			]);
-			if (room === this.selectedRoom)
+			if (room === this.selectedRoom && this.mongodb)
 				menu.append(new remote.MenuItem({
 					label: 'Get History',
 					click: () => {
