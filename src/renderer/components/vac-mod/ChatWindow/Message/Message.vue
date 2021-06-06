@@ -21,7 +21,7 @@
       }"
     >
       <slot name="message" v-bind="{ message }">
-        <div @click.right="avatarctx" @dblclick="$emit('poke')">
+        <div class="vac-message-sender-avatar" @click.right="avatarctx" @dblclick="$emit('poke')">
           <el-avatar
             size="medium"
             :src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
@@ -418,12 +418,18 @@ export default {
 }
 
 .vac-message-box {
+  position: relative;
   display: flex;
   flex: 0 0 50%;
   max-width: 50%;
   justify-content: flex-start;
   line-height: 1.4;
   align-items: flex-end;
+}
+
+.vac-message-sender-avatar {
+  position: sticky;
+  bottom: 0;
 }
 
 .vac-message-container {
