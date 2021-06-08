@@ -5,8 +5,6 @@
 </template>
 
 <script>
-window.Clansty = "Shadow";
-
 export default {
   name: "app",
 };
