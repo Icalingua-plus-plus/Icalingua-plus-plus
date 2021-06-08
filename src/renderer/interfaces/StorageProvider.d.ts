@@ -18,5 +18,7 @@ export default interface StorageProvider {
 
     getMessage(roomId: number, messageId: string): Promise<Message>
 
+    addMessages(roomId: number, messages: Message[]):Promise<any>
+
     getAllRooms(): Promise<Room[]>
 }

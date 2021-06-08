@@ -93,8 +93,14 @@ export default class IndexedStorageProvider implements StorageProvider {
       .values([roomItem])
       .exec();
   }
+
   removeRoom(roomId: number): void {
     const roomsTable = this.idb.getSchema().table("rooms");
+    this.idb
+      .delete()
+      .from(roomsTable)
+      .where(roomsTable.roomId.eq(roomId))
+      .exec();
   }
 
   updateMessage(roomId: number, messageId: string, message: object): void {
