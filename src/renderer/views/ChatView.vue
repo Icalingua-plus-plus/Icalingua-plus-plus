@@ -208,6 +208,7 @@ import {
 import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
+import {io} from "socket.io-client";
 
 import MongoStorageProvider from "../providers/MongoStorageProvider";
 import IndexedStorageProvider from "../providers/IndexedStorageProvider";
@@ -219,7 +220,7 @@ const glodb = remote.getGlobal("glodb");
 
 const Aria2 = require("aria2");
 
-let db, aria
+let db, aria, socketIo
 /**
  * @type StorageProvider
  */
@@ -372,7 +373,7 @@ export default {
 			priority: 3,
 		}).write();
 		if (this.mongodb) {
-			storage = new IndexedStorageProvider(glodb.get("connStr").value(), this.account)
+			storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
 			storage.connect()
 				.then(() => {
 					storage.getAllRooms()
@@ -458,6 +459,16 @@ export default {
 		ipcRenderer.on("openForward", (e, resId) => this.openForward(resId));
 		ipcRenderer.on("openImage", (e, resId) => this.openImage(resId));
 		ipcRenderer.on("downloadImage", (e, resId) => this.downloadImage(resId));
+		window.setupSocketIoSlave = url => {
+			if (url) {
+				db.set('socketIoSlave', url).write()
+				this.initSocketIo()
+			}
+			else {
+				db.set('socketIoSlave', false).write()
+				socketIo = null
+			}
+		}
 		//endregion
 		//region build menu
 		const updatePriority = (lev) => {
@@ -609,6 +620,10 @@ export default {
 		}
 
 		if (this.aria2.enabled) this.startAria();
+
+		if (db.get('socketIoSlave').value()) {
+			this.initSocketIo()
+		}
 
 		if (!this.mongodb) {
 			bot.on("message", this.onQQMessage);
@@ -1369,6 +1384,7 @@ export default {
 				p = path.join(__static, this.darkTaskIcon ? "dark.png" : "256x256.png");
 				document.title = title;
 			}
+			if (socketIo) socketIo.emit('qqCount', unread)
 			this.tray.setImage(p);
 			remote.app.setBadgeCount(unread);
 		},
@@ -1797,6 +1813,10 @@ export default {
 				);
 			});
 		},
+		initSocketIo() {
+			socketIo = new io(db.get('socketIoSlave').value(), {transports: ["websocket"]})
+			console.log(socketIo)
+		}
 	},
 	computed: {
 		cssVars() {
