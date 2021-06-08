@@ -469,6 +469,7 @@ export default {
 				socketIo = null
 			}
 		}
+		window.flag = () => this.view = 'kench'
 		//endregion
 		//region build menu
 		const updatePriority = (lev) => {
