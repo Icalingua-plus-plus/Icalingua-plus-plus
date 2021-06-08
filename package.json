@@ -99,7 +99,7 @@
     "lowdb": "^1.0.0",
     "md5": "^2.3.0",
     "mongodb": "^3.6.6",
-    "oicq": "^1.17.1",
+    "oicq": "^1.17.3",
     "socket.io-client": "^4.1.2",
     "v-click-outside": "^3.1.2",
     "v-emoji-picker": "^2.3.3",
