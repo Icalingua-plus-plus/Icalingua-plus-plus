@@ -124,7 +124,7 @@ export default {
 		isHidden() {
 			return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.message.content)
 		},
-		summary(){
+		summary() {
 			return this.message.content.replace(/[!！] *[Hh] *[Ii] *[Dd] *[Ee]/, '').trim()
 		}
 	},
@@ -184,14 +184,13 @@ export default {
 		vertical-align: top;
 		height: -webkit-fill-available;
 		width: -webkit-fill-available;
+
+		img {
+			max-height: 232px;
+			width: auto;
+			height: auto;
+			max-width: 250px;
+		}
 	}
-}
-
-
-::v-deep img {
-	max-height: 232px;
-	width: auto;
-	height: auto;
-	max-width: 250px;
 }
 </style>
