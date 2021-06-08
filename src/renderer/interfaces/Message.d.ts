@@ -23,6 +23,6 @@ export default interface Message {
     },
 }
 
-interface MessageInidb extends Message{
+interface MessageInIDB extends Message{
     roomId: number;
 }
