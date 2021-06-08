@@ -210,6 +210,7 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 
 import MongoStorageProvider from "../providers/MongoStorageProvider";
+import IndexedStorageProvider from "../providers/IndexedStorageProvider";
 
 const _ = require('lodash');
 const remote = require('@electron/remote')
@@ -371,7 +372,7 @@ export default {
 			priority: 1,
 		}).write();
 		if (this.mongodb) {
-			storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
+			storage = new IndexedStorageProvider(glodb.get("connStr").value(), this.account)
 			storage.connect()
 				.then(() => {
 					storage.getAllRooms()
