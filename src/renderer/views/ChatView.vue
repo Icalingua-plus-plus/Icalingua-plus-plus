@@ -369,7 +369,7 @@ export default {
 				secret: "",
 				path: "/jsonrpc",
 			},
-			priority: 5,
+			priority: 3,
 		}).write();
 		if (this.mongodb) {
 			storage = new IndexedStorageProvider(glodb.get("connStr").value(), this.account)
