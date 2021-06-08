@@ -5,12 +5,10 @@ import * as lf from "lovefield";
 
 export default class IndexedStorageProvider implements StorageProvider {
     id: string | number;
-    connStr: string;
     schemaBuilder: lf.schema.Builder;
     idb: lf.Database;
 
     constructor(connStr: string, id: string | number) {
-        this.connStr = connStr;
         this.id = id;
     }
 
