@@ -30,7 +30,13 @@ export interface RoomIniDB {
   unreadCount: number;
   priority: number;
   utime: number;
-  users: string;
+  users:
+      | [{ _id: 1; username: "1" }, { _id: 2; username: "2" }]
+      | [
+    { _id: 1; username: "1" },
+    { _id: 2; username: "2" },
+    { _id: 3; username: "3" }
+  ];
   at: boolean;
   lastMessage: {
     content: string;
