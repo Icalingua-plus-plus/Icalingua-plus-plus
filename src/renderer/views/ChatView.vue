@@ -441,7 +441,6 @@ export default {
 			e.preventDefault();
 			e.stopPropagation();
 		});
-
 		//keyboard
 		document.addEventListener("keydown", (e) => {
 			if (e.repeat) return;
@@ -456,8 +455,9 @@ export default {
 				if (unreadRoom) this.chroom(unreadRoom);
 			}
 		});
-
 		ipcRenderer.on("openForward", (e, resId) => this.openForward(resId));
+		ipcRenderer.on("openImage", (e, resId) => this.openImage(resId));
+		ipcRenderer.on("downloadImage", (e, resId) => this.downloadImage(resId));
 		//endregion
 		//region build menu
 		const updatePriority = (lev) => {
@@ -1417,6 +1417,7 @@ export default {
 			win.destroy();
 		},
 		downloadImage(url) {
+			console.log(url)
 			const downdir = remote.app.getPath("downloads");
 			const downpath = path.join(
 				downdir,
