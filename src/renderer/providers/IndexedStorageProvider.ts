@@ -1,6 +1,6 @@
 import StorageProvider from "../interfaces/StorageProvider";
-import Message, {MessageInidb} from "../interfaces/Message";
-import Room, {RoomIniDB} from "../interfaces/Room";
+import Message, {MessageInIDB} from "../interfaces/Message";
+import Room from "../interfaces/Room";
 import * as lf from "lovefield";
 
 export default class IndexedStorageProvider implements StorageProvider {
@@ -123,7 +123,7 @@ export default class IndexedStorageProvider implements StorageProvider {
             .orderBy(msgTable.time, lf.Order.DESC)
             .skip(skip)
             .limit(limit)
-            .exec()) as MessageInidb[];
+            .exec()) as MessageInIDB[];
         return msgs.reverse()
     }
 
@@ -134,7 +134,7 @@ export default class IndexedStorageProvider implements StorageProvider {
             .from(msgTable)
             .where(msgTable._id.in([messageId]))
             .orderBy(msgTable.time)
-            .exec()) as MessageInidb[];
+            .exec()) as MessageInIDB[];
         return messages[0]
     }
 
@@ -143,7 +143,7 @@ export default class IndexedStorageProvider implements StorageProvider {
         const rooms = (await this.idb
             .select()
             .from(roomsTable)
-            .exec()) as RoomIniDB[];
+            .exec()) as Room[];
         if (rooms) {
             return rooms
         } else {
