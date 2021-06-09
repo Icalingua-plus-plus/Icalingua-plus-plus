@@ -886,7 +886,7 @@ export default {
 			////process message////
 			await this.processMessage(data.message, message, lastMessage, roomId);
 			at = message.at;
-			if (!history) room.at = at;
+			if (!history && at) room.at = at;
 
 			//run only if is not history message
 			if (!history) {
