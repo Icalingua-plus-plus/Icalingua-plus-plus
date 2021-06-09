@@ -212,6 +212,7 @@ import {io} from "socket.io-client";
 
 import MongoStorageProvider from "../providers/MongoStorageProvider";
 import IndexedStorageProvider from "../providers/IndexedStorageProvider";
+import RedisStorageProvider from "../providers/RedisStorageProvider"
 
 const _ = require('lodash');
 const remote = require('@electron/remote')
