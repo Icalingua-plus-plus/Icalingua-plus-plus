@@ -153,20 +153,12 @@ export default {
 .vac-image-loading {
 	filter: blur(3px);
 	height: 250px;
+	width: 250px !important;
 }
 
 .vac-image-err {
 	height: 250px;
-}
-
-::v-deep .image-slot {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 100%;
-	height: 100%;
-	font-size: 30px;
-	color: #909399;
+	width: 250px !important;
 }
 
 .vac-message-image-mod {
@@ -191,6 +183,17 @@ export default {
 			height: auto;
 			max-width: 250px;
 		}
+
+		.image-slot {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+			height: 100%;
+			font-size: 30px;
+			color: #909399;
+		}
+
 	}
 }
 </style>

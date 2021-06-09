@@ -21,11 +21,11 @@
       }"
 		>
 			<slot name="message" v-bind="{ message }">
-				<div class="vac-message-sender-avatar" @click.right="avatarctx" @dblclick="$emit('poke')">
+				<div class="vac-message-sender-avatar" @click.right="avatarctx" @dblclick="$emit('poke')"
+				     v-if="roomUsers.length > 2 && message.senderId !== currentUserId">
 					<el-avatar
 						size="medium"
 						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
-						v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
 					/>
 				</div>
 				<div
