@@ -351,7 +351,8 @@ export default {
 		});
 		//region db init
 		this.account = glodb.get("account").value().username;
-		this.mongodb = glodb.get("mongodb").value();
+		const storageType = glodb.get("storage").value();
+		this.mongodb = storageType !== 'json'
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),
 			{
@@ -373,7 +374,10 @@ export default {
 			priority: 3,
 		}).write();
 		if (this.mongodb) {
-			storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
+			if (storageType === 'mdb')
+				storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
+			else
+				storage = new IndexedStorageProvider(this.account)
 			storage.connect()
 				.then(() => {
 					storage.getAllRooms()
