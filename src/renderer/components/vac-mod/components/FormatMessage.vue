@@ -38,6 +38,7 @@
 						</div>
 					</template>
 					<template v-else>
+						<br v-if="message.breakLine" />
 						<span>{{ message.value }}</span>
 					</template>
 				</component>
@@ -106,6 +107,7 @@ export default {
 				m.tag = this.checkType(m, "tag");
 				m.face = this.checkType(m, "face");
 				m.forward = this.checkType(m, "forward");
+				m.breakLine = this.checkType(m, "breakLine");
 				m.image = this.checkImageType(m);
 			});
 
