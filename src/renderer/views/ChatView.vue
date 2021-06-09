@@ -537,8 +537,11 @@ export default {
 					enabled: false,
 				}),
 				new remote.MenuItem({
+					label: "GitHub",
+					click: () => shell.openExternal('https://github.com/Clansty/electron-qq')
+				}),
+				new remote.MenuItem({
 					label: "Reload",
-					type: "normal",
 					click: () => {
 						bot.removeListener("message", this.onQQMessage);
 						bot.removeListener("notice.friend.recall", this.friendRecall);
