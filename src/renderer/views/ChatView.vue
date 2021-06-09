@@ -1705,7 +1705,7 @@ export default {
 					this.$message.error('错误：' + history.error.message)
 					break
 				}
-				if (!history.data.length) break
+				if (history.data.length < 2) break
 				const newMsgs = []
 				for (let i = 0; i < history.data.length; i++) {
 					const data = history.data[i];
@@ -1735,7 +1735,7 @@ export default {
 				const firstOwnMsg = this.selectedRoom.roomId < 0 ?
 					newMsgs[0] : //群的话只要第一条消息就行
 					newMsgs.find(e => e.senderId == this.account)
-				if (firstOwnMsg && await storage.getMessage(this.selectedRoom.roomId, firstOwnMsg._id)) break
+				if (!firstOwnMsg || await storage.getMessage(this.selectedRoom.roomId, firstOwnMsg._id)) break
 			}
 			console.log(messages);
 			message.historyGot = true;
