@@ -32,14 +32,18 @@
 					<el-radio-button label="5">iPad</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
-			<el-form-item prop="autologin">
+			<el-form-item prop="autologin" class="nobottmar">
 				<span class="el-form-item__label">Auto login</span>
 				<el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }"/>
-				<br/>
-				<span class="el-form-item__label">Use MongoDB</span>
-				<el-switch v-model="mongodb" :style="{ marginLeft: '5px' }"/>
 			</el-form-item>
-			<el-form-item prop="connStr" v-show="mongodb">
+			<el-form-item label="Storage engine">
+				<el-radio-group v-model="storage" size="small">
+					<el-radio-button label="json">JSON (Deprecated)</el-radio-button>
+					<el-radio-button label="idb">Indexed DB (Beta)</el-radio-button>
+					<el-radio-button label="mdb">MongoDB</el-radio-button>
+				</el-radio-group>
+			</el-form-item>
+			<el-form-item prop="connStr" v-show="storage==='mdb'">
 				<el-input
 					:show-password="connStr.split(':').length>2"
 					placeholder="MongoDB connect string"
@@ -89,16 +93,6 @@ const path = require("path");
 const fs = require("fs");
 
 const glodb = remote.getGlobal("glodb");
-glodb
-	.defaults({
-		account: {
-			username: "",
-			password: "",
-			protocol: 2,
-			autologin: false,
-		},
-	})
-	.write();
 export default {
 	name: "LoginView",
 	data() {
@@ -122,7 +116,7 @@ export default {
 			captcha: "",
 			captchaimg: "",
 
-			mongodb: false,
+			storage: 'idb',
 			connStr: ''
 		};
 	},
@@ -135,7 +129,7 @@ export default {
 				protocol: account.protocol,
 				autologin: account.autologin,
 			};
-		this.mongodb = glodb.get("mongodb").value();
+		this.storage = glodb.get("storage").value() || 'idb'
 		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
 	},
 	mounted() {
@@ -146,7 +140,7 @@ export default {
 			this.$refs[formName].validate((valid) => {
 				if (valid) {
 					this.disabled = true;
-					glodb.set("mongodb", this.mongodb).set("connStr", this.connStr).write();
+					glodb.set("storage", this.storage).set("connStr", this.connStr).write();
 					const createBot = remote.getGlobal("createBot");
 					createBot(this.form);
 					const bot = remote.getGlobal("bot");

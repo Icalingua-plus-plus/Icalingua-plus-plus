@@ -8,7 +8,7 @@ export default class IndexedStorageProvider implements StorageProvider {
     schemaBuilder: lf.schema.Builder;
     idb: lf.Database;
 
-    constructor(connStr: string, id: string | number) {
+    constructor(id: string | number) {
         this.id = id;
     }
 
