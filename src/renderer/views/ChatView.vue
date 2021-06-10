@@ -378,8 +378,10 @@ export default {
 		if (this.mongodb) {
 			if (storageType === 'mdb')
 				storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
-			else
+			else if (storageType === 'idb')
 				storage = new IndexedStorageProvider(this.account)
+			else if (storageType === 'redis')
+				storage = new RedisStorageProvider(glodb.get("rdsHost").value(), this.account)
 			storage.connect()
 				.then(() => {
 					storage.getAllRooms()

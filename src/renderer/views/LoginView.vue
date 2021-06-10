@@ -8,7 +8,7 @@
 			:disabled="disabled"
 			label-position="top"
 			class="login-box"
-			v-show="view == 'login'"
+			v-show="view === 'login'"
 		>
 			<center>
 				<h5>Version {{ ver }}</h5>
@@ -41,6 +41,7 @@
 					<el-radio-button label="json">JSON (Deprecated)</el-radio-button>
 					<el-radio-button label="idb">Indexed DB (Beta)</el-radio-button>
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
+					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item prop="connStr" v-show="storage==='mdb'">
@@ -48,6 +49,12 @@
 					:show-password="connStr.split(':').length>2"
 					placeholder="MongoDB connect string"
 					v-model="connStr"
+				/>
+			</el-form-item>
+			<el-form-item prop="rdsHost" v-show="storage==='redis'">
+				<el-input
+					placeholder="Redis Host"
+					v-model="rdsHost"
 				/>
 			</el-form-item>
 			<p class="red">
@@ -117,7 +124,8 @@ export default {
 			captchaimg: "",
 
 			storage: 'idb',
-			connStr: ''
+			connStr: '',
+			rdsHost: ''
 		};
 	},
 	created() {
@@ -131,6 +139,7 @@ export default {
 			};
 		this.storage = glodb.get("storage").value() || 'idb'
 		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
+		this.rdsHost = glodb.get("rdsHost").value() || '127.0.0.1'
 	},
 	mounted() {
 		if (this.form.autologin) this.onSubmit("loginForm");
@@ -140,7 +149,9 @@ export default {
 			this.$refs[formName].validate((valid) => {
 				if (valid) {
 					this.disabled = true;
-					glodb.set("storage", this.storage).set("connStr", this.connStr).write();
+					glodb.set("storage", this.storage)
+						.set("rdsHost", this.rdsHost)
+						.set("connStr", this.connStr).write();
 					const createBot = remote.getGlobal("createBot");
 					createBot(this.form);
 					const bot = remote.getGlobal("bot");
@@ -255,8 +266,8 @@ div#login {
 	background-position: bottom;
 	background-repeat: no-repeat;
 	background-size: contain;
-	background-image: url("~@/assets/loginbg.jpg");
-	font-family: "CircularSpotifyTxT Light Web";
+	background-image: url("../assets/loginbg.jpg");
+	font-family: "CircularSpotifyTxT Light Web", sans-serif;
 }
 
 .login-box {
