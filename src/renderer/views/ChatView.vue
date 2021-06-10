@@ -37,9 +37,9 @@
 				/>
 			</el-aside>
 			<el-main>
-				<el-row v-show="view === 'chats'">
+				<Multipane v-show="view === 'chats'">
 					<!-- main chat view -->
-					<el-col :span="5" ondragstart="return false;" class="nodrag">
+					<div :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
 						<TheRoomsPanel
 							:rooms="rooms"
 							:selected="selectedRoom"
@@ -47,9 +47,10 @@
 							@chroom="chroom"
 							@contextmenu="roomContext"
 						/>
-					</el-col>
-					<el-col
-						:span="panel ? 13 : 19"
+					</div>
+					<MultipaneResizer />
+					<div
+						style="flex: 1"
 						:style="[cssVars]"
 						class="vac-card-window"
 					>
@@ -100,11 +101,10 @@
 								<i class="el-icon-more"></i>
 							</template>
 						</Room>
-					</el-col>
-					<el-col
-						:span="6"
-						ondragstart="return false;"
-						class="nodrag"
+					</div>
+					<MultipaneResizer class="resize-next" />
+					<div
+						:style="{ minWidth: '300px', width: '300px', maxWidth: '500px' }"
 						v-show="panel"
 					>
 						<transition name="el-zoom-in-top">
@@ -124,8 +124,8 @@
 							@remove="rmIgnore"
 							@close="panel = ''"
 						/>
-					</el-col>
-				</el-row>
+					</div>
+				</Multipane>
 				<el-row v-if="view === 'contacts'" type="flex" justify="center">
 					<el-col :span="8" ondragstart="return false;" class="nodrag">
 						<TheContactsPanel @dblclick="startChat"/>
@@ -193,9 +193,8 @@
 import Room from "../components/vac-mod/ChatWindow/Room/Room";
 import Stickers from "../components/Stickers";
 import IgnoreManage from "../components/IgnoreManage";
+import { Multipane, MultipaneResizer } from '../components/multipane';
 import {defaultThemeStyles, cssThemeVars} from "../components/vac-mod/themes";
-
-//lowdb
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
 import path from "path";
@@ -305,6 +304,8 @@ export default {
 		SideBarIcon,
 		TheRoomsPanel,
 		TheContactsPanel,
+		Multipane,
+		MultipaneResizer,
 	},
 	data() {
 		return {
@@ -1863,7 +1864,7 @@ export default {
 	cursor: pointer;
 }
 
-.el-col {
+main div {
 	height: 100vh;
 	overflow: hidden;
 }
