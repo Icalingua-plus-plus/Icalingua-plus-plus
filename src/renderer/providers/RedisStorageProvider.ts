@@ -16,34 +16,61 @@ export default class RedisStorageProvider implements StorageProvider {
     this.redis = new Redis(this.connStr);
     return Promise.resolve();
   }
-  updateRoom(roomId: number, room: object): void {
-    this.redis.set(`${this.qid}:rooms:${roomId}`, JSON.stringify(room));
+  updateRoom(roomId: number, room: Room): void {
+    this.redis.hset(
+      `${this.qid}:rooms:rooms`,
+      `${roomId}`,
+      JSON.stringify(room)
+    );
+    this.redis.zadd(`${this.qid}:rooms:keyList`, room.utime, `${roomId}`);
   }
   addRoom(room: Room): void {
-    this.redis.set(`${this.qid}:rooms:${room.roomId}`, JSON.stringify(room));
+    this.redis.hset(
+      `${this.qid}:rooms:rooms`,
+      `${room.roomId}`,
+      JSON.stringify(room)
+    );
+    this.redis.zadd(
+      `${this.qid}:rooms:keyList`,
+      room.utime,
+      `${room.roomId}`
+    );
   }
   removeRoom(roomId: number): void {
-    this.redis.del(`${this.qid}:rooms:${roomId}`);
+    this.redis.hdel(`${this.qid}:rooms:rooms`, `${roomId}`);
+    this.redis.zrem(`${this.qid}:rooms:keyList`, `${roomId}`);
   }
   async getAllRooms(): Promise<Room[]> {
-    const roomKeys = await this.redis.keys(`${this.qid}:rooms*`);
+    const roomKeys = await this.redis.zrevrange(
+      `${this.qid}:rooms:keyList`,
+      0,
+      -1
+    );
     const roomsPAry = roomKeys.map(async (key) => {
-      const room = await this.redis.get(key);
-      return JSON.parse(room) as Room;
+      const room = await this.redis.hget(`${this.qid}:rooms:rooms`, key);
+      const pRoom = JSON.parse(room) as Room;
+      return { ...pRoom, roomId: Number(pRoom.roomId) };
     });
     const rooms = await Promise.all(roomsPAry);
     return rooms;
   }
 
   addMessage(roomId: number, message: Message): void {
-    this.redis.set(
-      `${this.qid}:msgof${roomId}:${message._id}`,
+    this.redis.hset(
+      `${this.qid}:msg${roomId}:messages`,
+      `${message._id}`,
       JSON.stringify(message)
+    );
+    this.redis.zadd(
+      `${this.qid}:msg${roomId}:msgIdList`,
+      message.time,
+      message._id
     );
   }
   updateMessage(roomId: number, messageId: string, message: object): void {
-    this.redis.set(
-      `${this.qid}:msgof${roomId}:${messageId}`,
+    this.redis.hset(
+      `${this.qid}:msg${roomId}:messages`,
+      `${messageId}`,
       JSON.stringify(message)
     );
   }
@@ -52,30 +79,41 @@ export default class RedisStorageProvider implements StorageProvider {
     skip: number,
     limit: number
   ): Promise<Message[]> {
-    const msgKeys = await this.redis.keys(`${this.qid}:msgof${roomId}:*`);
-    const msgtoFetchKeys = msgKeys.slice(
-      msgKeys.length - 1 - skip - limit,
-      msgKeys.length - skip
+    const msgKeys = await this.redis.zrevrange(
+      `${this.qid}:msg${roomId}:msgIdList`,
+      skip,
+      skip + limit - 1
     );
-    const messagesPAry = msgtoFetchKeys.map(async (key) => {
-      const msg = await this.redis.get(key);
+    const messagesPAry = msgKeys.map(async (key) => {
+      const msg = await this.redis.hget(
+        `${this.qid}:msg${roomId}:messages`,
+        key
+      );
       return JSON.parse(msg) as Message;
     });
     const messages = await Promise.all(messagesPAry);
+    messages.sort((a, b) => a.time - b.time);
     return messages;
   }
 
   async getMessage(roomId: number, messageId: string): Promise<Message> {
-    const msgString = await this.redis.get(
-      `${this.qid}:msgof${roomId}:${messageId}`
+    const msgString = await this.redis.hget(
+      `${this.qid}:msg${roomId}:messages`,
+      `${messageId}`
     );
     return JSON.parse(msgString);
   }
   addMessages(roomId: number, messages: Message[]): Promise<any> {
     messages.forEach((message) => {
-      this.redis.set(
-        `${this.qid}:msgof${roomId}:${message._id}`,
+      this.redis.hset(
+        `${this.qid}:msg${roomId}:messages`,
+        `${message._id}`,
         JSON.stringify(message)
+      );
+      this.redis.zadd(
+        `${this.qid}:msg${roomId}:msgIdList`,
+        message.time,
+        message._id
       );
     });
     return Promise.resolve();
