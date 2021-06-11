@@ -29,37 +29,7 @@
     "files": [
       "dist/electron/**/*"
     ],
-    "win": {
-      "target": [
-        {
-          "target": "7z"
-        }
-      ],
-      "icon": "static/Project2.ico"
-    },
-    "appx": {
-      "applicationId": "com.clansty.electronqq",
-      "backgroundColor": "transparent",
-      "displayName": "Electron QQ",
-      "identityName": "com.clansty.electronqq",
-      "publisher": "CN=凌莞",
-      "publisherDisplayName": "Clansty",
-      "languages": [
-        "en-US"
-      ],
-      "addAutoLaunchExtension": true,
-      "showNameOnTiles": false
-    },
-    "mac": {
-      "icon": "static/Project3.icns",
-      "target": [
-        {
-          "target": "dmg"
-        }
-      ]
-    },
     "linux": {
-      "icon": "static/512x512.png",
       "target": [
         {
           "target": "tar.xz"
@@ -73,21 +43,6 @@
       ],
       "executableName": "electron-qq",
       "category": "Network"
-    },
-    "dmg": {
-      "contents": [
-        {
-          "x": 410,
-          "y": 150,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 150,
-          "type": "file"
-        }
-      ]
     }
   },
   "dependencies": {
@@ -130,7 +85,7 @@
     "del": "^3.0.0",
     "devtron": "^1.4.0",
     "electron": "^12.0.7",
-    "electron-builder": "^22.10.5",
+    "electron-builder": "^22.11.7",
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.1.1",
     "element-ui": "^2.15.1",
