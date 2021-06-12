@@ -38,7 +38,6 @@
 			</el-form-item>
 			<el-form-item label="Storage engine">
 				<el-radio-group v-model="storage" size="small">
-					<el-radio-button label="json">JSON (Deprecated)</el-radio-button>
 					<el-radio-button label="idb">Indexed DB (Beta)</el-radio-button>
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
 					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
@@ -123,7 +122,7 @@ export default {
 			captcha: "",
 			captchaimg: "",
 
-			storage: 'idb',
+			storage: '',
 			connStr: '',
 			rdsHost: ''
 		};
@@ -138,6 +137,7 @@ export default {
 				autologin: account.autologin,
 			};
 		this.storage = glodb.get("storage").value() || 'idb'
+		if (this.storage === 'json') this.storage = 'idb'
 		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
 		this.rdsHost = glodb.get("rdsHost").value() || '127.0.0.1'
 	},
