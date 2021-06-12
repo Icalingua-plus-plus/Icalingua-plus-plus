@@ -208,7 +208,7 @@ import SideBarIcon from "../components/SideBarIcon.vue";
 import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 import {io} from "socket.io-client";
-
+import {base64encode, base64decode} from 'nodejs-base64'
 import MongoStorageProvider from "../providers/MongoStorageProvider";
 import IndexedStorageProvider from "../providers/IndexedStorageProvider";
 import RedisStorageProvider from "../providers/RedisStorageProvider"
@@ -1507,6 +1507,17 @@ export default {
 					case "json":
 						const json = m.data.data;
 						message.code = json;
+						const jsonObj = JSON.parse(json)
+						if (jsonObj.app === 'com.tencent.mannounce') {
+							try {
+								const title = base64decode(jsonObj.meta.mannounce.title)
+								const content = base64decode(jsonObj.meta.mannounce.text)
+								lastMessage.content = `[${title}]`
+								message.content = title + '\n\n' + content
+								break
+							}
+							catch (err){}
+						}
 						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
 						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
 						const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/;
