@@ -48,7 +48,7 @@
 							@contextmenu="roomContext"
 						/>
 					</div>
-					<MultipaneResizer />
+					<MultipaneResizer/>
 					<div
 						style="flex: 1"
 						:style="[cssVars]"
@@ -81,7 +81,7 @@
 							:show-footer="!isShutUp"
 							:loading-rooms="false"
 							:text-formatting="true"
-							:mongodb="mongodb"
+							:mongodb="true"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
 							@delete-message="deleteMessage"
@@ -102,7 +102,7 @@
 							</template>
 						</Room>
 					</div>
-					<MultipaneResizer class="resize-next" />
+					<MultipaneResizer class="resize-next"/>
 					<div
 						:style="{ minWidth: '300px', width: '300px', maxWidth: '500px' }"
 						v-show="panel"
@@ -193,7 +193,7 @@
 import Room from "../components/vac-mod/ChatWindow/Room/Room";
 import Stickers from "../components/Stickers";
 import IgnoreManage from "../components/IgnoreManage";
-import { Multipane, MultipaneResizer } from '../components/multipane';
+import {Multipane, MultipaneResizer} from '../components/multipane';
 import {defaultThemeStyles, cssThemeVars} from "../components/vac-mod/themes";
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
@@ -339,7 +339,6 @@ export default {
 			},
 			dialogAriaVisible: false,
 			aria,
-			mongodb: false,
 			priority: 1,
 			theme: "default",
 			menu: [],
@@ -354,7 +353,6 @@ export default {
 		//region db init
 		this.account = glodb.get("account").value().username;
 		const storageType = glodb.get("storage").value();
-		this.mongodb = storageType !== 'json'
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),
 			{
@@ -375,7 +373,8 @@ export default {
 			},
 			priority: 3,
 		}).write();
-		if (this.mongodb) {
+		//connect db
+		{
 			if (storageType === 'mdb')
 				storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
 			else if (storageType === 'idb')
@@ -410,16 +409,9 @@ export default {
 				.catch((err) => {
 					console.log(err);
 					glodb.set("account.autologin", false).write()
-					alert('Error connecting to MongoDB database')
+					alert('Error connecting to database')
 					//remote.getCurrentWindow().destroy()
 				})
-		}
-		else {
-			db.defaults({
-				rooms: [],
-				messages: {},
-			}).write();
-			this.rooms = db.get("rooms").value();
 		}
 		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
@@ -637,17 +629,6 @@ export default {
 			this.initSocketIo()
 		}
 
-		if (!this.mongodb) {
-			bot.on("message", this.onQQMessage);
-			bot.on("notice.friend.recall", this.friendRecall);
-			bot.on("notice.group.recall", this.groupRecall);
-			bot.on("system.online", this.online);
-			bot.on("system.offline", this.onOffline);
-			bot.on("notice.friend.poke", this.friendPoke);
-			bot.on("notice.group.poke", this.groupPoke);
-			remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
-			loading.close();
-		}
 	},
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
@@ -684,17 +665,9 @@ export default {
 					message._id = data.data.message_id;
 					this.messages = [...this.messages, message];
 					room.utime = new Date().getTime();
-					if (this.mongodb) {
-						message.time = new Date().getTime();
-						storage.addMessage(roomId, message)
-						storage.updateRoom(room.roomId, room)
-					}
-					else {
-						db.get("messages." + roomId)
-							.push(message)
-							.write();
-						db.set("rooms", this.rooms).write();
-					}
+					message.time = new Date().getTime();
+					storage.addMessage(roomId, message)
+					storage.updateRoom(room.roomId, room)
 				}
 			};
 
@@ -797,9 +770,7 @@ export default {
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false;
-				if (this.mongodb)
-					storage.updateRoom(this.selectedRoom.roomId, this.selectedRoom)
-				else db.set("rooms", this.rooms).write();
+				storage.updateRoom(this.selectedRoom.roomId, this.selectedRoom)
 
 				if (this.selectedRoom.roomId < 0) {
 					const gid = -this.selectedRoom.roomId
@@ -815,28 +786,15 @@ export default {
 					this.isShutUp = false
 				}
 			}
-			if (this.mongodb) {
-				storage.fetchMessages(this.selectedRoom.roomId, this.messages.length, 20)
-					.then((msgs2add) => {
-						setTimeout(() => {
-							if (msgs2add.length) {
-								this.messages = [...msgs2add, ...this.messages];
-							}
-							else this.messagesLoaded = true;
-						}, 0);
-					});
-			}
-			else {
-				const msgs2add = db
-					.get("messages." + this.selectedRoom.roomId)
-					.dropRightWhile((e) => this.messages.includes(e))
-					.takeRight(10)
-					.value();
-				setTimeout(() => {
-					if (msgs2add.length) this.messages = [...msgs2add, ...this.messages];
-					else this.messagesLoaded = true;
-				}, 0);
-			}
+			storage.fetchMessages(this.selectedRoom.roomId, this.messages.length, 20)
+				.then((msgs2add) => {
+					setTimeout(() => {
+						if (msgs2add.length) {
+							this.messages = [...msgs2add, ...this.messages];
+						}
+						else this.messagesLoaded = true;
+					}, 0);
+				});
 			this.updateTrayIcon();
 		},
 		async onQQMessage(data, history) {
@@ -877,8 +835,7 @@ export default {
 				// create room
 				room = this.createRoom(roomId, roomName, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (this.mongodb) storage.addRoom(room);
-				else db.set("messages." + roomId, []).write();
+				storage.addRoom(room);
 			}
 			else {
 				if (!history && !room.roomName.startsWith(roomName)) room.roomName = roomName;
@@ -974,18 +931,10 @@ export default {
 				}
 			}
 
-			if (this.mongodb) {
-				message.time = data.time * 1000;
-				if (!history)
-					storage.updateRoom(roomId, room)
-				storage.addMessage(roomId, message)
-			}
-			else {
-				db.set("rooms", this.rooms).write();
-				db.get("messages." + roomId)
-					.push(message)
-					.write();
-			}
+			message.time = data.time * 1000;
+			if (!history)
+				storage.updateRoom(roomId, room)
+			storage.addMessage(roomId, message)
 			return message;
 		},
 		async openImage(data) {
@@ -1018,13 +967,7 @@ export default {
 			if (!res.error) {
 				message.deleted = new Date();
 				this.messages = [...this.messages];
-				if (this.mongodb)
-					storage.updateMessage(this.selectedRoom.roomId, messageId, {deleted: new Date()})
-				else
-					db.get("messages." + this.selectedRoom.roomId)
-						.find({_id: messageId})
-						.assign({deleted: new Date()})
-						.write();
+				storage.updateMessage(this.selectedRoom.roomId, messageId, {deleted: new Date()})
 			}
 			else {
 				this.$notify.error({
@@ -1041,13 +984,7 @@ export default {
 					this.messages = [...this.messages];
 				}
 			}
-			if (this.mongodb)
-				storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
-			else
-				db.get("messages." + data.user_id)
-					.find({_id: data.message_id})
-					.assign({deleted: new Date()})
-					.write();
+			storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
 		},
 		groupRecall(data) {
 			if (-data.group_id == this.selectedRoom.roomId) {
@@ -1057,13 +994,7 @@ export default {
 					this.messages = [...this.messages];
 				}
 			}
-			if (this.mongodb)
-				storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
-			else
-				db.get("messages." + -data.group_id)
-					.find({_id: data.message_id})
-					.assign({deleted: new Date()})
-					.write();
+			storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
 		},
 		sendSticker(url) {
 			if (this.selectedRoom)
@@ -1111,10 +1042,7 @@ export default {
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const updatePriority = (lev) => {
 				room.priority = lev;
-				if (this.mongodb) {
-					storage.updateRoom(room.roomId, {priority: lev})
-				}
-				this.updateAppMenu();
+				storage.updateRoom(room.roomId, {priority: lev})
 			};
 			const menu = remote.Menu.buildFromTemplate([
 				{
@@ -1158,9 +1086,7 @@ export default {
 						if (room.index) room.index = 0;
 						else room.index = 1;
 						this.rooms = [...this.rooms];
-						if (this.mongodb)
-							storage.updateRoom(room.roomId, room)
-						else db.set("rooms", this.rooms).write();
+						storage.updateRoom(room.roomId, room)
 					},
 				},
 				{
@@ -1168,9 +1094,7 @@ export default {
 					click: () => {
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						if (this.mongodb)
-							storage.removeRoom(room.roomId)
-						else db.set("rooms", this.rooms).write();
+						storage.removeRoom(room.roomId)
 					},
 				},
 				{
@@ -1182,9 +1106,7 @@ export default {
 						});
 						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
-						if (this.mongodb)
-							storage.removeRoom(room.roomId)
-						else db.set("rooms", this.rooms).write();
+						storage.removeRoom(room.roomId)
 						db.set("ignoredChats", this.ignoredChats).write();
 					},
 				},
@@ -1215,9 +1137,7 @@ export default {
 							checked: !!room.autoDownload,
 							click: (menuItem) => {
 								room.autoDownload = menuItem.checked
-								if (this.mongodb)
-									storage.updateRoom(room.roomId, room)
-								else db.set("rooms", this.rooms).write();
+								storage.updateRoom(room.roomId, room)
 							},
 						},
 						{
@@ -1231,9 +1151,7 @@ export default {
 								console.log(selection)
 								if (selection && selection.length) {
 									room.downloadPath = selection[0]
-									if (this.mongodb)
-										storage.updateRoom(room.roomId, room)
-									else db.set("rooms", this.rooms).write();
+									storage.updateRoom(room.roomId, room)
 								}
 							},
 						},
@@ -1241,7 +1159,7 @@ export default {
 				},
 
 			]);
-			if (room === this.selectedRoom && this.mongodb)
+			if (room === this.selectedRoom)
 				menu.append(new remote.MenuItem({
 					label: 'Get History',
 					click: () => {
@@ -1283,14 +1201,8 @@ export default {
 				};
 				if (room === this.selectedRoom)
 					this.messages = [...this.messages, message];
-				if (this.mongodb) {
-					storage.updateRoom(room.roomId, room)
-					storage.addMessage(roomId, message)
-				}
-				else
-					db.get("messages." + roomId)
-						.push(message)
-						.write();
+				storage.updateRoom(room.roomId, room)
+				storage.addMessage(roomId, message)
 			}
 		},
 		startChat(id, name) {
@@ -1304,8 +1216,7 @@ export default {
 				// create room
 				room = this.createRoom(id, name, avatar);
 				this.rooms = [room, ...this.rooms];
-				if (this.mongodb) storage.addRoom(room);
-				else db.set("messages." + id, []).write();
+				storage.addRoom(room);
 			}
 			this.chroom(room);
 			this.view = "chats";
@@ -1496,14 +1407,8 @@ export default {
 				};
 				if (room === this.selectedRoom)
 					this.messages = [...this.messages, message];
-				if (this.mongodb) {
-					storage.updateRoom(room.roomId, room)
-					storage.addMessage(room.roomId, message);
-				}
-				else
-					db.get("messages." + room.roomId)
-						.push(message)
-						.write();
+				storage.updateRoom(room.roomId, room)
+				storage.addMessage(room.roomId, message);
 			}
 		},
 		pokeGroup(uin) {
@@ -1514,13 +1419,7 @@ export default {
 		revealMessage(message) {
 			message.reveal = true;
 			this.messages = [...this.messages];
-			if (this.mongodb)
-				storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
-			else
-				db.get("messages." + this.selectedRoom.roomId)
-					.find({_id: message._id})
-					.assign({reveal: true})
-					.write();
+			storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 		},
 		async processMessage(oicqMessage, message, lastMessage, roomId = null) {
 			if (!Array.isArray(oicqMessage))
@@ -1582,13 +1481,7 @@ export default {
 					case "reply":
 						let replyMessage;
 						if (roomId) {
-							if (this.mongodb)
-								replyMessage = await storage.getMessage(m.data.id);
-							else
-								replyMessage = db
-									.get("messages." + roomId)
-									.find({_id: m.data.id})
-									.value();
+							replyMessage = await storage.getMessage(m.data.id);
 						}
 						if (!replyMessage) {
 							//get the message
