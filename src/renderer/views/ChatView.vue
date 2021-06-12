@@ -127,7 +127,7 @@
 					</div>
 				</Multipane>
 				<el-row v-if="view === 'contacts'" type="flex" justify="center">
-					<el-col :span="8" ondragstart="return false;" class="nodrag">
+					<el-col :span="8">
 						<TheContactsPanel @dblclick="startChat"/>
 					</el-col>
 				</el-row>
