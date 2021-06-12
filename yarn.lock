@@ -5920,6 +5920,11 @@ node-loader@^0.6.0:
   resolved "https://registry.yarnpkg.com/node-loader/-/node-loader-0.6.0.tgz#c797ef51095ed5859902b157f6384f6361e05ae8"
   integrity sha1-x5fvUQle1YWZArFX9jhPY2HgWug=
 
+nodejs-base64@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/nodejs-base64/-/nodejs-base64-2.0.0.tgz#6325842fef622c67d9203677dca29a73a893335a"
+  integrity sha512-rf83teAz8f251P+HQW0nZyIhIIKrTs8wz11n5+Dp1b+/oWCYSeCfNfbUqda5B0DhspBVXwJ7SPk8aghv/TFsjQ==
+
 nopt@~2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/nopt/-/nopt-2.2.1.tgz#2aa09b7d1768487b3b89a9c5aa52335bff0baea7"
