@@ -44,10 +44,8 @@
 </template>
 
 <script>
-import {remote, ipcRenderer} from "electron";
+import {ipcRenderer} from "electron";
 import ContactEntry from "./ContactEntry.vue";
-
-const bot = remote.getGlobal("bot");
 
 export default {
 	components: {ContactEntry},
