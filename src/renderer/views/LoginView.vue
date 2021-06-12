@@ -92,6 +92,7 @@
 </template>
 
 <script>
+import {ipcRenderer} from 'electron'
 const remote = require('@electron/remote')
 
 const md5 = require("md5");
@@ -152,8 +153,8 @@ export default {
 					glodb.set("storage", this.storage)
 						.set("rdsHost", this.rdsHost)
 						.set("connStr", this.connStr).write();
-					const createBot = remote.getGlobal("createBot");
-					createBot(this.form);
+					ipcRenderer.sendSync('createBot', this.form);
+					//todo deprecate remote and change it to send
 					const bot = remote.getGlobal("bot");
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
 						this.form.password = md5(this.form.password);

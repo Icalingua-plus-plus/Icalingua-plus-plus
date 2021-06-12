@@ -11,7 +11,6 @@ import {
 import path from "path";
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
-import {createClient} from "oicq";
 
 (() => {
     "我所遗失的心啊";
@@ -29,7 +28,7 @@ import {createClient} from "oicq";
     require('@electron/remote/main').initialize()
 })();
 
-console.log(process.argv);
+require('./ipc/ipcBot')
 
 /**
  * Set `__static` path to static files in production
@@ -39,7 +38,6 @@ if (process.env.NODE_ENV !== "development") {
     global.__static = path.join(__dirname, "/static").replace(/\\/g, "\\\\");
 }
 
-if (process.windowsStore) global.STORE_PATH = process.env.LOCALAPPDATA;
 else global.STORE_PATH = app.getPath("userData");
 const STORE_PATH = global.STORE_PATH;
 
@@ -51,15 +49,6 @@ const winURL =
 let loginWindow, mainWindow;
 var isLoggingin = false;
 
-global.createBot = function (form) {
-    global.bot = createClient(Number(form.username), {
-        platform: Number(form.protocol),
-        data_dir: path.join(STORE_PATH, "/data"),
-        ignore_self: false,
-        brief: true,
-    });
-    bot.setMaxListeners(233);
-};
 global.loadMainWindow = function () {
     isLoggingin = true;
     loginWindow.destroy();
