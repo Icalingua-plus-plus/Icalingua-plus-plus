@@ -52,7 +52,10 @@ let rendererConfig = {
       },
       {
         test: /\.js$/,
-        use: 'babel-loader',
+        use: [
+          'thread-loader',
+          'babel-loader'
+        ],
         exclude: /node_modules/
       },
       {
