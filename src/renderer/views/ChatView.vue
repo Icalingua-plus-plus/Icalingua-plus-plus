@@ -373,6 +373,7 @@ export default {
 			},
 			priority: 3,
 		}).write();
+		db.unset('rooms').unset('messages').write()
 		//connect db
 		{
 			if (storageType === 'mdb')
@@ -1092,7 +1093,6 @@ export default {
 				{
 					label: "Delete Chat",
 					click: () => {
-						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
 						storage.removeRoom(room.roomId)
 					},
@@ -1104,7 +1104,6 @@ export default {
 							id: room.roomId,
 							name: room.roomName,
 						});
-						db.unset("messages." + room.roomId).write();
 						this.rooms = this.rooms.filter((item) => item != room);
 						storage.removeRoom(room.roomId)
 						db.set("ignoredChats", this.ignoredChats).write();
