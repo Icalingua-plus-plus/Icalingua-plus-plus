@@ -153,7 +153,7 @@ export default {
 					glodb.set("storage", this.storage)
 						.set("rdsHost", this.rdsHost)
 						.set("connStr", this.connStr).write();
-					ipcRenderer.sendSync('createBot', this.form);
+					ipcRenderer.send('createBot', this.form);
 					//todo deprecate remote and change it to send
 					const bot = remote.getGlobal("bot");
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))

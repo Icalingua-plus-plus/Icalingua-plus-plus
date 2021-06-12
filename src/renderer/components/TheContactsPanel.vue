@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import {remote} from "electron";
+import {remote, ipcRenderer} from "electron";
 import ContactEntry from "./ContactEntry.vue";
 
 const bot = remote.getGlobal("bot");
@@ -60,40 +60,21 @@ export default {
 		};
 	},
 	computed: {
-		searchContext : {
-			get(){
+		searchContext: {
+			get() {
 				return this.searchContextEdit;
 			},
-			set(val){
+			set(val) {
 				this.searchContextEdit = val.toUpperCase();
 			}
 		}
 	},
 	created() {
-		setTimeout(() => {
-			const friends = bot.fl.values();
-			let t = friends.next();
-			const friendsAll = []
-			while (!t.done) {
-				const f = {...t.value}
-				//这样搜索的时候就不需要三个值里判断了
-				f.sc = (f.nickname + f.remark + f.user_id).toUpperCase()
-				friendsAll.push(f);
-				t = friends.next();
-			}
-			const groups = bot.gl.values();
-			t = groups.next();
-			const groupsAll = []
-			while (!t.done) {
-				const f = {...t.value}
-				f.sc = (f.group_name + f.group_id).toUpperCase()
-				groupsAll.push(f);
-				t = groups.next();
-			}
-
+		ipcRenderer.invoke('getFriendsAndGroups')
+		.then(({friendsAll, groupsAll})=>{
 			this.friendsAll = Object.freeze(friendsAll)
 			this.groupsAll = Object.freeze(groupsAll)
-		}, 0)
+		})
 	},
 };
 </script>
