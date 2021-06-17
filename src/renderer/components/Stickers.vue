@@ -130,7 +130,7 @@ div.head {
 }
 .grid > div {
   width: 100%;
-  height: 0px;
+  height: 0;
   padding-bottom: 100%;
   position: relative;
   background-color: #fff;
@@ -140,10 +140,9 @@ div.head {
 }
 .bg {
   background-color: #fff;
-  height: 100vh;
+  height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #e1e4e8;
 }
 .title a {
   margin-right: 8px;
@@ -154,6 +153,12 @@ div.head {
 .title a:hover:not(.selected) {
   color: rgb(102, 177, 255);
 }
+@media screen and (min-width: 1200px) {
+	.bg{
+		  border-left: 1px solid #e1e4e8;
+	}
+}
+
 </style>
 
 <style scoped>
