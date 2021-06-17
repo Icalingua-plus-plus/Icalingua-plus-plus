@@ -38,7 +38,7 @@ if (process.env.NODE_ENV !== "development") {
     global.__static = path.join(__dirname, "/static").replace(/\\/g, "\\\\");
 }
 
-else global.STORE_PATH = app.getPath("userData");
+global.STORE_PATH = app.getPath("userData");
 const STORE_PATH = global.STORE_PATH;
 
 const winURL =
