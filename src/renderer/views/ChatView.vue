@@ -102,10 +102,11 @@
 							</template>
 						</Room>
 					</div>
-					<MultipaneResizer class="resize-next"/>
+					<MultipaneResizer class="resize-next" v-show="panel" />
 					<div
 						:style="{ minWidth: '300px', width: '300px', maxWidth: '500px' }"
 						v-show="panel"
+						class="panel"
 					>
 						<transition name="el-zoom-in-top">
 							<Stickers
@@ -119,7 +120,7 @@
 							/>
 						</transition>
 						<IgnoreManage
-							v-show="panel === 'ignore'"
+							v-if="panel === 'ignore'"
 							:ignoredChats="ignoredChats"
 							@remove="rmIgnore"
 							@close="panel = ''"
@@ -1796,6 +1797,21 @@ main div {
 	border-left-color: #29d;
 	border-radius: 10px;
 	animation: pace-spinner 400ms linear infinite;
+}
+
+@media screen and (max-width: 1200px) {
+	.resize-next{
+		display: none
+	}
+
+	.panel{
+		position:absolute;
+		height: 60vh;
+		bottom: 70px;
+		right: 15px;
+		border-radius: 10px;
+		border: solid #DCDFE6 2px;
+	}
 }
 </style>
 
