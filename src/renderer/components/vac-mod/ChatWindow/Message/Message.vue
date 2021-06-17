@@ -78,6 +78,11 @@
 							<span>{{ textMessages.MESSAGE_DELETED }}</span>
 						</div>
 
+						<LottieAnimation
+							v-else-if="lottie"
+							:path="lottie"
+						/>
+
 						<format-message
 							v-else-if="!message.file"
 							:content="message.content"
@@ -167,9 +172,12 @@ import FormatMessage from "../../components/FormatMessage";
 import MessageReply from "./MessageReply";
 import MessageImage from "./MessageImage";
 
+import getLottieFace from "../../../../utils/getLottieFace";
+
 const {isImageFile} = require("../../utils/mediaFile");
 
 import {remote, clipboard} from "electron";
+import LottieAnimation from "../../../LottieAnimation";
 
 export default {
 	name: "Message",
@@ -178,6 +186,7 @@ export default {
 		FormatMessage,
 		MessageReply,
 		MessageImage,
+		LottieAnimation
 	},
 
 	props: {
@@ -205,6 +214,7 @@ export default {
 			optionsOpened: false,
 			emojiOpened: false,
 			newMessage: {},
+			lottie: getLottieFace(this.message.content)
 		};
 	},
 
