@@ -28,7 +28,6 @@ let mainConfig = {
       {
         test: /\.ts$/,
         use: [
-          'thread-loader',
           'ts-loader'
         ],
         exclude: /node_modules/
