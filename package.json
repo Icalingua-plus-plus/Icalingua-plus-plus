@@ -38,6 +38,9 @@
           "target": "deb"
         },
         {
+          "target": "rpm"
+        },
+        {
           "target": "AppImage"
         }
       ],
