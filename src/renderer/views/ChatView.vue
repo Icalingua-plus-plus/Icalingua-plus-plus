@@ -139,6 +139,7 @@
 					<div style="background-color: #f5abb9; height: 20vh"/>
 					<div style="background-color: #5bcffa; height: 20vh"/>
 				</div>
+				<Test v-if="view === 'test'"/>
 			</el-main>
 		</el-container>
 		<el-dialog
@@ -193,6 +194,7 @@
 <script>
 import Room from "../components/vac-mod/ChatWindow/Room/Room";
 import Stickers from "../components/Stickers";
+import Test from "../components/Test";
 import IgnoreManage from "../components/IgnoreManage";
 import {Multipane, MultipaneResizer} from '../components/multipane';
 import {defaultThemeStyles, cssThemeVars} from "../components/vac-mod/themes";
@@ -307,6 +309,7 @@ export default {
 		TheContactsPanel,
 		Multipane,
 		MultipaneResizer,
+		Test
 	},
 	data() {
 		return {
@@ -472,6 +475,7 @@ export default {
 			}
 		}
 		window.flag = () => this.view = 'kench'
+		window.test = () => this.view = 'test'
 		//endregion
 		//region build menu
 		const updatePriority = (lev) => {
