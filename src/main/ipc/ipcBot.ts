@@ -2,7 +2,7 @@ import {ipcMain} from 'electron'
 import {Client, createClient} from "oicq";
 import path from "path";
 
-declare global{
+declare global {
     namespace NodeJS {
         interface Global {
             bot: Client
@@ -13,17 +13,18 @@ declare global{
 
 let bot: Client
 
-ipcMain.on('createBot',(event, form)=>{
+ipcMain.on('createBot', (event, form) => {
     bot = global.bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(global.STORE_PATH, "/data"),
         ignore_self: false,
         brief: true,
+        log_level: process.env.NODE_ENV === "development" ? 'trace' : 'off'
     });
     bot.setMaxListeners(233);
 })
 
-ipcMain.handle('getFriendsAndGroups', async ()=>{
+ipcMain.handle('getFriendsAndGroups', async () => {
     const friends = bot.fl.values();
     let iterF = friends.next();
     const friendsAll = []
