@@ -34,6 +34,11 @@ const pseudoMarkdown = {
 		allowed_chars: '.',
 		type: 'forward'
 	},
+	'||': {
+		end: '\\|\\|',
+		allowed_chars: '.',
+		type: 'spoiler'
+	},
 	'\n':{
 		type: 'breakLine'
 	}
