@@ -11,11 +11,11 @@ export default {
 </script>
 
 <style>
-@import url("~@/assets/stylesheet.css");
+@import url("./assets/stylesheet.css");
 
 @font-face {
   font-family: "msyh";
-  src: url("~@/assets/msyh.ttf");
+  src: url("./assets/msyh.ttf");
 }
 
 html,
@@ -27,7 +27,7 @@ body {
 }
 
 * {
-  font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", serif;
+  font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", sans-serif;
 }
 
 :focus {

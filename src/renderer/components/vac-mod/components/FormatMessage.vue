@@ -15,10 +15,12 @@
             'vac-text-inline-code': !singleLine && message.inline,
             'vac-text-multiline-code': !singleLine && message.multiline,
             'vac-text-tag': !singleLine && !reply && message.tag,
+            'vac-text-spoiler': !showSpoiler && message.spoiler,
+            'vac-text-spoiler-transition': message.spoiler
           }"
 					:href="message.href"
 					:target="message.href ? '_blank' : null"
-					@click="openTag(message)"
+					@click="showSpoiler=true"
 				>
 					<slot name="deleted-icon" v-bind="{ deleted }">
 						<svg-icon v-if="deleted" name="deleted" class="vac-icon-deleted"/>
@@ -89,6 +91,7 @@ export default {
 	data() {
 		return {
 			facepath: path.join(__static, "/face/"),
+			showSpoiler: false
 		};
 	},
 
@@ -108,6 +111,7 @@ export default {
 				m.face = this.checkType(m, "face");
 				m.forward = this.checkType(m, "forward");
 				m.breakLine = this.checkType(m, "breakLine");
+				m.spoiler = this.checkType(m, "spoiler");
 				m.image = this.checkImageType(m);
 			});
 
@@ -156,14 +160,6 @@ export default {
 			});
 
 			return content;
-		},
-		openTag(message) {
-			if (!this.singleLine && this.checkType(message, "tag")) {
-				const user = this.users.find(
-					(u) => message.value.indexOf(u.username) !== -1
-				);
-				this.$emit("open-user-tag", user);
-			}
 		},
 		openForward(message) {
 			if (!message.forward) return;
@@ -218,5 +214,14 @@ img.face {
 	width: 18px;
 	height: 18px;
 	margin-bottom: -4px;
+}
+
+.vac-text-spoiler{
+	background-color: #0a0a0a;
+	cursor: pointer;
+}
+
+.vac-text-spoiler-transition{
+	transition: all 0.5s;
 }
 </style>

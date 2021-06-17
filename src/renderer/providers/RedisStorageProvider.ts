@@ -1,4 +1,4 @@
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import Message from "../interfaces/Message";
 import Room from "../interfaces/Room";
 import StorageProvider from "../interfaces/StorageProvider";

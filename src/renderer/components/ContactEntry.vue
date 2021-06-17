@@ -1,8 +1,8 @@
 <template>
   <div @dblclick="$emit('dblclick')" @click.right="ctx">
-    <div class="root">
-      <div class="entry">
-        <div class="left">
+    <div class="contact-entry-root">
+      <div class="contact-entry-entry">
+        <div class="contact-entry-left">
           <el-avatar
             size="large"
             :src="
@@ -12,17 +12,17 @@
             "
           />
         </div>
-        <div class="right">
-          <div class="flex l1">
-            <div class="name">
+        <div class="contact-entry-right">
+          <div class="contact-entry-flex contact-entry-l1">
+            <div class="contact-entry-name">
               {{ remark }}
-              <span class="rawname" v-show="name && name != remark">
+              <span class="contact-entry-rawname" v-show="name && name != remark">
                 ({{ name }})
               </span>
             </div>
           </div>
-          <div class="flex">
-            <div class="desc">
+          <div class="contact-entry-flex">
+            <div class="contact-entry-desc">
               {{ displayId }}
             </div>
           </div>
@@ -81,35 +81,32 @@ export default {
 };
 </script>
 
-<style scoped>
-.root {
+<style>
+.contact-entry-root {
   padding: 0 15px;
   transition: background-color 0.3s;
   cursor: default;
 }
-.root:hover {
+.contact-entry-root:hover {
   background-color: #f2f6fc;
 }
-div.entry {
+div.contact-entry-entry {
   padding: 10px 0;
   height: 50px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #e4e7ed;
 }
-.left {
+.contact-entry-left {
   width: max-content;
   float: left;
   padding-top: 5px;
 }
-.right {
+.contact-entry-right {
   margin-left: 15px;
   width: 100%;
 }
-a {
-  text-decoration: none;
-}
-.desc {
+.contact-entry-desc {
   color: #606266;
   font-size: 12px;
   text-overflow: ellipsis;
@@ -118,7 +115,7 @@ a {
   width: 0;
   flex: 1;
 }
-.name {
+.contact-entry-name {
   font-weight: bold;
   color: #303133;
   text-overflow: ellipsis;
@@ -128,14 +125,14 @@ a {
   flex: 1;
   font-size: 16px;
 }
-.flex {
+.contact-entry-flex {
   display: flex;
   height: 18px;
 }
-.l1 {
+.contact-entry-l1 {
   height: 25px;
 }
-.rawname {
+.contact-entry-rawname {
   color: #909399;
   font-size: 14px;
 }
