@@ -296,6 +296,13 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 //endregion
 
+//onlineStatusTypes
+const ONLINE_STATUS_TYPES = {
+  Online: 11,
+  AFK:31,
+  Hide:41
+}
+
 export default {
 	components: {
 		Room,
@@ -515,6 +522,29 @@ export default {
 				],
 			}),
 			[
+        new remote.MenuItem({
+          label: "Status",
+          submenu:[
+            {
+              type: "radio",
+              label: "Online",
+              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.Online,
+              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online))
+            },
+            {
+              type: "radio",
+              label:"Away from keyboard",
+              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.AFK,
+              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK))
+            },
+            {
+              type: "radio",
+              label: "Hide",
+              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.Hide,
+              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide))
+            }
+          ]
+        }),
 				new remote.MenuItem({
 					label: "Manage ignored chats",
 					click: () => (this.panel = "ignore"),
@@ -1731,7 +1761,13 @@ export default {
 		initSocketIo() {
 			socketIo = new io(db.get('socketIoSlave').value(), {transports: ["websocket"]})
 			console.log(socketIo)
-		}
+		},
+    setOnlineStatus(status){
+		  bot.setOnlineStatus(status)
+          .then(()=> glodb.set("account.onlineStatus",status).write())
+      .catch((res)=> console.log(res))
+
+    }
 	},
 	computed: {
 		cssVars() {
