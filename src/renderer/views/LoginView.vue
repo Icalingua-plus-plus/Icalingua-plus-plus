@@ -43,6 +43,13 @@
 					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
+      <el-form-item label="Status">
+				<el-radio-group v-model="form.onlineStatus" size="small">
+					<el-radio-button label="11">Online</el-radio-button>
+					<el-radio-button label="31">Away From Keyboard</el-radio-button>
+					<el-radio-button label="41">Hide</el-radio-button>
+				</el-radio-group>
+			</el-form-item>
 			<el-form-item prop="connStr" v-show="storage==='mdb'">
 				<el-input
 					:show-password="connStr.split(':').length>2"
@@ -110,6 +117,7 @@ export default {
 				password: "",
 				protocol: 2,
 				autologin: false,
+        onlineStatus: 11,
 			},
 
 			rules: {
@@ -136,6 +144,7 @@ export default {
 				password: account.password,
 				protocol: account.protocol,
 				autologin: account.autologin,
+        onlineStatus: account.onlineStatus
 			};
 		this.storage = glodb.get("storage").value() || 'idb'
 		if (this.storage === 'json') this.storage = 'idb'
@@ -213,8 +222,12 @@ export default {
 								password: this.form.password,
 								protocol: Number(this.form.protocol),
 								autologin: this.form.autologin,
+                onlineStatus: this.form.onlineStatus
 							})
 							.write();
+						if(this.form.onlineStatus){
+						  bot.setOnlineStatus(this.form.onlineStatus);
+            }
 
 						const loadMainWindow = remote.getGlobal("loadMainWindow");
 						loadMainWindow();
