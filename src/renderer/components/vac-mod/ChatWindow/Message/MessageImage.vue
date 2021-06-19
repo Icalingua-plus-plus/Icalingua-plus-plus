@@ -19,10 +19,10 @@
 		        'max-height': `${imageResponsive.maxHeight}px`,
 		    }"
 			v-if="!isHidden"
+			@click="openImage"
 		>
 			<el-image
 				:src="message.file.url"
-				:preview-src-list="[message.file.url]"
 				fit="cover"
 				referrer-policy="no-referrer"
 				@load="imageLoading = false"
@@ -69,10 +69,10 @@
 				:style="{
 		        'max-height': `${imageResponsive.maxHeight}px`,
 		    }"
+				@click="openImage"
 			>
 				<el-image
 					:src="message.file.url"
-					:preview-src-list="[message.file.url]"
 					fit="cover"
 					referrer-policy="no-referrer"
 					@load="imageLoading = false"
@@ -94,6 +94,7 @@
 import Loader from "../../components/Loader";
 import SvgIcon from "../../components/SvgIcon";
 import FormatMessage from "../../components/FormatMessage";
+import openImage from "../../../../utils/openImage";
 
 export default {
 	name: "MessageImage",
@@ -136,6 +137,11 @@ export default {
 		};
 	},
 
+	methods: {
+		openImage() {
+			openImage(this.message.file.url)
+		}
+	}
 };
 </script>
 
@@ -176,6 +182,7 @@ export default {
 		vertical-align: top;
 		height: -webkit-fill-available;
 		width: -webkit-fill-available;
+		cursor: pointer;
 
 		img {
 			max-height: 232px;
