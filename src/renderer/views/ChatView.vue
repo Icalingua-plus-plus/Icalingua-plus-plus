@@ -102,7 +102,7 @@
 							</template>
 						</Room>
 					</div>
-					<MultipaneResizer class="resize-next" v-show="panel" />
+					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
 						:style="{ minWidth: '300px', width: '300px', maxWidth: '500px' }"
 						v-show="panel"
@@ -301,9 +301,9 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 //onlineStatusTypes
 const ONLINE_STATUS_TYPES = {
-  Online: 11,
-  AFK:31,
-  Hide:41
+	Online: 11,
+	AFK: 31,
+	Hide: 41
 }
 
 export default {
@@ -354,7 +354,8 @@ export default {
 			theme: "default",
 			menu: [],
 			loading: false,
-			isShutUp: false
+			isShutUp: false,
+			status: ONLINE_STATUS_TYPES.Online
 		};
 	},
 	created() {
@@ -429,6 +430,7 @@ export default {
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
 		this.aria2 = db.get("aria2").value();
+		this.status = glodb.get("account.onlineStatus").value()
 		//endregion
 		//region set status
 		if (process.env.NODE_ENV === "development")
@@ -485,7 +487,7 @@ export default {
 		window.test = () => this.view = 'test'
 		//endregion
 		//region build menu
-		const updatePriority = (lev) => {
+		const updatePriority = lev => {
 			this.priority = lev;
 			db.set("priority", lev).write();
 			this.updateAppMenu();
@@ -527,29 +529,29 @@ export default {
 				],
 			}),
 			[
-        new remote.MenuItem({
-          label: "Status",
-          submenu:[
-            {
-              type: "radio",
-              label: "Online",
-              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.Online,
-              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online))
-            },
-            {
-              type: "radio",
-              label:"Away from keyboard",
-              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.AFK,
-              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK))
-            },
-            {
-              type: "radio",
-              label: "Hide",
-              checked: glodb.get("account.onlineStatus").value() === ONLINE_STATUS_TYPES.Hide,
-              click: ()=> (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide))
-            }
-          ]
-        }),
+				new remote.MenuItem({
+					label: "Status",
+					submenu: [
+						{
+							type: "radio",
+							label: "Online",
+							checked: this.status === ONLINE_STATUS_TYPES.Online,
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online))
+						},
+						{
+							type: "radio",
+							label: "Away from keyboard",
+							checked: this.status === ONLINE_STATUS_TYPES.AFK,
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK))
+						},
+						{
+							type: "radio",
+							label: "Hide",
+							checked: this.status === ONLINE_STATUS_TYPES.Hide,
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide))
+						}
+					]
+				}),
 				new remote.MenuItem({
 					label: "Manage ignored chats",
 					click: () => (this.panel = "ignore"),
@@ -1551,7 +1553,8 @@ export default {
 								message.content = title + '\n\n' + content
 								break
 							}
-							catch (err){}
+							catch (err) {
+							}
 						}
 						const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/;
 						const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/;
@@ -1767,12 +1770,15 @@ export default {
 			socketIo = new io(db.get('socketIoSlave').value(), {transports: ["websocket"]})
 			console.log(socketIo)
 		},
-    setOnlineStatus(status){
-		  bot.setOnlineStatus(status)
-          .then(()=> glodb.set("account.onlineStatus",status).write())
-      .catch((res)=> console.log(res))
-
-    }
+		setOnlineStatus(status) {
+			bot.setOnlineStatus(status)
+				.then(() => {
+					this.status = status
+					this.updateAppMenu()
+					glodb.set("account.onlineStatus", status).write()
+				})
+				.catch((res) => console.log(res))
+		}
 	},
 	computed: {
 		cssVars() {
@@ -1840,12 +1846,12 @@ main div {
 }
 
 @media screen and (max-width: 1200px) {
-	.resize-next{
+	.resize-next {
 		display: none
 	}
 
-	.panel{
-		position:absolute;
+	.panel {
+		position: absolute;
 		height: 60vh;
 		bottom: 70px;
 		right: 15px;
