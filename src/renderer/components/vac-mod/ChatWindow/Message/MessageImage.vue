@@ -94,7 +94,7 @@
 import Loader from "../../components/Loader";
 import SvgIcon from "../../components/SvgIcon";
 import FormatMessage from "../../components/FormatMessage";
-import openImage from "../../../../utils/openImage";
+import {ipcRenderer} from 'electron'
 
 export default {
 	name: "MessageImage",
@@ -139,7 +139,7 @@ export default {
 
 	methods: {
 		openImage() {
-			openImage(this.message.file.url)
+			ipcRenderer.send('openImage', this.message.file.url, false)
 		}
 	}
 };
