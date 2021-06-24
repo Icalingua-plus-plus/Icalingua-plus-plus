@@ -19,7 +19,7 @@ ipcMain.on('createBot', (event, form) => {
         data_dir: path.join(global.STORE_PATH, "/data"),
         ignore_self: false,
         brief: true,
-        log_level: process.env.NODE_ENV === "development" ? 'trace' : 'off'
+        log_level: process.env.NODE_ENV === "development" ? 'mark' : 'off'
     });
     bot.setMaxListeners(233);
 })
