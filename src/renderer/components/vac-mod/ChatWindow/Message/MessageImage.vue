@@ -132,7 +132,7 @@ export default {
 
 	mounted() {
 		this.imageResponsive = {
-			maxHeight: this.$refs.imageRef.clientWidth - 18,
+			maxHeight: 232,
 			loaderTop: this.$refs.imageRef.clientWidth / 2,
 		};
 	},
@@ -148,12 +148,12 @@ export default {
 <style lang="scss">
 .vac-image-container {
 	// width: 250px;
-	max-width: 250px;
+	max-width: -webkit-fill-available;
 	width: fit-content;
 }
 
 .vac-image-container-loading {
-	width: 250px;
+	width: -webkit-fill-available;
 }
 
 .vac-image-loading {
@@ -171,7 +171,7 @@ export default {
 	position: relative;
 	background-color: var(--chat-message-bg-color-image) !important;
 	max-height: 250px;
-	max-width: 250px;
+	max-width: -webkit-fill-available;
 	border-radius: 4px;
 	margin: 4px auto 5px;
 	transition: 0.4s filter linear;
@@ -188,7 +188,7 @@ export default {
 			max-height: 232px;
 			width: auto;
 			height: auto;
-			max-width: 250px;
+			max-width: -webkit-fill-available;
 		}
 
 		.image-slot {
