@@ -4,10 +4,9 @@
 			{{ message.replyMessage.username }}
 		</div>
 
-		<div v-if="isImage" class="vac-image-reply-container">
+		<div v-if="isImage" class="vac-image-reply-container" @click="openImage">
 			<el-image
 				:src="message.replyMessage.file.url"
-				:preview-src-list="[message.replyMessage.file.url]"
 				fit="cover"
 				referrer-policy="no-referrer"
 				class="vac-message-image-reply"
@@ -31,6 +30,7 @@
 
 <script>
 import FormatMessage from "../../components/FormatMessage";
+import {ipcRenderer} from "electron";
 
 const {isImageFile} = require("../../utils/mediaFile");
 
@@ -48,6 +48,12 @@ export default {
 			return isImageFile(this.message.replyMessage.file);
 		},
 	},
+
+	methods: {
+		openImage() {
+			ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
+		}
+	}
 };
 </script>
 
@@ -73,6 +79,7 @@ export default {
 			height: 70px;
 			width: 70px;
 			margin: 4px auto 3px;
+			cursor: pointer;
 		}
 	}
 
