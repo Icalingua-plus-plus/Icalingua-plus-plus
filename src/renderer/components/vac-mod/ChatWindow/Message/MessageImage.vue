@@ -148,20 +148,64 @@ export default {
 </script>
 
 <style lang="scss">
-.vac-image-container {
-	// width: 250px;
-	max-width: -webkit-fill-available;
-	width: fit-content;
+@media only screen and (max-width: 950px) {
+	.vac-image-container {
+		max-width: -webkit-fill-available;
+	}
+
+	.vac-image-container-loading {
+		min-width: -webkit-fill-available !important;
+	}
+
+	.vac-message-image-mod {
+		max-width: -webkit-fill-available;
+
+		.el-image {
+			height: -webkit-fill-available;
+			width: -webkit-fill-available;
+
+			img {
+				max-height: 232px;
+				max-width: 250px;
+			}
+		}
+	}
+	.vac-image-err {
+		//width: -webkit-fill-available !important;
+	}
+	.vac-image-loading {
+		width: -webkit-fill-available !important;
+	}
 }
 
-.vac-image-container-loading {
-	width: -webkit-fill-available;
+@media only screen and (min-width: 950px) {
+	.vac-message-image-mod {
+		max-width: 250px;
+		.el-image {
+			img {
+				height: auto;
+				width: auto;
+			}
+		}
+	}
+	.vac-image-loading {
+		width: 250px !important;
+	}
+	.vac-image-container-loading {
+		width: 250px !important;
+	}
+	.vac-image-container {
+		max-width: 250px;
+	}
+}
+
+.vac-image-container {
+	width: fit-content;
 }
 
 .vac-image-loading {
 	filter: blur(3px);
 	height: 250px;
-	width: 250px !important;
 }
 
 .vac-image-err {
@@ -169,17 +213,10 @@ export default {
 	width: 250px !important;
 }
 
-//.vac-el-image-loaded {
-//	img {
-//		width: max-content
-//	}
-//}
-
 .vac-message-image-mod {
 	position: relative;
 	background-color: var(--chat-message-bg-color-image) !important;
 	max-height: 250px;
-	max-width: -webkit-fill-available;
 	border-radius: 4px;
 	margin: 4px auto 5px;
 	transition: 0.4s filter linear;
