@@ -34,7 +34,6 @@ import FileSync from "lowdb/adapters/FileSync";
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
  */
 
-global.static = __static
 if (process.env.NODE_ENV !== "development") {
     global.__static = path.join(__dirname, "/static").replace(/\\/g, "\\\\");
 }
