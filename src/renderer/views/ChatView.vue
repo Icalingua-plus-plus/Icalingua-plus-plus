@@ -1159,6 +1159,12 @@ export default {
 					},
 				},
 				{
+					label: "View Avatar",
+					click: () => {
+						ipcRenderer.send('openImage', room.avatar, false)
+					},
+				},
+				{
 					label: "Download Avatar",
 					click: () => {
 						this.downloadImage(room.avatar);

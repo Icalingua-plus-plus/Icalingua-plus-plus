@@ -231,7 +231,7 @@ export default {
 
 		img {
 			max-height: 232px;
-			max-width: -webkit-fill-available;
+			max-width: 250px;
 		}
 
 		.image-slot {

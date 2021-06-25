@@ -176,7 +176,7 @@ import getLottieFace from "../../../../utils/getLottieFace";
 
 const {isImageFile} = require("../../utils/mediaFile");
 
-import {remote, clipboard} from "electron";
+import {remote, clipboard, ipcRenderer} from "electron";
 import LottieAnimation from "../../../LottieAnimation";
 
 export default {
@@ -337,6 +337,14 @@ export default {
 					label: `Copy Message Id`,
 					click: () => {
 						clipboard.writeText(this.message._id);
+					},
+				})
+			);
+			menu.append(
+				new remote.MenuItem({
+					label: `View Avatar`,
+					click: () => {
+						ipcRenderer.send('openImage', `https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`, false)
 					},
 				})
 			);
