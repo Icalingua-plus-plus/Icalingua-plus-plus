@@ -212,9 +212,9 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 import {io} from "socket.io-client";
 import {base64encode, base64decode} from 'nodejs-base64'
-import MongoStorageProvider from "../providers/MongoStorageProvider";
-import IndexedStorageProvider from "../providers/IndexedStorageProvider";
-import RedisStorageProvider from "../providers/RedisStorageProvider"
+import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
+import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
+import RedisStorageProvider from "../storageProviders/RedisStorageProvider"
 
 const _ = require('lodash');
 const remote = require('@electron/remote')
