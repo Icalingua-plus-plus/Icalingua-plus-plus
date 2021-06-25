@@ -17,7 +17,13 @@
         td {
             text-align: center;
         }
+
+        * {
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
     </style>
+    <title>图片查看</title>
 </head>
 <body style="overflow: hidden;">
 <img id='IMG' style="position: absolute; z-index: 1" src="">
@@ -175,10 +181,11 @@
             IMG.style.transform = mkTransform(rotate, zoom);
         }, function () {
             // zoom in
-            zoom += 0.6;
+            zoom += 0.2;
             IMG.style.transform = mkTransform(rotate, zoom);
         }, function () {
-            zoom -= 0.6;
+            if (zoom < 0.3) return
+            zoom -= 0.2;
             IMG.style.transform = mkTransform(rotate, zoom);
         }, function () {
             // Download!
@@ -192,5 +199,14 @@
     }
 
     IMG.onload = btnactions[0]
+
+    DRAG.onwheel = e => {
+        if (e.wheelDeltaY > 0) {
+            btnactions[3]()
+        }
+        else if (e.wheelDeltaY < 0) {
+            btnactions[4]()
+        }
+    }
 </script>
 </html>
