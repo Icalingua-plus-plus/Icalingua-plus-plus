@@ -22,7 +22,20 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async connect(): Promise<void> {
         const dba = await MongoClient.connect(this.connStr)
-        this.mdb = dba.db("eqq" + this.id);
+        this.mdb = dba.db("eqq" + this.id)
+        await this.mdb.collection("rooms").createIndex('roomId', {
+            background: true,
+            unique: true,
+        })
+        await this.mdb.collection("rooms").createIndex({utime: -1}, {
+            background: true
+        })
+        const rooms = await this.getAllRooms()
+        for (const i of rooms) {
+            await this.mdb.collection('msg' + i.roomId).createIndex({time: -1}, {
+                background: true
+            })
+        }
     }
 
     addMessage(roomId: number, message: object): Promise<any> {
@@ -78,8 +91,7 @@ export default class MongoStorageProvider implements StorageProvider {
             return await this.mdb
                 .collection("msg" + roomId)
                 .insertMany(messages, {ordered: false})
-        }
-        catch(e){
+        } catch (e) {
             return e
         }
     }
