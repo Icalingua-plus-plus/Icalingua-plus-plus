@@ -1193,15 +1193,13 @@ export default {
 						},
 					],
 				},
-
-			]);
-			if (room === this.selectedRoom)
-				menu.append(new remote.MenuItem({
+				{
 					label: 'Get History',
 					click: () => {
 						this.getLatestHistory(room.roomId)
 					}
-				}))
+				}
+			]);
 			if (build) return menu;
 			menu.popup({window: remote.getCurrentWindow()});
 		},
@@ -1647,7 +1645,7 @@ export default {
 				);
 			remote.Menu.setApplicationMenu(menu);
 		},
-		async getHistory(message) {
+		async getHistory(message, roomId = this.selectedRoom.roomId) {
 			const messages = [];
 			while (true) {
 				const history = await bot.getChatHistory(message._id);
@@ -1678,39 +1676,41 @@ export default {
 						data.message,
 						message,
 						{},
-						this.selectedRoom.roomId
+						roomId
 					);
 					messages.push(message);
 					newMsgs.push(message)
 				}
 				message = newMsgs[0]
-				const firstOwnMsg = this.selectedRoom.roomId < 0 ?
+				const firstOwnMsg = roomId < 0 ?
 					newMsgs[0] : //群的话只要第一条消息就行
 					newMsgs.find(e => e.senderId == this.account)
-				if (!firstOwnMsg || await storage.getMessage(this.selectedRoom.roomId, firstOwnMsg._id)) break
+				if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id)) break
 			}
 			console.log(messages);
-			message.historyGot = true;
-			storage.updateMessage(this.selectedRoom.roomId, message._id, {historyGot: true})
-			storage.addMessages(this.selectedRoom.roomId, messages)
-				.then(() => storage.fetchMessages(this.selectedRoom.roomId, 0, this.messages.length))
-				.then(msgs2add => setTimeout(() => {
-					console.log('ok')
-					this.messages = msgs2add;
-					this.fetchMessage();
-				}, 0))
+			this.$message.success(`已拉取 ${messages.length} 条消息`)
+			storage.updateMessage(roomId, message._id, {historyGot: true})
+			await storage.addMessages(roomId, messages)
+			if (roomId === this.selectedRoom.roomId)
+				storage.fetchMessages(roomId, 0, this.messages.length)
+					.then(msgs2add => setTimeout(() => {
+						console.log('ok')
+						this.messages = msgs2add;
+						this.fetchMessage();
+					}, 0))
 		},
 		getLatestHistory(roomId) {
 			let buffer
+			let uid = roomId
 			if (roomId < 0) {
 				buffer = Buffer.alloc(21)
-				roomId = -roomId
+				uid = -uid
 			}
 			else buffer = Buffer.alloc(17)
-			buffer.writeUInt32BE(roomId, 0)
+			buffer.writeUInt32BE(uid, 0)
 			this.getHistory({
 				_id: buffer.toString('base64')
-			})
+			}, roomId)
 		},
 		async openForward(resId) {
 			const history = await bot.getForwardMsg(resId);
