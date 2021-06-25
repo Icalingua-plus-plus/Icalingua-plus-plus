@@ -14,7 +14,8 @@
 			:class="{
 		        'vac-image-loading': isImageLoading,
 		        'vac-image-err': err,
-		    }"
+		   		'vac-el-image-loaded':!isImageLoading
+			}"
 			:style="{
 		        'max-height': `${imageResponsive.maxHeight}px`,
 		    }"
@@ -65,6 +66,7 @@
 				:class="{
 		        'vac-image-loading': isImageLoading,
 		        'vac-image-err': err,
+		        'vac-el-image-loaded':!isImageLoading
 		    }"
 				:style="{
 		        'max-height': `${imageResponsive.maxHeight}px`,
@@ -167,6 +169,12 @@ export default {
 	width: 250px !important;
 }
 
+//.vac-el-image-loaded {
+//	img {
+//		width: max-content
+//	}
+//}
+
 .vac-message-image-mod {
 	position: relative;
 	background-color: var(--chat-message-bg-color-image) !important;
@@ -186,8 +194,6 @@ export default {
 
 		img {
 			max-height: 232px;
-			width: auto;
-			height: auto;
 			max-width: -webkit-fill-available;
 		}
 
