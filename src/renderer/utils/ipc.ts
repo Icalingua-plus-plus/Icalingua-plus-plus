@@ -7,4 +7,13 @@ export const getAllRooms = async () => {
 export const sendMessage = async (data) => {
     return await ipcRenderer.invoke('sendMessage', data)
 }
+export const exit = () => {
+    ipcRenderer.send('exit')
+}
+export const isOnline = async ():Promise<boolean> => {
+    return await ipcRenderer.invoke('isOnline')
+}
+export const getNick = async ():Promise<string> => {
+    return await ipcRenderer.invoke('getNick')
+}
 

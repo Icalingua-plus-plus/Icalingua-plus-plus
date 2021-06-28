@@ -70,3 +70,4 @@ export const sendToMainWindow = (channel: string, payload?: any) => {
     if (mainWindow)
         mainWindow.webContents.send(channel, payload)
 }
+export const getMainWindow = () => mainWindow
