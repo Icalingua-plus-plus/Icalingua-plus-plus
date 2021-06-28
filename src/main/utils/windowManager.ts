@@ -62,7 +62,11 @@ export const ready = () => {
 
     loginWindow.loadURL(global.winURL + "#/login");
 }
-export const sendToLoginWindow = (channel: string, payload: any) => {
+export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow)
         loginWindow.webContents.send(channel, payload)
+}
+export const sendToMainWindow = (channel: string, payload?: any) => {
+    if (mainWindow)
+        mainWindow.webContents.send(channel, payload)
 }

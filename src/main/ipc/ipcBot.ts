@@ -1,5 +1,5 @@
 import {BrowserWindow, ipcMain, ipcRenderer} from 'electron'
-import {Client, createClient, MessageEventData} from "oicq";
+import {Client, createClient, MessageEventData, Ret} from "oicq";
 import path from "path";
 import fs from 'fs'
 import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
@@ -8,6 +8,9 @@ import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
 import StorageProvider from "../../types/StorageProvider";
 import {loadMainWindow, sendToLoginWindow} from "../utils/windowManager";
 import {createTray} from "../utils/trayManager";
+import ui from '../utils/ui'
+import formatDate from "../utils/formatDate";
+import Message from "../../types/Message";
 
 type LoginForm = {
     username: string
@@ -108,7 +111,7 @@ const loginHandlers = {
             },
         });
         veriWin.on("close", () => {
-            this.onSubmit("loginForm");
+            bot.login(loginForm.password)
         });
         veriWin.webContents.on("did-finish-load", function () {
             veriWin.webContents.executeJavaScript(
@@ -138,7 +141,6 @@ const initStorage = async () => {
                     if (e.roomId > -1) return;
                     const group = bot.gl.get(-e.roomId)
                     if (group && group.group_name !== e.roomName) {
-                        e.roomName = group.group_name;
                         storage.updateRoom(e.roomId, {roomName: group.group_name})
                     }
                 });
@@ -213,4 +215,118 @@ ipcMain.handle('getAllRooms', async () => {
 })
 ipcMain.handle('botLogin', (_, password: string) => {
     bot.login(password)
+})
+ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, room, b64img, imgpath}) => {
+    if (file && file.type && !file.type.includes('image')) {
+        //群文件
+        if (roomId > 0) {
+            ui.messageError('暂时无法向好友发送文件')
+            return
+        }
+        const gfs = bot.acquireGfs(-roomId)
+        gfs.upload(file.path).then(ui.closeLoading)
+        ui.message('文件上传中')
+        return
+    }
+
+    const message: Message = {
+        _id: "",
+        senderId: bot.uin,
+        username: "You",
+        content,
+        timestamp: formatDate("hh:mm"),
+        date: formatDate("dd/MM/yyyy")
+    }
+
+    const chain = [];
+
+    if (replyMessage) {
+        message.replyMessage = {
+            _id: replyMessage._id,
+            username: replyMessage.username,
+            content: replyMessage.content,
+        };
+        if (replyMessage.file) {
+            message.replyMessage.file = replyMessage.file;
+        }
+
+        chain.push({
+            type: "reply",
+            data: {
+                id: replyMessage._id,
+            },
+        });
+    }
+    if (content)
+        chain.push({
+            type: "text",
+            data: {
+                text: content,
+            },
+        });
+    if (b64img) {
+        chain.push({
+            type: "image",
+            data: {
+                file: "base64://" + b64img.replace(/^data:.+;base64,/, ""),
+            },
+        });
+        message.file = {
+            type: "image/jpeg",
+            url: b64img,
+        };
+    }
+    if (imgpath) {
+        chain.push({
+            type: "image",
+            data: {
+                file: imgpath,
+            },
+        });
+        message.file = {
+            type: "image/jpeg",
+            url: imgpath.replace(/\\/g, "/"),
+        };
+    }
+    if (file) {
+        chain.push({
+            type: "image",
+            data: {
+                file: file.path,
+            },
+        });
+        message.file = {
+            url: file.path,
+            size: file.size,
+            type: file.type,
+        };
+    }
+    //发送消息链
+    let data: Ret<{ message_id: string }>
+    if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true);
+    else data = await bot.sendGroupMsg(-roomId, chain, true);
+
+    ui.closeLoading()
+    if (data.error) {
+        ui.notifyError({
+            title: "Failed to send",
+            message: data.error.message,
+        });
+        return;
+    }
+    if (roomId > 0) {
+        console.log(data);
+        room.lastMessage = {
+            content,
+            timestamp: formatDate('hh:mm'),
+        };
+        if (file || b64img || imgpath) room.lastMessage.content += "[Image]";
+        message._id = data.data.message_id;
+        ui.updateRoom(room)
+        ui.addMessage(room.room, message)
+        room.utime = new Date().getTime();
+        message.time = new Date().getTime();
+        storage.addMessage(roomId, message)
+        storage.updateRoom(room.roomId, room)
+    }
 })
