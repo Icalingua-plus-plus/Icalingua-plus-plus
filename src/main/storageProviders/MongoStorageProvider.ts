@@ -95,4 +95,10 @@ export default class MongoStorageProvider implements StorageProvider {
             return e
         }
     }
+
+    getRoom(roomId: number): Promise<Room> {
+        return this.mdb
+            .collection("rooms")
+            .findOne({roomId})
+    }
 }

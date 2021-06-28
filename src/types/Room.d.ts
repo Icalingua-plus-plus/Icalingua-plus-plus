@@ -13,7 +13,7 @@ export default interface Room {
         { _id: 2; username: "2" },
         { _id: 3; username: "3" }
       ];
-  at: boolean | null;
+  at: boolean | string | null;
   lastMessage: {
     content: string;
     timestamp: string;

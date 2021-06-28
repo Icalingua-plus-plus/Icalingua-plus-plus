@@ -515,15 +515,6 @@ export default {
 				new remote.MenuItem({
 					label: "Reload",
 					click: () => {
-						bot.removeListener("message", this.onQQMessage);
-						bot.removeListener("notice.friend.recall", this.friendRecall);
-						bot.removeListener("notice.group.recall", this.groupRecall);
-						bot.removeListener("system.online", this.online);
-						bot.removeListener("system.offline", this.onOffline);
-						bot.removeListener("notice.friend.poke", this.friendPoke);
-						remote
-							.getCurrentWindow()
-							.removeListener("focus", this.clearCurrentRoomUnread);
 						location.reload();
 					},
 				}),
@@ -611,144 +602,6 @@ export default {
 			this.updateTrayIcon();
 		},
 		async onQQMessage(data, history) {
-			console.log(data);
-			const now = new Date(data.time * 1000);
-			const groupId = data.group_id;
-			const senderId = data.sender.user_id;
-			let roomId = groupId ? -groupId : data.user_id;
-			if (typeof history === "number") roomId = history;
-			if (this.ignoredChats.find((e) => e.id == roomId)) return;
-			const isSelfMsg = this.account == senderId;
-			const senderName = groupId
-				? data.anonymous
-					? data.anonymous.name
-					: isSelfMsg
-						? "You"
-						: data.sender.card || data.sender.nickname
-				: data.sender.remark || data.sender.nickname;
-			const avatar = groupId
-				? `https://p.qlogo.cn/gh/${groupId}/${groupId}/0`
-				: `https://q1.qlogo.cn/g?b=qq&nk=${senderId}&s=640`;
-			let roomName = groupId ? data.group_name : senderName;
-
-			const message = {
-				senderId: senderId,
-				username: senderName,
-				content: "",
-				timestamp: now.format("hh:mm"),
-				date: now.format("dd/MM/yyyy"),
-				_id: data.message_id,
-				role: data.sender.role,
-			};
-
-			let room = this.rooms.find((e) => e.roomId == roomId);
-			if (room === undefined) {
-				const group = bot.gl.get(groupId)
-				if (group && group.group_name !== roomName) roomName = group.group_name;
-				// create room
-				room = this.createRoom(roomId, roomName, avatar);
-				this.rooms = [room, ...this.rooms];
-				storage.addRoom(room);
-			}
-			else {
-				if (!history && !room.roomName.startsWith(roomName)) room.roomName = roomName;
-				if (!history)
-					this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
-			} //bring the room first
-
-			//begin process msg
-			const lastMessage = {
-				content: "",
-				timestamp: now.format("hh:mm"),
-				username: senderName,
-			};
-			let at
-
-			////process message////
-			await this.processMessage(data.message, message, lastMessage, roomId);
-			at = message.at;
-			if (!history && at) room.at = at;
-
-			//run only if is not history message
-			if (!history) {
-				//notification
-				if (!room.priority) {
-					room.priority = groupId ? 2 : 4;
-				}
-				if (
-					(!remote.getCurrentWindow().isFocused() ||
-						room !== this.selectedRoom) &&
-					(room.priority >= this.priority || at) &&
-					!isSelfMsg
-				) {
-					//notification
-					if (process.platform === "darwin") {
-						convertImgToBase64(avatar, (b64img) => {
-							const notif = new remote.Notification({
-								title: room.roomName,
-								body: (groupId ? senderName + ": " : "") + lastMessage.content,
-								icon: nativeImage.createFromDataURL(b64img),
-								hasReply: true,
-								replyPlaceholder: "Reply to " + roomName,
-								urgency: "critical",
-							});
-							notif.addListener("click", () => {
-								const window = remote.getCurrentWindow();
-								window.show();
-								window.focus();
-								this.chroom(room);
-							});
-							notif.addListener("reply", (e, r) => {
-								this.sendMessage({
-									content: r,
-									room,
-								});
-							});
-							notif.show();
-						});
-					}
-					else {
-						const notiopin = {
-							body: (groupId ? senderName + ": " : "") + lastMessage.content,
-							icon: avatar,
-						};
-
-						const notif = new Notification(room.roomName, notiopin);
-
-						notif.onclick = () => {
-							const window = remote.getCurrentWindow();
-							window.show();
-							window.focus();
-							this.chroom(room);
-						};
-					}
-				}
-
-				if (
-					room !== this.selectedRoom ||
-					!remote.getCurrentWindow().isFocused()
-				) {
-					if (isSelfMsg) {
-						room.unreadCount = 0;
-						room.at = false;
-					}
-					else room.unreadCount++;
-				}
-				if (room === this.selectedRoom)
-					this.messages = [...this.messages, message];
-				room.utime = data.time * 1000;
-				room.lastMessage = lastMessage;
-				this.updateTrayIcon(room.roomName);
-				if (message.file && message.file.name && room.autoDownload) {
-					this.download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
-				}
-			}
-
-			message.time = data.time * 1000;
-			if (!history)
-				storage.updateRoom(roomId, room)
-			storage.addMessage(roomId, message)
-			return message;
 		},
 		async openImage(data) {
 			if (data.action === "download") {
@@ -1206,7 +1059,6 @@ export default {
 			this.messages = [...this.messages];
 			storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 		},
-
 		updateAppMenu() {
 			const menu = remote.Menu.buildFromTemplate([
 				{

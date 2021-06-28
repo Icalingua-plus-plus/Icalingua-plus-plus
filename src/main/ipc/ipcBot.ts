@@ -1,17 +1,29 @@
-import {BrowserWindow, ipcMain, ipcRenderer} from 'electron'
-import {Client, createClient, MessageElem, MessageEventData, Ret} from "oicq";
+import {BrowserWindow, ipcMain, nativeImage, Notification} from 'electron'
+import {
+    Client,
+    createClient,
+    FriendInfo,
+    GroupMessageEventData,
+    MemberBaseInfo,
+    MessageElem,
+    MessageEventData,
+    Ret
+} from "oicq";
 import path from "path";
 import fs from 'fs'
 import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
 import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
 // import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
 import StorageProvider from "../../types/StorageProvider";
-import {loadMainWindow, sendToLoginWindow} from "../utils/windowManager";
+import {getMainWindow, loadMainWindow, sendToLoginWindow} from "../utils/windowManager";
 import {createTray} from "../utils/trayManager";
 import ui from '../utils/ui'
 import formatDate from "../utils/formatDate";
 import Message from "../../types/Message";
 import processMessage from "../utils/processMessage";
+import getAvatarUrl from "../utils/getAvatarUrl";
+import settings from 'electron-settings'
+import avatarCache from "../utils/avatarCache";
 
 type LoginForm = {
     username: string
@@ -31,9 +43,123 @@ let storage: StorageProvider
 let storageConfig: StorageConfig
 let loginForm: LoginForm
 
+let selectedRoomId = 0
+
 //region event handlers
 const eventHandlers = {
-    onQQMessage(data: MessageEventData) {
+    async onQQMessage(data: MessageEventData) {
+        console.log(data);
+        const now = new Date(data.time * 1000);
+        const groupId = (data as GroupMessageEventData).group_id;
+        const senderId = data.sender.user_id;
+        let roomId = groupId ? -groupId : data.user_id;
+        if (this.ignoredChats.find((e) => e.id == roomId)) return;
+        const isSelfMsg = this.account == senderId;
+        const senderName = groupId
+            ? ('anonymous' in data)
+                ? data.anonymous.name
+                : isSelfMsg
+                    ? "You"
+                    : (data.sender as MemberBaseInfo).card || data.sender.nickname
+            : (data.sender as FriendInfo).remark || data.sender.nickname;
+        const avatar = getAvatarUrl(roomId)
+        let roomName = ('group_name' in data) ? data.group_name : senderName;
+
+        const message: Message = {
+            senderId: senderId,
+            username: senderName,
+            content: "",
+            timestamp: formatDate("hh:mm", now),
+            date: formatDate("dd/MM/yyyy", now),
+            _id: data.message_id,
+            role: (data.sender as MemberBaseInfo).role,
+        };
+
+        let room = await storage.getRoom(roomId)
+        if (room === undefined) {
+            const group = bot.gl.get(groupId)
+            if (group && group.group_name !== roomName) roomName = group.group_name;
+            // create room
+            room = this.createRoom(roomId, roomName, avatar);
+            await storage.addRoom(room);
+        } else {
+            if (!room.roomName.startsWith(roomName)) {
+                room.roomName = roomName
+            }
+        }
+
+        //begin process msg
+        const lastMessage = {
+            content: "",
+            timestamp: formatDate("hh:mm", now),
+            username: senderName,
+        };
+        ////process message////
+        await this.processMessage(data.message, message, lastMessage, roomId);
+        const at = message.at;
+        if (at) room.at = at;
+
+        if (!room.priority) {
+            room.priority = groupId ? 2 : 4;
+        }
+
+        ui.updateRoom(room)
+
+        //notification
+        if (
+            (!getMainWindow().isFocused() ||
+                roomId !== selectedRoomId) &&
+            (/*room.priority >= settings.getSync('priority') || */at) &&
+            !isSelfMsg
+        ) {
+            //notification
+
+                const notif = new Notification({
+                    title: room.roomName,
+                    body: (groupId ? senderName + ": " : "") + lastMessage.content,
+                    icon: await avatarCache(avatar),
+                    hasReply: true,
+                    replyPlaceholder: "Reply to " + roomName,
+                    urgency: "critical",
+                });
+                notif.addListener("click", () => {
+                    const window = getMainWindow();
+                    window.show();
+                    window.focus();
+                    ui.chroom(room);
+                });
+                notif.addListener("reply", (e, r) => {
+                    this.sendMessage({
+                        content: r,
+                        room,
+                    });
+                });
+                notif.show();
+        }
+
+        if (
+            room !== this.selectedRoom ||
+            !remote.getCurrentWindow().isFocused()
+        ) {
+            if (isSelfMsg) {
+                room.unreadCount = 0;
+                room.at = false;
+            } else room.unreadCount++;
+        }
+        if (room === this.selectedRoom)
+            messages = [...this.messages, message];
+        room.utime = data.time * 1000;
+        room.lastMessage = lastMessage;
+        updateTrayIcon(room.roomName);
+        if (message.file && message.file.name && room.autoDownload) {
+            download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
+        }
+
+        message.time = data.time * 1000;
+        if (!history)
+            storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+        return message;
 
     },
     friendRecall() {
@@ -357,7 +483,7 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
     }
     return storage.fetchMessages(roomId, offset, 20)
 })
-
+ipcMain.on('setSelectedRoomId', (_, id: number) => selectedRoomId = id)
 
 export const getBot = () => bot
 export const getStorage = () => storage
