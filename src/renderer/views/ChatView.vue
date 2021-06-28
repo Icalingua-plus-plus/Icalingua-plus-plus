@@ -609,6 +609,21 @@ export default {
 			this.initSocketIo()
 		}
 
+
+		ipcRenderer.on('closeLoading', () => this.loading = false)
+		ipcRenderer.on('notify', (_, p) => this.$notify(p))
+		ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
+		ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))
+		ipcRenderer.on('message', (_, p) => this.$message(p))
+		ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
+		ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
+		ipcRenderer.on('updateRoom', (_, room) => {
+			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)];
+		})
+		ipcRenderer.on('addMessage', (_, {roomId, message}) => {
+			if (roomId !== this.selectedRoom.roomId) return
+			this.messages = [...this.messages, message]
+		})
 	},
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
@@ -617,132 +632,16 @@ export default {
 				room = this.selectedRoom;
 				roomId = room.roomId;
 			}
+			if (!room) room = this.rooms.find((e) => e.roomId === roomId);
 			if (!roomId) roomId = room.roomId;
-			const sendchain = async () => {
-				let data;
-				if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true);
-				else data = await bot.sendGroupMsg(-roomId, chain, true);
-
-				this.loading = false
-				if (data.error) {
-					this.$notify.error({
-						title: "Failed to send",
-						message: data.error.message,
-					});
-					return;
-				}
-				if (roomId > 0) {
-					console.log(data);
-					if (!room) room = this.rooms.find((e) => e.roomId === roomId);
-					room.lastMessage = {
-						content,
-						timestamp: new Date().format("hh:mm"),
-					};
-					this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
-					//bring the room first
-					if (file || b64img || imgpath) room.lastMessage.content += "[Image]";
-
-					message._id = data.data.message_id;
-					this.messages = [...this.messages, message];
-					room.utime = new Date().getTime();
-					message.time = new Date().getTime();
-					storage.addMessage(roomId, message)
-					storage.updateRoom(room.roomId, room)
-				}
-			};
-
-			const message = {
-				senderId: this.account,
-				username: "You",
-				content,
-				timestamp: new Date().format("hh:mm"),
-				date: new Date().format("dd/MM/yyyy"),
-			};
-
-			const chain = [];
-
-			if (replyMessage) {
-				message.replyMessage = {
-					_id: replyMessage._id,
-					username: replyMessage.username,
-					content: replyMessage.content,
-				};
-				if (replyMessage.file) {
-					message.replyMessage.file = replyMessage.file;
-				}
-
-				chain.push({
-					type: "reply",
-					data: {
-						id: replyMessage._id,
-					},
-				});
-			}
-			if (content)
-				chain.push({
-					type: "text",
-					data: {
-						text: content,
-					},
-				});
-			if (b64img) {
-				chain.push({
-					type: "image",
-					data: {
-						file: "base64://" + b64img.replace(/^data:.+;base64,/, ""),
-					},
-				});
-				message.file = {
-					type: "image/jpeg",
-					url: b64img,
-				};
-			}
-			if (imgpath) {
-				chain.push({
-					type: "image",
-					data: {
-						file: imgpath,
-					},
-				});
-				message.file = {
-					type: "image/jpeg",
-					url: imgpath.replace(/\\/g, "/"),
-				};
-			}
 			if (file) {
-				if (file.type && file.type.includes('image')) {
-					const reader = new FileReader();
-					reader.readAsDataURL(file.blob);
-					reader.onload = function () {
-						const b64 = reader.result.replace(/^data:.+;base64,/, "");
-						chain.push({
-							type: "image",
-							data: {
-								file: "base64://" + b64,
-							},
-						});
-						message.file = {
-							url: reader.result,
-							size: file.size,
-							type: file.type,
-						};
-						sendchain();
-					}
-				}
-				else {
-					//is a group file
-					if (roomId > 0) {
-						this.$message('暂时无法向好友发送文件')
-						return
-					}
-					const gfs = bot.acquireGfs(-roomId)
-					gfs.upload(file.path).then(() => this.loading = false)
-					this.$message('文件上传中')
+				file = {
+					type: file.type,
+					size: file.size,
+					path: file.path
 				}
 			}
-			else {
-				sendchain();
-			}
+			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,})
 		},
 		fetchMessage(reset) {
 			if (reset) {
