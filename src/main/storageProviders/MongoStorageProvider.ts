@@ -1,6 +1,6 @@
-import StorageProvider from "../interfaces/StorageProvider";
-import Message from "../interfaces/Message";
-import Room from "../interfaces/Room";
+import StorageProvider from "../../types/StorageProvider";
+import Message from "../../types/Message";
+import Room from "../../types/Room";
 import {Db, MongoClient} from "mongodb";
 
 export default class MongoStorageProvider implements StorageProvider {

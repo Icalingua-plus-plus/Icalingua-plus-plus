@@ -12,6 +12,7 @@ import {
 import path from "path";
 import Datastore from "lowdb";
 import FileSync from "lowdb/adapters/FileSync";
+import {ready} from "./utils/windowManager";
 
 (() => {
     "我所遗失的心啊";
@@ -106,8 +107,6 @@ app.on("ready", () => {
         require('./ipc/ipcBot')
         require('./ipc/openImage')
         app.allowRendererProcessReuse = false;
-        if (process.windowsStore) app.setAppUserModelId("com.clansty.electronqq");
-        else if (process.platform === "win32") app.setAppUserModelId("Electron QQ");
         const adapter = new FileSync(path.join(STORE_PATH, "/data.json"));
         global.glodb = Datastore(adapter);
         if (process.env.NODE_ENV === "development")
@@ -115,36 +114,14 @@ app.on("ready", () => {
                 const pathname = request.url.replace("file:///", "");
                 cb(pathname);
             });
+        ready()
         Menu.setApplicationMenu(new Menu());
-        if (process.env.NYA) {
-            //ui debug mode
-            global.bot = {
-                on() {
-                },
-                logout() {
-                },
-            };
-            global.loadMainWindow();
-        }
-        else {
-            //login window
-            loginWindow = new BrowserWindow({
-                height: 720,
-                width: 450,
-                maximizable: false,
-                webPreferences: {
-                    nodeIntegration: true,
-                    enableRemoteModule: true,
-                    contextIsolation: false
-                },
-                icon: path.join(__static, "/512x512.png"),
-            });
+        //login window
 
-            // if (process.env.NODE_ENV === 'development')
-            // 	loginWindow.webContents.session.loadExtension('/usr/lib/node_modules/vue-devtools/vender/')
+        // if (process.env.NODE_ENV === 'development')
+        // 	loginWindow.webContents.session.loadExtension('/usr/lib/node_modules/vue-devtools/vender/')
 
-            loginWindow.loadURL(winURL + "#/login");
-        }
+        loginWindow.loadURL(winURL + "#/login");
     }
 });
 

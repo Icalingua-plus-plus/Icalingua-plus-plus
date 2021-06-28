@@ -1,5 +1,5 @@
 export default interface Room {
-  roomId: Number;
+  roomId: number;
   roomName: string;
   avatar: string;
   index: number;

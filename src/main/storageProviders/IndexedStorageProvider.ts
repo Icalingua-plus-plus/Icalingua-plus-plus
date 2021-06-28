@@ -1,6 +1,6 @@
-import StorageProvider from "../interfaces/StorageProvider";
-import Message, {MessageInIDB} from "../interfaces/Message";
-import Room from "../interfaces/Room";
+import StorageProvider from "../../types/StorageProvider";
+import Message, {MessageInIDB} from "../../types/Message";
+import Room from "../../types/Room";
 import * as lf from "lovefield";
 
 export default class IndexedStorageProvider implements StorageProvider {
