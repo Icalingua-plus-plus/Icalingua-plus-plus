@@ -3,18 +3,8 @@ import {Client, createClient, MessageEventData} from "oicq";
 import path from "path";
 import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
 import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
-import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
+// import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
 import StorageProvider from "../../types/StorageProvider";
-
-declare global {
-    namespace NodeJS {
-        interface Global {
-            bot: Client
-            STORE_PATH: string
-            glodb: any //todo: remove
-        }
-    }
-}
 
 type LoginForm = {
     username: string
@@ -39,6 +29,21 @@ const handler={
     },
     friendRecall() {
 
+    },
+    groupRecall() {
+
+    },
+    online() {
+
+    },
+    onOffline() {
+
+    },
+    friendPoke() {
+
+    },
+    groupPoke() {
+
     }
 }
 //endregion
@@ -61,8 +66,8 @@ ipcMain.handle('createBot', async (event, form: LoginForm, extra: LoginExtra) =>
     try {
         if (extra.storageType === 'mdb')
             storage = new MongoStorageProvider(extra.mdbConnStr, form.username)
-        else if (extra.storageType === 'idb')
-            storage = new IndexedStorageProvider(form.username)
+        // else if (extra.storageType === 'idb')
+        //     storage = new IndexedStorageProvider(form.username)
         else if (extra.storageType === 'redis')
             storage = new RedisStorageProvider(extra.rdsHost, form.username)
 

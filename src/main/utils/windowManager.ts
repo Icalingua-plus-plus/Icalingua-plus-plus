@@ -1,7 +1,52 @@
-import {BrowserWindow} from "electron";
+import {BrowserWindow, ipcMain, screen, Tray} from "electron";
 import path from "path";
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
+
+ipcMain.on('loadMainWindow', () => {
+    //start main window
+    let winSize = global.glodb.get('winSize').value()
+    if (!winSize) {
+        const size = screen.getPrimaryDisplay().size;
+        winSize = {
+            height: size.height - 200,
+            width: size.width - 300,
+            max: false
+        }
+        if (winSize.width > 1440)
+            winSize.width = 1440;
+    }
+    mainWindow = new BrowserWindow({
+        height: winSize.height,
+        width: winSize.width,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            enableRemoteModule: true,
+            webSecurity: false,
+            contextIsolation: false
+        },
+        icon: path.join(global.STATIC, "/512x512.png"),
+    });
+
+    loginWindow.destroy();
+
+    if (winSize.max)
+        mainWindow.maximize()
+
+    if (process.env.NODE_ENV === "development")
+        mainWindow.webContents.session.loadExtension(
+            "/usr/lib/node_modules/vue-devtools/vender/"
+        );
+
+    if (!process.env.NYA)
+        mainWindow.on("close", (e) => {
+            e.preventDefault();
+            mainWindow.hide();
+        });
+
+    mainWindow.loadURL(global.winURL + "#/main");
+})
 
 export const ready = () => {
     loginWindow = new BrowserWindow({
@@ -13,7 +58,8 @@ export const ready = () => {
             enableRemoteModule: true,
             contextIsolation: false
         },
-        icon: path.join(__static, "/512x512.png"),
+        icon: path.join(global.STATIC, "/512x512.png"),
     });
 
+    loginWindow.loadURL(global.winURL + "#/login");
 }
