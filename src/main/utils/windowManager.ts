@@ -3,7 +3,7 @@ import path from "path";
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
-ipcMain.on('loadMainWindow', () => {
+export const loadMainWindow = () => {
     //start main window
     let winSize = global.glodb.get('winSize').value()
     if (!winSize) {
@@ -46,8 +46,7 @@ ipcMain.on('loadMainWindow', () => {
         });
 
     mainWindow.loadURL(global.winURL + "#/main");
-})
-
+}
 export const ready = () => {
     loginWindow = new BrowserWindow({
         height: 720,
@@ -62,4 +61,8 @@ export const ready = () => {
     });
 
     loginWindow.loadURL(global.winURL + "#/login");
+}
+export const sendToLoginWindow = (channel: string, payload: any) => {
+    if (loginWindow)
+        loginWindow.webContents.send(channel, payload)
 }

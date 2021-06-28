@@ -152,6 +152,10 @@ export default {
 		if (this.storage === 'json') this.storage = 'idb'
 		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
 		this.rdsHost = glodb.get("rdsHost").value() || '127.0.0.1'
+		ipcRenderer.on('error', (_, msg) => {
+			this.errmsg = msg
+			this.disabled = false;
+		})
 	},
 	mounted() {
 		if (this.form.autologin) this.onSubmit("loginForm");
@@ -164,104 +168,13 @@ export default {
 					glodb.set("storage", this.storage)
 						.set("rdsHost", this.rdsHost)
 						.set("connStr", this.connStr).write();
+					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
+						this.form.password = md5(this.form.password);
 					await ipcRenderer.invoke('createBot', this.form, {
 						storageType: this.storage,
 						mdbConnStr: this.connStr,
 						rdsHost: this.rdsHost
 					});
-					//todo deprecate remote and change it to send
-					const bot = remote.getGlobal("bot");
-					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
-						this.form.password = md5(this.form.password);
-
-					const slider = (data) => {
-						console.log(data);
-						const veriWin = new remote.BrowserWindow({
-							height: 500,
-							width: 500,
-							webPreferences: {
-								nativeWindowOpen: true,
-								nodeIntegration: true,
-								enableRemoteModule: true,
-								contextIsolation: false
-							},
-						});
-						const inject = fs.readFileSync(
-							path.join(__static, "/sliderinj.js"),
-							"utf-8"
-						);
-						console.log(inject);
-						veriWin.webContents.on("did-finish-load", function () {
-							veriWin.webContents.executeJavaScript(inject);
-						});
-						veriWin.loadURL(data.url, {
-							userAgent:
-								"Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712",
-						});
-					};
-					const captcha = (nya) => {
-						console.log(nya);
-						this.view = "captcha";
-						let bytes = new Uint8Array(nya.image);
-						let data = "";
-						let len = bytes.byteLength;
-						for (let i = 0; i < len; i++) {
-							data += String.fromCharCode(bytes[i]);
-						}
-						this.captchaimg = "data:image/png;base64," + window.btoa(data);
-					};
-					const onErr = (data) => {
-						console.log(data);
-						this.errmsg = data.message;
-						this.disabled = false;
-					};
-					const onSucceed = () => {
-						bot.removeListener("system.login.slider", slider);
-						bot.removeListener("system.login.captcha", captcha);
-						bot.removeListener("system.login.error", onErr);
-						bot.removeListener("system.online", onSucceed);
-						bot.removeListener("system.login.device", verify);
-						//save account info
-						glodb
-							.set("account", {
-								username: Number(this.form.username),
-								password: this.form.password,
-								protocol: Number(this.form.protocol),
-								autologin: this.form.autologin,
-								onlineStatus: this.form.onlineStatus
-							})
-							.write();
-						if (this.form.onlineStatus) {
-							bot.setOnlineStatus(this.form.onlineStatus);
-						}
-
-						ipcRenderer.send('loadMainWindow')
-						ipcRenderer.send('createTray')
-					};
-					const verify = (data) => {
-						const veriWin = new remote.BrowserWindow({
-							height: 500,
-							width: 500,
-							webPreferences: {
-								nativeWindowOpen: true,
-							},
-						});
-						veriWin.on("close", () => {
-							this.onSubmit("loginForm");
-						});
-						veriWin.webContents.on("did-finish-load", function () {
-							veriWin.webContents.executeJavaScript(
-								"mqq.invoke=function(a, b, c){if(b=='closeWebViews'){window.close();}}"
-							);
-						});
-						veriWin.loadURL(data.url.replace("safe/verify", "safe/qrcode"));
-					};
-					bot.on("system.login.slider", slider);
-					bot.on("system.login.captcha", captcha);
-					bot.on("system.login.error", onErr);
-					bot.on("system.online", onSucceed);
-					bot.on("system.login.device", verify);
-					bot.login(this.form.password);
 				}
 				else {
 					return false;
