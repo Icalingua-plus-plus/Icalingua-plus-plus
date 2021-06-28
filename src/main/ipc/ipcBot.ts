@@ -1,6 +1,10 @@
 import {ipcMain} from 'electron'
 import {Client, createClient} from "oicq";
 import path from "path";
+import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
+import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
+import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
+import StorageProvider from "../interfaces/StorageProvider";
 
 declare global {
     namespace NodeJS {
@@ -11,9 +15,23 @@ declare global {
     }
 }
 
-let bot: Client
+type LoginForm = {
+    username: string
+    password: string
+    protocol: number
+    autologin: boolean
+    onlineStatus: string
+}
+type LoginExtra = {
+    storageType: string,
+    mdbConnStr: string,
+    rdsHost: string
+}
 
-ipcMain.on('createBot', (event, form) => {
+let bot: Client
+let storage: StorageProvider
+
+ipcMain.on('createBot', async (event, form: LoginForm, extra: LoginExtra) => {
     bot = global.bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(global.STORE_PATH, "/data"),
@@ -22,6 +40,16 @@ ipcMain.on('createBot', (event, form) => {
         log_level: process.env.NODE_ENV === "development" ? 'mark' : 'off'
     });
     bot.setMaxListeners(233);
+
+    //todo: use settings manager
+
+    if (extra.storageType === 'mdb')
+        storage = new MongoStorageProvider(extra.mdbConnStr, form.username)
+    else if (extra.storageType === 'idb')
+        storage = new IndexedStorageProvider(form.username)
+    else if (extra.storageType === 'redis')
+        storage = new RedisStorageProvider(extra.rdsHost, form.username)
+
 })
 
 ipcMain.handle('getFriendsAndGroups', async () => {
@@ -46,4 +74,8 @@ ipcMain.handle('getFriendsAndGroups', async () => {
     return {
         friendsAll, groupsAll
     }
+})
+
+ipcMain.handle('sliderLogin', (_, ticket: string) => {
+    bot.sliderLogin(ticket)
 })

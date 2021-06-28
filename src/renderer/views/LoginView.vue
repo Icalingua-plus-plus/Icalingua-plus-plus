@@ -37,13 +37,13 @@
 				<el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }"/>
 			</el-form-item>
 			<el-form-item label="Storage engine">
-				<el-radio-group v-model="storage" size="small">
-					<el-radio-button label="idb">Indexed DB (Beta)</el-radio-button>
+				<el-radio-group v-model="storage" size="small" disabled>
+					<el-radio-button label="idb">Indexed DB</el-radio-button>
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
 					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
-      <el-form-item label="Status">
+			<el-form-item label="Status">
 				<el-radio-group v-model="form.onlineStatus" size="small">
 					<el-radio-button label="11">Online</el-radio-button>
 					<el-radio-button label="31">Away From Keyboard</el-radio-button>
@@ -100,6 +100,7 @@
 
 <script>
 import {ipcRenderer} from 'electron'
+
 const remote = require('@electron/remote')
 
 const md5 = require("md5");
@@ -117,7 +118,7 @@ export default {
 				password: "",
 				protocol: 2,
 				autologin: false,
-        onlineStatus: 11,
+				onlineStatus: 11,
 			},
 
 			rules: {
@@ -144,9 +145,10 @@ export default {
 				password: account.password,
 				protocol: account.protocol,
 				autologin: account.autologin,
-        onlineStatus: account.onlineStatus
+				onlineStatus: account.onlineStatus
 			};
-		this.storage = glodb.get("storage").value() || 'idb'
+		// this.storage = glodb.get("storage").value() || 'idb'
+		this.storage = 'mdb'
 		if (this.storage === 'json') this.storage = 'idb'
 		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
 		this.rdsHost = glodb.get("rdsHost").value() || '127.0.0.1'
@@ -162,7 +164,11 @@ export default {
 					glodb.set("storage", this.storage)
 						.set("rdsHost", this.rdsHost)
 						.set("connStr", this.connStr).write();
-					ipcRenderer.send('createBot', this.form);
+					ipcRenderer.send('createBot', this.form, {
+						storageType: this.storage,
+						mdbConnStr: this.connStr,
+						rdsHost: this.rdsHost
+					});
 					//todo deprecate remote and change it to send
 					const bot = remote.getGlobal("bot");
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
@@ -222,12 +228,12 @@ export default {
 								password: this.form.password,
 								protocol: Number(this.form.protocol),
 								autologin: this.form.autologin,
-                onlineStatus: this.form.onlineStatus
+								onlineStatus: this.form.onlineStatus
 							})
 							.write();
-						if(this.form.onlineStatus){
-						  bot.setOnlineStatus(this.form.onlineStatus);
-            }
+						if (this.form.onlineStatus) {
+							bot.setOnlineStatus(this.form.onlineStatus);
+						}
 
 						const loadMainWindow = remote.getGlobal("loadMainWindow");
 						loadMainWindow();
