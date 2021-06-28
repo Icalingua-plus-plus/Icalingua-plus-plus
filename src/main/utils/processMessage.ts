@@ -71,7 +71,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
                         const data = getRet.data
-                        const senderName = (data as GroupMessageEventData).group_id
+                        const senderName = ('group_id' in data)
                             ? (data as GroupMessageEventData).anonymous
                                 ? (data as GroupMessageEventData).anonymous.name
                                 : getBot().uin === data.sender.user_id

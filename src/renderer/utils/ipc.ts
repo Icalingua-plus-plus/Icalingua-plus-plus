@@ -19,4 +19,7 @@ export const getNick = async (): Promise<string> => {
 export const fetchMessage = async (roomId: number, offset: number) => {
     return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
 }
+export const setSelectedRoomId = (roomId: number) => {
+    ipcRenderer.send('setSelectedRoomId', roomId)
+}
 
