@@ -330,3 +330,7 @@ ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, ro
         storage.updateRoom(room.roomId, room)
     }
 })
+ipcMain.handle('isOnline', () => bot.getStatus().data.online)
+ipcMain.handle('getNick', () => bot.nickname)
+
+

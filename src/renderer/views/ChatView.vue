@@ -314,7 +314,6 @@ export default {
 			rooms: [],
 			messages: [],
 			selectedRoom: {roomId: 0},
-			tray: null,
 			account: null,
 			messagesLoaded: false,
 			ignoredChats: [],
@@ -382,15 +381,8 @@ export default {
 		this.status = glodb.get("account.onlineStatus").value()
 		//endregion
 		//region set status
-		this.offline = !bot.getStatus().data.online;
-		this.username = bot.getLoginInfo().data.nickname;
-		this.tray = remote.getGlobal("tray");
-		this.tray.setToolTip("Electron QQ");
-		this.tray.on("click", () => {
-			const window = remote.getCurrentWindow();
-			window.show();
-			window.focus();
-		});
+		this.offline = !await ipc.isOnline();
+		this.username = await ipc.getNick();
 
 		//endregion
 		//region listener
@@ -546,50 +538,6 @@ export default {
 			],
 		];
 		this.updateAppMenu();
-		this.tray.setContextMenu(
-			remote.Menu.buildFromTemplate([
-				{
-					label: "Open",
-					type: "normal",
-					click: () => {
-						const window = remote.getCurrentWindow();
-						window.show();
-						window.focus();
-					},
-				},
-				this.menu[0],
-				{
-					label: "Icon theme",
-					submenu: [
-						{
-							label: "Dark",
-							type: "radio",
-							checked: this.darkTaskIcon,
-							click: () => {
-								this.darkTaskIcon = true;
-								this.updateTrayIcon();
-								db.set("darkTaskIcon", true).write();
-							},
-						},
-						{
-							label: "Light",
-							type: "radio",
-							checked: !this.darkTaskIcon,
-							click: () => {
-								this.darkTaskIcon = false;
-								this.updateTrayIcon();
-								db.set("darkTaskIcon", false).write();
-							},
-						},
-					],
-				},
-				{
-					label: "Exit",
-					type: "normal",
-					click: this.exit,
-				},
-			])
-		);
 
 		if (fs.existsSync(path.join(STORE_PATH, "font.ttf"))) {
 			console.log("nya");
@@ -626,7 +574,7 @@ export default {
 		})
 	},
 	methods: {
-		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
+		sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
 			this.loading = true
 			if (!room && !roomId) {
 				room = this.selectedRoom;
@@ -641,7 +589,7 @@ export default {
 					path: file.path
 				}
 			}
-			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,})
+			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
 		},
 		fetchMessage(reset) {
 			if (reset) {
@@ -1226,16 +1174,7 @@ export default {
 			}
 			else download(url, dest ? dest : path.join(dir, cb), cb);
 		},
-		exit() {
-			const win = remote.getCurrentWindow()
-			const size = win.getSize()
-			remote.getGlobal('glodb').set('winSize', {
-				width: size[0],
-				height: size[1],
-				max: win.isMaximized()
-			}).write()
-			win.destroy();
-		},
+		exit: ipc.exit,
 		downloadImage(url) {
 			console.log(url)
 			const downdir = remote.app.getPath("downloads");
