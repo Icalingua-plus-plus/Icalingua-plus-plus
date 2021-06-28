@@ -10,10 +10,13 @@ export const sendMessage = async (data) => {
 export const exit = () => {
     ipcRenderer.send('exit')
 }
-export const isOnline = async ():Promise<boolean> => {
+export const isOnline = async (): Promise<boolean> => {
     return await ipcRenderer.invoke('isOnline')
 }
-export const getNick = async ():Promise<string> => {
+export const getNick = async (): Promise<string> => {
     return await ipcRenderer.invoke('getNick')
+}
+export const fetchMessage = async (roomId: number, offset: number) => {
+    return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
 }
 

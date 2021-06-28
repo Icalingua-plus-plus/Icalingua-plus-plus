@@ -332,5 +332,26 @@ ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, ro
 })
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
-
+ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
+    if(!offset){
+        storage.updateRoom(roomId, {
+            unreadCount:0,
+            at: false
+        })
+        if (roomId < 0) {
+            const gid = -roomId
+            const group = bot.gl.get(gid)
+            if (group)
+                ui.setShutUp(!!group.shutup_time_me)
+            else {
+                ui.setShutUp(true)
+                ui.message('你已经不是群成员了')
+            }
+        }
+        else {
+            ui.setShutUp(false)
+        }
+    }
+    return storage.fetchMessages(roomId, offset, 20)
+})
 
