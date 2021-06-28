@@ -43,7 +43,7 @@ global.STATIC = __static
 global.STORE_PATH = app.getPath("userData");
 const STORE_PATH = global.STORE_PATH;
 
-const winURL =
+global.winURL =
     process.env.NODE_ENV === "development"
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`;
@@ -115,13 +115,11 @@ app.on("ready", () => {
                 cb(pathname);
             });
         ready()
-        Menu.setApplicationMenu(new Menu());
-        //login window
-
-        // if (process.env.NODE_ENV === 'development')
-        // 	loginWindow.webContents.session.loadExtension('/usr/lib/node_modules/vue-devtools/vender/')
-
-        loginWindow.loadURL(winURL + "#/login");
+        Menu.setApplicationMenu(Menu.buildFromTemplate([
+            {
+                role: 'toggleDevTools'
+            }
+        ]));
     }
 });
 

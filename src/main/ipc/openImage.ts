@@ -9,14 +9,6 @@ const VIEWERS = [
     'gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp'
 ]
 
-declare global {
-    namespace NodeJS {
-        interface Global {
-            STATIC: string
-        }
-    }
-}
-
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'image/jpeg']).toString()
     for (const i of VIEWERS) {

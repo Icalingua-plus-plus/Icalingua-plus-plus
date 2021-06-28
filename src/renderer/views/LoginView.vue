@@ -235,8 +235,8 @@ export default {
 							bot.setOnlineStatus(this.form.onlineStatus);
 						}
 
-						const loadMainWindow = remote.getGlobal("loadMainWindow");
-						loadMainWindow();
+						ipcRenderer.send('loadMainWindow')
+						ipcRenderer.send('createTray')
 					};
 					const verify = (data) => {
 						const veriWin = new remote.BrowserWindow({

@@ -382,17 +382,15 @@ export default {
 		this.status = glodb.get("account.onlineStatus").value()
 		//endregion
 		//region set status
-		else {
-			this.offline = !bot.getStatus().data.online;
-			this.username = bot.getLoginInfo().data.nickname;
-			this.tray = remote.getGlobal("tray");
-			this.tray.setToolTip("Electron QQ");
-			this.tray.on("click", () => {
-				const window = remote.getCurrentWindow();
-				window.show();
-				window.focus();
-			});
-		}
+		this.offline = !bot.getStatus().data.online;
+		this.username = bot.getLoginInfo().data.nickname;
+		this.tray = remote.getGlobal("tray");
+		this.tray.setToolTip("Electron QQ");
+		this.tray.on("click", () => {
+			const window = remote.getCurrentWindow();
+			window.show();
+			window.focus();
+		});
 
 		//endregion
 		//region listener
