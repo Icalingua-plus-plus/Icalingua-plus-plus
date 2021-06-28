@@ -25,12 +25,12 @@ export default {
         sendToMainWindow('messageSuccess', string)
     },
     updateRoom(room: Room) {
-        sendToMainWindow('messageSuccess', room)
+        sendToMainWindow('updateRoom', room)
     },
     setShutUp(isShutUp: boolean) {
         sendToMainWindow('setShutUp', isShutUp)
     },
     addMessage(roomId: number, message: Message) {
-        sendToMainWindow('messageSuccess', {roomId, message})
+        sendToMainWindow('addMessage', {roomId, message})
     },
 }

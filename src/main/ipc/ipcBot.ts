@@ -322,12 +322,15 @@ ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, ro
         };
         if (file || b64img || imgpath) room.lastMessage.content += "[Image]";
         message._id = data.data.message_id;
-        ui.updateRoom(room)
-        ui.addMessage(room.room, message)
         room.utime = new Date().getTime();
         message.time = new Date().getTime();
+        ui.updateRoom(room)
+        ui.addMessage(room.roomId, message)
         storage.addMessage(roomId, message)
-        storage.updateRoom(room.roomId, room)
+        storage.updateRoom(room.roomId, {
+            utime: room.utime,
+            lastMessage: room.lastMessage
+        })
     }
 })
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
