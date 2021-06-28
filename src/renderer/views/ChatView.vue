@@ -565,6 +565,7 @@ export default {
 		ipcRenderer.on('message', (_, p) => this.$message(p))
 		ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
 		ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
+		ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
 		ipcRenderer.on('updateRoom', (_, room) => {
 			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)];
 		})
@@ -597,24 +598,9 @@ export default {
 				this.messages = [];
 				this.selectedRoom.unreadCount = 0;
 				this.selectedRoom.at = false;
-				storage.updateRoom(this.selectedRoom.roomId, this.selectedRoom)
-
-				if (this.selectedRoom.roomId < 0) {
-					const gid = -this.selectedRoom.roomId
-					const group = bot.gl.get(gid)
-					if (group)
-						this.isShutUp = group.shutup_time_me
-					else {
-						this.isShutUp = true
-						this.$message('你已经不是群成员了')
-					}
-				}
-				else {
-					this.isShutUp = false
-				}
 			}
-			storage.fetchMessages(this.selectedRoom.roomId, this.messages.length, 20)
-				.then((msgs2add) => {
+			ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
+				.then(msgs2add => {
 					setTimeout(() => {
 						if (msgs2add.length) {
 							this.messages = [...msgs2add, ...this.messages];
@@ -1057,9 +1043,6 @@ export default {
 			this.updateTrayIcon();
 			this.fetchMessage(true);
 			this.updateAppMenu();
-			convertImgToBase64(room.avatar, (b64) => {
-				remote.getCurrentWindow().setIcon(nativeImage.createFromDataURL(b64));
-			});
 		},
 		pokeFriend() {
 			console.log("poke");
@@ -1137,8 +1120,8 @@ export default {
 				document.title = title;
 			}
 			if (socketIo) socketIo.emit('qqCount', unread)
-			this.tray.setImage(p);
-			remote.app.setBadgeCount(unread);
+			// this.tray.setImage(p);
+			// remote.app.setBadgeCount(unread);
 		},
 		closeAria() {
 			this.dialogAriaVisible = false;
