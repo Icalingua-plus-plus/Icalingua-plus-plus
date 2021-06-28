@@ -3,9 +3,12 @@ interface MessageFile {
     url: string;
     size?: number;
     name?: string;
+    fid?: string
 }
 
 export default interface Message {
+    code?: string;
+    at?: string | boolean;
     _id: string;
     senderId: number;
     username: string;
@@ -23,6 +26,6 @@ export default interface Message {
     },
 }
 
-interface MessageInIDB extends Message{
+interface MessageInIDB extends Message {
     roomId: number;
 }
