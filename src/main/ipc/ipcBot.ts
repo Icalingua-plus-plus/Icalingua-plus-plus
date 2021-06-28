@@ -1,16 +1,17 @@
 import {ipcMain} from 'electron'
-import {Client, createClient} from "oicq";
+import {Client, createClient, MessageEventData} from "oicq";
 import path from "path";
 import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
 import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
 import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
-import StorageProvider from "../interfaces/StorageProvider";
+import StorageProvider from "../../types/StorageProvider";
 
 declare global {
     namespace NodeJS {
         interface Global {
             bot: Client
             STORE_PATH: string
+            glodb: any //todo: remove
         }
     }
 }
@@ -28,10 +29,24 @@ type LoginExtra = {
     rdsHost: string
 }
 
-let bot: Client
+export let bot: Client
 let storage: StorageProvider
 
-ipcMain.on('createBot', async (event, form: LoginForm, extra: LoginExtra) => {
+//region event handlers
+const handler={
+    onQQMessage(data: MessageEventData){
+
+    },
+    friendRecall() {
+
+    }
+}
+//endregion
+//region utility functions
+
+//endregion
+
+ipcMain.handle('createBot', async (event, form: LoginForm, extra: LoginExtra) => {
     bot = global.bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(global.STORE_PATH, "/data"),
@@ -43,15 +58,42 @@ ipcMain.on('createBot', async (event, form: LoginForm, extra: LoginExtra) => {
 
     //todo: use settings manager
 
-    if (extra.storageType === 'mdb')
-        storage = new MongoStorageProvider(extra.mdbConnStr, form.username)
-    else if (extra.storageType === 'idb')
-        storage = new IndexedStorageProvider(form.username)
-    else if (extra.storageType === 'redis')
-        storage = new RedisStorageProvider(extra.rdsHost, form.username)
+    try {
+        if (extra.storageType === 'mdb')
+            storage = new MongoStorageProvider(extra.mdbConnStr, form.username)
+        else if (extra.storageType === 'idb')
+            storage = new IndexedStorageProvider(form.username)
+        else if (extra.storageType === 'redis')
+            storage = new RedisStorageProvider(extra.rdsHost, form.username)
 
+        await storage.connect()
+        storage.getAllRooms()
+            .then(e => {
+                e.forEach((e) => {
+                    //更新群的名称
+                    if (e.roomId > -1) return;
+                    const group = bot.gl.get(-e.roomId)
+                    if (group && group.group_name !== e.roomName) {
+                        e.roomName = group.group_name;
+                        storage.updateRoom(e.roomId, {roomName: group.group_name})
+                    }
+                });
+            });
+
+        bot.on("message", handler.onQQMessage);
+        bot.on("notice.friend.recall", handler.friendRecall);
+        bot.on("notice.group.recall", handler.groupRecall);
+        bot.on("system.online", handler.online);
+        bot.on("system.offline", handler.onOffline);
+        bot.on("notice.friend.poke", handler.friendPoke);
+        bot.on("notice.group.poke", handler.groupPoke);
+
+    } catch (err) {
+        console.log(err);
+        global.glodb.set("account.autologin", false).write()
+        alert('Error connecting to database')
+    }
 })
-
 ipcMain.handle('getFriendsAndGroups', async () => {
     const friends = bot.fl.values();
     let iterF = friends.next();
@@ -75,7 +117,9 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friendsAll, groupsAll
     }
 })
-
 ipcMain.handle('sliderLogin', (_, ticket: string) => {
     bot.sliderLogin(ticket)
+})
+ipcMain.handle('getAllRooms', async () => {
+    return await storage.getAllRooms()
 })

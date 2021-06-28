@@ -212,9 +212,7 @@ import TheRoomsPanel from "../components/TheRoomsPanel.vue";
 import TheContactsPanel from "../components/TheContactsPanel.vue";
 import {io} from "socket.io-client";
 import {base64encode, base64decode} from 'nodejs-base64'
-import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
-import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
-import RedisStorageProvider from "../storageProviders/RedisStorageProvider"
+import * as ipc from '../utils/ipc'
 
 const _ = require('lodash');
 const remote = require('@electron/remote')
@@ -224,13 +222,6 @@ const glodb = remote.getGlobal("glodb");
 const Aria2 = require("aria2");
 
 let db, aria, socketIo
-/**
- * @type StorageProvider
- */
-let storage
-//oicq
-const bot = remote.getGlobal("bot");
-console.log(bot);
 
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
@@ -358,10 +349,7 @@ export default {
 			status: ONLINE_STATUS_TYPES.Online
 		};
 	},
-	created() {
-		const loading = this.$loading({
-			lock: true,
-		});
+	async created() {
 		//region db init
 		this.account = glodb.get("account").value().username;
 		const storageType = glodb.get("storage").value();
@@ -386,46 +374,7 @@ export default {
 			priority: 3,
 		}).write();
 		db.unset('rooms').unset('messages').write()
-		//connect db
-		{
-			if (storageType === 'mdb')
-				storage = new MongoStorageProvider(glodb.get("connStr").value(), this.account)
-			else if (storageType === 'idb')
-				storage = new IndexedStorageProvider(this.account)
-			else if (storageType === 'redis')
-				storage = new RedisStorageProvider(glodb.get("rdsHost").value(), this.account)
-			storage.connect()
-				.then(() => {
-					storage.getAllRooms()
-						.then((e) => {
-							this.rooms = e;
-							this.rooms.forEach((e) => {
-								//更新群的名称
-								if (e.roomId > -1) return;
-								const group = bot.gl.get(-e.roomId)
-								if (group && group.group_name !== e.roomName) {
-									e.roomName = group.group_name;
-									storage.updateRoom(e.roomId, {roomName: group.group_name})
-								}
-							});
-						});
-					bot.on("message", this.onQQMessage);
-					bot.on("notice.friend.recall", this.friendRecall);
-					bot.on("notice.group.recall", this.groupRecall);
-					bot.on("system.online", this.online);
-					bot.on("system.offline", this.onOffline);
-					bot.on("notice.friend.poke", this.friendPoke);
-					bot.on("notice.group.poke", this.groupPoke);
-					remote.getCurrentWindow().on("focus", this.clearCurrentRoomUnread);
-					loading.close();
-				})
-				.catch((err) => {
-					console.log(err);
-					glodb.set("account.autologin", false).write()
-					alert('Error connecting to database')
-					//remote.getCurrentWindow().destroy()
-				})
-		}
+		this.rooms = await ipc.getAllRooms()
 		this.priority = db.get("priority").value();
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
@@ -433,11 +382,6 @@ export default {
 		this.status = glodb.get("account.onlineStatus").value()
 		//endregion
 		//region set status
-		if (process.env.NODE_ENV === "development")
-			document.title = "[DEBUG] Electron QQ";
-		if (process.env.NYA) {
-			document.title = "[DEBUG:UI] Electron QQ";
-		}
 		else {
 			this.offline = !bot.getStatus().data.online;
 			this.username = bot.getLoginInfo().data.nickname;

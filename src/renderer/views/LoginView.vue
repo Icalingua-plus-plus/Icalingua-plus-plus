@@ -158,13 +158,13 @@ export default {
 	},
 	methods: {
 		onSubmit(formName) {
-			this.$refs[formName].validate((valid) => {
+			this.$refs[formName].validate(async (valid) => {
 				if (valid) {
 					this.disabled = true;
 					glodb.set("storage", this.storage)
 						.set("rdsHost", this.rdsHost)
 						.set("connStr", this.connStr).write();
-					ipcRenderer.send('createBot', this.form, {
+					await ipcRenderer.invoke('createBot', this.form, {
 						storageType: this.storage,
 						mdbConnStr: this.connStr,
 						rdsHost: this.rdsHost

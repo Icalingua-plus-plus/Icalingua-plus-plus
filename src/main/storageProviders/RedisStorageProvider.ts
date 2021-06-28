@@ -1,7 +1,7 @@
 import Redis from "ioredis";
-import Message from "../interfaces/Message";
-import Room from "../interfaces/Room";
-import StorageProvider from "../interfaces/StorageProvider";
+import Message from "../../types/Message";
+import Room from "../../types/Room";
+import StorageProvider from "../../types/StorageProvider";
 export default class RedisStorageProvider implements StorageProvider {
   qid: string;
   connStr: string;
