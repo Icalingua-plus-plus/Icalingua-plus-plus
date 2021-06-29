@@ -112,9 +112,9 @@ export default {
 			(this.$refs[formName]).validate(async (valid) => {
 				if (valid) {
 					this.disabled = true;
-					await ipc.setSetting('account', this.form)
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
 						this.form.password = md5(this.form.password);
+					await ipc.setSetting('account', this.form)
 					await ipcRenderer.invoke('createBot', this.form, {
 						storageType: this.storage,
 						mdbConnStr: this.connStr,

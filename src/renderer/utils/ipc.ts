@@ -27,7 +27,7 @@ export const getSetting = async (kp: string | Array<string | number>) => {
     return await ipcRenderer.invoke('getSetting', kp)
 }
 export const setSetting = async (kp: string | Array<string | number>, value) => {
-    return await ipcRenderer.invoke('getSetting', kp, value)
+    return await ipcRenderer.invoke('setSetting', kp, value)
 }
 //remote 也是 ipc！
 export const getVersion = app.getVersion
