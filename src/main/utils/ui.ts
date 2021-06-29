@@ -33,4 +33,7 @@ export default {
     addMessage(roomId: number, message: Message) {
         sendToMainWindow('addMessage', {roomId, message})
     },
+    chroom(roomId: number) {
+        sendToMainWindow('chroom', roomId)
+    },
 }

@@ -557,6 +557,7 @@ export default {
 		ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
 		ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
 		ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
+		ipcRenderer.on('chroom', (_, p) => this.chroom(p))
 		ipcRenderer.on('updateRoom', (_, room) => {
 			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)];
 		})
@@ -890,6 +891,9 @@ export default {
 			this.view = "chats";
 		},
 		chroom(room) {
+			if ((typeof room) === 'number')
+				room = this.rooms.find(e => e.roomId === room)
+			if (!room) return
 			if (this.selectedRoom === room) return;
 			this.selectedRoom.at = false;
 			this.selectedRoom = room;

@@ -16,5 +16,5 @@ export default (roomId: number, roomName: string, avatar: string): Room => {
         lastMessage: {content: "", timestamp: ""},
     };
     if (roomId < 0) room.users.push({_id: 3, username: "3"});
-    return room;
+    return <Room>room;
 }
