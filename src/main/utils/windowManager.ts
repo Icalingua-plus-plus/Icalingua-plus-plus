@@ -71,3 +71,16 @@ export const sendToMainWindow = (channel: string, payload?: any) => {
         mainWindow.webContents.send(channel, payload)
 }
 export const getMainWindow = () => mainWindow
+export const showWindow = () => {
+    if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+    } else if (loginWindow) {
+        loginWindow.show();
+        loginWindow.focus();
+    }
+}
+export const destroyWindow = () => {
+    if (mainWindow) mainWindow.destroy()
+    if (loginWindow) loginWindow.destroy()
+}

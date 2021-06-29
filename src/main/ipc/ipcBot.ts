@@ -13,9 +13,8 @@ import path from "path";
 import fs from 'fs'
 import MongoStorageProvider from "../storageProviders/MongoStorageProvider";
 import RedisStorageProvider from "../storageProviders/RedisStorageProvider";
-// import IndexedStorageProvider from "../storageProviders/IndexedStorageProvider";
 import StorageProvider from "../../types/StorageProvider";
-import {getMainWindow, loadMainWindow, sendToLoginWindow} from "../utils/windowManager";
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from "../utils/windowManager";
 import {createTray} from "../utils/trayManager";
 import ui from '../utils/ui'
 import formatDate from "../utils/formatDate";
@@ -26,19 +25,8 @@ import settings from 'electron-settings'
 import avatarCache from "../utils/avatarCache";
 import createRoom from "../utils/createRoom";
 import Room from "../../types/Room";
+import LoginForm from "../../types/LoginForm";
 
-type LoginForm = {
-    username: string
-    password: string
-    protocol: number
-    autologin: boolean
-    onlineStatus: number
-}
-type StorageConfig = {
-    storageType: string,
-    mdbConnStr: string,
-    rdsHost: string
-}
 type SendMessageParams = {
     content: string,
     roomId: number,
@@ -55,7 +43,6 @@ type SendMessageParams = {
 
 let bot: Client
 let storage: StorageProvider
-let storageConfig: StorageConfig
 let loginForm: LoginForm
 
 let selectedRoomId = 0
@@ -121,7 +108,7 @@ const eventHandlers = {
         if (
             (!getMainWindow().isFocused() ||
                 roomId !== selectedRoomId) &&
-            // (room.priority >= settings.getSync('priority') || at) && todo
+            (room.priority >= settings.getSync('priority') || at) &&
             !isSelfMsg
         ) {
             //notification
@@ -132,12 +119,9 @@ const eventHandlers = {
                 icon: await avatarCache(avatar),
                 hasReply: true,
                 replyPlaceholder: "Reply to " + roomName,
-                urgency: "critical",
             });
             notif.addListener("click", () => {
-                const window = getMainWindow();
-                window.show();
-                window.focus();
+                showWindow()
                 ui.chroom(room.roomId);
             });
             notif.addListener("reply", (e, r) => {
@@ -265,12 +249,12 @@ const loginHandlers = {
 const initStorage = async () => {
     //todo: use settings manager
     try {
-        if (storageConfig.storageType === 'mdb')
-            storage = new MongoStorageProvider(storageConfig.mdbConnStr, loginForm.username)
+        if (loginForm.storageType === 'mdb')
+            storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
             // else if (extra.storageType === 'idb')
         //     storage = new IndexedStorageProvider(form.username)
-        else if (storageConfig.storageType === 'redis')
-            storage = new RedisStorageProvider(storageConfig.rdsHost, loginForm.username)
+        else if (loginForm.storageType === 'redis')
+            storage = new RedisStorageProvider(loginForm.rdsHost, loginForm.username)
 
         await storage.connect()
         storage.getAllRooms()
@@ -309,7 +293,7 @@ const attachLoginHandler = () => {
 }
 //endregion
 
-ipcMain.handle('createBot', async (event, form: LoginForm, extra: StorageConfig) => {
+ipcMain.handle('createBot', async (event, form: LoginForm) => {
     bot = global.bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(global.STORE_PATH, "/data"),
@@ -318,7 +302,6 @@ ipcMain.handle('createBot', async (event, form: LoginForm, extra: StorageConfig)
         log_level: process.env.NODE_ENV === "development" ? 'mark' : 'off'
     });
     bot.setMaxListeners(233);
-    storageConfig = extra
     loginForm = form
     attachLoginHandler()
     bot.login(form.password)

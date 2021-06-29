@@ -8,7 +8,6 @@
 			:disabled="disabled"
 			label-position="top"
 			class="login-box"
-			v-show="view === 'login'"
 		>
 			<center>
 				<h5>Version {{ ver }}</h5>
@@ -37,10 +36,10 @@
 				<el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }"/>
 			</el-form-item>
 			<el-form-item label="Storage engine">
-				<el-radio-group v-model="storage" size="small" disabled>
-					<el-radio-button label="idb">Indexed DB</el-radio-button>
+				<el-radio-group v-model="form.storageType" size="small">
+<!--					<el-radio-button label="idb">Indexed DB</el-radio-button>-->
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
-					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
+<!--					<el-radio-button label="redis">Redis (Beta)</el-radio-button>-->
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item label="Status">
@@ -50,17 +49,17 @@
 					<el-radio-button label="41">Hide</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
-			<el-form-item prop="connStr" v-show="storage==='mdb'">
+			<el-form-item prop="connStr" v-show="form.storageType==='mdb'">
 				<el-input
-					:show-password="connStr.split(':').length>2"
+					:show-password="form.mdbConnStr.split(':').length>2"
 					placeholder="MongoDB connect string"
-					v-model="connStr"
+					v-model="form.mdbConnStr"
 				/>
 			</el-form-item>
-			<el-form-item prop="rdsHost" v-show="storage==='redis'">
+			<el-form-item prop="rdsHost" v-show="form.storageType==='redis'">
 				<el-input
 					placeholder="Redis Host"
-					v-model="rdsHost"
+					v-model="form.rdsHost"
 				/>
 			</el-form-item>
 			<p class="red">
@@ -72,54 +71,22 @@
 				</el-button>
 			</el-form-item>
 		</el-form>
-		<el-form
-			:rules="rules"
-			:hide-required-asterisk="true"
-			label-position="top"
-			class="login-box"
-			v-show="view === 'captcha'"
-		>
-			<center>
-				<h4>验证码</h4>
-				<el-form-item prop="captchaimg">
-					<img :src="captchaimg" width="50%"/>
-				</el-form-item>
-			</center>
-			<el-form-item prop="captcha">
-				<el-input type="text" placeholder="输入验证码" v-model="captcha"/>
-			</el-form-item>
-			<p class="red">
-				{{ errmsg }}
-			</p>
-			<el-form-item align="center">
-				<el-button type="primary" @click="captchaLogin"> Login</el-button>
-			</el-form-item>
-		</el-form>
 	</div>
 </template>
 
 <script>
 import {ipcRenderer} from 'electron'
+import * as ipc from "../utils/ipc";
+// import LoginForm from "../../types/LoginForm";
+import md5 from "md5";
+// import {ElForm} from "element-ui/types/form";
 
-const remote = require('@electron/remote')
-
-const md5 = require("md5");
-const path = require("path");
-const fs = require("fs");
-
-const glodb = remote.getGlobal("glodb");
 export default {
 	name: "LoginView",
 	data() {
 		return {
-			ver: remote.app.getVersion(),
-			form: {
-				username: "",
-				password: "",
-				protocol: 2,
-				autologin: false,
-				onlineStatus: 11,
-			},
+			ver: ipc.getVersion(),
+			form: null,
 
 			rules: {
 				username: [{required: true, trigger: "blur"}],
@@ -128,30 +95,10 @@ export default {
 
 			disabled: false,
 			errmsg: "",
-			view: "login",
-			captcha: "",
-			captchaimg: "",
-
-			storage: '',
-			connStr: '',
-			rdsHost: ''
 		};
 	},
-	created() {
-		const account = glodb.get("account").value();
-		if (account)
-			this.form = {
-				username: account.username,
-				password: account.password,
-				protocol: account.protocol,
-				autologin: account.autologin,
-				onlineStatus: account.onlineStatus
-			};
-		// this.storage = glodb.get("storage").value() || 'idb'
-		this.storage = 'mdb'
-		if (this.storage === 'json') this.storage = 'idb'
-		this.connStr = glodb.get("connStr").value() || 'mongodb://localhost'
-		this.rdsHost = glodb.get("rdsHost").value() || '127.0.0.1'
+	async created() {
+		this.form = await ipc.getSetting('account')
 		ipcRenderer.on('error', (_, msg) => {
 			this.errmsg = msg
 			this.disabled = false;
@@ -162,12 +109,10 @@ export default {
 	},
 	methods: {
 		onSubmit(formName) {
-			this.$refs[formName].validate(async (valid) => {
+			(this.$refs[formName]).validate(async (valid) => {
 				if (valid) {
 					this.disabled = true;
-					glodb.set("storage", this.storage)
-						.set("rdsHost", this.rdsHost)
-						.set("connStr", this.connStr).write();
+					await ipc.setSetting('account', this.form)
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
 						this.form.password = md5(this.form.password);
 					await ipcRenderer.invoke('createBot', this.form, {
@@ -180,11 +125,6 @@ export default {
 					return false;
 				}
 			});
-		},
-
-		captchaLogin() {
-			const bot = remote.getGlobal("bot");
-			bot.captchaLogin(this.captcha);
 		},
 	},
 };

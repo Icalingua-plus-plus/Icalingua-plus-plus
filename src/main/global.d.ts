@@ -8,6 +8,7 @@ declare global {
             glodb: any //todo: remove
             winURL: string
             STATIC: string
+            __static: string //todo deprecate
         }
     }
 }

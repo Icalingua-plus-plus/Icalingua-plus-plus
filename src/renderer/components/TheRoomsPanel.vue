@@ -14,7 +14,7 @@
 				v-for="room in sortedRooms"
 				:key="room.roomId"
 				:room="room"
-				:selected="room === selected"
+				:selected="room.roomId === selected.roomId"
 				:priority="priority"
 				@click="$emit('chroom', room)"
 				@contextmenu="$emit('contextmenu', room)"
