@@ -567,7 +567,7 @@ export default {
 		})
 	},
 	methods: {
-		sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
+		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
 			this.loading = true
 			if (!room && !roomId) {
 				room = this.selectedRoom;
@@ -576,11 +576,19 @@ export default {
 			if (!room) room = this.rooms.find((e) => e.roomId === roomId);
 			if (!roomId) roomId = room.roomId;
 			if (file) {
-				file = {
-					type: file.type,
-					size: file.size,
-					path: file.path
+				console.log(file)
+				if (file.type.includes('image')) {
+					const b64 = Buffer.from(await file.blob.arrayBuffer()).toString('base64')
+					b64img = `data:${file.type};base64,${b64}`
+					file = null
 				}
+				else
+					file = {
+						type: file.type,
+						size: file.size,
+						path: file.path
+					}
+
 			}
 			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
 		},

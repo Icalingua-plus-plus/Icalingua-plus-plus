@@ -398,7 +398,7 @@ const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, i
             url: b64img,
         };
     }
-    if (imgpath) {
+    else if (imgpath) {
         chain.push({
             type: "image",
             data: {
@@ -410,7 +410,7 @@ const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, i
             url: imgpath.replace(/\\/g, "/"),
         };
     }
-    if (file) {
+    else if (file) {
         chain.push({
             type: "image",
             data: {
