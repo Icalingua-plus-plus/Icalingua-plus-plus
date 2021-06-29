@@ -24,6 +24,8 @@ import processMessage from "../utils/processMessage";
 import getAvatarUrl from "../utils/getAvatarUrl";
 import settings from 'electron-settings'
 import avatarCache from "../utils/avatarCache";
+import createRoom from "../utils/createRoom";
+import Room from "../../types/Room";
 
 type LoginForm = {
     username: string
@@ -36,6 +38,19 @@ type StorageConfig = {
     storageType: string,
     mdbConnStr: string,
     rdsHost: string
+}
+type SendMessageParams = {
+    content: string,
+    roomId: number,
+    file?: {
+        type: string,
+        path: string,
+        size: number
+    },
+    replyMessage?: any,
+    room: Room,
+    b64img?: string,
+    imgpath?: string
 }
 
 let bot: Client
@@ -53,11 +68,11 @@ const eventHandlers = {
         const groupId = (data as GroupMessageEventData).group_id;
         const senderId = data.sender.user_id;
         let roomId = groupId ? -groupId : data.user_id;
-        if (this.ignoredChats.find((e) => e.id == roomId)) return;
-        const isSelfMsg = this.account == senderId;
+        // if (ignoredChats.find((e) => e.id == roomId)) return;
+        const isSelfMsg = bot.uin === senderId;
         const senderName = groupId
-            ? ('anonymous' in data)
-                ? data.anonymous.name
+            ? ((<GroupMessageEventData>data).anonymous)
+                ? (<GroupMessageEventData>data).anonymous.name
                 : isSelfMsg
                     ? "You"
                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
@@ -80,7 +95,7 @@ const eventHandlers = {
             const group = bot.gl.get(groupId)
             if (group && group.group_name !== roomName) roomName = group.group_name;
             // create room
-            room = this.createRoom(roomId, roomName, avatar);
+            room = createRoom(roomId, roomName, avatar);
             await storage.addRoom(room);
         } else {
             if (!room.roomName.startsWith(roomName)) {
@@ -95,72 +110,69 @@ const eventHandlers = {
             username: senderName,
         };
         ////process message////
-        await this.processMessage(data.message, message, lastMessage, roomId);
+        await processMessage(data.message, message, lastMessage, roomId);
         const at = message.at;
         if (at) room.at = at;
 
         if (!room.priority) {
             room.priority = groupId ? 2 : 4;
         }
-
-        ui.updateRoom(room)
-
         //notification
         if (
             (!getMainWindow().isFocused() ||
                 roomId !== selectedRoomId) &&
-            (/*room.priority >= settings.getSync('priority') || */at) &&
+            // (room.priority >= settings.getSync('priority') || at) && todo
             !isSelfMsg
         ) {
             //notification
 
-                const notif = new Notification({
-                    title: room.roomName,
-                    body: (groupId ? senderName + ": " : "") + lastMessage.content,
-                    icon: await avatarCache(avatar),
-                    hasReply: true,
-                    replyPlaceholder: "Reply to " + roomName,
-                    urgency: "critical",
+            const notif = new Notification({
+                title: room.roomName,
+                body: (groupId ? senderName + ": " : "") + lastMessage.content,
+                icon: await avatarCache(avatar),
+                hasReply: true,
+                replyPlaceholder: "Reply to " + roomName,
+                urgency: "critical",
+            });
+            notif.addListener("click", () => {
+                const window = getMainWindow();
+                window.show();
+                window.focus();
+                ui.chroom(room.roomId);
+            });
+            notif.addListener("reply", (e, r) => {
+                sendMessage({
+                    content: r,
+                    room,
+                    roomId: room.roomId
                 });
-                notif.addListener("click", () => {
-                    const window = getMainWindow();
-                    window.show();
-                    window.focus();
-                    ui.chroom(room);
-                });
-                notif.addListener("reply", (e, r) => {
-                    this.sendMessage({
-                        content: r,
-                        room,
-                    });
-                });
-                notif.show();
+            });
+            notif.show();
+            console.log(notif);
         }
 
         if (
             room !== this.selectedRoom ||
-            !remote.getCurrentWindow().isFocused()
+            !getMainWindow().isFocused()
         ) {
             if (isSelfMsg) {
                 room.unreadCount = 0;
                 room.at = false;
             } else room.unreadCount++;
         }
-        if (room === this.selectedRoom)
-            messages = [...this.messages, message];
         room.utime = data.time * 1000;
         room.lastMessage = lastMessage;
-        updateTrayIcon(room.roomName);
-        if (message.file && message.file.name && room.autoDownload) {
-            download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
-        }
-
+        //todo
+        // updateTrayIcon(room.roomName);
+        // if (message.file && message.file.name && room.autoDownload) {
+        //     download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
+        // }
         message.time = data.time * 1000;
-        if (!history)
-            storage.updateRoom(roomId, room)
-        storage.addMessage(roomId, message)
+        ui.addMessage(room.roomId, message)
+        ui.updateRoom(room)
+        await storage.updateRoom(roomId, room)
+        await storage.addMessage(roomId, message)
         return message;
-
     },
     friendRecall() {
 
@@ -343,7 +355,7 @@ ipcMain.handle('getAllRooms', async () => {
 ipcMain.handle('botLogin', (_, password: string) => {
     bot.login(password)
 })
-ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, room, b64img, imgpath}) => {
+const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}:SendMessageParams) => {
     if (file && file.type && !file.type.includes('image')) {
         //群文件
         if (roomId > 0) {
@@ -459,7 +471,8 @@ ipcMain.handle('sendMessage', async (_, {content, roomId, file, replyMessage, ro
             lastMessage: room.lastMessage
         })
     }
-})
+}
+ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
