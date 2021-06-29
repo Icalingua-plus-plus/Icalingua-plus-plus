@@ -1,5 +1,6 @@
 import {ipcRenderer} from "electron";
 import Room from "../../types/Room";
+import {app} from '@electron/remote';
 
 export const getAllRooms = async () => {
     return await ipcRenderer.invoke('getAllRooms') as Room[]
@@ -22,4 +23,12 @@ export const fetchMessage = async (roomId: number, offset: number) => {
 export const setSelectedRoomId = (roomId: number) => {
     ipcRenderer.send('setSelectedRoomId', roomId)
 }
+export const getSetting = async (kp: string | Array<string | number>) => {
+    return await ipcRenderer.invoke('getSetting', kp)
+}
+export const setSetting = async (kp: string | Array<string | number>, value) => {
+    return await ipcRenderer.invoke('getSetting', kp, value)
+}
+//remote 也是 ipc！
+export const getVersion = app.getVersion
 

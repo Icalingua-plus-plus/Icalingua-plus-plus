@@ -602,8 +602,6 @@ export default {
 				});
 			this.updateTrayIcon();
 		},
-		async onQQMessage(data, history) {
-		},
 		async openImage(data) {
 			if (data.action === "download") {
 				if (data.message.file.type.includes("image")) {
