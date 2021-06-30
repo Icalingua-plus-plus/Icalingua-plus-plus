@@ -119,7 +119,7 @@ function greeting () {
 
   if (cols > 85) text = 'lets-build'
   else if (cols > 60) text = 'lets-|build'
-  else text = false
+  else text = ''
 
   if (text && !isCI) {
     say(text, {
