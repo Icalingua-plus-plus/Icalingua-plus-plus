@@ -484,7 +484,7 @@ export default {
 			}
 		})
 		ipcRenderer.on('setOnline', () => this.reconnecting = this.offline = false)
-		ipcRenderer.on('setOffline', (_,msg) => {
+		ipcRenderer.on('setOffline', (_, msg) => {
 			this.offlineReason = msg
 			this.offline = true
 		})
@@ -740,7 +740,7 @@ export default {
 			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room
-			ipc.setSelectedRoomId(room.roomId)
+			ipc.setSelectedRoom(room.roomId, room.roomName)
 			this.updateTrayIcon()
 			this.fetchMessage(true)
 			this.updateAppMenu()
@@ -758,40 +758,8 @@ export default {
 				this.panel = 'stickers'
 			})
 		},
-		getUnreadCount() {
-			return this.rooms.filter((e) => {
-				return e.unreadCount && e.priority >= this.priority
-			}).length
-		},
-		updateTrayIcon() {
-			let p
-			const unread = this.getUnreadCount()
-			const title = this.selectedRoom.roomName
-				? this.selectedRoom.roomName
-				: 'Electron QQ'
-			if (unread) {
-				p = path.join(
-					__static,
-					this.darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
-				)
-				const newMsgRoom = this.rooms.find(
-					(e) => e.unreadCount && e.priority >= this.priority,
-				)
-				const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
-				document.title = `(${unread}${extra}) ${title}`
-			}
-			else {
-				p = path.join(__static, this.darkTaskIcon ? 'dark.png' : '256x256.png')
-				document.title = title
-			}
-			if (socketIo) socketIo.emit('qqCount', unread)
-			// this.tray.setImage(p);
-			// remote.app.setBadgeCount(unread);
-		},
 		exit: ipc.exit,
 		downloadImage: ipc.downloadImage,
-		async groupPoke(data) {
-		},
 		pokeGroup(uin) {
 			const group = -this.selectedRoom.roomId
 			bot.sendGroupPoke(group, uin)

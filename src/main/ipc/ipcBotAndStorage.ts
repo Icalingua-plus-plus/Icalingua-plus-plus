@@ -14,7 +14,7 @@ import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import StorageProvider from '../../types/StorageProvider'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
-import {createTray} from '../utils/trayManager'
+import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import formatDate from '../utils/formatDate'
 import Message from '../../types/Message'
@@ -47,6 +47,7 @@ let storage: StorageProvider
 let loginForm: LoginForm
 
 let selectedRoomId = 0
+let selectedRoomName = ''
 
 //我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
 
@@ -150,8 +151,6 @@ const eventHandlers = {
         }
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
-        //todo
-        // updateTrayIcon(room.roomName);
         if (message.file && message.file.name && room.autoDownload) {
             download(message.file.url, message.file.name, room.downloadPath)
         }
@@ -161,7 +160,7 @@ const eventHandlers = {
         ui.updateRoom(room)
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
-        return message
+        await updateTray()
     },
     friendRecall(data: FriendRecallEventData) {
         if (data.user_id == selectedRoomId) {
@@ -344,7 +343,7 @@ const initStorage = async () => {
                     }
                 })
             })
-
+        await updateTray()
 
     } catch (err) {
         console.log(err)
@@ -367,6 +366,7 @@ const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
 }
+export const updateTray = () => updateTrayIcon(selectedRoomName)
 //endregion
 
 ipcMain.handle('createBot', async (event, form: LoginForm) => {
@@ -554,7 +554,10 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
     }
     return storage.fetchMessages(roomId, offset, 20)
 })
-ipcMain.on('setSelectedRoomId', (_, id: number) => selectedRoomId = id)
+ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
+    selectedRoomId = id
+    selectedRoomName = name
+})
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => {
 //todo use storage
@@ -563,4 +566,5 @@ ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => {
 export const getBot = () => bot
 export const getStorage = () => storage
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
-
+export const getUnreadCount = async () => await storage.getUnreadCount(<number>await settings.get('priority'))
+export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(<number>await settings.get('priority'))

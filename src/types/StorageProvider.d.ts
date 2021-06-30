@@ -1,8 +1,9 @@
-import Room from "./Room";
-import Message from "./Message";
+import Room from './Room'
+import Message from './Message'
+import {getUnreadCount} from '../main/ipc/ipcBotAndStorage'
 
 export default interface StorageProvider {
-    connect():Promise<void>
+    connect(): Promise<void>
 
     updateRoom(roomId: number, room: object): Promise<any>
 
@@ -18,9 +19,13 @@ export default interface StorageProvider {
 
     getMessage(roomId: number, messageId: string): Promise<Message>
 
-    addMessages(roomId: number, messages: Message[]):Promise<any>
+    addMessages(roomId: number, messages: Message[]): Promise<any>
 
     getAllRooms(): Promise<Room[]>
 
     getRoom(roomId: number): Promise<Room>
+
+    getUnreadCount(priority: number): Promise<number>
+
+    getFirstUnreadRoom(priority: number): Promise<Room>
 }

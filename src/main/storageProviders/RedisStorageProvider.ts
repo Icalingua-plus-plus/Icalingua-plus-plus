@@ -130,4 +130,12 @@ export default class RedisStorageProvider implements StorageProvider {
         });
         return Promise.resolve();
     }
+
+    getUnreadCount(priority: number): Promise<number> {
+        return Promise.resolve(0);
+    }
+
+    getFirstUnreadRoom(priority: number): Promise<Room> {
+        return Promise.resolve(undefined);
+    }
 }
