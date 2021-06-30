@@ -3,8 +3,10 @@ import Aria2Config from '../../types/Aria2Config'
 import ui from '../utils/ui'
 import edl from 'electron-dl'
 import {getMainWindow} from '../utils/windowManager'
-import {ipcMain} from 'electron'
+import {app, ipcMain} from 'electron'
 import settings from 'electron-settings'
+import path from 'path'
+import {getGroupFileMeta} from './ipcBotAndStorage'
 
 let aria: Aria2
 
@@ -24,10 +26,10 @@ export const loadConfig = (config: Aria2Config) => {
         aria = null
 }
 
-export const download = (url: string, out: string, dir: string) => {
+export const download = (url: string, out: string, dir?: string) => {
     if (aria) {
         aria
-            .call('aria2.addUri', [url], [out, dir])
+            .call('aria2.addUri', [url], {out, dir})
             .then(() => ui.messageSuccess('Pushed to Aria2 JSON RPC'))
             .catch((err) => {
                 console.log(err)
@@ -44,7 +46,28 @@ export const download = (url: string, out: string, dir: string) => {
 
 export const init = () => loadConfig(settings.getSync('aria2') as Aria2Config)
 
+/**
+ * 其实就是个只有 url 的下载方法，用来下图片
+ */
+export const downloadImage = (url: string) => {
+    console.log(url)
+    const out = 'QQ_Image_' + new Date().getTime() + '.jpg'
+    const dir = app.getPath('downloads')
+    download(url, out, dir)
+    ui.notifySuccess({
+        title: 'Image Saved',
+        message: path.join(dir, out),
+    })
+}
+
+export const downloadGroupFile = async (gin: number, fid: string) => {
+    const meta = await getGroupFileMeta(gin, fid)
+    download(meta.url, meta.name)
+}
+
 ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
+ipcMain.on('downloadImage', (_, url) => downloadImage(url))
+ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     settings.set('aria2', config)
     loadConfig(config)

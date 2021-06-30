@@ -39,7 +39,25 @@ export default {
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
     },
-    download(url: string, out: string, dir: string){
+    download(url: string, out: string, dir?: string) {
         ipcRenderer.invoke('download', url, out, dir)
-    }
+    },
+    downloadImage(url: string) {
+        ipcRenderer.invoke('downloadImage', url)
+    },
+    downloadGroupFile(gin: number, fid: string) {
+        ipcRenderer.invoke('downloadGroupFile', gin, fid)
+    },
+    downloadFileByMessageData(data: { action: string, message: Message }) {
+        if (data.action === 'download') {
+            if (data.message.file.type.includes('image')) {
+                this.downloadImage(data.message.file.url)
+            } else {
+                if (this.selectedRoom.roomId < 0 && data.message.file.fid)
+                    this.downloadGroupFile(-this.selectedRoom.roomId, data.message.file.fid)
+                else
+                    this.download(data.message.file.url, data.message.content)
+            }
+        }
+    },
 }
