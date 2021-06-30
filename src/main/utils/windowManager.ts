@@ -1,6 +1,7 @@
 import {BrowserWindow, screen} from 'electron'
 import path from 'path'
 import settings from 'electron-settings'
+import {clearCurrentRoomUnread} from '../ipc/ipcBotAndStorage'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
@@ -46,6 +47,8 @@ export const loadMainWindow = async () => {
         e.preventDefault()
         mainWindow.hide()
     })
+
+    mainWindow.on('focus', clearCurrentRoomUnread)
 
     mainWindow.loadURL(global.winURL + '#/main')
 }

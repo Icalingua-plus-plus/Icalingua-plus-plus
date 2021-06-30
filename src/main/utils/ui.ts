@@ -43,6 +43,9 @@ export default {
         sendToMainWindow('setOnline')
     },
     setOffline(message: string) {
-        sendToMainWindow('setOffline')
+        sendToMainWindow('setOffline', message)
+    },
+    clearCurrentRoomUnread() {
+        sendToMainWindow('clearCurrentRoomUnread')
     },
 }

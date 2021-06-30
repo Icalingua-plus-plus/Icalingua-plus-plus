@@ -488,6 +488,7 @@ export default {
 			this.offlineReason = msg
 			this.offline = true
 		})
+		ipcRenderer.on('clearCurrentRoomUnread', () => this.selectedRoom.unreadCount = 0)
 		console.log('加载完成')
 	},
 	methods: {
