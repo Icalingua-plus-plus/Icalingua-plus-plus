@@ -1,15 +1,15 @@
 'use strict'
 
+import path from 'path'
+
 process.env.BABEL_ENV = 'renderer'
+import {dependencies} from '../package.json'
+import webpack from 'webpack'
 
-const path = require('path')
-const { dependencies } = require('../package.json')
-const webpack = require('webpack')
-
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { VueLoaderPlugin } = require('vue-loader')
+import CopyWebpackPlugin from 'copy-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
+import {VueLoaderPlugin} from 'vue-loader'
 
 /**
  * List of node_modules to include in webpack bundle
@@ -23,7 +23,7 @@ let whiteListedModules = ['vue']
 let rendererConfig = {
   devtool: '#cheap-module-eval-source-map',
   entry: {
-    renderer: path.join(__dirname, '../src/renderer/main.js')
+    renderer: path.join(__dirname, '../src/renderer/main.ts')
   },
   externals: [
     ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))

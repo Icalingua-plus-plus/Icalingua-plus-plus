@@ -2,11 +2,9 @@
 
 process.env.BABEL_ENV = 'main'
 
-const path = require('path')
-const { dependencies } = require('../package.json')
-const webpack = require('webpack')
-
-const MinifyPlugin = require("babel-minify-webpack-plugin")
+import path from 'path'
+import {dependencies} from '../package.json'
+import webpack from 'webpack'
 
 let mainConfig = {
   entry: {
