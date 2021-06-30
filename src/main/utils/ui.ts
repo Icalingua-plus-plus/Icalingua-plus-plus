@@ -1,6 +1,6 @@
-import {sendToMainWindow} from "./windowManager";
-import Room from "../../types/Room";
-import Message from "../../types/Message";
+import {sendToMainWindow} from './windowManager'
+import Room from '../../types/Room'
+import Message from '../../types/Message'
 
 export default {
     closeLoading() {
@@ -35,5 +35,14 @@ export default {
     },
     chroom(roomId: number) {
         sendToMainWindow('chroom', roomId)
+    },
+    deleteMessage(messageId: string | number) {
+        sendToMainWindow('deleteMessage', messageId)
+    },
+    setOnline() {
+        sendToMainWindow('setOnline')
+    },
+    setOffline(message: string) {
+        sendToMainWindow('setOffline')
     },
 }

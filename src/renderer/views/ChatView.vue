@@ -476,6 +476,18 @@ export default {
 			if (roomId !== this.selectedRoom.roomId) return
 			this.messages = [...this.messages, message]
 		})
+		ipcRenderer.on('deleteMessage', (_, messageId) => {
+			const message = this.messages.find((e) => e._id === messageId)
+			if (message) {
+				message.deleted = new Date()
+				this.messages = [...this.messages]
+			}
+		})
+		ipcRenderer.on('setOnline', () => this.reconnecting = this.offline = false)
+		ipcRenderer.on('setOffline', (_,msg) => {
+			this.offlineReason = msg
+			this.offline = true
+		})
 		console.log('加载完成')
 	},
 	methods: {
@@ -538,26 +550,6 @@ export default {
 				})
 			}
 		},
-		friendRecall(data) {
-			if (data.user_id == this.selectedRoom.roomId) {
-				const message = this.messages.find((e) => e._id == data.message_id)
-				if (message) {
-					message.deleted = new Date()
-					this.messages = [...this.messages]
-				}
-			}
-			storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
-		},
-		groupRecall(data) {
-			if (-data.group_id == this.selectedRoom.roomId) {
-				const message = this.messages.find((e) => e._id == data.message_id)
-				if (message) {
-					message.deleted = new Date()
-					this.messages = [...this.messages]
-				}
-			}
-			storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
-		},
 		sendSticker(url) {
 			if (this.selectedRoom)
 				this.sendMessage({
@@ -577,14 +569,6 @@ export default {
 		reconnect() {
 			this.reconnecting = true
 			ipc.login()
-		},
-		online() {
-			this.reconnecting = this.offline = false
-		},
-		onOffline(data) {
-			this.offlineReason = data.message
-			console.log(data)
-			this.offline = true
 		},
 		appMenu() {
 			const menu = new remote.Menu()
