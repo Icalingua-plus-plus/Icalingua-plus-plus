@@ -259,7 +259,7 @@ export default {
 		return {
 			rooms: [],
 			messages: [],
-			selectedRoom: {roomId: 0},
+			selectedRoomId: 0,
 			account: null,
 			messagesLoaded: false,
 			ignoredChats: [],
@@ -473,7 +473,7 @@ export default {
 			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
 		})
 		ipcRenderer.on('addMessage', (_, {roomId, message}) => {
-			if (roomId !== this.selectedRoom.roomId) return
+			if (roomId !== this.selectedRoomId) return
 			this.messages = [...this.messages, message]
 		})
 		ipcRenderer.on('deleteMessage', (_, messageId) => {
@@ -532,7 +532,6 @@ export default {
 						else this.messagesLoaded = true
 					}, 0)
 				})
-			this.updateTrayIcon()
 		},
 		openImage: ipc.downloadFileByMessageData,
 		async deleteMessage(messageId) {
@@ -738,11 +737,10 @@ export default {
 			if ((typeof room) === 'number')
 				room = this.rooms.find(e => e.roomId === room)
 			if (!room) return
-			if (this.selectedRoom === room) return
+			if (this.selectedRoom.roomId === room.roomId) return
 			this.selectedRoom.at = false
-			this.selectedRoom = room
+			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
-			this.updateTrayIcon()
 			this.fetchMessage(true)
 			this.updateAppMenu()
 		},
@@ -940,6 +938,9 @@ export default {
 			})
 
 			return cssThemeVars(customStyles)
+		},
+		selectedRoom() {
+			return this.rooms.find(e => e.roomId === this.selectedRoomId) || {roomId: 0}
 		},
 	},
 }
