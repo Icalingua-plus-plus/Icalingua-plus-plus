@@ -157,37 +157,6 @@
         </el-button>
       </span>
 		</el-dialog>
-		<el-dialog
-			title="Aria2 config"
-			:visible.sync="dialogAriaVisible"
-			:show-close="false"
-			:close-on-press-escape="false"
-			:close-on-click-modal="false"
-		>
-			<el-form v-model="aria2" label-width="100px">
-				<el-form-item label="enabled">
-					<el-switch v-model="aria2.enabled"/>
-				</el-form-item>
-				<el-form-item label="host">
-					<el-input v-model="aria2.host"/>
-				</el-form-item>
-				<el-form-item label="port">
-					<el-input-number v-model.number="aria2.port"/>
-				</el-form-item>
-				<el-form-item label="secure">
-					<el-switch v-model="aria2.secure"/>
-				</el-form-item>
-				<el-form-item label="secret">
-					<el-input v-model="aria2.secret"/>
-				</el-form-item>
-				<el-form-item label="path">
-					<el-input v-model="aria2.path"/>
-				</el-form-item>
-			</el-form>
-			<div slot="footer" class="dialog-footer">
-				<el-button type="primary" @click="closeAria">Close</el-button>
-			</div>
-		</el-dialog>
 	</div>
 </template>
 
@@ -198,8 +167,6 @@ import Test from '../components/Test'
 import IgnoreManage from '../components/IgnoreManage'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
-import Datastore from 'lowdb'
-import FileSync from 'lowdb/adapters/FileSync'
 import path from 'path'
 import {
 	clipboard,
@@ -215,7 +182,7 @@ import ipc from '../utils/ipc'
 const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal('STORE_PATH')
 
-let db, aria, socketIo
+let db, socketIo
 
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
@@ -309,8 +276,6 @@ export default {
 			username: '',
 			darkTaskIcon: false,
 			nuist: false,
-			dialogAriaVisible: false,
-			aria,
 			priority: 3,
 			theme: 'default',
 			menu: [],
@@ -322,32 +287,10 @@ export default {
 	async created() {
 		//region db init
 		this.account = await ipc.getUin()
-		const adapter = new FileSync(
-			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),
-			{
-				serialize: (data) => JSON.stringify(data, null, false),
-			},
-		)
-		db = Datastore(adapter)
-		db.defaults({
-			ignoredChats: [],
-			darkTaskIcon: false,
-			aria2: {
-				enabled: false,
-				host: '127.0.0.1',
-				port: 6800,
-				secure: false,
-				secret: '',
-				path: '/jsonrpc',
-			},
-			priority: 3,
-		}).write()
-		db.unset('rooms').unset('messages').write()
 		this.rooms = await ipc.getAllRooms()
 		this.priority = await ipc.getSetting('priority')
 		this.darkTaskIcon = await ipc.getSetting('darkTaskIcon')
 		this.ignoredChats = await ipc.getSetting('ignoredChats')
-		this.aria2 = await ipc.getSetting('aria2')//todo
 		this.status = await ipc.getSetting('account.onlineStatus')
 		//endregion
 		//region set status
@@ -460,7 +403,7 @@ export default {
 				}),
 				new remote.MenuItem({
 					label: 'Aria2 downloadManager options',
-					click: () => (this.dialogAriaVisible = true),
+					click: () => {},
 				}),
 				new remote.MenuItem({
 					label: 'Auto login',
@@ -509,8 +452,6 @@ export default {
 				document.fonts.add(loadFace)
 			})
 		}
-
-		if (this.aria2.enabled) this.startAria()
 
 		if (db.get('socketIoSlave').value()) {
 			this.initSocketIo()
