@@ -9,7 +9,7 @@ interface MessageFile {
 export default interface Message {
     code?: string;
     at?: string | boolean;
-    _id: string;
+    _id: string | number;
     senderId: number;
     username: string;
     content: string;
@@ -24,6 +24,7 @@ export default interface Message {
         content: string,
         file?: MessageFile
     },
+    system?: boolean
 }
 
 interface MessageInIDB extends Message {

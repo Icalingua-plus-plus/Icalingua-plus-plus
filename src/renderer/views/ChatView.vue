@@ -717,42 +717,6 @@ export default {
 			if (build) return menu
 			menu.popup({window: remote.getCurrentWindow()})
 		},
-		friendPoke(data) {
-			console.log(data)
-			const roomId =
-				data.operator_id == this.account ? data.user_id : data.operator_id
-			const room = this.rooms.find((e) => e.roomId == roomId)
-			if (room) {
-				this.rooms = [room, ...this.rooms.filter((item) => item !== room)]
-				room.utime = data.time * 1000
-				let msg = ''
-				if (data.operator_id != this.account) msg += room.roomName
-				else msg += '你'
-				msg += data.action
-				if (data.operator_id == data.target_id) msg += '自己'
-				else if (data.target_id != this.account) msg += room.roomName
-				else msg += '你'
-				if (data.suffix) msg += data.suffix
-				room.lastMessage = {
-					content: msg,
-					username: null,
-					timestamp: new Date().format('hh:mm'),
-				}
-				const message = {
-					content: msg,
-					senderId: 0,
-					timestamp: new Date().format('hh:mm'),
-					date: new Date().format('dd/MM/yyyy'),
-					_id: data.time,
-					system: true,
-					time: data.time * 1000,
-				}
-				if (room === this.selectedRoom)
-					this.messages = [...this.messages, message]
-				storage.updateRoom(room.roomId, room)
-				storage.addMessage(roomId, message)
-			}
-		},
 		startChat(id, name) {
 			var room = this.rooms.find((e) => e.roomId == id)
 			const avatar =

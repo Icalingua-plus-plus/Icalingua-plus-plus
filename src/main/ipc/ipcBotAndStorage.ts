@@ -2,7 +2,7 @@ import {BrowserWindow, ipcMain, nativeImage, Notification} from 'electron'
 import {
     Client,
     createClient,
-    FriendInfo, FriendRecallEventData,
+    FriendInfo, FriendPokeEventData, FriendRecallEventData,
     GroupMessageEventData, GroupRecallEventData,
     MemberBaseInfo,
     MessageEventData, OfflineEventData, OnlineEventData,
@@ -182,8 +182,41 @@ const eventHandlers = {
         console.log(data)
         ui.setOffline(data.message)
     },
-    friendPoke() {
-
+    async friendPoke(data: FriendPokeEventData) {
+        console.log(data)
+        const roomId = data.operator_id == bot.uin ? data.user_id : data.operator_id
+        const room = await storage.getRoom(roomId)
+        if (room) {
+            room.utime = data.time * 1000
+            let msg = ''
+            if (data.operator_id != bot.uin) msg += room.roomName
+            else msg += '你'
+            msg += data.action
+            if (data.operator_id == data.target_id) msg += '自己'
+            else if (data.target_id != bot.uin) msg += room.roomName
+            else msg += '你'
+            if (data.suffix) msg += data.suffix
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: data.operator_id,
+                timestamp: formatDate('hh:mm'),
+                date: formatDate('dd/MM/yyyy'),
+                _id: data.time,
+                system: true,
+                time: data.time * 1000,
+            }
+            if (roomId === selectedRoomId)
+                ui.addMessage(roomId, message)
+            ui.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(roomId, message)
+        }
     },
     groupPoke() {
 
@@ -487,7 +520,7 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
 })
 ipcMain.on('setSelectedRoomId', (_, id: number) => selectedRoomId = id)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
-ipcMain.on('ignoreChat',(_, data: IgnoreChatInfo)=>{
+ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => {
 //todo use storage
 })
 
