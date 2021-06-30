@@ -24,8 +24,8 @@ const ipc = {
     async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
     },
-    setSelectedRoomId(roomId: number) {
-        ipcRenderer.send('setSelectedRoomId', roomId)
+    setSelectedRoom(roomId: number, name: string) {
+        ipcRenderer.send('setSelectedRoom', roomId, name)
     },
     async getSetting(kp: string | Array<string | number>) {
         return await ipcRenderer.invoke('getSetting', kp)

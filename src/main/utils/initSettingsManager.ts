@@ -32,6 +32,8 @@ export default async () => {
         await settings.set('aria2', defaultAria2Config)
     if (!await settings.has('ignoredChats'))
         await settings.set('ignoredChats', [])
+    if (!await settings.has('darkTaskIcon'))
+        await settings.set('darkTaskIcon', false)
 
     ipcMain.handle('getSetting', (_, kp: string | Array<string | number>) => {
         return settings.get(kp)
