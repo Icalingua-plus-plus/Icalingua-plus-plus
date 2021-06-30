@@ -209,14 +209,7 @@ const loginHandlers = {
     },
     onSucceed() {
         //save account info
-        global.glodb.set("account", {
-            username: Number(loginForm.username),
-            password: loginForm.password,
-            protocol: Number(loginForm.protocol),
-            autologin: loginForm.autologin,
-            onlineStatus: loginForm.onlineStatus
-        })
-            .write();
+        settings.set("account", loginForm)
         if (loginForm.onlineStatus) {
             bot.setOnlineStatus(loginForm.onlineStatus);
         }
@@ -272,7 +265,7 @@ const initStorage = async () => {
 
     } catch (err) {
         console.log(err);
-        global.glodb.set("account.autologin", false).write()
+        await settings.set("account.autologin", false)
         alert('Error connecting to database')
     }
 }
@@ -458,6 +451,7 @@ const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, i
 ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
+ipcMain.handle('getUin', () => bot.uin)
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     if (!offset) {
         storage.updateRoom(roomId, {

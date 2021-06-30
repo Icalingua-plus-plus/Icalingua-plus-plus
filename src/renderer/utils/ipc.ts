@@ -17,6 +17,9 @@ export const isOnline = async (): Promise<boolean> => {
 export const getNick = async (): Promise<string> => {
     return await ipcRenderer.invoke('getNick')
 }
+export const getUin = async (): Promise<number> => {
+    return await ipcRenderer.invoke('getUin')
+}
 export const fetchMessage = async (roomId: number, offset: number) => {
     return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
 }
@@ -29,6 +32,6 @@ export const getSetting = async (kp: string | Array<string | number>) => {
 export const setSetting = async (kp: string | Array<string | number>, value) => {
     return await ipcRenderer.invoke('setSetting', kp, value)
 }
-//remote 也是 ipc！
+//todo remote 也是 ipc！
 export const getVersion = app.getVersion
 

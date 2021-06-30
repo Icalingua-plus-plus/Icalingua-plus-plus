@@ -56,8 +56,6 @@ app.on("ready", async () => {
         require('./ipc/ipcBot')
         require('./ipc/openImage')
         app.allowRendererProcessReuse = false;
-        const adapter = new FileSync(path.join(STORE_PATH, "/data.json"));
-        global.glodb = Datastore(adapter);
         if (process.env.NODE_ENV === "development")
             protocol.registerFileProtocol("file", (request, cb) => {
                 const pathname = request.url.replace("file:///", "");

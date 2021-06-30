@@ -1,14 +1,15 @@
 import {getMainWindow} from "./windowManager";
 import {ipcMain} from "electron";
+import settings from 'electron-settings'
 
 const exit = () => {
     const win = getMainWindow()
     const size = win.getSize()
-    global.glodb.set('winSize', {
+    settings.set('winSize', {
         width: size[0],
         height: size[1],
         max: win.isMaximized()
-    }).write()
+    })
     win.destroy();
 }
 ipcMain.on('exit', exit)

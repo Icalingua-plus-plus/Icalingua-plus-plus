@@ -1,20 +1,21 @@
-import {BrowserWindow, ipcMain, screen, Tray} from "electron";
-import path from "path";
+import {BrowserWindow, screen} from 'electron'
+import path from 'path'
+import settings from 'electron-settings'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
 export const loadMainWindow = () => {
     //start main window
-    let winSize = global.glodb.get('winSize').value()
+    let winSize: WinSize = settings.get('winSize')
     if (!winSize) {
-        const size = screen.getPrimaryDisplay().size;
+        const size = screen.getPrimaryDisplay().size
         winSize = {
             height: size.height - 200,
             width: size.width - 300,
-            max: false
+            max: false,
         }
         if (winSize.width > 1440)
-            winSize.width = 1440;
+            winSize.width = 1440
     }
     mainWindow = new BrowserWindow({
         height: winSize.height,
@@ -24,28 +25,27 @@ export const loadMainWindow = () => {
             nodeIntegration: true,
             enableRemoteModule: true,
             webSecurity: false,
-            contextIsolation: false
+            contextIsolation: false,
         },
-        icon: path.join(global.STATIC, "/512x512.png"),
-    });
+        icon: path.join(global.STATIC, '/512x512.png'),
+    })
 
-    loginWindow.destroy();
+    loginWindow.destroy()
 
     if (winSize.max)
         mainWindow.maximize()
 
-    if (process.env.NODE_ENV === "development")
+    if (process.env.NODE_ENV === 'development')
         mainWindow.webContents.session.loadExtension(
-            "/usr/lib/node_modules/vue-devtools/vender/"
-        );
+            '/usr/lib/node_modules/vue-devtools/vender/',
+        )
 
-    if (!process.env.NYA)
-        mainWindow.on("close", (e) => {
-            e.preventDefault();
-            mainWindow.hide();
-        });
+    mainWindow.on('close', (e) => {
+        e.preventDefault()
+        mainWindow.hide()
+    })
 
-    mainWindow.loadURL(global.winURL + "#/main");
+    mainWindow.loadURL(global.winURL + '#/main')
 }
 export const ready = () => {
     loginWindow = new BrowserWindow({
@@ -55,12 +55,12 @@ export const ready = () => {
         webPreferences: {
             nodeIntegration: true,
             enableRemoteModule: true,
-            contextIsolation: false
+            contextIsolation: false,
         },
-        icon: path.join(global.STATIC, "/512x512.png"),
-    });
+        icon: path.join(global.STATIC, '/512x512.png'),
+    })
 
-    loginWindow.loadURL(global.winURL + "#/login");
+    loginWindow.loadURL(global.winURL + '#/login')
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow)
@@ -73,11 +73,11 @@ export const sendToMainWindow = (channel: string, payload?: any) => {
 export const getMainWindow = () => mainWindow
 export const showWindow = () => {
     if (mainWindow) {
-        mainWindow.show();
-        mainWindow.focus();
+        mainWindow.show()
+        mainWindow.focus()
     } else if (loginWindow) {
-        loginWindow.show();
-        loginWindow.focus();
+        loginWindow.show()
+        loginWindow.focus()
     }
 }
 export const destroyWindow = () => {
