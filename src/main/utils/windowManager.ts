@@ -4,10 +4,10 @@ import settings from 'electron-settings'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
-export const loadMainWindow = () => {
+export const loadMainWindow = async () => {
     //start main window
-    let winSize: WinSize = settings.get('winSize')
-    if (!winSize) {
+    let winSize: WinSize
+    if (!settings.hasSync('winSize')) {
         const size = screen.getPrimaryDisplay().size
         winSize = {
             height: size.height - 200,
@@ -16,6 +16,8 @@ export const loadMainWindow = () => {
         }
         if (winSize.width > 1440)
             winSize.width = 1440
+    } else {
+        winSize = <WinSize>await settings.get('winSize')
     }
     mainWindow = new BrowserWindow({
         height: winSize.height,
