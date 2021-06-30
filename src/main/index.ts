@@ -53,7 +53,7 @@ app.on("ready", async () => {
     if (!isFirstInstance) app.quit();
     else {
         await initSettingsManager()
-        require('./ipc/ipcBot')
+        require('./ipc/ipcBotAndStorage')
         require('./ipc/openImage')
         app.allowRendererProcessReuse = false;
         if (process.env.NODE_ENV === "development")
