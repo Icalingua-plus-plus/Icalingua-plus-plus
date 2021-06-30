@@ -30,6 +30,8 @@ export default async () => {
         await settings.set('priority', 3)
     if (!await settings.has('aria2'))
         await settings.set('aria2', defaultAria2Config)
+    if (!await settings.has('ignoredChats'))
+        await settings.set('ignoredChats', [])
 
     ipcMain.handle('getSetting', (_, kp: string | Array<string | number>) => {
         return settings.get(kp)

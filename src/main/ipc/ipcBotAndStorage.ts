@@ -2,11 +2,10 @@ import {BrowserWindow, ipcMain, nativeImage, Notification} from 'electron'
 import {
     Client,
     createClient,
-    FriendInfo,
-    GroupMessageEventData,
+    FriendInfo, FriendRecallEventData,
+    GroupMessageEventData, GroupRecallEventData,
     MemberBaseInfo,
-    MessageElem,
-    MessageEventData,
+    MessageEventData, OfflineEventData, OnlineEventData,
     Ret,
 } from 'oicq'
 import path from 'path'
@@ -27,6 +26,7 @@ import createRoom from '../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
 import {init as initDownloadManager} from './downloadManager'
+import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 
 type SendMessageParams = {
     content: string,
@@ -48,7 +48,7 @@ let loginForm: LoginForm
 
 let selectedRoomId = 0
 
-//todo 我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
+//我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
 
 //region event handlers
 const eventHandlers = {
@@ -58,7 +58,8 @@ const eventHandlers = {
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
         let roomId = groupId ? -groupId : data.user_id
-        // if (ignoredChats.find((e) => e.id == roomId)) return;
+        //todo
+        // if ((await settings.get('ignoredChats') as Array<{ id: number, name: string }>).find((e) => e.id == roomId)) return
         const isSelfMsg = bot.uin === senderId
         const senderName = groupId
             ? ((<GroupMessageEventData>data).anonymous)
@@ -155,23 +156,31 @@ const eventHandlers = {
         //     downloadManager(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
         // }
         message.time = data.time * 1000
-        ui.addMessage(room.roomId, message)
+        if (selectedRoomId === room.roomId)
+            ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         return message
     },
-    friendRecall() {
-
+    friendRecall(data: FriendRecallEventData) {
+        if (data.user_id == selectedRoomId) {
+            ui.deleteMessage(data.message_id)
+        }
+        storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
     },
-    groupRecall() {
-
+    groupRecall(data: GroupRecallEventData) {
+        if (-data.group_id == selectedRoomId) {
+            ui.deleteMessage(data.message_id)
+        }
+        storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
     },
     online() {
-
+        ui.setOnline()
     },
-    onOffline() {
-
+    onOffline(data: OfflineEventData) {
+        console.log(data)
+        ui.setOffline(data.message)
     },
     friendPoke() {
 
@@ -478,6 +487,9 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
 })
 ipcMain.on('setSelectedRoomId', (_, id: number) => selectedRoomId = id)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
+ipcMain.on('ignoreChat',(_, data: IgnoreChatInfo)=>{
+//todo use storage
+})
 
 export const getBot = () => bot
 export const getStorage = () => storage
