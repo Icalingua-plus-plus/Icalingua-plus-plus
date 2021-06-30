@@ -1,0 +1,51 @@
+import Aria2 from 'aria2'
+import Aria2Config from '../../types/Aria2Config'
+import ui from '../utils/ui'
+import edl from 'electron-dl'
+import {getMainWindow} from '../utils/windowManager'
+import {ipcMain} from 'electron'
+import settings from 'electron-settings'
+
+let aria: Aria2
+
+export const loadConfig = (config: Aria2Config) => {
+    if (config.enabled) {
+        aria = new Aria2(config)
+        aria.open()
+            .then(() => {
+                ui.messageSuccess('Aria2 RPC connected')
+                console.log('Aria2 RPC connected')
+            })
+            .catch((err) => {
+                ui.messageError('Aria2 failed')
+                console.log('Aria2 failed', err)
+            })
+    } else
+        aria = null
+}
+
+export const download = (url: string, out: string, dir: string) => {
+    if (aria) {
+        aria
+            .call('aria2.addUri', [url], [out, dir])
+            .then(() => ui.messageSuccess('Pushed to Aria2 JSON RPC'))
+            .catch((err) => {
+                console.log(err)
+                ui.messageError('Aria2 failed')
+            })
+    } else {
+        edl.download(getMainWindow(), url, {
+            directory: dir,
+            filename: out,
+            onCompleted: () => ui.messageSuccess('下载完成'),
+        })
+    }
+}
+
+export const init = () => loadConfig(settings.getSync('aria2') as Aria2Config)
+
+ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
+ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
+    settings.set('aria2', config)
+    loadConfig(config)
+})

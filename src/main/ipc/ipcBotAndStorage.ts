@@ -26,6 +26,7 @@ import avatarCache from '../utils/avatarCache'
 import createRoom from '../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
+import {init as initDownloadManager} from './downloadManager'
 
 type SendMessageParams = {
     content: string,
@@ -149,7 +150,7 @@ const eventHandlers = {
         //todo
         // updateTrayIcon(room.roomName);
         // if (message.file && message.file.name && room.autoDownload) {
-        //     download(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
+        //     downloadManager(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
         // }
         message.time = data.time * 1000
         ui.addMessage(room.roomId, message)
@@ -213,10 +214,12 @@ const loginHandlers = {
         if (loginForm.onlineStatus) {
             bot.setOnlineStatus(loginForm.onlineStatus)
         }
+        //登录完成之后的初始化操作
         loadMainWindow()
         createTray()
         attachEventHandler()
         initStorage()
+        initDownloadManager()
     },
     verify(data) {
         const veriWin = new BrowserWindow({

@@ -80,6 +80,7 @@
     "electron-builder": "^22.11.7",
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.1.1",
+    "electron-dl": "^3.2.1",
     "electron-settings": "^4.0.2",
     "element-ui": "^2.15.1",
     "file-loader": "^1.1.11",

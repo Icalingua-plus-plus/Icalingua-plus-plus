@@ -215,8 +215,6 @@ import ipc from '../utils/ipc'
 const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal('STORE_PATH')
 
-const Aria2 = require('aria2')
-
 let db, aria, socketIo
 
 //region copied code
@@ -248,10 +246,10 @@ Date.prototype.format = function (fmt) {
 	return fmt
 }
 
-//download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
+//downloadManager https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
 const https = require('https')
 const fs = require('fs')
-const download = function (url, dest, cb) {
+const downloadManager = function (url, dest, cb) {
 	const file = fs.createWriteStream(dest)
 	https
 		.get(url, function (response) {
@@ -326,14 +324,6 @@ export default {
 			username: '',
 			darkTaskIcon: false,
 			nuist: false,
-			aria2: {
-				enabled: false,
-				host: '127.0.0.1',
-				port: 6800,
-				secure: false,
-				secret: '',
-				path: '/jsonrpc',
-			},
 			dialogAriaVisible: false,
 			aria,
 			priority: 3,
@@ -486,7 +476,7 @@ export default {
 					click: () => (this.panel = 'ignore'),
 				}),
 				new remote.MenuItem({
-					label: 'Aria2 download options',
+					label: 'Aria2 downloadManager options',
 					click: () => (this.dialogAriaVisible = true),
 				}),
 				new remote.MenuItem({
@@ -561,7 +551,6 @@ export default {
 			this.messages = [...this.messages, message]
 		})
 	},
-	//todo set selected room id
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {
 			this.loading = true
@@ -813,10 +802,10 @@ export default {
 							},
 						},
 						{
-							label: 'Set download path',
+							label: 'Set downloadManager path',
 							click: () => {
 								const selection = remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
-									title: 'Select download path',
+									title: 'Select downloadManager path',
 									properties: ['openDirectory'],
 									defaultPath: room.downloadPath,
 								})
@@ -898,6 +887,7 @@ export default {
 			if (this.selectedRoom === room) return
 			this.selectedRoom.at = false
 			this.selectedRoom = room
+			ipc.setSelectedRoomId(room.roomId)
 			this.updateTrayIcon()
 			this.fetchMessage(true)
 			this.updateAppMenu()
@@ -934,10 +924,6 @@ export default {
 				return e.unreadCount && e.priority >= this.priority
 			}).length
 		},
-		clearCurrentRoomUnread() {
-			this.selectedRoom.unreadCount = 0
-			this.updateTrayIcon()
-		},
 		updateTrayIcon() {
 			let p
 			const unread = this.getUnreadCount()
@@ -962,40 +948,6 @@ export default {
 			if (socketIo) socketIo.emit('qqCount', unread)
 			// this.tray.setImage(p);
 			// remote.app.setBadgeCount(unread);
-		},
-		closeAria() {
-			this.dialogAriaVisible = false
-			db.set('aria2', this.aria2).write()
-			if (this.aria2.enabled) this.startAria()
-		},
-		startAria() {
-			this.aria = new Aria2(this.aria2)
-			this.aria
-				.open()
-				.then(this.$message('Aria2 RPC connected'))
-				.catch((err) => {
-					console.log(err)
-					this.$message('Aria2 failed')
-				})
-		},
-		download(url, dest, cb, out, dir) {
-			if (this.aria2.enabled) {
-				const opt = {}
-				if (dir) opt.dir = dir
-				if (out) opt.out = out
-				else if (dest) {
-					opt.dir = path.dirname(dest)
-					opt.out = path.basename(dest)
-				}
-				this.aria
-					.call('aria2.addUri', [url], opt)
-					.then(cb)
-					.catch((err) => {
-						console.log(err)
-						this.$message('Aria2 failed')
-					})
-			}
-			else download(url, dest ? dest : path.join(dir, cb), cb)
 		},
 		exit: ipc.exit,
 		downloadImage(url) {

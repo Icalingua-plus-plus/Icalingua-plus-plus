@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== 'development') {
     global.STATIC = global.__static = path.join(__dirname, '../../static')
 }
 
-const STORE_PATH = global.STORE_PATH = app.getPath('userData')
+global.STORE_PATH = app.getPath('userData')
 
 global.winURL =
     process.env.NODE_ENV === 'development'
