@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, nativeImage, Notification} from 'electron'
+import {BrowserWindow, ipcMain, Notification} from 'electron'
 import {
     Client,
     createClient,
@@ -25,7 +25,7 @@ import avatarCache from '../utils/avatarCache'
 import createRoom from '../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
-import {init as initDownloadManager} from './downloadManager'
+import {download, init as initDownloadManager} from './downloadManager'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 
 type SendMessageParams = {
@@ -152,9 +152,9 @@ const eventHandlers = {
         room.lastMessage = lastMessage
         //todo
         // updateTrayIcon(room.roomName);
-        // if (message.file && message.file.name && room.autoDownload) {
-        //     downloadManager(message.file.url, null, () => console.log(message.file.name), message.file.name, room.downloadPath)
-        // }
+        if (message.file && message.file.name && room.autoDownload) {
+            download(message.file.url, message.file.name, room.downloadPath)
+        }
         message.time = data.time * 1000
         if (selectedRoomId === room.roomId)
             ui.addMessage(room.roomId, message)
