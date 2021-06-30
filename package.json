@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "1.5.7",
+  "version": "2.0.0",
   "author": "clansty <i@gao4.pw>",
   "description": "A cross-platform QQ made with Electron",
   "license": "GPL-3.0",
@@ -13,8 +13,7 @@
     "build:dir": "ts-node .electron-vue/build.ts && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean ts-node .electron-vue/build.ts",
     "build:web": "cross-env BUILD_TARGET=web ts-node .electron-vue/build.ts",
-    "dev": "NODE_ENV=development node .electron-vue/dev-runner.js",
-    "dev:ui": "cross-env NYA=nya node .electron-vue/dev-runner.js",
+    "dev": "NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
