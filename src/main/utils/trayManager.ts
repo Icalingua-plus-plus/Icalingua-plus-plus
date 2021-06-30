@@ -51,8 +51,8 @@ export const updateTrayIcon = async (roomName?: string) => {
         document.title = `(${unread}${extra}) ${title}`
     } else {
         p = path.join(global.STATIC, await settings.get('darkTaskIcon') ? 'dark.png' : '256x256.png')
-        document.title = title
+        getMainWindow().title = title
     }
-    tray.setImage(p);
-    app.setBadgeCount(unread);
+    tray.setImage(p)
+    app.setBadgeCount(unread)
 }
