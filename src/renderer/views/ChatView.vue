@@ -534,21 +534,9 @@ export default {
 				})
 		},
 		openImage: ipc.downloadFileByMessageData,
-		async deleteMessage(messageId) {
-			const message = this.messages.find((e) => e._id === messageId)
-			const res = await bot.deleteMsg(messageId)
-			console.log(res)
-			if (!res.error) {
-				message.deleted = new Date()
-				this.messages = [...this.messages]
-				storage.updateMessage(this.selectedRoom.roomId, messageId, {deleted: new Date()})
-			}
-			else {
-				this.$notify.error({
-					title: 'Failed to delete message',
-					message: res.error.message,
-				})
-			}
+		deleteMessage(messageId) {
+			//todo 以后右键菜单都移到主线程了，撤回消息也不用在这里处理了
+			ipc.deleteMessage(this.selectedRoomId, messageId)
 		},
 		sendSticker(url) {
 			if (this.selectedRoom)
@@ -744,12 +732,6 @@ export default {
 			this.fetchMessage(true)
 			this.updateAppMenu()
 		},
-		pokeFriend() {
-			console.log('poke')
-			if (this.selectedRoom.roomId > 0)
-				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
-			this.$refs.room.focusTextarea()
-		},
 		addToStickers(message) {
 			ipc.download(message.file.url, String(new Date().getTime()), path.join(STORE_PATH, 'stickers'))
 			this.panel = 'refresh'
@@ -761,13 +743,18 @@ export default {
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
 			const group = -this.selectedRoom.roomId
-			bot.sendGroupPoke(group, uin)
+			ipc.sendGroupPoke(group, uin)
+			this.$refs.room.focusTextarea()
+		},
+		pokeFriend() {
+			if (this.selectedRoom.roomId > 0)
+				ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 			this.$refs.room.focusTextarea()
 		},
 		revealMessage(message) {
 			message.reveal = true
 			this.messages = [...this.messages]
-			storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
+			ipc.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 		},
 		updateAppMenu() {
 			const menu = remote.Menu.buildFromTemplate([

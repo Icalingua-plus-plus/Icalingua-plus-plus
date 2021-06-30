@@ -370,6 +370,7 @@ export const updateTray = () => updateTrayIcon(selectedRoomName)
 //endregion
 
 //todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts
+//尽量不要用返回值，出错的时候用 ui 发一个错
 
 ipcMain.handle('createBot', async (event, form: LoginForm) => {
     bot = global.bot = createClient(Number(form.username), {
@@ -561,8 +562,24 @@ ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
     selectedRoomName = name
 })
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
+ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
+    storage.updateMessage(roomId, messageId, message))
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => {
 //todo use storage
+})
+ipcMain.on('sendGroupPoke', (_, gin, uin) => bot.sendGroupPoke(gin, uin))
+ipcMain.on('deleteMessage', async (_, roomId: number, messageId: string) => {
+    const res = await bot.deleteMsg(messageId)
+    console.log(res)
+    if (!res.error) {
+        ui.deleteMessage(messageId)
+        await storage.updateMessage(roomId, messageId, {deleted: new Date()})
+    } else {
+        ui.notifyError({
+            title: 'Failed to delete message',
+            message: res.error.message,
+        })
+    }
 })
 
 export const getBot = () => bot
