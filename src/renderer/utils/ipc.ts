@@ -33,8 +33,12 @@ const ipc = {
     async setSetting(kp: string | Array<string | number>, value) {
         return await ipcRenderer.invoke('setSetting', kp, value)
     },
+    //todo 这俩玩意要封装的更细的说
     async updateRoom(roomId: number, room: object) {
         return await ipcRenderer.invoke('updateRoom', roomId, room)
+    },
+    async updateMessage(roomId: number, messageId: string, message: object) {
+        return await ipcRenderer.invoke('updateMessage', roomId, messageId, message)
     },
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
@@ -59,6 +63,12 @@ const ipc = {
                     ipc.download(data.message.file.url, data.message.content)
             }
         }
+    },
+    sendGroupPoke(gin: number, uin: number) {
+        ipcRenderer.send('sendGroupPoke', gin, uin)
+    },
+    deleteMessage(roomId: number, messageId: string) {
+        ipcRenderer.send('deleteMessage', roomId, messageId)
     },
 }
 export default ipc
