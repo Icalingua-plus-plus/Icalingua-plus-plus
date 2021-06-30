@@ -1,5 +1,8 @@
 import Vue from "vue";
 import Router from "vue-router";
+import ChatView from '../views/ChatView.vue'
+import HistoryView from '../views/HistoryView.vue'
+import LoginView from '../views/LoginView.vue'
 
 Vue.use(Router);
 
@@ -8,17 +11,17 @@ export default new Router({
     {
       path: "/main",
       name: "chat-page",
-      component: require("../views/ChatView").default,
+      component: ChatView
     },
     {
       path: "/history",
       name: "history-page",
-      component: require("../views/HistoryView").default,
+      component: HistoryView
     },
     {
       path: "/login",
       name: "login-page",
-      component: require("../views/LoginView").default,
+      component: LoginView
     },
   ],
 });

@@ -1,40 +1,42 @@
 import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
-import {app} from '@electron/remote'
+import Message from '../../types/Message'
 
-export const getAllRooms = async () => {
-    return await ipcRenderer.invoke('getAllRooms') as Room[]
+export default {
+    async getAllRooms() {
+        return await ipcRenderer.invoke('getAllRooms') as Room[]
+    },
+    async sendMessage(data) {
+        return await ipcRenderer.invoke('sendMessage', data)
+    },
+    async isOnline(): Promise<boolean> {
+        return await ipcRenderer.invoke('isOnline')
+    },
+    exit() {
+        ipcRenderer.send('exit')
+    },
+    async getNick(): Promise<string> {
+        return await ipcRenderer.invoke('getNick')
+    },
+    async getUin(): Promise<number> {
+        return await ipcRenderer.invoke('getUin')
+    },
+    async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
+    },
+    setSelectedRoomId(roomId: number) {
+        ipcRenderer.send('setSelectedRoomId', roomId)
+    },
+    async getSetting(kp: string | Array<string | number>) {
+        return await ipcRenderer.invoke('getSetting', kp)
+    },
+    async setSetting(kp: string | Array<string | number>, value) {
+        return await ipcRenderer.invoke('setSetting', kp, value)
+    },
+    async updateRoom(roomId: number, room: object) {
+        return await ipcRenderer.invoke('updateRoom', roomId, room)
+    },
+    async getVersion(): Promise<string> {
+        return await ipcRenderer.invoke('getVersion')
+    },
 }
-export const sendMessage = async (data) => {
-    return await ipcRenderer.invoke('sendMessage', data)
-}
-export const exit = () => {
-    ipcRenderer.send('exit')
-}
-export const isOnline = async (): Promise<boolean> => {
-    return await ipcRenderer.invoke('isOnline')
-}
-export const getNick = async (): Promise<string> => {
-    return await ipcRenderer.invoke('getNick')
-}
-export const getUin = async (): Promise<number> => {
-    return await ipcRenderer.invoke('getUin')
-}
-export const fetchMessage = async (roomId: number, offset: number) => {
-    return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
-}
-export const setSelectedRoomId = (roomId: number) => {
-    ipcRenderer.send('setSelectedRoomId', roomId)
-}
-export const getSetting = async (kp: string | Array<string | number>) => {
-    return await ipcRenderer.invoke('getSetting', kp)
-}
-export const setSetting = async (kp: string | Array<string | number>, value) => {
-    return await ipcRenderer.invoke('setSetting', kp, value)
-}
-export const updateRoom = async (roomId: number, room: object) => {
-    return await ipcRenderer.invoke('updateRoom', roomId, room)
-}
-//todo remote 也是 ipc！
-export const getVersion = app.getVersion
-
