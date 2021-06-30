@@ -15,8 +15,8 @@
     "build:web": "cross-env BUILD_TARGET=web ts-node .electron-vue/build.ts",
     "dev": "NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
     "pack": "npm run pack:main && npm run pack:renderer",
-    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
-    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
+    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.ts",
+    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.ts"
   },
   "build": {
     "productName": "Electron QQ",
@@ -58,6 +58,7 @@
     "@types/lowdb": "^1.0.10",
     "@types/md5": "^2.3.0",
     "@types/mongodb": "^3.6.17",
+    "@types/webpack": "^5.28.0",
     "ajv": "^6.5.0",
     "aria2": "^4.1.2",
     "axios": "^0.21.1",

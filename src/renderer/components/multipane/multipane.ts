@@ -53,7 +53,7 @@ export default {
 
         const { addEventListener, removeEventListener } = window;
 
-        const resize = (initialSize, offset = 0) => {
+        const resize = (initialSize?, offset = 0) => {
           if (layout == LAYOUT_VERTICAL) {
             let containerWidth = container.clientWidth;
             let paneWidth = initialSize + (resizeNext ? -offset : offset);
