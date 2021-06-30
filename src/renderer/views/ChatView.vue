@@ -192,33 +192,30 @@
 </template>
 
 <script>
-import Room from "../components/vac-mod/ChatWindow/Room/Room";
-import Stickers from "../components/Stickers";
-import Test from "../components/Test";
-import IgnoreManage from "../components/IgnoreManage";
-import {Multipane, MultipaneResizer} from '../components/multipane';
-import {defaultThemeStyles, cssThemeVars} from "../components/vac-mod/themes";
-import Datastore from "lowdb";
-import FileSync from "lowdb/adapters/FileSync";
-import path from "path";
+import Room from '../components/vac-mod/ChatWindow/Room/Room'
+import Stickers from '../components/Stickers'
+import Test from '../components/Test'
+import IgnoreManage from '../components/IgnoreManage'
+import {Multipane, MultipaneResizer} from '../components/multipane'
+import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
+import Datastore from 'lowdb'
+import FileSync from 'lowdb/adapters/FileSync'
+import path from 'path'
 import {
 	clipboard,
-	nativeImage,
 	shell,
 	ipcRenderer,
-} from "electron";
-import SideBarIcon from "../components/SideBarIcon.vue";
-import TheRoomsPanel from "../components/TheRoomsPanel.vue";
-import TheContactsPanel from "../components/TheContactsPanel.vue";
-import {io} from "socket.io-client";
-import {base64encode, base64decode} from 'nodejs-base64'
-import * as ipc from '../utils/ipc'
+} from 'electron'
+import SideBarIcon from '../components/SideBarIcon.vue'
+import TheRoomsPanel from '../components/TheRoomsPanel.vue'
+import TheContactsPanel from '../components/TheContactsPanel.vue'
+import {io} from 'socket.io-client'
+import ipc from '../utils/ipc'
 
-const _ = require('lodash');
 const remote = require('@electron/remote')
-const STORE_PATH = remote.getGlobal("STORE_PATH");
+const STORE_PATH = remote.getGlobal('STORE_PATH')
 
-const Aria2 = require("aria2");
+const Aria2 = require('aria2')
 
 let db, aria, socketIo
 
@@ -226,65 +223,65 @@ let db, aria, socketIo
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
 Date.prototype.format = function (fmt) {
 	var o = {
-		"M+": this.getMonth() + 1, //月份
-		"d+": this.getDate(), //日
-		"h+": this.getHours(), //小时
-		"m+": this.getMinutes(), //分
-		"s+": this.getSeconds(), //秒
-		"q+": Math.floor((this.getMonth() + 3) / 3), //季度
+		'M+': this.getMonth() + 1, //月份
+		'd+': this.getDate(), //日
+		'h+': this.getHours(), //小时
+		'm+': this.getMinutes(), //分
+		's+': this.getSeconds(), //秒
+		'q+': Math.floor((this.getMonth() + 3) / 3), //季度
 		S: this.getMilliseconds(), //毫秒
-	};
+	}
 	if (/(y+)/.test(fmt)) {
 		fmt = fmt.replace(
 			RegExp.$1,
-			(this.getFullYear() + "").substr(4 - RegExp.$1.length)
-		);
+			(this.getFullYear() + '').substr(4 - RegExp.$1.length),
+		)
 	}
 	for (var k in o) {
-		if (new RegExp("(" + k + ")").test(fmt)) {
+		if (new RegExp('(' + k + ')').test(fmt)) {
 			fmt = fmt.replace(
 				RegExp.$1,
-				RegExp.$1.length === 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
-			);
+				RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length),
+			)
 		}
 	}
-	return fmt;
-};
+	return fmt
+}
 
 //download https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
-const https = require("https");
-const fs = require("fs");
+const https = require('https')
+const fs = require('fs')
 const download = function (url, dest, cb) {
-	const file = fs.createWriteStream(dest);
+	const file = fs.createWriteStream(dest)
 	https
 		.get(url, function (response) {
-			response.pipe(file);
-			file.on("finish", function () {
-				file.close(cb); // close() is async, call cb after close completes.
-			});
+			response.pipe(file)
+			file.on('finish', function () {
+				file.close(cb) // close() is async, call cb after close completes.
+			})
 		})
-		.on("error", function (err) {
+		.on('error', function (err) {
 			// Handle errors
-			fs.unlink(dest); // Delete the file async. (But we don't check the result)
-			if (cb) cb(err.message);
-		});
-};
+			fs.unlink(dest) // Delete the file async. (But we don't check the result)
+			if (cb) cb(err.message)
+		})
+}
 
 //convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
 function convertImgToBase64(url, callback, outputFormat) {
-	var canvas = document.createElement("CANVAS"),
-		ctx = canvas.getContext("2d"),
-		img = new Image();
-	img.crossOrigin = "Anonymous";
+	var canvas = document.createElement('CANVAS'),
+		ctx = canvas.getContext('2d'),
+		img = new Image()
+	img.crossOrigin = 'Anonymous'
 	img.onload = function () {
-		canvas.height = img.height;
-		canvas.width = img.width;
-		ctx.drawImage(img, 0, 0);
-		var dataURL = canvas.toDataURL(outputFormat || "image/png");
-		callback.call(this, dataURL);
-		canvas = null;
-	};
-	img.src = url;
+		canvas.height = img.height
+		canvas.width = img.width
+		ctx.drawImage(img, 0, 0)
+		var dataURL = canvas.toDataURL(outputFormat || 'image/png')
+		callback.call(this, dataURL)
+		canvas = null
+	}
+	img.src = url
 }
 
 //endregion
@@ -293,7 +290,7 @@ function convertImgToBase64(url, callback, outputFormat) {
 const ONLINE_STATUS_TYPES = {
 	Online: 11,
 	AFK: 31,
-	Hide: 41
+	Hide: 41,
 }
 
 export default {
@@ -306,7 +303,7 @@ export default {
 		TheContactsPanel,
 		Multipane,
 		MultipaneResizer,
-		Test
+		Test,
 	},
 	data() {
 		return {
@@ -316,36 +313,36 @@ export default {
 			account: null,
 			messagesLoaded: false,
 			ignoredChats: [],
-			panel: "",
+			panel: '',
 			offline: false,
-			offlineReason: "",
+			offlineReason: '',
 			reconnecting: false,
 			styles: {
 				container: {
-					boxShadow: "none",
+					boxShadow: 'none',
 				},
 			},
-			view: "chats",
-			username: "",
+			view: 'chats',
+			username: '',
 			darkTaskIcon: false,
 			nuist: false,
 			aria2: {
 				enabled: false,
-				host: "127.0.0.1",
+				host: '127.0.0.1',
 				port: 6800,
 				secure: false,
-				secret: "",
-				path: "/jsonrpc",
+				secret: '',
+				path: '/jsonrpc',
 			},
 			dialogAriaVisible: false,
 			aria,
 			priority: 3,
-			theme: "default",
+			theme: 'default',
 			menu: [],
 			loading: false,
 			isShutUp: false,
-			status: ONLINE_STATUS_TYPES.Online
-		};
+			status: ONLINE_STATUS_TYPES.Online,
+		}
 	},
 	async created() {
 		//region db init
@@ -354,57 +351,57 @@ export default {
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),
 			{
 				serialize: (data) => JSON.stringify(data, null, false),
-			}
-		);
-		db = Datastore(adapter);
+			},
+		)
+		db = Datastore(adapter)
 		db.defaults({
 			ignoredChats: [],
 			darkTaskIcon: false,
 			aria2: {
 				enabled: false,
-				host: "127.0.0.1",
+				host: '127.0.0.1',
 				port: 6800,
 				secure: false,
-				secret: "",
-				path: "/jsonrpc",
+				secret: '',
+				path: '/jsonrpc',
 			},
 			priority: 3,
-		}).write();
+		}).write()
 		db.unset('rooms').unset('messages').write()
 		this.rooms = await ipc.getAllRooms()
-		this.priority = await ipc.getSetting("priority")
-		this.darkTaskIcon = await ipc.getSetting("darkTaskIcon")
-		this.ignoredChats = await ipc.getSetting("ignoredChats")
-		this.aria2 = await ipc.getSetting("aria2")//todo
-		this.status = await ipc.getSetting("account.onlineStatus")
+		this.priority = await ipc.getSetting('priority')
+		this.darkTaskIcon = await ipc.getSetting('darkTaskIcon')
+		this.ignoredChats = await ipc.getSetting('ignoredChats')
+		this.aria2 = await ipc.getSetting('aria2')//todo
+		this.status = await ipc.getSetting('account.onlineStatus')
 		//endregion
 		//region set status
-		this.offline = !await ipc.isOnline();
-		this.username = await ipc.getNick();
+		this.offline = !await ipc.isOnline()
+		this.username = await ipc.getNick()
 
 		//endregion
 		//region listener
-		document.addEventListener("dragover", (e) => {
-			e.preventDefault();
-			e.stopPropagation();
-		});
+		document.addEventListener('dragover', (e) => {
+			e.preventDefault()
+			e.stopPropagation()
+		})
 		//keyboard
-		document.addEventListener("keydown", (e) => {
-			if (e.repeat) return;
-			if (e.key === "w" && e.ctrlKey === true) {
-				remote.getCurrentWindow().minimize();
+		document.addEventListener('keydown', (e) => {
+			if (e.repeat) return
+			if (e.key === 'w' && e.ctrlKey === true) {
+				remote.getCurrentWindow().minimize()
 			}
-			else if (e.key === "Tab") {
+			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
-					(e) => e.unreadCount && e.priority >= this.priority
-				);
-				if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount);
-				if (unreadRoom) this.chroom(unreadRoom);
+					(e) => e.unreadCount && e.priority >= this.priority,
+				)
+				if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount)
+				if (unreadRoom) this.chroom(unreadRoom)
 			}
-		});
-		ipcRenderer.on("openForward", (e, resId) => this.openForward(resId));
-		ipcRenderer.on("openImage", (e, resId) => this.openImage(resId));
-		ipcRenderer.on("downloadImage", (e, resId) => this.downloadImage(resId));
+		})
+		ipcRenderer.on('openForward', (e, resId) => this.openForward(resId))
+		ipcRenderer.on('openImage', (e, resId) => this.openImage(resId))
+		ipcRenderer.on('downloadImage', (e, resId) => this.downloadImage(resId))
 		window.setupSocketIoSlave = url => {
 			if (url) {
 				db.set('socketIoSlave', url).write()
@@ -420,41 +417,41 @@ export default {
 		//endregion
 		//region build menu
 		const updatePriority = lev => {
-			this.priority = lev;
-			ipc.setSetting("priority", lev)
-			this.updateAppMenu();
-		};
+			this.priority = lev
+			ipc.setSetting('priority', lev)
+			this.updateAppMenu()
+		}
 		this.menu = [
 			new remote.MenuItem({
-				label: "Notification Priority",
+				label: 'Notification Priority',
 				submenu: [
 					{
-						type: "radio",
-						label: "1",
+						type: 'radio',
+						label: '1',
 						checked: this.priority === 1,
 						click: () => updatePriority(1),
 					},
 					{
-						type: "radio",
-						label: "2",
+						type: 'radio',
+						label: '2',
 						checked: this.priority === 2,
 						click: () => updatePriority(2),
 					},
 					{
-						type: "radio",
-						label: "3",
+						type: 'radio',
+						label: '3',
 						checked: this.priority === 3,
 						click: () => updatePriority(3),
 					},
 					{
-						type: "radio",
-						label: "4",
+						type: 'radio',
+						label: '4',
 						checked: this.priority === 4,
 						click: () => updatePriority(4),
 					},
 					{
-						type: "radio",
-						label: "5",
+						type: 'radio',
+						label: '5',
 						checked: this.priority === 5,
 						click: () => updatePriority(5),
 					},
@@ -462,42 +459,42 @@ export default {
 			}),
 			[
 				new remote.MenuItem({
-					label: "Status",
+					label: 'Status',
 					submenu: [
 						{
-							type: "radio",
-							label: "Online",
+							type: 'radio',
+							label: 'Online',
 							checked: this.status === ONLINE_STATUS_TYPES.Online,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online))
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online)),
 						},
 						{
-							type: "radio",
-							label: "Away from keyboard",
+							type: 'radio',
+							label: 'Away from keyboard',
 							checked: this.status === ONLINE_STATUS_TYPES.AFK,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK))
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK)),
 						},
 						{
-							type: "radio",
-							label: "Hide",
+							type: 'radio',
+							label: 'Hide',
 							checked: this.status === ONLINE_STATUS_TYPES.Hide,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide))
-						}
-					]
+							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide)),
+						},
+					],
 				}),
 				new remote.MenuItem({
-					label: "Manage ignored chats",
-					click: () => (this.panel = "ignore"),
+					label: 'Manage ignored chats',
+					click: () => (this.panel = 'ignore'),
 				}),
 				new remote.MenuItem({
-					label: "Aria2 download options",
+					label: 'Aria2 download options',
 					click: () => (this.dialogAriaVisible = true),
 				}),
 				new remote.MenuItem({
-					label: "Auto login",
-					type: "checkbox",
-					checked: await ipc.getSetting("account.autologin"),
+					label: 'Auto login',
+					type: 'checkbox',
+					checked: await ipc.getSetting('account.autologin'),
 					click: (menuItem) => {
-						ipc.setSetting("account.autologin", menuItem.checked)
+						ipc.setSetting('account.autologin', menuItem.checked)
 					},
 				}),
 			],
@@ -507,40 +504,40 @@ export default {
 					enabled: false,
 				}),
 				new remote.MenuItem({
-					label: "GitHub",
-					click: () => shell.openExternal('https://github.com/Clansty/electron-qq')
+					label: 'GitHub',
+					click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
 				}),
 				new remote.MenuItem({
-					label: "Reload",
+					label: 'Reload',
 					click: () => {
-						location.reload();
+						location.reload()
 					},
 				}),
 				new remote.MenuItem({
-					label: "Dev Tools",
-					role: "toggleDevTools",
+					label: 'Dev Tools',
+					role: 'toggleDevTools',
 				}),
 				new remote.MenuItem({
-					label: "Quit",
+					label: 'Quit',
 					click: this.exit,
 				}),
 			],
-		];
-		this.updateAppMenu();
+		]
+		this.updateAppMenu()
 
-		if (fs.existsSync(path.join(STORE_PATH, "font.ttf"))) {
-			console.log("nya");
+		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
+			console.log('nya')
 			const myFonts = new FontFace(
-				"font",
-				`url(${path.join(STORE_PATH, "font.ttf")})`,
-				{}
-			);
+				'font',
+				`url(${path.join(STORE_PATH, 'font.ttf')})`,
+				{},
+			)
 			myFonts.load().then(function (loadFace) {
-				document.fonts.add(loadFace);
-			});
+				document.fonts.add(loadFace)
+			})
 		}
 
-		if (this.aria2.enabled) this.startAria();
+		if (this.aria2.enabled) this.startAria()
 
 		if (db.get('socketIoSlave').value()) {
 			this.initSocketIo()
@@ -557,7 +554,7 @@ export default {
 		ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
 		ipcRenderer.on('chroom', (_, p) => this.chroom(p))
 		ipcRenderer.on('updateRoom', (_, room) => {
-			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)];
+			this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
 		})
 		ipcRenderer.on('addMessage', (_, {roomId, message}) => {
 			if (roomId !== this.selectedRoom.roomId) return
@@ -566,14 +563,14 @@ export default {
 	},
 	//todo set selected room id
 	methods: {
-		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
+		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {
 			this.loading = true
 			if (!room && !roomId) {
-				room = this.selectedRoom;
-				roomId = room.roomId;
+				room = this.selectedRoom
+				roomId = room.roomId
 			}
-			if (!room) room = this.rooms.find((e) => e.roomId === roomId);
-			if (!roomId) roomId = room.roomId;
+			if (!room) room = this.rooms.find((e) => e.roomId === roomId)
+			if (!roomId) roomId = room.roomId
 			if (file) {
 				if (file.type.includes('image')) {
 					const b64 = Buffer.from(await file.blob.arrayBuffer()).toString('base64')
@@ -584,7 +581,7 @@ export default {
 					file = {
 						type: file.type,
 						size: file.size,
-						path: file.path
+						path: file.path,
 					}
 
 			}
@@ -592,77 +589,77 @@ export default {
 		},
 		fetchMessage(reset) {
 			if (reset) {
-				this.messagesLoaded = false;
-				this.messages = [];
-				this.selectedRoom.unreadCount = 0;
-				this.selectedRoom.at = false;
+				this.messagesLoaded = false
+				this.messages = []
+				this.selectedRoom.unreadCount = 0
+				this.selectedRoom.at = false
 			}
 			ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
 				.then(msgs2add => {
 					setTimeout(() => {
 						if (msgs2add.length) {
-							this.messages = [...msgs2add, ...this.messages];
+							this.messages = [...msgs2add, ...this.messages]
 						}
-						else this.messagesLoaded = true;
-					}, 0);
-				});
-			this.updateTrayIcon();
+						else this.messagesLoaded = true
+					}, 0)
+				})
+			this.updateTrayIcon()
 		},
 		async openImage(data) {
-			if (data.action === "download") {
-				if (data.message.file.type.includes("image")) {
-					this.downloadImage(data.message.file.url);
+			if (data.action === 'download') {
+				if (data.message.file.type.includes('image')) {
+					this.downloadImage(data.message.file.url)
 				}
 				else {
 					if (this.selectedRoom.roomId < 0 && data.message.file.fid) {
 						const gfs = bot.acquireGfs(-this.selectedRoom.roomId)
 						data.message.file.url = (await gfs.download(data.message.file.fid)).url
 					}
-					if (this.aria2.enabled && data.message.file.url.startsWith("http"))
+					if (this.aria2.enabled && data.message.file.url.startsWith('http'))
 						this.download(
 							data.message.file.url,
 							null,
 							() => {
-								this.$message("Pushed to Aria2 JSONRPC");
+								this.$message('Pushed to Aria2 JSONRPC')
 							},
-							data.message.content
-						);
-					else shell.openExternal(data.message.file.url);
+							data.message.content,
+						)
+					else shell.openExternal(data.message.file.url)
 				}
 			}
 		},
 		async deleteMessage(messageId) {
-			const message = this.messages.find((e) => e._id === messageId);
-			const res = await bot.deleteMsg(messageId);
-			console.log(res);
+			const message = this.messages.find((e) => e._id === messageId)
+			const res = await bot.deleteMsg(messageId)
+			console.log(res)
 			if (!res.error) {
-				message.deleted = new Date();
-				this.messages = [...this.messages];
+				message.deleted = new Date()
+				this.messages = [...this.messages]
 				storage.updateMessage(this.selectedRoom.roomId, messageId, {deleted: new Date()})
 			}
 			else {
 				this.$notify.error({
-					title: "Failed to delete message",
+					title: 'Failed to delete message',
 					message: res.error.message,
-				});
+				})
 			}
 		},
 		friendRecall(data) {
 			if (data.user_id == this.selectedRoom.roomId) {
-				const message = this.messages.find((e) => e._id == data.message_id);
+				const message = this.messages.find((e) => e._id == data.message_id)
 				if (message) {
-					message.deleted = new Date();
-					this.messages = [...this.messages];
+					message.deleted = new Date()
+					this.messages = [...this.messages]
 				}
 			}
 			storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
 		},
 		groupRecall(data) {
 			if (-data.group_id == this.selectedRoom.roomId) {
-				const message = this.messages.find((e) => e._id == data.message_id);
+				const message = this.messages.find((e) => e._id == data.message_id)
 				if (message) {
-					message.deleted = new Date();
-					this.messages = [...this.messages];
+					message.deleted = new Date()
+					this.messages = [...this.messages]
 				}
 			}
 			storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
@@ -670,82 +667,82 @@ export default {
 		sendSticker(url) {
 			if (this.selectedRoom)
 				this.sendMessage({
-					content: "",
+					content: '',
 					room: this.selectedRoom,
 					imgpath: url,
-				});
-			this.$refs.room.focusTextarea();
+				})
+			this.$refs.room.focusTextarea()
 		},
 		rmIgnore(chat) {
-			console.log(chat);
+			console.log(chat)
 			this.ignoredChats = this.ignoredChats.filter(
-				(item) => item.id != chat.id
-			);
-			db.set("ignoredChats", this.ignoredChats).write();
+				(item) => item.id != chat.id,
+			)
+			db.set('ignoredChats', this.ignoredChats).write()
 		},
 		reconnect() {
-			this.reconnecting = true;
+			this.reconnecting = true
 			ipc.login()
 		},
 		online() {
-			this.reconnecting = this.offline = false;
+			this.reconnecting = this.offline = false
 		},
 		onOffline(data) {
-			this.offlineReason = data.message;
-			console.log(data);
-			this.offline = true;
+			this.offlineReason = data.message
+			console.log(data)
+			this.offline = true
 		},
 		appMenu() {
-			const menu = new remote.Menu();
-			menu.append(this.menu[0]);
+			const menu = new remote.Menu()
+			menu.append(this.menu[0])
 			for (let i = 0; i < this.menu[1].length; i++)
-				menu.append(this.menu[1][i]);
+				menu.append(this.menu[1][i])
 			menu.append(
 				new remote.MenuItem({
-					type: "separator",
-				})
-			);
+					type: 'separator',
+				}),
+			)
 			for (let i = 0; i < this.menu[2].length; i++)
-				menu.append(this.menu[2][i]);
-			menu.popup({window: remote.getCurrentWindow()});
+				menu.append(this.menu[2][i])
+			menu.popup({window: remote.getCurrentWindow()})
 		},
 		roomContext(room, build) {
-			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
+			const pintitle = room.index ? 'Unpin Chat' : 'Pin Chat'
 			const updatePriority = (lev) => {
-				room.priority = lev;
+				room.priority = lev
 				ipc.updateRoom(room.roomId, {priority: lev})
-			};
+			}
 			const menu = remote.Menu.buildFromTemplate([
 				{
-					label: "Notification Priority",
+					label: 'Notification Priority',
 					submenu: [
 						{
-							type: "radio",
-							label: "1",
+							type: 'radio',
+							label: '1',
 							checked: room.priority === 1,
 							click: () => updatePriority(1),
 						},
 						{
-							type: "radio",
-							label: "2",
+							type: 'radio',
+							label: '2',
 							checked: room.priority === 2,
 							click: () => updatePriority(2),
 						},
 						{
-							type: "radio",
-							label: "3",
+							type: 'radio',
+							label: '3',
 							checked: room.priority === 3,
 							click: () => updatePriority(3),
 						},
 						{
-							type: "radio",
-							label: "4",
+							type: 'radio',
+							label: '4',
 							checked: room.priority === 4,
 							click: () => updatePriority(4),
 						},
 						{
-							type: "radio",
-							label: "5",
+							type: 'radio',
+							label: '5',
 							checked: room.priority === 5,
 							click: () => updatePriority(5),
 						},
@@ -754,61 +751,61 @@ export default {
 				{
 					label: pintitle,
 					click: () => {
-						if (room.index) room.index = 0;
-						else room.index = 1;
-						this.rooms = [...this.rooms];
+						if (room.index) room.index = 0
+						else room.index = 1
+						this.rooms = [...this.rooms]
 						storage.updateRoom(room.roomId, room)
 					},
 				},
 				{
-					label: "Delete Chat",
+					label: 'Delete Chat',
 					click: () => {
-						this.rooms = this.rooms.filter((item) => item != room);
+						this.rooms = this.rooms.filter((item) => item != room)
 						storage.removeRoom(room.roomId)
 					},
 				},
 				{
-					label: "Ignore Chat",
+					label: 'Ignore Chat',
 					click: () => {
 						this.ignoredChats.push({
 							id: room.roomId,
 							name: room.roomName,
-						});
-						this.rooms = this.rooms.filter((item) => item != room);
+						})
+						this.rooms = this.rooms.filter((item) => item != room)
 						storage.removeRoom(room.roomId)
-						db.set("ignoredChats", this.ignoredChats).write();
+						db.set('ignoredChats', this.ignoredChats).write()
 					},
 				},
 				{
-					label: "Copy Name",
+					label: 'Copy Name',
 					click: () => {
-						clipboard.writeText(room.roomName);
+						clipboard.writeText(room.roomName)
 					},
 				},
 				{
-					label: "Copy ID",
+					label: 'Copy ID',
 					click: () => {
-						clipboard.writeText(String(Math.abs(room.roomId)));
+						clipboard.writeText(String(Math.abs(room.roomId)))
 					},
 				},
 				{
-					label: "View Avatar",
+					label: 'View Avatar',
 					click: () => {
 						ipcRenderer.send('openImage', room.avatar, false)
 					},
 				},
 				{
-					label: "Download Avatar",
+					label: 'Download Avatar',
 					click: () => {
-						this.downloadImage(room.avatar);
+						this.downloadImage(room.avatar)
 					},
 				},
 				{
 					label: 'Auto Download',
 					submenu: [
 						{
-							type: "checkbox",
-							label: "Files in this chat",
+							type: 'checkbox',
+							label: 'Files in this chat',
 							checked: !!room.autoDownload,
 							click: (menuItem) => {
 								room.autoDownload = menuItem.checked
@@ -816,12 +813,12 @@ export default {
 							},
 						},
 						{
-							label: "Set download path",
+							label: 'Set download path',
 							click: () => {
 								const selection = remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
 									title: 'Select download path',
 									properties: ['openDirectory'],
-									defaultPath: room.downloadPath
+									defaultPath: room.downloadPath,
 								})
 								console.log(selection)
 								if (selection && selection.length) {
@@ -836,272 +833,272 @@ export default {
 					label: 'Get History',
 					click: () => {
 						this.getLatestHistory(room.roomId)
-					}
-				}
-			]);
-			if (build) return menu;
-			menu.popup({window: remote.getCurrentWindow()});
+					},
+				},
+			])
+			if (build) return menu
+			menu.popup({window: remote.getCurrentWindow()})
 		},
 		friendPoke(data) {
 			console.log(data)
 			const roomId =
-				data.operator_id == this.account ? data.user_id : data.operator_id;
-			const room = this.rooms.find((e) => e.roomId == roomId);
+				data.operator_id == this.account ? data.user_id : data.operator_id
+			const room = this.rooms.find((e) => e.roomId == roomId)
 			if (room) {
-				this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
-				room.utime = data.time * 1000;
-				let msg = "";
-				if (data.operator_id != this.account) msg += room.roomName;
-				else msg += "你";
-				msg += data.action;
-				if (data.operator_id == data.target_id) msg += "自己";
-				else if (data.target_id != this.account) msg += room.roomName;
-				else msg += "你";
-				if (data.suffix) msg += data.suffix;
+				this.rooms = [room, ...this.rooms.filter((item) => item !== room)]
+				room.utime = data.time * 1000
+				let msg = ''
+				if (data.operator_id != this.account) msg += room.roomName
+				else msg += '你'
+				msg += data.action
+				if (data.operator_id == data.target_id) msg += '自己'
+				else if (data.target_id != this.account) msg += room.roomName
+				else msg += '你'
+				if (data.suffix) msg += data.suffix
 				room.lastMessage = {
 					content: msg,
 					username: null,
-					timestamp: new Date().format("hh:mm"),
-				};
+					timestamp: new Date().format('hh:mm'),
+				}
 				const message = {
 					content: msg,
 					senderId: 0,
-					timestamp: new Date().format("hh:mm"),
-					date: new Date().format("dd/MM/yyyy"),
+					timestamp: new Date().format('hh:mm'),
+					date: new Date().format('dd/MM/yyyy'),
 					_id: data.time,
 					system: true,
 					time: data.time * 1000,
-				};
+				}
 				if (room === this.selectedRoom)
-					this.messages = [...this.messages, message];
+					this.messages = [...this.messages, message]
 				storage.updateRoom(room.roomId, room)
 				storage.addMessage(roomId, message)
 			}
 		},
 		startChat(id, name) {
-			var room = this.rooms.find((e) => e.roomId == id);
+			var room = this.rooms.find((e) => e.roomId == id)
 			const avatar =
 				id < 0
 					? `https://p.qlogo.cn/gh/${-id}/${-id}/0`
-					: `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`;
+					: `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
 
 			if (room === undefined) {
 				// create room
-				room = this.createRoom(id, name, avatar);
-				this.rooms = [room, ...this.rooms];
-				storage.addRoom(room);
+				room = this.createRoom(id, name, avatar)
+				this.rooms = [room, ...this.rooms]
+				storage.addRoom(room)
 			}
-			this.chroom(room);
-			this.view = "chats";
+			this.chroom(room)
+			this.view = 'chats'
 		},
 		chroom(room) {
 			if ((typeof room) === 'number')
 				room = this.rooms.find(e => e.roomId === room)
 			if (!room) return
-			if (this.selectedRoom === room) return;
-			this.selectedRoom.at = false;
-			this.selectedRoom = room;
-			this.updateTrayIcon();
-			this.fetchMessage(true);
-			this.updateAppMenu();
+			if (this.selectedRoom === room) return
+			this.selectedRoom.at = false
+			this.selectedRoom = room
+			this.updateTrayIcon()
+			this.fetchMessage(true)
+			this.updateAppMenu()
 		},
 		pokeFriend() {
-			console.log("poke");
+			console.log('poke')
 			if (this.selectedRoom.roomId > 0)
-				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId);
-			this.$refs.room.focusTextarea();
+				bot.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
+			this.$refs.room.focusTextarea()
 		},
 		addToStickers(message) {
 			const downpath = path.join(
 				STORE_PATH,
-				"/stickers/",
-				String(new Date().getTime())
-			);
+				'/stickers/',
+				String(new Date().getTime()),
+			)
 			download(
-				message.file.url.replace("http://", "https://"),
+				message.file.url.replace('http://', 'https://'),
 				downpath,
 				() => {
 					this.$notify.success({
-						title: "Image Saved to stickers folder",
+						title: 'Image Saved to stickers folder',
 						message: downpath,
-					});
-					this.panel = "refresh";
+					})
+					this.panel = 'refresh'
 					this.$nextTick(() => {
-						this.panel = "stickers";
-					});
-				}
-			);
+						this.panel = 'stickers'
+					})
+				},
+			)
 		},
 		getUnreadCount() {
 			return this.rooms.filter((e) => {
-				return e.unreadCount && e.priority >= this.priority;
-			}).length;
+				return e.unreadCount && e.priority >= this.priority
+			}).length
 		},
 		clearCurrentRoomUnread() {
-			this.selectedRoom.unreadCount = 0;
-			this.updateTrayIcon();
+			this.selectedRoom.unreadCount = 0
+			this.updateTrayIcon()
 		},
 		updateTrayIcon() {
-			let p;
-			const unread = this.getUnreadCount();
+			let p
+			const unread = this.getUnreadCount()
 			const title = this.selectedRoom.roomName
 				? this.selectedRoom.roomName
-				: "Electron QQ";
+				: 'Electron QQ'
 			if (unread) {
 				p = path.join(
 					__static,
-					this.darkTaskIcon ? "darknewmsg.png" : "newmsg.png"
-				);
+					this.darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
+				)
 				const newMsgRoom = this.rooms.find(
-					(e) => e.unreadCount && e.priority >= this.priority
+					(e) => e.unreadCount && e.priority >= this.priority,
 				)
 				const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
-				document.title = `(${unread}${extra}) ${title}`;
+				document.title = `(${unread}${extra}) ${title}`
 			}
 			else {
-				p = path.join(__static, this.darkTaskIcon ? "dark.png" : "256x256.png");
-				document.title = title;
+				p = path.join(__static, this.darkTaskIcon ? 'dark.png' : '256x256.png')
+				document.title = title
 			}
 			if (socketIo) socketIo.emit('qqCount', unread)
 			// this.tray.setImage(p);
 			// remote.app.setBadgeCount(unread);
 		},
 		closeAria() {
-			this.dialogAriaVisible = false;
-			db.set("aria2", this.aria2).write();
-			if (this.aria2.enabled) this.startAria();
+			this.dialogAriaVisible = false
+			db.set('aria2', this.aria2).write()
+			if (this.aria2.enabled) this.startAria()
 		},
 		startAria() {
-			this.aria = new Aria2(this.aria2);
+			this.aria = new Aria2(this.aria2)
 			this.aria
 				.open()
-				.then(this.$message("Aria2 RPC connected"))
+				.then(this.$message('Aria2 RPC connected'))
 				.catch((err) => {
-					console.log(err);
-					this.$message("Aria2 failed");
-				});
+					console.log(err)
+					this.$message('Aria2 failed')
+				})
 		},
 		download(url, dest, cb, out, dir) {
 			if (this.aria2.enabled) {
-				const opt = {};
-				if (dir) opt.dir = dir;
-				if (out) opt.out = out;
+				const opt = {}
+				if (dir) opt.dir = dir
+				if (out) opt.out = out
 				else if (dest) {
-					opt.dir = path.dirname(dest);
-					opt.out = path.basename(dest);
+					opt.dir = path.dirname(dest)
+					opt.out = path.basename(dest)
 				}
 				this.aria
-					.call("aria2.addUri", [url], opt)
+					.call('aria2.addUri', [url], opt)
 					.then(cb)
 					.catch((err) => {
-						console.log(err);
-						this.$message("Aria2 failed");
-					});
+						console.log(err)
+						this.$message('Aria2 failed')
+					})
 			}
-			else download(url, dest ? dest : path.join(dir, cb), cb);
+			else download(url, dest ? dest : path.join(dir, cb), cb)
 		},
 		exit: ipc.exit,
 		downloadImage(url) {
 			console.log(url)
-			const downdir = remote.app.getPath("downloads");
+			const downdir = remote.app.getPath('downloads')
 			const downpath = path.join(
 				downdir,
-				"QQ_Image_" + new Date().getTime() + ".jpg"
-			);
-			this.download(url.replace("http://", "https://"), downpath, () => {
+				'QQ_Image_' + new Date().getTime() + '.jpg',
+			)
+			this.download(url.replace('http://', 'https://'), downpath, () => {
 				this.$notify.success({
-					title: "Image Saved",
+					title: 'Image Saved',
 					message: downpath,
-				});
-			});
+				})
+			})
 		},
 		async groupPoke(data) {
-			console.log(data);
-			const room = this.rooms.find((e) => e.roomId == -data.group_id);
+			console.log(data)
+			const room = this.rooms.find((e) => e.roomId == -data.group_id)
 			if (room) {
-				this.rooms = [room, ...this.rooms.filter((item) => item !== room)];
-				room.utime = data.time * 1000;
+				this.rooms = [room, ...this.rooms.filter((item) => item !== room)]
+				room.utime = data.time * 1000
 				let operator = (
 					await bot.getGroupMemberInfo(data.group_id, data.operator_id, false)
-				).data;
-				operator = operator.card ? operator.card : operator.nickname;
+				).data
+				operator = operator.card ? operator.card : operator.nickname
 				let user = (
 					await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
-				).data;
-				user = user.card ? user.card : user.nickname;
-				let msg = "";
-				if (data.operator_id != this.account) msg += operator;
-				else msg += "你";
-				msg += data.action;
-				if (data.user_id != this.account) msg += user;
-				else if (data.operator_id == this.account) msg += "自己";
-				else msg += "你";
-				if (data.suffix) msg += data.suffix;
+				).data
+				user = user.card ? user.card : user.nickname
+				let msg = ''
+				if (data.operator_id != this.account) msg += operator
+				else msg += '你'
+				msg += data.action
+				if (data.user_id != this.account) msg += user
+				else if (data.operator_id == this.account) msg += '自己'
+				else msg += '你'
+				if (data.suffix) msg += data.suffix
 				room.lastMessage = {
 					content: msg,
 					username: null,
-					timestamp: new Date().format("hh:mm"),
-				};
+					timestamp: new Date().format('hh:mm'),
+				}
 				const message = {
 					content: msg,
 					senderId: 0,
-					timestamp: new Date().format("hh:mm"),
-					date: new Date().format("dd/MM/yyyy"),
+					timestamp: new Date().format('hh:mm'),
+					date: new Date().format('dd/MM/yyyy'),
 					_id: data.time,
 					system: true,
 					time: data.time * 1000,
-				};
+				}
 				if (room === this.selectedRoom)
-					this.messages = [...this.messages, message];
+					this.messages = [...this.messages, message]
 				storage.updateRoom(room.roomId, room)
-				storage.addMessage(room.roomId, message);
+				storage.addMessage(room.roomId, message)
 			}
 		},
 		pokeGroup(uin) {
-			const group = -this.selectedRoom.roomId;
-			bot.sendGroupPoke(group, uin);
-			this.$refs.room.focusTextarea();
+			const group = -this.selectedRoom.roomId
+			bot.sendGroupPoke(group, uin)
+			this.$refs.room.focusTextarea()
 		},
 		revealMessage(message) {
-			message.reveal = true;
-			this.messages = [...this.messages];
+			message.reveal = true
+			this.messages = [...this.messages]
 			storage.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 		},
 		updateAppMenu() {
 			const menu = remote.Menu.buildFromTemplate([
 				{
-					label: "Electron QQ",
+					label: 'Electron QQ',
 					submenu: this.menu[2],
 				},
 				this.menu[0],
 				{
-					label: "Options",
+					label: 'Options',
 					submenu: this.menu[1],
 				},
-			]);
+			])
 			if (this.selectedRoom)
 				menu.append(
 					new remote.MenuItem({
 						label: this.selectedRoom.roomName,
 						submenu: this.roomContext(this.selectedRoom, true),
-					})
-				);
-			remote.Menu.setApplicationMenu(menu);
+					}),
+				)
+			remote.Menu.setApplicationMenu(menu)
 		},
 		async getHistory(message, roomId = this.selectedRoom.roomId) {
-			const messages = [];
+			const messages = []
 			while (true) {
-				const history = await bot.getChatHistory(message._id);
-				console.log(history);
+				const history = await bot.getChatHistory(message._id)
+				console.log(history)
 				if (history.error) {
-					console.log(history.error);
+					console.log(history.error)
 					this.$message.error('错误：' + history.error.message)
 					break
 				}
 				if (history.data.length < 2) break
 				const newMsgs = []
 				for (let i = 0; i < history.data.length; i++) {
-					const data = history.data[i];
+					const data = history.data[i]
 					const message = {
 						senderId: data.sender.user_id,
 						username: data.group_id
@@ -1109,19 +1106,19 @@ export default {
 								? data.anonymous.name
 								: data.sender.card || data.sender.nickname
 							: data.sender.remark || data.sender.nickname,
-						content: "",
-						timestamp: new Date(data.time * 1000).format("hh:mm"),
-						date: new Date(data.time * 1000).format("dd/MM/yyyy"),
+						content: '',
+						timestamp: new Date(data.time * 1000).format('hh:mm'),
+						date: new Date(data.time * 1000).format('dd/MM/yyyy'),
 						_id: data.message_id,
 						time: data.time * 1000,
-					};
+					}
 					await this.processMessage(
 						data.message,
 						message,
 						{},
-						roomId
-					);
-					messages.push(message);
+						roomId,
+					)
+					messages.push(message)
 					newMsgs.push(message)
 				}
 				message = newMsgs[0]
@@ -1130,7 +1127,7 @@ export default {
 					newMsgs.find(e => e.senderId == this.account)
 				if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id)) break
 			}
-			console.log(messages);
+			console.log(messages)
 			this.$message.success(`已拉取 ${messages.length} 条消息`)
 			storage.updateMessage(roomId, message._id, {historyGot: true})
 			await storage.addMessages(roomId, messages)
@@ -1138,8 +1135,8 @@ export default {
 				storage.fetchMessages(roomId, 0, this.messages.length)
 					.then(msgs2add => setTimeout(() => {
 						console.log('ok')
-						this.messages = msgs2add;
-						this.fetchMessage();
+						this.messages = msgs2add
+						this.fetchMessage()
 					}, 0))
 		},
 		getLatestHistory(roomId) {
@@ -1152,39 +1149,39 @@ export default {
 			else buffer = Buffer.alloc(17)
 			buffer.writeUInt32BE(uid, 0)
 			this.getHistory({
-				_id: buffer.toString('base64')
+				_id: buffer.toString('base64'),
 			}, roomId)
 		},
 		async openForward(resId) {
-			const history = await bot.getForwardMsg(resId);
-			console.log(history);
+			const history = await bot.getForwardMsg(resId)
+			console.log(history)
 			if (history.error) {
-				console.log(history.error);
-				return;
+				console.log(history.error)
+				return
 			}
-			const messages = [];
+			const messages = []
 			for (let i = 0; i < history.data.length; i++) {
-				const data = history.data[i];
+				const data = history.data[i]
 				const message = {
 					senderId: data.user_id,
 					username: data.nickname,
-					content: "",
-					timestamp: new Date(data.time * 1000).format("hh:mm"),
-					date: new Date(data.time * 1000).format("dd/MM/yyyy"),
+					content: '',
+					timestamp: new Date(data.time * 1000).format('hh:mm'),
+					date: new Date(data.time * 1000).format('dd/MM/yyyy'),
 					_id: i,
 					time: data.time * 1000,
-				};
+				}
 				await this.processMessage(
 					data.message,
 					message,
 					{},
-					this.selectedRoom.roomId
-				);
-				messages.push(message);
+					this.selectedRoom.roomId,
+				)
+				messages.push(message)
 			}
-			const size = remote.screen.getPrimaryDisplay().size;
-			let width = size.width - 300;
-			if (width > 1440) width = 900;
+			const size = remote.screen.getPrimaryDisplay().size
+			let width = size.width - 300
+			if (width > 1440) width = 900
 			const win = new remote.BrowserWindow({
 				height: size.height - 200,
 				width,
@@ -1193,24 +1190,24 @@ export default {
 					nodeIntegration: true,
 					enableRemoteModule: true,
 					webSecurity: false,
-					contextIsolation: false
+					contextIsolation: false,
 				},
-			});
+			})
 			const winURL =
-				process.env.NODE_ENV === "development"
+				process.env.NODE_ENV === 'development'
 					? `http://localhost:9080`
-					: `file://${__dirname}/index.html`;
-			win.loadURL(winURL + "#/history");
-			win.webContents.on("did-finish-load", function () {
+					: `file://${__dirname}/index.html`
+			win.loadURL(winURL + '#/history')
+			win.webContents.on('did-finish-load', function () {
 				win.webContents.send(
-					"loadMessages",
+					'loadMessages',
 					messages,
-					remote.getCurrentWindow().id
-				);
-			});
+					remote.getCurrentWindow().id,
+				)
+			})
 		},
 		initSocketIo() {
-			socketIo = new io(db.get('socketIoSlave').value(), {transports: ["websocket"]})
+			socketIo = new io(db.get('socketIoSlave').value(), {transports: ['websocket']})
 			console.log(socketIo)
 		},
 		setOnlineStatus(status) {
@@ -1218,27 +1215,27 @@ export default {
 				.then(() => {
 					this.status = status
 					this.updateAppMenu()
-					ipc.setSetting("account.onlineStatus", status)
+					ipc.setSetting('account.onlineStatus', status)
 				})
 				.catch((res) => console.log(res))
-		}
+		},
 	},
 	computed: {
 		cssVars() {
-			const defaultStyles = defaultThemeStyles["light"];
-			const customStyles = {};
+			const defaultStyles = defaultThemeStyles['light']
+			const customStyles = {}
 
 			Object.keys(defaultStyles).map((key) => {
 				customStyles[key] = {
 					...defaultStyles[key],
 					...(this.styles[key] || {}),
-				};
-			});
+				}
+			})
 
-			return cssThemeVars(customStyles);
+			return cssThemeVars(customStyles)
 		},
 	},
-};
+}
 </script>
 
 <style scoped>

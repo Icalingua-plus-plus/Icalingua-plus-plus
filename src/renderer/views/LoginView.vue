@@ -37,9 +37,9 @@
 			</el-form-item>
 			<el-form-item label="Storage engine">
 				<el-radio-group v-model="form.storageType" size="small">
-<!--					<el-radio-button label="idb">Indexed DB</el-radio-button>-->
+					<!--					<el-radio-button label="idb">Indexed DB</el-radio-button>-->
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
-<!--					<el-radio-button label="redis">Redis (Beta)</el-radio-button>-->
+					<!--					<el-radio-button label="redis">Redis (Beta)</el-radio-button>-->
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item label="Status">
@@ -76,53 +76,53 @@
 
 <script>
 import {ipcRenderer} from 'electron'
-import * as ipc from "../utils/ipc";
-// import LoginForm from "../../types/LoginForm";
-import md5 from "md5";
-// import {ElForm} from "element-ui/types/form";
+import ipc from '../utils/ipc'
+import md5 from 'md5'
 
 export default {
-	name: "LoginView",
+	name: 'LoginView',
 	data() {
 		return {
-			ver: ipc.getVersion(),
+			ver: '',
+			/**
+			 * @type LoginForm
+			 */
 			form: null,
-
 			rules: {
-				username: [{required: true, trigger: "blur"}],
-				password: [{required: true, trigger: "blur"}],
+				username: [{required: true, trigger: 'blur'}],
+				password: [{required: true, trigger: 'blur'}],
 			},
-
 			disabled: false,
-			errmsg: "",
-		};
+			errmsg: '',
+		}
 	},
 	async created() {
+		this.ver = await ipc.getVersion()
 		this.form = await ipc.getSetting('account')
 		ipcRenderer.on('error', (_, msg) => {
 			this.errmsg = msg
-			this.disabled = false;
+			this.disabled = false
 		})
 	},
 	mounted() {
-		if (this.form.autologin) this.onSubmit("loginForm");
+		if (this.form.autologin) this.onSubmit('loginForm')
 	},
 	methods: {
 		onSubmit(formName) {
 			(this.$refs[formName]).validate(async (valid) => {
 				if (valid) {
-					this.disabled = true;
+					this.disabled = true
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
-						this.form.password = md5(this.form.password);
-					await ipcRenderer.invoke('createBot', this.form);
+						this.form.password = md5(this.form.password)
+					await ipcRenderer.invoke('createBot', this.form)
 				}
 				else {
-					return false;
+					return false
 				}
-			});
+			})
 		},
 	},
-};
+}
 </script>
 
 <style scoped>
