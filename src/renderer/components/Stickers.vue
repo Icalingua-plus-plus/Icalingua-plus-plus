@@ -36,7 +36,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import {VEmojiPicker} from "v-emoji-picker";
 import {remote, shell} from "electron";
 

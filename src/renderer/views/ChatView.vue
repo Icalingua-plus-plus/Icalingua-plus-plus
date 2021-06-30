@@ -182,7 +182,7 @@ import ipc from '../utils/ipc'
 const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal('STORE_PATH')
 
-let db, socketIo
+let socketIo
 
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
@@ -260,7 +260,7 @@ export default {
 			rooms: [],
 			messages: [],
 			selectedRoomId: 0,
-			account: null,
+			account: 0,
 			messagesLoaded: false,
 			ignoredChats: [],
 			panel: '',
