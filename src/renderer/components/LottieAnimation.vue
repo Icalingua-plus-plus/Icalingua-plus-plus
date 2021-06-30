@@ -2,7 +2,7 @@
   <div v-if="style" :style="style" ref="lavContainer"/>
 </template>
 
-<script>
+<script lang="ts">
 import lottie from "lottie-web";
 import fs from "fs";
 

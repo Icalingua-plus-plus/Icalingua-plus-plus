@@ -32,7 +32,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { remote, clipboard } from "electron";
 export default {
   name: "ContactEntry",
