@@ -568,3 +568,9 @@ export const getStorage = () => storage
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
 export const getUnreadCount = async () => await storage.getUnreadCount(<number>await settings.get('priority'))
 export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(<number>await settings.get('priority'))
+
+export const clearCurrentRoomUnread = async () => {
+    ui.clearCurrentRoomUnread()
+    await storage.updateRoom(selectedRoomId, {unreadCount: 0})
+    await updateTray()
+}
