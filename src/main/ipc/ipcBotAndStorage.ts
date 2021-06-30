@@ -3,7 +3,7 @@ import {
     Client,
     createClient,
     FriendInfo, FriendPokeEventData, FriendRecallEventData,
-    GroupMessageEventData, GroupRecallEventData,
+    GroupMessageEventData, GroupPokeEventData, GroupRecallEventData,
     MemberBaseInfo,
     MessageEventData, OfflineEventData, OnlineEventData,
     Ret,
@@ -218,8 +218,44 @@ const eventHandlers = {
             storage.addMessage(roomId, message)
         }
     },
-    groupPoke() {
-
+    async groupPoke(data: GroupPokeEventData) {
+        console.log(data)
+        const room = await storage.getRoom(-data.group_id)
+        if (room) {
+            room.utime = data.time * 1000
+            const operatorObj = (await bot.getGroupMemberInfo(data.group_id, data.operator_id, false)).data
+            const operator = operatorObj.card ? operatorObj.card : operatorObj.nickname
+            const userObj = (await bot.getGroupMemberInfo(data.group_id, data.user_id, false)).data
+            const user = userObj.card ? userObj.card : userObj.nickname
+            let msg = ''
+            if (data.operator_id !== bot.uin) msg += operator
+            else msg += '你'
+            msg += data.action
+            if (data.user_id !== bot.uin) msg += user
+            else if (data.operator_id === bot.uin) msg += '自己'
+            else msg += '你'
+            if (data.suffix) msg += data.suffix
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: data.operator_id,
+                timestamp: formatDate('hh:mm'),
+                date: formatDate('dd/MM/yyyy'),
+                _id: data.time,
+                system: true,
+                time: data.time * 1000,
+            }
+            if (room.roomId === selectedRoomId)
+                ui.addMessage(-data.group_id, message)
+            ui.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(room.roomId, message)
+        }
     },
 }
 const loginHandlers = {

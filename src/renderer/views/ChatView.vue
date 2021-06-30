@@ -791,46 +791,6 @@ export default {
 		exit: ipc.exit,
 		downloadImage: ipc.downloadImage,
 		async groupPoke(data) {
-			console.log(data)
-			const room = this.rooms.find((e) => e.roomId == -data.group_id)
-			if (room) {
-				this.rooms = [room, ...this.rooms.filter((item) => item !== room)]
-				room.utime = data.time * 1000
-				let operator = (
-					await bot.getGroupMemberInfo(data.group_id, data.operator_id, false)
-				).data
-				operator = operator.card ? operator.card : operator.nickname
-				let user = (
-					await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
-				).data
-				user = user.card ? user.card : user.nickname
-				let msg = ''
-				if (data.operator_id != this.account) msg += operator
-				else msg += '你'
-				msg += data.action
-				if (data.user_id != this.account) msg += user
-				else if (data.operator_id == this.account) msg += '自己'
-				else msg += '你'
-				if (data.suffix) msg += data.suffix
-				room.lastMessage = {
-					content: msg,
-					username: null,
-					timestamp: new Date().format('hh:mm'),
-				}
-				const message = {
-					content: msg,
-					senderId: 0,
-					timestamp: new Date().format('hh:mm'),
-					date: new Date().format('dd/MM/yyyy'),
-					_id: data.time,
-					system: true,
-					time: data.time * 1000,
-				}
-				if (room === this.selectedRoom)
-					this.messages = [...this.messages, message]
-				storage.updateRoom(room.roomId, room)
-				storage.addMessage(room.roomId, message)
-			}
 		},
 		pokeGroup(uin) {
 			const group = -this.selectedRoom.roomId
