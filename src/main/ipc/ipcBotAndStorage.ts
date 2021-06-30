@@ -369,6 +369,8 @@ const attachLoginHandler = () => {
 export const updateTray = () => updateTrayIcon(selectedRoomName)
 //endregion
 
+//todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts
+
 ipcMain.handle('createBot', async (event, form: LoginForm) => {
     bot = global.bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
@@ -538,7 +540,7 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
         storage.updateRoom(roomId, {
             unreadCount: 0,
             at: false,
-        })
+        }).then(updateTray)
         if (roomId < 0) {
             const gid = -roomId
             const group = bot.gl.get(gid)
