@@ -61,8 +61,13 @@ export const downloadImage = (url: string) => {
 }
 
 export const downloadGroupFile = async (gin: number, fid: string) => {
-    const meta = await getGroupFileMeta(gin, fid)
-    download(meta.url, meta.name)
+    try {
+        const meta = await getGroupFileMeta(gin, fid)
+        download(meta.url, meta.name)
+    } catch (e) {
+        ui.notifyError(e)
+        console.error(e)
+    }
 }
 
 ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))

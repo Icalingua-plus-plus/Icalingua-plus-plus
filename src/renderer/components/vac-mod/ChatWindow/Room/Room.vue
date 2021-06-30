@@ -294,44 +294,44 @@
 </template>
 
 <script>
-import InfiniteLoading from "vue-infinite-loading";
-import vClickOutside from "v-click-outside";
-import emojis from "vue-emoji-picker/src/emojis";
+import InfiniteLoading from 'vue-infinite-loading'
+import vClickOutside from 'v-click-outside'
+import emojis from 'vue-emoji-picker/src/emojis'
 
-import Loader from "../../components/Loader";
-import SvgIcon from "../../components/SvgIcon";
+import Loader from '../../components/Loader'
+import SvgIcon from '../../components/SvgIcon'
 
-import RoomHeader from "./RoomHeader";
-import RoomMessageReply from "./RoomMessageReply";
-import Message from "../Message/Message";
+import RoomHeader from './RoomHeader'
+import RoomMessageReply from './RoomMessageReply'
+import Message from '../Message/Message'
 
-import filteredUsers from "../../utils/filterItems";
+import filteredUsers from '../../utils/filterItems'
 
-const {messagesValid} = require("../../utils/roomValidation");
-const {detectMobile, iOSDevice} = require("../../utils/mobileDetection");
-const {isImageFile, isVideoFile} = require("../../utils/mediaFile");
+const {messagesValid} = require('../../utils/roomValidation')
+const {detectMobile, iOSDevice} = require('../../utils/mobileDetection')
+const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
 
-import {remote, clipboard, nativeImage} from "electron";
+import {remote, clipboard, nativeImage} from 'electron'
 
 //convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
 function convertImgToBase64(url, callback, outputFormat) {
-	var canvas = document.createElement("CANVAS"),
-		ctx = canvas.getContext("2d"),
-		img = new Image();
-	img.crossOrigin = "Anonymous";
+	var canvas = document.createElement('CANVAS'),
+		ctx = canvas.getContext('2d'),
+		img = new Image()
+	img.crossOrigin = 'Anonymous'
 	img.onload = function () {
-		canvas.height = img.height;
-		canvas.width = img.width;
-		ctx.drawImage(img, 0, 0);
-		var dataURL = canvas.toDataURL(outputFormat || "image/jpeg");
-		callback.call(this, dataURL);
-		canvas = null;
-	};
-	img.src = url;
+		canvas.height = img.height
+		canvas.width = img.width
+		ctx.drawImage(img, 0, 0)
+		var dataURL = canvas.toDataURL(outputFormat || 'image/jpeg')
+		callback.call(this, dataURL)
+		canvas = null
+	}
+	img.src = url
 }
 
 export default {
-	name: "Room",
+	name: 'Room',
 	components: {
 		InfiniteLoading,
 		Loader,
@@ -373,7 +373,7 @@ export default {
 	},
 	data() {
 		return {
-			message: "",
+			message: '',
 			editedMessage: {},
 			messageReply: null,
 			infiniteState: null,
@@ -393,16 +393,16 @@ export default {
 			filteredUsersTag: [],
 			selectedUsersTag: [],
 			textareaCursorPosition: null,
-			textMessages: require("../../locales").default,
-		};
+			textMessages: require('../../locales').default,
+		}
 	},
 	computed: {
 		emojisList() {
-			const emojisTable = Object.keys(emojis).map((key) => emojis[key]);
-			return Object.assign({}, ...emojisTable);
+			const emojisTable = Object.keys(emojis).map((key) => emojis[key])
+			return Object.assign({}, ...emojisTable)
 		},
 		room() {
-			return this.rooms.find((room) => room.roomId === this.roomId) || {};
+			return this.rooms.find((room) => room.roomId === this.roomId) || {}
 		},
 		showNoMessages() {
 			return (
@@ -410,412 +410,412 @@ export default {
 				!this.messages.length &&
 				!this.loadingMessages &&
 				!this.loadingRooms
-			);
+			)
 		},
 		showMessagesStarted() {
-			return this.messages.length && this.messagesLoaded;
+			return this.messages.length && this.messagesLoaded
 		},
 		isMessageEmpty() {
-			return !this.file && !this.message.trim();
+			return !this.file && !this.message.trim()
 		},
 	},
 	watch: {
 		loadingMessages(val) {
-			if (val) this.infiniteState = null;
-			else this.focusTextarea(true);
+			if (val) this.infiniteState = null
+			else this.focusTextarea(true)
 		},
 		room(newVal, oldVal) {
 			if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
-				this.loadingMessages = true;
-				this.scrollIcon = false;
-				this.scrollMessagesCount = 0;
+				this.loadingMessages = true
+				this.scrollIcon = false
+				this.scrollMessagesCount = 0
 				//this.resetMessage(true)
 				if (this.roomMessage) {
-					this.message = this.roomMessage;
-					setTimeout(() => this.onChangeInput(), 0);
+					this.message = this.roomMessage
+					setTimeout(() => this.onChangeInput(), 0)
 				}
 			}
 		},
 		roomMessage: {
 			immediate: true,
 			handler(val) {
-				if (val) this.message = this.roomMessage;
+				if (val) this.message = this.roomMessage
 			},
 		},
 		messages(newVal, oldVal) {
 			newVal.forEach((message) => {
 				if (!messagesValid(message)) {
 					throw new Error(
-						"Messages object is not valid! Must contain _id[String, Number], content[String, Number] and senderId[String, Number]"
-					);
+						'Messages object is not valid! Must contain _id[String, Number], content[String, Number] and senderId[String, Number]',
+					)
 				}
-			});
+			})
 
-			const element = this.$refs.scrollContainer;
-			if (!element) return;
+			const element = this.$refs.scrollContainer
+			if (!element) return
 
 			if (oldVal && newVal && oldVal.length === newVal.length - 1) {
-				this.loadingMessages = false;
+				this.loadingMessages = false
 
 				if (
 					newVal[newVal.length - 1].senderId === this.currentUserId ||
 					this.getBottomScroll(element) < 60
 				) {
 					return setTimeout(() => {
-						const options = {top: element.scrollHeight, behavior: "smooth"};
-						element.scrollTo(options);
-					}, 50);
+						const options = {top: element.scrollHeight, behavior: 'smooth'}
+						element.scrollTo(options)
+					}, 50)
 				}
 				else {
-					this.scrollIcon = true;
-					return this.scrollMessagesCount++;
+					this.scrollIcon = true
+					return this.scrollMessagesCount++
 				}
 			}
 
 			if (this.infiniteState) {
-				this.infiniteState.loaded();
+				this.infiniteState.loaded()
 			}
 			else if (newVal.length && !this.scrollIcon) {
 				setTimeout(() => {
-					element.scrollTo({top: element.scrollHeight});
-					this.loadingMessages = false;
-				}, 0);
+					element.scrollTo({top: element.scrollHeight})
+					this.loadingMessages = false
+				}, 0)
 			}
 
-			setTimeout(() => (this.loadingMoreMessages = false), 0);
+			setTimeout(() => (this.loadingMoreMessages = false), 0)
 		},
 		messagesLoaded(val) {
-			if (val) this.loadingMessages = false;
-			if (this.infiniteState) this.infiniteState.complete();
+			if (val) this.loadingMessages = false
+			if (this.infiniteState) this.infiniteState.complete()
 		},
 	},
 	mounted() {
-		this.newMessages = [];
-		const isMobile = detectMobile();
+		this.newMessages = []
+		const isMobile = detectMobile()
 
-		window.addEventListener("keyup", (e) => {
-			if (e.key === "Enter" && !e.shiftKey && !this.fileDialog) {
+		window.addEventListener('keyup', (e) => {
+			if (e.key === 'Enter' && !e.shiftKey && !this.fileDialog) {
 				if (isMobile) {
-					this.message = this.message + "\n";
-					setTimeout(() => this.onChangeInput(), 0);
+					this.message = this.message + '\n'
+					setTimeout(() => this.onChangeInput(), 0)
 				}
 				else {
-					this.sendMessage();
+					this.sendMessage()
 				}
 			}
 
-			this.updateShowUsersTag();
-		});
+			this.updateShowUsersTag()
+		})
 
-		this.$refs["roomTextarea"].addEventListener("click", () => {
-			if (isMobile) this.keepKeyboardOpen = true;
-			this.updateShowUsersTag();
-		});
+		this.$refs['roomTextarea'].addEventListener('click', () => {
+			if (isMobile) this.keepKeyboardOpen = true
+			this.updateShowUsersTag()
+		})
 
-		this.$refs["roomTextarea"].addEventListener("blur", () => {
-			this.resetUsersTag();
-			if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0);
-		});
+		this.$refs['roomTextarea'].addEventListener('blur', () => {
+			this.resetUsersTag()
+			if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0)
+		})
 
 
-		window.addEventListener("paste", (event) => {
+		window.addEventListener('paste', (event) => {
 			console.log(event.clipboardData.files)
 			if (event.clipboardData.files) {
 				// Using the path attribute to get absolute file path
 				const f = event.clipboardData.files[0]
-				const index = f.name.lastIndexOf(".");
-				const ext = f.name.substr(index + 1).toLowerCase();
-				if (this.roomId < 0 || ["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext)) {
+				const index = f.name.lastIndexOf('.')
+				const ext = f.name.substr(index + 1).toLowerCase()
+				if (this.roomId < 0 || ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext)) {
 					this.onFileChange(event.clipboardData.files)
 				}
 			}
-		});
+		})
 
 		//drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
-		document.addEventListener("drop", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
+		document.addEventListener('drop', (event) => {
+			event.preventDefault()
+			event.stopPropagation()
 			console.log(event)
 			if (event.dataTransfer.files.length) {
 				// Using the path attribute to get absolute file path
 				const f = event.dataTransfer.files[0]
-				const index = f.name.lastIndexOf(".");
-				const ext = f.name.substr(index + 1).toLowerCase();
-				if (["png", "jpg", "jpeg", "bmp", "gif", "webp", "svg", "tiff"].includes(ext) ||
-					process.platform === "linux") {
+				const index = f.name.lastIndexOf('.')
+				const ext = f.name.substr(index + 1).toLowerCase()
+				if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) ||
+					process.platform === 'linux') {
 					this.onFileChange(event.dataTransfer.files)
 				}
 			}
-		});
+		})
 	},
 
 	methods: {
 		updateShowUsersTag() {
-			if (!this.$refs["roomTextarea"]) return;
-			if (!this.room.users || this.room.users.length <= 2) return;
+			if (!this.$refs['roomTextarea']) return
+			if (!this.room.users || this.room.users.length <= 2) return
 
 			if (
 				this.textareaCursorPosition ===
-				this.$refs["roomTextarea"].selectionStart
+				this.$refs['roomTextarea'].selectionStart
 			) {
-				return;
+				return
 			}
 
-			this.textareaCursorPosition = this.$refs["roomTextarea"].selectionStart;
+			this.textareaCursorPosition = this.$refs['roomTextarea'].selectionStart
 
-			let position = this.textareaCursorPosition;
+			let position = this.textareaCursorPosition
 
 			while (
 				position > 0 &&
-				this.message.charAt(position - 1) !== "@" &&
-				this.message.charAt(position - 1) !== " "
+				this.message.charAt(position - 1) !== '@' &&
+				this.message.charAt(position - 1) !== ' '
 				) {
-				position--;
+				position--
 			}
 
-			const beforeTag = this.message.charAt(position - 2);
-			const notLetterNumber = !beforeTag.match(/^[0-9a-zA-Z]+$/);
+			const beforeTag = this.message.charAt(position - 2)
+			const notLetterNumber = !beforeTag.match(/^[0-9a-zA-Z]+$/)
 
 			if (
-				this.message.charAt(position - 1) === "@" &&
-				(!beforeTag || beforeTag === " " || notLetterNumber)
+				this.message.charAt(position - 1) === '@' &&
+				(!beforeTag || beforeTag === ' ' || notLetterNumber)
 			) {
 				const query = this.message.substring(
 					position,
-					this.textareaCursorPosition
-				);
+					this.textareaCursorPosition,
+				)
 
 				this.filteredUsersTag = filteredUsers(
 					this.room.users,
-					"username",
+					'username',
 					query,
-					true
-				).filter((user) => user._id !== this.currentUserId);
+					true,
+				).filter((user) => user._id !== this.currentUserId)
 			}
 			else {
-				this.resetUsersTag();
+				this.resetUsersTag()
 			}
 		},
 		selectUserTag(user) {
-			const cursorPosition = this.$refs["roomTextarea"].selectionStart;
+			const cursorPosition = this.$refs['roomTextarea'].selectionStart
 
-			let position = cursorPosition;
-			while (position > 0 && this.message.charAt(position - 1) !== "@") {
-				position--;
+			let position = cursorPosition
+			while (position > 0 && this.message.charAt(position - 1) !== '@') {
+				position--
 			}
 
-			let endPosition = position;
+			let endPosition = position
 			while (
 				this.message.charAt(endPosition) &&
 				this.message.charAt(endPosition).trim()
 				) {
-				endPosition++;
+				endPosition++
 			}
 
 			const space = this.message.substr(endPosition, endPosition).length
-				? ""
-				: " ";
+				? ''
+				: ' '
 
 			this.message =
 				this.message.substr(0, position) +
 				user.username +
 				space +
-				this.message.substr(endPosition, this.message.length - 1);
+				this.message.substr(endPosition, this.message.length - 1)
 
-			this.selectedUsersTag = [...this.selectedUsersTag, {...user}];
+			this.selectedUsersTag = [...this.selectedUsersTag, {...user}]
 
-			this.focusTextarea();
+			this.focusTextarea()
 		},
 		resetUsersTag() {
-			this.filteredUsersTag = [];
-			this.textareaCursorPosition = null;
+			this.filteredUsersTag = []
+			this.textareaCursorPosition = null
 		},
 		onMediaLoad() {
-			let height = this.$refs.mediaFile.clientHeight;
-			if (height < 30) height = 30;
+			let height = this.$refs.mediaFile.clientHeight
+			if (height < 30) height = 30
 
 			this.mediaDimensions = {
 				height: this.$refs.mediaFile.clientHeight - 10,
 				width: this.$refs.mediaFile.clientWidth + 26,
-			};
+			}
 		},
 		addNewMessage(message) {
-			this.newMessages.push(message);
+			this.newMessages.push(message)
 		},
 		escapeTextarea() {
-			if (this.filteredUsersTag.length) this.filteredUsersTag = [];
-			else this.resetMessage();
+			if (this.filteredUsersTag.length) this.filteredUsersTag = []
+			else this.resetMessage()
 		},
 		resetMessage(disableMobileFocus = null, editFile = null) {
-			this.$emit("typing-message", null);
+			this.$emit('typing-message', null)
 
 			if (editFile) {
-				this.file = null;
-				this.message = "";
-				return;
+				this.file = null
+				this.message = ''
+				return
 			}
 
-			this.selectedUsersTag = [];
-			this.resetUsersTag();
-			this.resetTextareaSize();
-			this.message = "";
-			this.editedMessage = {};
-			this.messageReply = null;
-			this.file = null;
-			this.mediaDimensions = null;
-			this.imageFile = null;
-			this.videoFile = null;
-			this.emojiOpened = false;
-			this.preventKeyboardFromClosing();
-			setTimeout(() => this.focusTextarea(disableMobileFocus), 0);
+			this.selectedUsersTag = []
+			this.resetUsersTag()
+			this.resetTextareaSize()
+			this.message = ''
+			this.editedMessage = {}
+			this.messageReply = null
+			this.file = null
+			this.mediaDimensions = null
+			this.imageFile = null
+			this.videoFile = null
+			this.emojiOpened = false
+			this.preventKeyboardFromClosing()
+			setTimeout(() => this.focusTextarea(disableMobileFocus), 0)
 		},
 		resetMediaFile() {
-			this.mediaDimensions = null;
-			this.imageFile = null;
-			this.videoFile = null;
-			this.editedMessage.file = null;
-			this.file = null;
-			this.focusTextarea();
+			this.mediaDimensions = null
+			this.imageFile = null
+			this.videoFile = null
+			this.editedMessage.file = null
+			this.file = null
+			this.focusTextarea()
 		},
 		resetTextareaSize() {
-			if (!this.$refs["roomTextarea"]) return;
-			this.$refs["roomTextarea"].style.height = "20px";
+			if (!this.$refs['roomTextarea']) return
+			this.$refs['roomTextarea'].style.height = '20px'
 		},
 		focusTextarea(disableMobileFocus) {
-			if (detectMobile() && disableMobileFocus) return;
-			if (!this.$refs["roomTextarea"]) return;
-			this.$refs["roomTextarea"].focus();
+			if (detectMobile() && disableMobileFocus) return
+			if (!this.$refs['roomTextarea']) return
+			this.$refs['roomTextarea'].focus()
 		},
 		preventKeyboardFromClosing() {
-			if (this.keepKeyboardOpen) this.$refs["roomTextarea"].focus();
+			if (this.keepKeyboardOpen) this.$refs['roomTextarea'].focus()
 		},
 		sendMessage() {
-			let message = this.message.trim();
+			let message = this.message.trim()
 
-			if (!this.file && !message) return;
+			if (!this.file && !message) return
 
 			this.selectedUsersTag.forEach((user) => {
 				message = message.replace(
 					`@${user.username}`,
-					`<usertag>${user._id}</usertag>`
-				);
-			});
+					`<usertag>${user._id}</usertag>`,
+				)
+			})
 
 			if (this.editedMessage._id) {
 				if (this.editedMessage.content !== message || this.file) {
-					this.$emit("edit-message", {
+					this.$emit('edit-message', {
 						messageId: this.editedMessage._id,
 						newContent: message,
 						file: this.file,
 						replyMessage: this.messageReply,
 						usersTag: this.selectedUsersTag,
-					});
+					})
 				}
 			}
 			else {
-				this.$emit("send-message", {
+				this.$emit('send-message', {
 					content: message,
 					file: this.file,
 					replyMessage: this.messageReply,
 					usersTag: this.selectedUsersTag,
-				});
+				})
 			}
 
-			this.resetMessage(true);
+			this.resetMessage(true)
 		},
 		loadMoreMessages(infiniteState) {
 			setTimeout(
 				() => {
-					if (this.loadingMoreMessages) return;
+					if (this.loadingMoreMessages) return
 
 					if (this.messagesLoaded || !this.room.roomId) {
-						return infiniteState.complete();
+						return infiniteState.complete()
 					}
 
-					this.infiniteState = infiniteState;
-					this.$emit("fetch-messages");
-					this.loadingMoreMessages = true;
+					this.infiniteState = infiniteState
+					this.$emit('fetch-messages')
+					this.loadingMoreMessages = true
 				},
 				// prevent scroll bouncing issue on iOS devices
-				iOSDevice() ? 500 : 0
-			);
+				iOSDevice() ? 500 : 0,
+			)
 		},
 		messageActionHandler({action, message}) {
 			switch (action.name) {
-				case "replyMessage":
-					return this.replyMessage(message);
-				case "editMessage":
-					return this.editMessage(message);
-				case "deleteMessage":
-					return this.$emit("delete-message", message._id);
+				case 'replyMessage':
+					return this.replyMessage(message)
+				case 'editMessage':
+					return this.editMessage(message)
+				case 'deleteMessage':
+					return this.$emit('delete-message', message._id)
 				default:
-					return this.$emit("message-action-handler", {action, message});
+					return this.$emit('message-action-handler', {action, message})
 			}
 		},
 		replyMessage(message, e) {
-			if (e && e.path[1].classList.contains("el-avatar")) return; // prevent avatar dblclick
-			if (message.system) return;
-			this.messageReply = message;
-			this.focusTextarea();
+			if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
+			if (message.system) return
+			this.messageReply = message
+			this.focusTextarea()
 		},
 		editMessage(message) {
-			this.resetMessage();
-			this.editedMessage = {...message};
-			this.file = message.file;
+			this.resetMessage()
+			this.editedMessage = {...message}
+			this.file = message.file
 
 			if (isImageFile(this.file)) {
-				this.imageFile = message.file.url;
-				setTimeout(() => this.onMediaLoad(), 0);
+				this.imageFile = message.file.url
+				setTimeout(() => this.onMediaLoad(), 0)
 			}
 			else if (isVideoFile(this.file)) {
-				this.videoFile = message.file.url;
-				setTimeout(() => this.onMediaLoad(), 50);
+				this.videoFile = message.file.url
+				setTimeout(() => this.onMediaLoad(), 50)
 			}
 
-			this.message = message.content;
+			this.message = message.content
 		},
 		getBottomScroll(element) {
-			const {scrollHeight, clientHeight, scrollTop} = element;
-			return scrollHeight - clientHeight - scrollTop;
+			const {scrollHeight, clientHeight, scrollTop} = element
+			return scrollHeight - clientHeight - scrollTop
 		},
 		scrollToBottom() {
-			const element = this.$refs.scrollContainer;
-			element.scrollTo({top: element.scrollHeight, behavior: "smooth"});
+			const element = this.$refs.scrollContainer
+			element.scrollTo({top: element.scrollHeight, behavior: 'smooth'})
 		},
 		onChangeInput() {
-			this.keepKeyboardOpen = true;
-			this.resizeTextarea();
-			this.$emit("typing-message", this.message);
+			this.keepKeyboardOpen = true
+			this.resizeTextarea()
+			this.$emit('typing-message', this.message)
 		},
 		resizeTextarea() {
-			const el = this.$refs["roomTextarea"];
+			const el = this.$refs['roomTextarea']
 
-			if (!el) return;
+			if (!el) return
 
 			const padding = window
 				.getComputedStyle(el, null)
-				.getPropertyValue("padding-top")
-				.replace("px", "");
+				.getPropertyValue('padding-top')
+				.replace('px', '')
 
-			el.style.height = 0;
-			el.style.height = el.scrollHeight - padding * 2 + "px";
+			el.style.height = 0
+			el.style.height = el.scrollHeight - padding * 2 + 'px'
 		},
 		addEmoji(emoji) {
-			this.message += emoji.icon;
-			this.focusTextarea(true);
+			this.message += emoji.icon
+			this.focusTextarea(true)
 		},
 		launchFilePicker() {
-			this.$refs.file.value = "";
-			this.$refs.file.click();
+			this.$refs.file.value = ''
+			this.$refs.file.click()
 		},
 		async onFileChange(files) {
-			this.fileDialog = true;
-			this.resetMediaFile();
+			this.fileDialog = true
+			this.resetMediaFile()
 
-			const file = files[0];
-			const fileURL = URL.createObjectURL(file);
-			const blobFile = await fetch(fileURL).then((res) => res.blob());
-			const typeIndex = file.name.lastIndexOf(".");
+			const file = files[0]
+			const fileURL = URL.createObjectURL(file)
+			const blobFile = await fetch(fileURL).then((res) => res.blob())
+			const typeIndex = file.name.lastIndexOf('.')
 
 			this.file = {
 				blob: blobFile,
@@ -825,210 +825,214 @@ export default {
 				extension: file.name.substring(typeIndex + 1),
 				localUrl: fileURL,
 				path: file.path,
-			};
+			}
 
 			if (isImageFile(this.file)) {
-				this.imageFile = fileURL;
+				this.imageFile = fileURL
 			}
 			else if (isVideoFile(this.file)) {
-				this.videoFile = fileURL;
-				setTimeout(() => this.onMediaLoad(), 50);
+				this.videoFile = fileURL
+				setTimeout(() => this.onMediaLoad(), 50)
 			}
 			else {
-				this.message = file.name;
+				this.message = file.name
 			}
 
-			setTimeout(() => (this.fileDialog = false), 500);
+			setTimeout(() => (this.fileDialog = false), 500)
 		},
 		openFile({message, action}) {
-			this.$emit("open-file", {message, action});
+			this.$emit('open-file', {message, action, room:this.room})
 		},
 		openUserTag(user) {
-			this.$emit("open-user-tag", user);
+			this.$emit('open-user-tag', user)
 		},
 		textareaActionHandler() {
-			this.$emit("textarea-action-handler", this.message);
+			this.$emit('textarea-action-handler', this.message)
 		},
 		msgctx(message) {
-			const sect = window.getSelection().toString();
-			const menu = new remote.Menu();
+			const sect = window.getSelection().toString()
+			const menu = new remote.Menu()
 			if (message.deleted && !message.reveal)
 				menu.append(
 					new remote.MenuItem({
-						label: "Reveal",
-						type: "normal",
+						label: 'Reveal',
+						type: 'normal',
 						click: () => {
-							this.$emit("reveal-message", message);
+							this.$emit('reveal-message', message)
 						},
-					})
-				);
+					}),
+				)
 			else {
 				if (message.content)
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Text",
-							type: "normal",
+							label: 'Copy Text',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(message.content);
+								clipboard.writeText(message.content)
 							},
-						})
-					);
+						}),
+					)
 				if (message.replyMessage && message.replyMessage.content) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Reply Message",
-							type: "normal",
+							label: 'Copy Reply Message',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(message.replyMessage.content);
+								clipboard.writeText(message.replyMessage.content)
 							},
-						})
-					);
+						}),
+					)
 				}
 				if (sect) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Selection",
-							type: "normal",
+							label: 'Copy Selection',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(sect);
+								clipboard.writeText(sect)
 							},
-						})
-					);
+						}),
+					)
 				}
 				if (message.code) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Code",
-							type: "normal",
+							label: 'Copy Code',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(message.code);
+								clipboard.writeText(message.code)
 							},
-						})
-					);
+						}),
+					)
 				}
-				if (message.file && message.file.type.includes("image")) {
+				if (message.file && message.file.type.includes('image')) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Image",
-							type: "normal",
+							label: 'Copy Image',
+							type: 'normal',
 							click: () =>
 								convertImgToBase64(message.file.url, function (base64Image) {
-									const image = nativeImage.createFromDataURL(base64Image);
-									clipboard.writeImage(image);
+									const image = nativeImage.createFromDataURL(base64Image)
+									clipboard.writeImage(image)
 								}),
-						})
-					);
+						}),
+					)
 					menu.append(
 						new remote.MenuItem({
-							label: "Add to stickers",
-							type: "normal",
-							click: () => this.$emit("add-to-stickers", message),
-						})
-					);
+							label: 'Add to stickers',
+							type: 'normal',
+							click: () => this.$emit('add-to-stickers', message),
+						}),
+					)
 				}
 				if (message.replyMessage && message.replyMessage.file) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Reply File Url",
-							type: "normal",
+							label: 'Copy Reply File Url',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(message.replyMessage.file.url);
+								clipboard.writeText(message.replyMessage.file.url)
 							},
-						})
-					);
+						}),
+					)
 					menu.append(
 						new remote.MenuItem({
-							label: "Download Reply File",
+							label: 'Download Reply File',
 							click: () =>
-								this.$emit("open-file", {action: "download", message: message.replyMessage}),
-						})
-					);
+								this.$emit('open-file', {
+									action: 'download',
+									message: message.replyMessage,
+									room: this.room,
+								}),
+						}),
+					)
 				}
 				if (message.file) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Copy Url",
-							type: "normal",
+							label: 'Copy Url',
+							type: 'normal',
 							click: () => {
-								clipboard.writeText(message.file.url);
+								clipboard.writeText(message.file.url)
 							},
-						})
-					);
+						}),
+					)
 					menu.append(
 						new remote.MenuItem({
-							label: "Download",
+							label: 'Download',
 							click: () =>
-								this.$emit("open-file", {action: "download", message}),
-						})
-					);
+								this.$emit('open-file', {action: 'download', message, room: this.room}),
+						}),
+					)
 				}
 				if (this.$route.name !== 'history-page') {
 					menu.append(
 						new remote.MenuItem({
-							label: "Reply",
+							label: 'Reply',
 							click: () => {
-								this.replyMessage(message);
+								this.replyMessage(message)
 							},
-						})
-					);
+						}),
+					)
 					if (!message.file)
 						menu.append(
 							new remote.MenuItem({
-								label: "+1",
+								label: '+1',
 								click: () => {
 									const msgToSend = {
 										content: message.content,
 										replyMessage: message.replyMessage,
-									};
-									if (message.file) {
-										msgToSend.imgpath = message.file.url;
 									}
-									this.$emit("send-message", msgToSend);
+									if (message.file) {
+										msgToSend.imgpath = message.file.url
+									}
+									this.$emit('send-message', msgToSend)
 								},
-							})
-						);
+							}),
+						)
 					if (!message.historyGot && this.mongodb)
 						menu.append(
 							new remote.MenuItem({
-								label: "Get Historical Messages",
-								click: () => this.$emit("get-history", message),
-							})
-						);
+								label: 'Get Historical Messages',
+								click: () => this.$emit('get-history', message),
+							}),
+						)
 				}
 				if (message.senderId === this.currentUserId) {
 					menu.append(
 						new remote.MenuItem({
-							label: "Delete",
+							label: 'Delete',
 							click: () => {
-								this.$emit("delete-message", message._id);
+								this.$emit('delete-message', message._id)
 							},
-						})
-					);
+						}),
+					)
 				}
 			}
-			menu.popup({window: remote.getCurrentWindow()});
+			menu.popup({window: remote.getCurrentWindow()})
 		},
 		containerScroll(e) {
-			this.hideOptions = true;
+			this.hideOptions = true
 			setTimeout(() => {
-				if (!e.target) return;
+				if (!e.target) return
 
-				const bottomScroll = this.getBottomScroll(e.target);
-				if (bottomScroll < 60) this.scrollMessagesCount = 0;
-				this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount;
-			}, 200);
+				const bottomScroll = this.getBottomScroll(e.target)
+				if (bottomScroll < 60) this.scrollMessagesCount = 0
+				this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
+			}, 200)
 		},
 		textctx() {
 			const menu = remote.Menu.buildFromTemplate([
 				{
-					label: "Paste",
-					role: "paste",
+					label: 'Paste',
+					role: 'paste',
 				},
-			]);
-			menu.popup({window: remote.getCurrentWindow()});
+			])
+			menu.popup({window: remote.getCurrentWindow()})
 		},
 	},
-};
+}
 </script>
 
 <style lang="scss">
