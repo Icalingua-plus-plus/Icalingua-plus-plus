@@ -39,7 +39,7 @@ function logStats (proc, data) {
 }
 
 function startRenderer () {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     rendererConfig.entry.renderer = [path.join(__dirname, 'dev-client')].concat(rendererConfig.entry.renderer)
     rendererConfig.mode = 'development'
     const compiler = webpack(rendererConfig)
@@ -78,7 +78,7 @@ function startRenderer () {
 }
 
 function startMain () {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     // mainConfig.entry.main = [path.join(__dirname, '../src/main/index.dev.ts')].concat(mainConfig.entry.main)
     mainConfig.mode = 'development'
     const compiler = webpack(mainConfig)
@@ -163,7 +163,7 @@ function greeting () {
 
   if (cols > 104) text = 'nya~'
   else if (cols > 76) text = 'electron-|vue'
-  else text = false
+  else text = ''
 
   if (text) {
     say(text, {
