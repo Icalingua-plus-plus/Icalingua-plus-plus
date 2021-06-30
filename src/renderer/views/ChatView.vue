@@ -339,7 +339,7 @@ export default {
 			},
 			dialogAriaVisible: false,
 			aria,
-			priority: 1,
+			priority: 3,
 			theme: "default",
 			menu: [],
 			loading: false,
@@ -372,10 +372,10 @@ export default {
 		}).write();
 		db.unset('rooms').unset('messages').write()
 		this.rooms = await ipc.getAllRooms()
-		this.priority = db.get("priority").value();
-		this.darkTaskIcon = db.get("darkTaskIcon").value();
-		this.ignoredChats = db.get("ignoredChats").value();
-		this.aria2 = db.get("aria2").value();
+		this.priority = await ipc.getSetting("priority")
+		this.darkTaskIcon = await ipc.getSetting("darkTaskIcon")
+		this.ignoredChats = await ipc.getSetting("ignoredChats")
+		this.aria2 = await ipc.getSetting("aria2")//todo
 		this.status = await ipc.getSetting("account.onlineStatus")
 		//endregion
 		//region set status
@@ -421,7 +421,7 @@ export default {
 		//region build menu
 		const updatePriority = lev => {
 			this.priority = lev;
-			db.set("priority", lev).write();
+			ipc.setSetting("priority", lev)
 			this.updateAppMenu();
 		};
 		this.menu = [
@@ -713,7 +713,7 @@ export default {
 			const pintitle = room.index ? "Unpin Chat" : "Pin Chat";
 			const updatePriority = (lev) => {
 				room.priority = lev;
-				storage.updateRoom(room.roomId, {priority: lev})
+				ipc.updateRoom(room.roomId, {priority: lev})
 			};
 			const menu = remote.Menu.buildFromTemplate([
 				{

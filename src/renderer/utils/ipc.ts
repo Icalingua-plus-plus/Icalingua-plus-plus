@@ -1,6 +1,6 @@
-import {ipcRenderer} from "electron";
-import Room from "../../types/Room";
-import {app} from '@electron/remote';
+import {ipcRenderer} from 'electron'
+import Room from '../../types/Room'
+import {app} from '@electron/remote'
 
 export const getAllRooms = async () => {
     return await ipcRenderer.invoke('getAllRooms') as Room[]
@@ -31,6 +31,9 @@ export const getSetting = async (kp: string | Array<string | number>) => {
 }
 export const setSetting = async (kp: string | Array<string | number>, value) => {
     return await ipcRenderer.invoke('setSetting', kp, value)
+}
+export const updateRoom = async (roomId: number, room: object) => {
+    return await ipcRenderer.invoke('updateRoom', roomId, room)
 }
 //todo remote 也是 ipc！
 export const getVersion = app.getVersion
