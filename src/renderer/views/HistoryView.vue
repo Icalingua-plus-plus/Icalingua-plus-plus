@@ -34,87 +34,76 @@
 </template>
 
 <script>
-import {cssThemeVars, defaultThemeStyles} from "../components/vac-mod/themes";
-import Room from "../components/vac-mod/ChatWindow/Room/Room";
-import {ipcRenderer, remote} from "electron";
+import {cssThemeVars, defaultThemeStyles} from '../components/vac-mod/themes'
+import Room from '../components/vac-mod/ChatWindow/Room/Room'
+import {ipcRenderer, remote} from 'electron'
+import ipc from '../utils/ipc'
 
-let mainWindowId;
+let mainWindowId
 
 export default {
-	name: "HistoryView",
+	name: 'HistoryView',
 	data() {
 		return {
 			room: {
 				roomId: 0,
-				roomName: "Forwarded Messages",
+				roomName: 'Forwarded Messages',
 				users: [
-					{_id: 3, username: "3"},
-					{_id: 31, username: "3"},
-					{_id: 32, username: "3"},
+					{_id: 3, username: '3'},
+					{_id: 31, username: '3'},
+					{_id: 32, username: '3'},
 				],
 			},
 			messages: [],
 			styles: {
 				container: {
-					boxShadow: "none",
+					boxShadow: 'none',
 				},
 			},
-		};
+		}
 	},
 	created() {
-		ipcRenderer.on("loadMessages", (event, args, id) => {
-			console.log(args);
-			this.messages = [...args];
-			mainWindowId = id;
-		});
-		document.addEventListener("keydown", (e) => {
-			if (e.repeat) return;
-			if (e.key === "w" && e.ctrlKey === true) {
-				remote.getCurrentWindow().destroy();
+		ipcRenderer.on('loadMessages', (event, args, id) => {
+			console.log(args)
+			this.messages = [...args]
+			mainWindowId = id
+		})
+		document.addEventListener('keydown', (e) => {
+			if (e.repeat) return
+			if (e.key === 'w' && e.ctrlKey === true) {
+				remote.getCurrentWindow().destroy()
 			}
-		});
+		})
 	},
 	components: {
 		Room,
 	},
 	computed: {
 		cssVars() {
-			const defaultStyles = defaultThemeStyles["light"];
-			const customStyles = {};
+			const defaultStyles = defaultThemeStyles['light']
+			const customStyles = {}
 
 			Object.keys(defaultStyles).map((key) => {
 				customStyles[key] = {
 					...defaultStyles[key],
 					...(this.styles[key] || {}),
-				};
-			});
+				}
+			})
 
-			return cssThemeVars(customStyles);
+			return cssThemeVars(customStyles)
 		},
 	},
 	methods: {
-		openForward(resId) {
+		openForward(resId) {//todo
 			remote.BrowserWindow.fromId(mainWindowId).webContents.send(
-				"openForward",
-				resId
-			);
+				'openForward',
+				resId,
+			)
 		},
-		openImage(resId) {
-			console.log(resId)
-			remote.BrowserWindow.fromId(mainWindowId).webContents.send(
-				"openImage",
-				resId
-			);
-		},
-		downloadImage(resId) {
-			console.log(resId)
-			remote.BrowserWindow.fromId(mainWindowId).webContents.send(
-				"downloadImage",
-				resId
-			);
-		},
+		openImage: ipc.downloadFileByMessageData,
+		downloadImage: ipc.downloadImage,
 	},
-};
+}
 </script>
 
 <style scoped>

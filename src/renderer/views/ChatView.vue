@@ -249,21 +249,6 @@ Date.prototype.format = function (fmt) {
 //downloadManager https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
 const https = require('https')
 const fs = require('fs')
-const downloadManager = function (url, dest, cb) {
-	const file = fs.createWriteStream(dest)
-	https
-		.get(url, function (response) {
-			response.pipe(file)
-			file.on('finish', function () {
-				file.close(cb) // close() is async, call cb after close completes.
-			})
-		})
-		.on('error', function (err) {
-			// Handle errors
-			fs.unlink(dest) // Delete the file async. (But we don't check the result)
-			if (cb) cb(err.message)
-		})
-}
 
 //convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
 function convertImgToBase64(url, callback, outputFormat) {
@@ -390,8 +375,6 @@ export default {
 			}
 		})
 		ipcRenderer.on('openForward', (e, resId) => this.openForward(resId))
-		ipcRenderer.on('openImage', (e, resId) => this.openImage(resId))
-		ipcRenderer.on('downloadImage', (e, resId) => this.downloadImage(resId))
 		window.setupSocketIoSlave = url => {
 			if (url) {
 				db.set('socketIoSlave', url).write()
@@ -594,29 +577,7 @@ export default {
 				})
 			this.updateTrayIcon()
 		},
-		async openImage(data) {
-			if (data.action === 'download') {
-				if (data.message.file.type.includes('image')) {
-					this.downloadImage(data.message.file.url)
-				}
-				else {
-					if (this.selectedRoom.roomId < 0 && data.message.file.fid) {
-						const gfs = bot.acquireGfs(-this.selectedRoom.roomId)
-						data.message.file.url = (await gfs.download(data.message.file.fid)).url
-					}
-					if (this.aria2.enabled && data.message.file.url.startsWith('http'))
-						this.download(
-							data.message.file.url,
-							null,
-							() => {
-								this.$message('Pushed to Aria2 JSONRPC')
-							},
-							data.message.content,
-						)
-					else shell.openExternal(data.message.file.url)
-				}
-			}
-		},
+		openImage: ipc.downloadFileByMessageData,
 		async deleteMessage(messageId) {
 			const message = this.messages.find((e) => e._id === messageId)
 			const res = await bot.deleteMsg(messageId)
@@ -786,7 +747,7 @@ export default {
 				{
 					label: 'Download Avatar',
 					click: () => {
-						this.downloadImage(room.avatar)
+						ipc.downloadImage(room.avatar)
 					},
 				},
 				{
@@ -899,25 +860,11 @@ export default {
 			this.$refs.room.focusTextarea()
 		},
 		addToStickers(message) {
-			const downpath = path.join(
-				STORE_PATH,
-				'/stickers/',
-				String(new Date().getTime()),
-			)
-			download(
-				message.file.url.replace('http://', 'https://'),
-				downpath,
-				() => {
-					this.$notify.success({
-						title: 'Image Saved to stickers folder',
-						message: downpath,
-					})
-					this.panel = 'refresh'
-					this.$nextTick(() => {
-						this.panel = 'stickers'
-					})
-				},
-			)
+			ipc.download(message.file.url, String(new Date().getTime()), path.join(STORE_PATH, 'stickers'))
+			this.panel = 'refresh'
+			this.$nextTick(() => {
+				this.panel = 'stickers'
+			})
 		},
 		getUnreadCount() {
 			return this.rooms.filter((e) => {
@@ -950,20 +897,7 @@ export default {
 			// remote.app.setBadgeCount(unread);
 		},
 		exit: ipc.exit,
-		downloadImage(url) {
-			console.log(url)
-			const downdir = remote.app.getPath('downloads')
-			const downpath = path.join(
-				downdir,
-				'QQ_Image_' + new Date().getTime() + '.jpg',
-			)
-			this.download(url.replace('http://', 'https://'), downpath, () => {
-				this.$notify.success({
-					title: 'Image Saved',
-					message: downpath,
-				})
-			})
-		},
+		downloadImage: ipc.downloadImage,
 		async groupPoke(data) {
 			console.log(data)
 			const room = this.rooms.find((e) => e.roomId == -data.group_id)
