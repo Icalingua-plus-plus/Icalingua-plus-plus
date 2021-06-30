@@ -1,16 +1,16 @@
 import settings from 'electron-settings'
-import {ipcMain} from "electron";
-import LoginForm from "../../types/LoginForm";
+import {ipcMain} from 'electron'
+import LoginForm from '../../types/LoginForm'
 
-const emptyLoginForm:LoginForm={
-    mdbConnStr: "mongodb://localhost",
-    rdsHost: "127.0.0.1",
+const emptyLoginForm: LoginForm = {
+    mdbConnStr: 'mongodb://localhost',
+    rdsHost: '127.0.0.1',
     storageType: 'mdb',
-    username: "",
-    password: "",
+    username: '',
+    password: '',
     protocol: 5,
     autologin: false,
-    onlineStatus: 11
+    onlineStatus: 11,
 }
 
 export default async () => {

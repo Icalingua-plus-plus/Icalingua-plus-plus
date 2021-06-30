@@ -5,7 +5,6 @@ declare global {
         interface Global {
             bot: Client
             STORE_PATH: string
-            glodb: any //todo: remove
             winURL: string
             STATIC: string
             __static: string //todo deprecate

@@ -217,7 +217,6 @@ import * as ipc from '../utils/ipc'
 const _ = require('lodash');
 const remote = require('@electron/remote')
 const STORE_PATH = remote.getGlobal("STORE_PATH");
-const glodb = remote.getGlobal("glodb");
 
 const Aria2 = require("aria2");
 
@@ -350,8 +349,7 @@ export default {
 	},
 	async created() {
 		//region db init
-		this.account = glodb.get("account").value().username;
-		const storageType = glodb.get("storage").value();
+		this.account = await ipc.getUin()
 		const adapter = new FileSync(
 			path.join(STORE_PATH, `/chatdata${this.account}v2.json`),
 			{
@@ -378,7 +376,7 @@ export default {
 		this.darkTaskIcon = db.get("darkTaskIcon").value();
 		this.ignoredChats = db.get("ignoredChats").value();
 		this.aria2 = db.get("aria2").value();
-		this.status = glodb.get("account.onlineStatus").value()
+		this.status = await ipc.getSetting("account.onlineStatus")
 		//endregion
 		//region set status
 		this.offline = !await ipc.isOnline();
@@ -497,9 +495,9 @@ export default {
 				new remote.MenuItem({
 					label: "Auto login",
 					type: "checkbox",
-					checked: glodb.get("account.autologin").value(),
+					checked: await ipc.getSetting("account.autologin"),
 					click: (menuItem) => {
-						glodb.set("account.autologin", menuItem.checked).write();
+						ipc.setSetting("account.autologin", menuItem.checked)
 					},
 				}),
 			],
@@ -566,6 +564,7 @@ export default {
 			this.messages = [...this.messages, message]
 		})
 	},
+	//todo set selected room id
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath,}) {
 			this.loading = true
@@ -576,7 +575,6 @@ export default {
 			if (!room) room = this.rooms.find((e) => e.roomId === roomId);
 			if (!roomId) roomId = room.roomId;
 			if (file) {
-				console.log(file)
 				if (file.type.includes('image')) {
 					const b64 = Buffer.from(await file.blob.arrayBuffer()).toString('base64')
 					b64img = `data:${file.type};base64,${b64}`
@@ -687,7 +685,7 @@ export default {
 		},
 		reconnect() {
 			this.reconnecting = true;
-			bot.login(glodb.get("account.password").value());
+			ipc.login()
 		},
 		online() {
 			this.reconnecting = this.offline = false;
@@ -1220,7 +1218,7 @@ export default {
 				.then(() => {
 					this.status = status
 					this.updateAppMenu()
-					glodb.set("account.onlineStatus", status).write()
+					ipc.setSetting("account.onlineStatus", status)
 				})
 				.catch((res) => console.log(res))
 		}
