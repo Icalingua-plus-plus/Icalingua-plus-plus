@@ -403,7 +403,8 @@ export default {
 				}),
 				new remote.MenuItem({
 					label: 'Aria2 downloadManager options',
-					click: () => {},
+					click: () => {
+					},
 				}),
 				new remote.MenuItem({
 					label: 'Auto login',
@@ -453,9 +454,10 @@ export default {
 			})
 		}
 
-		if (db.get('socketIoSlave').value()) {
-			this.initSocketIo()
-		}
+		// todo
+		// if (db.get('socketIoSlave').value()) {
+		// 	this.initSocketIo()
+		// }
 
 
 		ipcRenderer.on('closeLoading', () => this.loading = false)
@@ -474,6 +476,7 @@ export default {
 			if (roomId !== this.selectedRoom.roomId) return
 			this.messages = [...this.messages, message]
 		})
+		console.log('加载完成')
 	},
 	methods: {
 		async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {

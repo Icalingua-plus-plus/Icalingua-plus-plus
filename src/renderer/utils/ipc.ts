@@ -2,7 +2,7 @@ import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
 
-export default {
+const ipc = {
     async getAllRooms() {
         return await ipcRenderer.invoke('getAllRooms') as Room[]
     },
@@ -40,24 +40,25 @@ export default {
         return await ipcRenderer.invoke('getVersion')
     },
     download(url: string, out: string, dir?: string) {
-        ipcRenderer.invoke('download', url, out, dir)
+        ipcRenderer.send('download', url, out, dir)
     },
     downloadImage(url: string) {
-        ipcRenderer.invoke('downloadImage', url)
+        ipcRenderer.send('downloadImage', url)
     },
     downloadGroupFile(gin: number, fid: string) {
-        ipcRenderer.invoke('downloadGroupFile', gin, fid)
+        ipcRenderer.send('downloadGroupFile', gin, fid)
     },
-    downloadFileByMessageData(data: { action: string, message: Message }) {
+    downloadFileByMessageData(data: { action: string, message: Message, room: Room }) {
         if (data.action === 'download') {
             if (data.message.file.type.includes('image')) {
-                this.downloadImage(data.message.file.url)
+                ipc.downloadImage(data.message.file.url)
             } else {
-                if (this.selectedRoom.roomId < 0 && data.message.file.fid)
-                    this.downloadGroupFile(-this.selectedRoom.roomId, data.message.file.fid)
+                if (data.room.roomId < 0 && data.message.file.fid)
+                    ipc.downloadGroupFile(-data.room.roomId, data.message.file.fid)
                 else
-                    this.download(data.message.file.url, data.message.content)
+                    ipc.download(data.message.file.url, data.message.content)
             }
         }
     },
 }
+export default ipc
