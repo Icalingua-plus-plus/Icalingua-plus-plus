@@ -48,7 +48,7 @@ export const updateTrayIcon = async (roomName?: string) => {
         )
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
-        document.title = `(${unread}${extra}) ${title}`
+        getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
         p = path.join(global.STATIC, await settings.get('darkTaskIcon') ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
