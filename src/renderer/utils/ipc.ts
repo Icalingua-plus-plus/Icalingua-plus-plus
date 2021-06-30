@@ -39,4 +39,7 @@ export default {
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
     },
+    download(url: string, out: string, dir: string){
+        ipcRenderer.invoke('download', url, out, dir)
+    }
 }
