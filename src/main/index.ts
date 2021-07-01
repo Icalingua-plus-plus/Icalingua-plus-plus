@@ -1,7 +1,7 @@
 import {app, protocol, shell, Menu} from 'electron'
 import path from 'path'
 import {destroyWindow, ready, showWindow} from './utils/windowManager'
-import initSettingsManager from './utils/initSettingsManager'
+import {init as initConfigManager} from './utils/configManager'
 
 (() => {
     '我所遗失的心啊'
@@ -39,7 +39,7 @@ app.on('ready', async () => {
     const isFirstInstance = app.requestSingleInstanceLock()
     if (!isFirstInstance) app.quit()
     else {
-        await initSettingsManager()
+        initConfigManager()
         require('./ipc/system')
         require('./ipc/ipcBotAndStorage')
         require('./ipc/openImage')
@@ -50,11 +50,6 @@ app.on('ready', async () => {
                 cb(pathname)
             })
         ready()
-        Menu.setApplicationMenu(Menu.buildFromTemplate([
-            {
-                role: 'toggleDevTools',
-            },
-        ]))
     }
 })
 

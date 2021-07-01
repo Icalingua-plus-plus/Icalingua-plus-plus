@@ -51,6 +51,8 @@ let selectedRoomName = ''
 
 //我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
 
+//todo electron settings 每次操作都读一次文件不太妙吧
+
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
