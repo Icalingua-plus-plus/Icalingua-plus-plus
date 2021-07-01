@@ -41,7 +41,7 @@ app.on('ready', async () => {
     else {
         initConfigManager()
         require('./ipc/system')
-        require('./ipc/ipcBotAndStorage')
+        require('./ipc/botAndStorage')
         require('./ipc/openImage')
         app.allowRendererProcessReuse = false
         if (process.env.NODE_ENV === 'development')

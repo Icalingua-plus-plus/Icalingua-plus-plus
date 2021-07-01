@@ -1,6 +1,6 @@
 import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from "oicq";
 import Message from "../../types/Message";
-import {getBot, getStorage} from "../ipc/ipcBotAndStorage";
+import {getBot, getStorage} from "../ipc/botAndStorage";
 import {base64decode} from 'nodejs-base64'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {

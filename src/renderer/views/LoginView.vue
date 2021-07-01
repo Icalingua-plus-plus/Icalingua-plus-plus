@@ -98,7 +98,7 @@ export default {
 	},
 	async created() {
 		this.ver = await ipc.getVersion()
-		this.form = await ipc.getSetting('account')
+		this.form = await ipc.getAccount()
 		ipcRenderer.on('error', (_, msg) => {
 			this.errmsg = msg
 			this.disabled = false

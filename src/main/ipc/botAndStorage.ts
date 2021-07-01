@@ -27,6 +27,7 @@ import LoginForm from '../../types/LoginForm'
 import {download, init as initDownloadManager} from './downloadManager'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import {getConfig, saveConfigFile} from '../utils/configManager'
+import {updateAppMenu} from './menuManager'
 
 type SendMessageParams = {
     content: string,
@@ -352,7 +353,7 @@ const initStorage = async () => {
         console.log(err)
         getConfig().account.autologin = false
         saveConfigFile()
-        alert('Error connecting to database')
+        //todo alert('Error connecting to database')
     }
 }
 const attachEventHandler = () => {
@@ -415,9 +416,10 @@ ipcMain.handle('getFriendsAndGroups', async () => {
 ipcMain.on('sliderLogin', (_, ticket: string) => {
     bot.sliderLogin(ticket)
 })
-ipcMain.handle('getAllRooms', async () => {
+const getAllRooms = async () => {
     return await storage.getAllRooms()
-})
+}
+ipcMain.handle('getAllRooms', getAllRooms)
 ipcMain.on('reLogin', () => {
     bot.login()
 })
@@ -540,6 +542,7 @@ ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
 ipcMain.handle('getUin', () => bot.uin)
+ipcMain.handle('getPriority', () => getConfig().priority)
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     if (!offset) {
         storage.updateRoom(roomId, {
@@ -564,13 +567,11 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
 ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
     selectedRoomId = id
     selectedRoomName = name
+    updateAppMenu()
 })
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     storage.updateMessage(roomId, messageId, message))
-ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => {
-//todo use storage
-})
 ipcMain.on('sendGroupPoke', (_, gin, uin) => bot.sendGroupPoke(gin, uin))
 ipcMain.on('deleteMessage', async (_, roomId: number, messageId: string) => {
     const res = await bot.deleteMsg(messageId)
@@ -591,9 +592,36 @@ export const getStorage = () => storage
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
 export const getUnreadCount = async () => await storage.getUnreadCount(getConfig().priority)
 export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(getConfig().priority)
+export const getSelectedRoom = async () => await storage.getRoom(selectedRoomId)
+export const getRoom = (roomId: number) => storage.getRoom(roomId)
 
 export const clearCurrentRoomUnread = async () => {
     ui.clearCurrentRoomUnread()
     await storage.updateRoom(selectedRoomId, {unreadCount: 0})
     await updateTray()
+}
+export const setRoomPriority = async (roomId: number, priority: 1 | 2 | 3 | 4 | 5) => {
+    await storage.updateRoom(roomId, {priority})
+    ui.setAllRooms(await getAllRooms())
+}
+export const setRoomAutoDownload = async (roomId: number, autoDownload: boolean) => {
+    await storage.updateRoom(roomId, {autoDownload})
+}
+export const setRoomAutoDownloadPath = async (roomId: number, downloadPath: string) => {
+    await storage.updateRoom(roomId, {downloadPath})
+}
+export const pinRoom = async (roomId: number, pin: boolean) => {
+    await storage.updateRoom(roomId, {index: pin ? 1 : 0})
+    ui.setAllRooms(await getAllRooms())
+}
+export const ignoreChat = async (data: IgnoreChatInfo) => {
+    //todo use storage
+}
+export const removeChat = async (roomId: number) => {
+    await storage.removeRoom(roomId)
+    ui.setAllRooms(await getAllRooms())
+}
+
+export const fetchLatestHistory = async (roomId: number) => {
+    //todo
 }

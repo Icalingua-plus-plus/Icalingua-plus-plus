@@ -1,6 +1,7 @@
 import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
+import {popupRoomMenu} from '../../main/ipc/menuManager'
 
 const ipc = {
     async getAllRooms() {
@@ -27,12 +28,11 @@ const ipc = {
     setSelectedRoom(roomId: number, name: string) {
         ipcRenderer.send('setSelectedRoom', roomId, name)
     },
-    //todo
-    async getSetting(kp: string | Array<string | number>) {
-        return await ipcRenderer.invoke('getSetting', kp)
+    async getAccount() {
+        return await ipcRenderer.invoke('getAccount')
     },
-    async setSetting(kp: string | Array<string | number>, value) {
-        return await ipcRenderer.invoke('setSetting', kp, value)
+    async getPriority() {
+        return await ipcRenderer.invoke('getPriority')
     },
     //todo 这俩玩意要封装的更细的说
     async updateRoom(roomId: number, room: object) {
@@ -73,6 +73,12 @@ const ipc = {
     },
     reLogin() {
         ipcRenderer.send('reLogin')
+    },
+    updatePriority(level: 1 | 2 | 3 | 4 | 5) {
+        ipcRenderer.send('updatePriority', level)
+    },
+    popupRoomMenu(roomId: number) {
+        ipcRenderer.send('popupRoomMenu', roomId)
     },
 }
 export default ipc
