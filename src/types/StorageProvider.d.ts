@@ -1,6 +1,6 @@
 import Room from './Room'
 import Message from './Message'
-import {getUnreadCount} from '../main/ipc/ipcBotAndStorage'
+import {getUnreadCount} from '../main/ipc/botAndStorage'
 
 export default interface StorageProvider {
     connect(): Promise<void>

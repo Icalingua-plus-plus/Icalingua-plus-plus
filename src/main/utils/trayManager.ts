@@ -2,7 +2,7 @@ import {app, Menu, Tray} from 'electron'
 import path from 'path'
 import {getMainWindow} from './windowManager'
 import exit from './exit'
-import {getFirstUnreadRoom, getUnreadCount} from '../ipc/ipcBotAndStorage'
+import {getFirstUnreadRoom, getUnreadCount} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 
 let tray: Tray

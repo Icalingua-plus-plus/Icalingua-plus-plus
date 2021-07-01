@@ -236,13 +236,6 @@ function convertImgToBase64(url, callback, outputFormat) {
 
 //endregion
 
-//onlineStatusTypes
-const ONLINE_STATUS_TYPES = {
-	Online: 11,
-	AFK: 31,
-	Hide: 41,
-}
-
 export default {
 	components: {
 		Room,
@@ -281,17 +274,13 @@ export default {
 			menu: [],
 			loading: false,
 			isShutUp: false,
-			status: ONLINE_STATUS_TYPES.Online,
 		}
 	},
 	async created() {
 		//region db init
 		this.account = await ipc.getUin()
 		this.rooms = await ipc.getAllRooms()
-		this.priority = await ipc.getSetting('priority')
-		this.darkTaskIcon = await ipc.getSetting('darkTaskIcon')
-		this.ignoredChats = await ipc.getSetting('ignoredChats')
-		this.status = await ipc.getSetting('account.onlineStatus')
+		this.priority = await ipc.getPriority()
 		//endregion
 		//region set status
 		this.offline = !await ipc.isOnline()
@@ -332,80 +321,6 @@ export default {
 		window.test = () => this.view = 'test'
 		//endregion
 		//region build menu
-		const updatePriority = lev => {
-			this.priority = lev
-			ipc.setSetting('priority', lev)
-			this.updateAppMenu()
-		}
-		this.menu = [
-			[
-				new remote.MenuItem({
-					label: 'Status',
-					submenu: [
-						{
-							type: 'radio',
-							label: 'Online',
-							checked: this.status === ONLINE_STATUS_TYPES.Online,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Online)),
-						},
-						{
-							type: 'radio',
-							label: 'Away from keyboard',
-							checked: this.status === ONLINE_STATUS_TYPES.AFK,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.AFK)),
-						},
-						{
-							type: 'radio',
-							label: 'Hide',
-							checked: this.status === ONLINE_STATUS_TYPES.Hide,
-							click: () => (this.setOnlineStatus(ONLINE_STATUS_TYPES.Hide)),
-						},
-					],
-				}),
-				new remote.MenuItem({
-					label: 'Manage ignored chats',
-					click: () => (this.panel = 'ignore'),
-				}),
-				new remote.MenuItem({
-					label: 'Aria2 downloadManager options',
-					click: () => {
-					},
-				}),
-				new remote.MenuItem({
-					label: 'Auto login',
-					type: 'checkbox',
-					checked: await ipc.getSetting('account.autologin'),
-					click: (menuItem) => {
-						ipc.setSetting('account.autologin', menuItem.checked)
-					},
-				}),
-			],
-			[
-				new remote.MenuItem({
-					label: remote.app.getVersion(),
-					enabled: false,
-				}),
-				new remote.MenuItem({
-					label: 'GitHub',
-					click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
-				}),
-				new remote.MenuItem({
-					label: 'Reload',
-					click: () => {
-						location.reload()
-					},
-				}),
-				new remote.MenuItem({
-					label: 'Dev Tools',
-					role: 'toggleDevTools',
-				}),
-				new remote.MenuItem({
-					label: 'Quit',
-					click: this.exit,
-				}),
-			],
-		]
-		this.updateAppMenu()
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
 			console.log('nya')
@@ -454,6 +369,8 @@ export default {
 			this.offline = true
 		})
 		ipcRenderer.on('clearCurrentRoomUnread', () => this.selectedRoom.unreadCount = 0)
+		ipcRenderer.on('updatePriority', (_, p) => this.priority = p)
+		ipcRenderer.on('setAllRooms', (_, p) => this.rooms = p)
 		console.log('加载完成')
 	},
 	methods: {
@@ -537,139 +454,6 @@ export default {
 				menu.append(this.menu[2][i])
 			menu.popup({window: remote.getCurrentWindow()})
 		},
-		roomContext(room, build) {
-			const pintitle = room.index ? 'Unpin Chat' : 'Pin Chat'
-			const updatePriority = (lev) => {
-				room.priority = lev
-				ipc.updateRoom(room.roomId, {priority: lev})
-			}
-			const menu = remote.Menu.buildFromTemplate([
-				{
-					label: 'Notification Priority',
-					submenu: [
-						{
-							type: 'radio',
-							label: '1',
-							checked: room.priority === 1,
-							click: () => updatePriority(1),
-						},
-						{
-							type: 'radio',
-							label: '2',
-							checked: room.priority === 2,
-							click: () => updatePriority(2),
-						},
-						{
-							type: 'radio',
-							label: '3',
-							checked: room.priority === 3,
-							click: () => updatePriority(3),
-						},
-						{
-							type: 'radio',
-							label: '4',
-							checked: room.priority === 4,
-							click: () => updatePriority(4),
-						},
-						{
-							type: 'radio',
-							label: '5',
-							checked: room.priority === 5,
-							click: () => updatePriority(5),
-						},
-					],
-				},
-				{
-					label: pintitle,
-					click: () => {
-						if (room.index) room.index = 0
-						else room.index = 1
-						this.rooms = [...this.rooms]
-						storage.updateRoom(room.roomId, room)
-					},
-				},
-				{
-					label: 'Delete Chat',
-					click: () => {
-						this.rooms = this.rooms.filter((item) => item != room)
-						storage.removeRoom(room.roomId)
-					},
-				},
-				{
-					label: 'Ignore Chat',
-					click: () => {
-						this.ignoredChats.push({
-							id: room.roomId,
-							name: room.roomName,
-						})
-						this.rooms = this.rooms.filter((item) => item != room)
-						storage.removeRoom(room.roomId)
-						db.set('ignoredChats', this.ignoredChats).write()
-					},
-				},
-				{
-					label: 'Copy Name',
-					click: () => {
-						clipboard.writeText(room.roomName)
-					},
-				},
-				{
-					label: 'Copy ID',
-					click: () => {
-						clipboard.writeText(String(Math.abs(room.roomId)))
-					},
-				},
-				{
-					label: 'View Avatar',
-					click: () => {
-						ipcRenderer.send('openImage', room.avatar, false)
-					},
-				},
-				{
-					label: 'Download Avatar',
-					click: () => {
-						ipc.downloadImage(room.avatar)
-					},
-				},
-				{
-					label: 'Auto Download',
-					submenu: [
-						{
-							type: 'checkbox',
-							label: 'Files in this chat',
-							checked: !!room.autoDownload,
-							click: (menuItem) => {
-								room.autoDownload = menuItem.checked
-								storage.updateRoom(room.roomId, room)
-							},
-						},
-						{
-							label: 'Set downloadManager path',
-							click: () => {
-								const selection = remote.dialog.showOpenDialogSync(remote.getCurrentWindow(), {
-									title: 'Select downloadManager path',
-									properties: ['openDirectory'],
-									defaultPath: room.downloadPath,
-								})
-								console.log(selection)
-								if (selection && selection.length) {
-									room.downloadPath = selection[0]
-									storage.updateRoom(room.roomId, room)
-								}
-							},
-						},
-					],
-				},
-				{
-					label: 'Get History',
-					click: () => {
-						this.getLatestHistory(room.roomId)
-					},
-				},
-			])
-			if (build) return menu
-			menu.popup({window: remote.getCurrentWindow()})
-		},
 		startChat(id, name) {
 			var room = this.rooms.find((e) => e.roomId == id)
 			const avatar =
@@ -720,27 +504,6 @@ export default {
 			message.reveal = true
 			this.messages = [...this.messages]
 			ipc.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
-		},
-		updateAppMenu() {
-			const menu = remote.Menu.buildFromTemplate([
-				{
-					label: 'Electron QQ',
-					submenu: this.menu[2],
-				},
-				this.menu[0],
-				{
-					label: 'Options',
-					submenu: this.menu[1],
-				},
-			])
-			if (this.selectedRoom)
-				menu.append(
-					new remote.MenuItem({
-						label: this.selectedRoom.roomName,
-						submenu: this.roomContext(this.selectedRoom, true),
-					}),
-				)
-			remote.Menu.setApplicationMenu(menu)
 		},
 		async getHistory(message, roomId = this.selectedRoom.roomId) {
 			const messages = []
@@ -866,15 +629,6 @@ export default {
 		initSocketIo() {
 			socketIo = new io(db.get('socketIoSlave').value(), {transports: ['websocket']})
 			console.log(socketIo)
-		},
-		setOnlineStatus(status) {
-			bot.setOnlineStatus(status)
-				.then(() => {
-					this.status = status
-					this.updateAppMenu()
-					ipc.setSetting('account.onlineStatus', status)
-				})
-				.catch((res) => console.log(res))
 		},
 	},
 	computed: {

@@ -48,4 +48,7 @@ export default {
     clearCurrentRoomUnread() {
         sendToMainWindow('clearCurrentRoomUnread')
     },
+    setAllRooms(rooms: Room[]) {
+        sendToMainWindow('setAllRooms', rooms)
+    },
 }

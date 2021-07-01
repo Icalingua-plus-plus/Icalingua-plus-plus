@@ -5,7 +5,7 @@ import edl from 'electron-dl'
 import {getMainWindow} from '../utils/windowManager'
 import {app, ipcMain} from 'electron'
 import path from 'path'
-import {getGroupFileMeta} from './ipcBotAndStorage'
+import {getGroupFileMeta} from './botAndStorage'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 
 let aria: Aria2

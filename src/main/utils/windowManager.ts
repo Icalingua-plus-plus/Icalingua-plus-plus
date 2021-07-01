@@ -1,6 +1,6 @@
 import {BrowserWindow, screen} from 'electron'
 import path from 'path'
-import {clearCurrentRoomUnread} from '../ipc/ipcBotAndStorage'
+import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
