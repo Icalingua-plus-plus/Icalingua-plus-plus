@@ -4,9 +4,9 @@ import ui from '../utils/ui'
 import edl from 'electron-dl'
 import {getMainWindow} from '../utils/windowManager'
 import {app, ipcMain} from 'electron'
-import settings from 'electron-settings'
 import path from 'path'
 import {getGroupFileMeta} from './ipcBotAndStorage'
+import {getConfig, saveConfigFile} from '../utils/configManager'
 
 let aria: Aria2
 
@@ -44,7 +44,7 @@ export const download = (url: string, out: string, dir?: string) => {
     }
 }
 
-export const init = () => loadConfig(settings.getSync('aria2') as Aria2Config)
+export const init = () => loadConfig(getConfig().aria2)
 
 /**
  * 其实就是个只有 url 的下载方法，用来下图片
@@ -74,6 +74,7 @@ ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
 ipcMain.on('downloadImage', (_, url) => downloadImage(url))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
-    settings.set('aria2', config)
+    getConfig().aria2 = config
     loadConfig(config)
+    saveConfigFile()
 })

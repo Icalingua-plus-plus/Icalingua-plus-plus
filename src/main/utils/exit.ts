@@ -1,15 +1,16 @@
 import {getMainWindow} from "./windowManager";
 import {ipcMain} from "electron";
-import settings from 'electron-settings'
+import {getConfig, saveConfigFile} from './configManager'
 
 const exit = () => {
     const win = getMainWindow()
     const size = win.getSize()
-    settings.set('winSize', {
+    getConfig().winSize={
         width: size[0],
         height: size[1],
         max: win.isMaximized()
-    })
+    }
+    saveConfigFile()
     win.destroy();
 }
 ipcMain.on('exit', exit)
