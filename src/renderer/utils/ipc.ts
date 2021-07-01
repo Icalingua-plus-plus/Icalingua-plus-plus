@@ -70,5 +70,8 @@ const ipc = {
     deleteMessage(roomId: number, messageId: string) {
         ipcRenderer.send('deleteMessage', roomId, messageId)
     },
+    reLogin() {
+        ipcRenderer.send('reLogin')
+    },
 }
 export default ipc

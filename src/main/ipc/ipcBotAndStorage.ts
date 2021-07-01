@@ -414,8 +414,8 @@ ipcMain.on('sliderLogin', (_, ticket: string) => {
 ipcMain.handle('getAllRooms', async () => {
     return await storage.getAllRooms()
 })
-ipcMain.handle('botLogin', (_, password: string) => {
-    bot.login(password)
+ipcMain.on('reLogin', () => {
+    bot.login()
 })
 const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) => {
     if (file && file.type && !file.type.includes('image')) {

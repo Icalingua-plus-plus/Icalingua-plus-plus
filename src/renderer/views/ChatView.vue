@@ -556,7 +556,7 @@ export default {
 		},
 		reconnect() {
 			this.reconnecting = true
-			ipc.login()
+			ipc.reLogin()
 		},
 		appMenu() {
 			const menu = new remote.Menu()
