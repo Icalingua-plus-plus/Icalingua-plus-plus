@@ -27,6 +27,7 @@ const ipc = {
     setSelectedRoom(roomId: number, name: string) {
         ipcRenderer.send('setSelectedRoom', roomId, name)
     },
+    //todo
     async getSetting(kp: string | Array<string | number>) {
         return await ipcRenderer.invoke('getSetting', kp)
     },
