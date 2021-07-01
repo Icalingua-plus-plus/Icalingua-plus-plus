@@ -408,7 +408,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friendsAll, groupsAll,
     }
 })
-ipcMain.handle('sliderLogin', (_, ticket: string) => {
+ipcMain.on('sliderLogin', (_, ticket: string) => {
     bot.sliderLogin(ticket)
 })
 ipcMain.handle('getAllRooms', async () => {
