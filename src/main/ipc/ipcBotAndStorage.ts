@@ -20,13 +20,13 @@ import formatDate from '../utils/formatDate'
 import Message from '../../types/Message'
 import processMessage from '../utils/processMessage'
 import getAvatarUrl from '../utils/getAvatarUrl'
-import settings from 'electron-settings'
 import avatarCache from '../utils/avatarCache'
 import createRoom from '../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
 import {download, init as initDownloadManager} from './downloadManager'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
+import {getConfig, saveConfigFile} from '../utils/configManager'
 
 type SendMessageParams = {
     content: string,
@@ -115,7 +115,7 @@ const eventHandlers = {
         if (
             (!getMainWindow().isFocused() ||
                 roomId !== selectedRoomId) &&
-            (room.priority >= settings.getSync('priority') || at) &&
+            (room.priority >= getConfig().priority || at) &&
             !isSelfMsg
         ) {
             //notification
@@ -291,7 +291,8 @@ const loginHandlers = {
     },
     onSucceed() {
         //save account info
-        settings.set('account', loginForm)
+        getConfig().account = loginForm
+        saveConfigFile()
         if (loginForm.onlineStatus) {
             bot.setOnlineStatus(loginForm.onlineStatus)
         }
@@ -349,7 +350,8 @@ const initStorage = async () => {
 
     } catch (err) {
         console.log(err)
-        await settings.set('account.autologin', false)
+        getConfig().account.autologin = false
+        saveConfigFile()
         alert('Error connecting to database')
     }
 }
@@ -587,8 +589,8 @@ ipcMain.on('deleteMessage', async (_, roomId: number, messageId: string) => {
 export const getBot = () => bot
 export const getStorage = () => storage
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
-export const getUnreadCount = async () => await storage.getUnreadCount(<number>await settings.get('priority'))
-export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(<number>await settings.get('priority'))
+export const getUnreadCount = async () => await storage.getUnreadCount(getConfig().priority)
+export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(getConfig().priority)
 
 export const clearCurrentRoomUnread = async () => {
     ui.clearCurrentRoomUnread()

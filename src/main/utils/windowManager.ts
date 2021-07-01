@@ -1,25 +1,13 @@
 import {BrowserWindow, screen} from 'electron'
 import path from 'path'
-import settings from 'electron-settings'
 import {clearCurrentRoomUnread} from '../ipc/ipcBotAndStorage'
+import {getConfig} from './configManager'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
 export const loadMainWindow = async () => {
     //start main window
-    let winSize: WinSize
-    if (!settings.hasSync('winSize')) {
-        const size = screen.getPrimaryDisplay().size
-        winSize = {
-            height: size.height - 200,
-            width: size.width - 300,
-            max: false,
-        }
-        if (winSize.width > 1440)
-            winSize.width = 1440
-    } else {
-        winSize = <WinSize>await settings.get('winSize')
-    }
+    const winSize = getConfig().winSize
     mainWindow = new BrowserWindow({
         height: winSize.height,
         width: winSize.width,

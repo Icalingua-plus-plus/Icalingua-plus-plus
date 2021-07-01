@@ -1,9 +1,9 @@
-import {app, ipcMain, Menu, Tray} from 'electron'
+import {app, Menu, Tray} from 'electron'
 import path from 'path'
 import {getMainWindow} from './windowManager'
 import exit from './exit'
 import {getFirstUnreadRoom, getUnreadCount} from '../ipc/ipcBotAndStorage'
-import settings from 'electron-settings'
+import {getConfig} from './configManager'
 
 let tray: Tray
 
@@ -44,13 +44,13 @@ export const updateTrayIcon = async (roomName?: string) => {
     if (unread) {
         p = path.join(
             global.STATIC,
-            await settings.get('darkTaskIcon') ? 'darknewmsg.png' : 'newmsg.png',
+            getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
         )
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
-        p = path.join(global.STATIC, await settings.get('darkTaskIcon') ? 'dark.png' : '256x256.png')
+        p = path.join(global.STATIC, getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
     }
     tray.setImage(p)
