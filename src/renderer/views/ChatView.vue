@@ -75,15 +75,11 @@
 							:text-formatting="true"
 							:mongodb="true"
 							@send-message="sendMessage"
-							@fetch-messages="fetchMessage"
 							@open-file="openImage"
 							@pokefriend="pokeFriend"
-							@add-to-stickers="addToStickers"
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
 							@pokegroup="pokeGroup"
-							@reveal-message="revealMessage"
-							@open-forward="openForward"
 							@start-chat="startChat"
 						>
 							<template v-slot:menu-icon>

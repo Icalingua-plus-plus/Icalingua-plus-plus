@@ -532,7 +532,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friendsAll, groupsAll,
     }
 })
-ipcMain.handle('getAllRooms', storage.getAllRooms)
+ipcMain.handle('getAllRooms', () => storage.getAllRooms())
 ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
