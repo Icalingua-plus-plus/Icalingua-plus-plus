@@ -1,4 +1,4 @@
-import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, remote, shell} from 'electron'
+import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, shell} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
 import {getMainWindow} from '../utils/windowManager'
@@ -276,7 +276,7 @@ export const updateAppMenu = async () => {
         },
         globalMenu.priority,
         {
-            label: 'Options',
+            label: '选项',
             submenu: Menu.buildFromTemplate(globalMenu.options),
         },
     ])
@@ -483,4 +483,51 @@ ipcMain.on('popupTextAreaMenu', () => {
             role: 'paste',
         },
     ]).popup({window: getMainWindow()})
+})
+ipcMain.on('popupAvatarMenu', (_, message: Message) => {
+    const menu = Menu.buildFromTemplate([
+        {
+            label: `复制 "${message.username}"`,
+            click: () => {
+                clipboard.writeText(message.username)
+            },
+        },
+        {
+            label: `复制 "${message.senderId}"`,
+            click: () => {
+                clipboard.writeText(message.senderId.toString())
+            },
+        },
+    ])
+    if (message.replyMessage) {
+        menu.append(
+            new MenuItem({
+                label: `复制 "${message.replyMessage.username}"`,
+                click: () => {
+                    clipboard.writeText(message.replyMessage.username)
+                },
+            }),
+        )
+    }
+    menu.append(
+        new MenuItem({
+            label: `查看头像`,
+            click: () => {
+                openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`, false)
+            },
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: `下载头像`,
+            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`),
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: `发起私聊`,
+            click: () => ui.startChat(message.senderId, message.username),
+        }),
+    )
+    menu.popup({window: getMainWindow()})
 })

@@ -69,6 +69,9 @@ const ipc = {
     popupRoomMenu(roomId: number) {
         ipcRenderer.send('popupRoomMenu', roomId)
     },
+    popupAvatarMenu(message: Message) {
+        ipcRenderer.send('popupAvatarMenu', message)
+    },
     popupTextAreaMenu() {
         ipcRenderer.send('popupTextAreaMenu')
     },

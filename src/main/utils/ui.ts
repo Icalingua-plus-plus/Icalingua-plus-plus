@@ -61,4 +61,7 @@ export default {
     replyMessage(message: Message) {
         sendToMainWindow('replyMessage', message)
     },
+    startChat(id: number, name: string) {
+        sendToMainWindow('startChat', {id, name})
+    },
 }

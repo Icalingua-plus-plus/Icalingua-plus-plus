@@ -166,27 +166,27 @@
 </template>
 
 <script>
-import SvgIcon from "../../components/SvgIcon";
-import FormatMessage from "../../components/FormatMessage";
+import SvgIcon from '../../components/SvgIcon'
+import FormatMessage from '../../components/FormatMessage'
 
-import MessageReply from "./MessageReply";
-import MessageImage from "./MessageImage";
+import MessageReply from './MessageReply'
+import MessageImage from './MessageImage'
 
-import getLottieFace from "../../../../utils/getLottieFace";
+import getLottieFace from '../../../../utils/getLottieFace'
 
-const {isImageFile} = require("../../utils/mediaFile");
+const {isImageFile} = require('../../utils/mediaFile')
 
-import {remote, clipboard, ipcRenderer} from "electron";
-import LottieAnimation from "../../../LottieAnimation";
+import LottieAnimation from '../../../LottieAnimation'
+import ipc from '../../../../utils/ipc'
 
 export default {
-	name: "Message",
+	name: 'Message',
 	components: {
 		SvgIcon,
 		FormatMessage,
 		MessageReply,
 		MessageImage,
-		LottieAnimation
+		LottieAnimation,
 	},
 
 	props: {
@@ -214,8 +214,8 @@ export default {
 			optionsOpened: false,
 			emojiOpened: false,
 			newMessage: {},
-			lottie: getLottieFace(this.message.content)
-		};
+			lottie: getLottieFace(this.message.content),
+		}
 	},
 
 	computed: {
@@ -223,159 +223,95 @@ export default {
 			return (
 				this.index > 0 &&
 				this.message.date !== this.messages[this.index - 1].date
-			);
+			)
 		},
 		messageOffset() {
 			return (
 				this.index > 0 &&
 				this.message.senderId !== this.messages[this.index - 1].senderId
-			);
+			)
 		},
 		isMessageHover() {
 			return (
 				this.editedMessage._id === this.message._id ||
 				this.hoverMessageId === this.message._id
-			);
+			)
 		},
 		isImage() {
-			return isImageFile(this.message.file);
+			return isImageFile(this.message.file)
 		},
 		isVideo() {
-			return this.checkVideoType(this.message.file);
+			return this.checkVideoType(this.message.file)
 		},
 		isCheckmarkVisible() {
 			return (
 				this.message.senderId === this.currentUserId &&
 				!this.message.deleted &&
 				(this.message.saved || this.message.distributed || this.message.seen)
-			);
+			)
 		},
 	},
 
 	watch: {
 		newMessages(val) {
-			if (!val.length || !this.showNewMessagesDivider) return;
+			if (!val.length || !this.showNewMessagesDivider) return
 			this.newMessage = val.reduce((res, obj) =>
-				obj.index < res.index ? obj : res
-			);
+				obj.index < res.index ? obj : res,
+			)
 		},
 	},
 
 	mounted() {
 		if (!this.message.seen && this.message.senderId !== this.currentUserId) {
-			this.$emit("add-new-message", {
+			this.$emit('add-new-message', {
 				_id: this.message._id,
 				index: this.index,
-			});
+			})
 		}
 	},
 
 	methods: {
 		onHoverMessage() {
-			this.imageHover = true;
-			this.messageHover = true;
-			if (this.canEditMessage()) this.hoverMessageId = this.message._id;
+			this.imageHover = true
+			this.messageHover = true
+			if (this.canEditMessage()) this.hoverMessageId = this.message._id
 		},
 		canEditMessage() {
-			return !this.message.deleted;
+			return !this.message.deleted
 		},
 		onLeaveMessage() {
-			this.imageHover = false;
-			if (!this.optionsOpened && !this.emojiOpened) this.messageHover = false;
-			this.hoverMessageId = null;
+			this.imageHover = false
+			if (!this.optionsOpened && !this.emojiOpened) this.messageHover = false
+			this.hoverMessageId = null
 		},
 		openFile(action) {
-			this.$emit("open-file", {message: this.message, action});
+			this.$emit('open-file', {message: this.message, action})
 		},
 		openUserTag(user) {
-			this.$emit("open-user-tag", {user});
+			this.$emit('open-user-tag', {user})
 		},
 		messageActionHandler(action) {
-			this.messageHover = false;
-			this.hoverMessageId = null;
+			this.messageHover = false
+			this.hoverMessageId = null
 
 			setTimeout(() => {
-				this.$emit("message-action-handler", {
+				this.$emit('message-action-handler', {
 					action,
 					message: this.message,
-				});
-			}, 300);
+				})
+			}, 300)
 		},
 		checkVideoType(file) {
-			if (!file) return;
-			const videoTypes = ["video/mp4", "video/ogg", "video/webm"];
-			const {type} = file;
-			return videoTypes.some((t) => type.toLowerCase().includes(t));
+			if (!file) return
+			const videoTypes = ['video/mp4', 'video/ogg', 'video/webm']
+			const {type} = file
+			return videoTypes.some((t) => type.toLowerCase().includes(t))
 		},
 		avatarctx() {
-			const menu = new remote.Menu.buildFromTemplate([
-				{
-					label: `Copy "${this.message.username}"`,
-					click: () => {
-						clipboard.writeText(this.message.username);
-					},
-				},
-				{
-					label: `Copy "${this.message.senderId}"`,
-					click: () => {
-						clipboard.writeText(this.message.senderId.toString());
-					},
-				},
-			]);
-			if (this.message.replyMessage) {
-				menu.append(
-					new remote.MenuItem({
-						label: `Copy "${this.message.replyMessage.username}"`,
-						click: () => {
-							clipboard.writeText(this.message.replyMessage.username);
-						},
-					})
-				);
-			}
-			menu.append(
-				new remote.MenuItem({
-					label: `Copy Message Id`,
-					click: () => {
-						clipboard.writeText(this.message._id);
-					},
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: `View Avatar`,
-					click: () => {
-						ipcRenderer.send('openImage', `https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`, false)
-					},
-				})
-			);
-			menu.append(
-				new remote.MenuItem({
-					label: `Download Avatar`,
-					click: () => {
-						this.$emit(
-							"download-image",
-							`https://q1.qlogo.cn/g?b=qq&nk=${this.message.senderId}&s=640`
-						);
-					},
-				})
-			);
-			if (this.$route.name === 'chat-page')
-				menu.append(
-					new remote.MenuItem({
-						label: `Private Chat`,
-						click: () => {
-							this.$emit(
-								"start-chat",
-								this.message.senderId,
-								this.message.username
-							);
-						},
-					})
-				);
-			menu.popup({window: remote.getCurrentWindow()});
+			ipc.popupAvatarMenu(this.message)
 		},
 	},
-};
+}
 </script>
 
 <style lang="scss" scoped>
