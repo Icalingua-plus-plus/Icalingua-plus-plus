@@ -531,3 +531,4 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
     )
     menu.popup({window: getMainWindow()})
 })
+//todo 等等，还有个联系人菜单
