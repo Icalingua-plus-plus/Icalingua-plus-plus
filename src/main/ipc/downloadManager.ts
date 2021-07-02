@@ -7,6 +7,8 @@ import {app, ipcMain} from 'electron'
 import path from 'path'
 import {getGroupFileMeta} from './botAndStorage'
 import {getConfig, saveConfigFile} from '../utils/configManager'
+import Message from '../../types/Message'
+import Room from '../../types/Room'
 
 let aria: Aria2
 
@@ -70,7 +72,22 @@ export const downloadGroupFile = async (gin: number, fid: string) => {
     }
 }
 
+export const downloadFileByMessageData = (data: { action: string, message: Message, room: Room }) => {
+    if (data.action === 'download') {
+        if (data.message.file.type.includes('image')) {
+            downloadImage(data.message.file.url)
+        } else {
+            if (data.room.roomId < 0 && data.message.file.fid)
+                downloadGroupFile(-data.room.roomId, data.message.file.fid)
+            else
+                download(data.message.file.url, data.message.content)
+        }
+    }
+}
+
 ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
+ipcMain.on('downloadFileByMessageData',
+    (_, data: { action: string, message: Message, room: Room }) => downloadFileByMessageData(data))
 ipcMain.on('downloadImage', (_, url) => downloadImage(url))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {

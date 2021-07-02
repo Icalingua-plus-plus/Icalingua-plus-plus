@@ -7,23 +7,20 @@ interface MessageFile {
 }
 
 export default interface Message {
+    reveal?: boolean
     code?: string;
     at?: string | boolean;
     _id: string | number;
-    senderId: number;
+    senderId?: number;
     username: string;
     content: string;
-    timestamp: string;
-    date: string;
+    timestamp?: string;
+    date?: string;
     role?: string;
     time?: number;
+    deleted?: boolean | Date | number;
     file?: MessageFile;
-    replyMessage?: {
-        _id: string,
-        username: string,
-        content: string,
-        file?: MessageFile
-    },
+    replyMessage?: Message,
     system?: boolean
 }
 

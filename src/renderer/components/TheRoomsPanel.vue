@@ -17,7 +17,7 @@
 				:selected="room.roomId === selected.roomId"
 				:priority="priority"
 				@click="$emit('chroom', room)"
-				@contextmenu="$emit('contextmenu', room)"
+				@contextmenu="roomMenu"
 			/>
 		</div>
 	</div>
@@ -25,6 +25,7 @@
 
 <script type="ts">
 import RoomEntry from './RoomEntry.vue'
+import ipc from '../utils/ipc'
 
 export default {
 	name: 'TheRoomsPanel',
@@ -51,6 +52,11 @@ export default {
 		return {
 			input: '',
 		}
+	},
+	methods: {
+		roomMenu() {
+			ipc.popupRoomMenu(room.roomId)
+		},
 	},
 }
 </script>

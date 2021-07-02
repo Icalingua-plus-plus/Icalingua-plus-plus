@@ -1,23 +1,27 @@
-import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, shell} from 'electron'
+import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, remote, shell} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
-import ipc from '../../renderer/utils/ipc'
 import exit from '../utils/exit'
 import {getMainWindow} from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import {
+    deleteMessage,
+    fetchHistory,
     fetchLatestHistory,
     getBot, getRoom,
     getSelectedRoom,
     ignoreChat,
     pinRoom,
-    removeChat,
+    removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
 } from './botAndStorage'
 import Room from '../../types/Room'
-import {downloadImage} from './downloadManager'
+import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
+import Message from '../../types/Message'
+import axios from 'axios'
+import ui from '../utils/ui'
 
 const updatePriority = (lev: 1 | 2 | 3 | 4 | 5) => {
     getConfig().priority = lev
@@ -47,7 +51,7 @@ const buildRoomMenu = (room: Room): Menu => {
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
     return Menu.buildFromTemplate([
         {
-            label: 'Notification Priority',
+            label: '优先级',
             submenu: [
                 {
                     type: 'radio',
@@ -86,51 +90,51 @@ const buildRoomMenu = (room: Room): Menu => {
             click: () => pinRoom(room.roomId, !room.index),
         },
         {
-            label: 'Delete Chat',
+            label: '删除会话',
             click: () => removeChat(room.roomId),
         },
         {
-            label: 'Ignore Chat',
+            label: '屏蔽消息',
             click: () => ignoreChat({id: room.roomId, name: room.roomName}),
         },
         {
-            label: 'Copy Name',
+            label: '复制名称',
             click: () => {
                 clipboard.writeText(room.roomName)
             },
         },
         {
-            label: 'Copy ID',
+            label: '复制 ID',
             click: () => {
                 clipboard.writeText(String(Math.abs(room.roomId)))
             },
         },
         {
-            label: 'View Avatar',
+            label: '查看头像',
             click: () => {
                 openImage(room.avatar, false)
             },
         },
         {
-            label: 'Download Avatar',
+            label: '下载头像',
             click: () => {
                 downloadImage(room.avatar)
             },
         },
         {
-            label: 'Auto Download',
+            label: '自动下载',
             submenu: [
                 {
                     type: 'checkbox',
-                    label: 'Files in this chat',
+                    label: '聊天文件',
                     checked: !!room.autoDownload,
                     click: (menuItem) => setRoomAutoDownload(room.roomId, menuItem.checked),
                 },
                 {
-                    label: 'Set downloadManager path',
+                    label: '设置下载路径',
                     click: () => {
                         const selection = dialog.showOpenDialogSync(getMainWindow(), {
-                            title: 'Select downloadManager path',
+                            title: '设置下载路径',
                             properties: ['openDirectory'],
                             defaultPath: room.downloadPath,
                         })
@@ -143,7 +147,7 @@ const buildRoomMenu = (room: Room): Menu => {
             ],
         },
         {
-            label: 'Get History',
+            label: '获取历史消息',
             click: () => fetchLatestHistory(room.roomId),
         },
     ])
@@ -293,3 +297,190 @@ export const popupRoomMenu = async (roomId: number) => {
     })
 }
 ipcMain.on('popupRoomMenu', (_, id) => popupRoomMenu(id))
+ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, history?: boolean) => {
+    const menu = new Menu()
+    if (message.deleted && !message.reveal)
+        menu.append(
+            new MenuItem({
+                label: '显示',
+                type: 'normal',
+                click: () => {
+                    revealMessage(room.roomId, message._id)
+                },
+            }),
+        )
+    else {
+        if (sect) {
+            menu.append(
+                new MenuItem({
+                    label: '复制选区',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(sect)
+                    },
+                }),
+            )
+        }
+        if (message.content)
+            menu.append(
+                new MenuItem({
+                    label: '复制文本',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(message.content)
+                    },
+                }),
+            )
+        if (message.replyMessage && message.replyMessage.content) {
+            menu.append(
+                new MenuItem({
+                    label: '复制回复文本',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(message.replyMessage.content)
+                    },
+                }),
+            )
+        }
+        if (message.code) {
+            menu.append(
+                new MenuItem({
+                    label: '复制代码',
+                    type: 'normal',
+                    click() {
+                        clipboard.writeText(message.code)
+                    },
+                }),
+            )
+        }
+        if (message.file && message.file.type.includes('image')) {
+            menu.append(
+                new MenuItem({
+                    label: '复制图片',
+                    type: 'normal',
+                    click: async () => {
+                        const res = await axios.get(message.file.url, {
+                            responseType: 'arraybuffer',
+                        })
+                        const buf = Buffer.from(res.data, 'binary')
+                        clipboard.writeImage(nativeImage.createFromBuffer(buf))
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '添加为表情',
+                    type: 'normal',
+                    click: () => {
+                        download(message.file.url, String(new Date().getTime()), path.join(app.getPath('appData'), 'stickers'))
+                    },
+                }),
+            )
+        }
+        if (message.replyMessage && message.replyMessage.file) {
+            menu.append(
+                new MenuItem({
+                    label: '复制回复文件 URL',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(message.replyMessage.file.url)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '下载回复文件',
+                    click: () => downloadFileByMessageData({
+                        message: message.replyMessage,
+                        room,
+                        action: 'download',
+                    }),
+                }),
+            )
+        }
+        if (message.file) {
+            menu.append(
+                new MenuItem({
+                    label: '复制 URL',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(message.file.url)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '下载',
+                    click: () =>
+                        downloadFileByMessageData({action: 'download', message, room}),
+                }),
+            )
+        }
+        if (!history) {
+            menu.append(
+                new MenuItem({
+                    label: '回复',
+                    click: () => {
+                        ui.replyMessage(message)
+                    },
+                }),
+            )
+            if (!message.file)
+                menu.append(
+                    new MenuItem({
+                        label: '+1',
+                        click: () => {
+                            const msgToSend = {
+                                content: message.content,
+                                replyMessage: message.replyMessage,
+                                imgpath: undefined,
+                            }
+                            if (message.file) {
+                                msgToSend.imgpath = message.file.url
+                            }
+                            sendMessage(msgToSend)
+                        },
+                    }),
+                )
+            menu.append(
+                new MenuItem({
+                    label: '获取历史消息',
+                    click: () => fetchHistory(message._id as string),
+                }),
+            )
+        }
+        if (message.senderId === getBot().uin) {
+            menu.append(
+                new MenuItem({
+                    label: '撤回',
+                    click: () => {
+                        deleteMessage(room.roomId, message._id as string)
+                    },
+                }),
+            )
+        }
+    }
+    menu.append(
+        new MenuItem({
+            label: '复制消息 ID',
+            type: 'normal',
+            click: () => {
+                clipboard.writeText(String(message._id))
+            },
+        }),
+    )
+    menu.popup({window: getMainWindow()})
+})
+ipcMain.on('popupTextAreaMenu', () => {
+    Menu.buildFromTemplate([
+        {
+            role: 'cut',
+        },
+        {
+            role: 'copy',
+        },
+        {
+            role: 'paste',
+        },
+    ]).popup({window: getMainWindow()})
+})

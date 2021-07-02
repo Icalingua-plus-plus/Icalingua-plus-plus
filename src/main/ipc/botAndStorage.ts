@@ -30,14 +30,14 @@ import {updateAppMenu} from './menuManager'
 
 type SendMessageParams = {
     content: string,
-    roomId: number,
+    roomId?: number,
     file?: {
         type: string,
         path: string,
         size: number
     },
     replyMessage?: any,
-    room: Room,
+    room?: Room,
     b64img?: string,
     imgpath?: string
 }
@@ -375,10 +375,13 @@ export const updateTray = () => updateTrayIcon(selectedRoomName)
 //todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts
 //尽量不要用返回值，出错的时候用 ui 发一个错
 
-const getAllRooms = async () => {
-    return await storage.getAllRooms()
-}
-const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) => {
+export const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) => {
+    if (!room && !roomId) {
+        roomId = selectedRoomId
+        room = await storage.getRoom(roomId)
+    }
+    if (!room) room = await storage.getRoom(roomId)
+    if (!roomId) roomId = room.roomId
     if (file && file.type && !file.type.includes('image')) {
         //群文件
         if (roomId > 0) {
@@ -529,7 +532,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friendsAll, groupsAll,
     }
 })
-ipcMain.handle('getAllRooms', getAllRooms)
+ipcMain.handle('getAllRooms', storage.getAllRooms)
 ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
@@ -589,7 +592,7 @@ export const clearCurrentRoomUnread = async () => {
 }
 export const setRoomPriority = async (roomId: number, priority: 1 | 2 | 3 | 4 | 5) => {
     await storage.updateRoom(roomId, {priority})
-    ui.setAllRooms(await getAllRooms())
+    ui.setAllRooms(await storage.getAllRooms())
 }
 export const setRoomAutoDownload = async (roomId: number, autoDownload: boolean) => {
     await storage.updateRoom(roomId, {autoDownload})
@@ -599,14 +602,14 @@ export const setRoomAutoDownloadPath = async (roomId: number, downloadPath: stri
 }
 export const pinRoom = async (roomId: number, pin: boolean) => {
     await storage.updateRoom(roomId, {index: pin ? 1 : 0})
-    ui.setAllRooms(await getAllRooms())
+    ui.setAllRooms(await storage.getAllRooms())
 }
 export const ignoreChat = async (data: IgnoreChatInfo) => {
     //todo use storage
 }
 export const removeChat = async (roomId: number) => {
     await storage.removeRoom(roomId)
-    ui.setAllRooms(await getAllRooms())
+    ui.setAllRooms(await storage.getAllRooms())
 }
 export const deleteMessage = async (roomId: number, messageId: string) => {
     const res = await bot.deleteMsg(messageId)
@@ -620,6 +623,10 @@ export const deleteMessage = async (roomId: number, messageId: string) => {
             message: res.error.message,
         })
     }
+}
+export const revealMessage = async (roomId: number, messageId: string | number) => {
+    ui.revealMessage(messageId)
+    await storage.updateMessage(roomId, messageId, {reveal: true})
 }
 
 export const fetchHistory = async (messageId: string, roomId: number = selectedRoomId) => {
