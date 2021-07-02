@@ -10,7 +10,7 @@
 					trigger="hover"
 					:content="`${account}`"
 				>
-					<a @click="appMenu" slot="reference">
+					<a slot="reference">
 						<el-avatar
 							:src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
 						/>
@@ -28,13 +28,6 @@
 					:selected="view === 'contacts'"
 					@click="view = 'contacts'"
 				/>
-				<SideBarIcon
-					v-if="nuist"
-					icon="el-icon-school"
-					name="NUIST"
-					:selected="view === 'nuist'"
-					@click="view = 'nuist'"
-				/>
 			</el-aside>
 			<el-main>
 				<Multipane v-show="view === 'chats'">
@@ -45,7 +38,6 @@
 							:selected="selectedRoom"
 							:priority="priority"
 							@chroom="chroom"
-							@contextmenu="roomContext"
 						/>
 					</div>
 					<MultipaneResizer/>
@@ -84,16 +76,13 @@
 							:mongodb="true"
 							@send-message="sendMessage"
 							@fetch-messages="fetchMessage"
-							@delete-message="deleteMessage"
 							@open-file="openImage"
 							@pokefriend="pokeFriend"
-							@room-menu="roomContext(selectedRoom)"
 							@add-to-stickers="addToStickers"
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
 							@pokegroup="pokeGroup"
 							@reveal-message="revealMessage"
-							@get-history="getHistory"
 							@open-forward="openForward"
 							@start-chat="startChat"
 						>
@@ -178,9 +167,10 @@ import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
 import {io} from 'socket.io-client'
 import ipc from '../utils/ipc'
+import getAvatarUrl from '../../utils/getAvatarUrl'
+import createRoom from '../../utils/createRoom'
 
-const remote = require('@electron/remote')
-const STORE_PATH = remote.getGlobal('STORE_PATH')
+let STORE_PATH
 
 let socketIo
 
@@ -217,23 +207,6 @@ Date.prototype.format = function (fmt) {
 const https = require('https')
 const fs = require('fs')
 
-//convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
-function convertImgToBase64(url, callback, outputFormat) {
-	var canvas = document.createElement('CANVAS'),
-		ctx = canvas.getContext('2d'),
-		img = new Image()
-	img.crossOrigin = 'Anonymous'
-	img.onload = function () {
-		canvas.height = img.height
-		canvas.width = img.width
-		ctx.drawImage(img, 0, 0)
-		var dataURL = canvas.toDataURL(outputFormat || 'image/png')
-		callback.call(this, dataURL)
-		canvas = null
-	}
-	img.src = url
-}
-
 //endregion
 
 export default {
@@ -267,8 +240,6 @@ export default {
 			},
 			view: 'chats',
 			username: '',
-			darkTaskIcon: false,
-			nuist: false,
 			priority: 3,
 			theme: 'default',
 			menu: [],
@@ -277,15 +248,13 @@ export default {
 		}
 	},
 	async created() {
-		//region db init
+		//region set status
 		this.account = await ipc.getUin()
 		this.rooms = await ipc.getAllRooms()
 		this.priority = await ipc.getPriority()
-		//endregion
-		//region set status
 		this.offline = !await ipc.isOnline()
 		this.username = await ipc.getNick()
-
+		STORE_PATH = await ipc.getStorePath()
 		//endregion
 		//region listener
 		document.addEventListener('dragover', (e) => {
@@ -295,9 +264,9 @@ export default {
 		//keyboard
 		document.addEventListener('keydown', (e) => {
 			if (e.repeat) return
-			if (e.key === 'w' && e.ctrlKey === true) {
-				remote.getCurrentWindow().minimize()
-			}
+			// if (e.key === 'w' && e.ctrlKey === true) {
+			// 	remote.getCurrentWindow().minimize()
+			// }
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
 					(e) => e.unreadCount && e.priority >= this.priority,
@@ -371,6 +340,10 @@ export default {
 		ipcRenderer.on('clearCurrentRoomUnread', () => this.selectedRoom.unreadCount = 0)
 		ipcRenderer.on('updatePriority', (_, p) => this.priority = p)
 		ipcRenderer.on('setAllRooms', (_, p) => this.rooms = p)
+		ipcRenderer.on('setMessages', (_, p) => {
+			this.messages = p
+			this.messagesLoaded = false
+		})
 		console.log('加载完成')
 	},
 	methods: {
@@ -416,10 +389,6 @@ export default {
 				})
 		},
 		openImage: ipc.downloadFileByMessageData,
-		deleteMessage(messageId) {
-			//todo 以后右键菜单都移到主线程了，撤回消息也不用在这里处理了
-			ipc.deleteMessage(this.selectedRoomId, messageId)
-		},
 		sendSticker(url) {
 			if (this.selectedRoom)
 				this.sendMessage({
@@ -440,32 +409,15 @@ export default {
 			this.reconnecting = true
 			ipc.reLogin()
 		},
-		appMenu() {
-			const menu = new remote.Menu()
-			menu.append(this.menu[0])
-			for (let i = 0; i < this.menu[1].length; i++)
-				menu.append(this.menu[1][i])
-			menu.append(
-				new remote.MenuItem({
-					type: 'separator',
-				}),
-			)
-			for (let i = 0; i < this.menu[2].length; i++)
-				menu.append(this.menu[2][i])
-			menu.popup({window: remote.getCurrentWindow()})
-		},
 		startChat(id, name) {
 			var room = this.rooms.find((e) => e.roomId == id)
-			const avatar =
-				id < 0
-					? `https://p.qlogo.cn/gh/${-id}/${-id}/0`
-					: `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
+			const avatar = getAvatarUrl(id)
 
 			if (room === undefined) {
 				// create room
-				room = this.createRoom(id, name, avatar)
+				room = createRoom(id, name, avatar)
 				this.rooms = [room, ...this.rooms]
-				storage.addRoom(room)
+				ipc.addRoom(room)
 			}
 			this.chroom(room)
 			this.view = 'chats'
@@ -479,7 +431,6 @@ export default {
 			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
 			this.fetchMessage(true)
-			this.updateAppMenu()
 		},
 		addToStickers(message) {
 			ipc.download(message.file.url, String(new Date().getTime()), path.join(STORE_PATH, 'stickers'))
@@ -488,7 +439,6 @@ export default {
 				this.panel = 'stickers'
 			})
 		},
-		exit: ipc.exit,
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
 			const group = -this.selectedRoom.roomId
@@ -504,73 +454,6 @@ export default {
 			message.reveal = true
 			this.messages = [...this.messages]
 			ipc.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
-		},
-		async getHistory(message, roomId = this.selectedRoom.roomId) {
-			const messages = []
-			while (true) {
-				const history = await bot.getChatHistory(message._id)
-				console.log(history)
-				if (history.error) {
-					console.log(history.error)
-					this.$message.error('错误：' + history.error.message)
-					break
-				}
-				if (history.data.length < 2) break
-				const newMsgs = []
-				for (let i = 0; i < history.data.length; i++) {
-					const data = history.data[i]
-					const message = {
-						senderId: data.sender.user_id,
-						username: data.group_id
-							? data.anonymous
-								? data.anonymous.name
-								: data.sender.card || data.sender.nickname
-							: data.sender.remark || data.sender.nickname,
-						content: '',
-						timestamp: new Date(data.time * 1000).format('hh:mm'),
-						date: new Date(data.time * 1000).format('dd/MM/yyyy'),
-						_id: data.message_id,
-						time: data.time * 1000,
-					}
-					await this.processMessage(
-						data.message,
-						message,
-						{},
-						roomId,
-					)
-					messages.push(message)
-					newMsgs.push(message)
-				}
-				message = newMsgs[0]
-				const firstOwnMsg = roomId < 0 ?
-					newMsgs[0] : //群的话只要第一条消息就行
-					newMsgs.find(e => e.senderId == this.account)
-				if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id)) break
-			}
-			console.log(messages)
-			this.$message.success(`已拉取 ${messages.length} 条消息`)
-			storage.updateMessage(roomId, message._id, {historyGot: true})
-			await storage.addMessages(roomId, messages)
-			if (roomId === this.selectedRoom.roomId)
-				storage.fetchMessages(roomId, 0, this.messages.length)
-					.then(msgs2add => setTimeout(() => {
-						console.log('ok')
-						this.messages = msgs2add
-						this.fetchMessage()
-					}, 0))
-		},
-		getLatestHistory(roomId) {
-			let buffer
-			let uid = roomId
-			if (roomId < 0) {
-				buffer = Buffer.alloc(21)
-				uid = -uid
-			}
-			else buffer = Buffer.alloc(17)
-			buffer.writeUInt32BE(uid, 0)
-			this.getHistory({
-				_id: buffer.toString('base64'),
-			}, roomId)
 		},
 		async openForward(resId) {
 			const history = await bot.getForwardMsg(resId)
@@ -608,7 +491,6 @@ export default {
 				autoHideMenuBar: true,
 				webPreferences: {
 					nodeIntegration: true,
-					enableRemoteModule: true,
 					webSecurity: false,
 					contextIsolation: false,
 				},
@@ -664,10 +546,6 @@ export default {
 	text-align: center;
 	padding-top: 15px;
 	-webkit-user-select: none;
-}
-
-.el-avatar {
-	cursor: pointer;
 }
 
 main div {

@@ -13,11 +13,11 @@ const ipc = {
     async isOnline(): Promise<boolean> {
         return await ipcRenderer.invoke('isOnline')
     },
-    exit() {
-        ipcRenderer.send('exit')
-    },
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
+    },
+    async getStorePath(): Promise<string> {
+        return await ipcRenderer.invoke('getStorePath')
     },
     async getUin(): Promise<number> {
         return await ipcRenderer.invoke('getUin')
@@ -68,9 +68,6 @@ const ipc = {
     sendGroupPoke(gin: number, uin: number) {
         ipcRenderer.send('sendGroupPoke', gin, uin)
     },
-    deleteMessage(roomId: number, messageId: string) {
-        ipcRenderer.send('deleteMessage', roomId, messageId)
-    },
     reLogin() {
         ipcRenderer.send('reLogin')
     },
@@ -80,5 +77,8 @@ const ipc = {
     popupRoomMenu(roomId: number) {
         ipcRenderer.send('popupRoomMenu', roomId)
     },
+    addRoom(room:Room){
+        ipcRenderer.send('addRoom', room)
+    }
 }
 export default ipc

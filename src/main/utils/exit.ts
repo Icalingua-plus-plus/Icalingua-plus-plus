@@ -1,5 +1,4 @@
 import {getMainWindow} from "./windowManager";
-import {ipcMain} from "electron";
 import {getConfig, saveConfigFile} from './configManager'
 
 const exit = () => {
@@ -13,5 +12,4 @@ const exit = () => {
     saveConfigFile()
     win.destroy();
 }
-ipcMain.on('exit', exit)
 export default exit
