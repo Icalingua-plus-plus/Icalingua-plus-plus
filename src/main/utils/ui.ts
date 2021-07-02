@@ -1,6 +1,7 @@
 import {sendToMainWindow} from './windowManager'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
+import {revealMessage} from '../ipc/botAndStorage'
 
 export default {
     closeLoading() {
@@ -39,6 +40,9 @@ export default {
     deleteMessage(messageId: string | number) {
         sendToMainWindow('deleteMessage', messageId)
     },
+    revealMessage(messageId: string | number) {
+        sendToMainWindow('revealMessage', messageId)
+    },
     setOnline() {
         sendToMainWindow('setOnline')
     },
@@ -53,5 +57,8 @@ export default {
     },
     setMessages(messages: Message[]) {
         sendToMainWindow('setMessages', messages)
+    },
+    replyMessage(message: Message) {
+        sendToMainWindow('replyMessage', message)
     },
 }

@@ -54,16 +54,8 @@ const ipc = {
         ipcRenderer.send('downloadGroupFile', gin, fid)
     },
     downloadFileByMessageData(data: { action: string, message: Message, room: Room }) {
-        if (data.action === 'download') {
-            if (data.message.file.type.includes('image')) {
-                ipc.downloadImage(data.message.file.url)
-            } else {
-                if (data.room.roomId < 0 && data.message.file.fid)
-                    ipc.downloadGroupFile(-data.room.roomId, data.message.file.fid)
-                else
-                    ipc.download(data.message.file.url, data.message.content)
-            }
-        }
+        ipcRenderer.send('downloadFileByMessageData', data)
+
     },
     sendGroupPoke(gin: number, uin: number) {
         ipcRenderer.send('sendGroupPoke', gin, uin)
@@ -77,8 +69,14 @@ const ipc = {
     popupRoomMenu(roomId: number) {
         ipcRenderer.send('popupRoomMenu', roomId)
     },
-    addRoom(room:Room){
+    popupTextAreaMenu() {
+        ipcRenderer.send('popupTextAreaMenu')
+    },
+    popupMessageMenu(room: Room, message: Message, sect?: string, history?: boolean) {
+        ipcRenderer.send('popupMessageMenu', room, message, sect, history)
+    },
+    addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)
-    }
+    },
 }
 export default ipc

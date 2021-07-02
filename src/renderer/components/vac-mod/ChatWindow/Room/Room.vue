@@ -27,7 +27,7 @@
 			@toggle-rooms-list="$emit('toggle-rooms-list')"
 			@menu-action-handler="$emit('menu-action-handler', $event)"
 			@pokefriend="$emit('pokefriend')"
-			@room-menu="$emit('room-menu')"
+			@room-menu="roomMenu"
 		>
 			<template v-for="(index, name) in $scopedSlots" #[name]="data">
 				<slot :name="name" v-bind="data"/>
@@ -306,29 +306,13 @@ import RoomMessageReply from './RoomMessageReply'
 import Message from '../Message/Message'
 
 import filteredUsers from '../../utils/filterItems'
+import {ipcRenderer} from 'electron'
 
 const {messagesValid} = require('../../utils/roomValidation')
 const {detectMobile, iOSDevice} = require('../../utils/mobileDetection')
 const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
 
-import {remote, clipboard, nativeImage} from 'electron'
-
-//convertImgToBase64 https://blog.csdn.net/myf8520/article/details/107340712
-function convertImgToBase64(url, callback, outputFormat) {
-	var canvas = document.createElement('CANVAS'),
-		ctx = canvas.getContext('2d'),
-		img = new Image()
-	img.crossOrigin = 'Anonymous'
-	img.onload = function () {
-		canvas.height = img.height
-		canvas.width = img.width
-		ctx.drawImage(img, 0, 0)
-		var dataURL = canvas.toDataURL(outputFormat || 'image/jpeg')
-		callback.call(this, dataURL)
-		canvas = null
-	}
-	img.src = url
-}
+import ipc from '../../../../utils/ipc'
 
 export default {
 	name: 'Room',
@@ -548,7 +532,10 @@ export default {
 			}
 		})
 	},
+	created () {
+		ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
 
+	},
 	methods: {
 		updateShowUsersTag() {
 			if (!this.$refs['roomTextarea']) return
@@ -841,7 +828,7 @@ export default {
 			setTimeout(() => (this.fileDialog = false), 500)
 		},
 		openFile({message, action}) {
-			this.$emit('open-file', {message, action, room:this.room})
+			this.$emit('open-file', {message, action, room: this.room})
 		},
 		openUserTag(user) {
 			this.$emit('open-user-tag', user)
@@ -851,166 +838,7 @@ export default {
 		},
 		msgctx(message) {
 			const sect = window.getSelection().toString()
-			const menu = new remote.Menu()
-			if (message.deleted && !message.reveal)
-				menu.append(
-					new remote.MenuItem({
-						label: 'Reveal',
-						type: 'normal',
-						click: () => {
-							this.$emit('reveal-message', message)
-						},
-					}),
-				)
-			else {
-				if (message.content)
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Text',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(message.content)
-							},
-						}),
-					)
-				if (message.replyMessage && message.replyMessage.content) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Reply Message',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(message.replyMessage.content)
-							},
-						}),
-					)
-				}
-				if (sect) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Selection',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(sect)
-							},
-						}),
-					)
-				}
-				if (message.code) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Code',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(message.code)
-							},
-						}),
-					)
-				}
-				if (message.file && message.file.type.includes('image')) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Image',
-							type: 'normal',
-							click: () =>
-								convertImgToBase64(message.file.url, function (base64Image) {
-									const image = nativeImage.createFromDataURL(base64Image)
-									clipboard.writeImage(image)
-								}),
-						}),
-					)
-					menu.append(
-						new remote.MenuItem({
-							label: 'Add to stickers',
-							type: 'normal',
-							click: () => this.$emit('add-to-stickers', message),
-						}),
-					)
-				}
-				if (message.replyMessage && message.replyMessage.file) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Reply File Url',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(message.replyMessage.file.url)
-							},
-						}),
-					)
-					menu.append(
-						new remote.MenuItem({
-							label: 'Download Reply File',
-							click: () =>
-								this.$emit('open-file', {
-									action: 'download',
-									message: message.replyMessage,
-									room: this.room,
-								}),
-						}),
-					)
-				}
-				if (message.file) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Copy Url',
-							type: 'normal',
-							click: () => {
-								clipboard.writeText(message.file.url)
-							},
-						}),
-					)
-					menu.append(
-						new remote.MenuItem({
-							label: 'Download',
-							click: () =>
-								this.$emit('open-file', {action: 'download', message, room: this.room}),
-						}),
-					)
-				}
-				if (this.$route.name !== 'history-page') {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Reply',
-							click: () => {
-								this.replyMessage(message)
-							},
-						}),
-					)
-					if (!message.file)
-						menu.append(
-							new remote.MenuItem({
-								label: '+1',
-								click: () => {
-									const msgToSend = {
-										content: message.content,
-										replyMessage: message.replyMessage,
-									}
-									if (message.file) {
-										msgToSend.imgpath = message.file.url
-									}
-									this.$emit('send-message', msgToSend)
-								},
-							}),
-						)
-					if (!message.historyGot && this.mongodb)
-						menu.append(
-							new remote.MenuItem({
-								label: 'Get Historical Messages',
-								click: () => this.$emit('get-history', message),
-							}),
-						)
-				}
-				if (message.senderId === this.currentUserId) {
-					menu.append(
-						new remote.MenuItem({
-							label: 'Delete',
-							click: () => {
-								this.$emit('delete-message', message._id)
-							},
-						}),
-					)
-				}
-			}
-			menu.popup({window: remote.getCurrentWindow()})
+			ipc.popupMessageMenu(this.room, message, sect, this.$route.name === 'history-page')
 		},
 		containerScroll(e) {
 			this.hideOptions = true
@@ -1022,14 +850,9 @@ export default {
 				this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 			}, 200)
 		},
-		textctx() {
-			const menu = remote.Menu.buildFromTemplate([
-				{
-					label: 'Paste',
-					role: 'paste',
-				},
-			])
-			menu.popup({window: remote.getCurrentWindow()})
+		textctx: ipc.popupTextAreaMenu,
+		roomMenu() {
+			ipc.popupRoomMenu(this.room.roomId)
 		},
 	},
 }

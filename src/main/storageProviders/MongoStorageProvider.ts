@@ -46,7 +46,7 @@ export default class MongoStorageProvider implements StorageProvider {
         return this.mdb.collection('rooms').insertOne(room)
     }
 
-    updateMessage(roomId: number, messageId: string, message: object): Promise<any> {
+    updateMessage(roomId: number, messageId: string | number, message: object): Promise<any> {
         return this.mdb
             .collection('msg' + roomId)
             .updateOne({_id: messageId}, {$set: message})

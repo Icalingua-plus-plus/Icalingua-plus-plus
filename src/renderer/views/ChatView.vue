@@ -264,8 +264,8 @@ export default {
 		//keyboard
 		document.addEventListener('keydown', (e) => {
 			if (e.repeat) return
-			// if (e.key === 'w' && e.ctrlKey === true) {
-			// 	remote.getCurrentWindow().minimize()
+				// if (e.key === 'w' && e.ctrlKey === true) {
+				// 	remote.getCurrentWindow().minimize()
 			// }
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
@@ -292,7 +292,6 @@ export default {
 		//region build menu
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
-			console.log('nya')
 			const myFonts = new FontFace(
 				'font',
 				`url(${path.join(STORE_PATH, 'font.ttf')})`,
@@ -329,6 +328,13 @@ export default {
 			const message = this.messages.find((e) => e._id === messageId)
 			if (message) {
 				message.deleted = new Date()
+				this.messages = [...this.messages]
+			}
+		})
+		ipcRenderer.on('revealMessage', (_, messageId) => {
+			const message = this.messages.find((e) => e._id === messageId)
+			if (message) {
+				message.reveal = true
 				this.messages = [...this.messages]
 			}
 		})
@@ -449,11 +455,6 @@ export default {
 			if (this.selectedRoom.roomId > 0)
 				ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 			this.$refs.room.focusTextarea()
-		},
-		revealMessage(message) {
-			message.reveal = true
-			this.messages = [...this.messages]
-			ipc.updateMessage(this.selectedRoom.roomId, message._id, {reveal: true})
 		},
 		async openForward(resId) {
 			const history = await bot.getForwardMsg(resId)

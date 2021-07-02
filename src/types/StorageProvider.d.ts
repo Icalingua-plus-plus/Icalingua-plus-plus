@@ -13,7 +13,7 @@ export default interface StorageProvider {
 
     removeRoom(roomId: number): Promise<any>
 
-    updateMessage(roomId: number, messageId: string, message: object): Promise<any>
+    updateMessage(roomId: number, messageId: string | number, message: object): Promise<any>
 
     fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
 
