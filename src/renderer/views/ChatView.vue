@@ -80,7 +80,6 @@
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
 							@pokegroup="pokeGroup"
-							@start-chat="startChat"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -153,11 +152,7 @@ import IgnoreManage from '../components/IgnoreManage'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import path from 'path'
-import {
-	clipboard,
-	shell,
-	ipcRenderer,
-} from 'electron'
+import {ipcRenderer} from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
@@ -198,9 +193,6 @@ Date.prototype.format = function (fmt) {
 	}
 	return fmt
 }
-
-//downloadManager https://qastack.cn/programming/11944932/how-to-download-a-file-with-node-js-without-using-third-party-libraries
-const https = require('https')
 const fs = require('fs')
 
 //endregion
@@ -346,6 +338,7 @@ export default {
 			this.messages = p
 			this.messagesLoaded = false
 		})
+		ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
 		console.log('加载完成')
 	},
 	methods: {
@@ -433,13 +426,6 @@ export default {
 			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
 			this.fetchMessage(true)
-		},
-		addToStickers(message) {
-			ipc.download(message.file.url, String(new Date().getTime()), path.join(STORE_PATH, 'stickers'))
-			this.panel = 'refresh'
-			this.$nextTick(() => {
-				this.panel = 'stickers'
-			})
 		},
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
