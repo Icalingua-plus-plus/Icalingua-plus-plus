@@ -5,13 +5,12 @@ import {
     FriendInfo, FriendPokeEventData, FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData, GroupRecallEventData,
     MemberBaseInfo,
-    MessageEventData, OfflineEventData, OnlineEventData,
+    MessageEventData, OfflineEventData, OnlineEventData, PrivateMessageEventData,
     Ret,
 } from 'oicq'
 import path from 'path'
 import fs from 'fs'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
-import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import StorageProvider from '../../types/StorageProvider'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
@@ -19,9 +18,9 @@ import ui from '../utils/ui'
 import formatDate from '../utils/formatDate'
 import Message from '../../types/Message'
 import processMessage from '../utils/processMessage'
-import getAvatarUrl from '../utils/getAvatarUrl'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 import avatarCache from '../utils/avatarCache'
-import createRoom from '../utils/createRoom'
+import createRoom from '../../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
 import {download, init as initDownloadManager} from './downloadManager'
@@ -49,10 +48,9 @@ let loginForm: LoginForm
 
 let selectedRoomId = 0
 let selectedRoomName = ''
+let currentLoadedMessagesCount = 0
 
 //我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
-
-//todo electron settings 每次操作都读一次文件不太妙吧
 
 //region event handlers
 const eventHandlers = {
@@ -330,10 +328,10 @@ const initStorage = async () => {
     try {
         if (loginForm.storageType === 'mdb')
             storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
-            // else if (extra.storageType === 'idb')
+        // else if (extra.storageType === 'idb')
         //     storage = new IndexedStorageProvider(form.username)
-        else if (loginForm.storageType === 'redis')
-            storage = new RedisStorageProvider(loginForm.rdsHost, loginForm.username)
+        // else if (loginForm.storageType === 'redis')
+        //     storage = new RedisStorageProvider(loginForm.rdsHost, loginForm.username)
 
         await storage.connect()
         storage.getAllRooms()
@@ -377,52 +375,9 @@ export const updateTray = () => updateTrayIcon(selectedRoomName)
 //todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts
 //尽量不要用返回值，出错的时候用 ui 发一个错
 
-ipcMain.handle('createBot', async (event, form: LoginForm) => {
-    bot = global.bot = createClient(Number(form.username), {
-        platform: Number(form.protocol),
-        data_dir: path.join(global.STORE_PATH, '/data'),
-        ignore_self: false,
-        brief: true,
-        log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
-    })
-    bot.setMaxListeners(233)
-    loginForm = form
-    attachLoginHandler()
-    bot.login(form.password)
-})
-ipcMain.handle('getFriendsAndGroups', async () => {
-    const friends = bot.fl.values()
-    let iterF = friends.next()
-    const friendsAll = []
-    while (!iterF.done) {
-        const f = {...iterF.value}
-        f.sc = (f.nickname + f.remark + f.user_id).toUpperCase()
-        friendsAll.push(f)
-        iterF = friends.next()
-    }
-    const groups = bot.gl.values()
-    let iterG = groups.next()
-    const groupsAll = []
-    while (!iterG.done) {
-        const f = {...iterG.value}
-        f.sc = (f.group_name + f.group_id).toUpperCase()
-        groupsAll.push(f)
-        iterG = groups.next()
-    }
-    return {
-        friendsAll, groupsAll,
-    }
-})
-ipcMain.on('sliderLogin', (_, ticket: string) => {
-    bot.sliderLogin(ticket)
-})
 const getAllRooms = async () => {
     return await storage.getAllRooms()
 }
-ipcMain.handle('getAllRooms', getAllRooms)
-ipcMain.on('reLogin', () => {
-    bot.login()
-})
 const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) => {
     if (file && file.type && !file.type.includes('image')) {
         //群文件
@@ -538,6 +493,43 @@ const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, i
         })
     }
 }
+ipcMain.handle('createBot', async (event, form: LoginForm) => {
+    bot = global.bot = createClient(Number(form.username), {
+        platform: Number(form.protocol),
+        data_dir: path.join(global.STORE_PATH, '/data'),
+        ignore_self: false,
+        brief: true,
+        log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
+    })
+    bot.setMaxListeners(233)
+    loginForm = form
+    attachLoginHandler()
+    bot.login(form.password)
+})
+ipcMain.handle('getFriendsAndGroups', async () => {
+    const friends = bot.fl.values()
+    let iterF = friends.next()
+    const friendsAll = []
+    while (!iterF.done) {
+        const f = {...iterF.value}
+        f.sc = (f.nickname + f.remark + f.user_id).toUpperCase()
+        friendsAll.push(f)
+        iterF = friends.next()
+    }
+    const groups = bot.gl.values()
+    let iterG = groups.next()
+    const groupsAll = []
+    while (!iterG.done) {
+        const f = {...iterG.value}
+        f.sc = (f.group_name + f.group_id).toUpperCase()
+        groupsAll.push(f)
+        iterG = groups.next()
+    }
+    return {
+        friendsAll, groupsAll,
+    }
+})
+ipcMain.handle('getAllRooms', getAllRooms)
 ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('isOnline', () => bot.getStatus().data.online)
 ipcMain.handle('getNick', () => bot.nickname)
@@ -562,7 +554,14 @@ ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: n
             ui.setShutUp(false)
         }
     }
+    currentLoadedMessagesCount = offset + 20
     return storage.fetchMessages(roomId, offset, 20)
+})
+ipcMain.on('sliderLogin', (_, ticket: string) => {
+    bot.sliderLogin(ticket)
+})
+ipcMain.on('reLogin', () => {
+    bot.login()
 })
 ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
     selectedRoomId = id
@@ -573,19 +572,7 @@ ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     storage.updateMessage(roomId, messageId, message))
 ipcMain.on('sendGroupPoke', (_, gin, uin) => bot.sendGroupPoke(gin, uin))
-ipcMain.on('deleteMessage', async (_, roomId: number, messageId: string) => {
-    const res = await bot.deleteMsg(messageId)
-    console.log(res)
-    if (!res.error) {
-        ui.deleteMessage(messageId)
-        await storage.updateMessage(roomId, messageId, {deleted: new Date()})
-    } else {
-        ui.notifyError({
-            title: 'Failed to delete message',
-            message: res.error.message,
-        })
-    }
-})
+ipcMain.on('addRoom', (_, room) => storage.addRoom(room))
 
 export const getBot = () => bot
 export const getStorage = () => storage
@@ -621,7 +608,77 @@ export const removeChat = async (roomId: number) => {
     await storage.removeRoom(roomId)
     ui.setAllRooms(await getAllRooms())
 }
+export const deleteMessage = async (roomId: number, messageId: string) => {
+    const res = await bot.deleteMsg(messageId)
+    console.log(res)
+    if (!res.error) {
+        ui.deleteMessage(messageId)
+        await storage.updateMessage(roomId, messageId, {deleted: new Date()})
+    } else {
+        ui.notifyError({
+            title: 'Failed to delete message',
+            message: res.error.message,
+        })
+    }
+}
 
-export const fetchLatestHistory = async (roomId: number) => {
-    //todo
+export const fetchHistory = async (messageId: string, roomId: number = selectedRoomId) => {
+    const messages = []
+    while (true) {
+        const history = await bot.getChatHistory(messageId)
+        console.log(history)
+        if (history.error) {
+            console.log(history.error)
+            ui.messageError('错误：' + history.error.message)
+            break
+        }
+        const newMsgs: Message[] = []
+        for (let i = 0; i < history.data.length; i++) {
+            const data = history.data[i]
+            const message = {
+                senderId: data.sender.user_id,
+                username: (<GroupMessageEventData>data).group_id
+                    ? (<GroupMessageEventData>data).anonymous
+                        ? (<GroupMessageEventData>data).anonymous.name
+                        : (<GroupMessageEventData>data).sender.card || data.sender.nickname
+                    : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
+                content: '',
+                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                _id: data.message_id,
+                time: data.time * 1000,
+            }
+            await processMessage(
+                data.message,
+                message,
+                {},
+                roomId,
+            )
+            messages.push(message)
+            newMsgs.push(message)
+        }
+        if (history.data.length < 2) break
+        messageId = newMsgs[0]._id as string
+        //todo 所有消息都过一遍，数据库里面都有才能结束
+        const firstOwnMsg = roomId < 0 ?
+            newMsgs[0] : //群的话只要第一条消息就行
+            newMsgs.find(e => e.senderId == bot.uin)
+        if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
+    }
+    console.log(messages)
+    ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+    await storage.addMessages(roomId, messages)
+    if (roomId === selectedRoomId)
+        storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .then(ui.setMessages)
+}
+export const fetchLatestHistory = (roomId: number) => {
+    let buffer: Buffer
+    let uid = roomId
+    if (roomId < 0) {
+        buffer = Buffer.alloc(21)
+        uid = -uid
+    } else buffer = Buffer.alloc(17)
+    buffer.writeUInt32BE(uid, 0)
+    fetchHistory(buffer.toString('base64'), roomId)
 }

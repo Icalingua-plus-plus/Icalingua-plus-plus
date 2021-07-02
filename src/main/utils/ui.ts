@@ -51,4 +51,7 @@ export default {
     setAllRooms(rooms: Room[]) {
         sendToMainWindow('setAllRooms', rooms)
     },
+    setMessages(messages: Message[]) {
+        sendToMainWindow('setMessages', messages)
+    },
 }
