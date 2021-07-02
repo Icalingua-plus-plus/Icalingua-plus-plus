@@ -1,7 +1,5 @@
 import {app, protocol, shell, Menu} from 'electron'
 import path from 'path'
-import {destroyWindow, ready, showWindow} from './utils/windowManager'
-import {init as initConfigManager} from './utils/configManager'
 
 (() => [
     '我所遗失的心啊',
@@ -33,50 +31,8 @@ global.winURL =
         ? `http://localhost:9080`
         : `file://${__dirname}/index.html`
 
-var isLoggingin = false
-
 app.on('ready', async () => {
     const isFirstInstance = app.requestSingleInstanceLock()
     if (!isFirstInstance) app.quit()
-    else {
-        initConfigManager()
-        require('./ipc/system')
-        require('./ipc/botAndStorage')
-        require('./ipc/openImage')
-        app.allowRendererProcessReuse = false
-        if (process.env.NODE_ENV === 'development')
-            protocol.registerFileProtocol('file', (request, cb) => {
-                const pathname = request.url.replace('file:///', '')
-                cb(pathname)
-            })
-        ready()
-    }
+    else require('./ready')
 })
-
-app.on('window-all-closed', () => {
-    if (isLoggingin) return
-    if (global.bot) global.bot.logout()
-    setTimeout(() => {
-        app.quit()
-    }, 1000)
-})
-
-app.on('web-contents-created', (e, webContents) => {
-    webContents.on('new-window', (event, url) => {
-        event.preventDefault()
-        shell.openExternal(url)
-    })
-})
-
-app.on('second-instance', showWindow)
-
-app.on('before-quit', () => {
-    destroyWindow()
-    if (global.bot) global.bot.logout()
-})
-
-app.on('will-quit', () => {
-    destroyWindow()
-    if (global.bot) global.bot.logout()
-})
-

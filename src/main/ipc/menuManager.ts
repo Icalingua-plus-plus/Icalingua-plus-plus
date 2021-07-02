@@ -1,4 +1,4 @@
-import {app, clipboard, dialog, ipcRenderer, Menu, MenuItem, shell} from 'electron'
+import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, shell} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import ipc from '../../renderer/utils/ipc'
 import exit from '../utils/exit'
@@ -292,4 +292,4 @@ export const popupRoomMenu = async (roomId: number) => {
         window: getMainWindow(),
     })
 }
-// ipcRenderer.on('popupRoomMenu', (_, id) => popupRoomMenu(id))
+ipcMain.on('popupRoomMenu', (_, id) => popupRoomMenu(id))
