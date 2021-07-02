@@ -17,7 +17,7 @@
 				:selected="room.roomId === selected.roomId"
 				:priority="priority"
 				@click="$emit('chroom', room)"
-				@contextmenu="roomMenu"
+				@contextmenu="roomMenu(room)"
 			/>
 		</div>
 	</div>
@@ -54,7 +54,7 @@ export default {
 		}
 	},
 	methods: {
-		roomMenu() {
+		roomMenu(room) {
 			ipc.popupRoomMenu(room.roomId)
 		},
 	},
