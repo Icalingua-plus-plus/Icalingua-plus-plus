@@ -1,4 +1,4 @@
-import {BrowserWindow, screen} from 'electron'
+import {BrowserWindow} from 'electron'
 import path from 'path'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
@@ -40,7 +40,7 @@ export const loadMainWindow = async () => {
 
     mainWindow.loadURL(global.winURL + '#/main')
 }
-export const ready = () => {
+export const showLoginWindow = () => {
     loginWindow = new BrowserWindow({
         height: 720,
         width: 450,
