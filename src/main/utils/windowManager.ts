@@ -11,10 +11,8 @@ export const loadMainWindow = async () => {
     mainWindow = new BrowserWindow({
         height: winSize.height,
         width: winSize.width,
-        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModule: true,
             webSecurity: false,
             contextIsolation: false,
         },
@@ -47,7 +45,6 @@ export const showLoginWindow = () => {
         maximizable: false,
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModule: true,
             contextIsolation: false,
         },
         icon: path.join(global.STATIC, '/512x512.png'),
