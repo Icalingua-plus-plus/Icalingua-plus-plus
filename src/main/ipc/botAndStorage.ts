@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, Notification, screen} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, Notification, screen} from 'electron'
 import {
     Client,
     createClient,
@@ -288,18 +288,19 @@ const loginHandlers = {
         console.log(data)
         sendToLoginWindow('error', data.message)
     },
-    onSucceed() {
+    async onSucceed() {
         //save account info
         getConfig().account = loginForm
         saveConfigFile()
         if (loginForm.onlineStatus) {
-            bot.setOnlineStatus(loginForm.onlineStatus)
+            await bot.setOnlineStatus(loginForm.onlineStatus)
         }
         //登录完成之后的初始化操作
-        loadMainWindow()
+        await loadMainWindow()
         createTray()
+        await initStorage()
         attachEventHandler()
-        initStorage()
+        await updateTray()
     },
     verify(data) {
         const veriWin = new BrowserWindow({
@@ -323,7 +324,6 @@ const loginHandlers = {
 //endregion
 //region utility functions
 const initStorage = async () => {
-    //todo: use settings manager
     try {
         if (loginForm.storageType === 'mdb')
             storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
@@ -344,13 +344,16 @@ const initStorage = async () => {
                     }
                 })
             })
-        await updateTray()
-
     } catch (err) {
         console.log(err)
         getConfig().account.autologin = false
         saveConfigFile()
-        //todo alert('Error connecting to database')
+        await dialog.showMessageBox(getMainWindow(), {
+            title: '错误',
+            message: '无法连接数据库',
+            type: 'error'
+        })
+        app.quit()
     }
 }
 const attachEventHandler = () => {
