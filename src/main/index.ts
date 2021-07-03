@@ -23,7 +23,6 @@ app.on('ready', async () => {
         '#5bcffa',
     ])()
 
-    const isFirstInstance = app.requestSingleInstanceLock()
-    if (!isFirstInstance) app.quit()
+    if (!app.requestSingleInstanceLock()) app.quit()
     else require('./ready')
 })
