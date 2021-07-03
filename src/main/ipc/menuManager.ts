@@ -22,15 +22,9 @@ import {download, downloadFileByMessageData, downloadImage} from './downloadMana
 import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
-import ipc from '../../renderer/utils/ipc'
 import getStaticPath from '../../utils/getStaticPath'
+import setPriority from '../utils/setPriority'
 
-const updatePriority = (lev: 1 | 2 | 3 | 4 | 5) => {
-    getConfig().priority = lev
-    updateAppMenu()
-    //todo ui
-    saveConfigFile()
-}
 const setOnlineStatus = (status: OnlineStatusType) => {
     getBot().setOnlineStatus(status)
         .then(() => {
@@ -40,7 +34,6 @@ const setOnlineStatus = (status: OnlineStatusType) => {
         })
         .catch(res => console.log(res))
 }
-
 
 Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
@@ -189,31 +182,31 @@ export const updateAppMenu = async () => {
                     type: 'radio',
                     label: '1',
                     checked: getConfig().priority === 1,
-                    click: () => updatePriority(1),
+                    click: () => setPriority(1),
                 },
                 {
                     type: 'radio',
                     label: '2',
                     checked: getConfig().priority === 2,
-                    click: () => updatePriority(2),
+                    click: () => setPriority(2),
                 },
                 {
                     type: 'radio',
                     label: '3',
                     checked: getConfig().priority === 3,
-                    click: () => updatePriority(3),
+                    click: () => setPriority(3),
                 },
                 {
                     type: 'radio',
                     label: '4',
                     checked: getConfig().priority === 4,
-                    click: () => updatePriority(4),
+                    click: () => setPriority(4),
                 },
                 {
                     type: 'radio',
                     label: '5',
                     checked: getConfig().priority === 5,
-                    click: () => updatePriority(5),
+                    click: () => setPriority(5),
                 },
                 {
                     type: 'separator',

@@ -369,7 +369,7 @@ const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
 }
-export const updateTray = () => updateTrayIcon(selectedRoomName)
+const updateTray = () => updateTrayIcon(selectedRoomName)
 //endregion
 
 //todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts

@@ -159,40 +159,7 @@ import TheContactsPanel from '../components/TheContactsPanel.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
-
-let STORE_PATH
-
-//region copied code
-//date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
-Date.prototype.format = function (fmt) {
-	var o = {
-		'M+': this.getMonth() + 1, //月份
-		'd+': this.getDate(), //日
-		'h+': this.getHours(), //小时
-		'm+': this.getMinutes(), //分
-		's+': this.getSeconds(), //秒
-		'q+': Math.floor((this.getMonth() + 3) / 3), //季度
-		S: this.getMilliseconds(), //毫秒
-	}
-	if (/(y+)/.test(fmt)) {
-		fmt = fmt.replace(
-			RegExp.$1,
-			(this.getFullYear() + '').substr(4 - RegExp.$1.length),
-		)
-	}
-	for (var k in o) {
-		if (new RegExp('(' + k + ')').test(fmt)) {
-			fmt = fmt.replace(
-				RegExp.$1,
-				RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length),
-			)
-		}
-	}
-	return fmt
-}
-const fs = require('fs')
-
-//endregion
+import fs from 'fs'
 
 export default {
 	components: {
@@ -238,7 +205,7 @@ export default {
 		this.priority = await ipc.getPriority()
 		this.offline = !await ipc.isOnline()
 		this.username = await ipc.getNick()
-		STORE_PATH = await ipc.getStorePath()
+		const STORE_PATH = await ipc.getStorePath()
 		//endregion
 		//region listener
 		document.addEventListener('dragover', (e) => {
@@ -249,14 +216,19 @@ export default {
 		document.addEventListener('keydown', (e) => {
 			if (e.repeat) {
 			}
-			else if (e.key === 'Tab') {
-				let unreadRoom = this.rooms.find(
-					(e) => e.unreadCount && e.priority >= this.priority,
-				)
-				if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount)
-				if (unreadRoom) this.chroom(unreadRoom)
+			else if (e.key === 'w' && e.ctrlKey === true) {
+				window.close()
 			}
-		})
+			else
+				if (e.key === 'Tab') {
+					let unreadRoom = this.rooms.find(
+						(e) => e.unreadCount && e.priority >= this.priority,
+					)
+					if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount)
+					if (unreadRoom) this.chroom(unreadRoom)
+				}
+			}
+		)
 		window.flag = () => this.view = 'kench'
 		//endregion
 		//region build menu

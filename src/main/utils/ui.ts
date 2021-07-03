@@ -67,4 +67,7 @@ export default {
     closePanel() {
         sendToMainWindow('closePanel')
     },
+    updatePriority(lev: 1 | 2 | 3 | 4 | 5) {
+        sendToMainWindow('updatePriority', lev)
+    },
 }
