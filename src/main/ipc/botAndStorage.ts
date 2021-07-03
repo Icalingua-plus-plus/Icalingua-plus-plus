@@ -23,7 +23,7 @@ import avatarCache from '../utils/avatarCache'
 import createRoom from '../../utils/createRoom'
 import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
-import {download, init as initDownloadManager} from './downloadManager'
+import {download} from './downloadManager'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import {updateAppMenu} from './menuManager'
@@ -300,7 +300,6 @@ const loginHandlers = {
         createTray()
         attachEventHandler()
         initStorage()
-        initDownloadManager()
     },
     verify(data) {
         const veriWin = new BrowserWindow({

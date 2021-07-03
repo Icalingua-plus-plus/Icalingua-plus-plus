@@ -61,6 +61,7 @@ export default {
 		}
 	},
 	created() {
+		document.title = '查看转发的消息记录'
 		ipcRenderer.on('loadMessages', (event, args) => {
 			console.log(args)
 			this.messages = [...args]

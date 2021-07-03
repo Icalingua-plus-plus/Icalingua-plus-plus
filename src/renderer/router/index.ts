@@ -3,6 +3,7 @@ import Router from "vue-router";
 import ChatView from '../views/ChatView.vue'
 import HistoryView from '../views/HistoryView.vue'
 import LoginView from '../views/LoginView.vue'
+import Aria2Settings from '../views/Aria2Settings.vue'
 
 Vue.use(Router);
 
@@ -22,6 +23,11 @@ export default new Router({
       path: "/login",
       name: "login-page",
       component: LoginView
+    },
+    {
+      path: "/aria2",
+      name: "aria2-page",
+      component: Aria2Settings
     },
   ],
 });

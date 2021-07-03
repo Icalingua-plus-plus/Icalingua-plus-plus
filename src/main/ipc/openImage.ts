@@ -40,12 +40,6 @@ const openImage = (url: string, external: boolean = false) => {
     if (!external) {
         const viewerWindow = new BrowserWindow({
             autoHideMenuBar: true,
-            webPreferences: {
-                nodeIntegration: true,
-                enableRemoteModule: true,
-                webSecurity: false,
-                contextIsolation: false,
-            },
         })
         viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
         viewerWindow.maximize()
