@@ -535,7 +535,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
     if (remark) {
         menu.append(
             new MenuItem({
-                label: `Copy "${remark}"`,
+                label: `复制 "${remark}"`,
                 click: () => {
                     clipboard.writeText(remark)
                 },
@@ -545,7 +545,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
     if (name) {
         menu.append(
             new MenuItem({
-                label: `Copy "${name}"`,
+                label: `复制 "${name}"`,
                 click: () => {
                     clipboard.writeText(name)
                 },
@@ -555,7 +555,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
     if (displayId) {
         menu.append(
             new MenuItem({
-                label: `Copy "${displayId}"`,
+                label: `复制 "${displayId}"`,
                 click: () => {
                     clipboard.writeText(displayId.toString())
                 },

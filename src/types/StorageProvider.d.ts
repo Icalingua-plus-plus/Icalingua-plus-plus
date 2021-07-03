@@ -1,6 +1,7 @@
 import Room from './Room'
 import Message from './Message'
 import {getUnreadCount} from '../main/ipc/botAndStorage'
+import IgnoreChatInfo from './IgnoreChatInfo'
 
 export default interface StorageProvider {
     connect(): Promise<void>
@@ -28,4 +29,10 @@ export default interface StorageProvider {
     getUnreadCount(priority: number): Promise<number>
 
     getFirstUnreadRoom(priority: number): Promise<Room>
+
+    getIgnoredChats(): Promise<IgnoreChatInfo[]>
+
+    isChatIgnored(id: number): Promise<boolean>
+
+    addIgnoredChat(info: IgnoreChatInfo): Promise<any>
 }
