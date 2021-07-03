@@ -64,4 +64,7 @@ export default {
     startChat(id: number, name: string) {
         sendToMainWindow('startChat', {id, name})
     },
+    closePanel() {
+        sendToMainWindow('closePanel')
+    },
 }

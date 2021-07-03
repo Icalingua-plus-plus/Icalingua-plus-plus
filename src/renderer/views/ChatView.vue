@@ -333,6 +333,7 @@ export default {
 			this.messagesLoaded = false
 		})
 		ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
+		ipcRenderer.on('closePanel', () => this.panel = '')
 		console.log('加载完成')
 	},
 	methods: {

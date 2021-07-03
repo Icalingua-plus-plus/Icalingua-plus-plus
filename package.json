@@ -52,7 +52,6 @@
     "oicq": "^1.17.3"
   },
   "devDependencies": {
-    "@electron/remote": "*",
     "@types/ioredis": "^4.26.4",
     "@types/lovefield": "^2.1.3",
     "@types/lowdb": "^1.0.10",

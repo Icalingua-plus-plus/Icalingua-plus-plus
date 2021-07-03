@@ -22,6 +22,7 @@ import {download, downloadFileByMessageData, downloadImage} from './downloadMana
 import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
+import ipc from '../../renderer/utils/ipc'
 
 const updatePriority = (lev: 1 | 2 | 3 | 4 | 5) => {
     getConfig().priority = lev
@@ -480,6 +481,22 @@ ipcMain.on('popupTextAreaMenu', () => {
         },
         {
             role: 'paste',
+        },
+    ]).popup({window: getMainWindow()})
+})
+ipcMain.on('popupStickerMenu', () => {
+    Menu.buildFromTemplate([
+        {
+            label: 'Open stickers folder',
+            type: 'normal',
+            click() {
+                shell.openPath(path.join(app.getPath('appData'), 'stickers'))
+            }
+        },
+        {
+            label: 'Close panel',
+            type: 'normal',
+            click: ui.closePanel,
         },
     ]).popup({window: getMainWindow()})
 })
