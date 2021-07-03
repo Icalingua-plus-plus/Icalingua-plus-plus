@@ -145,7 +145,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="js">
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import Stickers from '../components/Stickers'
 import IgnoreManage from '../components/IgnoreManage'
@@ -231,7 +231,6 @@ export default {
 		)
 		window.flag = () => this.view = 'kench'
 		//endregion
-		//region build menu
 
 		if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
 			const myFonts = new FontFace(

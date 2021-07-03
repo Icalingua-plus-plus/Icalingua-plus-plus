@@ -1,4 +1,16 @@
-import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, remote, shell} from 'electron'
+import {
+    app,
+    BrowserWindow,
+    clipboard,
+    dialog,
+    ipcMain,
+    ipcRenderer,
+    Menu,
+    MenuItem,
+    nativeImage,
+    remote,
+    shell,
+} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
 import {getMainWindow} from '../utils/windowManager'
@@ -24,6 +36,7 @@ import axios from 'axios'
 import ui from '../utils/ui'
 import getStaticPath from '../../utils/getStaticPath'
 import setPriority from '../utils/setPriority'
+import getWinUrl from '../../utils/getWinUrl'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     getBot().setOnlineStatus(status)
@@ -250,7 +263,16 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: 'Aria2 下载管理器设置',
                 click: () => {
-                    //这个也 todo
+                    new BrowserWindow({
+                        height: 460,
+                        width: 500,
+                        maximizable: false,
+                        webPreferences: {
+                            nodeIntegration: true,
+                            contextIsolation: false,
+                        },
+                        icon: path.join(getStaticPath(), '/512x512.png'),
+                    }).loadURL(getWinUrl() + '#/aria2')
                 },
             }),
             new MenuItem({

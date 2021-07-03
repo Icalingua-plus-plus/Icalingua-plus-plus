@@ -46,7 +46,7 @@ export const download = (url: string, out: string, dir?: string) => {
     }
 }
 
-export const init = () => loadConfig(getConfig().aria2)
+loadConfig(getConfig().aria2)
 
 /**
  * 其实就是个只有 url 的下载方法，用来下图片

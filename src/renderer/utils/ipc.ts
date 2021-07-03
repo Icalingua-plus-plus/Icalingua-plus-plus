@@ -1,6 +1,7 @@
 import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
+import Aria2Config from '../../types/Aria2Config'
 
 const ipc = {
     async getAllRooms() {
@@ -14,6 +15,9 @@ const ipc = {
     },
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
+    },
+    async getAria2Settings(): Promise<Aria2Config> {
+        return await ipcRenderer.invoke('getAria2Settings')
     },
     async getStorePath(): Promise<string> {
         return await ipcRenderer.invoke('getStorePath')
@@ -85,6 +89,9 @@ const ipc = {
     },
     openForward(resId: string) {
         ipcRenderer.send('openForward', resId)
+    },
+    setAria2Config(config: Aria2Config) {
+        ipcRenderer.send('setAria2Config', config)
     },
 }
 export default ipc
