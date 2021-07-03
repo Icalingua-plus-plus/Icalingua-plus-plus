@@ -417,6 +417,25 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
+        menu.append(
+            new MenuItem({
+                label: '复制消息 ID',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(String(message._id))
+                },
+            }),
+        )
+        if (message.senderId === getBot().uin) {
+            menu.append(
+                new MenuItem({
+                    label: '撤回',
+                    click: () => {
+                        deleteMessage(room.roomId, message._id as string)
+                    },
+                }),
+            )
+        }
         if (!history) {
             menu.append(
                 new MenuItem({
@@ -450,26 +469,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
-        if (message.senderId === getBot().uin) {
-            menu.append(
-                new MenuItem({
-                    label: '撤回',
-                    click: () => {
-                        deleteMessage(room.roomId, message._id as string)
-                    },
-                }),
-            )
-        }
     }
-    menu.append(
-        new MenuItem({
-            label: '复制消息 ID',
-            type: 'normal',
-            click: () => {
-                clipboard.writeText(String(message._id))
-            },
-        }),
-    )
     menu.popup({window: getMainWindow()})
 })
 ipcMain.on('popupTextAreaMenu', () => {
