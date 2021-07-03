@@ -15,13 +15,10 @@ import path from 'path'
     '都是笑话 不值一提 该放弃',
 ])()
 
-//todo deprecate
-require('@electron/remote/main').initialize()
-
 if (process.env.NODE_ENV !== 'development') {
-    global.STATIC = global.__static = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
+    global.STATIC = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
 } else {
-    global.STATIC = global.__static = path.join(__dirname, '../../static')
+    global.STATIC = path.join(__dirname, '../../static')
 }
 
 global.STORE_PATH = app.getPath('userData')
