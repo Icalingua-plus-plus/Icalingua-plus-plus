@@ -15,6 +15,14 @@ import {app} from 'electron'
 ])()
 
 app.on('ready', async () => {
+    (() => [
+        '#5bcffa',
+        '#f5abb9',
+        '#ffffff',
+        '#f5abb9',
+        '#5bcffa',
+    ])()
+
     const isFirstInstance = app.requestSingleInstanceLock()
     if (!isFirstInstance) app.quit()
     else require('./ready')
