@@ -155,14 +155,11 @@ import {ipcRenderer} from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
-import {io} from 'socket.io-client'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 
 let STORE_PATH
-
-let socketIo
 
 //region copied code
 //date format https://www.cnblogs.com/tugenhua0707/p/3776808.html
@@ -259,16 +256,6 @@ export default {
 				if (unreadRoom) this.chroom(unreadRoom)
 			}
 		})
-		window.setupSocketIoSlave = url => {
-			if (url) {
-				db.set('socketIoSlave', url).write()
-				this.initSocketIo()
-			}
-			else {
-				db.set('socketIoSlave', false).write()
-				socketIo = null
-			}
-		}
 		window.flag = () => this.view = 'kench'
 		//endregion
 		//region build menu
@@ -434,10 +421,6 @@ export default {
 			this.$refs.room.focusTextarea()
 		},
 		openForward: ipc.openForward,
-		initSocketIo() {
-			socketIo = new io(db.get('socketIoSlave').value(), {transports: ['websocket']})
-			console.log(socketIo)
-		},
 	},
 	computed: {
 		cssVars() {

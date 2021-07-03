@@ -5,6 +5,7 @@ import exit from './exit'
 import {getFirstUnreadRoom, getUnreadCount} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getStaticPath from '../../utils/getStaticPath'
+import {pushUnreadCount} from './socketIoSlave'
 
 let tray: Tray
 
@@ -56,4 +57,5 @@ export const updateTrayIcon = async (roomName?: string) => {
     }
     tray.setImage(p)
     app.setBadgeCount(unread)
+    pushUnreadCount(unread)
 }
