@@ -39,8 +39,6 @@ import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import {ipcRenderer, remote} from 'electron'
 import ipc from '../utils/ipc'
 
-let mainWindowId
-
 export default {
 	name: 'HistoryView',
 	data() {
@@ -63,15 +61,14 @@ export default {
 		}
 	},
 	created() {
-		ipcRenderer.on('loadMessages', (event, args, id) => {
+		ipcRenderer.on('loadMessages', (event, args) => {
 			console.log(args)
 			this.messages = [...args]
-			mainWindowId = id
 		})
 		document.addEventListener('keydown', (e) => {
 			if (e.repeat) return
 			if (e.key === 'w' && e.ctrlKey === true) {
-				remote.getCurrentWindow().destroy()
+				window.close()
 			}
 		})
 	},
@@ -94,12 +91,7 @@ export default {
 		},
 	},
 	methods: {
-		openForward(resId) {//todo
-			remote.BrowserWindow.fromId(mainWindowId).webContents.send(
-				'openForward',
-				resId,
-			)
-		},
+		openForward: ipc.openForward,
 		openImage: ipc.downloadFileByMessageData,
 		downloadImage: ipc.downloadImage,
 	},

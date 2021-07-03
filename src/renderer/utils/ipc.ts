@@ -80,5 +80,8 @@ const ipc = {
     addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)
     },
+    openForward(resId: string) {
+        ipcRenderer.send('openForward', resId)
+    },
 }
 export default ipc
