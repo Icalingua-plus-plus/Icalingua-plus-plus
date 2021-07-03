@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, Notification} from 'electron'
+import {BrowserWindow, ipcMain, Notification, screen} from 'electron'
 import {
     Client,
     createClient,
@@ -266,7 +266,6 @@ const loginHandlers = {
             webPreferences: {
                 nativeWindowOpen: true,
                 nodeIntegration: true,
-                enableRemoteModule: true,
                 contextIsolation: false,
             },
         })
@@ -575,6 +574,50 @@ ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: obje
     storage.updateMessage(roomId, messageId, message))
 ipcMain.on('sendGroupPoke', (_, gin, uin) => bot.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => storage.addRoom(room))
+ipcMain.on('openForward', async (_, resId: string) => {
+    const history = await bot.getForwardMsg(resId)
+    if (history.error) {
+        console.log(history.error)
+        return
+    }
+    const messages = []
+    for (let i = 0; i < history.data.length; i++) {
+        const data = history.data[i]
+        const message: Message = {
+            senderId: data.user_id,
+            username: <string><unknown>data.nickname, //确信
+            content: '',
+            timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+            date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+            _id: i,
+            time: data.time * 1000,
+        }
+        await processMessage(
+            data.message,
+            message,
+            {},
+            selectedRoomId,
+        )
+        messages.push(message)
+    }
+    const size = screen.getPrimaryDisplay().size
+    let width = size.width - 300
+    if (width > 1440) width = 900
+    const win = new BrowserWindow({
+        height: size.height - 200,
+        width,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
+        },
+    })
+    win.loadURL(global.winURL + '#/history')
+    win.webContents.on('did-finish-load', function () {
+        win.webContents.send('loadMessages', messages)
+    })
+})
 
 export const getBot = () => bot
 export const getStorage = () => storage

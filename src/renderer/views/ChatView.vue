@@ -80,6 +80,7 @@
 							@stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
 							@download-image="downloadImage"
 							@pokegroup="pokeGroup"
+							@open-forward="openForward"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
@@ -248,10 +249,8 @@ export default {
 		})
 		//keyboard
 		document.addEventListener('keydown', (e) => {
-			if (e.repeat) return
-				// if (e.key === 'w' && e.ctrlKey === true) {
-				// 	remote.getCurrentWindow().minimize()
-			// }
+			if (e.repeat) {
+			}
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
 					(e) => e.unreadCount && e.priority >= this.priority,
@@ -260,7 +259,6 @@ export default {
 				if (unreadRoom) this.chroom(unreadRoom)
 			}
 		})
-		ipcRenderer.on('openForward', (e, resId) => this.openForward(resId))
 		window.setupSocketIoSlave = url => {
 			if (url) {
 				db.set('socketIoSlave', url).write()
@@ -434,60 +432,7 @@ export default {
 				ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 			this.$refs.room.focusTextarea()
 		},
-		//todo
-		async openForward(resId) {
-			const history = await bot.getForwardMsg(resId)
-			console.log(history)
-			if (history.error) {
-				console.log(history.error)
-				return
-			}
-			const messages = []
-			for (let i = 0; i < history.data.length; i++) {
-				const data = history.data[i]
-				const message = {
-					senderId: data.user_id,
-					username: data.nickname,
-					content: '',
-					timestamp: new Date(data.time * 1000).format('hh:mm'),
-					date: new Date(data.time * 1000).format('dd/MM/yyyy'),
-					_id: i,
-					time: data.time * 1000,
-				}
-				await this.processMessage(
-					data.message,
-					message,
-					{},
-					this.selectedRoom.roomId,
-				)
-				messages.push(message)
-			}
-			const size = remote.screen.getPrimaryDisplay().size
-			let width = size.width - 300
-			if (width > 1440) width = 900
-			const win = new remote.BrowserWindow({
-				height: size.height - 200,
-				width,
-				autoHideMenuBar: true,
-				webPreferences: {
-					nodeIntegration: true,
-					webSecurity: false,
-					contextIsolation: false,
-				},
-			})
-			const winURL =
-				process.env.NODE_ENV === 'development'
-					? `http://localhost:9080`
-					: `file://${__dirname}/index.html`
-			win.loadURL(winURL + '#/history')
-			win.webContents.on('did-finish-load', function () {
-				win.webContents.send(
-					'loadMessages',
-					messages,
-					remote.getCurrentWindow().id,
-				)
-			})
-		},
+		openForward: ipc.openForward,
 		initSocketIo() {
 			socketIo = new io(db.get('socketIoSlave').value(), {transports: ['websocket']})
 			console.log(socketIo)
