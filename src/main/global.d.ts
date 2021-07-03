@@ -7,7 +7,6 @@ declare global {
             STORE_PATH: string
             winURL: string
             STATIC: string
-            __static: string //todo deprecate
         }
     }
 }
