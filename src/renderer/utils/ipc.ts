@@ -71,6 +71,9 @@ const ipc = {
     popupTextAreaMenu() {
         ipcRenderer.send('popupTextAreaMenu')
     },
+    popupStickerMenu() {
+        ipcRenderer.send('popupStickerMenu')
+    },
     popupContactMenu(remark?: string, name?: string, displayId?: number) {
         ipcRenderer.send('popupContactMenu', remark, name, displayId)
     },

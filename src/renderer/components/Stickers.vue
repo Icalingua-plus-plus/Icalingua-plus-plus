@@ -38,7 +38,7 @@
 
 <script>
 import {VEmojiPicker} from 'v-emoji-picker'
-import {remote, shell} from 'electron'
+import {shell} from 'electron'
 import ipc from '../utils/ipc'
 import fs from 'fs'
 import path from 'path'
@@ -54,7 +54,7 @@ export default {
 		}
 	},
 	async created() {
-		this.dir = path.join(await ipc.getStorePath(), '/stickers/')
+		this.dir = path.join(await ipc.getStorePath(), 'stickers/')
 		if (!fs.existsSync(this.dir)) {
 			fs.mkdirSync(this.dir)
 		}
@@ -74,17 +74,7 @@ export default {
 		folder() {
 			shell.openPath(this.dir)
 		},
-		menu() {
-			const menu = remote.Menu.buildFromTemplate([
-				{label: 'Open stickers folder', type: 'normal', click: this.folder},
-				{
-					label: 'Close panel',
-					type: 'normal',
-					click: () => this.$emit('close'),
-				},
-			])
-			menu.popup({window: remote.getCurrentWindow()})
-		},
+		menu: ipc.popupStickerMenu,
 	},
 }
 </script>
