@@ -37,6 +37,10 @@ export default class MongoStorageProvider implements StorageProvider {
                 background: true,
             })
         }
+        await this.mdb.collection('ignoredChats').createIndex('id', {
+            background: true,
+            unique: true,
+        })
     }
 
     addMessage(roomId: number, message: object): Promise<any> {
