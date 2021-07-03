@@ -1,4 +1,4 @@
-import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, shell} from 'electron'
+import {app, clipboard, dialog, ipcMain, ipcRenderer, Menu, MenuItem, nativeImage, remote, shell} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
 import {getMainWindow} from '../utils/windowManager'
@@ -291,12 +291,11 @@ export const updateAppMenu = async () => {
     }
     Menu.setApplicationMenu(menu)
 }
-export const popupRoomMenu = async (roomId: number) => {
+ipcMain.on('popupRoomMenu', async (_, roomId: number) => {
     buildRoomMenu(await getRoom(roomId)).popup({
         window: getMainWindow(),
     })
-}
-ipcMain.on('popupRoomMenu', (_, id) => popupRoomMenu(id))
+})
 ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, history?: boolean) => {
     const menu = new Menu()
     if (message.deleted && !message.reveal)
@@ -531,4 +530,37 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
     )
     menu.popup({window: getMainWindow()})
 })
-//todo 等等，还有个联系人菜单
+ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number) => {
+    const menu = new Menu()
+    if (remark) {
+        menu.append(
+            new MenuItem({
+                label: `Copy "${remark}"`,
+                click: () => {
+                    clipboard.writeText(remark)
+                },
+            }),
+        )
+    }
+    if (name) {
+        menu.append(
+            new MenuItem({
+                label: `Copy "${name}"`,
+                click: () => {
+                    clipboard.writeText(name)
+                },
+            }),
+        )
+    }
+    if (displayId) {
+        menu.append(
+            new MenuItem({
+                label: `Copy "${displayId}"`,
+                click: () => {
+                    clipboard.writeText(displayId.toString())
+                },
+            }),
+        )
+    }
+    menu.popup({window: getMainWindow()})
+})

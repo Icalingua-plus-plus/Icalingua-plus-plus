@@ -1,7 +1,6 @@
 import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {popupRoomMenu} from '../../main/ipc/menuManager'
 
 const ipc = {
     async getAllRooms() {
@@ -50,9 +49,6 @@ const ipc = {
     downloadImage(url: string) {
         ipcRenderer.send('downloadImage', url)
     },
-    downloadGroupFile(gin: number, fid: string) {
-        ipcRenderer.send('downloadGroupFile', gin, fid)
-    },
     downloadFileByMessageData(data: { action: string, message: Message, room: Room }) {
         ipcRenderer.send('downloadFileByMessageData', data)
 
@@ -74,6 +70,9 @@ const ipc = {
     },
     popupTextAreaMenu() {
         ipcRenderer.send('popupTextAreaMenu')
+    },
+    popupContactMenu(remark?: string, name?: string, displayId?: number) {
+        ipcRenderer.send('popupContactMenu', remark, name, displayId)
     },
     popupMessageMenu(room: Room, message: Message, sect?: string, history?: boolean) {
         ipcRenderer.send('popupMessageMenu', room, message, sect, history)
