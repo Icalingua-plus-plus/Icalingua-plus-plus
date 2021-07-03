@@ -4,4 +4,4 @@ import {getConfig} from '../utils/configManager'
 
 ipcMain.handle('getVersion', app.getVersion)
 ipcMain.handle('getAccount', () => getConfig().account)
-ipcMain.handle('getStorePath', () => app.getPath('appData'))
+ipcMain.handle('getStorePath', () => app.getPath('userData'))

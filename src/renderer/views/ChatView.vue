@@ -271,12 +271,6 @@ export default {
 			})
 		}
 
-		// todo
-		// if (db.get('socketIoSlave').value()) {
-		// 	this.initSocketIo()
-		// }
-
-
 		ipcRenderer.on('closeLoading', () => this.loading = false)
 		ipcRenderer.on('notify', (_, p) => this.$notify(p))
 		ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
