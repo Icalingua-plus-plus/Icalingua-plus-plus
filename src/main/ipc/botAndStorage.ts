@@ -499,7 +499,7 @@ export const sendMessage = async ({content, roomId, file, replyMessage, room, b6
 ipcMain.handle('createBot', async (event, form: LoginForm) => {
     bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
-        data_dir: path.join(app.getPath('appData'), '/data'),
+        data_dir: path.join(app.getPath('userData'), '/data'),
         ignore_self: false,
         brief: true,
         log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',

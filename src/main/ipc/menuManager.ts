@@ -373,7 +373,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     label: '添加为表情',
                     type: 'normal',
                     click: () => {
-                        download(message.file.url, String(new Date().getTime()), path.join(app.getPath('appData'), 'stickers'))
+                        download(message.file.url, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
                     },
                 }),
             )
@@ -491,7 +491,7 @@ ipcMain.on('popupStickerMenu', () => {
             label: 'Open stickers folder',
             type: 'normal',
             click() {
-                shell.openPath(path.join(app.getPath('appData'), 'stickers'))
+                shell.openPath(path.join(app.getPath('userData'), 'stickers'))
             }
         },
         {
