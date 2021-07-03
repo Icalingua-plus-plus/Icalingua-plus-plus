@@ -1,23 +1,22 @@
 {
   "name": "electron-qq",
-  "version": "1.5.7",
+  "version": "2.0.0-beta",
   "author": "clansty <i@gao4.pw>",
   "description": "A cross-platform QQ made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "electron-qq.desktop",
   "scripts": {
-    "build": "node .electron-vue/build.js && electron-builder",
+    "build": "ts-node .electron-vue/build.ts && electron-builder",
     "build:win": "electron-builder --win",
-    "build:ci": "node .electron-vue/build.js",
-    "build:dir": "node .electron-vue/build.js && electron-builder --dir",
-    "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
-    "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
-    "dev": "NODE_ENV=development node .electron-vue/dev-runner.js",
-    "dev:ui": "cross-env NYA=nya node .electron-vue/dev-runner.js",
+    "build:ci": "ts-node .electron-vue/build.ts",
+    "build:dir": "ts-node .electron-vue/build.ts && electron-builder --dir",
+    "build:clean": "cross-env BUILD_TARGET=clean ts-node .electron-vue/build.ts",
+    "build:web": "cross-env BUILD_TARGET=web ts-node .electron-vue/build.ts",
+    "dev": "NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
     "pack": "npm run pack:main && npm run pack:renderer",
-    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
-    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js"
+    "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.ts",
+    "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.ts"
   },
   "build": {
     "productName": "Electron QQ",
@@ -53,11 +52,12 @@
     "oicq": "^1.17.3"
   },
   "devDependencies": {
-    "@electron/remote": "*",
     "@types/ioredis": "^4.26.4",
     "@types/lovefield": "^2.1.3",
+    "@types/lowdb": "^1.0.10",
     "@types/md5": "^2.3.0",
     "@types/mongodb": "^3.6.17",
+    "@types/webpack": "^5.28.0",
     "ajv": "^6.5.0",
     "aria2": "^4.1.2",
     "axios": "^0.21.1",
@@ -79,6 +79,7 @@
     "electron-builder": "^22.11.7",
     "electron-debug": "^3.2.0",
     "electron-devtools-installer": "^3.1.1",
+    "electron-dl": "^3.2.1",
     "element-ui": "^2.15.1",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.2.0",
@@ -87,7 +88,6 @@
     "lodash": "^4.17.21",
     "lottie-web": "^5.7.11",
     "lovefield": "^2.1.12",
-    "lowdb": "^1.0.0",
     "md5": "^2.3.0",
     "mini-css-extract-plugin": "0.4.0",
     "multispinner": "^0.2.1",
@@ -119,6 +119,7 @@
     "webpack-dev-server": "^3.1.4",
     "webpack-hot-middleware": "^2.22.2",
     "webpack-merge": "^4.1.3",
-    "which": "^2.0.2"
+    "which": "^2.0.2",
+    "yaml": "^1.10.2"
   }
 }
