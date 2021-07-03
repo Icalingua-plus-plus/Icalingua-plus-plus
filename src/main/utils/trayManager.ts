@@ -4,11 +4,12 @@ import {getMainWindow} from './windowManager'
 import exit from './exit'
 import {getFirstUnreadRoom, getUnreadCount} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
+import getStaticPath from '../../utils/getStaticPath'
 
 let tray: Tray
 
 export const createTray = () => {
-    tray = new Tray(path.join(global.STATIC, '/256x256.png'))
+    tray = new Tray(path.join(getStaticPath(), '/256x256.png'))
     tray.setToolTip('Electron QQ')
     tray.on('click', () => {
         const window = getMainWindow()
@@ -43,14 +44,14 @@ export const updateTrayIcon = async (roomName?: string) => {
         : 'Electron QQ'
     if (unread) {
         p = path.join(
-            global.STATIC,
+            getStaticPath(),
             getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
         )
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
-        p = path.join(global.STATIC, getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
+        p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
     }
     tray.setImage(p)

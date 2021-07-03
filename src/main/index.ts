@@ -1,5 +1,4 @@
-import {app, protocol, shell, Menu} from 'electron'
-import path from 'path'
+import {app} from 'electron'
 
 (() => [
     '我所遗失的心啊',
@@ -14,19 +13,6 @@ import path from 'path'
 
     '都是笑话 不值一提 该放弃',
 ])()
-
-if (process.env.NODE_ENV !== 'development') {
-    global.STATIC = path.join(__dirname, '/static').replace(/\\/g, '\\\\')
-} else {
-    global.STATIC = path.join(__dirname, '../../static')
-}
-
-global.STORE_PATH = app.getPath('userData')
-
-global.winURL =
-    process.env.NODE_ENV === 'development'
-        ? `http://localhost:9080`
-        : `file://${__dirname}/index.html`
 
 app.on('ready', async () => {
     const isFirstInstance = app.requestSingleInstanceLock()

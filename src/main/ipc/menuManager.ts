@@ -23,6 +23,7 @@ import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
 import ipc from '../../renderer/utils/ipc'
+import getStaticPath from '../../utils/getStaticPath'
 
 const updatePriority = (lev: 1 | 2 | 3 | 4 | 5) => {
     getConfig().priority = lev
@@ -219,7 +220,7 @@ export const updateAppMenu = async () => {
                 },
                 {
                     label: '帮助',
-                    click: () => openImage(path.join(global.STATIC, 'notification.webp')),
+                    click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
                 },
             ],
         }),
