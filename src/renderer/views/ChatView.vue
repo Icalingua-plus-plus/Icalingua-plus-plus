@@ -434,6 +434,7 @@ export default {
 				ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
 			this.$refs.room.focusTextarea()
 		},
+		//todo
 		async openForward(resId) {
 			const history = await bot.getForwardMsg(resId)
 			console.log(history)

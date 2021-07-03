@@ -2,6 +2,7 @@ import StorageProvider from '../../types/StorageProvider'
 import Message from '../../types/Message'
 import Room from '../../types/Room'
 import {Db, MongoClient} from 'mongodb'
+import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 
 export default class MongoStorageProvider implements StorageProvider {
     id: string | number
@@ -123,5 +124,17 @@ export default class MongoStorageProvider implements StorageProvider {
                 $gte: priority,
             },
         })
+    }
+
+    addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
+        return this.mdb.collection('ignoredChats').insertOne(info)
+    }
+
+    getIgnoredChats(): Promise<IgnoreChatInfo[]> {
+        return this.mdb.collection('ignoredChats').find().toArray()
+    }
+
+    async isChatIgnored(id: number): Promise<boolean> {
+        return !!await this.mdb.collection('ignoredChats').findOne({id})
     }
 }

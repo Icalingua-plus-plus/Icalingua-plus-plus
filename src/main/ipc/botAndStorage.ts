@@ -60,8 +60,7 @@ const eventHandlers = {
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
         let roomId = groupId ? -groupId : data.user_id
-        //todo
-        // if ((await settings.get('ignoredChats') as Array<{ id: number, name: string }>).find((e) => e.id == roomId)) return
+        if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = bot.uin === senderId
         const senderName = groupId
             ? ((<GroupMessageEventData>data).anonymous)
@@ -605,7 +604,8 @@ export const pinRoom = async (roomId: number, pin: boolean) => {
     ui.setAllRooms(await storage.getAllRooms())
 }
 export const ignoreChat = async (data: IgnoreChatInfo) => {
-    //todo use storage
+    await storage.addIgnoredChat(data)
+    await removeChat(data.id)
 }
 export const removeChat = async (roomId: number) => {
     await storage.removeRoom(roomId)
