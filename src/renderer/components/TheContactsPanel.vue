@@ -43,7 +43,7 @@
 	</div>
 </template>
 
-<script lang="ts">
+<script>
 import {ipcRenderer} from "electron";
 import ContactEntry from "./ContactEntry.vue";
 
