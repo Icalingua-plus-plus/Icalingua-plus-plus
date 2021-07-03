@@ -81,6 +81,7 @@
 							@download-image="downloadImage"
 							@pokegroup="pokeGroup"
 							@open-forward="openForward"
+							@fetch-messages="fetchMessage"
 						>
 							<template v-slot:menu-icon>
 								<i class="el-icon-more"></i>
