@@ -3,6 +3,7 @@ import which from 'which'
 import {BrowserWindow, ipcMain} from 'electron'
 import path from 'path'
 import querystring from 'querystring'
+import getStaticPath from '../../utils/getStaticPath'
 
 let viewer = ''
 const VIEWERS = [
@@ -46,7 +47,7 @@ const openImage = (url: string, external: boolean = false) => {
                 contextIsolation: false,
             },
         })
-        viewerWindow.loadURL('file://' + path.join(global.STATIC, 'imgView.html') + '?' + querystring.stringify({url}))
+        viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
         viewerWindow.maximize()
     } else if (viewer) {
         execFile(viewer, [url])

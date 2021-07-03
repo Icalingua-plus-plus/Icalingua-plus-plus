@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, Notification, screen} from 'electron'
+import {app, BrowserWindow, ipcMain, Notification, screen} from 'electron'
 import {
     Client,
     createClient,
@@ -27,6 +27,8 @@ import {download, init as initDownloadManager} from './downloadManager'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import {updateAppMenu} from './menuManager'
+import getWinUrl from '../../utils/getWinUrl'
+import getStaticPath from '../../utils/getStaticPath'
 
 type SendMessageParams = {
     content: string,
@@ -270,7 +272,7 @@ const loginHandlers = {
             },
         })
         const inject = fs.readFileSync(
-            path.join(global.STATIC, '/sliderinj.js'),
+            path.join(getStaticPath(), '/sliderinj.js'),
             'utf-8',
         )
         console.log(inject)
@@ -495,9 +497,9 @@ export const sendMessage = async ({content, roomId, file, replyMessage, room, b6
     }
 }
 ipcMain.handle('createBot', async (event, form: LoginForm) => {
-    bot = global.bot = createClient(Number(form.username), {
+    bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
-        data_dir: path.join(global.STORE_PATH, '/data'),
+        data_dir: path.join(app.getPath('appData'), '/data'),
         ignore_self: false,
         brief: true,
         log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
@@ -613,7 +615,7 @@ ipcMain.on('openForward', async (_, resId: string) => {
             contextIsolation: false,
         },
     })
-    win.loadURL(global.winURL + '#/history')
+    win.loadURL(getWinUrl() + '#/history')
     win.webContents.on('did-finish-load', function () {
         win.webContents.send('loadMessages', messages)
     })

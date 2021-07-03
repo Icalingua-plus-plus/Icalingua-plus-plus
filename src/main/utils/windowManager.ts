@@ -2,6 +2,8 @@ import {BrowserWindow} from 'electron'
 import path from 'path'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
+import getWinUrl from '../../utils/getWinUrl'
+import getStaticPath from '../../utils/getStaticPath'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
@@ -16,7 +18,7 @@ export const loadMainWindow = async () => {
             webSecurity: false,
             contextIsolation: false,
         },
-        icon: path.join(global.STATIC, '/512x512.png'),
+        icon: path.join(getStaticPath(), '/512x512.png'),
     })
 
     loginWindow.destroy()
@@ -36,7 +38,7 @@ export const loadMainWindow = async () => {
 
     mainWindow.on('focus', clearCurrentRoomUnread)
 
-    mainWindow.loadURL(global.winURL + '#/main')
+    mainWindow.loadURL(getWinUrl() + '#/main')
 }
 export const showLoginWindow = () => {
     loginWindow = new BrowserWindow({
@@ -47,10 +49,10 @@ export const showLoginWindow = () => {
             nodeIntegration: true,
             contextIsolation: false,
         },
-        icon: path.join(global.STATIC, '/512x512.png'),
+        icon: path.join(getStaticPath(), '/512x512.png'),
     })
 
-    loginWindow.loadURL(global.winURL + '#/login')
+    loginWindow.loadURL(getWinUrl() + '#/login')
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow)

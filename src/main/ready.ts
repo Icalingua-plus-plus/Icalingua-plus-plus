@@ -1,5 +1,6 @@
 import {app, protocol, shell} from 'electron'
 import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
+import {getBot} from './ipc/botAndStorage'
 
 require('./utils/configManager')
 require('./ipc/system')
@@ -13,7 +14,7 @@ if (process.env.NODE_ENV === 'development')
     })
 showLoginWindow()
 app.on('window-all-closed', () => {
-    if (global.bot) global.bot.logout()
+    if (getBot()) getBot().logout()
     setTimeout(() => {
         app.quit()
     }, 1000)
@@ -30,10 +31,10 @@ app.on('second-instance', showWindow)
 
 app.on('before-quit', () => {
     destroyWindow()
-    if (global.bot) global.bot.logout()
+    if (getBot()) getBot().logout()
 })
 
 app.on('will-quit', () => {
     destroyWindow()
-    if (global.bot) global.bot.logout()
+    if (getBot()) getBot().logout()
 })
