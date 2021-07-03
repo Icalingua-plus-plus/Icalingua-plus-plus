@@ -257,6 +257,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '管理屏蔽的会话',
+                enabled: false,
                 click: () => {
                 },//todo 做一个单独的窗口来管理,
             }),
