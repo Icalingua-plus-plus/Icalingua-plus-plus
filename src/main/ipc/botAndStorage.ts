@@ -85,7 +85,7 @@ const eventHandlers = {
         }
 
         let room = await storage.getRoom(roomId)
-        if (room === undefined) {
+        if (!room) {
             const group = bot.gl.get(groupId)
             if (group && group.group_name !== roomName) roomName = group.group_name
             // create room

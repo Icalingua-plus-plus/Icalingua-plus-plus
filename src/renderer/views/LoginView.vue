@@ -103,8 +103,6 @@ export default {
 			this.errmsg = msg
 			this.disabled = false
 		})
-	},
-	mounted() {
 		if (this.form.autologin) this.onSubmit('loginForm')
 	},
 	methods: {
