@@ -93,7 +93,7 @@ export const updateTrayIcon = async (roomName?: string) => {
     let p
     const unread = await getUnreadCount()
     const title = roomName
-        ? roomName + ' - Electron QQ'
+        ? roomName + ' — Electron QQ'
         : 'Electron QQ'
     if (unread) {
         p = path.join(
