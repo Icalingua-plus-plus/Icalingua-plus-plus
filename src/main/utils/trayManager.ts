@@ -3,7 +3,7 @@ import path from 'path'
 import {getMainWindow} from './windowManager'
 import exit from './exit'
 import {getFirstUnreadRoom, getUnreadCount} from '../ipc/botAndStorage'
-import {getConfig} from './configManager'
+import {getConfig, saveConfigFile} from './configManager'
 import getStaticPath from '../../utils/getStaticPath'
 import {pushUnreadCount} from './socketIoSlave'
 import openImage from '../ipc/openImage'
@@ -22,10 +22,13 @@ export const createTray = () => {
         window.show()
         window.focus()
     })
+    updateTrayMenu()
+}
+export const updateTrayMenu = () => {
     tray.setContextMenu(
         Menu.buildFromTemplate([
             {
-                label: 'Open',
+                label: '打开',
                 type: 'normal',
                 click: () => {
                     const window = getMainWindow()
@@ -69,22 +72,28 @@ export const createTray = () => {
                 ],
             },
             {
-                label: 'Exit',
+                label: '深色图标',
+                type: 'checkbox',
+                checked: getConfig().darkTaskIcon,
+                click(item) {
+                    getConfig().darkTaskIcon = item.checked
+                    updateTrayIcon()
+                    saveConfigFile()
+                },
+            },
+            {
+                label: '退出',
                 type: 'normal',
                 click: exit,
             },
         ]),
     )
-
-}
-export const updateTrayMenu=()=>{
-
 }
 export const updateTrayIcon = async (roomName?: string) => {
     let p
     const unread = await getUnreadCount()
     const title = roomName
-        ? roomName
+        ? roomName + ' - Electron QQ'
         : 'Electron QQ'
     if (unread) {
         p = path.join(
