@@ -215,20 +215,25 @@ export default {
 		//keyboard
 		document.addEventListener('keydown', (e) => {
 			if (e.repeat) {
+				return
 			}
 			else if (e.key === 'w' && e.ctrlKey === true) {
 				window.close()
 			}
-			else
-				if (e.key === 'Tab') {
-					let unreadRoom = this.rooms.find(
-						(e) => e.unreadCount && e.priority >= this.priority,
-					)
-					if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount)
-					if (unreadRoom) this.chroom(unreadRoom)
-				}
+			else if (e.key === 'Escape') {
+				this.selectedRoomId = 0
+				this.messages = []
+				ipc.setSelectedRoom(0, '')
+				document.title = 'Electron QQ'
 			}
-		)
+			else if (e.key === 'Tab') {
+				let unreadRoom = this.rooms.find(
+					(e) => e.unreadCount && e.priority >= this.priority,
+				)
+				if (!unreadRoom) unreadRoom = this.rooms.find((e) => e.unreadCount)
+				if (unreadRoom) this.chroom(unreadRoom)
+			}
+		})
 		window.flag = () => this.view = 'kench'
 		//endregion
 
