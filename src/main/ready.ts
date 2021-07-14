@@ -1,6 +1,7 @@
 import {app, protocol, shell} from 'electron'
 import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
-import {getBot} from './ipc/botAndStorage'
+import {createBot, getBot} from './ipc/botAndStorage'
+import {getConfig} from './utils/configManager'
 
 require('./utils/configManager')
 require('./ipc/system')
@@ -12,7 +13,12 @@ if (process.env.NODE_ENV === 'development')
         const pathname = request.url.replace('file:///', '')
         cb(pathname)
     })
-showLoginWindow()
+if(getConfig().account.autologin){
+    createBot(getConfig().account)
+}
+else{
+    showLoginWindow()
+}
 app.on('window-all-closed', () => {
     if (getBot()) getBot().logout()
     setTimeout(() => {
