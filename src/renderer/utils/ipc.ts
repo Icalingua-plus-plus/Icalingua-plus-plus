@@ -4,9 +4,6 @@ import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
 
 const ipc = {
-    async getAllRooms() {
-        return await ipcRenderer.invoke('getAllRooms') as Room[]
-    },
     async sendMessage(data) {
         return await ipcRenderer.invoke('sendMessage', data)
     },

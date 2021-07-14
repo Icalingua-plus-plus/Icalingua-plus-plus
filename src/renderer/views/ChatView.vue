@@ -201,7 +201,6 @@ export default {
 	async created() {
 		//region set status
 		this.account = await ipc.getUin()
-		this.rooms = await ipc.getAllRooms()
 		this.priority = await ipc.getPriority()
 		this.offline = !await ipc.isOnline()
 		this.username = await ipc.getNick()
