@@ -247,7 +247,7 @@ export const updateAppMenu = async () => {
                     },
                     {
                         type: 'radio',
-                        label: 'Hide',
+                        label: '隐身',
                         checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
                         click: () => setOnlineStatus(OnlineStatusType.Hide),
                     },
