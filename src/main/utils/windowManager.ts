@@ -7,7 +7,7 @@ import getStaticPath from '../../utils/getStaticPath'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
-export const loadMainWindow = async () => {
+export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
     mainWindow = new BrowserWindow({
@@ -21,15 +21,11 @@ export const loadMainWindow = async () => {
         icon: path.join(getStaticPath(), '/512x512.png'),
     })
 
-    loginWindow.destroy()
+    if (loginWindow)
+        loginWindow.destroy()
 
     if (winSize.max)
         mainWindow.maximize()
-
-    if (process.env.NODE_ENV === 'development')
-        mainWindow.webContents.session.loadExtension(
-            '/usr/lib/node_modules/vue-devtools/vender/',
-        )
 
     mainWindow.on('close', (e) => {
         e.preventDefault()
@@ -41,18 +37,28 @@ export const loadMainWindow = async () => {
     mainWindow.loadURL(getWinUrl() + '#/main')
 }
 export const showLoginWindow = () => {
-    loginWindow = new BrowserWindow({
-        height: 720,
-        width: 450,
-        maximizable: false,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-        },
-        icon: path.join(getStaticPath(), '/512x512.png'),
-    })
+    if (loginWindow) {
+        loginWindow.show()
+        loginWindow.focus()
+    } else {
+        loginWindow = new BrowserWindow({
+            height: 720,
+            width: 450,
+            maximizable: false,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+            icon: path.join(getStaticPath(), '/512x512.png'),
+        })
 
-    loginWindow.loadURL(getWinUrl() + '#/login')
+        if (process.env.NODE_ENV === 'development')
+            loginWindow.webContents.session.loadExtension(
+                '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
+            )
+
+        loginWindow.loadURL(getWinUrl() + '#/login')
+    }
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow)

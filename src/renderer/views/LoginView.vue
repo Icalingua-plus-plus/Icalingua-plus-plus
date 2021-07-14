@@ -103,7 +103,6 @@ export default {
 			this.errmsg = msg
 			this.disabled = false
 		})
-		if (this.form.autologin) this.onSubmit('loginForm')
 	},
 	methods: {
 		onSubmit(formName) {
@@ -112,7 +111,7 @@ export default {
 					this.disabled = true
 					if (!/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
 						this.form.password = md5(this.form.password)
-					await ipcRenderer.invoke('createBot', this.form)
+					await ipcRenderer.send('createBot', this.form)
 				}
 				else {
 					return false

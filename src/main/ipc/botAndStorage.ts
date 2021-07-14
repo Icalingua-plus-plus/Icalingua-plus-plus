@@ -497,7 +497,7 @@ export const sendMessage = async ({content, roomId, file, replyMessage, room, b6
         })
     }
 }
-ipcMain.handle('createBot', async (event, form: LoginForm) => {
+export const createBot=(form: LoginForm)=>{
     bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(app.getPath('userData'), '/data'),
@@ -509,7 +509,8 @@ ipcMain.handle('createBot', async (event, form: LoginForm) => {
     loginForm = form
     attachLoginHandler()
     bot.login(form.password)
-})
+}
+ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => {
     const friends = bot.fl.values()
     let iterF = friends.next()
