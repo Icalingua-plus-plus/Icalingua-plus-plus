@@ -298,6 +298,7 @@ const loginHandlers = {
         await loadMainWindow()
         createTray()
         await initStorage()
+        ui.setAllRooms(await storage.getAllRooms())
         attachEventHandler()
         await updateAppMenu()
         await updateTray()

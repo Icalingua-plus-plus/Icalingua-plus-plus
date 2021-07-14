@@ -34,7 +34,7 @@ export const loadMainWindow = () => {
 
     mainWindow.on('focus', clearCurrentRoomUnread)
 
-    mainWindow.loadURL(getWinUrl() + '#/main')
+    return mainWindow.loadURL(getWinUrl() + '#/main')
 }
 export const showLoginWindow = () => {
     if (loginWindow) {
