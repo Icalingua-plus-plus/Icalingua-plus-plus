@@ -299,6 +299,7 @@ const loginHandlers = {
         createTray()
         await initStorage()
         attachEventHandler()
+        await updateAppMenu()
         await updateTray()
     },
     verify(data) {

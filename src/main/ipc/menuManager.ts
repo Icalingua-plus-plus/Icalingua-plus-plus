@@ -4,11 +4,9 @@ import {
     clipboard,
     dialog,
     ipcMain,
-    ipcRenderer,
     Menu,
     MenuItem,
     nativeImage,
-    remote,
     shell,
 } from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
@@ -508,7 +506,7 @@ ipcMain.on('popupStickerMenu', () => {
             type: 'normal',
             click() {
                 shell.openPath(path.join(app.getPath('userData'), 'stickers'))
-            }
+            },
         },
         {
             label: 'Close panel',
