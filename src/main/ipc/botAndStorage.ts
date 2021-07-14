@@ -52,8 +52,6 @@ let selectedRoomId = 0
 let selectedRoomName = ''
 let currentLoadedMessagesCount = 0
 
-//我希望这里面的东西是本机无关的，就是说这个文件可以整个换掉不影响其他部分，或者单独抽出来也能工作，只要接口签名都一样
-
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
@@ -114,6 +112,7 @@ const eventHandlers = {
         //notification
         if (
             (!getMainWindow().isFocused() ||
+                !getMainWindow().isVisible() ||
                 roomId !== selectedRoomId) &&
             (room.priority >= getConfig().priority || at) &&
             !isSelfMsg
@@ -351,7 +350,7 @@ const initStorage = async () => {
         await dialog.showMessageBox(getMainWindow(), {
             title: '错误',
             message: '无法连接数据库',
-            type: 'error'
+            type: 'error',
         })
         app.quit()
     }
