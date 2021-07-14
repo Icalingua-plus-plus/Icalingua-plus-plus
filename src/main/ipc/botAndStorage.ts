@@ -51,6 +51,7 @@ let loginForm: LoginForm
 let selectedRoomId = 0
 let selectedRoomName = ''
 let currentLoadedMessagesCount = 0
+let loggedIn = false
 
 //region event handlers
 const eventHandlers = {
@@ -288,18 +289,22 @@ const loginHandlers = {
         sendToLoginWindow('error', data.message)
     },
     async onSucceed() {
-        //save account info
-        getConfig().account = loginForm
-        saveConfigFile()
+        if (!loggedIn) {
+            //不是二次登录
+            loggedIn = true
+            //save account info
+            getConfig().account = loginForm
+            saveConfigFile()
+            //登录完成之后的初始化操作
+            await loadMainWindow()
+            createTray()
+            await initStorage()
+            ui.setAllRooms(await storage.getAllRooms())
+            attachEventHandler()
+        }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
-        //登录完成之后的初始化操作
-        await loadMainWindow()
-        createTray()
-        await initStorage()
-        ui.setAllRooms(await storage.getAllRooms())
-        attachEventHandler()
         await updateAppMenu()
         await updateTray()
     },
@@ -499,7 +504,7 @@ export const sendMessage = async ({content, roomId, file, replyMessage, room, b6
         })
     }
 }
-export const createBot=(form: LoginForm)=>{
+export const createBot = (form: LoginForm) => {
     bot = createClient(Number(form.username), {
         platform: Number(form.protocol),
         data_dir: path.join(app.getPath('userData'), '/data'),
