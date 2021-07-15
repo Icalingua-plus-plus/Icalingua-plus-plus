@@ -303,9 +303,8 @@ export default {
 		},
 		checkVideoType(file) {
 			if (!file) return
-			const videoTypes = ['video/mp4', 'video/ogg', 'video/webm']
 			const {type} = file
-			return videoTypes.some((t) => type.toLowerCase().includes(t))
+			return type.toLowerCase().includes('video/')
 		},
 		avatarctx() {
 			ipc.popupAvatarMenu(this.message)

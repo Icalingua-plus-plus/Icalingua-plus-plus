@@ -2,6 +2,8 @@ import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} 
 import Message from "../../types/Message";
 import {getBot, getStorage} from "../ipc/botAndStorage";
 import {base64decode} from 'nodejs-base64'
+import mime from './mime'
+import path from 'path'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -48,7 +50,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 lastMessage.content += "[File]" + m.data.name;
                 message.content += m.data.name;
                 message.file = {
-                    type: "object/stream",
+                    type: mime(path.extname(m.data.name)),
                     size: m.data.size,
                     url: m.data.url,
                     name: m.data.name,
