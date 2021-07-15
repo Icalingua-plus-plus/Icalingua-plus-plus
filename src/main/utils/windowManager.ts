@@ -32,6 +32,11 @@ export const loadMainWindow = () => {
         mainWindow.hide()
     })
 
+    if (process.env.NODE_ENV === 'development')
+        mainWindow.webContents.session.loadExtension(
+            '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
+        )
+
     mainWindow.on('focus', clearCurrentRoomUnread)
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
