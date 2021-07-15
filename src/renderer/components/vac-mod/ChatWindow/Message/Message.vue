@@ -116,9 +116,9 @@
 							</video>
 						</div>
 
-						<div v-else-if="message.file.audio" class="vac-audio-message">
+						<div v-else-if="isAudio" class="vac-audio-message">
 							<div id="vac-audio-player">
-								<audio v-if="message.file.audio" controls>
+								<audio controls controlslist="nodownload noremoteplayback novolume nomute">
 									<source :src="message.file.url"/>
 								</audio>
 							</div>
@@ -243,6 +243,9 @@ export default {
 		isVideo() {
 			return this.checkVideoType(this.message.file)
 		},
+		isAudio() {
+			return this.checkAudioType(this.message.file)
+		},
 		isCheckmarkVisible() {
 			return (
 				this.message.senderId === this.currentUserId &&
@@ -305,6 +308,11 @@ export default {
 			if (!file) return
 			const {type} = file
 			return type.toLowerCase().includes('video/')
+		},
+		checkAudioType(file) {
+			if (!file) return
+			const {type} = file
+			return type.toLowerCase().includes('audio/')
 		},
 		avatarctx() {
 			ipc.popupAvatarMenu(this.message)
@@ -486,29 +494,17 @@ export default {
 
 .selector:not(*:root),
 #vac-audio-player {
-	width: 250px;
+	max-width: 250px;
 	overflow: hidden;
 	border-top-right-radius: 1em;
 	border-bottom-right-radius: 2.5em 1em;
 
 	audio {
 		height: 40px;
+		max-width: 100%;
 
 		&::-webkit-media-controls-panel {
 			height: 40px;
-		}
-
-		&::-webkit-media-controls-mute-button {
-			display: none;
-		}
-
-		&::-webkit-media-controls-timeline {
-			min-width: 103px;
-			max-width: 142px;
-		}
-
-		&:focus {
-			outline: none;
 		}
 	}
 }
