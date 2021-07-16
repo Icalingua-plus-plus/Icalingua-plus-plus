@@ -1,38 +1,17 @@
-import {app, BrowserWindow, dialog, ipcMain, Notification, screen} from 'electron'
-import {
-    Client,
-    createClient,
-    FriendInfo, FriendPokeEventData, FriendRecallEventData,
-    GroupMessageEventData, GroupPokeEventData, GroupRecallEventData,
-    MemberBaseInfo,
-    MessageEventData, OfflineEventData, PrivateMessageEventData,
-    Ret,
-} from 'oicq'
-import path from 'path'
-import fs from 'fs'
-import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
-import StorageProvider from '../../types/StorageProvider'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
-import {createTray, updateTrayIcon} from '../utils/trayManager'
+import {BrowserWindow, ipcMain, screen} from 'electron'
 import ui from '../utils/ui'
 import formatDate from '../utils/formatDate'
 import Message from '../../types/Message'
 import processMessage from '../utils/processMessage'
-import getAvatarUrl from '../../utils/getAvatarUrl'
-import avatarCache from '../utils/avatarCache'
-import createRoom from '../../utils/createRoom'
-import Room from '../../types/Room'
 import LoginForm from '../../types/LoginForm'
-import {download} from './downloadManager'
-import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import {getConfig, saveConfigFile} from '../utils/configManager'
-import {updateAppMenu} from './menuManager'
+import {getConfig} from '../utils/configManager'
 import getWinUrl from '../../utils/getWinUrl'
-import getStaticPath from '../../utils/getStaticPath'
-import SendMessageParams from '../../types/SendMessageParams'
-import localAdapter from '../adapters/localAdapter'
+import oicqAdapter from '../adapters/oicqAdapter'
+import Adapter from '../../types/Adapter'
 
-let adapter = localAdapter
+let adapter: Adapter
+if (getConfig().adapter === 'oicq')
+    adapter = oicqAdapter
 
 export const {
     sendMessage, createBot,
