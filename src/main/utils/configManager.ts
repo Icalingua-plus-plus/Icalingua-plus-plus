@@ -16,6 +16,7 @@ type AllConfig = {
     darkTaskIcon: boolean
     winSize: WinSize
     socketIo: string
+    adapter: 'oicq' | 'socketIo'
 }
 
 
@@ -61,7 +62,8 @@ const defaultConfig: AllConfig = {
     aria2: defaultAria2Config,
     darkTaskIcon: false,
     winSize: defaultWinSize,
-    socketIo: ''
+    socketIo: '',
+    adapter: 'oicq',
 }
 if (fs.existsSync(configFilePath)) {
     config = YAML.parse(fs.readFileSync(configFilePath, 'utf8'))
