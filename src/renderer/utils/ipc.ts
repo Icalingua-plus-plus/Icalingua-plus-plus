@@ -4,8 +4,8 @@ import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
 
 const ipc = {
-    async sendMessage(data) {
-        return await ipcRenderer.invoke('sendMessage', data)
+    sendMessage(data) {
+        return ipcRenderer.send('sendMessage', data)
     },
     async isOnline(): Promise<boolean> {
         return await ipcRenderer.invoke('isOnline')

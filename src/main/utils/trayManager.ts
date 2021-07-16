@@ -8,6 +8,7 @@ import getStaticPath from '../../utils/getStaticPath'
 import {pushUnreadCount} from './socketIoSlave'
 import openImage from '../ipc/openImage'
 import setPriority from './setPriority'
+import ui from './ui'
 
 let tray: Tray
 
@@ -89,11 +90,11 @@ export const updateTrayMenu = () => {
         ]),
     )
 }
-export const updateTrayIcon = async (roomName?: string) => {
+export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
-    const title = roomName
-        ? roomName + ' — Electron QQ'
+    const title = ui.getSelectedRoomName()
+        ? ui.getSelectedRoomName() + ' — Electron QQ'
         : 'Electron QQ'
     if (unread) {
         p = path.join(
