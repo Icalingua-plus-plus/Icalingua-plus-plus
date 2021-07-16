@@ -29,6 +29,7 @@ import {updateAppMenu} from '../ipc/menuManager'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
+import Adapter from '../../types/Adapter'
 
 let bot: Client
 let storage: StorageProvider
@@ -363,7 +364,7 @@ const attachLoginHandler = () => {
 const updateTray = () => updateTrayIcon(ui.getSelectedRoomName())
 //endregion
 
-const adapter = {
+const adapter: Adapter = {
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()
