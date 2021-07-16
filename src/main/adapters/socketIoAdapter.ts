@@ -8,19 +8,23 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import crypto from 'crypto'
-import {app, dialog} from 'electron'
-import {getMainWindow, loadMainWindow} from '../utils/windowManager'
+import {app, dialog, Notification} from 'electron'
+import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
+import avatarCache from '../utils/avatarCache'
 
 let socket: Socket
 let uin = 0
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', (room: Room) => {
-        if (room.roomId === ui.getSelectedRoomId())
+        if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
+            //把它点掉
             room.unreadCount = 0
+            socket.emit('updateRoom', room.roomId, {unreadCount: 0})
+        }
         ui.updateRoom(room)
     })
     socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
@@ -45,6 +49,41 @@ const attachSocketEvents = () => {
     socket.on('setMessages', ({roomId, messages}: { roomId: number, messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)
+    })
+    socket.on('notification', async(data: {
+        avatar: string,
+        priority: 1 | 2 | 3 | 4 | 5,
+        roomId: number,
+        at: string | boolean,
+        data: { title: string, body: string, hasReply: boolean, replyPlaceholder: string },
+        isSelfMsg: boolean
+    }) => {
+        if (
+            (!getMainWindow().isFocused() ||
+                !getMainWindow().isVisible() ||
+                data.roomId !== ui.getSelectedRoomId()) &&
+            (data.priority >= getConfig().priority || data.at) &&
+            !data.isSelfMsg
+        ) {
+            //notification
+
+            const notif = new Notification({
+                ...data.data,
+                icon: await avatarCache(data.avatar),
+            })
+            notif.addListener('click', () => {
+                showWindow()
+                ui.chroom(data.roomId)
+            })
+            notif.addListener('reply', (e, r) => {
+                adapter.sendMessage({
+                    content: r,
+                    roomId: data.roomId,
+                })
+            })
+            notif.show()
+            console.log(notif)
+        }
     })
 }
 
