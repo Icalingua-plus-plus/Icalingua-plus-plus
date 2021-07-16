@@ -1,9 +1,7 @@
 import {BrowserWindow} from 'electron'
-import path from 'path'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
-import getStaticPath from '../../utils/getStaticPath'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
@@ -18,7 +16,6 @@ export const loadMainWindow = () => {
             webSecurity: false,
             contextIsolation: false,
         },
-        icon: path.join(getStaticPath(), '/512x512.png'),
     })
 
     if (loginWindow)
@@ -54,7 +51,6 @@ export const showLoginWindow = () => {
                 nodeIntegration: true,
                 contextIsolation: false,
             },
-            icon: path.join(getStaticPath(), '/512x512.png'),
         })
 
         if (process.env.NODE_ENV === 'development')

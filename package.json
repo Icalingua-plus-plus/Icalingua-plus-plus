@@ -14,7 +14,6 @@
     "build:ci": "ts-node .electron-vue/build.ts",
     "build:dir": "ts-node .electron-vue/build.ts && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean ts-node .electron-vue/build.ts",
-    "build:web": "cross-env BUILD_TARGET=web ts-node .electron-vue/build.ts",
     "dev": "NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.ts",
