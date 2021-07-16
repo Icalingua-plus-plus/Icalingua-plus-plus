@@ -14,41 +14,51 @@
 				v-for="room in sortedRooms"
 				:key="room.roomId"
 				:room="room"
-				:selected="room === selected"
+				:selected="room.roomId === selected.roomId"
 				:priority="priority"
 				@click="$emit('chroom', room)"
-				@contextmenu="$emit('contextmenu', room)"
+				@contextmenu="roomMenu(room)"
 			/>
 		</div>
 	</div>
 </template>
 
-<script>
-import RoomEntry from "./RoomEntry.vue";
+<script type="ts">
+import RoomEntry from './RoomEntry.vue'
+import ipc from '../utils/ipc'
 
 export default {
-	name: "TheRoomsPanel",
+	name: 'TheRoomsPanel',
 	components: {RoomEntry},
 	computed: {
 		sortedRooms() {
-			this.input = this.input.toUpperCase();
-			let tmpr = [...this.rooms];
+			this.input = this.input.toUpperCase()
+			let tmpr = [...this.rooms]
 			if (this.input)
 				tmpr = tmpr.filter(
 					(e) =>
 						e.roomName.toUpperCase().includes(this.input) ||
-						String(e.roomId).includes(this.input)
-				);
-			return tmpr.sort((a, b) => b.index - a.index);
+						String(e.roomId).includes(this.input),
+				)
+			return tmpr.sort((a, b) => b.index - a.index)
 		},
 	},
-	props: ["rooms", "selected", "priority"],
+	props: {
+		rooms: Array,
+		selected: Object,
+		priority: Number,
+	},
 	data() {
 		return {
-			input: "",
-		};
+			input: '',
+		}
 	},
-};
+	methods: {
+		roomMenu(room) {
+			ipc.popupRoomMenu(room.roomId)
+		},
+	},
+}
 </script>
 
 <style scoped>

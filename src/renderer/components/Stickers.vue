@@ -37,56 +37,46 @@
 </template>
 
 <script>
-import {VEmojiPicker} from "v-emoji-picker";
-import {remote, shell} from "electron";
-
-const fs = require("fs");
-const path = require("path");
-const STORE_PATH = remote.app.getPath("userData");
+import {VEmojiPicker} from 'v-emoji-picker'
+import {shell} from 'electron'
+import ipc from '../utils/ipc'
+import fs from 'fs'
+import path from 'path'
 
 export default {
-	name: "Stickers",
+	name: 'Stickers',
 	components: {VEmojiPicker},
 	data() {
 		return {
 			pics: [],
-			dir: path.join(STORE_PATH, "/stickers/"),
-			panel: "stickers",
-		};
+			dir: '',
+			panel: 'stickers',
+		}
 	},
-	created() {
+	async created() {
+		this.dir = path.join(await ipc.getStorePath(), 'stickers/')
 		if (!fs.existsSync(this.dir)) {
-			fs.mkdirSync(this.dir);
+			fs.mkdirSync(this.dir)
 		}
 		fs.watch(this.dir, () => {
 			fs.readdir(this.dir, (_err, files) => {
-				this.pics = files;
-			});
-		});
+				this.pics = files
+			})
+		})
 		fs.readdir(this.dir, (_err, files) => {
-			this.pics = files;
-		});
+			this.pics = files
+		})
 	},
 	methods: {
 		picClick(pic) {
-			this.$emit("send", pic);
+			this.$emit('send', pic)
 		},
 		folder() {
-			shell.openPath(this.dir);
+			shell.openPath(this.dir)
 		},
-		menu() {
-			const menu = remote.Menu.buildFromTemplate([
-				{label: "Open stickers folder", type: "normal", click: this.folder},
-				{
-					label: "Close panel",
-					type: "normal",
-					click: () => this.$emit("close"),
-				},
-			]);
-			menu.popup({window: remote.getCurrentWindow()});
-		},
+		menu: ipc.popupStickerMenu,
 	},
-};
+}
 </script>
 
 <style scoped>

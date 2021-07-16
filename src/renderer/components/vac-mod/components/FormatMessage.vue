@@ -72,7 +72,6 @@ import SvgIcon from "./SvgIcon";
 const path = require("path");
 
 import formatString from "../utils/formatString";
-import {IMAGE_TYPES} from "../utils/constants";
 
 export default {
 	name: "FormatMessage",
@@ -134,7 +133,7 @@ export default {
 			const type = message.value.substring(index + 1, message.value.length);
 
 			const isMedia =
-				index > 0 && IMAGE_TYPES.some((t) => type.toLowerCase().includes(t));
+				index > 0 && type.toLowerCase().startsWith('image/')
 
 			if (isMedia) this.setImageSize(message);
 
