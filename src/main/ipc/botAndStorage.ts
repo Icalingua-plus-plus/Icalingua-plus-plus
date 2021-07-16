@@ -8,10 +8,13 @@ import {getConfig} from '../utils/configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import oicqAdapter from '../adapters/oicqAdapter'
 import Adapter from '../../types/Adapter'
+import socketIoAdapter from '../adapters/socketIoAdapter'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
     adapter = oicqAdapter
+else if (getConfig().adapter === 'socketIo')
+    adapter = socketIoAdapter
 
 export const {
     sendMessage, createBot,
