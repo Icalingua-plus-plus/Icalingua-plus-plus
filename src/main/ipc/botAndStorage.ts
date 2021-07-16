@@ -5,7 +5,7 @@ import {
     FriendInfo, FriendPokeEventData, FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData, GroupRecallEventData,
     MemberBaseInfo,
-    MessageEventData, OfflineEventData, OnlineEventData, PrivateMessageEventData,
+    MessageEventData, OfflineEventData, PrivateMessageEventData,
     Ret,
 } from 'oicq'
 import path from 'path'
@@ -29,7 +29,6 @@ import {getConfig, saveConfigFile} from '../utils/configManager'
 import {updateAppMenu} from './menuManager'
 import getWinUrl from '../../utils/getWinUrl'
 import getStaticPath from '../../utils/getStaticPath'
-import OnlineData from '../../types/OnlineData'
 
 type SendMessageParams = {
     content: string,
@@ -632,13 +631,20 @@ ipcMain.on('openForward', async (_, resId: string) => {
     })
 })
 
-export const getBot = () => bot
 export const getStorage = () => storage
+export const getUin = () => bot.uin
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
 export const getUnreadCount = async () => await storage.getUnreadCount(getConfig().priority)
 export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(getConfig().priority)
 export const getSelectedRoom = async () => await storage.getRoom(selectedRoomId)
 export const getRoom = (roomId: number) => storage.getRoom(roomId)
+
+export const setOnlineStatus = (status: number) => bot.setOnlineStatus(status)
+export const logOut = () => {
+    if (bot)
+        bot.logout()
+}
+export const getMsg = (id: string) => bot.getMsg(id)
 
 export const clearCurrentRoomUnread = async () => {
     ui.clearCurrentRoomUnread()

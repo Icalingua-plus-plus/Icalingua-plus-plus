@@ -19,13 +19,14 @@ import {
     deleteMessage,
     fetchHistory,
     fetchLatestHistory,
-    getBot, getRoom,
+    getRoom,
     getSelectedRoom,
     ignoreChat,
     pinRoom,
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
+    setOnlineStatus as setStatus, getUin,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -38,7 +39,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
-    getBot().setOnlineStatus(status)
+    setStatus(status)
         .then(() => {
             getConfig().account.onlineStatus = status
             updateAppMenu()
@@ -457,7 +458,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 },
             }),
         )
-        if (message.senderId === getBot().uin) {
+        if (message.senderId === getUin()) {
             menu.append(
                 new MenuItem({
                     label: '撤回',
