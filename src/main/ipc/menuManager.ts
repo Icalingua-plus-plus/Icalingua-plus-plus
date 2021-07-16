@@ -35,6 +35,7 @@ import ui from '../utils/ui'
 import getStaticPath from '../../utils/getStaticPath'
 import setPriority from '../utils/setPriority'
 import getWinUrl from '../../utils/getWinUrl'
+import openMedia from '../utils/openMedia'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     getBot().setOnlineStatus(status)
@@ -423,6 +424,22 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
+            if (message.file.type.startsWith('image/'))
+                menu.append(
+                    new MenuItem({
+                        label: '使用本地查看器打开',
+                        click: () =>
+                            openImage(message.file.url, true),
+                    }),
+                )
+            if (message.file.type.startsWith('video/') || message.file.type.startsWith('audio/'))
+                menu.append(
+                    new MenuItem({
+                        label: '使用本地播放器打开',
+                        click: () =>
+                            openMedia(message.file.url),
+                    }),
+                )
             menu.append(
                 new MenuItem({
                     label: '下载',

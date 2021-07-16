@@ -4,6 +4,7 @@ import {BrowserWindow, ipcMain} from 'electron'
 import path from 'path'
 import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
+import ui from '../utils/ui'
 
 let viewer = ''
 const VIEWERS = [
@@ -46,7 +47,7 @@ const openImage = (url: string, external: boolean = false) => {
     } else if (viewer) {
         execFile(viewer, [url])
     } else {
-        //todo
+        ui.messageError('找不到可用的本地查看器')
     }
 }
 ipcMain.on('openImage', (e, url: string, external: boolean = false) => openImage(url, external))
