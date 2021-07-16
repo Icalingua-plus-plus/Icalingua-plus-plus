@@ -2,6 +2,7 @@ import {sendToMainWindow} from './windowManager'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
 import {revealMessage} from '../ipc/botAndStorage'
+import OnlineData from '../../types/OnlineData'
 
 export default {
     closeLoading() {
@@ -70,4 +71,7 @@ export default {
     updatePriority(lev: 1 | 2 | 3 | 4 | 5) {
         sendToMainWindow('updatePriority', lev)
     },
+    sendOnlineData(data:OnlineData){
+        sendToMainWindow('gotOnlineData', data)
+    }
 }
