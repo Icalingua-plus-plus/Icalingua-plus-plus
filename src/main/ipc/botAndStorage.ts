@@ -12,7 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import StorageProvider from '../../types/StorageProvider'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, sendToMainWindow, showWindow} from '../utils/windowManager'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import formatDate from '../utils/formatDate'
@@ -48,8 +48,6 @@ let bot: Client
 let storage: StorageProvider
 let loginForm: LoginForm
 
-let selectedRoomId = 0
-let selectedRoomName = ''
 let currentLoadedMessagesCount = 0
 let loggedIn = false
 
@@ -114,7 +112,7 @@ const eventHandlers = {
         if (
             (!getMainWindow().isFocused() ||
                 !getMainWindow().isVisible() ||
-                roomId !== selectedRoomId) &&
+                roomId !== ui.getSelectedRoomId()) &&
             (room.priority >= getConfig().priority || at) &&
             !isSelfMsg
         ) {
@@ -143,7 +141,7 @@ const eventHandlers = {
         }
 
         if (
-            room.roomId !== selectedRoomId ||
+            room.roomId !== ui.getSelectedRoomId() ||
             !getMainWindow().isFocused()
         ) {
             if (isSelfMsg) {
@@ -157,23 +155,18 @@ const eventHandlers = {
             download(message.file.url, message.file.name, room.downloadPath)
         }
         message.time = data.time * 1000
-        if (selectedRoomId === room.roomId)
-            ui.addMessage(room.roomId, message)
+        ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         await updateTray()
     },
     friendRecall(data: FriendRecallEventData) {
-        if (data.user_id == selectedRoomId) {
-            ui.deleteMessage(data.message_id)
-        }
+        ui.deleteMessage(data.message_id)
         storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
     },
     groupRecall(data: GroupRecallEventData) {
-        if (-data.group_id == selectedRoomId) {
-            ui.deleteMessage(data.message_id)
-        }
+        ui.deleteMessage(data.message_id)
         storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
     },
     online() {
@@ -212,8 +205,7 @@ const eventHandlers = {
                 system: true,
                 time: data.time * 1000,
             }
-            if (roomId === selectedRoomId)
-                ui.addMessage(roomId, message)
+            ui.addMessage(roomId, message)
             ui.updateRoom(room)
             storage.updateRoom(room.roomId, room)
             storage.addMessage(roomId, message)
@@ -251,8 +243,7 @@ const eventHandlers = {
                 system: true,
                 time: data.time * 1000,
             }
-            if (room.roomId === selectedRoomId)
-                ui.addMessage(-data.group_id, message)
+            ui.addMessage(room.roomId, message)
             ui.updateRoom(room)
             storage.updateRoom(room.roomId, room)
             storage.addMessage(room.roomId, message)
@@ -383,15 +374,12 @@ const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
 }
-const updateTray = () => updateTrayIcon(selectedRoomName)
+const updateTray = () => updateTrayIcon(ui.getSelectedRoomName())
 //endregion
-
-//todo 移动处理 selected room 以及 update tray 之类的代码到 ui.ts
-//尽量不要用返回值，出错的时候用 ui 发一个错
 
 export const sendMessage = async ({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) => {
     if (!room && !roomId) {
-        roomId = selectedRoomId
+        roomId = ui.getSelectedRoomId()
         room = await storage.getRoom(roomId)
     }
     if (!room) room = await storage.getRoom(roomId)
@@ -576,11 +564,6 @@ ipcMain.on('sliderLogin', (_, ticket: string) => {
 ipcMain.on('reLogin', () => {
     bot.login()
 })
-ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
-    selectedRoomId = id
-    selectedRoomName = name
-    updateAppMenu()
-})
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => storage.updateRoom(roomId, room))
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     storage.updateMessage(roomId, messageId, message))
@@ -608,7 +591,7 @@ ipcMain.on('openForward', async (_, resId: string) => {
             data.message,
             message,
             {},
-            selectedRoomId,
+            ui.getSelectedRoomId(),
         )
         messages.push(message)
     }
@@ -635,7 +618,7 @@ export const getUin = () => bot.uin
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
 export const getUnreadCount = async () => await storage.getUnreadCount(getConfig().priority)
 export const getFirstUnreadRoom = async () => await storage.getFirstUnreadRoom(getConfig().priority)
-export const getSelectedRoom = async () => await storage.getRoom(selectedRoomId)
+export const getSelectedRoom = async () => await storage.getRoom(ui.getSelectedRoomId())
 export const getRoom = (roomId: number) => storage.getRoom(roomId)
 
 export const setOnlineStatus = (status: number) => bot.setOnlineStatus(status)
@@ -648,7 +631,7 @@ export const getMsg = (id: string) => bot.getMsg(id)
 
 export const clearCurrentRoomUnread = async () => {
     ui.clearCurrentRoomUnread()
-    await storage.updateRoom(selectedRoomId, {unreadCount: 0})
+    await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
     await updateTray()
 }
 export const setRoomPriority = async (roomId: number, priority: 1 | 2 | 3 | 4 | 5) => {
@@ -691,7 +674,7 @@ export const revealMessage = async (roomId: number, messageId: string | number) 
     await storage.updateMessage(roomId, messageId, {reveal: true})
 }
 
-export const fetchHistory = async (messageId: string, roomId: number = selectedRoomId) => {
+export const fetchHistory = async (messageId: string, roomId: number = ui.getSelectedRoomId()) => {
     const messages = []
     while (true) {
         const history = await bot.getChatHistory(messageId)
@@ -737,7 +720,7 @@ export const fetchHistory = async (messageId: string, roomId: number = selectedR
     console.log(messages)
     ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
     await storage.addMessages(roomId, messages)
-    if (roomId === selectedRoomId)
+    if (roomId === ui.getSelectedRoomId())
         storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then(ui.setMessages)
 }
