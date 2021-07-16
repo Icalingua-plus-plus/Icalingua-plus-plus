@@ -273,7 +273,6 @@ export const updateAppMenu = async () => {
                             contextIsolation: false,
                         },
                         autoHideMenuBar: true,
-                        icon: path.join(getStaticPath(), '/512x512.png'),
                     }).loadURL(getWinUrl() + '#/aria2')
                 },
             }),
