@@ -410,7 +410,13 @@ const attachLoginHandler = () => {
 }
 //endregion
 
-const adapter: Adapter = {
+interface OicqAdapter extends Adapter{
+    getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
+
+    getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
+}
+
+const adapter: OicqAdapter = {
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()

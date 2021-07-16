@@ -1,6 +1,6 @@
 import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from "oicq";
 import Message from "../../types/Message";
-import {getMessageFromStorage, getMsg, getUin} from '../ipc/botAndStorage'
+import oicq from '../adapters/oicqAdapter'
 import {base64decode} from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
@@ -22,7 +22,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += m.data.text;
                 if ((m as AtElem).data.qq === "all") {
                     message.at = "all";
-                } else if ((m as AtElem).data.qq == getUin()) {
+                } else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true;
                 }
                 break;
@@ -64,11 +64,11 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case "reply":
                 let replyMessage: Message
                 if (roomId) {
-                    replyMessage = await getMessageFromStorage(roomId, m.data.id);
+                    replyMessage = await oicq.getMessageFromStorage(roomId, m.data.id);
                 }
                 if (!replyMessage) {
                     //get the message
-                    const getRet = await getMsg(m.data.id);
+                    const getRet = await oicq.getMsg(m.data.id);
                     if (getRet.data) {
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
@@ -76,7 +76,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         const senderName = ('group_id' in data)
                             ? (data as GroupMessageEventData).anonymous
                                 ? (data as GroupMessageEventData).anonymous.name
-                                : getUin() === data.sender.user_id
+                                : oicq.getUin() === data.sender.user_id
                                     ? "You"
                                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
                             : (data.sender as FriendInfo).remark || data.sender.nickname
