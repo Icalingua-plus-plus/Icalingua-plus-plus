@@ -17,6 +17,8 @@ type AllConfig = {
     winSize: WinSize
     socketIo: string
     adapter: 'oicq' | 'socketIo'
+    server: string
+    privateKey: string
 }
 
 
@@ -57,13 +59,15 @@ const defaultWinSize: WinSize = {
 if (defaultWinSize.width > 1440)
     defaultWinSize.width = 1440
 const defaultConfig: AllConfig = {
+    privateKey: '',
+    server: '',
     account: emptyLoginForm,
     priority: 3,
     aria2: defaultAria2Config,
     darkTaskIcon: false,
     winSize: defaultWinSize,
     socketIo: '',
-    adapter: 'oicq',
+    adapter: 'oicq'
 }
 if (fs.existsSync(configFilePath)) {
     config = YAML.parse(fs.readFileSync(configFilePath, 'utf8'))

@@ -146,7 +146,7 @@ const eventHandlers = {
         ui.updateRoom(room)
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
-        await updateTray()
+        await updateTrayIcon()
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
@@ -335,7 +335,7 @@ const loginHandlers = {
             priority: getConfig().priority,
         })
         await updateAppMenu()
-        await updateTray()
+        await updateTrayIcon()
     },
     verify(data) {
         const veriWin = new BrowserWindow({
@@ -408,7 +408,6 @@ const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
 }
-const updateTray = () => updateTrayIcon(ui.getSelectedRoomName())
 //endregion
 
 const adapter: Adapter = {
@@ -574,7 +573,7 @@ const adapter: Adapter = {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
-            }).then(updateTray)
+            }).then(updateTrayIcon)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
@@ -631,7 +630,7 @@ const adapter: Adapter = {
     async clearCurrentRoomUnread() {
         ui.clearCurrentRoomUnread()
         await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
-        await updateTray()
+        await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
         await storage.updateRoom(roomId, {priority})

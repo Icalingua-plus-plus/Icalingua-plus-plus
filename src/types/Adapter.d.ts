@@ -8,7 +8,7 @@ import IgnoreChatInfo from './IgnoreChatInfo'
 export default interface Adapter {
     sendMessage(data: SendMessageParams): Promise<void>
 
-    createBot(form: LoginForm): void
+    createBot(form: LoginForm): any
 
     getFriendsAndGroups(): Promise<{ friendsAll: any[], groupsAll: any[] }>
 
