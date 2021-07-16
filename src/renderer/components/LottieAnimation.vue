@@ -67,8 +67,8 @@ export default {
     },
     async init() {
       this.style = {
-        width: (this.width != -1 )? `${this.width}px` : '100%',
-        height: (this.height != -1 )? `${this.height}px` : '100%',
+        width: (this.width !== -1 )? `${this.width}px` : '100%',
+        height: (this.height !== -1 )? `${this.height}px` : '100%',
         overflow: "hidden",
         margin: "0 auto"
       };
@@ -107,7 +107,7 @@ export default {
       setTimeout(() => {
         this.anim.stop();
         this.executeLoop();
-      }, this.getRandomInt(this.loopDelayMin, this.loopDelayMax == 0? this.loopDelayMin : this.loopDelayMax));
+      }, this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0? this.loopDelayMin : this.loopDelayMax));
     },
 
 
