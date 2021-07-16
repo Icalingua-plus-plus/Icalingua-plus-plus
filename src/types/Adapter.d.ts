@@ -18,11 +18,11 @@ export default interface Adapter {
 
     reLogin(): void
 
-    updateRoom(roomId: number, room: object): Promise<any>
+    updateRoom(roomId: number, room: object): any
 
-    updateMessage(roomId: number, messageId: string, message: object): Promise<any>
+    updateMessage(roomId: number, messageId: string, message: object): any
 
-    sendGroupPoke(gin: number, uin: number): Promise<Ret<null>>
+    sendGroupPoke(gin: number, uin: number): any
 
     addRoom(room: Room): any
 
@@ -40,7 +40,7 @@ export default interface Adapter {
 
     getRoom(roomId: number): Promise<Room>
 
-    setOnlineStatus(status: number): Promise<Ret>
+    setOnlineStatus(status: number): any
 
     logOut(): void
 

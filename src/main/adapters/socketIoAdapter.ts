@@ -18,7 +18,11 @@ let socket: Socket
 let uin = 0
 
 const attachSocketEvents = () => {
-    socket.on('updateRoom', ui.updateRoom)
+    socket.on('updateRoom', (room: Room) => {
+        if (room.roomId === ui.getSelectedRoomId())
+            room.unreadCount = 0
+        ui.updateRoom(room)
+    })
     socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
@@ -90,70 +94,84 @@ const adapter: Adapter = {
         })
     },
     getFirstUnreadRoom(): Promise<Room> {
-        return new Promise((resolve, reject)=>{
+        return new Promise((resolve, reject) => {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)
         })
     },
     getForwardMsg(resId: string): Promise<Ret<{ group_id?: number; user_id: number; nickname: number; time: number; message: MessageElem[]; raw_message: string }[]>> {
-        return Promise.resolve(undefined)
+        return new Promise((resolve, reject) => {
+            socket.emit('getForwardMsg', resId, resolve)
+        })
     },
     getFriendsAndGroups(): Promise<{ friendsAll: any[]; groupsAll: any[] }> {
-        return Promise.resolve({friendsAll: [], groupsAll: []})
+        return new Promise((resolve, reject) => {
+            socket.emit('getFriendsAndGroups', resolve)
+        })
     },
     getGroupFileMeta(gin: number, fid: string): Promise<FileElem['data']> {
-        return Promise.resolve(undefined)
+        return new Promise((resolve, reject) => {
+            socket.emit('getGroupFileMeta', gin, fid, resolve)
+        })
     },
     getRoom(roomId: number): Promise<Room> {
-        return Promise.resolve(undefined)
+        return new Promise((resolve, reject) => {
+            socket.emit('getRoom', roomId, resolve)
+        })
     },
     getSelectedRoom(): Promise<Room> {
-        return Promise.resolve(undefined)
+        return adapter.getRoom(ui.getSelectedRoomId())
     },
     getUin: () => uin,
     getUnreadCount(): Promise<number> {
-        return Promise.resolve(0)
+        return new Promise((resolve, reject) => {
+            socket.emit('getUnreadCount', getConfig().priority, resolve)
+        })
     },
-    ignoreChat(data: IgnoreChatInfo): Promise<void> {
-        return Promise.resolve(undefined)
+    ignoreChat(data: IgnoreChatInfo) {
+        socket.emit('ignoreChat', data)
     },
     logOut(): void {
     },
-    pinRoom(roomId: number, pin: boolean): Promise<void> {
-        return Promise.resolve(undefined)
+    pinRoom(roomId: number, pin: boolean) {
+        socket.emit('pinRoom', roomId, pin)
     },
     reLogin(): void {
+        socket.emit('reLogin')
     },
-    removeChat(roomId: number): Promise<void> {
-        return Promise.resolve(undefined)
+    removeChat(roomId: number) {
+        socket.emit('removeChat', roomId)
     },
-    revealMessage(roomId: number, messageId: string | number): Promise<void> {
-        return Promise.resolve(undefined)
+    revealMessage(roomId: number, messageId: string | number) {
+        socket.emit('revealMessage', roomId, messageId)
     },
-    sendGroupPoke(gin: number, uin: number): Promise<Ret<null>> {
-        return Promise.resolve(undefined)
+    sendGroupPoke(gin: number, uin: number) {
+        socket.emit('sendGroupPoke', gin, uin)
     },
-    sendMessage(data: SendMessageParams): Promise<void> {
-        return Promise.resolve(undefined)
+    sendMessage(data: SendMessageParams) {
+        if (!data.roomId && !data.room)
+            data.roomId = ui.getSelectedRoomId()
+        //todo 本地文件
+        socket.emit('sendMessage', data)
     },
-    setOnlineStatus(status: number): Promise<Ret> {
-        return Promise.resolve(undefined)
+    setOnlineStatus(status: number) {
+        socket.emit('setOnlineStatus', status)
     },
-    setRoomAutoDownload(roomId: number, autoDownload: boolean): Promise<void> {
-        return Promise.resolve(undefined)
+    setRoomAutoDownload(roomId: number, autoDownload: boolean) {
+        socket.emit('setRoomAutoDownload', roomId, autoDownload)
     },
-    setRoomAutoDownloadPath(roomId: number, downloadPath: string): Promise<void> {
-        return Promise.resolve(undefined)
+    setRoomAutoDownloadPath(roomId: number, downloadPath: string) {
+        socket.emit('setRoomAutoDownloadPath', roomId, downloadPath)
     },
-    setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): Promise<void> {
-        return Promise.resolve(undefined)
+    setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
+        socket.emit('setRoomPriority', roomId, priority)
     },
     sliderLogin(ticket: string): void {
     },
-    updateMessage(roomId: number, messageId: string, message: object): Promise<any> {
-        return Promise.resolve(undefined)
+    updateMessage(roomId: number, messageId: string, message: object) {
+        socket.emit('updateMessage', roomId, messageId, message)
     },
-    updateRoom(roomId: number, room: object): Promise<any> {
-        return Promise.resolve(undefined)
+    updateRoom(roomId: number, room: object) {
+        socket.emit('updateRoom', roomId, room)
     },
 
 }
