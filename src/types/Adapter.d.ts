@@ -6,7 +6,7 @@ import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 
 export default interface Adapter {
-    sendMessage(data: SendMessageParams): Promise<void>
+    sendMessage(data: SendMessageParams): any
 
     createBot(form: LoginForm): any
 
@@ -24,7 +24,7 @@ export default interface Adapter {
 
     sendGroupPoke(gin: number, uin: number): Promise<Ret<null>>
 
-    addRoom(room: Room): Promise<any>
+    addRoom(room: Room): any
 
     getForwardMsg(resId: string): Promise<Ret<{ group_id?: number, user_id: number, nickname: number, time: number, message: MessageElem[], raw_message: string }[]>>
 
@@ -44,27 +44,23 @@ export default interface Adapter {
 
     logOut(): void
 
-    getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
+    clearCurrentRoomUnread(): any
 
-    getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
+    setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): any
 
-    clearCurrentRoomUnread(): Promise<void>
+    setRoomAutoDownload(roomId: number, autoDownload: boolean): any
 
-    setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): Promise<void>
+    setRoomAutoDownloadPath(roomId: number, downloadPath: string): any
 
-    setRoomAutoDownload(roomId: number, autoDownload: boolean): Promise<void>
+    pinRoom(roomId: number, pin: boolean): any
 
-    setRoomAutoDownloadPath(roomId: number, downloadPath: string): Promise<void>
+    ignoreChat(data: IgnoreChatInfo): any
 
-    pinRoom(roomId: number, pin: boolean): Promise<void>
+    removeChat(roomId: number): any
 
-    ignoreChat(data: IgnoreChatInfo): Promise<void>
+    deleteMessage(roomId: number, messageId: string): any
 
-    removeChat(roomId: number): Promise<void>
+    revealMessage(roomId: number, messageId: string | number): any
 
-    deleteMessage(roomId: number, messageId: string): Promise<void>
-
-    revealMessage(roomId: number, messageId: string | number): Promise<void>
-
-    fetchHistory(messageId: string, roomId?: number): Promise<void>
+    fetchHistory(messageId: string, roomId?: number): any
 }

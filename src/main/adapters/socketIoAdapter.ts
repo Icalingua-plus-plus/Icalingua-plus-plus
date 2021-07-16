@@ -15,6 +15,7 @@ import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
 
 let socket: Socket
+let uin = 0
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', ui.updateRoom)
@@ -23,6 +24,7 @@ const attachSocketEvents = () => {
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
     socket.on('onlineData', (data: { online: boolean, nick: string, uin: number }) => {
+        uin = data.uin
         ui.sendOnlineData({
             ...data,
             priority: getConfig().priority,
@@ -43,17 +45,19 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
-    addRoom(room: Room): Promise<any> {
-        return Promise.resolve(undefined)
+    addRoom(room: Room) {
+        socket.emit('addRoom', room)
     },
-    clearCurrentRoomUnread(): Promise<void> {
-        return Promise.resolve(undefined)
+    clearCurrentRoomUnread() {
+        ui.clearCurrentRoomUnread()
+        socket.emit('updateRoom', ui.getSelectedRoomId(), {unreadCount: 0})
+        updateTrayIcon()
     },
     async createBot(_?: LoginForm) {
         await loadMainWindow()
         createTray()
         socket = io(getConfig().server)
-        socket.once('requireAuth', (salt: string) => {
+        socket.on('requireAuth', (salt: string) => {
             const sign = crypto.createSign('RSA-SHA1')
             sign.update(salt)
             sign.end()
@@ -72,17 +76,23 @@ const adapter: Adapter = {
         await updateAppMenu()
         await updateTrayIcon()
     },
-    deleteMessage(roomId: number, messageId: string): Promise<void> {
-        return Promise.resolve(undefined)
+    deleteMessage(roomId: number, messageId: string) {
+        socket.emit('deleteMessage', roomId, messageId)
     },
-    fetchHistory(messageId: string, roomId?: number): Promise<void> {
-        return Promise.resolve(undefined)
+    fetchHistory(messageId: string, roomId?: number) {
+        if (!roomId)
+            roomId = ui.getSelectedRoomId()
+        socket.emit('fetchHistory', messageId, roomId)
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        return Promise.resolve([])
+        return new Promise((resolve, reject) => {
+            socket.emit('fetchMessages', roomId, offset, resolve)
+        })
     },
     getFirstUnreadRoom(): Promise<Room> {
-        return Promise.resolve(undefined)
+        return new Promise((resolve, reject)=>{
+            socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)
+        })
     },
     getForwardMsg(resId: string): Promise<Ret<{ group_id?: number; user_id: number; nickname: number; time: number; message: MessageElem[]; raw_message: string }[]>> {
         return Promise.resolve(undefined)
@@ -93,21 +103,13 @@ const adapter: Adapter = {
     getGroupFileMeta(gin: number, fid: string): Promise<FileElem['data']> {
         return Promise.resolve(undefined)
     },
-    getMessageFromStorage(roomId: number, msgId: string): Promise<Message> {
-        return Promise.resolve(undefined)
-    },
-    getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>> {
-        return Promise.resolve(undefined)
-    },
     getRoom(roomId: number): Promise<Room> {
         return Promise.resolve(undefined)
     },
     getSelectedRoom(): Promise<Room> {
         return Promise.resolve(undefined)
     },
-    getUin(): number {
-        return 0
-    },
+    getUin: () => uin,
     getUnreadCount(): Promise<number> {
         return Promise.resolve(0)
     },
