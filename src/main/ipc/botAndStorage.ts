@@ -12,7 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import StorageProvider from '../../types/StorageProvider'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, sendToMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import formatDate from '../utils/formatDate'
@@ -29,6 +29,7 @@ import {getConfig, saveConfigFile} from '../utils/configManager'
 import {updateAppMenu} from './menuManager'
 import getWinUrl from '../../utils/getWinUrl'
 import getStaticPath from '../../utils/getStaticPath'
+import OnlineData from '../../types/OnlineData'
 
 type SendMessageParams = {
     content: string,
@@ -305,6 +306,12 @@ const loginHandlers = {
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
+        ui.sendOnlineData({
+            online: bot.getStatus().data.online,
+            nick: bot.nickname,
+            uin: bot.uin,
+            priority: getConfig().priority,
+        })
         await updateAppMenu()
         await updateTray()
     },
@@ -541,11 +548,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friendsAll, groupsAll,
     }
 })
-ipcMain.handle('sendMessage', (_, data) => sendMessage(data))
-ipcMain.handle('isOnline', () => bot.getStatus().data.online)
-ipcMain.handle('getNick', () => bot.nickname)
-ipcMain.handle('getUin', () => bot.uin)
-ipcMain.handle('getPriority', () => getConfig().priority)
+ipcMain.on('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     if (!offset) {
         storage.updateRoom(roomId, {
