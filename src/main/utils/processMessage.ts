@@ -1,6 +1,6 @@
 import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from "oicq";
 import Message from "../../types/Message";
-import {getBot, getStorage} from "../ipc/botAndStorage";
+import {getMsg, getStorage, getUin} from '../ipc/botAndStorage'
 import {base64decode} from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
@@ -22,7 +22,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += m.data.text;
                 if ((m as AtElem).data.qq === "all") {
                     message.at = "all";
-                } else if ((m as AtElem).data.qq == getBot().uin) {
+                } else if ((m as AtElem).data.qq == getUin()) {
                     message.at = true;
                 }
                 break;
@@ -68,7 +68,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 if (!replyMessage) {
                     //get the message
-                    const getRet = await getBot().getMsg(m.data.id);
+                    const getRet = await getMsg(m.data.id);
                     if (getRet.data) {
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
@@ -76,7 +76,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         const senderName = ('group_id' in data)
                             ? (data as GroupMessageEventData).anonymous
                                 ? (data as GroupMessageEventData).anonymous.name
-                                : getBot().uin === data.sender.user_id
+                                : getUin() === data.sender.user_id
                                     ? "You"
                                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
                             : (data.sender as FriendInfo).remark || data.sender.nickname

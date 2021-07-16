@@ -1,6 +1,6 @@
 import {app, protocol, shell} from 'electron'
 import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
-import {createBot, getBot} from './ipc/botAndStorage'
+import {createBot, logOut} from './ipc/botAndStorage'
 import {getConfig} from './utils/configManager'
 
 require('./utils/configManager')
@@ -20,7 +20,7 @@ else{
     showLoginWindow()
 }
 app.on('window-all-closed', () => {
-    if (getBot()) getBot().logout()
+    logOut()
     setTimeout(() => {
         app.quit()
     }, 1000)
@@ -36,11 +36,11 @@ app.on('web-contents-created', (e, webContents) => {
 app.on('second-instance', showWindow)
 
 app.on('before-quit', () => {
+    logOut()
     destroyWindow()
-    if (getBot()) getBot().logout()
 })
 
 app.on('will-quit', () => {
+    logOut()
     destroyWindow()
-    if (getBot()) getBot().logout()
 })
