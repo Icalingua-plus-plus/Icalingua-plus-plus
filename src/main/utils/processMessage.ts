@@ -1,6 +1,6 @@
 import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from "oicq";
 import Message from "../../types/Message";
-import {getMsg, getStorage, getUin} from '../ipc/botAndStorage'
+import {getMessageFromStorage, getMsg, getUin} from '../ipc/botAndStorage'
 import {base64decode} from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
@@ -64,7 +64,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case "reply":
                 let replyMessage: Message
                 if (roomId) {
-                    replyMessage = await getStorage().getMessage(roomId, m.data.id);
+                    replyMessage = await getMessageFromStorage(roomId, m.data.id);
                 }
                 if (!replyMessage) {
                     //get the message

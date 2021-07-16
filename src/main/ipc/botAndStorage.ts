@@ -631,7 +631,6 @@ ipcMain.on('openForward', async (_, resId: string) => {
     })
 })
 
-export const getStorage = () => storage
 export const getUin = () => bot.uin
 export const getGroupFileMeta = (gin: number, fid: string) => bot.acquireGfs(gin).download(fid)
 export const getUnreadCount = async () => await storage.getUnreadCount(getConfig().priority)
@@ -644,6 +643,7 @@ export const logOut = () => {
     if (bot)
         bot.logout()
 }
+export const getMessageFromStorage = (roomId: number, msgId: string) => storage.getMessage(roomId, msgId)
 export const getMsg = (id: string) => bot.getMsg(id)
 
 export const clearCurrentRoomUnread = async () => {
