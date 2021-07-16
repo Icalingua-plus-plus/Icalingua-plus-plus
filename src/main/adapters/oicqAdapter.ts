@@ -5,7 +5,7 @@ import {
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
@@ -236,6 +236,51 @@ const eventHandlers = {
             storage.addMessage(room.roomId, message)
         }
     },
+    async groupMemberIncrease(data: MemberIncreaseEventData) {
+        console.log(data)
+        const now = new Date(data.time * 1000)
+        const groupId = data.group_id
+        const senderId = data.user_id
+        let roomId = -groupId
+        if (await storage.isChatIgnored(roomId)) return
+        const message: Message = {
+            _id: `${now.getTime()}-${groupId}-${senderId}`,
+            content: `${data.nickname} 加入了本群`,
+            username: data.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        ui.addMessage(roomId, message)
+        await storage.addMessage(roomId, message)
+    },
+    async groupMemberDecrease(data: MemberDecreaseEventData) {
+        console.log(data)
+        const now = new Date(data.time * 1000)
+        const groupId = data.group_id
+        const senderId = data.user_id
+        const operator = (await bot.getGroupMemberInfo(groupId, data.operator_id)).data
+        let roomId = -groupId
+        if (await storage.isChatIgnored(roomId)) return
+        const message: Message = {
+            _id: `${now.getTime()}-${groupId}-${senderId}`,
+            content: data.member.card ? data.member.card : data.member.nickname +
+                (data.operator_id === data.user_id ? ' 离开了本群' :
+                    ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+            username: data.member ?
+                (data.member.card ? data.member.card : data.member.nickname) :
+                data.user_id.toString(),
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        ui.addMessage(roomId, message)
+        await storage.addMessage(roomId, message)
+    },
 }
 const loginHandlers = {
     slider(data) {
@@ -354,6 +399,8 @@ const attachEventHandler = () => {
     bot.on('system.offline', eventHandlers.onOffline)
     bot.on('notice.friend.poke', eventHandlers.friendPoke)
     bot.on('notice.group.poke', eventHandlers.groupPoke)
+    bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
+    bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)
