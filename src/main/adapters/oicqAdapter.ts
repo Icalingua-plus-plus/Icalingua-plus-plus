@@ -408,9 +408,10 @@ const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
 }
+
 //endregion
 
-interface OicqAdapter extends Adapter{
+interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
@@ -634,6 +635,8 @@ const adapter: OicqAdapter = {
     getMsg: (id: string) => bot.getMsg(id),
 
     async clearCurrentRoomUnread() {
+        if (!ui.getSelectedRoomId())
+            return
         ui.clearCurrentRoomUnread()
         await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
         await updateTrayIcon()

@@ -50,7 +50,7 @@ const attachSocketEvents = () => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)
     })
-    socket.on('notification', async(data: {
+    socket.on('notification', async (data: {
         avatar: string,
         priority: 1 | 2 | 3 | 4 | 5,
         roomId: number,
@@ -92,6 +92,8 @@ const adapter: Adapter = {
         socket.emit('addRoom', room)
     },
     clearCurrentRoomUnread() {
+        if (!(socket && ui.getSelectedRoomId()))
+            return
         ui.clearCurrentRoomUnread()
         socket.emit('updateRoom', ui.getSelectedRoomId(), {unreadCount: 0})
         updateTrayIcon()
