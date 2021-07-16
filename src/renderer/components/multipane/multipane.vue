@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script src="./multipane.js"></script>
+<script src="./multipane.ts" lang="ts"></script>
 
 <style lang="scss">
 .multipane {

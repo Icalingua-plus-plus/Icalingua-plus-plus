@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import GroupEntry from "./GroupEntry";
 export default {
   name: "IgnoreManage",

@@ -1,6 +1,4 @@
 !(() => {
-    let prompt = window.prompt;
-
     // jsbridge://CAPTCHA/onVerifyCAPTCHA?p=....#2
     /**
      * @type {string} url
@@ -17,11 +15,8 @@
                     let content = decodeURIComponent(j);
                     let obj = JSON.parse(content);
                     console.log(obj);
-                    window.miraiSeleniumComplete = content;
-                    const remote=require('@electron/remote')
-                    const bot=remote.getGlobal('bot')
-                    bot.sliderLogin(obj.ticket);
-                    remote.getCurrentWindow().destroy()
+                    require('electron').ipcRenderer.send('sliderLogin', obj.ticket)
+                    window.close()
                     break;
                 } catch (ignore) {
                 }
