@@ -200,10 +200,6 @@ export default {
 	},
 	async created() {
 		//region set status
-		this.account = await ipc.getUin()
-		this.priority = await ipc.getPriority()
-		this.offline = !await ipc.isOnline()
-		this.username = await ipc.getNick()
 		const STORE_PATH = await ipc.getStorePath()
 		//endregion
 		//region listener
@@ -291,6 +287,12 @@ export default {
 		})
 		ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
 		ipcRenderer.on('closePanel', () => this.panel = '')
+		ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority}) => {
+			this.offline = !online
+			this.account = uin
+			this.priority = priority
+			this.username = nick
+		})
 		console.log('加载完成')
 	},
 	methods: {

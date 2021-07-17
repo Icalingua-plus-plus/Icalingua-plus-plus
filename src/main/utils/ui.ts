@@ -2,6 +2,17 @@ import {sendToMainWindow} from './windowManager'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
 import {revealMessage} from '../ipc/botAndStorage'
+import OnlineData from '../../types/OnlineData'
+import {ipcMain} from 'electron'
+import {updateAppMenu} from '../ipc/menuManager'
+
+let selectedRoomId = 0
+let selectedRoomName = ''
+ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
+    selectedRoomId = id
+    selectedRoomName = name
+    updateAppMenu()
+})
 
 export default {
     closeLoading() {
@@ -32,7 +43,8 @@ export default {
         sendToMainWindow('setShutUp', isShutUp)
     },
     addMessage(roomId: number, message: Message) {
-        sendToMainWindow('addMessage', {roomId, message})
+        if (roomId === selectedRoomId)
+            sendToMainWindow('addMessage', {roomId, message})
     },
     chroom(roomId: number) {
         sendToMainWindow('chroom', roomId)
@@ -70,4 +82,9 @@ export default {
     updatePriority(lev: 1 | 2 | 3 | 4 | 5) {
         sendToMainWindow('updatePriority', lev)
     },
+    sendOnlineData(data: OnlineData) {
+        sendToMainWindow('gotOnlineData', data)
+    },
+    getSelectedRoomId: () => selectedRoomId,
+    getSelectedRoomName: () => selectedRoomName,
 }

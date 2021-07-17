@@ -1,9 +1,8 @@
-import {BrowserWindow} from 'electron'
-import path from 'path'
+import {BrowserWindow, shell} from 'electron'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
-import getStaticPath from '../../utils/getStaticPath'
+import {updateTrayIcon} from './trayManager'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
@@ -18,7 +17,6 @@ export const loadMainWindow = () => {
             webSecurity: false,
             contextIsolation: false,
         },
-        icon: path.join(getStaticPath(), '/512x512.png'),
     })
 
     if (loginWindow)
@@ -37,7 +35,17 @@ export const loadMainWindow = () => {
             '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
         )
 
-    mainWindow.on('focus', clearCurrentRoomUnread)
+    mainWindow.on('focus', async ()=> {
+        clearCurrentRoomUnread()
+        await updateTrayIcon()
+    })
+
+    mainWindow.webContents.setWindowOpenHandler(details => {
+        shell.openExternal(details.url)
+        return {
+            action: 'deny'
+        }
+    })
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
 }
@@ -54,7 +62,6 @@ export const showLoginWindow = () => {
                 nodeIntegration: true,
                 contextIsolation: false,
             },
-            icon: path.join(getStaticPath(), '/512x512.png'),
         })
 
         if (process.env.NODE_ENV === 'development')
