@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "2.0.0-rc1",
+  "version": "2.0.1-rc1",
   "author": "clansty <i@gao4.pw>",
   "description": "A cross-platform QQ made with Electron",
   "license": "GPL-3.0",
