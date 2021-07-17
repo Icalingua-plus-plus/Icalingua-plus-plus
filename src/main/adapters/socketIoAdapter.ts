@@ -17,7 +17,7 @@ import avatarCache from '../utils/avatarCache'
 
 let socket: Socket
 let uin = 0
-
+//todo 标题栏刷新不及时
 const attachSocketEvents = () => {
     socket.on('updateRoom', (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
