@@ -26,13 +26,6 @@ app.on('window-all-closed', () => {
     }, 1000)
 })
 
-app.on('web-contents-created', (e, webContents) => {
-    webContents.on('new-window', (event, url) => {
-        event.preventDefault()
-        shell.openExternal(url)
-    })
-})
-
 app.on('second-instance', showWindow)
 
 app.on('before-quit', () => {

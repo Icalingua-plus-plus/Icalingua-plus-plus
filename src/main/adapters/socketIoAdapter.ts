@@ -2,7 +2,7 @@ import Adapter from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {FileElem, GroupMessageEventData, MessageElem, PrivateMessageEventData, Ret} from 'oicq'
+import {FileElem, MessageElem, Ret} from 'oicq'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
@@ -14,29 +14,32 @@ import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
+import fs from 'fs'
 
 let socket: Socket
 let uin = 0
-
 const attachSocketEvents = () => {
-    socket.on('updateRoom', (room: Room) => {
+    socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
             room.unreadCount = 0
             socket.emit('updateRoom', room.roomId, {unreadCount: 0})
         }
         ui.updateRoom(room)
+        await updateTrayIcon()
     })
     socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
-    socket.on('onlineData', (data: { online: boolean, nick: string, uin: number }) => {
+    socket.on('onlineData', async (data: { online: boolean, nick: string, uin: number }) => {
         uin = data.uin
         ui.sendOnlineData({
             ...data,
             priority: getConfig().priority,
         })
+        updateTrayIcon()
+        updateAppMenu()
     })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
@@ -50,7 +53,7 @@ const attachSocketEvents = () => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)
     })
-    socket.on('notification', async (data: {
+    socket.on('notify', async (data: {
         avatar: string,
         priority: 1 | 2 | 3 | 4 | 5,
         roomId: number,
@@ -101,7 +104,17 @@ const adapter: Adapter = {
     async createBot(_?: LoginForm) {
         await loadMainWindow()
         createTray()
-        socket = io(getConfig().server)
+        socket = io(getConfig().server, {
+            transports: ['websocket'],
+        })
+        socket.on('connect_error', async () => {
+            await dialog.showMessageBox(getMainWindow(), {
+                title: '错误',
+                message: '连接失败',
+                type: 'error',
+            })
+            app.quit()
+        })
         socket.on('requireAuth', (salt: string) => {
             const sign = crypto.createSign('RSA-SHA1')
             sign.update(salt)
@@ -130,6 +143,7 @@ const adapter: Adapter = {
         socket.emit('fetchHistory', messageId, roomId)
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
+        updateTrayIcon()
         return new Promise((resolve, reject) => {
             socket.emit('fetchMessages', roomId, offset, resolve)
         })
@@ -191,7 +205,11 @@ const adapter: Adapter = {
     sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room)
             data.roomId = ui.getSelectedRoomId()
-        //todo 本地文件
+        if (data.imgpath) {
+            const fileContent = fs.readFileSync(data.imgpath)
+            data.b64img = fileContent.toString('base64')
+            data.imgpath = null
+        }
         socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {

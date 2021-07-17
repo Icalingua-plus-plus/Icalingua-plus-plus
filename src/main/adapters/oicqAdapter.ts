@@ -266,7 +266,9 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
-            content: data.member.card ? data.member.card : data.member.nickname +
+            content: (data.member ?
+                (data.member.card ? data.member.card : data.member.nickname) :
+                data.user_id) +
                 (data.operator_id === data.user_id ? ' 离开了本群' :
                     ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member ?
