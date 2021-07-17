@@ -2,7 +2,7 @@ import Adapter from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {FileElem, GroupMessageEventData, MessageElem, PrivateMessageEventData, Ret} from 'oicq'
+import {FileElem, MessageElem, Ret} from 'oicq'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
@@ -17,26 +17,27 @@ import avatarCache from '../utils/avatarCache'
 
 let socket: Socket
 let uin = 0
-//todo 标题栏刷新不及时
 const attachSocketEvents = () => {
-    socket.on('updateRoom', (room: Room) => {
+    socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
             room.unreadCount = 0
             socket.emit('updateRoom', room.roomId, {unreadCount: 0})
         }
         ui.updateRoom(room)
+        await updateTrayIcon()
     })
     socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
-    socket.on('onlineData', (data: { online: boolean, nick: string, uin: number }) => {
+    socket.on('onlineData', async (data: { online: boolean, nick: string, uin: number }) => {
         uin = data.uin
         ui.sendOnlineData({
             ...data,
             priority: getConfig().priority,
         })
+        await updateTrayIcon()
     })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
@@ -130,6 +131,7 @@ const adapter: Adapter = {
         socket.emit('fetchHistory', messageId, roomId)
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
+        updateTrayIcon()
         return new Promise((resolve, reject) => {
             socket.emit('fetchMessages', roomId, offset, resolve)
         })

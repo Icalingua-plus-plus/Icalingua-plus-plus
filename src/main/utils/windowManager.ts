@@ -2,6 +2,7 @@ import {BrowserWindow} from 'electron'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
+import {updateTrayIcon} from './trayManager'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow
 
@@ -34,7 +35,10 @@ export const loadMainWindow = () => {
             '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
         )
 
-    mainWindow.on('focus', clearCurrentRoomUnread)
+    mainWindow.on('focus', async ()=> {
+        clearCurrentRoomUnread()
+        await updateTrayIcon()
+    })
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
 }
