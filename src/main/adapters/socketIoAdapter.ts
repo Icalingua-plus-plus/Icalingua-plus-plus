@@ -14,6 +14,7 @@ import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
+import fs from 'fs'
 
 let socket: Socket
 let uin = 0
@@ -204,7 +205,11 @@ const adapter: Adapter = {
     sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room)
             data.roomId = ui.getSelectedRoomId()
-        //todo 本地文件
+        if (data.imgpath) {
+            const fileContent = fs.readFileSync(data.imgpath)
+            data.b64img = fileContent.toString('base64')
+            data.imgpath = null
+        }
         socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
