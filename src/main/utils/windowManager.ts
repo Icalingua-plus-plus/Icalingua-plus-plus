@@ -1,4 +1,4 @@
-import {BrowserWindow} from 'electron'
+import {BrowserWindow, shell} from 'electron'
 import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -38,6 +38,13 @@ export const loadMainWindow = () => {
     mainWindow.on('focus', async ()=> {
         clearCurrentRoomUnread()
         await updateTrayIcon()
+    })
+
+    mainWindow.webContents.setWindowOpenHandler(details => {
+        shell.openExternal(details.url)
+        return {
+            action: 'deny'
+        }
     })
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
