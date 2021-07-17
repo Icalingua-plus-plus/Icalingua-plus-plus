@@ -37,7 +37,8 @@ const attachSocketEvents = () => {
             ...data,
             priority: getConfig().priority,
         })
-        await updateTrayIcon()
+        updateTrayIcon()
+        updateAppMenu()
     })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
@@ -51,7 +52,7 @@ const attachSocketEvents = () => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)
     })
-    socket.on('notification', async (data: {
+    socket.on('notify', async (data: {
         avatar: string,
         priority: 1 | 2 | 3 | 4 | 5,
         roomId: number,
