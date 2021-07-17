@@ -102,7 +102,17 @@ const adapter: Adapter = {
     async createBot(_?: LoginForm) {
         await loadMainWindow()
         createTray()
-        socket = io(getConfig().server)
+        socket = io(getConfig().server, {
+            transports: ['websocket'],
+        })
+        socket.on('connect_error', async () => {
+            await dialog.showMessageBox(getMainWindow(), {
+                title: '错误',
+                message: '连接失败',
+                type: 'error',
+            })
+            app.quit()
+        })
         socket.on('requireAuth', (salt: string) => {
             const sign = crypto.createSign('RSA-SHA1')
             sign.update(salt)
