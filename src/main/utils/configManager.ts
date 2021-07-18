@@ -19,6 +19,7 @@ type AllConfig = {
     adapter: 'oicq' | 'socketIo'
     server: string
     privateKey: string
+    tgBotToken: string
 }
 
 
@@ -67,7 +68,8 @@ const defaultConfig: AllConfig = {
     darkTaskIcon: false,
     winSize: defaultWinSize,
     socketIo: '',
-    adapter: 'oicq'
+    adapter: 'oicq',
+    tgBotToken: null
 }
 if (fs.existsSync(configFilePath)) {
     config = YAML.parse(fs.readFileSync(configFilePath, 'utf8'))
