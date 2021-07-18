@@ -44,5 +44,5 @@ export default (ext: string) => {
         ext = ext.substr(1)
     if (mimes[ext])
         return mimes[ext]
-    return 'object/stream'
+    return 'application/octet-stream'
 }

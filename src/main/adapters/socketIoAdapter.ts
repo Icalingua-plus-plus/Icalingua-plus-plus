@@ -207,7 +207,7 @@ const adapter: Adapter = {
             data.roomId = ui.getSelectedRoomId()
         if (data.imgpath) {
             const fileContent = fs.readFileSync(data.imgpath)
-            data.b64img = fileContent.toString('base64')
+            data.b64img = 'data:image/png;base64,' + fileContent.toString('base64')
             data.imgpath = null
         }
         socket.emit('sendMessage', data)
