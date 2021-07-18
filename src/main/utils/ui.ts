@@ -5,6 +5,7 @@ import {revealMessage} from '../ipc/botAndStorage'
 import OnlineData from '../../types/OnlineData'
 import {ipcMain} from 'electron'
 import {updateAppMenu} from '../ipc/menuManager'
+import {updateTrayIcon} from './trayManager'
 
 let selectedRoomId = 0
 let selectedRoomName = ''
@@ -12,6 +13,8 @@ ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
     selectedRoomId = id
     selectedRoomName = name
     updateAppMenu()
+    if (id === 0)
+        updateTrayIcon()
 })
 
 export default {
