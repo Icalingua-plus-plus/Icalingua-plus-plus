@@ -1,3 +1,5 @@
+import MessageMirai from './MessageMirai'
+
 interface MessageFile {
     type: string;
     url: string;
@@ -7,6 +9,7 @@ interface MessageFile {
 }
 
 export default interface Message {
+    mirai?: MessageMirai
     reveal?: boolean
     code?: string;
     at?: string | boolean;
