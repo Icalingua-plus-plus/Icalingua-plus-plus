@@ -1,8 +1,8 @@
-type MiraiTg={
+type MiraiTg = {
     type: 'tg'
     tgUid: number
 }
 
-type MessageMirai=MiraiTg
+type MessageMirai = { eqq: MiraiTg }
 
 export default MessageMirai

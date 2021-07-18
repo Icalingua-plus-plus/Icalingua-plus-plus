@@ -23,6 +23,11 @@
 			<slot name="message" v-bind="{ message }">
 				<div class="vac-message-sender-avatar" @click.right="avatarctx" @dblclick="$emit('poke')"
 				     v-if="roomUsers.length > 2 && message.senderId !== currentUserId">
+					<img
+						:src="tgLogo"
+						v-if="message.mirai&&message.mirai.eqq.type==='tg'"
+						style="position: absolute;right: -4px;bottom: 3px;object-fit: cover;height: 18px;width: 18px;line-height: 18px;"
+					/>
 					<el-avatar
 						size="medium"
 						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
@@ -215,6 +220,7 @@ export default {
 			emojiOpened: false,
 			newMessage: {},
 			lottie: getLottieFace(this.message.content),
+			tgLogo: `file://${__static}/tg.svg`,
 		}
 	},
 
