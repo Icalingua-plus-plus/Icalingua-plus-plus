@@ -30,7 +30,7 @@
 					/>
 					<el-avatar
 						size="medium"
-						:src="`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
+						:src="message.avatar?message.avatar:`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
 					/>
 				</div>
 				<div

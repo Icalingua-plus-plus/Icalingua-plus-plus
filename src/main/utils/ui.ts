@@ -6,6 +6,8 @@ import OnlineData from '../../types/OnlineData'
 import {ipcMain} from 'electron'
 import {updateAppMenu} from '../ipc/menuManager'
 import {updateTrayIcon} from './trayManager'
+import {getConfig} from './configManager'
+import {getTgAvatar} from './tgAvatar'
 
 let selectedRoomId = 0
 let selectedRoomName = ''
@@ -45,9 +47,15 @@ export default {
     setShutUp(isShutUp: boolean) {
         sendToMainWindow('setShutUp', isShutUp)
     },
-    addMessage(roomId: number, message: Message) {
-        if (roomId === selectedRoomId)
+    async addMessage(roomId: number, message: Message) {
+        if (roomId === selectedRoomId) {
+            if (getConfig().tgBotToken)
+                if (message.mirai && message.mirai.eqq.type === 'tg') {
+                    message.avatar = await getTgAvatar(message.mirai.eqq.tgUid)
+                }
+
             sendToMainWindow('addMessage', {roomId, message})
+        }
     },
     chroom(roomId: number) {
         sendToMainWindow('chroom', roomId)
