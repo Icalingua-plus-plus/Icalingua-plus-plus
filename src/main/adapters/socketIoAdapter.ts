@@ -15,6 +15,7 @@ import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
 import fs from 'fs'
+import fileType from 'file-type'
 
 let socket: Socket
 let uin = 0
@@ -153,7 +154,7 @@ const adapter: Adapter = {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)
         })
     },
-    getForwardMsg(resId: string){
+    getForwardMsg(resId: string) {
         return new Promise((resolve, reject) => {
             socket.emit('getForwardMsg', resId, resolve)
         })
@@ -202,12 +203,13 @@ const adapter: Adapter = {
     sendGroupPoke(gin: number, uin: number) {
         socket.emit('sendGroupPoke', gin, uin)
     },
-    sendMessage(data: SendMessageParams) {
+    async sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room)
             data.roomId = ui.getSelectedRoomId()
         if (data.imgpath) {
             const fileContent = fs.readFileSync(data.imgpath)
-            data.b64img = 'data:image/png;base64,' + fileContent.toString('base64')
+            const type = await fileType.fromBuffer(fileContent)
+            data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
             data.imgpath = null
         }
         socket.emit('sendMessage', data)
