@@ -5,7 +5,6 @@ import getWinUrl from '../../utils/getWinUrl'
 import oicqAdapter from '../adapters/oicqAdapter'
 import Adapter from '../../types/Adapter'
 import socketIoAdapter from '../adapters/socketIoAdapter'
-import {getTgAvatar} from '../utils/tgAvatar'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
@@ -34,16 +33,8 @@ export const fetchLatestHistory = (roomId: number) => {
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', adapter.getFriendsAndGroups)
 ipcMain.on('sendMessage', (_, data) => sendMessage(data))
-ipcMain.handle('fetchMessage', async (_, {roomId, offset}: { roomId: number, offset: number }) => {
-    const messages = await adapter.fetchMessages(roomId, offset)
-    //process tg avatar
-    if (getConfig().tgBotToken)
-        for (const message of messages) {
-            if (message.mirai && message.mirai.eqq.type === 'tg') {
-                message.avatar = await getTgAvatar(message.mirai.eqq.tgUid)
-            }
-        }
-    return messages
+ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
+    return adapter.fetchMessages(roomId, offset)
 })
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
 ipcMain.on('reLogin', adapter.reLogin)
