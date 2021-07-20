@@ -562,7 +562,7 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
         new MenuItem({
             label: `查看头像`,
             click: () => {
-                openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`, false)
+                openImage(message.avatar ? message.avatar : `https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`, false)
             },
         }),
     )
