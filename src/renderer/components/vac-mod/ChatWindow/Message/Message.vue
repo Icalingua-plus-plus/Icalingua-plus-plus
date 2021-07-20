@@ -30,7 +30,7 @@
 					/>
 					<el-avatar
 						size="medium"
-						:src="message.avatar?message.avatar:`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`"
+						:src="avatar"
 					/>
 				</div>
 				<div
@@ -183,6 +183,8 @@ const {isImageFile} = require('../../utils/mediaFile')
 
 import LottieAnimation from '../../../LottieAnimation'
 import ipc from '../../../../utils/ipc'
+import getImageUrlByMd5 from '../../../../utils/getImageUrlByMd5'
+import getAvatarUrl from '../../../../../utils/getAvatarUrl'
 
 export default {
 	name: 'Message',
@@ -259,6 +261,12 @@ export default {
 				(this.message.saved || this.message.distributed || this.message.seen)
 			)
 		},
+		avatar(){
+			if(this.message.mirai&&this.message.mirai.eqq.avatarMd5){
+				return getImageUrlByMd5(this.message.mirai.eqq.avatarMd5)
+			}
+			return getAvatarUrl(this.message.senderId)
+		}
 	},
 
 	watch: {
