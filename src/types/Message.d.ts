@@ -9,7 +9,6 @@ interface MessageFile {
 }
 
 export default interface Message {
-    avatar?: string
     mirai?: MessageMirai
     reveal?: boolean
     code?: string;

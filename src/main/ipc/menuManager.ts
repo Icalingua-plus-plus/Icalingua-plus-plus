@@ -37,6 +37,8 @@ import getStaticPath from '../../utils/getStaticPath'
 import setPriority from '../utils/setPriority'
 import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
+import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -570,7 +572,11 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
         new MenuItem({
             label: `查看头像`,
             click: () => {
-                openImage(message.avatar ? message.avatar : `https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`, false)
+                if (message.mirai && message.mirai.eqq.avatarMd5) {
+                    openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
+                } else {
+                    openImage(getAvatarUrl(message.senderId))
+                }
             },
         }),
     )
