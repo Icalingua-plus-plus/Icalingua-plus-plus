@@ -1,3 +1,5 @@
+import LastMessage from './LastMessage'
+
 export default interface Room {
     roomId: number;
     roomName: string;
@@ -14,11 +16,7 @@ export default interface Room {
         { _id: 3; username: '3' }
     ];
     at?: boolean | string | null;
-    lastMessage: {
-        content: string;
-        timestamp: string;
-        username?: string;
-    };
+    lastMessage: LastMessage;
     autoDownload?: boolean;
     downloadPath?: string;
 }

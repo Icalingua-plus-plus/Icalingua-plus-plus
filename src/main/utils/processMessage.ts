@@ -4,8 +4,10 @@ import oicq from '../adapters/oicqAdapter'
 import {base64decode} from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
+import Room from '../../types/Room'
+import LastMessage from '../../types/LastMessage'
 
-const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
+const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
         oicqMessage = [oicqMessage]
     let lastType
@@ -178,6 +180,23 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'mirai':
                 try {
                     message.mirai = JSON.parse(m.data.data)
+                    if (!message.mirai.eqq) {
+                        message.mirai = null
+                        break
+                    } else if (message.mirai.eqq.type === 'tg') {
+                        const index = message.content.indexOf('：\n')
+                        let sender = ''
+                        if (index > -1) {
+                            sender = message.content.substr(0, index)
+                            message.content = message.content.substr(index + 2)
+                        } else {
+                            //是图片之类没有真实文本内容的
+                            //去除尾部：
+                            sender = message.content.substr(0, message.content.length - 1)
+                            message.content = ''
+                        }
+                        message.username = lastMessage.username = sender
+                    }
                 } catch (e) {
                 }
                 break
