@@ -1,7 +1,7 @@
 import TelegramBot from 'node-telegram-bot-api'
 import {getConfig} from './configManager'
-import fetch from 'node-fetch'
 import fileType from 'file-type'
+import {streamToBuffer} from './steamToBuffer'
 
 const TG_TOKEN = getConfig().tgBotToken
 
@@ -21,11 +21,10 @@ export const getTgAvatar = async (uid: number): Promise<string> => {
             const photos = await tg.getUserProfilePhotos(uid, {limit: 1})
             const photo = photos.photos[0]
             const fid = photo[photo.length - 1].file_id
-            const url = await tg.getFileLink(fid)
-            const res = await fetch(url)
-            const buf = await res.buffer()
-            const type = await fileType.fromBuffer(res)
-            b64 = 'data:' + type.mime + ';base64,' + Buffer.from(buf, 'binary').toString('base64')
+            const res = tg.getFileStream(fid)
+            const buf = await streamToBuffer(res)
+            const type = await fileType.fromBuffer(buf)
+            b64 = 'data:' + type.mime + ';base64,' + buf.toString('base64')
             cache.set(uid, b64)
         }
         return b64
