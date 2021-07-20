@@ -1,7 +1,7 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import {FileElem, GroupMessageEventData, MessageElem, PrivateMessageEventData, Ret} from 'oicq'
+import {FileElem} from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 
@@ -26,7 +26,7 @@ export default interface Adapter {
 
     addRoom(room: Room): any
 
-    getForwardMsg(resId: string): Promise<Ret<{ group_id?: number, user_id: number, nickname: number, time: number, message: MessageElem[], raw_message: string }[]>>
+    getForwardMsg(resId: string): Promise<Message[]>
 
     getUin(): number
 
