@@ -153,7 +153,7 @@ const adapter: Adapter = {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)
         })
     },
-    getForwardMsg(resId: string): Promise<Ret<{ group_id?: number; user_id: number; nickname: number; time: number; message: MessageElem[]; raw_message: string }[]>> {
+    getForwardMsg(resId: string){
         return new Promise((resolve, reject) => {
             socket.emit('getForwardMsg', resId, resolve)
         })

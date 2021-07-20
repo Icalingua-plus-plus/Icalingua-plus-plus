@@ -617,8 +617,33 @@ const adapter: OicqAdapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    getForwardMsg(resId: string) {
-        return bot.getForwardMsg(resId)
+    async getForwardMsg(resId: string): Promise<Message[]> {
+        const history = await bot.getForwardMsg(resId)
+        if (history.error) {
+            console.log(history.error)
+            return
+        }
+        const messages = []
+        for (let i = 0; i < history.data.length; i++) {
+            const data = history.data[i]
+            const message: Message = {
+                senderId: data.user_id,
+                username: <string><unknown>data.nickname, //确信
+                content: '',
+                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                _id: i,
+                time: data.time * 1000,
+            }
+            await processMessage(
+                data.message,
+                message,
+                {},
+                ui.getSelectedRoomId(),
+            )
+            messages.push(message)
+        }
+        return messages
     },
 
     getUin: () => bot.uin,
