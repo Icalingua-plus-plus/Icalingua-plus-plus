@@ -467,6 +467,14 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
+            menu.append(
+                new MenuItem({
+                    label: '一分钟后撤回',
+                    click: () => {
+                        setTimeout(() => deleteMessage(room.roomId, message._id as string), 1000 * 60)
+                    },
+                }),
+            )
         }
         if (!history) {
             menu.append(
