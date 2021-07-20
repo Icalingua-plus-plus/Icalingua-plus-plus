@@ -107,7 +107,7 @@ const adapter: Adapter = {
         socket = io(getConfig().server, {
             transports: ['websocket'],
         })
-        socket.on('connect_error', async () => {
+        socket.once('connect_error', async () => {
             await dialog.showMessageBox(getMainWindow(), {
                 title: '错误',
                 message: '连接失败',
