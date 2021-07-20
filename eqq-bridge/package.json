@@ -1,0 +1,26 @@
+{
+  "name": "eqq-bridge",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "repository": "git@git.lwqwq.com:Clansty/eqq-bridge.git",
+  "author": "Clansty <i@gao4.pw>",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node .",
+    "detach-start": "screen -U yarn start",
+    "dev": "NODE_ENV=development ts-node ."
+  },
+  "devDependencies": {
+    "@types/mongodb": "^3.6.20",
+    "@types/node": "^16.3.2"
+  },
+  "dependencies": {
+    "mongodb": "^4.0.0",
+    "nodejs-base64": "^2.0.0",
+    "oicq": "^1.17.3",
+    "socket.io": "^4.1.3",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5",
+    "yaml": "^1.10.2"
+  }
+}
