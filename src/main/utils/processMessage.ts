@@ -196,6 +196,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             message.content = ''
                         }
                         message.username = lastMessage.username = sender
+                        lastMessage.content = lastMessage.content.substr(sender.length + 1)
                     }
                 } catch (e) {
                 }
