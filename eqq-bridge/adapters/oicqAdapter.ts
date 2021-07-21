@@ -28,6 +28,11 @@ let loginForm: LoginForm
 let currentLoadedMessagesCount = 0
 let loggedIn = false
 
+type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
+    'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
+    'mma.qq.com' | 'game.qq.com' | 'qqweb.qq.com' | 'openmobile.qq.com' |
+    'qun.qq.com' | 'ti.qq.com'
+
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
@@ -298,6 +303,9 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    async getCookies(domain: CookiesDomain, resolve) {
+        resolve(await bot.getCookies(domain)).data.cookies
+    },
     //roomId 和 room 必有一个
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
         if (!room) room = await storage.getRoom(roomId)

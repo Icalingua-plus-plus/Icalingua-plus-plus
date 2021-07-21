@@ -3,8 +3,10 @@ import LoginForm from '../../types/LoginForm'
 import {getConfig} from '../utils/configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import oicqAdapter from '../adapters/oicqAdapter'
-import Adapter from '../../types/Adapter'
+import Adapter, {CookiesDomain} from '../../types/Adapter'
 import socketIoAdapter from '../adapters/socketIoAdapter'
+import getCharCount from '../utils/getCharCount'
+import Cookies from '../../types/cookies'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
@@ -28,6 +30,21 @@ export const fetchLatestHistory = (roomId: number) => {
     } else buffer = Buffer.alloc(17)
     buffer.writeUInt32BE(uid, 0)
     fetchHistory(buffer.toString('base64'), roomId)
+}
+export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
+    const strCookies = await adapter.getCookies(domain)
+    if (getCharCount(strCookies, ';') < 2)
+        return null
+    const cookies = strCookies.split(';', 4)
+    const ret: Cookies = {
+        uin: cookies[0].substr(4),
+        skey: cookies[1].trim().substr(5),
+    }
+    if (getCharCount(strCookies, ';') === 4) {
+        ret.p_uin = cookies[2].trim().substr(6)
+        ret.p_skey = cookies[3].trim().substr(7)
+    }
+    return ret
 }
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
