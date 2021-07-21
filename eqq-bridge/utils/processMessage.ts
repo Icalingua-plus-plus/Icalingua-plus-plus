@@ -4,6 +4,8 @@ import {base64decode} from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
 import adapter from '../adapters/oicqAdapter'
+import BilibiliMiniApp from '../types/BilibiliMiniApp'
+import StructMessageCard from '../types/StructMessageCard'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -129,8 +131,24 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 else if (jsonAppLinkRegex.test(json))
                     appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
                 if (appurl) {
-                    lastMessage.content = appurl
-                    message.content = appurl
+                    try {
+                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
+                        lastMessage.content = meta.desc + ' '
+                        message.content = meta.desc + '\n\n'
+
+                        let previewUrl = meta.preview
+                        if (!previewUrl.toLowerCase().startsWith('http')) {
+                            previewUrl = 'https://' + previewUrl
+                        }
+                        message.file = {
+                            type: 'image/jpeg',
+                            url: previewUrl,
+                        }
+                    } catch (e) {
+                    }
+
+                    lastMessage.content += appurl
+                    message.content += appurl
                 } else {
                     lastMessage.content = '[JSON]'
                     message.content = '[JSON]'
