@@ -5,6 +5,11 @@ import {FileElem} from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 
+type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
+    'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
+    'mma.qq.com' | 'game.qq.com' | 'qqweb.qq.com' | 'openmobile.qq.com' |
+    'qun.qq.com' | 'ti.qq.com'
+
 export default interface Adapter {
     sendMessage(data: SendMessageParams): any
 
@@ -63,4 +68,6 @@ export default interface Adapter {
     revealMessage(roomId: number, messageId: string | number): any
 
     fetchHistory(messageId: string, roomId?: number): any
+
+    getCookies(domain: CookiesDomain): Promise<string>
 }

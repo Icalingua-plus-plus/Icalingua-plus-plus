@@ -29,7 +29,7 @@ import {updateAppMenu} from '../ipc/menuManager'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import Adapter from '../../types/Adapter'
+import Adapter, { CookiesDomain } from '../../types/Adapter'
 
 let bot: Client
 let storage: StorageProvider
@@ -420,6 +420,9 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    async getCookies(domain: CookiesDomain) {
+        return (await bot.getCookies(domain)).data.cookies
+    },
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()
@@ -756,7 +759,7 @@ const adapter: OicqAdapter = {
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
-    },
+    }
 }
 
 export default adapter

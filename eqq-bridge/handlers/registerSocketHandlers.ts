@@ -28,4 +28,5 @@ export default (io: Server, socket: Socket) => {
     socket.on('setRoomPriority', adapter.setRoomPriority)
     socket.on('updateMessage', adapter.updateMessage)
     socket.on('updateRoom', adapter.updateRoom)
+    socket.on('getCookies',adapter.getCookies)
 }
