@@ -6,7 +6,7 @@ import {
     ipcMain,
     Menu,
     MenuItem,
-    nativeImage,
+    nativeImage, screen,
     shell,
 } from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
@@ -26,7 +26,7 @@ import {
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus, getUin,
+    setOnlineStatus as setStatus, getUin, getCookies,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -39,6 +39,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
 import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import fs from 'fs'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -59,7 +60,7 @@ Menu.setApplicationMenu(Menu.buildFromTemplate([
 const buildRoomMenu = (room: Room): Menu => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
-    return Menu.buildFromTemplate([
+    const menu = Menu.buildFromTemplate([
         {
             label: '优先级',
             submenu: [
@@ -161,6 +162,34 @@ const buildRoomMenu = (room: Room): Menu => {
             click: () => fetchLatestHistory(room.roomId),
         },
     ])
+    if (room.roomId < 0) {
+        menu.append(new MenuItem({
+            label: '查看精华消息',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        nodeIntegration: true,
+                        contextIsolation: false,
+                    }
+            })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://qun.qq.com/essence/index?gc=' + -room.roomId)
+                win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(),'essenceInj.js'),'utf-8'))
+            },
+        }))
+    }
+    return menu
 }
 
 export const updateAppMenu = async () => {
