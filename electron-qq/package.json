@@ -1,11 +1,12 @@
 {
   "name": "electron-qq",
-  "version": "2.0.1-rc3",
+  "version": "2.0.1-rc4",
   "author": "clansty <i@gao4.pw>",
   "description": "A cross-platform QQ made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "electron-qq.desktop",
+  "homepage": "https://github.com/Clansty/electron-qq",
   "scripts": {
     "build": "ts-node .electron-vue/build.ts && electron-builder",
     "build:win": "electron-builder --win",

@@ -304,7 +304,12 @@ const attachLoginHandler = () => {
 
 const adapter = {
     async getCookies(domain: CookiesDomain, resolve) {
-        resolve(await bot.getCookies(domain)).data.cookies
+        try{
+            resolve((await bot.getCookies(domain)).data.cookies)
+        }
+        catch (e){
+            resolve('')
+        }
     },
     //roomId 和 room 必有一个
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
