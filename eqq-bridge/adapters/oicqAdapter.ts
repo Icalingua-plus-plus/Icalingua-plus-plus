@@ -20,6 +20,7 @@ import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import clients from '../utils/clients'
 import {Socket} from 'socket.io'
 import {broadcast} from '../providers/socketIoProvider'
+import sleep from '../utils/sleep'
 
 let bot: Client
 let storage: MongoStorageProvider
@@ -262,6 +263,24 @@ const loginHandlers = {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
         console.log('上线成功')
+
+        console.log('正在获取历史消息')
+        {
+            const rooms = await storage.getAllRooms()
+            for (const i of rooms) {
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                const roomId = i.roomId
+                let buffer: Buffer
+                let uid = roomId
+                if (roomId < 0) {
+                    buffer = Buffer.alloc(21)
+                    uid = -uid
+                } else buffer = Buffer.alloc(17)
+                buffer.writeUInt32BE(uid, 0)
+                adapter.fetchHistory(buffer.toString('base64'), roomId)
+                await sleep(500)
+            }
+        }
     },
 }
 //endregion
@@ -304,10 +323,9 @@ const attachLoginHandler = () => {
 
 const adapter = {
     async getCookies(domain: CookiesDomain, resolve) {
-        try{
+        try {
             resolve((await bot.getCookies(domain)).data.cookies)
-        }
-        catch (e){
+        } catch (e) {
             resolve('')
         }
     },
