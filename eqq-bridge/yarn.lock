@@ -220,11 +220,6 @@ ieee754@^1.1.13:
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
   integrity sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==
 
-jce@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/jce/-/jce-0.2.3.tgz#891b8f8c88642c328f2629a3a82c7a7d5de29e05"
-  integrity sha512-5Kjv9JHdWwji34bZ+oRtiytQytMfbRU9JpcFyYQlidiDfXp8OpuEp3L0jVZPAo+ktctMOQTCy6PfKi7uTO+Lmw==
-
 jsonfile@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-4.0.0.tgz#8771aae0799b64076b76640fca058f9c10e33ecb"
@@ -337,12 +332,11 @@ object-assign@^4:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
-oicq@^1.17.3:
-  version "1.17.3"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.17.3.tgz#892e9d51313edc6cddabb223a24ded59c4d5ad4b"
-  integrity sha512-coL/nDq+xbBXN9QvCDHQP7vvZwhrzDt0ynU88ysR34LPaEhok6wDh8ImeMYm7fFKXgdb4v+NF0eZEoxqtH6RDw==
+oicq@^1.18.1:
+  version "1.18.1"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.18.1.tgz#c9f28711cadde4f868529c2a6aec31f57d9a05fb"
+  integrity sha512-McordBTcO5kUBLPbHi3wqHmqAHs8SWusy+32y6++GK+xxcfM+sN67a9oXkvE3pV4Oo1g3ZGHpYqOdcZ84gbX6g==
   dependencies:
-    jce "^0.2.3"
     log4js "^6.3.0"
     long "^4.0.0"
     probe-image-size "^7.2.0"
