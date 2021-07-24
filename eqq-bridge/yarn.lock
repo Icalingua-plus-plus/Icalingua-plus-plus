@@ -332,10 +332,10 @@ object-assign@^4:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
-oicq@^1.18.1:
-  version "1.18.1"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.18.1.tgz#c9f28711cadde4f868529c2a6aec31f57d9a05fb"
-  integrity sha512-McordBTcO5kUBLPbHi3wqHmqAHs8SWusy+32y6++GK+xxcfM+sN67a9oXkvE3pV4Oo1g3ZGHpYqOdcZ84gbX6g==
+oicq@^1.18.2:
+  version "1.18.2"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.18.2.tgz#e828f392f2a5e7250eb17f6f1899e398b7b31692"
+  integrity sha512-X5TH79eC2Jr+IBvpz97nUPLb7atMOPkbJEg5Wt1Xu5eOHHy8p1e1VjkeznZgHlh0AcrV0nYh54bncKO9GehZyA==
   dependencies:
     log4js "^6.3.0"
     long "^4.0.0"

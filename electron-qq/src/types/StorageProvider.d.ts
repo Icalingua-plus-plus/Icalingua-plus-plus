@@ -35,4 +35,6 @@ export default interface StorageProvider {
     isChatIgnored(id: number): Promise<boolean>
 
     addIgnoredChat(info: IgnoreChatInfo): Promise<any>
+
+    removeIgnoredChat(roomId: number): Promise<any>
 }

@@ -29,4 +29,6 @@ export default (io: Server, socket: Socket) => {
     socket.on('updateMessage', adapter.updateMessage)
     socket.on('updateRoom', adapter.updateRoom)
     socket.on('getCookies',adapter.getCookies)
+    socket.on('getIgnoredChats',adapter.getIgnoredChats)
+    socket.on('removeIgnoredChat',adapter.removeIgnoredChat)
 }

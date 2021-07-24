@@ -1,4 +1,4 @@
-import Adapter, { CookiesDomain } from '../../types/Adapter'
+import Adapter, {CookiesDomain} from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
@@ -92,6 +92,12 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    getIgnoredChats(): Promise<IgnoreChatInfo[]> {
+        return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
+    },
+    removeIgnoredChat(roomId: number): any {
+        socket.emit('removeIgnoredChat', roomId)
+    },
     getCookies(domain: CookiesDomain): Promise<string> {
         return new Promise((resolve, reject) => {
             socket.emit('getCookies', domain, resolve)
@@ -238,7 +244,7 @@ const adapter: Adapter = {
     },
     updateRoom(roomId: number, room: object) {
         socket.emit('updateRoom', roomId, room)
-    }
+    },
 
 }
 
