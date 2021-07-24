@@ -4,6 +4,6 @@ type MiraiTg = {
     avatarMd5: string
 }
 
-type MessageMirai = { eqq: MiraiTg }
+type MessageMirai = { eqq?: MiraiTg }
 
 export default MessageMirai
