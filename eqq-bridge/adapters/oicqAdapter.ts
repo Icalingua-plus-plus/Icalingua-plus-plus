@@ -466,16 +466,7 @@ const adapter = {
         attachLoginHandler()
         bot.login(form.password)
     },
-    async getFriendsAndGroups(resolve) {
-        const friends = bot.fl.values()
-        let iterF = friends.next()
-        const friendsAll = []
-        while (!iterF.done) {
-            const f = {...iterF.value}
-            f.sc = (f.nickname + f.remark + f.user_id).toUpperCase()
-            friendsAll.push(f)
-            iterF = friends.next()
-        }
+    async getGroups(resolve) {
         const groups = bot.gl.values()
         let iterG = groups.next()
         const groupsAll = []
@@ -485,9 +476,7 @@ const adapter = {
             groupsAll.push(f)
             iterG = groups.next()
         }
-        resolve({
-            friendsAll, groupsAll,
-        })
+        resolve(groupsAll)
     },
     async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
         if (!offset) {
