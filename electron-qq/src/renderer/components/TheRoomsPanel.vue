@@ -16,7 +16,7 @@
 				:room="room"
 				:selected="room.roomId === selected.roomId"
 				:priority="priority"
-				@click="$emit('chroom', room)"
+				@click="input='';$emit('chroom', room)"
 				@contextmenu="roomMenu(room)"
 			/>
 		</div>
