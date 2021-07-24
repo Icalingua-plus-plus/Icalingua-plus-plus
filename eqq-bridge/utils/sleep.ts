@@ -1,1 +1,1 @@
-export default (ms: number) => new Promise<never>(resolve => setTimeout(resolve, ms))
+/home/clansty/repos/electron-qq/electron-qq/src/utils/sleep.ts
