@@ -18,7 +18,7 @@
   </a>
 </template>
 
-<script lang="ts">
+<script>
 export default {
   name: "GroupEntry",
   props: ["chat"],

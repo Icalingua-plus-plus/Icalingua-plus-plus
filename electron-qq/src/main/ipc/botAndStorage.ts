@@ -80,3 +80,5 @@ ipcMain.on('openForward', async (_, resId: string) => {
         win.webContents.send('loadMessages', messages)
     })
 })
+ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
+ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))

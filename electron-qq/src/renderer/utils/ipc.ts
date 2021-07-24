@@ -2,6 +2,7 @@ import {ipcRenderer} from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
+import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 
 const ipc = {
     sendMessage(data) {
@@ -90,5 +91,11 @@ const ipc = {
     setAria2Config(config: Aria2Config) {
         ipcRenderer.send('setAria2Config', config)
     },
+    getIgnoredChats(): Promise<IgnoreChatInfo[]>{
+        return ipcRenderer.invoke('getIgnoredChats')
+    },
+    removeIgnoredChat(roomId:number){
+        ipcRenderer.send('removeIgnoredChat', roomId)
+    }
 }
 export default ipc
