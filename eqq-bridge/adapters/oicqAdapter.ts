@@ -323,6 +323,12 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    getIgnoredChats(resolve) {
+        resolve(storage.getIgnoredChats())
+    },
+    removeIgnoredChat(roomId: number): any {
+        return storage.removeIgnoredChat(roomId)
+    },
     async getCookies(domain: CookiesDomain, resolve) {
         try {
             resolve((await bot.getCookies(domain)).data.cookies)

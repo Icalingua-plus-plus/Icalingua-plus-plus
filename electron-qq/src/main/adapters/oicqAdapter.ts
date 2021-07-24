@@ -420,6 +420,12 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    getIgnoredChats(): Promise<IgnoreChatInfo[]> {
+        return storage.getIgnoredChats()
+    },
+    removeIgnoredChat(roomId: number): any {
+        return storage.removeIgnoredChat(roomId)
+    },
     async getCookies(domain: CookiesDomain) {
         return (await bot.getCookies(domain)).data.cookies
     },
@@ -760,6 +766,8 @@ const adapter: OicqAdapter = {
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
     }
+
+
 }
 
 export default adapter

@@ -14,6 +14,12 @@ export default class MongoStorageProvider implements StorageProvider {
         this.connStr = connStr
     }
 
+    removeIgnoredChat(id: number): Promise<any> {
+        return this.mdb
+            .collection('ignoredChats')
+            .deleteOne({id})
+    }
+
     async getAllRooms(): Promise<Room[]> {
         try {
             return await this.mdb
