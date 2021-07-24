@@ -5,7 +5,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import oicqAdapter from '../adapters/oicqAdapter'
 import Adapter, {CookiesDomain} from '../../types/Adapter'
 import socketIoAdapter from '../adapters/socketIoAdapter'
-import getCharCount from '../utils/getCharCount'
+import getCharCount from '../../utils/getCharCount'
 import Cookies from '../../types/cookies'
 
 let adapter: Adapter
@@ -48,7 +48,9 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 }
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
-ipcMain.handle('getFriendsAndGroups', adapter.getFriendsAndGroups)
+ipcMain.handle('getFriendsAndGroups', async () => ({
+    groups: await adapter.getGroups(),
+}))
 ipcMain.on('sendMessage', (_, data) => sendMessage(data))
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     return adapter.fetchMessages(roomId, offset)

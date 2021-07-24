@@ -170,9 +170,9 @@ const adapter: Adapter = {
             socket.emit('getForwardMsg', resId, resolve)
         })
     },
-    getFriendsAndGroups(): Promise<{ friendsAll: any[]; groupsAll: any[] }> {
+    getGroups() {
         return new Promise((resolve, reject) => {
-            socket.emit('getFriendsAndGroups', resolve)
+            socket.emit('getGroups', resolve)
         })
     },
     getGroupFileMeta(gin: number, fid: string): Promise<FileElem['data']> {

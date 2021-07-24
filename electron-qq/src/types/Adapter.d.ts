@@ -4,6 +4,7 @@ import Message from './Message'
 import {FileElem} from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
+import SearchableGroup from './SearchableGroup'
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
     'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
@@ -15,7 +16,7 @@ export default interface Adapter {
 
     createBot(form: LoginForm): any
 
-    getFriendsAndGroups(): Promise<{ friendsAll: any[], groupsAll: any[] }>
+    getGroups(): Promise<SearchableGroup[]>
 
     fetchMessages(roomId: number, offset: number): Promise<Message[]>
 
