@@ -203,6 +203,26 @@ const buildRoomMenu = (room: Room): Menu => {
                 await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
             },
         }))
+        menu.append(new MenuItem({
+            label: '群荣誉',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://qun.qq.com/interactive/qunhonor?gc=' + -room.roomId)
+            },
+        }))
     }
     menu.append(new MenuItem({
             label: '获取历史消息',
