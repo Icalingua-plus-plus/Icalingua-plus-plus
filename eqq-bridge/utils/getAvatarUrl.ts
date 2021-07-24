@@ -1,1 +1,1 @@
-/home/clansty/repos/electron-qq/electron-qq/src/utils/getAvatarUrl.ts
+../../electron-qq/src/utils/getAvatarUrl.ts

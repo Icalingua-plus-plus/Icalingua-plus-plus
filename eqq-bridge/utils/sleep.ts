@@ -1,1 +1,1 @@
-/home/clansty/repos/electron-qq/electron-qq/src/utils/sleep.ts
+../../electron-qq/src/utils/sleep.ts
