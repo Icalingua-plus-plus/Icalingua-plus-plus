@@ -2,7 +2,7 @@ import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} 
 import Message from '../../types/Message'
 import oicq from '../adapters/oicqAdapter'
 import {base64decode} from 'nodejs-base64'
-import mime from './mime'
+import mime from '../../utils/mime'
 import path from 'path'
 import LastMessage from '../../types/LastMessage'
 import BilibiliMiniApp from '../../types/BilibiliMiniApp'

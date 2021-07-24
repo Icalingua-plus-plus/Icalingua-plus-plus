@@ -1,6 +1,5 @@
 import Room from './Room'
 import Message from './Message'
-import {getUnreadCount} from '../main/ipc/botAndStorage'
 import IgnoreChatInfo from './IgnoreChatInfo'
 
 export default interface StorageProvider {

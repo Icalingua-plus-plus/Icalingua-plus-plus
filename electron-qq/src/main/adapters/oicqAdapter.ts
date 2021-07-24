@@ -564,16 +564,7 @@ const adapter: OicqAdapter = {
         attachLoginHandler()
         bot.login(form.password)
     },
-    async getFriendsAndGroups() {
-        const friends = bot.fl.values()
-        let iterF = friends.next()
-        const friendsAll = []
-        while (!iterF.done) {
-            const f = {...iterF.value}
-            f.sc = (f.nickname + f.remark + f.user_id).toUpperCase()
-            friendsAll.push(f)
-            iterF = friends.next()
-        }
+    async getGroups() {
         const groups = bot.gl.values()
         let iterG = groups.next()
         const groupsAll = []
@@ -583,9 +574,7 @@ const adapter: OicqAdapter = {
             groupsAll.push(f)
             iterG = groups.next()
         }
-        return {
-            friendsAll, groupsAll,
-        }
+        return groupsAll
     },
     fetchMessages(roomId: number, offset: number) {
         if (!offset) {

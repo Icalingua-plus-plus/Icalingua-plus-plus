@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "mongodb": "^3.6.6",
-    "oicq": "^1.17.3"
+    "oicq": "^1.18.2"
   },
   "devDependencies": {
     "@types/ioredis": "^4.26.4",
