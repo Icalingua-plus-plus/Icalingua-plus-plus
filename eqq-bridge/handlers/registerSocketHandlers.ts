@@ -11,7 +11,7 @@ export default (io: Server, socket: Socket) => {
         adapter.fetchMessages(roomId, offset, socket, resolve))
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)
     socket.on('getForwardMsg', adapter.getForwardMsg)
-    socket.on('getFriendsAndGroups', adapter.getFriendsAndGroups)
+    socket.on('getGroups', adapter.getGroups)
     socket.on('getGroupFileMeta', adapter.getGroupFileMeta)
     socket.on('getRoom', adapter.getRoom)
     socket.on('getUnreadCount', adapter.getUnreadCount)
