@@ -157,10 +157,6 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             ],
         },
-        {
-            label: '获取历史消息',
-            click: () => fetchLatestHistory(room.roomId),
-        },
     ])
     if (room.roomId < 0) {
         menu.append(new MenuItem({
@@ -172,10 +168,10 @@ const buildRoomMenu = (room: Room): Menu => {
                     width: 500,
                     autoHideMenuBar: true,
                     webPreferences: {
-                        nodeIntegration: true,
+                        preload: path.join(getStaticPath(), 'essenceInj.js'),
                         contextIsolation: false,
-                    }
-            })
+                    },
+                })
                 const cookies = await getCookies('qun.qq.com')
                 for (const i in cookies) {
                     await win.webContents.session.cookies.set({
@@ -185,10 +181,34 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://qun.qq.com/essence/index?gc=' + -room.roomId)
-                win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(),'essenceInj.js'),'utf-8'))
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '查看群公告',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://web.qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
             },
         }))
     }
+    menu.append(new MenuItem({
+            label: '获取历史消息',
+            click: () => fetchLatestHistory(room.roomId),
+        },
+    ))
     return menu
 }
 
