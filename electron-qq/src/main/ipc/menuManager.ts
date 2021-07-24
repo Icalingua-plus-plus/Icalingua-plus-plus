@@ -209,7 +209,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 const size = screen.getPrimaryDisplay().size
                 const win = new BrowserWindow({
                     height: size.height - 200,
-                    width: 500,
+                    width: 800,
                     autoHideMenuBar: true,
                 })
                 const cookies = await getCookies('qun.qq.com')
@@ -328,9 +328,19 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '管理屏蔽的会话',
-                enabled: false,
                 click: () => {
-                },//todo 做一个单独的窗口来管理,
+                    const size = screen.getPrimaryDisplay().size
+                    const win = new BrowserWindow({
+                        height: size.height - 200,
+                        width: 500,
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            nodeIntegration: true,
+                            contextIsolation: false,
+                        },
+                    })
+                    win.loadURL(getWinUrl() + '#/ignoreManage')
+                },
             }),
             new MenuItem({
                 label: 'Aria2 下载管理器设置',

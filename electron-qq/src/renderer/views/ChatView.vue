@@ -105,12 +105,6 @@
                 "
 							/>
 						</transition>
-						<IgnoreManage
-							v-if="panel === 'ignore'"
-							:ignoredChats="ignoredChats"
-							@remove="rmIgnore"
-							@close="panel = ''"
-						/>
 					</div>
 				</Multipane>
 				<el-row v-if="view === 'contacts'" type="flex" justify="center">
@@ -148,7 +142,6 @@
 <script lang="js">
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import Stickers from '../components/Stickers'
-import IgnoreManage from '../components/IgnoreManage'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import path from 'path'
@@ -165,7 +158,6 @@ export default {
 	components: {
 		Room,
 		Stickers,
-		IgnoreManage,
 		SideBarIcon,
 		TheRoomsPanel,
 		TheContactsPanel,
