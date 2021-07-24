@@ -13,15 +13,19 @@
 					class="contacts-panel"
 					v-show="activeName === 'friends'"
 				>
-					<ContactEntry
-						v-for="i in friendsAll"
-						:key="i.user_id"
-						:id="i.user_id"
-						:remark="i.remark"
-						:name="i.nickname"
-						v-show="i.sc.includes(searchContext)"
-						@dblclick="$emit('dblclick', i.user_id, i.remark)"
-					/>
+					<el-collapse v-model="activeFriendGroup">
+						<el-collapse-item v-for="(v, i) in friendsAll" :title="v.name" :name="i" :key="i">
+							<ContactEntry
+								v-for="i in v.friends"
+								:key="i.uin"
+								:id="i.uin"
+								:remark="i.remark"
+								:name="i.nick"
+								v-show="i.sc.includes(searchContext)"
+								@dblclick="$emit('dblclick', i.uin, i.remark)"
+							/>
+						</el-collapse-item>
+					</el-collapse>
 				</div>
 			</el-tab-pane>
 			<el-tab-pane label="Groups" name="groups">
@@ -53,8 +57,12 @@ export default {
 		return {
 			activeName: "friends",
 			groupsAll: [],
+			/**
+			 * @type GroupOfFriend[]
+			 */
 			friendsAll: [],
 			searchContextEdit: "",
+			activeFriendGroup: []
 		};
 	},
 	computed: {
@@ -69,9 +77,9 @@ export default {
 	},
 	created() {
 		ipcRenderer.invoke('getFriendsAndGroups')
-		.then(({friendsAll, groupsAll})=>{
-			this.friendsAll = Object.freeze(friendsAll)
-			this.groupsAll = Object.freeze(groupsAll)
+		.then(({friends, groups})=>{
+			this.friendsAll = Object.freeze(friends)
+			this.groupsAll = Object.freeze(groups)
 		})
 	},
 };
