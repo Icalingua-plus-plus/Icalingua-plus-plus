@@ -219,7 +219,7 @@ export default {
 				this.selectedRoomId = 0
 				this.messages = []
 				ipc.setSelectedRoom(0, '')
-				document.title = 'Electron QQ'
+				document.title = 'Icalingua'
 			}
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(

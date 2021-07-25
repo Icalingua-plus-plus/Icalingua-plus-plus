@@ -370,7 +370,7 @@ export const updateAppMenu = async () => {
     }
     const menu = Menu.buildFromTemplate([
         {
-            label: 'Electron QQ',
+            label: 'Icalingua',
             submenu: Menu.buildFromTemplate(globalMenu.app),
         },
         globalMenu.priority,

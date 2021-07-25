@@ -2,11 +2,11 @@
   "name": "electron-qq",
   "version": "2.0.1-rc5",
   "author": "clansty <i@gao4.pw>",
-  "description": "A cross-platform QQ made with Electron",
+  "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "electron-qq.desktop",
-  "homepage": "https://github.com/Clansty/electron-qq",
+  "homepage": "https://github.com/Clansty/Icalingua",
   "scripts": {
     "build": "ts-node .electron-vue/build.ts && electron-builder",
     "build:win": "electron-builder --win",
@@ -21,7 +21,7 @@
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.ts"
   },
   "build": {
-    "productName": "Electron QQ",
+    "productName": "Icalingua",
     "appId": "com.clansty.electronqq",
     "directories": {
       "output": "build",
