@@ -17,7 +17,7 @@ export const createTray = () => {
         getStaticPath(),
         getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
     ))
-    tray.setToolTip('Electron QQ')
+    tray.setToolTip('Icalingua')
     tray.on('click', () => {
         const window = getMainWindow()
         window.show()
@@ -94,8 +94,8 @@ export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
     const title = ui.getSelectedRoomName()
-        ? ui.getSelectedRoomName() + ' — Electron QQ'
-        : 'Electron QQ'
+        ? ui.getSelectedRoomName() + ' — Icalingua'
+        : 'Icalingua'
     if (unread) {
         p = path.join(
             getStaticPath(),
