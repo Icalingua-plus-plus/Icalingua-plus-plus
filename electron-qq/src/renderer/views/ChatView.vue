@@ -292,7 +292,11 @@ export default {
 			this.account = uin
 			this.priority = priority
 			this.username = nick
-			this.sysInfo = sysInfo
+			this.sysInfo = sysInfo+`
+
+Client Electron ${process.versions.electron}
+Node ${process.versions.node}
+Chromium ${process.versions.chrome}`
 		})
 		console.log('加载完成')
 	},
