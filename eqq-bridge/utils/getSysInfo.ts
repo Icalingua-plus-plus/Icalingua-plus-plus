@@ -8,5 +8,6 @@ export default () => {
 Running on ${os.type()} ${os.hostname()} ${os.release()}
 Resident Set Size ${Math.round((used.rss / 1024 / 1024) * 100) / 100}MB
 Heap used ${Math.round((used.heapUsed / 1024 / 1024) * 100) / 100}MB
-Load ${load.join(' ')}`
+Load ${load.join(' ')}
+Server Node ${process.versions.node}`
 }
