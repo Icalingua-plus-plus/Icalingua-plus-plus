@@ -87,6 +87,13 @@
 								<i class="el-icon-more"></i>
 							</template>
 						</Room>
+						<pre v-show="selectedRoomId===0&&sysInfo"
+						     style="position: absolute;
+						         right: 13px;
+							     top: 0;
+							     font-family: monospace;
+							     color: rgb(156, 166, 175);
+							 ">{{ sysInfo }}</pre>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -188,6 +195,7 @@ export default {
 			menu: [],
 			loading: false,
 			isShutUp: false,
+			sysInfo: '',
 		}
 	},
 	async created() {
@@ -279,11 +287,12 @@ export default {
 		})
 		ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
 		ipcRenderer.on('closePanel', () => this.panel = '')
-		ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority}) => {
+		ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo}) => {
 			this.offline = !online
 			this.account = uin
 			this.priority = priority
 			this.username = nick
+			this.sysInfo = sysInfo
 		})
 		console.log('加载完成')
 	},

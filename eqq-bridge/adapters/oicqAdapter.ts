@@ -21,6 +21,7 @@ import clients from '../utils/clients'
 import {Socket} from 'socket.io'
 import {broadcast} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
+import getSysInfo from '../utils/getSysInfo'
 
 let bot: Client
 let storage: MongoStorageProvider
@@ -259,6 +260,25 @@ const loginHandlers = {
         if (!loggedIn) {
             await initStorage()
             attachEventHandler()
+            setInterval(adapter.sendOnlineData, 1000 * 60)
+            setInterval(async () => {
+                clients.message('获取好友历史消息')
+                const rooms = await storage.getAllRooms()
+                for (const i of rooms) {
+                    if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                    const roomId = i.roomId
+                    if (roomId < 0) continue
+                    let buffer: Buffer
+                    let uid = roomId
+                    if (roomId < 0) {
+                        buffer = Buffer.alloc(21)
+                        uid = -uid
+                    } else buffer = Buffer.alloc(17)
+                    buffer.writeUInt32BE(uid, 0)
+                    await adapter.fetchHistory(buffer.toString('base64'), roomId)
+                    await sleep(500)
+                }
+            }, 1000 * 60 * 60 * 12)
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
@@ -283,24 +303,6 @@ const loginHandlers = {
                 await sleep(500)
             }
         }
-        setInterval(async () => {
-            clients.message('获取好友历史消息')
-            const rooms = await storage.getAllRooms()
-            for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
-                const roomId = i.roomId
-                if (roomId < 0) continue
-                let buffer: Buffer
-                let uid = roomId
-                if (roomId < 0) {
-                    buffer = Buffer.alloc(21)
-                    uid = -uid
-                } else buffer = Buffer.alloc(17)
-                buffer.writeUInt32BE(uid, 0)
-                await adapter.fetchHistory(buffer.toString('base64'), roomId)
-                await sleep(500)
-            }
-        }, 1000 * 60 * 60 * 12)
     },
 }
 //endregion
@@ -669,6 +671,7 @@ const adapter = {
             online: bot.getStatus().data.online,
             nick: bot.nickname,
             uin: bot.uin,
+            sysInfo: getSysInfo(),
         })
         clients.setAllRooms(await storage.getAllRooms())
     },
