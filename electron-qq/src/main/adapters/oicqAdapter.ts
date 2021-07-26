@@ -30,6 +30,7 @@ import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import Adapter, { CookiesDomain } from '../../types/Adapter'
+import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 
 let bot: Client
 let storage: StorageProvider
@@ -363,13 +364,16 @@ const loginHandlers = {
 //region utility functions
 const initStorage = async () => {
     try {
-        if (loginForm.storageType === 'mdb')
-            storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
-        // else if (extra.storageType === 'idb')
-        //     storage = new IndexedStorageProvider(form.username)
-        // else if (loginForm.storageType === 'redis')
-        //     storage = new RedisStorageProvider(loginForm.rdsHost, loginForm.username)
-
+        switch (loginForm.storageType) {
+            case 'mdb':
+                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                break;
+            case 'redis':
+                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                break;
+            default:
+                break;
+        }
         await storage.connect()
         storage.getAllRooms()
             .then(e => {

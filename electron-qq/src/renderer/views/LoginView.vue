@@ -39,7 +39,7 @@
 				<el-radio-group v-model="form.storageType" size="small">
 					<!--					<el-radio-button label="idb">Indexed DB</el-radio-button>-->
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
-					<!--					<el-radio-button label="redis">Redis (Beta)</el-radio-button>-->
+					<el-radio-button label="redis">Redis (Beta)</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item label="Status">
