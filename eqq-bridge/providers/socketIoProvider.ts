@@ -36,3 +36,4 @@ io.on('connection', (socket) => {
 httpServer.listen(6789, '0.0.0.0', () => console.log('listening'))
 
 export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
+export const getClientsCount = () => io.sockets.sockets.size
