@@ -50,8 +50,12 @@
     }
   },
   "dependencies": {
+    "knex": "^0.95.8",
     "mongodb": "^3.6.6",
-    "oicq": "^1.18.2"
+    "mysql": "^2.18.1",
+    "oicq": "^1.18.2",
+    "pg": "^8.6.0",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "@types/ioredis": "^4.26.4",

@@ -106,3 +106,6 @@ dist
 build
 
 .directory
+
+# SQLite 数据库文件
+eqq*.db
