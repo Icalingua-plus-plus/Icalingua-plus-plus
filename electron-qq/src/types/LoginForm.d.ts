@@ -6,7 +6,7 @@ type LoginForm = {
     protocol: 1 | 2 | 3 | 4 | 5
     autologin?: boolean
     onlineStatus?: OnlineStatusType
-    storageType: 'mdb' | 'redis' | 'idb',
+    storageType: 'mdb' | 'redis' | 'sqlite',
     mdbConnStr: string,
     rdsHost?: string
 }

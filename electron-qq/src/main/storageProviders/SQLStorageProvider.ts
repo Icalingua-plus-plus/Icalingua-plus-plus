@@ -1,4 +1,5 @@
 import knex, { Knex } from "knex";
+import lodash from "lodash";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
@@ -53,14 +54,15 @@ export default class SQLStorageProvider implements StorageProvider {
     }
   }
 
-  private roomConToDB(room: Record<string, any>) {
-    if (room.users) {
+  private roomConToDB(room: Room): Record<string, any> {
+    if (room) {
       return {
         ...room,
         users: JSON.stringify(room.users),
+        lastMessage: JSON.stringify(room.lastMessage),
       };
     }
-    return room;
+    return null;
   }
 
   private roomConFromDB(room: Record<string, any>): Room {
@@ -69,17 +71,31 @@ export default class SQLStorageProvider implements StorageProvider {
         ...room,
         roomId: Number(room.roomId),
         utime: Number(room.utime),
+        users: JSON.parse(room.users),
+        lastMessage: JSON.parse(room.lastMessage),
       } as Room;
     return null;
   }
 
-  private msgConFromDB(message: Message): Message {
+  private msgConToDB(message: Message): Record<string, any> {
+    return {
+      ...message,
+      senderId: `${message.senderId}`,
+      _id: `${message._id}`,
+      file: JSON.stringify(message.file),
+      replyMessage: JSON.stringify(message.replyMessage),
+    };
+  }
+
+  private msgConFromDB(message: Record<string, any>): Message {
     if (message) {
       return {
         ...message,
         senderId: Number(message.senderId),
         time: Number(message.time),
-      };
+        file: JSON.parse(message.file),
+        replyMessage: JSON.parse(message.replyMessage),
+      } as Message;
     }
     return null;
   }
@@ -131,8 +147,8 @@ export default class SQLStorageProvider implements StorageProvider {
         table.integer("unreadCount");
         table.integer("priority");
         table.bigInteger("utime").index();
-        table.jsonb("users");
-        table.jsonb("lastMessage");
+        table.text("users");
+        table.text("lastMessage");
         table.boolean("at").nullable();
         table.boolean("autoDownload").nullable();
         table.string("downloadPath").nullable();
@@ -157,20 +173,17 @@ export default class SQLStorageProvider implements StorageProvider {
     return await this.db(`rooms`).insert(this.roomConToDB(room));
   }
 
-  async updateRoom(roomId: number, room: Record<string, any>): Promise<any> {
+  async updateRoom(roomId: number, room: Room): Promise<any> {
     await this.db(`rooms`)
-
       .where("roomId", "=", roomId)
       .update(this.roomConToDB(room));
   }
 
   async removeRoom(roomId: number): Promise<any> {
     await this.db(`rooms`)
-
       .where("roomId", "=", roomId)
       .delete();
     await this.db("msgTableName")
-
       .where("tableName", "=", `msg${roomId}`)
       .insert({ tableName: `msg${roomId}` });
     await this.db.schema.dropTableIfExists(`msg${roomId}`);
@@ -183,7 +196,6 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async getRoom(roomId: number): Promise<Room> {
     const room = await this.db<Room>(`rooms`)
-
       .where("roomId", "=", roomId)
       .select("*");
     return this.roomConFromDB(room[0]);
@@ -191,7 +203,6 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async getUnreadCount(priority: number): Promise<number> {
     const unreadRooms = await this.db<Room>(`rooms`)
-
       .where("unreadCount", ">", 0)
       .where("priority", "=", priority)
       .select("roomId"); // 尽可能减小通过 node 的数据量
@@ -200,7 +211,6 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async getFirstUnreadRoom(priority: number): Promise<Room> {
     const unreadRooms = await this.db<Room>(`rooms`)
-
       .where("unreadCount", ">", 0)
       .where("priority", "=", priority)
       .orderBy("utime", "desc")
@@ -228,7 +238,6 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async removeIgnoredChat(roomId: number): Promise<any> {
     await this.db<IgnoreChatInfo>(`ignoredChats`)
-
       .where("id", "=", roomId)
       .delete();
   }
@@ -251,9 +260,9 @@ export default class SQLStorageProvider implements StorageProvider {
         table.string("timestamp");
         table.string("date");
         table.string("role");
-        table.jsonb("file").nullable();
+        table.text("file").nullable();
         table.bigInteger("time");
-        table.jsonb("replyMessage").nullable();
+        table.text("replyMessage").nullable();
         table.boolean("at").nullable();
       });
       await this.db("msgTableName").insert({ tableName: `msg${roomId}` });
@@ -262,10 +271,7 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async addMessage(roomId: number, message: Message): Promise<any> {
     await this.createMsgTable(roomId);
-    await this.db<Message>(`msg${roomId}`).insert({
-      ...message,
-      _id: `${message._id}`,
-    });
+    await this.db<Message>(`msg${roomId}`).insert(this.msgConToDB(message));
   }
 
   async updateMessage(
@@ -274,7 +280,6 @@ export default class SQLStorageProvider implements StorageProvider {
     message: object
   ): Promise<any> {
     await this.db<Message>(`msg${roomId}`)
-
       .where("_id", "=", `${messageId}`)
       .update(message);
   }
@@ -286,7 +291,6 @@ export default class SQLStorageProvider implements StorageProvider {
   ): Promise<Message[]> {
     await this.createMsgTable(roomId);
     const messages = await this.db<Message>(`msg${roomId}`)
-
       .orderBy("time", "desc")
       .limit(limit)
       .offset(skip)
@@ -296,17 +300,24 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async getMessage(roomId: number, messageId: string): Promise<Message> {
     const message = await this.db<Message>(`msg${roomId}`)
-
       .where("_id", "=", messageId)
       .select("*")[0];
     return this.msgConFromDB(message);
   }
 
   async addMessages(roomId: number, messages: Message[]): Promise<any> {
-    await this.db<Message>(`msg${roomId}`)
-
-      .insert(Array.from(new Set(messages)))
-      .onConflict("_id")
-      .ignore();
+    try {
+      const msgToInsert = messages.map((message) => this.msgConToDB(message));
+      const chunkedMessages = lodash.chunk(msgToInsert, 200);
+      const pAry = chunkedMessages.map(async (chunkedMessage) => {
+        await this.db<Message>(`msg${roomId}`)
+          .insert(chunkedMessage)
+          .onConflict("_id")
+          .ignore();
+      });
+      await Promise.all(pAry);
+    } catch (e) {
+      return e;
+    }
   }
 }
