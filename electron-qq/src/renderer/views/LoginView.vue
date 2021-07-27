@@ -80,6 +80,7 @@
 			<el-form-item prop="sqlPassword" v-show="form.storageType==='mysql' || form.storageType==='pg'">
 				<el-input
 					placeholder="password"
+					type="password"
 					v-model="form.sqlPassword"
 				/>
 			</el-form-item>
