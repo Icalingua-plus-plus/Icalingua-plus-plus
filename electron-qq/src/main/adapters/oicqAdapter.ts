@@ -31,6 +31,7 @@ import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import Adapter, { CookiesDomain } from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
+import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 
 let bot: Client
 let storage: StorageProvider
@@ -371,6 +372,8 @@ const initStorage = async () => {
             case 'redis':
                 storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
                 break;
+            case 'sqlite':
+                storage = new SQLStorageProvider(`${loginForm.username}`,"sqlite3")
             default:
                 break;
         }
