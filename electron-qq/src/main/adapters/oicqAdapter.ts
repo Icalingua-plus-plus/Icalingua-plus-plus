@@ -374,6 +374,7 @@ const initStorage = async () => {
                 break;
             case 'sqlite':
                 storage = new SQLStorageProvider(`${loginForm.username}`, "sqlite3")
+                break;
             case 'mysql':
                 storage = new SQLStorageProvider(`${loginForm.username}`, "mysql", {
                     host: loginForm.sqlHost,
@@ -381,6 +382,7 @@ const initStorage = async () => {
                     password: loginForm.sqlPassword,
                     database: loginForm.sqlDatabase,
                 })
+                break;
             case 'pg':
                 storage = new SQLStorageProvider(`${loginForm.username}`, "pg", {
                     host: loginForm.sqlHost,
@@ -388,6 +390,7 @@ const initStorage = async () => {
                     password: loginForm.sqlPassword,
                     database: loginForm.sqlDatabase,
                 })
+                break;
             default:
                 break;
         }
