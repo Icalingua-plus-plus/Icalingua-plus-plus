@@ -64,7 +64,12 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   private roomConFromDB(room: Record<string, any>): Room {
-    if (room) return { ...room, roomId: Number(room.roomId) } as Room;
+    if (room)
+      return {
+        ...room,
+        roomId: Number(room.roomId),
+        utime: Number(room.utime),
+      } as Room;
     return null;
   }
 
