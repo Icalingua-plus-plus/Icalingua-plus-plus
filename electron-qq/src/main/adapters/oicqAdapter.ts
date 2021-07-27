@@ -373,7 +373,21 @@ const initStorage = async () => {
                 storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
                 break;
             case 'sqlite':
-                storage = new SQLStorageProvider(`${loginForm.username}`,"sqlite3")
+                storage = new SQLStorageProvider(`${loginForm.username}`, "sqlite3")
+            case 'mysql':
+                storage = new SQLStorageProvider(`${loginForm.username}`, "mysql", {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+            case 'pg':
+                storage = new SQLStorageProvider(`${loginForm.username}`, "pg", {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
             default:
                 break;
         }

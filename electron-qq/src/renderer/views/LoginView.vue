@@ -41,6 +41,8 @@
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
 					<el-radio-button label="redis">Redis</el-radio-button>
 					<el-radio-button label="sqlite">SQLite (内置)</el-radio-button>
+					<el-radio-button label="mysql">MySQL</el-radio-button>
+					<el-radio-button label="pg">PostgreSQL</el-radio-button>
 				</el-radio-group>
 			</el-form-item>
 			<el-form-item label="Status">
@@ -61,6 +63,30 @@
 				<el-input
 					placeholder="Redis Host"
 					v-model="form.rdsHost"
+				/>
+			</el-form-item>
+			<el-form-item prop="sqlHost" v-show="form.storageType==='mysql' || form.storageType==='pg'">
+				<el-input
+					placeholder="Host"
+					v-model="form.sqlHost"
+				/>
+			</el-form-item>
+			<el-form-item prop="sqlUsername" v-show="form.storageType==='mysql' || form.storageType==='pg'">
+				<el-input
+					placeholder="username"
+					v-model="form.sqlUsername"
+				/>
+			</el-form-item>
+			<el-form-item prop="sqlPassword" v-show="form.storageType==='mysql' || form.storageType==='pg'">
+				<el-input
+					placeholder="password"
+					v-model="form.sqlPassword"
+				/>
+			</el-form-item>
+			<el-form-item prop="sqlDatabase" v-show="form.storageType==='mysql' || form.storageType==='pg'">
+				<el-input
+					placeholder="database"
+					v-model="form.sqlDatabase"
 				/>
 			</el-form-item>
 			<p class="red">
