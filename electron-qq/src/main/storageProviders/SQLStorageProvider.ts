@@ -73,6 +73,7 @@ export default class SQLStorageProvider implements StorageProvider {
         utime: Number(room.utime),
         users: JSON.parse(room.users),
         lastMessage: JSON.parse(room.lastMessage),
+        downloadPath: room.downloadPath ? room.downloadPath : "",
       } as Room;
     return null;
   }
@@ -183,10 +184,6 @@ export default class SQLStorageProvider implements StorageProvider {
     await this.db(`rooms`)
       .where("roomId", "=", roomId)
       .delete();
-    await this.db("msgTableName")
-      .where("tableName", "=", `msg${roomId}`)
-      .insert({ tableName: `msg${roomId}` });
-    await this.db.schema.dropTableIfExists(`msg${roomId}`);
   }
 
   async getAllRooms(): Promise<Room[]> {
@@ -251,8 +248,7 @@ export default class SQLStorageProvider implements StorageProvider {
           .string("_id")
           .unique()
           .index()
-          .primary()
-          .unsigned();
+          .primary();
         table.string("senderId");
         table.string("username");
         table.text("content").nullable();
