@@ -4,6 +4,8 @@ import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
 import StorageProvider from "../../types/StorageProvider";
+import path from 'path'
+import {app} from 'electron'
 
 interface PgMyOpt {
   host: string;
@@ -30,7 +32,7 @@ export default class SQLStorageProvider implements StorageProvider {
       case "sqlite3":
         this.db = knex({
           client: "sqlite3",
-          connection: { filename: `${this.qid}.db` },
+          connection: { filename: path.join(app.getPath('userData'),`${this.qid}.db`) },
           useNullAsDefault: true,
         });
         break;
