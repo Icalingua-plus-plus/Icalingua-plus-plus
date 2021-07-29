@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "2.0.1-rc5",
+  "version": "2.1.1-dev",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
@@ -47,7 +47,8 @@
       ],
       "executableName": "electron-qq",
       "category": "Network"
-    }
+    },
+    "npmRebuild": false
   },
   "dependencies": {
     "knex": "^0.95.8",
@@ -64,6 +65,7 @@
     "@types/md5": "^2.3.0",
     "@types/mongodb": "^3.6.17",
     "@types/webpack": "^5.28.0",
+    "noble-ed25519": "^1.2.5",
     "ajv": "^6.5.0",
     "aria2": "^4.1.2",
     "axios": "^0.21.1",

@@ -7,7 +7,7 @@ import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
-import crypto from 'crypto'
+import {sign} from 'noble-ed25519'
 import {app, dialog, Notification} from 'electron'
 import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
@@ -86,7 +86,6 @@ const attachSocketEvents = () => {
                 })
             })
             notif.show()
-            console.log(notif)
         }
     })
 }
@@ -127,11 +126,8 @@ const adapter: Adapter = {
             })
             app.quit()
         })
-        socket.on('requireAuth', (salt: string) => {
-            const sign = crypto.createSign('RSA-SHA1')
-            sign.update(salt)
-            sign.end()
-            socket.emit('auth', sign.sign(getConfig().privateKey).toString('base64'))
+        socket.on('requireAuth', async (salt: string) => {
+            socket.emit('auth', await sign(salt, getConfig().privateKey))
             console.log('已向服务端提交身份验证')
         })
         socket.once('authSucceed', attachSocketEvents)

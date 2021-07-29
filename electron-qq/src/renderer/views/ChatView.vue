@@ -201,6 +201,7 @@ export default {
 	async created() {
 		//region set status
 		const STORE_PATH = await ipc.getStorePath()
+		const ver = await ipc.getVersion()
 		//endregion
 		//region listener
 		document.addEventListener('dragover', (e) => {
@@ -292,9 +293,8 @@ export default {
 			this.account = uin
 			this.priority = priority
 			this.username = nick
-			this.sysInfo = sysInfo+`
-
-Client Electron ${process.versions.electron}
+			this.sysInfo = (sysInfo ? (sysInfo + '\n\n') : '') + `Client ${ver}
+Electron ${process.versions.electron}
 Node ${process.versions.node}
 Chromium ${process.versions.chrome}`
 		})

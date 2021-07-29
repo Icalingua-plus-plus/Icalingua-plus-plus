@@ -15,7 +15,9 @@
     "@types/node": "^16.3.2"
   },
   "dependencies": {
+    "md5": "^2.3.0",
     "mongodb": "^4.0.0",
+    "noble-ed25519": "^1.2.5",
     "nodejs-base64": "^2.0.0",
     "oicq": "^1.18.2",
     "socket.io": "^4.1.3",
