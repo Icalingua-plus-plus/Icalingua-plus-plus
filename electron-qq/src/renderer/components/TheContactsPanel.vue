@@ -14,7 +14,9 @@
 					v-show="activeName === 'friends'"
 				>
 					<el-collapse v-model="activeFriendGroup">
-						<el-collapse-item v-for="(v, i) in friendsAll" :title="v.name" :name="i" :key="i">
+						<el-collapse-item v-for="(v, i) in friendsAll"
+						                  :title="`${v.name} (${v.friends.filter(e=>e.sc.includes(searchContext)).length})`"
+						                  :name="i" :key="i">
 							<ContactEntry
 								v-for="i in v.friends"
 								:key="i.uin"
@@ -48,41 +50,41 @@
 </template>
 
 <script>
-import {ipcRenderer} from "electron";
-import ContactEntry from "./ContactEntry.vue";
+import {ipcRenderer} from 'electron'
+import ContactEntry from './ContactEntry.vue'
 
 export default {
 	components: {ContactEntry},
 	data() {
 		return {
-			activeName: "friends",
+			activeName: 'friends',
 			groupsAll: [],
 			/**
 			 * @type GroupOfFriend[]
 			 */
 			friendsAll: [],
-			searchContextEdit: "",
-			activeFriendGroup: []
-		};
+			searchContextEdit: '',
+			activeFriendGroup: [],
+		}
 	},
 	computed: {
 		searchContext: {
 			get() {
-				return this.searchContextEdit;
+				return this.searchContextEdit
 			},
 			set(val) {
-				this.searchContextEdit = val.toUpperCase();
-			}
-		}
+				this.searchContextEdit = val.toUpperCase()
+			},
+		},
 	},
 	created() {
 		ipcRenderer.invoke('getFriendsAndGroups')
-		.then(({friends, groups})=>{
-			this.friendsAll = Object.freeze(friends)
-			this.groupsAll = Object.freeze(groups)
-		})
+			.then(({friends, groups}) => {
+				this.friendsAll = Object.freeze(friends)
+				this.groupsAll = Object.freeze(groups)
+			})
 	},
-};
+}
 </script>
 
 <style>
