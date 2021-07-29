@@ -126,7 +126,6 @@ const eventHandlers = {
                 })
             })
             notif.show()
-            console.log(notif)
         }
 
         if (
