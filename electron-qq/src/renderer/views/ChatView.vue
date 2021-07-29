@@ -293,9 +293,7 @@ export default {
 			this.account = uin
 			this.priority = priority
 			this.username = nick
-			this.sysInfo = sysInfo + `
-
-Client ${ver}
+			this.sysInfo = (sysInfo ? (sysInfo + '\n\n') : '') + `Client ${ver}
 Electron ${process.versions.electron}
 Node ${process.versions.node}
 Chromium ${process.versions.chrome}`
