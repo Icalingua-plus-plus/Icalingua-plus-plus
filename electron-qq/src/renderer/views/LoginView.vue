@@ -13,7 +13,7 @@
 				<h5>Version {{ ver }}</h5>
 			</center>
 			<el-form-item prop="username">
-				<el-input type="text" placeholder="QQ ID" v-model="form.username"/>
+				<el-input type="text" placeholder="QQ ID" v-model.number="form.username"/>
 			</el-form-item>
 			<el-form-item prop="password" :style="{ marginBottom: '15px' }">
 				<el-input
@@ -37,7 +37,6 @@
 			</el-form-item>
 			<el-form-item label="Storage engine">
 				<el-radio-group v-model="form.storageType" size="small">
-					<!--					<el-radio-button label="idb">Indexed DB</el-radio-button>-->
 					<el-radio-button label="mdb">MongoDB</el-radio-button>
 					<el-radio-button label="redis">Redis</el-radio-button>
 					<el-radio-button label="sqlite">SQLite (内置)</el-radio-button>

@@ -38,7 +38,6 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
-        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
@@ -130,11 +129,9 @@ const eventHandlers = {
         clients.setOnline()
     },
     onOffline(data: OfflineEventData) {
-        console.log(data)
         clients.setOffline(data.message)
     },
     async friendPoke(data: FriendPokeEventData) {
-        console.log(data)
         const roomId = data.operator_id == bot.uin ? data.user_id : data.operator_id
         const room = await storage.getRoom(roomId)
         if (room) {
@@ -169,7 +166,6 @@ const eventHandlers = {
         }
     },
     async groupPoke(data: GroupPokeEventData) {
-        console.log(data)
         const room = await storage.getRoom(-data.group_id)
         if (room) {
             room.utime = data.time * 1000
@@ -207,7 +203,6 @@ const eventHandlers = {
         }
     },
     async groupMemberIncrease(data: MemberIncreaseEventData) {
-        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
@@ -227,7 +222,6 @@ const eventHandlers = {
         await storage.addMessage(roomId, message)
     },
     async groupMemberDecrease(data: MemberDecreaseEventData) {
-        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
@@ -458,7 +452,6 @@ const adapter = {
             return
         }
         if (roomId > 0) {
-            console.log(data)
             room.lastMessage = {
                 content,
                 timestamp: formatDate('hh:mm'),
@@ -602,7 +595,6 @@ const adapter = {
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)
-        console.log(res)
         if (!res.error) {
             clients.deleteMessage(messageId)
             await storage.updateMessage(roomId, messageId, {deleted: new Date()})
@@ -621,7 +613,6 @@ const adapter = {
         const messages = []
         while (true) {
             const history = await bot.getChatHistory(messageId)
-            console.log(history)
             if (history.error) {
                 console.log(history.error)
                 clients.messageError('错误：' + history.error.message)
@@ -660,7 +651,7 @@ const adapter = {
                 newMsgs.find(e => e.senderId == bot.uin)
             if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
         }
-        console.log(messages)
+        console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
         clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
         await storage.addMessages(roomId, messages)
         storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
