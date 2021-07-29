@@ -13,10 +13,9 @@ if (process.env.NODE_ENV === 'development')
         const pathname = request.url.replace('file:///', '')
         cb(pathname)
     })
-if(getConfig().account.autologin){
+if (getConfig().account.autologin || getConfig().adapter === 'socketIo') {
     createBot(getConfig().account)
-}
-else{
+} else {
     showLoginWindow()
 }
 app.on('window-all-closed', () => {
