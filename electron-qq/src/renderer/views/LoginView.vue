@@ -13,7 +13,7 @@
 				<h5>Version {{ ver }}</h5>
 			</center>
 			<el-form-item prop="username">
-				<el-input type="text" placeholder="QQ ID" v-model="form.username"/>
+				<el-input type="text" placeholder="QQ ID" v-model.number="form.username"/>
 			</el-form-item>
 			<el-form-item prop="password" :style="{ marginBottom: '15px' }">
 				<el-input
