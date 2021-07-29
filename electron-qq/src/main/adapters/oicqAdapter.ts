@@ -373,7 +373,9 @@ const initStorage = async () => {
                 storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
                 break;
             case 'sqlite':
-                storage = new SQLStorageProvider(`${loginForm.username}`, "sqlite3")
+                storage = new SQLStorageProvider(`${loginForm.username}`, "sqlite3", {
+                    dataPath: app.getPath("userData")
+                })
                 break;
             case 'mysql':
                 storage = new SQLStorageProvider(`${loginForm.username}`, "mysql", {

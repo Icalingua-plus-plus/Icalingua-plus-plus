@@ -1,5 +1,6 @@
 import knex, { Knex } from "knex";
 import lodash from "lodash";
+import path from "path";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
@@ -10,6 +11,15 @@ interface PgMyOpt {
   user: string;
   password: string;
   database: string;
+  dataPath?: never;
+}
+
+interface SQLiteOpt {
+  dataPath: string;
+  host?: never;
+  user?: never;
+  password?: never;
+  database?: never;
 }
 
 export default class SQLStorageProvider implements StorageProvider {
@@ -21,7 +31,7 @@ export default class SQLStorageProvider implements StorageProvider {
   constructor(
     id: string,
     type: "pg" | "mysql" | "sqlite3",
-    connectOpt?: PgMyOpt
+    connectOpt: PgMyOpt | SQLiteOpt
   ) {
     this.id = id;
     this.qid = `eqq${id}`;
@@ -30,21 +40,27 @@ export default class SQLStorageProvider implements StorageProvider {
       case "sqlite3":
         this.db = knex({
           client: "sqlite3",
-          connection: { filename: `${this.qid}.db` },
+          connection: {
+            filename: `${path.join(
+              connectOpt.dataPath,
+              "databases",
+              this.qid
+            )}.db`,
+          },
           useNullAsDefault: true,
         });
         break;
       case "mysql":
         this.db = knex({
           client: "mysql",
-          connection: { ...connectOpt },
+          connection: connectOpt,
           useNullAsDefault: true,
         });
         break;
       case "pg":
         this.db = knex({
           client: "pg",
-          connection: { ...connectOpt },
+          connection: connectOpt,
           useNullAsDefault: true,
           searchPath: [this.qid, "public"],
         });
