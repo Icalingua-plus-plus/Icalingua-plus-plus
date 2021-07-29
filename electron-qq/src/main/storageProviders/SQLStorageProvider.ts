@@ -297,8 +297,8 @@ export default class SQLStorageProvider implements StorageProvider {
   async getMessage(roomId: number, messageId: string): Promise<Message> {
     const message = await this.db<Message>(`msg${roomId}`)
       .where("_id", "=", messageId)
-      .select("*")[0];
-    return this.msgConFromDB(message);
+      .select("*");
+    return this.msgConFromDB(message[0]);
   }
 
   async addMessages(roomId: number, messages: Message[]): Promise<any> {
