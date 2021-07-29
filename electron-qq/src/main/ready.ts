@@ -10,9 +10,7 @@ require('./ipc/system')
 require('./ipc/botAndStorage')
 require('./ipc/openImage')
 app.allowRendererProcessReuse = false
-protocol.registerBufferProtocol('jsbridge', (request, cb) => {
-    console.log(request)
-})
+protocol.registerBufferProtocol('jsbridge', ()=>{})
 if (process.env.NODE_ENV === 'development')
     protocol.registerFileProtocol('file', (request, cb) => {
         const pathname = request.url.replace('file:///', '')

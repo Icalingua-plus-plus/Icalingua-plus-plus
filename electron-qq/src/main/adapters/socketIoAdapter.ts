@@ -86,7 +86,6 @@ const attachSocketEvents = () => {
                 })
             })
             notif.show()
-            console.log(notif)
         }
     })
 }
