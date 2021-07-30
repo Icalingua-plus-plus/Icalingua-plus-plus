@@ -99,13 +99,15 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   private msgConToDB(message: Message): Record<string, any> {
-    return {
-      ...message,
-      senderId: `${message.senderId}`,
-      _id: `${message._id}`,
-      file: JSON.stringify(message.file),
-      replyMessage: JSON.stringify(message.replyMessage),
-    };
+    if (message)
+      return {
+        ...message,
+        senderId: `${message.senderId}`,
+        _id: `${message._id}`,
+        file: JSON.stringify(message.file),
+        replyMessage: JSON.stringify(message.replyMessage),
+      };
+    return null;
   }
 
   private msgConFromDB(message: Record<string, any>): Message {
