@@ -191,9 +191,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                message.file={
-                    type: 'audio/mp3',
-                    url: await silkDecode(m.data.url)
+                try {
+                    message.file = {
+                        type: 'audio/mp3',
+                        url: await silkDecode(m.data.url),
+                    }
+                } catch (e) {
+                    message.file = null
+                    message.content = '[无法处理的语音]'
+                    message.code = JSON.stringify(e)
                 }
                 lastMessage.content = `[Audio]`
                 break
