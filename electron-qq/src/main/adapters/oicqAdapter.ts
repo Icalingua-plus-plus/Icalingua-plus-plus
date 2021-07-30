@@ -43,7 +43,6 @@ let loggedIn = false
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
-        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
@@ -148,6 +147,7 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         await updateTrayIcon()
+        console.log(data.message)
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
