@@ -207,7 +207,9 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   async getAllRooms(): Promise<Room[]> {
-    const rooms = await this.db<Room>(`rooms`).select("*");
+    const rooms = await this.db<Room>(`rooms`)
+      .select("*")
+      .orderBy("utime", "desc");
     return rooms.map((room) => this.roomConFromDB(room));
   }
 
