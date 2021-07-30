@@ -39,17 +39,16 @@ export default class SQLStorageProvider implements StorageProvider {
     this.type = type;
     switch (type) {
       case "sqlite3":
-        fs.mkdirSync(path.join(connectOpt.dataPath, "databases"), {
-          recursive: true,
-        });
+        const dbPath = path.join(connectOpt.dataPath, "databases");
+        if (!fs.existsSync(dbPath)) {
+          fs.mkdirSync(dbPath, {
+            recursive: true,
+          });
+        }
         this.db = knex({
           client: "sqlite3",
           connection: {
-            filename: `${path.join(
-              connectOpt.dataPath,
-              "databases",
-              this.qid
-            )}.db`,
+            filename: `${path.join(dbPath, this.qid)}.db`,
           },
           useNullAsDefault: true,
         });
@@ -99,13 +98,15 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   private msgConToDB(message: Message): Record<string, any> {
-    return {
-      ...message,
-      senderId: `${message.senderId}`,
-      _id: `${message._id}`,
-      file: JSON.stringify(message.file),
-      replyMessage: JSON.stringify(message.replyMessage),
-    };
+    if (message)
+      return {
+        ...message,
+        senderId: `${message.senderId}`,
+        _id: `${message._id}`,
+        file: JSON.stringify(message.file),
+        replyMessage: JSON.stringify(message.replyMessage),
+      };
+    return null;
   }
 
   private msgConFromDB(message: Record<string, any>): Message {
