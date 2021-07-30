@@ -6,6 +6,7 @@ import path from 'path'
 import adapter from '../adapters/oicqAdapter'
 import BilibiliMiniApp from '../types/BilibiliMiniApp'
 import StructMessageCard from '../types/StructMessageCard'
+import silkDecode from './silkDecode'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -190,7 +191,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                message.content = '[Audio]'
+                message.file={
+                    type: 'audio/mp3',
+                    url: await silkDecode(m.data.url)
+                }
                 lastMessage.content = `[Audio]`
                 break
             case 'mirai':
