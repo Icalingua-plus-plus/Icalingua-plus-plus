@@ -1,6 +1,7 @@
 import knex, { Knex } from "knex";
 import lodash from "lodash";
 import path from "path";
+import fs from "fs";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
@@ -38,6 +39,9 @@ export default class SQLStorageProvider implements StorageProvider {
     this.type = type;
     switch (type) {
       case "sqlite3":
+        fs.mkdirSync(path.join(connectOpt.dataPath, "databases"), {
+          recursive: true,
+        });
         this.db = knex({
           client: "sqlite3",
           connection: {
