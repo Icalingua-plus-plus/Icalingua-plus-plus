@@ -219,6 +219,7 @@ export default {
 			else if (e.key === 'Escape') {
 				this.selectedRoomId = 0
 				this.messages = []
+				this.panel = ''
 				ipc.setSelectedRoom(0, '')
 				document.title = 'Icalingua'
 			}
