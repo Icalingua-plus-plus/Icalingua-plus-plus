@@ -39,6 +39,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
 import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import fs from 'fs'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -241,6 +242,31 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://ti.qq.com/hybrid-h5/interactive_logo/inter?target_uin=' + room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '照片墙',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        preload: path.join(getStaticPath(), 'photoWallPreload.js'),
+                        contextIsolation: false,
+                    },
+                })
+                const cookies = await getCookies('ti.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://ti.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://ti.qq.com/photowall/index.html?uin=' + room.roomId)
+                win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'photoWallInj.js'), 'utf-8'))
             },
         }))
     }
