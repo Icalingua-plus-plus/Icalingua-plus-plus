@@ -17,6 +17,10 @@ export default {
   font-family: "msyh";
   src: url("./assets/msyh.ttf");
 }
+@font-face {
+  font-family: "twemoji";
+  src: url("./assets/Twemoji.ttf");
+}
 
 html,
 body {
@@ -27,7 +31,7 @@ body {
 }
 
 * {
-  font-family: font, "CircularSpotifyTxT Book Web", msyh, "PingFang SC", sans-serif;
+  font-family: font, "CircularSpotifyTxT Book Web", msyh, twemoji, "PingFang SC", sans-serif;
 }
 
 :focus {
