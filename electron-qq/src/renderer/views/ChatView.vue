@@ -94,6 +94,11 @@
 							     font-family: monospace;
 							     color: rgb(156, 166, 175);
 							 ">{{ sysInfo }}</pre>
+						<div class="getting-history" v-if="historyCount">
+							<div class="pace-activity"/>
+							<span>正在获取历史消息...</span>
+							<span>{{ historyCount }}</span>
+						</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -196,6 +201,7 @@ export default {
 			loading: false,
 			isShutUp: false,
 			sysInfo: '',
+			historyCount: 0,
 		}
 	},
 	async created() {
@@ -247,6 +253,8 @@ export default {
 
 		ipcRenderer.on('closeLoading', () => this.loading = false)
 		ipcRenderer.on('notify', (_, p) => this.$notify(p))
+		ipcRenderer.on('addHistoryCount', (_, p) => this.historyCount += p)
+		ipcRenderer.on('clearHistoryCount', () => this.historyCount = 0)
 		ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
 		ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))
 		ipcRenderer.on('message', (_, p) => this.$message(p))
@@ -421,7 +429,29 @@ Chromium ${process.versions.chrome}`
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+.getting-history {
+	display: flex;
+	padding: 5px;
+	position: absolute;
+	top: 75px;
+	right: 10px;
+	height: 30px;
+	background-color: #F1F3F4;
+	align-items: center;
+	border-radius: 5px;
+
+	.pace-activity {
+		position: relative;
+		bottom: unset;
+		right: unset;
+	}
+
+	span {
+		margin-left: 5px;
+	}
+}
+
 .el-main {
 	padding: 0;
 	height: 100vh;

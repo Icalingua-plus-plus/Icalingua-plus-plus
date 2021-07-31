@@ -735,7 +735,6 @@ const adapter: OicqAdapter = {
         const messages = []
         while (true) {
             const history = await bot.getChatHistory(messageId)
-            console.log(history)
             if (history.error) {
                 console.log(history.error)
                 ui.messageError('错误：' + history.error.message)
@@ -766,16 +765,16 @@ const adapter: OicqAdapter = {
                 messages.push(message)
                 newMsgs.push(message)
             }
+            ui.addHistoryCount(newMsgs.length)
             if (history.data.length < 2) break
             messageId = newMsgs[0]._id as string
-            //todo 所有消息都过一遍，数据库里面都有才能结束
             const firstOwnMsg = roomId < 0 ?
                 newMsgs[0] : //群的话只要第一条消息就行
                 newMsgs.find(e => e.senderId == bot.uin)
             if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
         }
-        console.log(messages)
         ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+        ui.clearHistoryCount()
         await storage.addMessages(roomId, messages)
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)

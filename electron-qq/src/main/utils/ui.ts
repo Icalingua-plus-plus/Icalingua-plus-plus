@@ -85,6 +85,12 @@ export default {
     updatePriority(lev: 1 | 2 | 3 | 4 | 5) {
         sendToMainWindow('updatePriority', lev)
     },
+    addHistoryCount(count: number) {
+        sendToMainWindow('addHistoryCount', count)
+    },
+    clearHistoryCount() {
+        sendToMainWindow('clearHistoryCount')
+    },
     sendOnlineData(data: OnlineData) {
         sendToMainWindow('gotOnlineData', data)
     },
