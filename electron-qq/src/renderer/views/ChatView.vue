@@ -96,8 +96,7 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-							<span>正在获取历史消息...</span>
-							<span>{{ historyCount }}</span>
+							<span>正在获取历史消息... {{ historyCount }}</span>
 						</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
