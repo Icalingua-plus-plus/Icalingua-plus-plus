@@ -1,0 +1,8 @@
+[Desktop Entry]
+Categories=chat;Network;
+Exec=electron-qq %u
+Icon=electron-qq.png
+Name=Electron QQ
+Comment=A cross-platform QQ made with Electron
+Terminal=false
+Type=Application

@@ -1,49 +1,66 @@
 name: CI
 
-# Controls when the workflow will run
 on:
   push:
-    branches: 
-      - main
-      - dev
+    branches:
+    - main
+    - dev
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  pack-dist:
-    # The type of runner that the job will run on
+  install:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: electron-qq
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2  
-      
+      - uses: actions/checkout@v2
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-          
+
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
           WORKING_DIR: electron-qq
-      
+
       - name: Yarn install
         run: yarn install
 
-      - name: webpack
-        run: yarn build:ci
-              
-      - name: upload dist
+  version:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: electron-qq
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: get-version
+        id: version
+        uses: ashley-taylor/read-json-property-action@v1.0
+        with:
+          path: ./electron-qq/package.json
+          property: version
+
+  arch-artifacts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: dist
-          path: electron-qq/dist
+          name: pkgres
+          path: pkgres/*
+          if-no-files-found: error
 
-  build-x86_64:
-    # The type of runner that the job will run on
+  build-dist-bundle:
     runs-on: ubuntu-latest
-    needs: pack-dist
+    needs: install
     defaults:
       run:
         working-directory: electron-qq
@@ -53,13 +70,36 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - run: ls
-
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
           WORKING_DIR: electron-qq
 
-      - run: ls
+      - name: build
+        run: yarn build:ci
+
+      - name: upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: electron-qq/dist
+          if-no-files-found: error
+
+  # deb rpm appimage 之类的文件可以待会儿再构建，现在拿到 app.asar 之后就能构建 arch 包了
+  build-x86_64:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -67,107 +107,461 @@ jobs:
           name: dist
           path: electron-qq/dist
 
+      - name: build native modules
+        run: yarn build:electron install-app-deps
+
       - name: build
-        run: npx electron-builder
+        run: yarn build:electron --dir
 
       - uses: actions/upload-artifact@v2
         name: upload app-x86_64.asar
         with:
           name: app-x86_64.asar
           path: electron-qq/build/linux-unpacked/resources/app.asar
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
-        name: upload tar xz
+        name: upload x86_64
         with:
-          name: x86_64.tar.gz
-          path: electron-qq/build/*.tar.xz
+          name: x86_64-unpacked
+          path: electron-qq/build/linux-unpacked
+          if-no-files-found: error
+
+  build-ia32:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: electron-qq/dist
+
+      - name: Install gcc-multilib
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install gcc-multilib g++-multilib -y
+
+      - name: build native modules
+        run: yarn build:electron install-app-deps --arch ia32
+
+      - name: build
+        run: yarn build:electron --ia32 --dir
 
       - uses: actions/upload-artifact@v2
-        name: upload app image
+        name: upload app.asar
         with:
-          name: x86_64.AppImage
-          path: electron-qq/build/*.AppImage
+          name: app-ia32.asar
+          path: electron-qq/build/linux-ia32-unpacked/resources/app.asar
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
-        name: upload rpm
+        name: upload unpacked
         with:
-          name: x86_64.rpm
-          path: electron-qq/build/*.rpm
+          name: ia32-unpacked
+          path: electron-qq/build/linux-ia32-unpacked
+          if-no-files-found: error
+
+  build-arm64:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: electron-qq/dist
+
+      - uses: uraimo/run-on-arch-action@v2.1.1
+        name: build native modules using another arch
+        with:
+          arch: aarch64
+          distro: archarm_latest
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}/electron-qq:/build"
+          install: |
+            pacman -Sy --noconfirm yarn python2 python base-devel
+          run: |
+            uname -a
+            chmod -R 777 /build
+            cd /build
+            useradd -m builduser
+            su builduser -c 'yarn build:electron install-app-deps'
+
+      - name: build
+        run: yarn build:electron --arm64 --dir
 
       - uses: actions/upload-artifact@v2
-        name: upload deb
+        name: upload app.asar
         with:
-          name: x86_64.deb
-          path: electron-qq/build/*.deb
+          name: app-arm64.asar
+          path: electron-qq/build/linux-arm64-unpacked/resources/app.asar
+          if-no-files-found: error
 
+      - uses: actions/upload-artifact@v2
+        name: upload unpacked
+        with:
+          name: arm64-unpacked
+          path: electron-qq/build/linux-arm64-unpacked
+          if-no-files-found: error
 
-  #build-arm:
-    #runs-on: ubuntu-latest
-    #needs: pack-dist
-    #defaults:
-      #run:
-        #working-directory: electron-qq
+  pack-archpkg-x86_64:
+    runs-on: ubuntu-latest
+    needs:
+      - version
+      - arch-artifacts
+      - build-x86_64
+    steps:
+      - name: print the PKGBUILD for x86_64
+        shell: bash
+        run: |
+          cat << EOFMeow > PKGBUILD
+            pkgname=icalingua
+            pkgver=${{ needs.version.outputs.version }}
+            pkgrel=1
+            pkgdesc='A Linux client for QQ and more'
+            license=('GPL')
+            depends=('electron' 'ffmpeg')
+            optdepends=('mongodb-bin: Provides storage'
+                        'redis: Provides storage')
+            arch=('x86_64')
+            url="https://github.com/Clansty/Icalingua"
+            provides=('electron-qq')
+            conflicts=('electron-qq')
+            replaces=('electron-qq')
+            source=(app.asar
+                    512x512.png
+                    \${pkgname}.desktop
+                    \${pkgname})
+            package() {
+              install -Dm644 -t "\${pkgdir}/usr/share/applications" "\${pkgname}.desktop"
+              install -Dm644 "512x512.png" "\$pkgdir/usr/share/icons/hicolor/512x512/apps/\$pkgname.png"
+              install -Dm644 "app.asar" "\${pkgdir}/usr/share/\${pkgname}/\${pkgname}.asar"
+              install -Dm755 "\${pkgname}" "\${pkgdir}/usr/bin/\${pkgname}"
+              ln -s "/usr/bin/\${pkgname}" "\${pkgdir}/usr/bin/electron-qq"
+            }
+          EOFMeow
 
-    #steps:
-      #- uses: actions/checkout@v2
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+          
 
-      #- uses: zach-hill/gha-yarn-node-cache@1.1
-        #env:
-          #WORKING_DIR: electron-qq
+      #- run: cp pkgres/* .
+        #name: copy assets
 
-      #- name: get dist
-        #uses: actions/download-artifact@v2
-        #with:
-          #name: dist
-          #path: electron-qq/dist
+      - name: get binary for x86_64
+        uses: actions/download-artifact@v2
+        with:
+          name: app-x86_64.asar
+          
 
-      #- uses: uraimo/run-on-arch-action@v2.1.1
-        #name: build using another arch
-        #with:
-          #arch: aarch64
-          #distro: archarm_latest
-          #githubToken: ${{ github.token }}
-          #dockerRunArgs: |
-            #--volume "${PWD}/electron-qq:/build"
-          #install: |
-            #pacman -Sy --noconfirm yarn python2 python base-devel npm
-          #run: |
-            #uname -a
-            #chmod -R 777 /build
-            #cd /build
-            #ls
-            #useradd -m builduser
-            #su builduser -c 'DEBUG=electron-builder npx electron-builder install-app-deps'
-            #su builduser -c 'npx electron-builder'
+      - run: chmod -R 777 .
 
+      - name: makepkg for x86_64
+        uses: Clansty/archlinux-package-action@main
+        with:
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
 
-      #- uses: actions/upload-artifact@v2
-        #name: upload app-aarch64.asar
-        #with:
-          #name: app-aarch64.asar
-          #path: electron-qq/build/linux-unpacked/resources/app.asar
+      - uses: actions/upload-artifact@v2
+        name: upload x86_64
+        with:
+          name: x86_64.pkg.tar.zst
+          path: '*-x86_64.pkg.*'
+          if-no-files-found: error
 
-      #- uses: actions/upload-artifact@v2
-        #name: upload tar xz
-        #with:
-          #name: aarch64.tar.gz
-          #path: electron-qq/build/*.tar.xz
+  pack-archpkg-i686:
+    runs-on: ubuntu-latest
+    needs:
+      - version
+      - arch-artifacts
+      - build-ia32
+    steps:
 
-      #- uses: actions/upload-artifact@v2
-        #name: upload app image
-        #with:
-          #name: aarch64.AppImage
-          #path: electron-qq/build/*.AppImage
+      - name: print the PKGBUILD for i686
+        shell: bash
+        run: |
+          cat << EOFMeow > PKGBUILD
+            pkgname=icalingua
+            pkgver=${{ needs.version.outputs.version }}
+            pkgrel=1
+            pkgdesc='A Linux client for QQ and more'
+            license=('GPL')
+            depends=('electron13' 'ffmpeg')
+            optdepends=('mongodb-bin: Provides storage'
+                        'redis: Provides storage')
+            arch=('i686')
+            url="https://github.com/Clansty/Icalingua"
+            provides=('electron-qq')
+            conflicts=('electron-qq')
+            replaces=('electron-qq')
+            source=(app.asar
+                    512x512.png
+                    \${pkgname}.desktop
+                    \${pkgname}-electron13)
+            package() {
+              install -Dm644 -t "\${pkgdir}/usr/share/applications" "\${pkgname}.desktop"
+              install -Dm644 "512x512.png" "\$pkgdir/usr/share/icons/hicolor/512x512/apps/\$pkgname.png"
+              install -Dm644 "app.asar" "\${pkgdir}/usr/share/\${pkgname}/\${pkgname}.asar"
+              install -Dm755 "\${pkgname}-electron13" "\${pkgdir}/usr/bin/\${pkgname}"
+              ln -s "/usr/bin/\${pkgname}" "\${pkgdir}/usr/bin/electron-qq"
+            }
+          EOFMeow
 
-      #- uses: actions/upload-artifact@v2
-        #name: upload rpm
-        #with:
-          #name: aarch64.rpm
-          #path: electron-qq/build/*.rpm
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+          
+      - name: get binary for i686
+        uses: actions/download-artifact@v2
+        with:
+          name: app-ia32.asar
+          
+      - run: chmod -R 777 .
 
-      #- uses: actions/upload-artifact@v2
-        #name: upload deb
-        #with:
-          #name: aarch64.deb
-          #path: electron-qq/build/*.deb
-        
+      - name: makepkg for i686
+        uses: Clansty/archlinux-package-action@main
+        with:
+          carch: i686
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - uses: actions/upload-artifact@v2
+        name: upload i686
+        with:
+          name: i686.pkg.tar.zst
+          path: '*-i686.pkg.*'
+          if-no-files-found: error
+
+  pack-archpkg-aarch64:
+    runs-on: ubuntu-latest
+    needs:
+      - version
+      - arch-artifacts
+      - build-arm64
+    steps:
+      - name: print the PKGBUILD for aarch64
+        shell: bash
+        run: |
+          cat << EOFMeow > PKGBUILD
+            pkgname=icalingua
+            pkgver=${{ needs.version.outputs.version }}
+            pkgrel=1
+            pkgdesc='A Linux client for QQ and more'
+            license=('GPL')
+            depends=('electron13' 'ffmpeg')
+            optdepends=('mongodb-bin: Provides storage'
+                        'redis: Provides storage')
+            arch=('aarch64')
+            url="https://github.com/Clansty/Icalingua"
+            provides=('electron-qq')
+            conflicts=('electron-qq')
+            replaces=('electron-qq')
+            source=(app.asar
+                    512x512.png
+                    \${pkgname}.desktop
+                    \${pkgname}-electron13)
+            package() {
+              install -Dm644 -t "\${pkgdir}/usr/share/applications" "\${pkgname}.desktop"
+              install -Dm644 "512x512.png" "\$pkgdir/usr/share/icons/hicolor/512x512/apps/\$pkgname.png"
+              install -Dm644 "app.asar" "\${pkgdir}/usr/share/\${pkgname}/\${pkgname}.asar"
+              install -Dm755 "\${pkgname}-electron13" "\${pkgdir}/usr/bin/\${pkgname}"
+              ln -s "/usr/bin/\${pkgname}" "\${pkgdir}/usr/bin/electron-qq"
+            }
+          EOFMeow
+
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+         
+      - name: get binary for aarch64
+        uses: actions/download-artifact@v2
+        with:
+          name: app-arm64.asar
+         
+
+      - run: chmod -R 777 .
+
+      - name: makepkg for aarch64
+        uses: Clansty/archlinux-package-action@main
+        with:
+          carch: aarch64
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - uses: actions/upload-artifact@v2
+        name: upload aarch64
+        with:
+          name: aarch64.pkg.tar.zst
+          path: '*-aarch64.pkg.*'
+          if-no-files-found: error
+
+  pack-otherpkg-x86_64:
+    runs-on: ubuntu-latest
+    needs: build-x86_64
+    strategy:
+      matrix:
+        package: 
+          - deb
+          - rpm 
+          - AppImage
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64-unpacked
+          path: electron-qq/unpacked
+
+      - name: pack
+        run: yarn build:electron --pd unpacked -l ${{ matrix.package }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: x86_64.${{ matrix.package }}
+          path: electron-qq/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  pack-otherpkg-ia32:
+    runs-on: ubuntu-latest
+    needs: build-ia32
+    strategy:
+      matrix:
+        package: 
+          - deb
+          - rpm 
+          - AppImage
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32-unpacked
+          path: electron-qq/unpacked
+
+      - name: pack
+        run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: ia32.${{ matrix.package }}
+          path: electron-qq/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  pack-otherpkg-arm64:
+    runs-on: ubuntu-latest
+    needs: build-arm64
+    strategy:
+      matrix:
+        package: 
+          - deb
+          - rpm 
+          - AppImage
+    defaults:
+      run:
+        working-directory: electron-qq
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: zach-hill/gha-yarn-node-cache@1.1
+        env:
+          WORKING_DIR: electron-qq
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64-unpacked
+          path: electron-qq/unpacked
+
+      - name: pack
+        run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: arm64.${{ matrix.package }}
+          path: electron-qq/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  cleanup-dist:
+    runs-on: ubuntu-latest
+    needs:
+      - build-x86_64
+      - build-ia32
+      - build-arm64
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: dist
+
+  cleanup-pkgres:
+    runs-on: ubuntu-latest
+    needs:
+      - pack-archpkg-x86_64
+      - pack-archpkg-i686
+      - pack-archpkg-aarch64
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: pkgres
+

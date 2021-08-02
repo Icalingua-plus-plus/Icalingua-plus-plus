@@ -1,0 +1,2 @@
+#!/usr/bin/bash
+electron13 /usr/share/icalingua/icalingua.asar
