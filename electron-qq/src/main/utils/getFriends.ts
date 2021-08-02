@@ -30,7 +30,7 @@ export default async (): Promise<GroupOfFriend[]> => {
             uin: i.uin,
             nick: i.nick,
             remark: i.remark,
-            sc: i.searchField,
+            sc: i.searchField.toUpperCase(),
         })
     }
     return Object.values(map)
