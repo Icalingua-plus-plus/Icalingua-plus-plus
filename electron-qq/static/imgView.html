@@ -69,133 +69,133 @@
 <a style="display: none" id='download' download href=""></a>
 </body>
 <script>
-    const body = document.body;
-    const IMG = document.getElementById('IMG');
-    const DRAG = document.getElementById('DRAG');
-    const BAR = document.getElementById('BAR');
-    const DOWNLOAD = document.getElementById('download');
-    const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim();
-    IMG.src = url;
-    DOWNLOAD.href = url;
+    const body = document.body
+    const IMG = document.getElementById('IMG')
+    const DRAG = document.getElementById('DRAG')
+    const BAR = document.getElementById('BAR')
+    const DOWNLOAD = document.getElementById('download')
+    const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
+    IMG.src = url
+    DOWNLOAD.href = url
 
-    var centerX = -1;	// to center, with % instead
-    var centerY = -1;
-    var rotate = 0;	// degree
-    var zoom = 1;
+    var centerX = -1	// to center, with % instead
+    var centerY = -1
+    var rotate = 0	// degree
+    var zoom = 1
 
-    var toggle = false;
+    var toggle = false
 
     function deployLT() {
         if (centerX < 0 || centerY < 0) {
-            centerX = 50;
-            centerY = 50;
+            centerX = 50
+            centerY = 50
         }
-        var cX = centerX * body.clientWidth / 100;
-        var hX = IMG.offsetWidth / 2;
-        var cY = centerY * body.clientHeight / 100;
-        var hY = IMG.offsetHeight / 2;
-        IMG.style.left = cX - hX;
-        IMG.style.right = cX + hX;
-        IMG.style.top = cY - hY;
-        IMG.style.bottom = cY + hY;
+        var cX = centerX * body.clientWidth / 100
+        var hX = IMG.offsetWidth / 2
+        var cY = centerY * body.clientHeight / 100
+        var hY = IMG.offsetHeight / 2
+        IMG.style.left = cX - hX
+        IMG.style.right = cX + hX
+        IMG.style.top = cY - hY
+        IMG.style.bottom = cY + hY
     }
 
     function adapt(relative = null) {
-        var absX, absY;
+        var absX, absY
 
-        centerX = 50;
-        centerY = 50;
+        centerX = 50
+        centerY = 50
 
         if (relative) {
             // force adjust
             if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
                 // use height
-                var ratio = IMG.offsetWidth / IMG.offsetHeight;
-                IMG.style.height = body.clientHeight;
-                IMG.style.width = IMG.offsetHeight * ratio;
+                var ratio = IMG.offsetWidth / IMG.offsetHeight
+                IMG.style.height = body.clientHeight
+                IMG.style.width = IMG.offsetHeight * ratio
             }
             else {
-                var ratio = IMG.offsetHeight / IMG.offsetWidth;
-                IMG.style.width = body.clientWidth;
-                IMG.style.height = IMG.offsetWidth * ratio;
+                var ratio = IMG.offsetHeight / IMG.offsetWidth
+                IMG.style.width = body.clientWidth
+                IMG.style.height = IMG.offsetWidth * ratio
             }
         }
         else if (relative == false) {
             // force adjust
-            IMG.style.width = IMG.naturalWidth;
-            IMG.style.height = IMG.naturalHeight;
+            IMG.style.width = IMG.naturalWidth
+            IMG.style.height = IMG.naturalHeight
         }
-        const w = IMG.offsetWidth, h = IMG.offsetHheight;
-        deployLT();
+        const w = IMG.offsetWidth, h = IMG.offsetHheight
+        deployLT()
     }
 
     // Drag support
-    var starT, starTLT;
+    var starT, starTLT
     DRAG.onmousedown = function (ev) {
-        var e = ev || window.event;
-        starT = [e.clientX, e.clientY];
-        starTLT = [IMG.offsetLeft, IMG.offsetTop];
+        var e = ev || window.event
+        starT = [e.clientX, e.clientY]
+        starTLT = [IMG.offsetLeft, IMG.offsetTop]
     }
     DRAG.onmousemove = function (ev) {
-        var e = ev || window.event;
+        var e = ev || window.event
 
-        if (starT == null) return;
+        if (starT == null) return
 
         if (centerX < 0 || centerY < 0) {
-            centerX = 50;
-            centerY = 50;
+            centerX = 50
+            centerY = 50
         }
 
-        IMG.style.left = e.clientX - starT[0] + starTLT[0];
-        IMG.style.top = e.clientY - starT[1] + starTLT[1];
+        IMG.style.left = e.clientX - starT[0] + starTLT[0]
+        IMG.style.top = e.clientY - starT[1] + starTLT[1]
 
-        centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth;
-        centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight;
+        centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
+        centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
     }
 
 
     DRAG.onmouseup = function (ev) {
-        starT = null;
+        starT = null
     }
 
     // deploy buttons
 
     function mkTransform(rotate, zoom) {
-        return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')';
+        return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
     }
 
     var btnactions = [
         function () {
             // toggle
-            toggle = !toggle;
-            zoom = 1;
-            IMG.style.transform = mkTransform(rotate, zoom);
-            adapt(toggle);
+            toggle = !toggle
+            zoom = 1
+            IMG.style.transform = mkTransform(rotate, zoom)
+            adapt(toggle)
         }, function () {
-            rotate -= 90;
-            if (!rotate % 360) rotate = 0;
-            IMG.style.transform = mkTransform(rotate, zoom);
+            rotate -= 90
+            if (!rotate % 360) rotate = 0
+            IMG.style.transform = mkTransform(rotate, zoom)
         }, function () {
-            rotate += 90;
-            if (!rotate % 360) rotate = 0;
-            IMG.style.transform = mkTransform(rotate, zoom);
+            rotate += 90
+            if (!rotate % 360) rotate = 0
+            IMG.style.transform = mkTransform(rotate, zoom)
         }, function () {
             // zoom in
-            zoom += 0.2;
-            IMG.style.transform = mkTransform(rotate, zoom);
+            zoom += 0.2
+            IMG.style.transform = mkTransform(rotate, zoom)
         }, function () {
             if (zoom < 0.3) return
-            zoom -= 0.2;
-            IMG.style.transform = mkTransform(rotate, zoom);
+            zoom -= 0.2
+            IMG.style.transform = mkTransform(rotate, zoom)
         }, function () {
             // Download!
-            DOWNLOAD.dispatchEvent(new MouseEvent('click'));
-        }
-    ];
+            DOWNLOAD.dispatchEvent(new MouseEvent('click'))
+        },
+    ]
 
-    var btns = document.getElementsByTagName('button');
+    var btns = document.getElementsByTagName('button')
     for (var i in btns) {
-        btns[i].onclick = btnactions[i];
+        btns[i].onclick = btnactions[i]
     }
 
     IMG.onload = btnactions[0]
@@ -209,11 +209,11 @@
         }
     }
 
-    document.addEventListener("keydown", (e) => {
-        if (e.repeat) return;
-        if (e.key === "w" && e.ctrlKey === true) {
+    document.addEventListener('keydown', (e) => {
+        if (e.repeat) return
+        if (e.key === 'w' && e.ctrlKey === true || e.key === 'Escape') {
             window.close()
         }
-    });
+    })
 </script>
 </html>
