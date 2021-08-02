@@ -1,6 +1,6 @@
 {
   "name": "electron-qq",
-  "version": "2.1.2",
+  "version": "2.1.3_dev",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
