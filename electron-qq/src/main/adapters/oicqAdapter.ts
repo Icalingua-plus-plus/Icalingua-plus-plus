@@ -767,6 +767,10 @@ const adapter: OicqAdapter = {
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         const messages = []
         while (true) {
+            if (adapter.stopFetching) {
+                adapter.stopFetching = false
+                break
+            }
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
                 console.log(history.error)
@@ -804,7 +808,7 @@ const adapter: OicqAdapter = {
             const firstOwnMsg = roomId < 0 ?
                 newMsgs[0] : //群的话只要第一条消息就行
                 newMsgs.find(e => e.senderId == bot.uin)
-            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string) || adapter.stopFetching) break
+            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
         }
         ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
         ui.clearHistoryCount()
