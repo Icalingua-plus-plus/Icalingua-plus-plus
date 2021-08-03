@@ -8,6 +8,7 @@ import path from 'path'
 import YAML from 'yaml'
 import {app, screen} from 'electron'
 import OnlineStatusType from '../../types/OnlineStatusType'
+import argv from './argv'
 
 type AllConfig = {
     account: LoginForm
@@ -22,7 +23,7 @@ type AllConfig = {
 }
 
 
-const configFilePath = path.join(app.getPath('userData'), 'config.yaml')
+const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
 
 let config: AllConfig
 
