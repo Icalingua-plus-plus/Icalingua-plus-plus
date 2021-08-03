@@ -272,7 +272,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: pkgres
-          
+
 
       #- run: cp pkgres/* .
         #name: copy assets
@@ -281,7 +281,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: app-x86_64.asar
-          
+
 
       - run: chmod -R 777 .
 
@@ -341,12 +341,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: pkgres
-          
+
       - name: get binary for i686
         uses: actions/download-artifact@v2
         with:
           name: app-ia32.asar
-          
+
       - run: chmod -R 777 .
 
       - name: makepkg for i686
@@ -405,12 +405,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: pkgres
-         
+
       - name: get binary for aarch64
         uses: actions/download-artifact@v2
         with:
           name: app-arm64.asar
-         
+
 
       - run: chmod -R 777 .
 
@@ -434,9 +434,9 @@ jobs:
     needs: build-x86_64
     strategy:
       matrix:
-        package: 
+        package:
           - deb
-          - rpm 
+          - rpm
           - AppImage
     defaults:
       run:
@@ -457,6 +457,9 @@ jobs:
           name: x86_64-unpacked
           path: electron-qq/unpacked
 
+      - name: fix premissions
+        run: chmod +x unpacked/electron-qq
+
       - name: pack
         run: yarn build:electron --pd unpacked -l ${{ matrix.package }}
 
@@ -472,9 +475,9 @@ jobs:
     needs: build-ia32
     strategy:
       matrix:
-        package: 
+        package:
           - deb
-          - rpm 
+          - rpm
           - AppImage
     defaults:
       run:
@@ -495,6 +498,9 @@ jobs:
           name: ia32-unpacked
           path: electron-qq/unpacked
 
+      - name: fix premissions
+        run: chmod +x unpacked/electron-qq
+
       - name: pack
         run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }}
 
@@ -510,9 +516,9 @@ jobs:
     needs: build-arm64
     strategy:
       matrix:
-        package: 
+        package:
           - deb
-          - rpm 
+          - rpm
           - AppImage
     defaults:
       run:
@@ -532,6 +538,9 @@ jobs:
         with:
           name: arm64-unpacked
           path: electron-qq/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/electron-qq
 
       - name: pack
         run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }}
