@@ -443,6 +443,8 @@ const attachLoginHandler = () => {
 interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
+    stopFetching: boolean
+
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 }
 
@@ -758,6 +760,10 @@ const adapter: OicqAdapter = {
         ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
+    stopFetching: false,
+    stopFetchingHistory() {
+        adapter.stopFetching = true
+    },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         const messages = []
         while (true) {
@@ -798,7 +804,7 @@ const adapter: OicqAdapter = {
             const firstOwnMsg = roomId < 0 ?
                 newMsgs[0] : //群的话只要第一条消息就行
                 newMsgs.find(e => e.senderId == bot.uin)
-            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
+            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string) || adapter.stopFetching) break
         }
         ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
         ui.clearHistoryCount()
