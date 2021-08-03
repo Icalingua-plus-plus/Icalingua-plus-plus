@@ -83,6 +83,7 @@ const attachSocketEvents = () => {
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
+                    at: []
                 })
             })
             notif.show()

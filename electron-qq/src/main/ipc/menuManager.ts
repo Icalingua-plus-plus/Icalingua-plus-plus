@@ -40,6 +40,7 @@ import openMedia from '../utils/openMedia'
 import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import fs from 'fs'
+import atCache from '../utils/atCache'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -621,6 +622,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                                 content: message.content,
                                 replyMessage: message.replyMessage,
                                 imgpath: undefined,
+                                at: [],
                             }
                             if (message.file) {
                                 msgToSend.imgpath = message.file.url
@@ -693,6 +695,16 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
             }),
         )
     }
+    menu.append(new MenuItem({
+        label: 'at',
+        click() {
+            atCache.push({
+                text: '@' + message.username,
+                id: message.senderId,
+            })
+            ui.addMessageText('@' + message.username + ' ')
+        },
+    }))
     menu.append(
         new MenuItem({
             label: `查看头像`,

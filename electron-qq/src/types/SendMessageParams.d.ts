@@ -1,4 +1,5 @@
 import Room from './Room'
+import AtCacheItem from './AtCacheElem'
 
 type SendMessageParams = {
     content: string,
@@ -11,6 +12,7 @@ type SendMessageParams = {
     replyMessage?: any,
     room?: Room,
     b64img?: string,
-    imgpath?: string
+    imgpath?: string,
+    at: AtCacheItem[]
 }
 export default SendMessageParams

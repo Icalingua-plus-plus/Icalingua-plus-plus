@@ -94,6 +94,9 @@ export default {
     sendOnlineData(data: OnlineData) {
         sendToMainWindow('gotOnlineData', data)
     },
+    addMessageText(text: string) {
+        sendToMainWindow('addMessageText', text)
+    },
     getSelectedRoomId: () => selectedRoomId,
     getSelectedRoomName: () => selectedRoomName,
 }

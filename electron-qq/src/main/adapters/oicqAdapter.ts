@@ -5,7 +5,7 @@ import {
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
@@ -29,7 +29,7 @@ import {updateAppMenu} from '../ipc/menuManager'
 import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import Adapter, { CookiesDomain } from '../../types/Adapter'
+import Adapter, {CookiesDomain} from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 
@@ -122,6 +122,7 @@ const eventHandlers = {
                     content: r,
                     room,
                     roomId: room.roomId,
+                    at: [],
                 })
             })
             notif.show()
@@ -367,33 +368,33 @@ const initStorage = async () => {
         switch (loginForm.storageType) {
             case 'mdb':
                 storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
-                break;
+                break
             case 'redis':
                 storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
-                break;
+                break
             case 'sqlite':
-                storage = new SQLStorageProvider(`${loginForm.username}`, "sqlite3", {
-                    dataPath: app.getPath("userData")
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'sqlite3', {
+                    dataPath: app.getPath('userData'),
                 })
-                break;
+                break
             case 'mysql':
-                storage = new SQLStorageProvider(`${loginForm.username}`, "mysql", {
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'mysql', {
                     host: loginForm.sqlHost,
                     user: loginForm.sqlUsername,
                     password: loginForm.sqlPassword,
                     database: loginForm.sqlDatabase,
                 })
-                break;
+                break
             case 'pg':
-                storage = new SQLStorageProvider(`${loginForm.username}`, "pg", {
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'pg', {
                     host: loginForm.sqlHost,
                     user: loginForm.sqlUsername,
                     password: loginForm.sqlPassword,
                     database: loginForm.sqlDatabase,
                 })
-                break;
+                break
             default:
-                break;
+                break
         }
         await storage.connect()
         storage.getAllRooms()
@@ -455,7 +456,7 @@ const adapter: OicqAdapter = {
     async getCookies(domain: CookiesDomain) {
         return (await bot.getCookies(domain)).data.cookies
     },
-    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
+    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at}: SendMessageParams) {
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()
             room = await storage.getRoom(roomId)
@@ -483,7 +484,7 @@ const adapter: OicqAdapter = {
             date: formatDate('dd/MM/yyyy'),
         }
 
-        const chain = []
+        const chain: MessageElem[] = []
 
         if (replyMessage) {
             message.replyMessage = {
@@ -502,13 +503,39 @@ const adapter: OicqAdapter = {
                 },
             })
         }
-        if (content)
-            chain.push({
-                type: 'text',
-                data: {
-                    text: content,
-                },
-            })
+        if (content) {
+            let splitContent = [content]
+            for (const {text} of at) {
+                let newParts: string[] = []
+                for (let part of splitContent) {
+                    while (part.includes(text)) {
+                        const index = part.indexOf(text)
+                        const before = part.substr(0, index)
+                        part = part.substr(index + text.length)
+                        before && newParts.push(before)
+                        newParts.push(text)
+                    }
+                    part && newParts.push(part)
+                }
+                splitContent = newParts
+            }
+            console.log(splitContent)
+            for (const part of splitContent) {
+                const atInfo = at.find(e => e.text === part)
+                chain.push(atInfo ? {
+                    type: 'at',
+                    data: {
+                        qq: atInfo.id,
+                        text: atInfo.text,
+                    },
+                } : {
+                    type: 'text',
+                    data: {
+                        text: part,
+                    },
+                })
+            }
+        }
         if (b64img) {
             chain.push({
                 type: 'image',
@@ -779,7 +806,7 @@ const adapter: OicqAdapter = {
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
-    }
+    },
 
 
 }
