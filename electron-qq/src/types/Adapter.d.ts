@@ -70,6 +70,8 @@ export default interface Adapter {
 
     fetchHistory(messageId: string, roomId?: number): any
 
+    stopFetchingHistory(): any
+
     getCookies(domain: CookiesDomain): Promise<string>
 
     getIgnoredChats(): Promise<IgnoreChatInfo[]>
