@@ -532,9 +532,12 @@ export default {
 			}
 		})
 	},
-	created () {
+	created() {
 		ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
-
+		ipcRenderer.on('addMessageText', (_, message) => {
+			this.message += message
+			this.focusTextarea()
+		})
 	},
 	methods: {
 		updateShowUsersTag() {

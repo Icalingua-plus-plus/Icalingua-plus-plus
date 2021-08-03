@@ -352,7 +352,7 @@ const adapter = {
         }
     },
     //roomId 和 room 必有一个
-    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}: SendMessageParams) {
+    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at}: SendMessageParams) {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && file.type && !file.type.includes('image')) {
@@ -396,13 +396,38 @@ const adapter = {
                 },
             })
         }
-        if (content)
-            chain.push({
-                type: 'text',
-                data: {
-                    text: content,
-                },
-            })
+        if (content) {
+            let splitContent = [content]
+            for (const {text} of at) {
+                let newParts: string[] = []
+                for (let part of splitContent) {
+                    while (part.includes(text)) {
+                        const index = part.indexOf(text)
+                        const before = part.substr(0, index)
+                        part = part.substr(index + text.length)
+                        before && newParts.push(before)
+                        newParts.push(text)
+                    }
+                    part && newParts.push(part)
+                }
+                splitContent = newParts
+            }
+            for (const part of splitContent) {
+                const atInfo = at.find(e => e.text === part)
+                chain.push(atInfo ? {
+                    type: 'at',
+                    data: {
+                        qq: atInfo.id,
+                        text: atInfo.text,
+                    },
+                } : {
+                    type: 'text',
+                    data: {
+                        text: part,
+                    },
+                })
+            }
+        }
         if (b64img) {
             chain.push({
                 type: 'image',

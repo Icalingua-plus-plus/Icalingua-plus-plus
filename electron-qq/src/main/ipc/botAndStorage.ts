@@ -8,6 +8,7 @@ import socketIoAdapter from '../adapters/socketIoAdapter'
 import getCharCount from '../../utils/getCharCount'
 import Cookies from '../../types/cookies'
 import getFriends from '../utils/getFriends'
+import atCache from '../utils/atCache'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
@@ -51,9 +52,13 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => ({
     groups: await adapter.getGroups(),
-    friends: await getFriends()
+    friends: await getFriends(),
 }))
-ipcMain.on('sendMessage', (_, data) => sendMessage(data))
+ipcMain.on('sendMessage', (_, data) => {
+    data.at = atCache.get()
+    sendMessage(data)
+    atCache.clear()
+})
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     return adapter.fetchMessages(roomId, offset)
 })
