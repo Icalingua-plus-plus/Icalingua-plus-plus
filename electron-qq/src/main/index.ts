@@ -1,4 +1,5 @@
 import {app} from 'electron'
+import argv from './utils/argv'
 
 (() => [
     '我所遗失的心啊',
@@ -23,6 +24,10 @@ app.on('ready', async () => {
         '#5bcffa',
     ])()
 
-    if (!app.requestSingleInstanceLock()) app.quit()
+    if(argv.version){
+        console.log(app.getVersion())
+        app.quit()
+    }
+    if (!argv.config && !app.requestSingleInstanceLock()) app.quit()
     else require('./ready')
 })
