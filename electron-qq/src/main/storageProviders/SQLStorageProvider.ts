@@ -6,6 +6,8 @@ import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
 import StorageProvider from "../../types/StorageProvider";
+import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
+import upg0to1 from "./SQLUpgradeScript/0to1";
 
 interface PgMyOpt {
   host: string;
@@ -79,6 +81,7 @@ export default class SQLStorageProvider implements StorageProvider {
         ...room,
         users: JSON.stringify(room.users),
         lastMessage: JSON.stringify(room.lastMessage),
+        at: JSON.stringify(room.at),
       };
     }
     return null;
@@ -93,6 +96,7 @@ export default class SQLStorageProvider implements StorageProvider {
         users: JSON.parse(room.users),
         lastMessage: JSON.parse(room.lastMessage),
         downloadPath: room.downloadPath ? room.downloadPath : "",
+        at: JSON.parse(room.at),
       } as Room;
     return null;
   }
@@ -105,6 +109,7 @@ export default class SQLStorageProvider implements StorageProvider {
         _id: `${message._id}`,
         file: JSON.stringify(message.file),
         replyMessage: JSON.stringify(message.replyMessage),
+        at: JSON.stringify(message.at),
       };
     return null;
   }
@@ -117,30 +122,38 @@ export default class SQLStorageProvider implements StorageProvider {
         time: Number(message.time),
         file: JSON.parse(message.file),
         replyMessage: JSON.parse(message.replyMessage),
+        at: JSON.parse(message.at),
       } as Message;
     }
     return null;
   }
 
-  private updateDB() {
-    return 0;
+  private async updateDB(dbVersion: number) {
+    console.log("正在升级数据库");
+    // 这个 switch 居然不用 break，好耶！
+    switch (dbVersion) {
+      case 0:
+        await upg0to1(this.db);
+      default:
+        break;
+    }
+    return true;
   }
 
   async connect(): Promise<void> {
-
     // PostgreSQL 特有功能，可用一个数据库存放所有用户的聊天数据
     if (this.type === "pg") {
       await this.db.schema.createSchemaIfNotExists(this.qid);
     }
 
-    // 建表存放数据库版本以便升级，当前版本为0。
+    // 建表存放数据库版本以便升级。
     const hasVersionTable = await this.db.schema.hasTable(`dbVersion`);
     if (!hasVersionTable) {
       await this.db.schema.createTable(`dbVersion`, (table) => {
         table.integer("dbVersion");
         table.primary(["dbVersion"]);
       });
-      await this.db(`dbVersion`).insert({ dbVersion: 0 });
+      await this.db(`dbVersion`).insert({ dbVersion: 1 });
     }
 
     // 建表存放聊天数据库名以便升级。
@@ -152,12 +165,11 @@ export default class SQLStorageProvider implements StorageProvider {
       });
     }
 
-    const dbVersion = await this.db<{ dbVersion: number }>(`dbVersion`).select(
-      "*"
-    );
+    const dbVersion = await this.db<DBVersion>(`dbVersion`).select("dbVersion");
+
     // 若版本低于当前版本则启动升级函数
-    if (dbVersion[0].dbVersion < 0) {
-      this.updateDB();
+    if (dbVersion[0].dbVersion < 1) {
+      await this.updateDB(dbVersion[0].dbVersion);
     }
 
     // 建表存放聊天
@@ -177,7 +189,7 @@ export default class SQLStorageProvider implements StorageProvider {
         table.bigInteger("utime").index();
         table.text("users");
         table.text("lastMessage");
-        table.boolean("at").nullable();
+        table.string("at").nullable();
         table.boolean("autoDownload").nullable();
         table.string("downloadPath").nullable();
       });
@@ -288,9 +300,11 @@ export default class SQLStorageProvider implements StorageProvider {
         table.text("file").nullable();
         table.bigInteger("time");
         table.text("replyMessage").nullable();
-        table.boolean("at").nullable();
+        table.string("at").nullable();
       });
-      await this.db("msgTableName").insert({ tableName: `msg${roomId}` });
+      await this.db<MsgTableName>("msgTableName").insert({
+        tableName: `msg${roomId}`,
+      });
     }
   }
 
@@ -342,6 +356,7 @@ export default class SQLStorageProvider implements StorageProvider {
       });
       await Promise.all(pAry);
     } catch (e) {
+      console.error(e);
       return e;
     }
   }
