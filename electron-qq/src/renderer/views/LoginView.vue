@@ -36,13 +36,13 @@
 				<el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }"/>
 			</el-form-item>
 			<el-form-item label="Storage engine">
-				<el-radio-group v-model="form.storageType" size="small">
-					<el-radio-button label="mdb">MongoDB</el-radio-button>
-					<el-radio-button label="redis">Redis</el-radio-button>
-					<el-radio-button label="sqlite">SQLite (内置)</el-radio-button>
-					<el-radio-button label="mysql">MySQL</el-radio-button>
-					<el-radio-button label="pg">PostgreSQL</el-radio-button>
-				</el-radio-group>
+				<el-select v-model="form.storageType" size="small">
+					<el-option label="MongoDB" value="mdb">MongoDB</el-option>
+					<el-option label="Redis" value="redis">Redis</el-option>
+					<el-option label="SQLite (内置)" value="sqlite">SQLite (内置)</el-option>
+					<el-option label="MySQL / MariaDB" value="mysql">MySQL / MariaDB</el-option>
+					<el-option label="PostgreSQL" value="pg">PostgreSQL</el-option>
+				</el-select>
 			</el-form-item>
 			<el-form-item label="Status">
 				<el-radio-group v-model="form.onlineStatus" size="small">
