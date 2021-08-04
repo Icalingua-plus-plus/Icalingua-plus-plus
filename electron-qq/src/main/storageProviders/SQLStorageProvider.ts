@@ -127,6 +127,12 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   async connect(): Promise<void> {
+
+    // PostgreSQL 特有功能，可用一个数据库存放所有用户的聊天数据
+    if (this.type === "pg") {
+      await this.db.schema.createSchemaIfNotExists(this.qid);
+    }
+
     // 建表存放数据库版本以便升级，当前版本为0。
     const hasVersionTable = await this.db.schema.hasTable(`dbVersion`);
     if (!hasVersionTable) {
