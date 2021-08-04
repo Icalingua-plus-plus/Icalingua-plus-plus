@@ -8,6 +8,7 @@ import Room from "../../types/Room";
 import StorageProvider from "../../types/StorageProvider";
 import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 import upg0to1 from "./SQLUpgradeScript/0to1";
+import errorHandler from "../utils/errorHandler";
 
 interface PgMyOpt {
   host: string;
@@ -131,153 +132,94 @@ export default class SQLStorageProvider implements StorageProvider {
   private async updateDB(dbVersion: number) {
     console.log("正在升级数据库");
     // 这个 switch 居然不用 break，好耶！
-    switch (dbVersion) {
-      case 0:
-        await upg0to1(this.db);
-      default:
-        break;
+    try {
+      switch (dbVersion) {
+        case 0:
+          await upg0to1(this.db);
+        default:
+          break;
+      }
+      return true;
+    } catch (e) {
+      errorHandler(e);
     }
-    return true;
   }
 
   async connect(): Promise<void> {
     // PostgreSQL 特有功能，可用一个数据库存放所有用户的聊天数据
-    if (this.type === "pg") {
-      await this.db.schema.createSchemaIfNotExists(this.qid);
+    try {
+      if (this.type === "pg") {
+        await this.db.schema.createSchemaIfNotExists(this.qid);
+      }
+
+      // 建表存放数据库版本以便升级。
+      const hasVersionTable = await this.db.schema.hasTable(`dbVersion`);
+      if (!hasVersionTable) {
+        await this.db.schema.createTable(`dbVersion`, (table) => {
+          table.integer("dbVersion");
+          table.primary(["dbVersion"]);
+        });
+        await this.db(`dbVersion`).insert({ dbVersion: 1 });
+      }
+
+      // 建表存放聊天数据库名以便升级。
+      const hasMsgTableNameTable = await this.db.schema.hasTable(
+        `msgTableName`
+      );
+      if (!hasMsgTableNameTable) {
+        await this.db.schema.createTable("msgTableName", (table) => {
+          table.increments("id").primary();
+          table.string("tableName");
+        });
+      }
+
+      const dbVersion = await this.db<DBVersion>(`dbVersion`).select(
+        "dbVersion"
+      );
+
+      // 若版本低于当前版本则启动升级函数
+      if (dbVersion[0].dbVersion < 1) {
+        await this.updateDB(dbVersion[0].dbVersion);
+      }
+
+      // 建表存放聊天
+      const hasRoomTable = await this.db.schema.hasTable(`rooms`);
+      if (!hasRoomTable) {
+        await this.db.schema.createTable(`rooms`, (table) => {
+          table
+            .string("roomId")
+            .unique()
+            .index()
+            .primary();
+          table.string("roomName");
+          table.string("avatar");
+          table.integer("index");
+          table.integer("unreadCount");
+          table.integer("priority");
+          table.bigInteger("utime").index();
+          table.text("users");
+          table.text("lastMessage");
+          table.string("at").nullable();
+          table.boolean("autoDownload").nullable();
+          table.string("downloadPath").nullable();
+        });
+      }
+
+      // 建表存放忽略聊天
+      const hasIgnoredTable = await this.db.schema.hasTable(`ignoredChats`);
+      if (!hasIgnoredTable) {
+        await this.db.schema.createTable(`ignoredChats`, (table) => {
+          table
+            .integer("id")
+            .unique()
+            .primary()
+            .index();
+          table.string("name");
+        });
+      }
+    } catch (e) {
+      errorHandler(e);
     }
-
-    // 建表存放数据库版本以便升级。
-    const hasVersionTable = await this.db.schema.hasTable(`dbVersion`);
-    if (!hasVersionTable) {
-      await this.db.schema.createTable(`dbVersion`, (table) => {
-        table.integer("dbVersion");
-        table.primary(["dbVersion"]);
-      });
-      await this.db(`dbVersion`).insert({ dbVersion: 1 });
-    }
-
-    // 建表存放聊天数据库名以便升级。
-    const hasMsgTableNameTable = await this.db.schema.hasTable(`msgTableName`);
-    if (!hasMsgTableNameTable) {
-      await this.db.schema.createTable("msgTableName", (table) => {
-        table.increments("id").primary();
-        table.string("tableName");
-      });
-    }
-
-    const dbVersion = await this.db<DBVersion>(`dbVersion`).select("dbVersion");
-
-    // 若版本低于当前版本则启动升级函数
-    if (dbVersion[0].dbVersion < 1) {
-      await this.updateDB(dbVersion[0].dbVersion);
-    }
-
-    // 建表存放聊天
-    const hasRoomTable = await this.db.schema.hasTable(`rooms`);
-    if (!hasRoomTable) {
-      await this.db.schema.createTable(`rooms`, (table) => {
-        table
-          .string("roomId")
-          .unique()
-          .index()
-          .primary();
-        table.string("roomName");
-        table.string("avatar");
-        table.integer("index");
-        table.integer("unreadCount");
-        table.integer("priority");
-        table.bigInteger("utime").index();
-        table.text("users");
-        table.text("lastMessage");
-        table.string("at").nullable();
-        table.boolean("autoDownload").nullable();
-        table.string("downloadPath").nullable();
-      });
-    }
-
-    // 建表存放忽略聊天
-    const hasIgnoredTable = await this.db.schema.hasTable(`ignoredChats`);
-    if (!hasIgnoredTable) {
-      await this.db.schema.createTable(`ignoredChats`, (table) => {
-        table
-          .integer("id")
-          .unique()
-          .primary()
-          .index();
-        table.string("name");
-      });
-    }
-  }
-
-  async addRoom(room: Room): Promise<any> {
-    return await this.db(`rooms`).insert(this.roomConToDB(room));
-  }
-
-  async updateRoom(roomId: number, room: Room): Promise<any> {
-    await this.db(`rooms`)
-      .where("roomId", "=", roomId)
-      .update(this.roomConToDB(room));
-  }
-
-  async removeRoom(roomId: number): Promise<any> {
-    await this.db(`rooms`)
-      .where("roomId", "=", roomId)
-      .delete();
-  }
-
-  async getAllRooms(): Promise<Room[]> {
-    const rooms = await this.db<Room>(`rooms`)
-      .select("*")
-      .orderBy("utime", "desc");
-    return rooms.map((room) => this.roomConFromDB(room));
-  }
-
-  async getRoom(roomId: number): Promise<Room> {
-    const room = await this.db<Room>(`rooms`)
-      .where("roomId", "=", roomId)
-      .select("*");
-    return this.roomConFromDB(room[0]);
-  }
-
-  async getUnreadCount(priority: number): Promise<number> {
-    const unreadRooms = await this.db<Room>(`rooms`)
-      .where("unreadCount", ">", 0)
-      .where("priority", "=", priority)
-      .select("roomId"); // 尽可能减小通过 node 的数据量
-    return unreadRooms.length;
-  }
-
-  async getFirstUnreadRoom(priority: number): Promise<Room> {
-    const unreadRooms = await this.db<Room>(`rooms`)
-      .where("unreadCount", ">", 0)
-      .where("priority", "=", priority)
-      .orderBy("utime", "desc")
-      .select("*");
-    if (unreadRooms.length >= 1) return unreadRooms[0];
-    return null;
-  }
-
-  async getIgnoredChats(): Promise<IgnoreChatInfo[]> {
-    return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
-  }
-
-  async isChatIgnored(id: number): Promise<boolean> {
-    const ignoredChats = await this.db<IgnoreChatInfo>(`ignoredChats`).where(
-      "id",
-      "=",
-      id
-    );
-    return ignoredChats.length !== 0;
-  }
-
-  async addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
-    await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info);
-  }
-
-  async removeIgnoredChat(roomId: number): Promise<any> {
-    await this.db<IgnoreChatInfo>(`ignoredChats`)
-      .where("id", "=", roomId)
-      .delete();
   }
 
   // 建表存放聊天记录
@@ -308,9 +250,124 @@ export default class SQLStorageProvider implements StorageProvider {
     }
   }
 
+  async addRoom(room: Room): Promise<any> {
+    try {
+      return await this.db(`rooms`).insert(this.roomConToDB(room));
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async updateRoom(roomId: number, room: Room): Promise<any> {
+    try {
+      await this.db(`rooms`)
+        .where("roomId", "=", roomId)
+        .update(this.roomConToDB(room));
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async removeRoom(roomId: number): Promise<any> {
+    try {
+      await this.db(`rooms`)
+        .where("roomId", "=", roomId)
+        .delete();
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async getAllRooms(): Promise<Room[]> {
+    try {
+      const rooms = await this.db<Room>(`rooms`)
+        .select("*")
+        .orderBy("utime", "desc");
+      return rooms.map((room) => this.roomConFromDB(room));
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async getRoom(roomId: number): Promise<Room> {
+    try {
+      const room = await this.db<Room>(`rooms`)
+        .where("roomId", "=", roomId)
+        .select("*");
+      return this.roomConFromDB(room[0]);
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async getUnreadCount(priority: number): Promise<number> {
+    try {
+      const unreadRooms = await this.db<Room>(`rooms`)
+        .where("unreadCount", ">", 0)
+        .where("priority", "=", priority)
+        .select("roomId"); // 尽可能减小通过 node 的数据量
+      return unreadRooms.length;
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async getFirstUnreadRoom(priority: number): Promise<Room> {
+    try {
+      const unreadRooms = await this.db<Room>(`rooms`)
+        .where("unreadCount", ">", 0)
+        .where("priority", "=", priority)
+        .orderBy("utime", "desc")
+        .select("*");
+      if (unreadRooms.length >= 1) return unreadRooms[0];
+      return null;
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async getIgnoredChats(): Promise<IgnoreChatInfo[]> {
+    return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
+  }
+
+  async isChatIgnored(id: number): Promise<boolean> {
+    try {
+      const ignoredChats = await this.db<IgnoreChatInfo>(`ignoredChats`).where(
+        "id",
+        "=",
+        id
+      );
+      return ignoredChats.length !== 0;
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
+    try {
+      await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info);
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
+  async removeIgnoredChat(roomId: number): Promise<any> {
+    try {
+      await this.db<IgnoreChatInfo>(`ignoredChats`)
+        .where("id", "=", roomId)
+        .delete();
+    } catch (e) {
+      errorHandler(e);
+    }
+  }
+
   async addMessage(roomId: number, message: Message): Promise<any> {
-    await this.createMsgTable(roomId);
-    await this.db<Message>(`msg${roomId}`).insert(this.msgConToDB(message));
+    try {
+      await this.createMsgTable(roomId);
+      await this.db<Message>(`msg${roomId}`).insert(this.msgConToDB(message));
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   async updateMessage(
@@ -318,9 +375,13 @@ export default class SQLStorageProvider implements StorageProvider {
     messageId: string | number,
     message: object
   ): Promise<any> {
-    await this.db<Message>(`msg${roomId}`)
-      .where("_id", "=", `${messageId}`)
-      .update(message);
+    try {
+      await this.db<Message>(`msg${roomId}`)
+        .where("_id", "=", `${messageId}`)
+        .update(message);
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   async fetchMessages(
@@ -328,20 +389,28 @@ export default class SQLStorageProvider implements StorageProvider {
     skip: number,
     limit: number
   ): Promise<Message[]> {
-    await this.createMsgTable(roomId);
-    const messages = await this.db<Message>(`msg${roomId}`)
-      .orderBy("time", "desc")
-      .limit(limit)
-      .offset(skip)
-      .select("*");
-    return messages.reverse().map((message) => this.msgConFromDB(message));
+    try {
+      await this.createMsgTable(roomId);
+      const messages = await this.db<Message>(`msg${roomId}`)
+        .orderBy("time", "desc")
+        .limit(limit)
+        .offset(skip)
+        .select("*");
+      return messages.reverse().map((message) => this.msgConFromDB(message));
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   async getMessage(roomId: number, messageId: string): Promise<Message> {
-    const message = await this.db<Message>(`msg${roomId}`)
-      .where("_id", "=", messageId)
-      .select("*");
-    return this.msgConFromDB(message[0]);
+    try {
+      const message = await this.db<Message>(`msg${roomId}`)
+        .where("_id", "=", messageId)
+        .select("*");
+      return this.msgConFromDB(message[0]);
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   async addMessages(roomId: number, messages: Message[]): Promise<any> {
@@ -356,7 +425,7 @@ export default class SQLStorageProvider implements StorageProvider {
       });
       await Promise.all(pAry);
     } catch (e) {
-      console.error(e);
+      errorHandler(e);
       return e;
     }
   }
