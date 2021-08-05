@@ -1,14 +1,8 @@
-import { app } from "electron";
-import fs from "fs";
-import path from "path";
+import logger from "./winstonLogger";
 
 const errorHandler = (e: Error) => {
-  console.error(e);
-  const errPath = app.getPath("crashDumps");
-  const now = new Date();
-  fs.writeFileSync(
-    path.join(errPath, `Err${now.toISOString().substring(0, 19)}.log`),
-    JSON.stringify(e)
-  );
+  logger.error({ errname: e.name, errMsg: e.message, e: e.toString() });
+  throw e;
 };
+
 export default errorHandler;
