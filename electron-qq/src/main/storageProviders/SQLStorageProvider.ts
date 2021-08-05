@@ -77,56 +77,72 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   private roomConToDB(room: Room): Record<string, any> {
-    if (room) {
-      return {
-        ...room,
-        users: JSON.stringify(room.users),
-        lastMessage: JSON.stringify(room.lastMessage),
-        at: JSON.stringify(room.at),
-      };
+    try {
+      if (room) {
+        return {
+          ...room,
+          users: JSON.stringify(room.users),
+          lastMessage: JSON.stringify(room.lastMessage),
+          at: JSON.stringify(room.at),
+        };
+      }
+      return null;
+    } catch (e) {
+      errorHandler(e);
     }
-    return null;
   }
 
   private roomConFromDB(room: Record<string, any>): Room {
-    if (room)
-      return {
-        ...room,
-        roomId: Number(room.roomId),
-        utime: Number(room.utime),
-        users: JSON.parse(room.users),
-        lastMessage: JSON.parse(room.lastMessage),
-        downloadPath: room.downloadPath ? room.downloadPath : "",
-        at: JSON.parse(room.at),
-      } as Room;
-    return null;
+    try {
+      if (room)
+        return {
+          ...room,
+          roomId: Number(room.roomId),
+          utime: Number(room.utime),
+          users: JSON.parse(room.users),
+          lastMessage: JSON.parse(room.lastMessage),
+          downloadPath: room.downloadPath ? room.downloadPath : "",
+          at: JSON.parse(room.at),
+        } as Room;
+      return null;
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   private msgConToDB(message: Message): Record<string, any> {
-    if (message)
-      return {
-        ...message,
-        senderId: `${message.senderId}`,
-        _id: `${message._id}`,
-        file: JSON.stringify(message.file),
-        replyMessage: JSON.stringify(message.replyMessage),
-        at: JSON.stringify(message.at),
-      };
-    return null;
+    try {
+      if (message)
+        return {
+          ...message,
+          senderId: `${message.senderId}`,
+          _id: `${message._id}`,
+          file: JSON.stringify(message.file),
+          replyMessage: JSON.stringify(message.replyMessage),
+          at: JSON.stringify(message.at),
+        };
+      return null;
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   private msgConFromDB(message: Record<string, any>): Message {
-    if (message) {
-      return {
-        ...message,
-        senderId: Number(message.senderId),
-        time: Number(message.time),
-        file: JSON.parse(message.file),
-        replyMessage: JSON.parse(message.replyMessage),
-        at: JSON.parse(message.at),
-      } as Message;
+    try {
+      if (message) {
+        return {
+          ...message,
+          senderId: Number(message.senderId),
+          time: Number(message.time),
+          file: JSON.parse(message.file),
+          replyMessage: JSON.parse(message.replyMessage),
+          at: JSON.parse(message.at),
+        } as Message;
+      }
+      return null;
+    } catch (e) {
+      errorHandler(e);
     }
-    return null;
   }
 
   private async updateDB(dbVersion: number) {
@@ -224,29 +240,33 @@ export default class SQLStorageProvider implements StorageProvider {
 
   // 建表存放聊天记录
   private async createMsgTable(roomId: number) {
-    const hasMsgTable = await this.db.schema.hasTable(`msg${roomId}`);
-    if (!hasMsgTable) {
-      await this.db.schema.createTable(`msg${roomId}`, (table) => {
-        table
-          .string("_id")
-          .unique()
-          .index()
-          .primary();
-        table.string("senderId");
-        table.string("username");
-        table.text("content").nullable();
-        table.text("code").nullable();
-        table.string("timestamp");
-        table.string("date");
-        table.string("role");
-        table.text("file").nullable();
-        table.bigInteger("time");
-        table.text("replyMessage").nullable();
-        table.string("at").nullable();
-      });
-      await this.db<MsgTableName>("msgTableName").insert({
-        tableName: `msg${roomId}`,
-      });
+    try {
+      const hasMsgTable = await this.db.schema.hasTable(`msg${roomId}`);
+      if (!hasMsgTable) {
+        await this.db.schema.createTable(`msg${roomId}`, (table) => {
+          table
+            .string("_id")
+            .unique()
+            .index()
+            .primary();
+          table.string("senderId");
+          table.string("username");
+          table.text("content").nullable();
+          table.text("code").nullable();
+          table.string("timestamp");
+          table.string("date");
+          table.string("role");
+          table.text("file").nullable();
+          table.bigInteger("time");
+          table.text("replyMessage").nullable();
+          table.string("at").nullable();
+        });
+        await this.db<MsgTableName>("msgTableName").insert({
+          tableName: `msg${roomId}`,
+        });
+      }
+    } catch (e) {
+      errorHandler(e);
     }
   }
 
@@ -327,7 +347,11 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   async getIgnoredChats(): Promise<IgnoreChatInfo[]> {
-    return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
+    try {
+      return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   async isChatIgnored(id: number): Promise<boolean> {
