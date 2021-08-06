@@ -9,6 +9,9 @@ import StorageProvider from "../../types/StorageProvider";
 import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 import upg0to1 from "./SQLUpgradeScript/0to1";
 import errorHandler from "../utils/errorHandler";
+import upg1to2 from "./SQLUpgradeScript/1to2";
+
+const dbVersionLatest = 2;
 
 interface PgMyOpt {
   host: string;
@@ -120,6 +123,7 @@ export default class SQLStorageProvider implements StorageProvider {
           file: JSON.stringify(message.file),
           replyMessage: JSON.stringify(message.replyMessage),
           at: JSON.stringify(message.at),
+          mirai: JSON.stringify(message.mirai),
         };
       return null;
     } catch (e) {
@@ -137,6 +141,7 @@ export default class SQLStorageProvider implements StorageProvider {
           file: JSON.parse(message.file),
           replyMessage: JSON.parse(message.replyMessage),
           at: JSON.parse(message.at),
+          mirai: JSON.parse(message.mirai),
         } as Message;
       }
       return null;
@@ -152,6 +157,8 @@ export default class SQLStorageProvider implements StorageProvider {
       switch (dbVersion) {
         case 0:
           await upg0to1(this.db);
+        case 1:
+          await upg1to2(this.db)
         default:
           break;
       }
@@ -175,7 +182,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.integer("dbVersion");
           table.primary(["dbVersion"]);
         });
-        await this.db(`dbVersion`).insert({ dbVersion: 1 });
+        await this.db(`dbVersion`).insert({ dbVersion: dbVersionLatest });
       }
 
       // 建表存放聊天数据库名以便升级。
@@ -194,7 +201,7 @@ export default class SQLStorageProvider implements StorageProvider {
       );
 
       // 若版本低于当前版本则启动升级函数
-      if (dbVersion[0].dbVersion < 1) {
+      if (dbVersion[0].dbVersion < dbVersionLatest) {
         await this.updateDB(dbVersion[0].dbVersion);
       }
 
@@ -260,6 +267,10 @@ export default class SQLStorageProvider implements StorageProvider {
           table.bigInteger("time");
           table.text("replyMessage").nullable();
           table.string("at").nullable();
+          table.boolean("deleted").nullable();
+          table.boolean("system").nullable();
+          table.text("mirai").nullable();
+          table.boolean("reveal").nullable();
         });
         await this.db<MsgTableName>("msgTableName").insert({
           tableName: `msg${roomId}`,

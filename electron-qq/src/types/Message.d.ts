@@ -9,22 +9,22 @@ interface MessageFile {
 }
 
 export default interface Message {
-  mirai?: MessageMirai;
-  reveal?: boolean;
-  code?: string;
-  at?: boolean | "all";
   _id: string | number;
   senderId?: number;
   username: string;
   content: string;
+  code?: string;
   timestamp?: string;
   date?: string;
   role?: string;
-  time?: number;
-  deleted?: boolean | Date | number;
   file?: MessageFile;
+  time?: number;
   replyMessage?: Message;
+  at?: boolean | "all";
+  deleted?: boolean;
   system?: boolean;
+  mirai?: MessageMirai;
+  reveal?: boolean;
 }
 
 interface MessageInIDB extends Message {
