@@ -152,11 +152,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(data.user_id, data.message_id, {deleted: true})
     },
     groupRecall(data: GroupRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(-data.group_id, data.message_id, {deleted: true})
     },
     online() {
         ui.setOnline()
@@ -748,7 +748,7 @@ const adapter: OicqAdapter = {
         console.log(res)
         if (!res.error) {
             ui.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, {deleted: new Date()})
+            await storage.updateMessage(roomId, messageId, {deleted: true})
         } else {
             ui.notifyError({
                 title: 'Failed to delete message',
