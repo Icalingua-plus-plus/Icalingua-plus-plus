@@ -16,6 +16,7 @@ import {updateAppMenu} from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
 import fs from 'fs'
 import fileType from 'file-type'
+import axios from 'axios'
 
 let socket: Socket
 let uin = 0
@@ -83,7 +84,7 @@ const attachSocketEvents = () => {
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
-                    at: []
+                    at: [],
                 })
             })
             notif.show()
@@ -223,7 +224,14 @@ const adapter: Adapter = {
             data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
             data.imgpath = null
         }
-        socket.emit('sendMessage', data)
+        data.b64img ?
+            socket.emit('requestToken', (token: string) =>
+                axios.post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                    proxy: false,
+                })
+                    .catch(console.log),
+            ) :
+            socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
         socket.emit('setOnlineStatus', status)
