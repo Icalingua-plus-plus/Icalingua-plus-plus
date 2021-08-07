@@ -49,15 +49,15 @@ export default class MongoStorageProvider implements StorageProvider {
         })
     }
 
-    addMessage(roomId: number, message: object): Promise<any> {
+    addMessage(roomId: number, message: Message): Promise<any> {
         return this.mdb.collection('msg' + roomId).insertOne(message)
     }
 
-    addRoom(room: object): Promise<any> {
+    addRoom(room: Room): Promise<any> {
         return this.mdb.collection('rooms').insertOne(room)
     }
 
-    updateMessage(roomId: number, messageId: string | number, message: object): Promise<any> {
+    updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         return this.mdb
             .collection('msg' + roomId)
             .updateOne({_id: messageId}, {$set: message})
@@ -82,7 +82,7 @@ export default class MongoStorageProvider implements StorageProvider {
         return this.mdb.collection('rooms').findOneAndDelete({roomId: roomId})
     }
 
-    updateRoom(roomId: number, room: object): Promise<any> {
+    updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         return this.mdb
             .collection('rooms')
             .updateOne(
@@ -97,7 +97,7 @@ export default class MongoStorageProvider implements StorageProvider {
             .findOne({_id: messageId})
     }
 
-    async addMessages(roomId: number, messages: object[]): Promise<any> {
+    async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
             return await this.mdb
                 .collection('msg' + roomId)

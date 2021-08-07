@@ -53,21 +53,21 @@ export default class MongoStorageProvider implements StorageProvider {
         })
     }
 
-    async addMessage(roomId: number, message: object): Promise<any> {
+    async addMessage(roomId: number, message: Message): Promise<any> {
         try {
-            return await this.mdb.collection('msg' + roomId).insertOne(message)
+            return await this.mdb.collection('msg' + roomId).insertOne(message as object)
         } catch (e) {
         }
     }
 
-    async addRoom(room: object): Promise<any> {
+    async addRoom(room: Room): Promise<any> {
         try {
             return await this.mdb.collection('rooms').insertOne(room)
         } catch (e) {
         }
     }
 
-    async updateMessage(roomId: number, messageId: string | number, message: object): Promise<any> {
+    async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
             return await this.mdb
                 .collection('msg' + roomId)
@@ -102,7 +102,7 @@ export default class MongoStorageProvider implements StorageProvider {
         }
     }
 
-    async updateRoom(roomId: number, room: object): Promise<any> {
+    async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         try {
             return await this.mdb
                 .collection('rooms')
@@ -122,11 +122,11 @@ export default class MongoStorageProvider implements StorageProvider {
             .findOne({_id: messageId})
     }
 
-    async addMessages(roomId: number, messages: object[]): Promise<any> {
+    async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
             return await this.mdb
                 .collection('msg' + roomId)
-                .insertMany(messages, {ordered: false})
+                .insertMany(messages as object[], {ordered: false})//确信
         } catch (e) {
             return e
         }

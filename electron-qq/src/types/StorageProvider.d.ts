@@ -5,15 +5,15 @@ import IgnoreChatInfo from './IgnoreChatInfo'
 export default interface StorageProvider {
     connect(): Promise<void>
 
-    updateRoom(roomId: number, room: object): Promise<any>
+    updateRoom(roomId: number, room: Partial<Room>): Promise<any>
 
-    addMessage(roomId: number, message: object): Promise<any>
+    addMessage(roomId: number, message: Message): Promise<any>
 
-    addRoom(room: object): Promise<any>
+    addRoom(room: Room): Promise<any>
 
     removeRoom(roomId: number): Promise<any>
 
-    updateMessage(roomId: number, messageId: string | number, message: object): Promise<any>
+    updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any>
 
     fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
 

@@ -119,11 +119,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(data.user_id, data.message_id, {deleted: true})
     },
     groupRecall(data: GroupRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(-data.group_id, data.message_id, {deleted: true})
     },
     online() {
         clients.setOnline()
@@ -622,7 +622,7 @@ const adapter = {
         const res = await bot.deleteMsg(messageId)
         if (!res.error) {
             clients.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, {deleted: new Date()})
+            await storage.updateMessage(roomId, messageId, {deleted: true})
         } else {
             clients.notifyError({
                 title: 'Failed to delete message',
