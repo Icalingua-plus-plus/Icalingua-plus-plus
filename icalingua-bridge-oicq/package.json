@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node .",
+    "compile": "tsc",
     "detach-start": "screen -U yarn start",
     "dev": "NODE_ENV=development ts-node ."
   },
