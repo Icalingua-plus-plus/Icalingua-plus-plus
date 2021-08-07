@@ -574,3 +574,27 @@ jobs:
         with:
           name: pkgres
 
+  pack-bridge-js:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: icalingua-bridge-oicq
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - name: Yarn install
+        run: yarn install
+
+      - name: Compile
+        run: yarn compile
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: bridge-oicq
+          path: icalingua-bridge-oicq/build/
+          if-no-files-found: error
