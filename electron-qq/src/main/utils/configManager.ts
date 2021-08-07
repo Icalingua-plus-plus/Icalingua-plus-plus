@@ -36,7 +36,11 @@ export const getConfig = () => config
 const emptyLoginForm: LoginForm = {
     mdbConnStr: 'mongodb://localhost',
     rdsHost: '127.0.0.1',
-    storageType: 'mdb',
+    storageType: 'sqlite',
+    sqlHost: '127.0.0.1',
+    sqlUsername: '',
+    sqlPassword: '',
+    sqlDatabase: '',
     username: '',
     password: '',
     protocol: 5,

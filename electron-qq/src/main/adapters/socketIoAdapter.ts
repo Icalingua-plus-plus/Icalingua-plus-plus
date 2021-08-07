@@ -151,6 +151,9 @@ const adapter: Adapter = {
             roomId = ui.getSelectedRoomId()
         socket.emit('fetchHistory', messageId, roomId)
     },
+    stopFetchingHistory() {
+        socket.emit('stopFetchingHistory')
+    },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
         updateTrayIcon()
         return new Promise((resolve, reject) => {

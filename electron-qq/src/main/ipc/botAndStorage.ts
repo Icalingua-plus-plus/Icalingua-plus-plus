@@ -21,7 +21,7 @@ export const {
     getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom,
     getSelectedRoom, getRoom, setOnlineStatus, logOut,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
-    pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory,
+    pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
@@ -91,3 +91,4 @@ ipcMain.on('openForward', async (_, resId: string) => {
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
+ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
