@@ -1,6 +1,7 @@
 import {Server, Socket} from 'socket.io'
 import adapter from '../adapters/oicqAdapter'
 import Message from '../types/Message'
+import tokenManager from '../utils/tokenManager'
 
 export default (io: Server, socket: Socket) => {
     socket.on('addRoom', adapter.addRoom)
@@ -28,7 +29,8 @@ export default (io: Server, socket: Socket) => {
     socket.on('setRoomPriority', adapter.setRoomPriority)
     socket.on('updateMessage', adapter.updateMessage)
     socket.on('updateRoom', adapter.updateRoom)
-    socket.on('getCookies',adapter.getCookies)
-    socket.on('getIgnoredChats',adapter.getIgnoredChats)
-    socket.on('removeIgnoredChat',adapter.removeIgnoredChat)
+    socket.on('getCookies', adapter.getCookies)
+    socket.on('getIgnoredChats', adapter.getIgnoredChats)
+    socket.on('removeIgnoredChat', adapter.removeIgnoredChat)
+    socket.on('requestToken', cb => cb(tokenManager.create()))
 }

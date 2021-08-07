@@ -5,8 +5,9 @@ import {config} from './configManager'
 import adapter from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
+import {app} from './expressProvider'
 
-const httpServer = createServer()
+const httpServer = createServer(app)
 const io = new Server(httpServer, {
     cors: {
         allowedHeaders: ['GET', 'POST'],
