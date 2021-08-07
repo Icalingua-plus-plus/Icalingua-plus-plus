@@ -1,8 +1,8 @@
 [Desktop Entry]
 Categories=chat;Network;
-Exec=electron-qq %u
-Icon=electron-qq.png
-Name=Electron QQ
-Comment=A cross-platform QQ made with Electron
+Exec=icalingua %u
+Icon=icalingua.png
+Name=Icalingua
+Comment=A Linux client for QQ and more
 Terminal=false
 Type=Application
