@@ -273,15 +273,10 @@ jobs:
         with:
           name: pkgres
 
-
-      #- run: cp pkgres/* .
-        #name: copy assets
-
       - name: get binary for x86_64
         uses: actions/download-artifact@v2
         with:
           name: app-x86_64.asar
-
 
       - run: chmod -R 777 .
 
@@ -628,3 +623,145 @@ jobs:
           name: bridge-oicq
           path: icalingua-bridge-oicq/build/
           if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - pack-archpkg-x86_64
+      - pack-archpkg-i686
+      - pack-archpkg-aarch64
+      - pack-otherpkg-x86_64
+      - pack-otherpkg-ia32
+      - pack-otherpkg-arm64
+      - version
+    steps:
+      - name: Make dir
+        run: mkdir release
+
+      - name: get app-x86_64.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-x86_64.asar
+
+      - name: rename app-x86_64.asar
+        run: mv app.asar release/app-x86_64.asar
+
+
+      - name: get app-ia32.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-ia32.asar
+
+      - name: rename app-ia32.asar
+        run: mv app.asar release/app-ia32.asar
+
+
+      - name: get app-arm64.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-arm64.asar
+
+      - name: rename app-arm64.asar
+        run: mv app.asar release/app-arm64.asar
+
+
+      - name: get aarch64.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: aarch64.pkg.tar.zst
+          path: release
+
+      - name: get arm64.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.AppImage
+          path: release
+
+      - name: get arm64.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.deb
+          path: release
+
+      - name: get arm64.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.rpm
+          path: release
+
+      - name: get arm64.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.tar.xz
+          path: release
+
+      - name: get i686.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: i686.pkg.tar.zst
+          path: release
+
+      - name: get ia32.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.AppImage
+          path: release
+
+      - name: get ia32.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.tar.xz
+          path: release
+
+      - name: get ia32.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.deb
+          path: release
+
+      - name: get ia32.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.rpm
+          path: release
+
+      - name: get x86_64.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.AppImage
+          path: release
+
+      - name: get x86_64.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.tar.xz
+          path: release
+
+      - name: get x86_64.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.deb
+          path: release
+
+      - name: get x86_64.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.pkg.tar.zst
+          path: release
+
+      - name: get x86_64.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.rpm
+          path: release
+
+
+      - name: Release
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: release/
+          GITHUB_TOKEN: ${{ github.token }}
+          GHR_REPLACE: true
+          GHR_TITLE: ${{ needs.version.outputs.version }}
+          GHR_DRAFT: true
