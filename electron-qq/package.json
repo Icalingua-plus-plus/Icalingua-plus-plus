@@ -57,7 +57,9 @@
     "oicq": "^1.18.2",
     "pg": "^8.6.0",
     "silk-sdk": "^0.2.2",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.18",
@@ -68,6 +70,7 @@
     "@types/minimist": "^1.2.2",
     "@types/mongodb": "^3.6.17",
     "@types/webpack": "^5.28.0",
+    "@types/winston": "^2.4.4",
     "ajv": "^6.5.0",
     "aria2": "^4.1.2",
     "axios": "^0.21.1",

@@ -96,8 +96,10 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-							<span>正在获取历史消息... {{ historyCount }}</span>
-						</div>
+								<span>正在获取历史消息... {{ historyCount }}
+									<button @click="stopFetchingHistory">就要这么多</button>
+								</span>
+							</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -406,6 +408,9 @@ Chromium ${process.versions.chrome}`
 			this.$refs.room.focusTextarea()
 		},
 		openForward: ipc.openForward,
+		stopFetchingHistory() {
+			ipc.stopFetchMessage()
+		}
 	},
 	computed: {
 		cssVars() {

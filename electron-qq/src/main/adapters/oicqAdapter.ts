@@ -152,11 +152,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(data.user_id, data.message_id, {deleted: true})
     },
     groupRecall(data: GroupRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: new Date()})
+        storage.updateMessage(-data.group_id, data.message_id, {deleted: true})
     },
     online() {
         ui.setOnline()
@@ -442,6 +442,8 @@ const attachLoginHandler = () => {
 
 interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
+
+    stopFetching: boolean
 
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 }
@@ -746,7 +748,7 @@ const adapter: OicqAdapter = {
         console.log(res)
         if (!res.error) {
             ui.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, {deleted: new Date()})
+            await storage.updateMessage(roomId, messageId, {deleted: true})
         } else {
             ui.notifyError({
                 title: 'Failed to delete message',
@@ -758,9 +760,17 @@ const adapter: OicqAdapter = {
         ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
+    stopFetching: false,
+    stopFetchingHistory() {
+        adapter.stopFetching = true
+    },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         const messages = []
         while (true) {
+            if (adapter.stopFetching) {
+                adapter.stopFetching = false
+                break
+            }
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
                 console.log(history.error)
