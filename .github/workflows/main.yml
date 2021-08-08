@@ -313,7 +313,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron13' 'ffmpeg')
+            depends=('electron' 'ffmpeg')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('i686')
@@ -324,12 +324,12 @@ jobs:
             source=(app.asar
                     512x512.png
                     \${pkgname}.desktop
-                    \${pkgname}-electron13)
+                    \${pkgname})
             package() {
               install -Dm644 -t "\${pkgdir}/usr/share/applications" "\${pkgname}.desktop"
               install -Dm644 "512x512.png" "\$pkgdir/usr/share/icons/hicolor/512x512/apps/\$pkgname.png"
               install -Dm644 "app.asar" "\${pkgdir}/usr/share/\${pkgname}/\${pkgname}.asar"
-              install -Dm755 "\${pkgname}-electron13" "\${pkgdir}/usr/bin/\${pkgname}"
+              install -Dm755 "\${pkgname}" "\${pkgdir}/usr/bin/\${pkgname}"
               ln -s "/usr/bin/\${pkgname}" "\${pkgdir}/usr/bin/electron-qq"
             }
           EOFMeow
@@ -377,7 +377,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron13' 'ffmpeg')
+            depends=('electron' 'ffmpeg')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('aarch64')
@@ -388,12 +388,12 @@ jobs:
             source=(app.asar
                     512x512.png
                     \${pkgname}.desktop
-                    \${pkgname}-electron13)
+                    \${pkgname})
             package() {
               install -Dm644 -t "\${pkgdir}/usr/share/applications" "\${pkgname}.desktop"
               install -Dm644 "512x512.png" "\$pkgdir/usr/share/icons/hicolor/512x512/apps/\$pkgname.png"
               install -Dm644 "app.asar" "\${pkgdir}/usr/share/\${pkgname}/\${pkgname}.asar"
-              install -Dm755 "\${pkgname}-electron13" "\${pkgdir}/usr/bin/\${pkgname}"
+              install -Dm755 "\${pkgname}" "\${pkgdir}/usr/bin/\${pkgname}"
               ln -s "/usr/bin/\${pkgname}" "\${pkgdir}/usr/bin/electron-qq"
             }
           EOFMeow
