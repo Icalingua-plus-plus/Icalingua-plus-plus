@@ -24,7 +24,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'text':
                 lastMessage.content += m.data.text
                 message.content += m.data.text
-                if ((m as AtElem).data.qq === 'all') {
+                if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
                 } else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true
@@ -192,9 +192,9 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                message.file={
+                message.file = {
                     type: 'audio/mp3',
-                    url: await silkDecode(m.data.url)
+                    url: await silkDecode(m.data.url),
                 }
                 lastMessage.content = '[Audio]'
                 break

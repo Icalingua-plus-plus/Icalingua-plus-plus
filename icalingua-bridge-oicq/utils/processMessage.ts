@@ -23,7 +23,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'text':
                 lastMessage.content += m.data.text
                 message.content += m.data.text
-                if ((m as AtElem).data.qq === 'all') {
+                if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
                 } else if ((m as AtElem).data.qq == adapter.getUin()) {
                     message.at = true
