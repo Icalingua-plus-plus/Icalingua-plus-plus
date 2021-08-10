@@ -3,6 +3,7 @@ import Room from '../../types/Room'
 import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
+import RoamingStamp from "../../types/RoamingStamp";
 
 const ipc = {
     sendMessage(data) {
@@ -100,7 +101,7 @@ const ipc = {
     removeIgnoredChat(roomId:number){
         ipcRenderer.send('removeIgnoredChat', roomId)
     },
-    async getRoamingStamp(no_cache?: boolean) {
+    async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
     }
 }

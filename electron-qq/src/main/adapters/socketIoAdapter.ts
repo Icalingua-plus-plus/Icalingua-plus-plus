@@ -17,6 +17,7 @@ import avatarCache from '../utils/avatarCache'
 import fs from 'fs'
 import fileType from 'file-type'
 import axios from 'axios'
+import RoamingStamp from "../../types/RoamingStamp";
 
 let socket: Socket
 let uin = 0
@@ -253,8 +254,10 @@ const adapter: Adapter = {
     updateRoom(roomId: number, room: object) {
         socket.emit('updateRoom', roomId, room)
     },
-    getRoamingStamp(no_cache?: boolean) {
-        socket.emit('getRoamingStamp', no_cache)
+    getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
+        return new Promise((resolve, reject) => {
+            socket.emit('getRoamingStamp', no_cache, resolve)
+        })
     }
 }
 

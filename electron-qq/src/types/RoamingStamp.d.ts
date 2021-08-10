@@ -1,4 +1,5 @@
 type RoamingStamp = {
+    id: number,
     url: string
 }
 

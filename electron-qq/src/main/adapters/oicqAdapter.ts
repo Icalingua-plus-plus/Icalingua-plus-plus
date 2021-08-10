@@ -32,6 +32,7 @@ import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import Adapter, {CookiesDomain} from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
+import RoamingStamp from "../../types/RoamingStamp";
 
 let bot: Client
 let storage: StorageProvider
@@ -818,8 +819,20 @@ const adapter: OicqAdapter = {
                 .then(ui.setMessages)
     },
 
-    async getRoamingStamp(no_cache?: boolean) {
-        return await bot.getRoamingStamp(no_cache);
+    async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
+        const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data
+        let stamps = []
+
+        for (let index:number = roaming_stamp.length - 1; index >= 0; index--) {
+            const stamp: RoamingStamp = {
+                id: index,
+                url: roaming_stamp[index]
+            }
+
+            stamps.push(stamp)
+        }
+
+        return stamps
     }
 }
 
