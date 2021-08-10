@@ -19,6 +19,7 @@ import fileType from 'file-type'
 import axios from 'axios'
 import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
+import SearchableFriend from '../../types/SearchableFriend'
 
 let socket: Socket
 let uin = 0
@@ -102,6 +103,9 @@ const adapter: Adapter = {
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
+    },
+    getFriendsFallback(): Promise<SearchableFriend[]> {
+        return new Promise(resolve => socket.emit('getFriendsFallback', resolve))
     },
     removeIgnoredChat(roomId: number): any {
         socket.emit('removeIgnoredChat', roomId)

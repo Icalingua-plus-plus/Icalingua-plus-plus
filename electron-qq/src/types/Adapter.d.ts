@@ -7,6 +7,7 @@ import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
 import RoamingStamp from "./RoamingStamp";
 import OnlineData from './OnlineData'
+import SearchableFriend from './SearchableFriend'
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
     'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
@@ -19,6 +20,8 @@ export default interface Adapter {
     createBot(form: LoginForm): any
 
     getGroups(): Promise<SearchableGroup[]>
+
+    getFriendsFallback(): Promise<SearchableFriend[]>
 
     fetchMessages(roomId: number, offset: number): Promise<Message[]>
 
