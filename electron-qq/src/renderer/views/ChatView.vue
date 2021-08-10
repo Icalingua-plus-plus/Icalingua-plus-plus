@@ -38,13 +38,13 @@
 							:selected="selectedRoom"
 							:priority="priority"
 							@chroom="chroom"
-              v-show="view === 'chats'"
+							v-show="view === 'chats'"
 						/>
 
-            <TheContactsPanel
-                @dblclick="startChat"
-                v-show="view === 'contacts'"
-            />
+						<TheContactsPanel
+							@dblclick="startChat"
+							v-show="view === 'contacts'"
+						/>
 					</div>
 					<MultipaneResizer/>
 					<div
@@ -102,10 +102,10 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-								<span>正在获取历史消息... {{ historyCount }}
+							<span>正在获取历史消息... {{ historyCount }}
 									<button @click="stopFetchingHistory">就要这么多</button>
 								</span>
-							</div>
+						</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -119,9 +119,9 @@
 								@send="sendSticker"
 								@close="panel = ''"
 								@selectEmoji="
-                  $refs.room.message += $event.data;
-                  $refs.room.focusTextarea();
-                "
+				                  $refs.room.message += $event.data;
+				                  $refs.room.focusTextarea();
+				                "
 							/>
 						</transition>
 					</div>
@@ -154,8 +154,8 @@
 </template>
 
 <script lang="js">
-import Room from '../components/vac-mod/ChatWindow/Room/Room'
-import Stickers from '../components/Stickers'
+import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
+import Stickers from '../components/Stickers.vue'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import path from 'path'
@@ -411,7 +411,7 @@ Chromium ${process.versions.chrome}`
 		openForward: ipc.openForward,
 		stopFetchingHistory() {
 			ipc.stopFetchMessage()
-		}
+		},
 	},
 	computed: {
 		cssVars() {
