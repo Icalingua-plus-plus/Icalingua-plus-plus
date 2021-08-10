@@ -32,5 +32,6 @@ export default (io: Server, socket: Socket) => {
     socket.on('getCookies', adapter.getCookies)
     socket.on('getIgnoredChats', adapter.getIgnoredChats)
     socket.on('removeIgnoredChat', adapter.removeIgnoredChat)
+    socket.on('getRoamingStamp', adapter.getRoamingStamp)
     socket.on('requestToken', cb => cb(tokenManager.create()))
 }
