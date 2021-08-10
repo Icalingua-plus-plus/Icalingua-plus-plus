@@ -292,6 +292,12 @@ export const updateAppMenu = async () => {
                 click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
             }),
             new MenuItem({
+                label: '重新加载',
+                click: () => {
+                    getMainWindow().reload()
+                },
+            }),
+            new MenuItem({
                 label: '开发者工具',
                 role: 'toggleDevTools',
             }),
