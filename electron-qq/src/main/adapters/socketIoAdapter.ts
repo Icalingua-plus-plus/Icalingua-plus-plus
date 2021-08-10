@@ -253,7 +253,9 @@ const adapter: Adapter = {
     updateRoom(roomId: number, room: object) {
         socket.emit('updateRoom', roomId, room)
     },
-
+    getRoamingStamp(no_cache?: boolean) {
+        socket.emit('getRoamingStamp', no_cache)
+    }
 }
 
 export default adapter
