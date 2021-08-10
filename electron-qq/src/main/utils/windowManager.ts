@@ -1,5 +1,5 @@
 import {BrowserWindow, shell} from 'electron'
-import {clearCurrentRoomUnread} from '../ipc/botAndStorage'
+import {clearCurrentRoomUnread, sendOnlineData} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import {updateTrayIcon} from './trayManager'
@@ -46,6 +46,8 @@ export const loadMainWindow = () => {
             action: 'deny'
         }
     })
+
+    mainWindow.webContents.on('did-finish-load', sendOnlineData)
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
 }
