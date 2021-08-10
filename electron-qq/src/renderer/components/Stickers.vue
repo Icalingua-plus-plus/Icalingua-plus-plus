@@ -2,6 +2,11 @@
 	<div class="bg" ondragstart="return false;">
 		<div class="head">
 			<div class="title">
+        <a
+            @click="panel = 'remote'"
+            :class="{ selected: panel === 'remote' }"
+        >Remote</a
+        >
 				<a
 					@click="panel = 'stickers'"
 					:class="{ selected: panel === 'stickers' }"
@@ -17,6 +22,16 @@
 				</div>
 			</a>
 		</div>
+    <div v-show="panel === 'remote'" style="overflow: auto">
+      <center v-show="!remote_pics.length">
+        <p>No remote stickers found</p>
+      </center>
+      <div class="grid" v-show="remote_pics.length">
+        <div v-for="i in remote_pics" :key="i" v-if="i[0]!=='.'">
+          <img :src="i.url" @click="picClick(i.url)"/>
+        </div>
+      </div>
+    </div>
 		<div v-show="panel === 'stickers'" style="overflow: auto">
 			<center v-show="!pics.length">
 				<p>No stickers found</p>
@@ -48,12 +63,17 @@ export default {
 	components: {VEmojiPicker},
 	data() {
 		return {
+		  remote_pics: [],
 			pics: [],
 			dir: '',
-			panel: 'stickers',
+			panel: 'remote',
 		}
 	},
 	async created() {
+	  // Remote Stickers
+    this.remote_pics = await ipc.getRoamingStamp()
+
+    // Stickers
 		this.dir = path.join(await ipc.getStorePath(), 'stickers/')
 		if (!fs.existsSync(this.dir)) {
 			fs.mkdirSync(this.dir)
