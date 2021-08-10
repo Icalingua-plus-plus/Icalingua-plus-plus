@@ -9,6 +9,9 @@ import getCharCount from '../../utils/getCharCount'
 import Cookies from '../../types/cookies'
 import getFriends from '../utils/getFriends'
 import atCache from '../utils/atCache'
+import GroupOfFriend from '../../types/GroupOfFriend'
+import errorHandler from '../utils/errorHandler'
+import SearchableFriend from '../../types/SearchableFriend'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
@@ -50,10 +53,19 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 }
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
-ipcMain.handle('getFriendsAndGroups', async () => ({
-    groups: await adapter.getGroups(),
-    friends: await getFriends(),
-}))
+ipcMain.handle('getFriendsAndGroups', async () => {
+    const groups = await adapter.getGroups()
+    let friends: GroupOfFriend[]
+    let friendsFallback: SearchableFriend[]
+    try {
+        friends = await getFriends()
+    } catch (e) {
+        errorHandler(e, true)
+        friends = null
+        friendsFallback = await adapter.getFriendsFallback()
+    }
+    return {groups, friends, friendsFallback}
+})
 ipcMain.on('sendMessage', (_, data) => {
     data.at = atCache.get()
     sendMessage(data)

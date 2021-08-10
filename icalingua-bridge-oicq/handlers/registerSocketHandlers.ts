@@ -33,5 +33,6 @@ export default (io: Server, socket: Socket) => {
     socket.on('getIgnoredChats', adapter.getIgnoredChats)
     socket.on('removeIgnoredChat', adapter.removeIgnoredChat)
     socket.on('getRoamingStamp', adapter.getRoamingStamp)
+    socket.on('getFriendsFallback', adapter.getFriendsFallback)
     socket.on('requestToken', cb => cb(tokenManager.create()))
 }

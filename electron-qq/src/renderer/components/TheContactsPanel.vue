@@ -26,6 +26,15 @@
 								@dblclick="$emit('dblclick', i.uin, i.remark)"
 							/>
 						</el-collapse-item>
+						<ContactEntry
+							v-for="i in friendsFallback"
+							:key="i.uin"
+							:id="i.uin"
+							:remark="i.remark"
+							:name="i.nick"
+							v-show="i.sc.includes(searchContext)"
+							@dblclick="$emit('dblclick', i.uin, i.remark)"
+						/>
 					</el-collapse>
 				</el-tab-pane>
 				<el-tab-pane label="Groups" name="groups">
@@ -59,6 +68,7 @@ export default {
 			friendsAll: [],
 			searchContextEdit: '',
 			activeFriendGroup: [],
+			friendsFallback: [],
 		}
 	},
 	computed: {
@@ -73,9 +83,10 @@ export default {
 	},
 	created() {
 		ipcRenderer.invoke('getFriendsAndGroups')
-			.then(({friends, groups}) => {
-				this.friendsAll = Object.freeze(friends)
+			.then(({friends, groups, friendsFallback}) => {
+				this.friendsAll = friends ? Object.freeze(friends) : null
 				this.groupsAll = Object.freeze(groups)
+				friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
 			})
 	},
 }
