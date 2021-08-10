@@ -6,6 +6,7 @@ import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
 import RoamingStamp from "./RoamingStamp";
+import OnlineData from './OnlineData'
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
     'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
@@ -80,4 +81,6 @@ export default interface Adapter {
     removeIgnoredChat(roomId: number): any
 
     getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]>
+
+    sendOnlineData(): any
 }
