@@ -12,41 +12,31 @@
 		<div class="contacts-content">
 			<el-tabs v-model="activeName" :stretch="true">
 				<el-tab-pane label="Friends" name="friends">
-					<div
-						class="contacts-panel"
-						v-show="activeName === 'friends'"
-					>
-						<el-collapse v-model="activeFriendGroup">
-							<el-collapse-item v-for="(v, i) in friendsAll"
-							                  :title="`${v.name} (${v.friends.filter(e=>e.sc.includes(searchContext)).length})`"
-							                  :name="i" :key="i">
-								<ContactEntry
-									v-for="i in v.friends"
-									:key="i.uin"
-									:id="i.uin"
-									:remark="i.remark"
-									:name="i.nick"
-									v-show="i.sc.includes(searchContext)"
-									@dblclick="$emit('dblclick', i.uin, i.remark)"
-								/>
-							</el-collapse-item>
-						</el-collapse>
-					</div>
+					<el-collapse v-model="activeFriendGroup">
+						<el-collapse-item v-for="(v, i) in friendsAll"
+						                  :title="`${v.name} (${v.friends.filter(e=>e.sc.includes(searchContext)).length})`"
+						                  :name="i" :key="i">
+							<ContactEntry
+								v-for="i in v.friends"
+								:key="i.uin"
+								:id="i.uin"
+								:remark="i.remark"
+								:name="i.nick"
+								v-show="i.sc.includes(searchContext)"
+								@dblclick="$emit('dblclick', i.uin, i.remark)"
+							/>
+						</el-collapse-item>
+					</el-collapse>
 				</el-tab-pane>
 				<el-tab-pane label="Groups" name="groups">
-					<div
-						class="contacts-panel"
-						v-show="activeName === 'groups'"
-					>
-						<ContactEntry
-							v-for="i in groupsAll"
-							:key="i.group_id"
-							:id="-i.group_id"
-							:remark="i.group_name"
-							v-show="i.sc.includes(searchContext)"
-							@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
-						/>
-					</div>
+					<ContactEntry
+						v-for="i in groupsAll"
+						:key="i.group_id"
+						:id="-i.group_id"
+						:remark="i.group_name"
+						v-show="i.sc.includes(searchContext)"
+						@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
+					/>
 				</el-tab-pane>
 			</el-tabs>
 		</div>
@@ -92,8 +82,12 @@ export default {
 </script>
 
 <style>
-.contacts-panel {
-	margin: 0 12px;
+.el-collapse-item__header {
+	padding-left: 12px;
+}
+
+.el-tabs__item {
+	padding: 0;
 }
 
 .contacts-root {
@@ -104,7 +98,7 @@ export default {
 }
 
 .contacts-head {
-	margin: 12px 12px 0;
+	margin: 0 12px;
 	height: 64px;
 	min-height: 64px;
 	display: flex;
@@ -113,9 +107,5 @@ export default {
 
 .contacts-content {
 	overflow: auto;
-}
-
-.el-tabs__header {
-	margin: unset !important;
 }
 </style>
