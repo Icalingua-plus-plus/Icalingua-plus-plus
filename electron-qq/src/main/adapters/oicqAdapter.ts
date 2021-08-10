@@ -818,7 +818,9 @@ const adapter: OicqAdapter = {
                 .then(ui.setMessages)
     },
 
-
+    async getRoamingStamp(no_cache?: boolean) {
+        return await bot.getRoamingStamp(no_cache);
+    }
 }
 
 export default adapter

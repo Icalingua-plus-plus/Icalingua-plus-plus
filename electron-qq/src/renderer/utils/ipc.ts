@@ -99,6 +99,9 @@ const ipc = {
     },
     removeIgnoredChat(roomId:number){
         ipcRenderer.send('removeIgnoredChat', roomId)
+    },
+    async getRoamingStamp(no_cache?: boolean) {
+        return await ipcRenderer.invoke('getRoamingStamp', no_cache)
     }
 }
 export default ipc

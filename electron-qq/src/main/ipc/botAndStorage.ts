@@ -92,3 +92,4 @@ ipcMain.on('openForward', async (_, resId: string) => {
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
+ipcMain.on('getRoamingStamp', () => adapter.getRoamingStamp())
