@@ -43,8 +43,16 @@
 
 						<TheContactsPanel
 							@dblclick="startChat"
-							v-show="view === 'contacts'"
+							v-if="view === 'contacts'"
 						/>
+
+						<div v-show="view === 'kench'">
+							<div style="background-color: #5bcffa; height: 20vh"/>
+							<div style="background-color: #f5abb9; height: 20vh"/>
+							<div style="background-color: #ffffff; height: 20vh"/>
+							<div style="background-color: #f5abb9; height: 20vh"/>
+							<div style="background-color: #5bcffa; height: 20vh"/>
+						</div>
 					</div>
 					<MultipaneResizer/>
 					<div
@@ -126,13 +134,6 @@
 						</transition>
 					</div>
 				</Multipane>
-				<div v-show="view === 'kench'">
-					<div style="background-color: #5bcffa; height: 20vh"/>
-					<div style="background-color: #f5abb9; height: 20vh"/>
-					<div style="background-color: #ffffff; height: 20vh"/>
-					<div style="background-color: #f5abb9; height: 20vh"/>
-					<div style="background-color: #5bcffa; height: 20vh"/>
-				</div>
 			</el-main>
 		</el-container>
 		<el-dialog
