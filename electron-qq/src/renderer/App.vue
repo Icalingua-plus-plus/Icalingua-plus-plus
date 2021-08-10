@@ -12,6 +12,7 @@ export default {
 
 <style>
 @import url("./assets/stylesheet.css");
+@import url("./assets/scrollbar.css");
 
 @font-face {
   font-family: "msyh";
