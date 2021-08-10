@@ -5,7 +5,7 @@
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
-  "desktopName": "electron-qq.desktop",
+  "desktopName": "icalingua.desktop",
   "homepage": "https://github.com/Clansty/Icalingua",
   "scripts": {
     "build": "ts-node .electron-vue/build.ts && electron-builder",
@@ -45,7 +45,7 @@
           "target": "AppImage"
         }
       ],
-      "executableName": "electron-qq",
+      "executableName": "icalingua",
       "category": "Network"
     },
     "npmRebuild": false
