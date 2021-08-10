@@ -30,7 +30,7 @@
 				/>
 			</el-aside>
 			<el-main>
-				<Multipane v-show="view === 'chats'">
+				<Multipane>
 					<!-- main chat view -->
 					<div :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
 						<TheRoomsPanel
@@ -38,7 +38,13 @@
 							:selected="selectedRoom"
 							:priority="priority"
 							@chroom="chroom"
+              v-show="view === 'chats'"
 						/>
+
+            <TheContactsPanel
+                @dblclick="startChat"
+                v-show="view === 'contacts'"
+            />
 					</div>
 					<MultipaneResizer/>
 					<div
@@ -120,11 +126,6 @@
 						</transition>
 					</div>
 				</Multipane>
-				<el-row v-if="view === 'contacts'" type="flex" justify="center">
-					<el-col :span="8">
-						<TheContactsPanel @dblclick="startChat"/>
-					</el-col>
-				</el-row>
 				<div v-show="view === 'kench'">
 					<div style="background-color: #5bcffa; height: 20vh"/>
 					<div style="background-color: #f5abb9; height: 20vh"/>
