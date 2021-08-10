@@ -23,6 +23,7 @@ import {broadcast} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../../electron-qq/src/types/RoamingStamp'
+import SearchableFriend from '../../electron-qq/src/types/SearchableFriend'
 
 let bot: Client
 let storage: MongoStorageProvider
@@ -339,6 +340,22 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    async getFriendsFallback(cb) {
+        const friends = bot.fl.values()
+        let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
+        const friendsAll: SearchableFriend[] = []
+        while (!iterF.done) {
+            const f: SearchableFriend = {
+                uin: iterF.value.user_id,
+                nick: iterF.value.nickname,
+                remark: iterF.value.remark,
+                sc: iterF.value.nickname + iterF.value.remark + iterF.value.user_id,
+            }
+            friendsAll.push(f)
+            iterF = friends.next()
+        }
+        cb(friendsAll)
+    },
     getIgnoredChats(resolve) {
         resolve(storage.getIgnoredChats())
     },
