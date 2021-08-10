@@ -23,12 +23,12 @@
 			</a>
 		</div>
     <div v-show="panel === 'remote'" style="overflow: auto">
-      <center v-show="!pics.length">
+      <center v-show="!remote_pics.length">
         <p>No remote stickers found</p>
       </center>
-      <div class="grid" v-show="pics.length">
-        <div v-for="i in pics" :key="i" v-if="i[0]!=='.'">
-          <img :src="'file://'+dir + i" @click="picClick(dir + i)"/>
+      <div class="grid" v-show="remote_pics.length">
+        <div v-for="i in remote_pics" :key="i" v-if="i[0]!=='.'">
+          <img :src="i.url" @click="picClick(i.url)"/>
         </div>
       </div>
     </div>
@@ -63,16 +63,17 @@ export default {
 	components: {VEmojiPicker},
 	data() {
 		return {
+		  remote_pics: [],
 			pics: [],
 			dir: '',
-			panel: 'stickers',
+			panel: 'remote',
 		}
 	},
 	async created() {
 	  // Remote Stickers
-    console.log(await ipc.getRoamingStamp());
+    this.remote_pics = await ipc.getRoamingStamp()
 
-
+    // Stickers
 		this.dir = path.join(await ipc.getStorePath(), 'stickers/')
 		if (!fs.existsSync(this.dir)) {
 			fs.mkdirSync(this.dir)
