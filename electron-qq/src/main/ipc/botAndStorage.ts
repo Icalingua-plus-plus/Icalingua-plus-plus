@@ -19,7 +19,7 @@ else if (getConfig().adapter === 'socketIo')
 export const {
     sendMessage, createBot,
     getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom,
-    getSelectedRoom, getRoom, setOnlineStatus, logOut,
+    getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter

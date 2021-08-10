@@ -32,7 +32,8 @@ import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import Adapter, {CookiesDomain} from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
-import RoamingStamp from "../../types/RoamingStamp";
+import RoamingStamp from '../../types/RoamingStamp'
+import OnlineData from '../../types/OnlineData'
 
 let bot: Client
 let storage: StorageProvider
@@ -325,21 +326,14 @@ const loginHandlers = {
             getConfig().account = loginForm
             saveConfigFile()
             //登录完成之后的初始化操作
+            await initStorage()
             await loadMainWindow()
             createTray()
-            await initStorage()
-            ui.setAllRooms(await storage.getAllRooms())
             attachEventHandler()
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
-        ui.sendOnlineData({
-            online: bot.getStatus().data.online,
-            nick: bot.nickname,
-            uin: bot.uin,
-            priority: getConfig().priority,
-        })
         await updateAppMenu()
         await updateTrayIcon()
     },
@@ -450,6 +444,15 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    async sendOnlineData() {
+        ui.sendOnlineData({
+            online: bot.getStatus().data.online,
+            nick: bot.nickname,
+            uin: bot.uin,
+            priority: getConfig().priority,
+        })
+        ui.setAllRooms(await storage.getAllRooms())
+    },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return storage.getIgnoredChats()
     },
@@ -823,17 +826,17 @@ const adapter: OicqAdapter = {
         const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data
         let stamps = []
 
-        for (let index:number = roaming_stamp.length - 1; index >= 0; index--) {
+        for (let index: number = roaming_stamp.length - 1; index >= 0; index--) {
             const stamp: RoamingStamp = {
                 id: index,
-                url: roaming_stamp[index]
+                url: roaming_stamp[index],
             }
 
             stamps.push(stamp)
         }
 
         return stamps
-    }
+    },
 }
 
 export default adapter

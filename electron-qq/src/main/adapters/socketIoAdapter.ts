@@ -17,10 +17,12 @@ import avatarCache from '../utils/avatarCache'
 import fs from 'fs'
 import fileType from 'file-type'
 import axios from 'axios'
-import RoamingStamp from "../../types/RoamingStamp";
+import RoamingStamp from '../../types/RoamingStamp'
+import OnlineData from '../../types/OnlineData'
 
 let socket: Socket
 let uin = 0
+let cachedOnlineData: OnlineData
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
@@ -37,10 +39,11 @@ const attachSocketEvents = () => {
     socket.on('setOffline', ui.setOffline)
     socket.on('onlineData', async (data: { online: boolean, nick: string, uin: number }) => {
         uin = data.uin
-        ui.sendOnlineData({
+        cachedOnlineData = {
             ...data,
             priority: getConfig().priority,
-        })
+        }
+        ui.sendOnlineData(cachedOnlineData)
         updateTrayIcon()
         updateAppMenu()
     })
@@ -94,6 +97,9 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    sendOnlineData() {
+        ui.sendOnlineData(cachedOnlineData)
+    },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
     },
@@ -258,7 +264,7 @@ const adapter: Adapter = {
         return new Promise((resolve, reject) => {
             socket.emit('getRoamingStamp', no_cache, resolve)
         })
-    }
+    },
 }
 
 export default adapter
