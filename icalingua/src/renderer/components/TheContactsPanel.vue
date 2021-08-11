@@ -7,6 +7,7 @@
 				prefix-icon="el-icon-search"
 				clearable
 			/>
+			<span class="el-icon-refresh-right contacts-refresh" @click="refresh"/>
 		</div>
 
 		<div class="contacts-content">
@@ -89,6 +90,18 @@ export default {
 				friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
 			})
 	},
+	methods: {
+		refresh() {
+			this.friendsAll = this.groupsAll = this.friendsFallback = []
+			ipcRenderer.invoke('getFriendsAndGroups')
+				.then(({friends, groups, friendsFallback}) => {
+					this.friendsAll = friends ? Object.freeze(friends) : null
+					this.groupsAll = Object.freeze(groups)
+					friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
+					this.$message.success('已刷新')
+				})
+		},
+	},
 }
 </script>
 
@@ -118,5 +131,12 @@ export default {
 
 .contacts-content {
 	overflow: auto;
+}
+
+.contacts-refresh {
+	cursor: pointer;
+	font-size: larger;
+	color: #909399;
+	margin-left: 10px;
 }
 </style>
