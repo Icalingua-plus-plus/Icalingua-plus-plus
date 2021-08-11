@@ -22,6 +22,7 @@ type AllConfig = {
     server: string
     privateKey: string
     fetchHistoryOnChatOpen: boolean
+    lastUsedStickerType: 'remote' | 'stickers' | 'emojis'
 }
 
 
@@ -76,7 +77,9 @@ const defaultConfig: AllConfig = {
     winSize: defaultWinSize,
     socketIo: '',
     adapter: 'oicq',
-    fetchHistoryOnChatOpen: true
+    fetchHistoryOnChatOpen: true,
+    //给 @rain15z3 一点面子，而且第一次用的人也没有本地表情
+    lastUsedStickerType: 'remote',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
