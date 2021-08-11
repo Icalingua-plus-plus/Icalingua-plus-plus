@@ -413,6 +413,15 @@ export const updateAppMenu = async () => {
                     saveConfigFile()
                 },
             }),
+            new MenuItem({
+                label: '切换会话窗口时自动获取历史消息',
+                type: 'checkbox',
+                checked: getConfig().fetchHistoryOnChatOpen,
+                click: (menuItem) => {
+                    getConfig().fetchHistoryOnChatOpen = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
         ],
     }
     const menu = Menu.buildFromTemplate([

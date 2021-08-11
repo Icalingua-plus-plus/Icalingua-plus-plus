@@ -21,6 +21,7 @@ type AllConfig = {
     adapter: 'oicq' | 'socketIo'
     server: string
     privateKey: string
+    fetchHistoryOnChatOpen: boolean
 }
 
 
@@ -75,6 +76,7 @@ const defaultConfig: AllConfig = {
     winSize: defaultWinSize,
     socketIo: '',
     adapter: 'oicq',
+    fetchHistoryOnChatOpen: true
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
