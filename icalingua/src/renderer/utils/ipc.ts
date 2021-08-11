@@ -98,14 +98,17 @@ const ipc = {
     setAria2Config(config: Aria2Config) {
         ipcRenderer.send('setAria2Config', config)
     },
-    getIgnoredChats(): Promise<IgnoreChatInfo[]>{
+    getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return ipcRenderer.invoke('getIgnoredChats')
     },
-    removeIgnoredChat(roomId:number){
+    removeIgnoredChat(roomId: number) {
         ipcRenderer.send('removeIgnoredChat', roomId)
     },
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
+    },
+    fetchHistory(messageId: string | number, roomId?: number) {
+        ipcRenderer.send('fetchHistory', messageId, roomId)
     }
 }
 export default ipc
