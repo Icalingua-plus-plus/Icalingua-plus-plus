@@ -363,13 +363,6 @@ Chromium ${process.versions.chrome}`
 				})
 			this.$refs.room.focusTextarea()
 		},
-		rmIgnore(chat) {
-			console.log(chat)
-			this.ignoredChats = this.ignoredChats.filter(
-				(item) => item.id != chat.id,
-			)
-			db.set('ignoredChats', this.ignoredChats).write()
-		},
 		reconnect() {
 			this.reconnecting = true
 			ipc.reLogin()
