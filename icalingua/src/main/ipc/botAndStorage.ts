@@ -72,7 +72,7 @@ ipcMain.on('sendMessage', (_, data) => {
     atCache.clear()
 })
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
-    offset === 0 && fetchLatestHistory(roomId)
+    offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
 })
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
