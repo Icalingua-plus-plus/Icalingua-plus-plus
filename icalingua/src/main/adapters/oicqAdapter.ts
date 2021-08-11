@@ -36,6 +36,7 @@ import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
 import {IteratorCallback} from 'mongodb'
+import errorHandler from '../utils/errorHandler'
 
 let bot: Client
 let storage: StorageProvider
@@ -788,57 +789,83 @@ const adapter: OicqAdapter = {
         adapter.stopFetching = true
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
-        const messages = []
-        while (true) {
-            if (adapter.stopFetching) {
-                adapter.stopFetching = false
-                break
-            }
-            const history = await bot.getChatHistory(messageId)
-            if (history.error) {
-                console.log(history.error)
-                ui.messageError('错误：' + history.error.message)
-                break
-            }
-            const newMsgs: Message[] = []
-            for (let i = 0; i < history.data.length; i++) {
-                const data = history.data[i]
-                const message = {
-                    senderId: data.sender.user_id,
-                    username: (<GroupMessageEventData>data).group_id
-                        ? (<GroupMessageEventData>data).anonymous
-                            ? (<GroupMessageEventData>data).anonymous.name
-                            : (<GroupMessageEventData>data).sender.card || data.sender.nickname
-                        : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
-                    content: '',
-                    timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
-                    date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
-                    _id: data.message_id,
-                    time: data.time * 1000,
+        const fetchLoop = async (limit?: number) => {
+            const messages = []
+            let done = false
+            while (true) {
+                if (adapter.stopFetching) {
+                    adapter.stopFetching = false
+                    done = true
+                    break
                 }
-                await processMessage(
-                    data.message,
-                    message,
-                    {},
-                    roomId,
-                )
-                messages.push(message)
-                newMsgs.push(message)
+                const history = await bot.getChatHistory(messageId)
+                if (history.error) {
+                    errorHandler(history.error, true)
+                    ui.messageError('错误：' + history.error.message)
+                    done = true
+                    break
+                }
+                const newMsgs: Message[] = []
+                for (let i = 0; i < history.data.length; i++) {
+                    const data = history.data[i]
+                    const message = {
+                        senderId: data.sender.user_id,
+                        username: (<GroupMessageEventData>data).group_id
+                            ? (<GroupMessageEventData>data).anonymous
+                                ? (<GroupMessageEventData>data).anonymous.name
+                                : (<GroupMessageEventData>data).sender.card || data.sender.nickname
+                            : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
+                        content: '',
+                        timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                        date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                        _id: data.message_id,
+                        time: data.time * 1000,
+                    }
+                    await processMessage(
+                        data.message,
+                        message,
+                        {},
+                        roomId,
+                    )
+                    messages.push(message)
+                    newMsgs.push(message)
+                }
+                ui.addHistoryCount(newMsgs.length)
+                if (history.data.length < 2) {
+                    done = true
+                    break
+                }
+                messageId = newMsgs[0]._id as string
+                const firstOwnMsg = roomId < 0 ?
+                    newMsgs[0] : //群的话只要第一条消息就行
+                    newMsgs.find(e => e.senderId == bot.uin)
+                if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) {
+                    done = true
+                    break
+                }
+                if (limit && messages.length > limit)
+                    break
             }
-            ui.addHistoryCount(newMsgs.length)
-            if (history.data.length < 2) break
-            messageId = newMsgs[0]._id as string
-            const firstOwnMsg = roomId < 0 ?
-                newMsgs[0] : //群的话只要第一条消息就行
-                newMsgs.find(e => e.senderId == bot.uin)
-            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
+            return {messages, done}
         }
-        ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
-        ui.clearHistoryCount()
+        const {messages, done} = await fetchLoop(60)
         await storage.addMessages(roomId, messages)
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
+        if(done){
+            ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+            ui.clearHistoryCount()
+        }
+        else{
+            ui.message(`已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            {
+                const {messages} = await fetchLoop()
+                await storage.addMessages(roomId, messages)
+                ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+                ui.clearHistoryCount()
+            }
+        }
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
