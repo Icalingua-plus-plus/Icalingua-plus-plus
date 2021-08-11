@@ -35,15 +35,15 @@ export const loadMainWindow = () => {
             '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
         )
 
-    mainWindow.on('focus', async ()=> {
+    setTimeout(() => mainWindow.on('focus', async () => {
         clearCurrentRoomUnread()
         await updateTrayIcon()
-    })
+    }), 5000)
 
     mainWindow.webContents.setWindowOpenHandler(details => {
         shell.openExternal(details.url)
         return {
-            action: 'deny'
+            action: 'deny',
         }
     })
 
