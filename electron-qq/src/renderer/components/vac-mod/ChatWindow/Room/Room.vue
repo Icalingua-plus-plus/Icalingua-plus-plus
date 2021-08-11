@@ -229,7 +229,6 @@
           }"
 					@input="onChangeInput"
 					@click.right="textctx"
-					@keydown.esc="escapeTextarea"
 					@keydown.enter.exact.prevent=""
 				/>
 
@@ -631,10 +630,6 @@ export default {
 		},
 		addNewMessage(message) {
 			this.newMessages.push(message)
-		},
-		escapeTextarea() {
-			if (this.filteredUsersTag.length) this.filteredUsersTag = []
-			else this.resetMessage()
 		},
 		resetMessage(disableMobileFocus = null, editFile = null) {
 			this.$emit('typing-message', null)
