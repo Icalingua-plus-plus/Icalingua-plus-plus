@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/steamToBuffer.ts
+../../icalingua/src/utils/steamToBuffer.ts

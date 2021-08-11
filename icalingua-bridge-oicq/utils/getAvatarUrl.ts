@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/getAvatarUrl.ts
+../../icalingua/src/utils/getAvatarUrl.ts

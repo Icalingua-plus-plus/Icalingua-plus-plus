@@ -667,6 +667,8 @@ const adapter: OicqAdapter = {
                     ui.setShutUp(true)
                     ui.message('你已经不是群成员了')
                 }
+            } else if (roomId === bot.uin) {
+                ui.setShutUp(true)
             } else {
                 ui.setShutUp(false)
             }
