@@ -9,6 +9,7 @@ import YAML from 'yaml'
 import {app, screen} from 'electron'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import argv from './argv'
+import migrateData from './migrateData'
 
 type AllConfig = {
     account: LoginForm
@@ -24,6 +25,7 @@ type AllConfig = {
 
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
+const oldConfigFilePath = argv.config || path.join(app.getPath('userData'), '../electron-qq/config.yaml')
 
 let config: AllConfig
 
@@ -73,6 +75,9 @@ const defaultConfig: AllConfig = {
     winSize: defaultWinSize,
     socketIo: '',
     adapter: 'oicq',
+}
+if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
+    migrateData()
 }
 if (fs.existsSync(configFilePath)) {
     config = YAML.parse(fs.readFileSync(configFilePath, 'utf8'))

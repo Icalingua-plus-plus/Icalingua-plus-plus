@@ -1,5 +1,5 @@
 {
-  "name": "electron-qq",
+  "name": "icalingua",
   "version": "2.1.5",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
@@ -22,7 +22,7 @@
   },
   "build": {
     "productName": "Icalingua",
-    "appId": "com.clansty.electronqq",
+    "appId": "com.clansty.icalingua",
     "directories": {
       "output": "build",
       "buildResources": "static"
