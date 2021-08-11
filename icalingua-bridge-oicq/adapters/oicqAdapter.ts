@@ -550,6 +550,8 @@ const adapter = {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
                 }
+            } else if (roomId === bot.uin) {
+                client.emit('setShutUp', true)
             } else {
                 client.emit('setShutUp', false)
             }
