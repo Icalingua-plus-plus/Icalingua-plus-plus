@@ -38,13 +38,13 @@
 							:selected="selectedRoom"
 							:priority="priority"
 							@chroom="chroom"
-              v-show="view === 'chats'"
+							v-show="view === 'chats'"
 						/>
 
-            <TheContactsPanel
-                @dblclick="startChat"
-                v-show="view === 'contacts'"
-            />
+						<TheContactsPanel
+							@dblclick="startChat"
+							v-show="view === 'contacts'"
+						/>
 					</div>
 					<MultipaneResizer/>
 					<div
@@ -102,10 +102,10 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-								<span>正在获取历史消息... {{ historyCount }}
+							<span>正在获取历史消息... {{ historyCount }}
 									<button @click="stopFetchingHistory">就要这么多</button>
 								</span>
-							</div>
+						</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -126,13 +126,13 @@
 						</transition>
 					</div>
 				</Multipane>
-        <div v-show="view === 'kench'">
-          <div style="background-color: #5bcffa; height: 20vh"/>
-          <div style="background-color: #f5abb9; height: 20vh"/>
-          <div style="background-color: #ffffff; height: 20vh"/>
-          <div style="background-color: #f5abb9; height: 20vh"/>
-          <div style="background-color: #5bcffa; height: 20vh"/>
-        </div>
+				<div v-show="view === 'kench'">
+					<div style="background-color: #5bcffa; height: 20vh"/>
+					<div style="background-color: #f5abb9; height: 20vh"/>
+					<div style="background-color: #ffffff; height: 20vh"/>
+					<div style="background-color: #f5abb9; height: 20vh"/>
+					<div style="background-color: #5bcffa; height: 20vh"/>
+				</div>
 			</el-main>
 		</el-container>
 		<el-dialog
@@ -351,7 +351,7 @@ Chromium ${process.versions.chrome}`
 				else this.messagesLoaded = true
 			}, 0)
 
-      return msgs2add[msgs2add.length-1]
+			return msgs2add[msgs2add.length - 1]
 		},
 		openImage: ipc.downloadFileByMessageData,
 		sendSticker(url) {
@@ -388,9 +388,7 @@ Chromium ${process.versions.chrome}`
 			this.selectedRoom.at = false
 			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
-
-      let messageId = (await this.fetchMessage(true))._id
-      ipc.fetchHistory(messageId)
+			await this.fetchMessage(true)
 		},
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
@@ -406,7 +404,7 @@ Chromium ${process.versions.chrome}`
 		openForward: ipc.openForward,
 		stopFetchingHistory() {
 			ipc.stopFetchMessage()
-		}
+		},
 	},
 	computed: {
 		cssVars() {
