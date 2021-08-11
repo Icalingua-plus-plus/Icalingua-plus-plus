@@ -110,6 +110,18 @@ export default {
 	padding-left: 12px;
 }
 
+.el-collapse-item__content {
+  padding-bottom: 0;
+}
+
+.el-collapse-item__wrap > div > div:last-child > div > div {
+  border-bottom: unset !important;
+}
+
+.el-tabs__header {
+  margin: unset !important;
+}
+
 .el-tabs__item {
 	padding: 0;
 }
