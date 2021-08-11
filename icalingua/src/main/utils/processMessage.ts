@@ -8,6 +8,7 @@ import LastMessage from '../../types/LastMessage'
 import BilibiliMiniApp from '../../types/BilibiliMiniApp'
 import StructMessageCard from '../../types/StructMessageCard'
 import silkDecode from './silkDecode'
+import errorHandler from './errorHandler'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -192,9 +193,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                message.file = {
-                    type: 'audio/mp3',
-                    url: await silkDecode(m.data.url),
+                try {
+                    message.file = {
+                        type: 'audio/mp3',
+                        url: await silkDecode(m.data.url),
+                    }
+                } catch (e) {
+                    errorHandler(e, true)
+                    message.code = JSON.stringify(e)
+                    message.content = '[语音下载失败]'
                 }
                 lastMessage.content = '[Audio]'
                 break
