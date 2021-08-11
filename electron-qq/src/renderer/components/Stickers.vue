@@ -38,7 +38,7 @@
 			</center>
 			<div class="grid" v-show="pics.length">
 				<div v-for="i in pics" :key="i" v-if="i[0]!=='.'">
-					<img :src="'file://'+dir + i" @click="picClick(dir + i)"/>
+					<img :src="'file://'+dir + i" @click="picClick(dir + i)" @click.right="itemMenu(i)"/>
 				</div>
 			</div>
 		</div>
@@ -92,6 +92,7 @@ export default {
 			shell.openPath(this.dir)
 		},
 		menu: ipc.popupStickerMenu,
+		itemMenu: ipc.popupStickerItemMenu,
 	},
 }
 </script>

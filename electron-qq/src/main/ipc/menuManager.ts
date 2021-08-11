@@ -670,6 +670,17 @@ ipcMain.on('popupStickerMenu', () => {
         },
     ]).popup({window: getMainWindow()})
 })
+ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
+    Menu.buildFromTemplate([
+        {
+            label: '删除',
+            type: 'normal',
+            click() {
+                fs.unlink(path.join(app.getPath('userData'), 'stickers', itemName), () => ui.message('删除成功'))
+            },
+        },
+    ]).popup({window: getMainWindow()})
+})
 ipcMain.on('popupAvatarMenu', (_, message: Message) => {
     const menu = Menu.buildFromTemplate([
         {
