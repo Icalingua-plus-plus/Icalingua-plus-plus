@@ -4,5 +4,6 @@ Exec=icalingua %u
 Icon=icalingua.png
 Name=Icalingua
 Comment=A Linux client for QQ and more
+StartupNotify=true
 Terminal=false
 Type=Application

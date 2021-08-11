@@ -1,14 +1,15 @@
 import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from 'oicq'
-import Message from '../types/Message'
+import Message from '../../types/Message'
+import oicq from '../adapters/oicqAdapter'
 import {base64decode} from 'nodejs-base64'
-import mime from './mime'
+import mime from '../../utils/mime'
 import path from 'path'
-import adapter from '../adapters/oicqAdapter'
-import BilibiliMiniApp from '../types/BilibiliMiniApp'
-import StructMessageCard from '../types/StructMessageCard'
+import LastMessage from '../../types/LastMessage'
+import BilibiliMiniApp from '../../types/BilibiliMiniApp'
+import StructMessageCard from '../../types/StructMessageCard'
 import silkDecode from './silkDecode'
 
-const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
+const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
         oicqMessage = [oicqMessage]
     let lastType
@@ -25,7 +26,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += m.data.text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
-                } else if ((m as AtElem).data.qq == adapter.getUin()) {
+                } else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true
                 }
                 break
@@ -67,11 +68,11 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'reply':
                 let replyMessage: Message
                 if (roomId) {
-                    replyMessage = await adapter.getMessageFromStorage(roomId, m.data.id)
+                    replyMessage = await oicq.getMessageFromStorage(roomId, m.data.id)
                 }
                 if (!replyMessage) {
                     //get the message
-                    const getRet = await adapter.getMsg(m.data.id)
+                    const getRet = await oicq.getMsg(m.data.id)
                     if (getRet.data) {
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
@@ -79,7 +80,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         const senderName = ('group_id' in data)
                             ? (data as GroupMessageEventData).anonymous
                                 ? (data as GroupMessageEventData).anonymous.name
-                                : adapter.getUin() === data.sender.user_id
+                                : oicq.getUin() === data.sender.user_id
                                     ? 'You'
                                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
                             : (data.sender as FriendInfo).remark || data.sender.nickname
@@ -191,17 +192,11 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                try {
-                    message.file = {
-                        type: 'audio/mp3',
-                        url: await silkDecode(m.data.url),
-                    }
-                } catch (e) {
-                    message.file = null
-                    message.content = '[无法处理的语音]'
-                    message.code = JSON.stringify(e)
+                message.file = {
+                    type: 'audio/mp3',
+                    url: await silkDecode(m.data.url),
                 }
-                lastMessage.content = `[Audio]`
+                lastMessage.content = '[Audio]'
                 break
             case 'mirai':
                 try {

@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/formatDate.ts
+../../icalingua/src/utils/formatDate.ts

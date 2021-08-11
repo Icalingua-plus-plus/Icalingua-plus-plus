@@ -1,41 +1,48 @@
-import SendMessageParams from '../types/SendMessageParams'
+import SendMessageParams from '../../types/SendMessageParams'
 import {
     Client, createClient,
     FriendInfo, FriendPokeEventData,
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
 } from 'oicq'
-import LoginForm from '../types/LoginForm'
-import getAvatarUrl from '../utils/getAvatarUrl'
-import Message from '../types/Message'
-import formatDate from '../utils/formatDate'
-import createRoom from '../utils/createRoom'
+import StorageProvider from '../../types/StorageProvider'
+import LoginForm from '../../types/LoginForm'
+import getAvatarUrl from '../../utils/getAvatarUrl'
+import Message from '../../types/Message'
+import formatDate from '../../utils/formatDate'
+import createRoom from '../../utils/createRoom'
 import processMessage from '../utils/processMessage'
-import MongoStorageProvider from '../providers/MongoStorageProvider'
-import Room from '../types/Room'
-import IgnoreChatInfo from '../types/IgnoreChatInfo'
-import clients from '../utils/clients'
-import {Socket} from 'socket.io'
-import {broadcast} from '../providers/socketIoProvider'
-import sleep from '../utils/sleep'
-import getSysInfo from '../utils/getSysInfo'
-import RoamingStamp from '../types/RoamingStamp'
-import SearchableFriend from '../types/SearchableFriend'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
+import ui from '../utils/ui'
+import {getConfig, saveConfigFile} from '../utils/configManager'
+import {app, BrowserWindow, dialog, Notification} from 'electron'
+import avatarCache from '../utils/avatarCache'
+import {download} from '../ipc/downloadManager'
+import fs from 'fs'
+import path from 'path'
+import getStaticPath from '../../utils/getStaticPath'
+import {createTray, updateTrayIcon} from '../utils/trayManager'
+import {updateAppMenu} from '../ipc/menuManager'
+import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
+import Room from '../../types/Room'
+import IgnoreChatInfo from '../../types/IgnoreChatInfo'
+import Adapter, {CookiesDomain} from '../../types/Adapter'
+import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
+import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
+import RoamingStamp from '../../types/RoamingStamp'
+import OnlineData from '../../types/OnlineData'
+import SearchableFriend from '../../types/SearchableFriend'
+import {IteratorCallback} from 'mongodb'
 
 let bot: Client
-let storage: MongoStorageProvider
+let storage: StorageProvider
 let loginForm: LoginForm
 
 let currentLoadedMessagesCount = 0
 let loggedIn = false
-
-type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
-    'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
-    'mma.qq.com' | 'game.qq.com' | 'qqweb.qq.com' | 'openmobile.qq.com' |
-    'qun.qq.com' | 'ti.qq.com'
 
 //region event handlers
 const eventHandlers = {
@@ -93,47 +100,77 @@ const eventHandlers = {
         if (!room.priority) {
             room.priority = groupId ? 2 : 4
         }
+        //notification
+        if (
+            (!getMainWindow().isFocused() ||
+                !getMainWindow().isVisible() ||
+                roomId !== ui.getSelectedRoomId()) &&
+            (room.priority >= getConfig().priority || at) &&
+            !isSelfMsg
+        ) {
+            //notification
 
-        //可能要发通知，所以由客户端来决定
-        broadcast('notify', {
-            avatar: avatar,
-            priority: room.priority,
-            roomId, at, isSelfMsg,
-            data: {
+            const notif = new Notification({
                 title: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
+                icon: await avatarCache(avatar),
                 hasReply: true,
                 replyPlaceholder: 'Reply to ' + roomName,
-            },
-        })
+            })
+            notif.addListener('click', () => {
+                showWindow()
+                ui.chroom(room.roomId)
+            })
+            notif.addListener('reply', (e, r) => {
+                adapter.sendMessage({
+                    content: r,
+                    room,
+                    roomId: room.roomId,
+                    at: [],
+                })
+            })
+            notif.show()
+        }
 
-        if (isSelfMsg) {
-            room.unreadCount = 0
-            room.at = false
-        } else room.unreadCount++
+        if (
+            room.roomId !== ui.getSelectedRoomId() ||
+            !getMainWindow().isFocused()
+        ) {
+            if (isSelfMsg) {
+                room.unreadCount = 0
+                room.at = false
+            } else room.unreadCount++
+        }
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
+        if (message.file && message.file.name && room.autoDownload) {
+            download(message.file.url, message.file.name, room.downloadPath)
+        }
         message.time = data.time * 1000
-        clients.addMessage(room.roomId, message)
-        clients.updateRoom(room)
+        ui.addMessage(room.roomId, message)
+        ui.updateRoom(room)
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
+        await updateTrayIcon()
+        console.log(data.message)
     },
     friendRecall(data: FriendRecallEventData) {
-        clients.deleteMessage(data.message_id)
+        ui.deleteMessage(data.message_id)
         storage.updateMessage(data.user_id, data.message_id, {deleted: true})
     },
     groupRecall(data: GroupRecallEventData) {
-        clients.deleteMessage(data.message_id)
+        ui.deleteMessage(data.message_id)
         storage.updateMessage(-data.group_id, data.message_id, {deleted: true})
     },
     online() {
-        clients.setOnline()
+        ui.setOnline()
     },
     onOffline(data: OfflineEventData) {
-        clients.setOffline(data.message)
+        console.log(data)
+        ui.setOffline(data.message)
     },
     async friendPoke(data: FriendPokeEventData) {
+        console.log(data)
         const roomId = data.operator_id == bot.uin ? data.user_id : data.operator_id
         const room = await storage.getRoom(roomId)
         if (room) {
@@ -161,13 +198,14 @@ const eventHandlers = {
                 system: true,
                 time: data.time * 1000,
             }
-            clients.addMessage(roomId, message)
-            clients.updateRoom(room)
+            ui.addMessage(roomId, message)
+            ui.updateRoom(room)
             storage.updateRoom(room.roomId, room)
             storage.addMessage(roomId, message)
         }
     },
     async groupPoke(data: GroupPokeEventData) {
+        console.log(data)
         const room = await storage.getRoom(-data.group_id)
         if (room) {
             room.utime = data.time * 1000
@@ -198,13 +236,14 @@ const eventHandlers = {
                 system: true,
                 time: data.time * 1000,
             }
-            clients.addMessage(room.roomId, message)
-            clients.updateRoom(room)
+            ui.addMessage(room.roomId, message)
+            ui.updateRoom(room)
             storage.updateRoom(room.roomId, room)
             storage.addMessage(room.roomId, message)
         }
     },
     async groupMemberIncrease(data: MemberIncreaseEventData) {
+        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
@@ -220,10 +259,11 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
-        clients.addMessage(roomId, message)
+        ui.addMessage(roomId, message)
         await storage.addMessage(roomId, message)
     },
     async groupMemberDecrease(data: MemberDecreaseEventData) {
+        console.log(data)
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
@@ -247,65 +287,112 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
-        clients.addMessage(roomId, message)
+        ui.addMessage(roomId, message)
         await storage.addMessage(roomId, message)
     },
 }
 const loginHandlers = {
+    slider(data) {
+        console.log(data)
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        })
+        const inject = fs.readFileSync(
+            path.join(getStaticPath(), '/sliderinj.js'),
+            'utf-8',
+        )
+        console.log(inject)
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(inject)
+        })
+        veriWin.loadURL(data.url, {
+            userAgent:
+                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712',
+        })
+    },
+    onErr(data) {
+        console.log(data)
+        sendToLoginWindow('error', data.message)
+    },
     async onSucceed() {
         if (!loggedIn) {
+            //不是二次登录
+            loggedIn = true
+            //save account info
+            getConfig().account = loginForm
+            saveConfigFile()
+            //登录完成之后的初始化操作
             await initStorage()
+            await loadMainWindow()
+            createTray()
             attachEventHandler()
-            setInterval(adapter.sendOnlineData, 1000 * 60)
-            setInterval(async () => {
-                clients.message('获取好友历史消息')
-                const rooms = await storage.getAllRooms()
-                for (const i of rooms) {
-                    if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
-                    const roomId = i.roomId
-                    if (roomId < 0) continue
-                    let buffer: Buffer
-                    let uid = roomId
-                    if (roomId < 0) {
-                        buffer = Buffer.alloc(21)
-                        uid = -uid
-                    } else buffer = Buffer.alloc(17)
-                    buffer.writeUInt32BE(uid, 0)
-                    await adapter.fetchHistory(buffer.toString('base64'), roomId)
-                    await sleep(500)
-                }
-            }, 1000 * 60 * 60 * 12)
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
-        console.log('上线成功')
-
-        await sleep(3000)
-        console.log('正在获取历史消息')
-        {
-            const rooms = await storage.getAllRooms()
-            for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
-                const roomId = i.roomId
-                let buffer: Buffer
-                let uid = roomId
-                if (roomId < 0) {
-                    buffer = Buffer.alloc(21)
-                    uid = -uid
-                } else buffer = Buffer.alloc(17)
-                buffer.writeUInt32BE(uid, 0)
-                adapter.fetchHistory(buffer.toString('base64'), roomId)
-                await sleep(500)
-            }
-        }
+        await updateAppMenu()
+        await updateTrayIcon()
+    },
+    verify(data) {
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+            },
+        })
+        veriWin.on('close', () => {
+            bot.login(loginForm.password)
+        })
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(
+                'mqq.invoke=function(a, b, c){if(b==\'closeWebViews\'){window.close();}}',
+            )
+        })
+        veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
     },
 }
 //endregion
 //region utility functions
 const initStorage = async () => {
     try {
-        storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+        switch (loginForm.storageType) {
+            case 'mdb':
+                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                break
+            case 'redis':
+                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                break
+            case 'sqlite':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'sqlite3', {
+                    dataPath: app.getPath('userData'),
+                })
+                break
+            case 'mysql':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'mysql', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            case 'pg':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'pg', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            default:
+                break
+        }
         await storage.connect()
         storage.getAllRooms()
             .then(e => {
@@ -320,7 +407,14 @@ const initStorage = async () => {
             })
     } catch (err) {
         console.log(err)
-        console.log('无法连接数据库')
+        getConfig().account.autologin = false
+        saveConfigFile()
+        await dialog.showMessageBox(getMainWindow(), {
+            title: '错误',
+            message: '无法连接数据库',
+            type: 'error',
+        })
+        app.quit()
     }
 }
 const attachEventHandler = () => {
@@ -335,12 +429,24 @@ const attachEventHandler = () => {
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
 }
 const attachLoginHandler = () => {
+    bot.on('system.login.slider', loginHandlers.slider)
+    bot.on('system.login.error', loginHandlers.onErr)
     bot.on('system.online', loginHandlers.onSucceed)
+    bot.on('system.login.device', loginHandlers.verify)
 }
+
 //endregion
 
-const adapter = {
-    async getFriendsFallback(cb) {
+interface OicqAdapter extends Adapter {
+    getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
+
+    stopFetching: boolean
+
+    getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
+}
+
+const adapter: OicqAdapter = {
+    async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
         let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
         const friendsAll: SearchableFriend[] = []
@@ -354,35 +460,42 @@ const adapter = {
             friendsAll.push(f)
             iterF = friends.next()
         }
-        cb(friendsAll)
+        return friendsAll
     },
-    getIgnoredChats(resolve) {
-        resolve(storage.getIgnoredChats())
+    async sendOnlineData() {
+        ui.sendOnlineData({
+            online: bot.getStatus().data.online,
+            nick: bot.nickname,
+            uin: bot.uin,
+            priority: getConfig().priority,
+        })
+        ui.setAllRooms(await storage.getAllRooms())
+    },
+    getIgnoredChats(): Promise<IgnoreChatInfo[]> {
+        return storage.getIgnoredChats()
     },
     removeIgnoredChat(roomId: number): any {
         return storage.removeIgnoredChat(roomId)
     },
-    async getCookies(domain: CookiesDomain, resolve) {
-        try {
-            resolve((await bot.getCookies(domain)).data.cookies)
-        } catch (e) {
-            resolve('')
-        }
+    async getCookies(domain: CookiesDomain) {
+        return (await bot.getCookies(domain)).data.cookies
     },
-    //roomId 和 room 必有一个
     async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at}: SendMessageParams) {
+        if (!room && !roomId) {
+            roomId = ui.getSelectedRoomId()
+            room = await storage.getRoom(roomId)
+        }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && file.type && !file.type.includes('image')) {
-            // //群文件
-            // if (roomId > 0) {
-            //     clients.messageError('暂时无法向好友发送文件')
-            //     return
-            // }
-            // const gfs = bot.acquireGfs(-roomId)
-            // gfs.upload(file.path).then(ui.closeLoading)
-            // ui.message('文件上传中')
-            clients.messageError('Not implicated')
+            //群文件
+            if (roomId > 0) {
+                ui.messageError('暂时无法向好友发送文件')
+                return
+            }
+            const gfs = bot.acquireGfs(-roomId)
+            gfs.upload(file.path).then(ui.closeLoading)
+            ui.message('文件上传中')
             return
         }
 
@@ -395,7 +508,7 @@ const adapter = {
             date: formatDate('dd/MM/yyyy'),
         }
 
-        const chain = []
+        const chain: MessageElem[] = []
 
         if (replyMessage) {
             message.replyMessage = {
@@ -430,6 +543,7 @@ const adapter = {
                 }
                 splitContent = newParts
             }
+            console.log(splitContent)
             for (const part of splitContent) {
                 const atInfo = at.find(e => e.text === part)
                 chain.push(atInfo ? {
@@ -486,15 +600,16 @@ const adapter = {
         if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true)
         else data = await bot.sendGroupMsg(-roomId, chain, true)
 
-        clients.closeLoading()
+        ui.closeLoading()
         if (data.error) {
-            clients.notifyError({
+            ui.notifyError({
                 title: 'Failed to send',
                 message: data.error.message,
             })
             return
         }
         if (roomId > 0) {
+            console.log(data)
             room.lastMessage = {
                 content,
                 timestamp: formatDate('hh:mm'),
@@ -503,8 +618,8 @@ const adapter = {
             message._id = data.data.message_id
             room.utime = new Date().getTime()
             message.time = new Date().getTime()
-            clients.updateRoom(room)
-            clients.addMessage(room.roomId, message)
+            ui.updateRoom(room)
+            ui.addMessage(room.roomId, message)
             storage.addMessage(roomId, message)
             storage.updateRoom(room.roomId, {
                 utime: room.utime,
@@ -515,15 +630,17 @@ const adapter = {
     createBot(form: LoginForm) {
         bot = createClient(Number(form.username), {
             platform: Number(form.protocol),
+            data_dir: path.join(app.getPath('userData'), '/data'),
             ignore_self: false,
             brief: true,
+            log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
         })
         bot.setMaxListeners(233)
         loginForm = form
         attachLoginHandler()
         bot.login(form.password)
     },
-    async getGroups(resolve) {
+    async getGroups() {
         const groups = bot.gl.values()
         let iterG = groups.next()
         const groupsAll = []
@@ -533,31 +650,34 @@ const adapter = {
             groupsAll.push(f)
             iterG = groups.next()
         }
-        resolve(groupsAll)
+        return groupsAll
     },
-    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
+    fetchMessages(roomId: number, offset: number) {
         if (!offset) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
-            })
+            }).then(updateTrayIcon)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
                 if (group)
-                    client.emit('setShutUp', !!group.shutup_time_me)
+                    ui.setShutUp(!!group.shutup_time_me)
                 else {
-                    client.emit('setShutUp', true)
-                    client.emit('message', '你已经不是群成员了')
+                    ui.setShutUp(true)
+                    ui.message('你已经不是群成员了')
                 }
             } else if (roomId === bot.uin) {
-                client.emit('setShutUp', true)
+                ui.setShutUp(true)
             } else {
-                client.emit('setShutUp', false)
+                ui.setShutUp(false)
             }
         }
         currentLoadedMessagesCount = offset + 20
-        callback(await storage.fetchMessages(roomId, offset, 20))
+        return storage.fetchMessages(roomId, offset, 20)
+    },
+    sliderLogin(ticket: string) {
+        bot.sliderLogin(ticket)
     },
     reLogin() {
         bot.login()
@@ -574,7 +694,7 @@ const adapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    async getForwardMsg(resId: string, resolve) {
+    async getForwardMsg(resId: string): Promise<Message[]> {
         const history = await bot.getForwardMsg(resId)
         if (history.error) {
             console.log(history.error)
@@ -596,17 +716,19 @@ const adapter = {
                 data.message,
                 message,
                 {},
+                ui.getSelectedRoomId(),
             )
             messages.push(message)
         }
-        resolve(messages)
+        return messages
     },
 
     getUin: () => bot.uin,
-    getGroupFileMeta: (gin: number, fid: string, resolve) => resolve(bot.acquireGfs(gin).download(fid)),
-    getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
-    getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getFirstUnreadRoom(priority)),
-    getRoom: async (roomId: number, resolve) => resolve(await storage.getRoom(roomId)),
+    getGroupFileMeta: (gin: number, fid: string) => bot.acquireGfs(gin).download(fid),
+    getUnreadCount: async () => await storage.getUnreadCount(getConfig().priority),
+    getFirstUnreadRoom: async () => await storage.getFirstUnreadRoom(getConfig().priority),
+    getSelectedRoom: async () => await storage.getRoom(ui.getSelectedRoomId()),
+    getRoom: (roomId: number) => storage.getRoom(roomId),
 
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {
@@ -616,9 +738,16 @@ const adapter = {
     getMessageFromStorage: (roomId: number, msgId: string) => storage.getMessage(roomId, msgId),
     getMsg: (id: string) => bot.getMsg(id),
 
+    async clearCurrentRoomUnread() {
+        if (!ui.getSelectedRoomId())
+            return
+        ui.clearCurrentRoomUnread()
+        await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
+        await updateTrayIcon()
+    },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
         await storage.updateRoom(roomId, {priority})
-        clients.setAllRooms(await storage.getAllRooms())
+        ui.setAllRooms(await storage.getAllRooms())
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         await storage.updateRoom(roomId, {autoDownload})
@@ -628,7 +757,7 @@ const adapter = {
     },
     async pinRoom(roomId: number, pin: boolean) {
         await storage.updateRoom(roomId, {index: pin ? 1 : 0})
-        clients.setAllRooms(await storage.getAllRooms())
+        ui.setAllRooms(await storage.getAllRooms())
     },
     async ignoreChat(data: IgnoreChatInfo) {
         await storage.addIgnoredChat(data)
@@ -636,31 +765,40 @@ const adapter = {
     },
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
-        clients.setAllRooms(await storage.getAllRooms())
+        ui.setAllRooms(await storage.getAllRooms())
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)
+        console.log(res)
         if (!res.error) {
-            clients.deleteMessage(messageId)
+            ui.deleteMessage(messageId)
             await storage.updateMessage(roomId, messageId, {deleted: true})
         } else {
-            clients.notifyError({
+            ui.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,
             })
         }
     },
     async revealMessage(roomId: number, messageId: string | number) {
-        clients.revealMessage(messageId)
+        ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
-    async fetchHistory(messageId: string, roomId: number) {
+    stopFetching: false,
+    stopFetchingHistory() {
+        adapter.stopFetching = true
+    },
+    async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         const messages = []
         while (true) {
+            if (adapter.stopFetching) {
+                adapter.stopFetching = false
+                break
+            }
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
                 console.log(history.error)
-                clients.messageError('错误：' + history.error.message)
+                ui.messageError('错误：' + history.error.message)
                 break
             }
             const newMsgs: Message[] = []
@@ -688,30 +826,23 @@ const adapter = {
                 messages.push(message)
                 newMsgs.push(message)
             }
+            ui.addHistoryCount(newMsgs.length)
             if (history.data.length < 2) break
             messageId = newMsgs[0]._id as string
-            //todo 所有消息都过一遍，数据库里面都有才能结束
             const firstOwnMsg = roomId < 0 ?
                 newMsgs[0] : //群的话只要第一条消息就行
                 newMsgs.find(e => e.senderId == bot.uin)
             if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
         }
-        console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
-        clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
+        ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+        ui.clearHistoryCount()
         await storage.addMessages(roomId, messages)
-        storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
-            .then(messages => clients.setMessages(roomId, messages))
+        if (roomId === ui.getSelectedRoomId())
+            storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+                .then(ui.setMessages)
     },
-    async sendOnlineData() {
-        clients.sendOnlineData({
-            online: bot.getStatus().data.online,
-            nick: bot.nickname,
-            uin: bot.uin,
-            sysInfo: getSysInfo(),
-        })
-        clients.setAllRooms(await storage.getAllRooms())
-    },
-    async getRoamingStamp(no_cache: boolean | undefined, cb) {
+
+    async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
         const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data
         let stamps = []
 
@@ -724,7 +855,7 @@ const adapter = {
             stamps.push(stamp)
         }
 
-        cb(stamps)
+        return stamps
     },
 }
 

@@ -1,19 +1,13 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - main
-      - dev
-    tags:
-      - v*
+on: push
 
 jobs:
   install:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
 
     steps:
       - uses: actions/checkout@v2
@@ -23,7 +17,7 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: Yarn install
         run: yarn install
@@ -32,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     outputs:
       version: ${{ steps.version.outputs.value }}
     steps:
@@ -42,14 +36,14 @@ jobs:
         id: version
         uses: ashley-taylor/read-json-property-action@v1.0
         with:
-          path: ./electron-qq/package.json
+          path: ./icalingua/package.json
           property: version
 
   arch-artifacts:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -65,7 +59,7 @@ jobs:
     needs: install
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -74,7 +68,7 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: build
         run: yarn build:ci
@@ -83,7 +77,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: dist
-          path: electron-qq/dist
+          path: icalingua/dist
           if-no-files-found: error
 
   # deb rpm appimage 之类的文件可以待会儿再构建，现在拿到 app.asar 之后就能构建 arch 包了
@@ -92,7 +86,7 @@ jobs:
     needs: build-dist-bundle
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -101,13 +95,13 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
         with:
           name: dist
-          path: electron-qq/dist
+          path: icalingua/dist
 
       - name: build native modules
         run: yarn build:electron install-app-deps
@@ -119,14 +113,14 @@ jobs:
         name: upload app-x86_64.asar
         with:
           name: app-x86_64.asar
-          path: electron-qq/build/linux-unpacked/resources/app.asar
+          path: icalingua/build/linux-unpacked/resources/app.asar
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         name: upload x86_64
         with:
           name: x86_64-unpacked
-          path: electron-qq/build/linux-unpacked
+          path: icalingua/build/linux-unpacked
           if-no-files-found: error
 
   build-ia32:
@@ -134,7 +128,7 @@ jobs:
     needs: build-dist-bundle
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -143,13 +137,13 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
         with:
           name: dist
-          path: electron-qq/dist
+          path: icalingua/dist
 
       - name: Install gcc-multilib
         run: |
@@ -167,14 +161,14 @@ jobs:
         name: upload app.asar
         with:
           name: app-ia32.asar
-          path: electron-qq/build/linux-ia32-unpacked/resources/app.asar
+          path: icalingua/build/linux-ia32-unpacked/resources/app.asar
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         name: upload unpacked
         with:
           name: ia32-unpacked
-          path: electron-qq/build/linux-ia32-unpacked
+          path: icalingua/build/linux-ia32-unpacked
           if-no-files-found: error
 
   build-arm64:
@@ -182,7 +176,7 @@ jobs:
     needs: build-dist-bundle
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -191,13 +185,13 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
         with:
           name: dist
-          path: electron-qq/dist
+          path: icalingua/dist
 
       - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
@@ -206,7 +200,7 @@ jobs:
           distro: archarm_latest
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}/electron-qq:/build"
+            --volume "${PWD}/icalingua:/build"
           install: |
             pacman -Sy --noconfirm yarn python2 python base-devel
           run: |
@@ -223,14 +217,14 @@ jobs:
         name: upload app.asar
         with:
           name: app-arm64.asar
-          path: electron-qq/build/linux-arm64-unpacked/resources/app.asar
+          path: icalingua/build/linux-arm64-unpacked/resources/app.asar
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         name: upload unpacked
         with:
           name: arm64-unpacked
-          path: electron-qq/build/linux-arm64-unpacked
+          path: icalingua/build/linux-arm64-unpacked
           if-no-files-found: error
 
   pack-archpkg-x86_64:
@@ -249,7 +243,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('x86_64')
@@ -313,7 +307,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('i686')
@@ -377,7 +371,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('aarch64')
@@ -438,7 +432,7 @@ jobs:
           - tar.xz
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -447,16 +441,16 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get built files
         uses: actions/download-artifact@v2
         with:
           name: x86_64-unpacked
-          path: electron-qq/unpacked
+          path: icalingua/unpacked
 
       - name: fix premissions
-        run: chmod +x unpacked/electron-qq
+        run: chmod +x unpacked/icalingua
 
       - name: pack
         run: yarn build:electron --pd unpacked -l ${{ matrix.package }}
@@ -465,7 +459,7 @@ jobs:
         name: upload ${{ matrix.package }}
         with:
           name: x86_64.${{ matrix.package }}
-          path: electron-qq/build/*.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
           if-no-files-found: error
 
   pack-otherpkg-ia32:
@@ -480,7 +474,7 @@ jobs:
           - tar.xz
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -489,16 +483,16 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get built files
         uses: actions/download-artifact@v2
         with:
           name: ia32-unpacked
-          path: electron-qq/unpacked
+          path: icalingua/unpacked
 
       - name: fix premissions
-        run: chmod +x unpacked/electron-qq
+        run: chmod +x unpacked/icalingua
 
       - name: pack
         run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }}
@@ -507,7 +501,7 @@ jobs:
         name: upload ${{ matrix.package }}
         with:
           name: ia32.${{ matrix.package }}
-          path: electron-qq/build/*.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
           if-no-files-found: error
 
   pack-otherpkg-arm64:
@@ -522,7 +516,7 @@ jobs:
           - tar.xz
     defaults:
       run:
-        working-directory: electron-qq
+        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -531,16 +525,16 @@ jobs:
 
       - uses: zach-hill/gha-yarn-node-cache@1.1
         env:
-          WORKING_DIR: electron-qq
+          WORKING_DIR: icalingua
 
       - name: get built files
         uses: actions/download-artifact@v2
         with:
           name: arm64-unpacked
-          path: electron-qq/unpacked
+          path: icalingua/unpacked
 
       - name: fix premissions
-        run: chmod +x unpacked/electron-qq
+        run: chmod +x unpacked/icalingua
 
       - name: pack
         run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }}
@@ -549,7 +543,7 @@ jobs:
         name: upload ${{ matrix.package }}
         with:
           name: arm64.${{ matrix.package }}
-          path: electron-qq/build/*.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
           if-no-files-found: error
 
   cleanup-dist:
