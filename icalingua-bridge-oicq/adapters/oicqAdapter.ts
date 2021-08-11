@@ -22,8 +22,8 @@ import {Socket} from 'socket.io'
 import {broadcast} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
-import RoamingStamp from '../../electron-qq/src/types/RoamingStamp'
-import SearchableFriend from '../../electron-qq/src/types/SearchableFriend'
+import RoamingStamp from '../types/RoamingStamp'
+import SearchableFriend from '../types/SearchableFriend'
 
 let bot: Client
 let storage: MongoStorageProvider
