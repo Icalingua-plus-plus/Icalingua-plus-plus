@@ -107,8 +107,5 @@ const ipc = {
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
     },
-    fetchHistory(messageId: string | number, roomId?: number) {
-        ipcRenderer.send('fetchHistory', messageId, roomId)
-    }
 }
 export default ipc

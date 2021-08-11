@@ -72,6 +72,7 @@ ipcMain.on('sendMessage', (_, data) => {
     atCache.clear()
 })
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
+    offset === 0 && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
 })
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
@@ -105,4 +106,3 @@ ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())
-ipcMain.on('fetchHistory', (_, messageId, roomId) => adapter.fetchHistory(messageId, roomId))
