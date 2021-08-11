@@ -80,6 +80,9 @@ const ipc = {
     popupStickerMenu() {
         ipcRenderer.send('popupStickerMenu')
     },
+    popupStickerItemMenu(itemName: string) {
+        ipcRenderer.send('popupStickerItemMenu', itemName)
+    },
     popupContactMenu(remark?: string, name?: string, displayId?: number) {
         ipcRenderer.send('popupContactMenu', remark, name, displayId)
     },
