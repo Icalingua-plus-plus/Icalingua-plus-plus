@@ -307,7 +307,6 @@ const loginHandlers = {
             path.join(getStaticPath(), '/sliderinj.js'),
             'utf-8',
         )
-        console.log(inject)
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(inject)
         })
