@@ -249,7 +249,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('x86_64')
@@ -313,7 +313,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('i686')
@@ -377,7 +377,7 @@ jobs:
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
-            depends=('electron' 'ffmpeg')
+            depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('aarch64')
