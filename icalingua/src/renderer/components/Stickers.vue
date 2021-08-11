@@ -3,14 +3,16 @@
 		<div class="head">
 			<div class="title">
 				<a
-					@click="panel = 'stickers'"
+					@click="setPanel('stickers')"
 					:class="{ selected: panel === 'stickers' }"
 				>Stickers</a>
 				<a
-					@click="panel = 'remote'"
+					@click="setPanel('remote')"
 					:class="{ selected: panel === 'remote' }"
 				>Remote</a>
-				<a @click="panel = 'emojis'" :class="{ selected: panel === 'emojis' }"
+				<a
+					@click="setPanel('emojis')"
+					:class="{ selected: panel === 'emojis' }"
 				>Emojis</a>
 			</div>
 			<a @click="menu">
@@ -63,10 +65,12 @@ export default {
 			remote_pics: [],
 			pics: [],
 			dir: '',
-			panel: 'remote',
+			panel: '',
 		}
 	},
 	async created() {
+		this.panel = await ipc.getLastUsedStickerType()
+
 		// Remote Stickers
 		this.remote_pics = await ipc.getRoamingStamp()
 
@@ -93,6 +97,10 @@ export default {
 		},
 		menu: ipc.popupStickerMenu,
 		itemMenu: ipc.popupStickerItemMenu,
+		setPanel(type) {
+			this.panel = type
+			ipc.setLastUsedStickerType(type)
+		},
 	},
 }
 </script>

@@ -104,8 +104,14 @@ const ipc = {
     removeIgnoredChat(roomId: number) {
         ipcRenderer.send('removeIgnoredChat', roomId)
     },
+    setLastUsedStickerType(type: 'remote' | 'stickers' | 'emojis') {
+        ipcRenderer.send('setLastUsedStickerType', type)
+    },
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
+    },
+    async getLastUsedStickerType(): Promise<'remote' | 'stickers' | 'emojis'> {
+        return await ipcRenderer.invoke('getLastUsedStickerType')
     },
 }
 export default ipc
