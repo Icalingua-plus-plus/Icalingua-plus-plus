@@ -704,7 +704,7 @@ const adapter: OicqAdapter = {
             const data = history.data[i]
             const message: Message = {
                 senderId: data.user_id,
-                username: <string><unknown>data.nickname, //确信
+                username: data.nickname,
                 content: '',
                 timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
                 date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
