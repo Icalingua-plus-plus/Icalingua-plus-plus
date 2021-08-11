@@ -102,9 +102,10 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-							<span>正在获取历史消息... {{ historyCount }}
-									<button @click="stopFetchingHistory">就要这么多</button>
-								</span>
+							<span>
+								正在获取历史消息... {{ historyCount }}
+							</span>
+							<el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
 						</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
@@ -446,7 +447,7 @@ Chromium ${process.versions.chrome}`
 	}
 
 	span {
-		margin-left: 5px;
+		margin: 0 5px;
 	}
 }
 
