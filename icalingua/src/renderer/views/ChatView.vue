@@ -30,7 +30,7 @@
 				/>
 			</el-aside>
 			<el-main>
-				<Multipane>
+				<Multipane v-show="view !== 'kench'">
 					<!-- main chat view -->
 					<div :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
 						<TheRoomsPanel
@@ -38,21 +38,13 @@
 							:selected="selectedRoom"
 							:priority="priority"
 							@chroom="chroom"
-							v-show="view === 'chats'"
+              v-show="view === 'chats'"
 						/>
 
-						<TheContactsPanel
-							@dblclick="startChat"
-							v-if="view === 'contacts'"
-						/>
-
-						<div v-show="view === 'kench'">
-							<div style="background-color: #5bcffa; height: 20vh"/>
-							<div style="background-color: #f5abb9; height: 20vh"/>
-							<div style="background-color: #ffffff; height: 20vh"/>
-							<div style="background-color: #f5abb9; height: 20vh"/>
-							<div style="background-color: #5bcffa; height: 20vh"/>
-						</div>
+            <TheContactsPanel
+                @dblclick="startChat"
+                v-show="view === 'contacts'"
+            />
 					</div>
 					<MultipaneResizer/>
 					<div
@@ -110,10 +102,10 @@
 							 ">{{ sysInfo }}</pre>
 						<div class="getting-history" v-if="historyCount">
 							<div class="pace-activity"/>
-							<span>正在获取历史消息... {{ historyCount }}
+								<span>正在获取历史消息... {{ historyCount }}
 									<button @click="stopFetchingHistory">就要这么多</button>
 								</span>
-						</div>
+							</div>
 					</div>
 					<MultipaneResizer class="resize-next" v-show="panel"/>
 					<div
@@ -127,13 +119,20 @@
 								@send="sendSticker"
 								@close="panel = ''"
 								@selectEmoji="
-				                  $refs.room.message += $event.data;
-				                  $refs.room.focusTextarea();
-				                "
+                  $refs.room.message += $event.data;
+                  $refs.room.focusTextarea();
+                "
 							/>
 						</transition>
 					</div>
 				</Multipane>
+        <div v-show="view === 'kench'">
+          <div style="background-color: #5bcffa; height: 20vh"/>
+          <div style="background-color: #f5abb9; height: 20vh"/>
+          <div style="background-color: #ffffff; height: 20vh"/>
+          <div style="background-color: #f5abb9; height: 20vh"/>
+          <div style="background-color: #5bcffa; height: 20vh"/>
+        </div>
 			</el-main>
 		</el-container>
 		<el-dialog
@@ -155,8 +154,8 @@
 </template>
 
 <script lang="js">
-import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
-import Stickers from '../components/Stickers.vue'
+import Room from '../components/vac-mod/ChatWindow/Room/Room'
+import Stickers from '../components/Stickers'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import path from 'path'
@@ -226,15 +225,11 @@ export default {
 				window.close()
 			}
 			else if (e.key === 'Escape') {
-				if (this.$refs.room.messageReply)
-					this.$refs.room.resetMessage()
-				else {
-					this.selectedRoomId = 0
-					this.messages = []
-					this.panel = ''
-					ipc.setSelectedRoom(0, '')
-					document.title = 'Icalingua'
-				}
+				this.selectedRoomId = 0
+				this.messages = []
+				this.panel = ''
+				ipc.setSelectedRoom(0, '')
+				document.title = 'Icalingua'
 			}
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
@@ -341,22 +336,22 @@ Chromium ${process.versions.chrome}`
 			}
 			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
 		},
-		fetchMessage(reset) {
+		async fetchMessage(reset) {
 			if (reset) {
 				this.messagesLoaded = false
 				this.messages = []
 				this.selectedRoom.unreadCount = 0
 				this.selectedRoom.at = false
 			}
-			ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
-				.then(msgs2add => {
-					setTimeout(() => {
-						if (msgs2add.length) {
-							this.messages = [...msgs2add, ...this.messages]
-						}
-						else this.messagesLoaded = true
-					}, 0)
-				})
+			const msgs2add = await ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
+			setTimeout(() => {
+				if (msgs2add.length) {
+					this.messages = [...msgs2add, ...this.messages]
+				}
+				else this.messagesLoaded = true
+			}, 0)
+
+      return msgs2add[msgs2add.length-1]
 		},
 		openImage: ipc.downloadFileByMessageData,
 		sendSticker(url) {
@@ -380,7 +375,7 @@ Chromium ${process.versions.chrome}`
 			ipc.reLogin()
 		},
 		startChat(id, name) {
-			var room = this.rooms.find((e) => e.roomId == id)
+			let room = this.rooms.find((e) => e.roomId === id)
 			const avatar = getAvatarUrl(id)
 
 			if (room === undefined) {
@@ -392,7 +387,7 @@ Chromium ${process.versions.chrome}`
 			this.chroom(room)
 			this.view = 'chats'
 		},
-		chroom(room) {
+		async chroom(room) {
 			if ((typeof room) === 'number')
 				room = this.rooms.find(e => e.roomId === room)
 			if (!room) return
@@ -400,7 +395,9 @@ Chromium ${process.versions.chrome}`
 			this.selectedRoom.at = false
 			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
-			this.fetchMessage(true)
+
+      let messageId = (await this.fetchMessage(true))._id
+      ipc.fetchHistory(messageId)
 		},
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
@@ -416,7 +413,7 @@ Chromium ${process.versions.chrome}`
 		openForward: ipc.openForward,
 		stopFetchingHistory() {
 			ipc.stopFetchMessage()
-		},
+		}
 	},
 	computed: {
 		cssVars() {
