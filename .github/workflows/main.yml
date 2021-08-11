@@ -1,11 +1,6 @@
 name: CI
 
-on:
-  push:
-    branches:
-      - *
-    tags:
-      - v*
+on: push
 
 jobs:
   install:
