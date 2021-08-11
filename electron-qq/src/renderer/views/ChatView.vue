@@ -336,22 +336,22 @@ Chromium ${process.versions.chrome}`
 			}
 			ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
 		},
-		fetchMessage(reset) {
+		async fetchMessage(reset) {
 			if (reset) {
 				this.messagesLoaded = false
 				this.messages = []
 				this.selectedRoom.unreadCount = 0
 				this.selectedRoom.at = false
 			}
-			ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
-				.then(msgs2add => {
-					setTimeout(() => {
-						if (msgs2add.length) {
-							this.messages = [...msgs2add, ...this.messages]
-						}
-						else this.messagesLoaded = true
-					}, 0)
-				})
+			const msgs2add = await ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
+			setTimeout(() => {
+				if (msgs2add.length) {
+					this.messages = [...msgs2add, ...this.messages]
+				}
+				else this.messagesLoaded = true
+			}, 0)
+
+      return msgs2add[msgs2add.length-1]
 		},
 		openImage: ipc.downloadFileByMessageData,
 		sendSticker(url) {
@@ -375,7 +375,7 @@ Chromium ${process.versions.chrome}`
 			ipc.reLogin()
 		},
 		startChat(id, name) {
-			var room = this.rooms.find((e) => e.roomId == id)
+			let room = this.rooms.find((e) => e.roomId === id)
 			const avatar = getAvatarUrl(id)
 
 			if (room === undefined) {
@@ -387,7 +387,7 @@ Chromium ${process.versions.chrome}`
 			this.chroom(room)
 			this.view = 'chats'
 		},
-		chroom(room) {
+		async chroom(room) {
 			if ((typeof room) === 'number')
 				room = this.rooms.find(e => e.roomId === room)
 			if (!room) return
@@ -395,7 +395,9 @@ Chromium ${process.versions.chrome}`
 			this.selectedRoom.at = false
 			this.selectedRoomId = room.roomId
 			ipc.setSelectedRoom(room.roomId, room.roomName)
-      this.fetchMessage(true)
+
+      let messageId = (await this.fetchMessage(true))._id
+      ipc.fetchHistory(messageId)
 		},
 		downloadImage: ipc.downloadImage,
 		pokeGroup(uin) {
