@@ -63,7 +63,7 @@ export default {
 			remote_pics: [],
 			pics: [],
 			dir: '',
-			panel: 'stickers',
+			panel: 'remote',
 		}
 	},
 	async created() {
