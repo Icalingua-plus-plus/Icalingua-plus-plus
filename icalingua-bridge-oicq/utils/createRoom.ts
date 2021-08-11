@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/createRoom.ts
+../../icalingua/src/utils/createRoom.ts

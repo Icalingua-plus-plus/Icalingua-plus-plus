@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/mime.ts
+../../icalingua/src/utils/mime.ts
