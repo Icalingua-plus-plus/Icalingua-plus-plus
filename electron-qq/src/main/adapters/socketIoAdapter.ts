@@ -229,7 +229,7 @@ const adapter: Adapter = {
     async sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room)
             data.roomId = ui.getSelectedRoomId()
-        if (data.imgpath) {
+        if (data.imgpath && !/^https?:\/\//.test(data.imgpath)) {
             const fileContent = fs.readFileSync(data.imgpath)
             const type = await fileType.fromBuffer(fileContent)
             data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')

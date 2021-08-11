@@ -42,7 +42,7 @@
   width: 10px;
   height: 100%;
   margin-left: -10px;
-  left: 5px;
+  left: 8px;
   cursor: col-resize;
 }
 </style>
