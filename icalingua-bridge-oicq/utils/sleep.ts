@@ -1,1 +1,1 @@
-../../electron-qq/src/utils/sleep.ts
+../../icalingua/src/utils/sleep.ts
