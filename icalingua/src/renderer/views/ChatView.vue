@@ -120,9 +120,9 @@
 								@send="sendSticker"
 								@close="panel = ''"
 								@selectEmoji="
-                  $refs.room.message += $event.data;
-                  $refs.room.focusTextarea();
-                "
+				                  $refs.room.message += $event.data;
+				                  $refs.room.focusTextarea();
+				                "
 							/>
 						</transition>
 					</div>
@@ -226,11 +226,15 @@ export default {
 				window.close()
 			}
 			else if (e.key === 'Escape') {
-				this.selectedRoomId = 0
-				this.messages = []
-				this.panel = ''
-				ipc.setSelectedRoom(0, '')
-				document.title = 'Icalingua'
+				if (this.$refs.room.messageReply)
+					this.$refs.room.resetMessage()
+				else {
+					this.selectedRoomId = 0
+					this.messages = []
+					this.panel = ''
+					ipc.setSelectedRoom(0, '')
+					document.title = 'Icalingua'
+				}
 			}
 			else if (e.key === 'Tab') {
 				let unreadRoom = this.rooms.find(
