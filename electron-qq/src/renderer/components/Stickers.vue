@@ -3,13 +3,13 @@
 		<div class="head">
 			<div class="title">
 				<a
-					@click="panel = 'remote'"
-					:class="{ selected: panel === 'remote' }"
-				>Remote</a>
-				<a
 					@click="panel = 'stickers'"
 					:class="{ selected: panel === 'stickers' }"
 				>Stickers</a>
+				<a
+					@click="panel = 'remote'"
+					:class="{ selected: panel === 'remote' }"
+				>Remote</a>
 				<a @click="panel = 'emojis'" :class="{ selected: panel === 'emojis' }"
 				>Emojis</a>
 			</div>
@@ -24,7 +24,7 @@
 				<p>No remote stickers found</p>
 			</center>
 			<div class="grid" v-show="remote_pics.length">
-				<div v-for="i in remote_pics" :key="i" v-if="i[0]!=='.'">
+				<div v-for="i in remote_pics" :key="i">
 					<img :src="i.url" @click="picClick(i.url)"/>
 				</div>
 			</div>
@@ -63,7 +63,7 @@ export default {
 			remote_pics: [],
 			pics: [],
 			dir: '',
-			panel: 'remote',
+			panel: 'stickers',
 		}
 	},
 	async created() {
