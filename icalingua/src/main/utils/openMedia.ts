@@ -11,7 +11,6 @@ try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'video/mp4']).toString()
     for (const i of VIEWERS) {
         if (xdgDefault.includes(i)) {
-            console.log('xdg', i)
             viewer = i
             break
         }
@@ -23,7 +22,6 @@ if (!viewer) {
     for (const i of VIEWERS) {
         const resolved = which.sync(i, {nothrow: true})
         if (resolved) {
-            console.log('which', i)
             viewer = i
             break
         }
