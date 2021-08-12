@@ -4151,6 +4151,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"csv-writer@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "csv-writer@npm:1.6.0"
+  checksum: 2e62cb46f00b674f0710eb90586000601f3a467aabe529464dcb402d453a1322a716d7522ef3282dd6551f1059305c7dd3db49def1201caaf340597dcf7b4c7e
+  languageName: node
+  linkType: hard
+
 "cyclist@npm:^1.0.1":
   version: 1.0.1
   resolution: "cyclist@npm:1.0.1"
@@ -6599,6 +6606,7 @@ fsevents@~2.3.1:
     copy-webpack-plugin: ^4.5.1
     cross-env: ^5.1.6
     css-loader: ^0.28.11
+    csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
     electron: ^13.1.2

@@ -41,6 +41,7 @@ import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import fs from 'fs'
 import atCache from '../utils/atCache'
+import exportContacts from '../utils/exportContacts'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -290,6 +291,19 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: 'GitHub',
                 click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
+            }),
+            new MenuItem({
+                label: '数据导出',
+                submenu: [
+                    {
+                        label: '好友列表',
+                        click: () => exportContacts('friend'),
+                    },
+                    {
+                        label: '群列表',
+                        click: () => exportContacts('group'),
+                    },
+                ],
             }),
             new MenuItem({
                 label: '重新加载',
