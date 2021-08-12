@@ -109,3 +109,12 @@ build
 
 # SQLite 数据库文件
 eqq*.db
+
+# Yarn2
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

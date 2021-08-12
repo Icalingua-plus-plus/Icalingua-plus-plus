@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -66,7 +66,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -93,7 +93,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -135,7 +135,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -183,7 +183,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -439,7 +439,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -481,7 +481,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -523,7 +523,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: zach-hill/gha-yarn-node-cache@1.1
+      - uses: Clansty/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
