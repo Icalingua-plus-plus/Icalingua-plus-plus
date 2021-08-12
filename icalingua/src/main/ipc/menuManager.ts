@@ -704,7 +704,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         },
     ]).popup({window: getMainWindow()})
 })
-ipcMain.on('popupAvatarMenu', (_, message: Message) => {
+ipcMain.on('popupAvatarMenu', (e, message: Message) => {
     const menu = Menu.buildFromTemplate([
         {
             label: `复制 "${message.username}"`,
@@ -729,16 +729,17 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
             }),
         )
     }
-    menu.append(new MenuItem({
-        label: 'at',
-        click() {
-            atCache.push({
-                text: '@' + message.username,
-                id: message.senderId,
-            })
-            ui.addMessageText('@' + message.username + ' ')
-        },
-    }))
+    if (e.sender === getMainWindow().webContents)
+        menu.append(new MenuItem({
+            label: 'at',
+            click() {
+                atCache.push({
+                    text: '@' + message.username,
+                    id: message.senderId,
+                })
+                ui.addMessageText('@' + message.username + ' ')
+            },
+        }))
     menu.append(
         new MenuItem({
             label: `查看头像`,
