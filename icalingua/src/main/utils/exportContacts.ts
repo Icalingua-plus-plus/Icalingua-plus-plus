@@ -20,9 +20,14 @@ export default async (type: 'friend' | 'group') => {
     })
     if (!savePath) return
     const exportFunc = type === 'friend' ? exportFriendsAsCsv : exportGroupsAsCsv
-    if (await exportFunc(savePath))
-        ui.messageSuccess('导出成功')
-    else ui.messageError('导出失败')
+    try {
+        if (await exportFunc(savePath))
+            ui.messageSuccess('导出成功')
+        else ui.messageError('导出失败')
+    } catch (e) {
+        errorHandler(e, true)
+        ui.messageError(`导出失败: ${e}`)
+    }
 }
 
 //region 好友
@@ -68,12 +73,7 @@ const exportFriendsAsCsv = async (savePath: string) => {
         }
     }
     //写出 csv
-    try {
-        return await writeCsvData(friendsHeader, friendsExport, savePath)
-    } catch (e) {
-        errorHandler(e, true)
-        return false
-    }
+    return await writeCsvData(friendsHeader, friendsExport, savePath)
 }
 //endregion
 
