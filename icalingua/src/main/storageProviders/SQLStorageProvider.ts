@@ -79,7 +79,7 @@ export default class SQLStorageProvider implements StorageProvider {
     }
   }
 
-  private roomConToDB(room: Room): Record<string, any> {
+  private roomConToDB(room: Partial<Room>): Record<string, any> {
     try {
       if (room) {
         return {
@@ -158,7 +158,7 @@ export default class SQLStorageProvider implements StorageProvider {
         case 0:
           await upg0to1(this.db);
         case 1:
-          await upg1to2(this.db)
+          await upg1to2(this.db);
         default:
           break;
       }
@@ -283,13 +283,14 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async addRoom(room: Room): Promise<any> {
     try {
+      await this.createMsgTable(room.roomId);
       return await this.db(`rooms`).insert(this.roomConToDB(room));
     } catch (e) {
       errorHandler(e);
     }
   }
 
-  async updateRoom(roomId: number, room: Room): Promise<any> {
+  async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
     try {
       await this.db(`rooms`)
         .where("roomId", "=", roomId)
@@ -408,7 +409,7 @@ export default class SQLStorageProvider implements StorageProvider {
   async updateMessage(
     roomId: number,
     messageId: string | number,
-    message: object
+    message: Partial<Message>
   ): Promise<any> {
     try {
       await this.db<Message>(`msg${roomId}`)
@@ -439,9 +440,11 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async getMessage(roomId: number, messageId: string): Promise<Message> {
     try {
+      await this.createMsgTable(roomId);
       const message = await this.db<Message>(`msg${roomId}`)
         .where("_id", "=", messageId)
         .select("*");
+      if (message.length === 0) return null;
       return this.msgConFromDB(message[0]);
     } catch (e) {
       errorHandler(e);
@@ -450,6 +453,7 @@ export default class SQLStorageProvider implements StorageProvider {
 
   async addMessages(roomId: number, messages: Message[]): Promise<any> {
     try {
+      await this.createMsgTable(roomId);
       const msgToInsert = messages.map((message) => this.msgConToDB(message));
       const chunkedMessages = lodash.chunk(msgToInsert, 200);
       const pAry = chunkedMessages.map(async (chunkedMessage) => {
