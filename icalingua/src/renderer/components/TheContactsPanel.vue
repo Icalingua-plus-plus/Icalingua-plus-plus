@@ -83,12 +83,12 @@ export default {
 		},
 	},
 	created() {
-		ipcRenderer.invoke('getFriendsAndGroups')
+		setTimeout(() => ipcRenderer.invoke('getFriendsAndGroups')
 			.then(({friends, groups, friendsFallback}) => {
 				this.friendsAll = friends ? Object.freeze(friends) : null
 				this.groupsAll = Object.freeze(groups)
 				friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-			})
+			}), 10 * 1000)
 	},
 	methods: {
 		refresh() {
@@ -111,15 +111,15 @@ export default {
 }
 
 .el-collapse-item__content {
-  padding-bottom: 0;
+	padding-bottom: 0;
 }
 
 .el-collapse-item__wrap > div > div:last-child > div > div {
-  border-bottom: unset !important;
+	border-bottom: unset !important;
 }
 
 .el-tabs__header {
-  margin: unset !important;
+	margin: unset !important;
 }
 
 .el-tabs__item {
