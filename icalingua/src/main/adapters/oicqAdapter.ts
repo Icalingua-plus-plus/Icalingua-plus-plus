@@ -799,7 +799,8 @@ const adapter: OicqAdapter = {
                 const history = await bot.getChatHistory(messageId)
                 if (history.error) {
                     errorHandler(history.error, true)
-                    ui.messageError('错误：' + history.error.message)
+                    if (history.error.message !== 'msg not exists')
+                        ui.messageError('错误：' + history.error.message)
                     done = true
                     break
                 }
