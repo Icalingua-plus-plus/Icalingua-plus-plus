@@ -21,8 +21,8 @@ else if (getConfig().adapter === 'socketIo')
 
 export const {
     sendMessage, createBot,
-    getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom,
-    getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData,
+    getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
+    getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter
@@ -54,7 +54,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => {
-    const groups = await adapter.getGroups()
+    const groups = await getGroups()
     let friends: GroupOfFriend[]
     let friendsFallback: SearchableFriend[]
     try {
@@ -62,7 +62,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
     } catch (e) {
         errorHandler(e, true)
         friends = null
-        friendsFallback = await adapter.getFriendsFallback()
+        friendsFallback = await getFriendsFallback()
     }
     return {groups, friends, friendsFallback}
 })
