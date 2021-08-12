@@ -819,14 +819,18 @@ const adapter: OicqAdapter = {
                         _id: data.message_id,
                         time: data.time * 1000,
                     }
-                    await processMessage(
-                        data.message,
-                        message,
-                        {},
-                        roomId,
-                    )
-                    messages.push(message)
-                    newMsgs.push(message)
+                    try {
+                        await processMessage(
+                            data.message,
+                            message,
+                            {},
+                            roomId,
+                        )
+                        messages.push(message)
+                        newMsgs.push(message)
+                    } catch (e) {
+                        errorHandler(e, true)
+                    }
                 }
                 ui.addHistoryCount(newMsgs.length)
                 if (history.data.length < 2) {
