@@ -62,6 +62,7 @@
     "winston-daily-rotate-file": "^4.5.5"
   },
   "devDependencies": {
+    "csv-writer": "^1.6.0",
     "@types/fluent-ffmpeg": "^2.1.18",
     "@types/ioredis": "^4.26.4",
     "@types/lovefield": "^2.1.3",
