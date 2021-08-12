@@ -44,6 +44,7 @@ let loginForm: LoginForm
 
 let currentLoadedMessagesCount = 0
 let loggedIn = false
+let stopFetching = false
 
 //region event handlers
 const eventHandlers = {
@@ -440,8 +441,6 @@ const attachLoginHandler = () => {
 interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
-    stopFetching: boolean
-
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 }
 
@@ -784,17 +783,16 @@ const adapter: OicqAdapter = {
         ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
-    stopFetching: false,
     stopFetchingHistory() {
-        adapter.stopFetching = true
+        stopFetching = true
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         const fetchLoop = async (limit?: number) => {
             const messages = []
             let done = false
             while (true) {
-                if (adapter.stopFetching) {
-                    adapter.stopFetching = false
+                if (stopFetching) {
+                    stopFetching = false
                     done = true
                     break
                 }
@@ -853,11 +851,10 @@ const adapter: OicqAdapter = {
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
-        if(done){
+        if (done) {
             ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
-        }
-        else{
+        } else {
             ui.message(`已拉取 ${messages.length} 条消息，正在后台继续拉取`)
             {
                 const {messages} = await fetchLoop()
