@@ -81,10 +81,16 @@ const exportFriendsAsCsv = async (savePath: string) => {
 const groupsHeader: Array<{ id: string, title: string }> = [
     {id: 'gin', title: '群号'},
     {id: 'name', title: '名称'},
+    {id: 'memberCount', title: '成员数'},
+    {id: 'joinTime', title: '加入时间'},
+    {id: 'owner', title: '群主'},
 ]
 type groupExport = {
     gin: number,
     name: string,
+    memberCount: number,
+    joinTime: string,
+    owner: number
 }
 
 const exportGroupsAsCsv = async (savePath: string) => {
@@ -94,6 +100,9 @@ const exportGroupsAsCsv = async (savePath: string) => {
         groupsExport.push({
             gin: g.group_id,
             name: g.group_name,
+            memberCount: g.member_count,
+            owner: g.owner_id,
+            joinTime: formatDate('yyyy-MM-dd', new Date(g.last_join_time * 1000)),
         })
     }
     //写出 csv
