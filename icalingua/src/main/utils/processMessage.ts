@@ -9,6 +9,7 @@ import BilibiliMiniApp from '../../types/BilibiliMiniApp'
 import StructMessageCard from '../../types/StructMessageCard'
 import silkDecode from './silkDecode'
 import errorHandler from './errorHandler'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -160,6 +161,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'xml':
                 message.code = m.data.data
                 const urlRegex = /url="([^"]+)"/
+                const md5ImageRegex = /image md5="([A-F\d]{32})"/
                 if (urlRegex.test(m.data.data))
                     appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
                 if (m.data.data.includes('action="viewMultiMsg"')) {
@@ -175,6 +177,14 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     appurl = appurl.replace(/&amp;/g, '&')
                     lastMessage.content = appurl
                     message.content = appurl
+                } else if (md5ImageRegex.test(m.data.data)) {
+                    const imgMd5 = appurl = m.data.data.match(md5ImageRegex)[1]
+                    lastMessage.content += '[Image]'
+                    url = getImageUrlByMd5(imgMd5)
+                    message.file = {
+                        type: 'image/jpeg',
+                        url,
+                    }
                 } else {
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
