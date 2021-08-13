@@ -26,7 +26,7 @@ import {
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus, getUin, getCookies,
+    setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -42,6 +42,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import fs from 'fs'
 import atCache from '../utils/atCache'
 import exportContacts from '../utils/exportContacts'
+import querystring from 'querystring'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -223,6 +224,24 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://qun.qq.com/interactive/qunhonor?gc=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '我的群昵称',
+            async click() {
+                const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
+                const win = new BrowserWindow({
+                    height: 170,
+                    width: 600,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
+                })
+                await win.loadURL(getWinUrl() + '#/groupNickEdit/' +
+                    -room.roomId + '/' + querystring.escape(room.roomName) + '/' +
+                    querystring.escape(memberInfo.card || memberInfo.nickname))
             },
         }))
     } else {

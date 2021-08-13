@@ -5,7 +5,7 @@ import {
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MessageElem,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
@@ -37,6 +37,7 @@ import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
 import {IteratorCallback} from 'mongodb'
 import errorHandler from '../utils/errorHandler'
+import {getUin} from '../ipc/botAndStorage'
 
 let bot: Client
 let storage: StorageProvider
@@ -445,6 +446,12 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    setGroupNick(group: number, nick: string): any {
+        return bot.setGroupCard(group, getUin(), nick)
+    },
+    async getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
+        return (await bot.getGroupMemberInfo(group, member, true)).data
+    },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
         let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
