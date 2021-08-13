@@ -41,7 +41,7 @@ const openImage = (url: string, external: boolean = false) => {
             autoHideMenuBar: true,
         })
         viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
-        viewerWindow.maximize()
+        //viewerWindow.maximize()
     } else if (viewer) {
         execFile(viewer, [url])
     } else {
