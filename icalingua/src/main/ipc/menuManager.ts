@@ -26,7 +26,7 @@ import {
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus, getUin, getCookies,
+    setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -37,11 +37,13 @@ import getStaticPath from '../../utils/getStaticPath'
 import setPriority from '../utils/setPriority'
 import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
-import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import fs from 'fs'
 import atCache from '../utils/atCache'
 import exportContacts from '../utils/exportContacts'
+import querystring from 'querystring'
+import exportGroupMembers from '../utils/exportGroupMembers'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -223,6 +225,30 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://qun.qq.com/interactive/qunhonor?gc=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '我的群昵称',
+            async click() {
+                const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
+                const win = new BrowserWindow({
+                    height: 170,
+                    width: 600,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
+                })
+                await win.loadURL(getWinUrl() + '#/groupNickEdit/' +
+                    -room.roomId + '/' + querystring.escape(room.roomName) + '/' +
+                    querystring.escape(memberInfo.card || memberInfo.nickname))
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '导出群成员',
+            click() {
+                exportGroupMembers(-room.roomId)
             },
         }))
     } else {
@@ -704,7 +730,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         },
     ]).popup({window: getMainWindow()})
 })
-ipcMain.on('popupAvatarMenu', (_, message: Message) => {
+ipcMain.on('popupAvatarMenu', (e, message: Message) => {
     const menu = Menu.buildFromTemplate([
         {
             label: `复制 "${message.username}"`,
@@ -729,16 +755,17 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
             }),
         )
     }
-    menu.append(new MenuItem({
-        label: 'at',
-        click() {
-            atCache.push({
-                text: '@' + message.username,
-                id: message.senderId,
-            })
-            ui.addMessageText('@' + message.username + ' ')
-        },
-    }))
+    if (e.sender === getMainWindow().webContents)
+        menu.append(new MenuItem({
+            label: 'at',
+            click() {
+                atCache.push({
+                    text: '@' + message.username,
+                    id: message.senderId,
+                })
+                ui.addMessageText('@' + message.username + ' ')
+            },
+        }))
     menu.append(
         new MenuItem({
             label: `查看头像`,
