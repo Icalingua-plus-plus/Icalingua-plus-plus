@@ -5,7 +5,7 @@ import {
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
@@ -340,6 +340,16 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    async getGroupMembers(group: number, resolve) {
+        const values = (await bot.getGroupMemberList(group, true)).data.values()
+        let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
+        const all: MemberInfo[] = []
+        while (!iter.done) {
+            all.push(iter.value)
+            iter = values.next()
+        }
+        resolve(all)
+    },
     setGroupNick(group: number, nick: string) {
         bot.setGroupCard(group, bot.uin, nick)
     },

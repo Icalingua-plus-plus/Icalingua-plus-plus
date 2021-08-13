@@ -446,6 +446,16 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    async getGroupMembers(group: number): Promise<MemberInfo[]> {
+        const values = (await bot.getGroupMemberList(group, true)).data.values()
+        let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
+        const all: MemberInfo[] = []
+        while (!iter.done) {
+            all.push(iter.value)
+            iter = values.next()
+        }
+        return all
+    },
     setGroupNick(group: number, nick: string): any {
         return bot.setGroupCard(group, getUin(), nick)
     },
