@@ -183,7 +183,7 @@ const {isImageFile} = require('../../utils/mediaFile')
 
 import LottieAnimation from '../../../LottieAnimation'
 import ipc from '../../../../utils/ipc'
-import getImageUrlByMd5 from '../../../../utils/getImageUrlByMd5'
+import getImageUrlByMd5 from '../../../../../utils/getImageUrlByMd5'
 import getAvatarUrl from '../../../../../utils/getAvatarUrl'
 
 export default {
