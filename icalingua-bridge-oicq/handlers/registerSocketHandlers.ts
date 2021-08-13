@@ -36,5 +36,6 @@ export default (io: Server, socket: Socket) => {
     socket.on('getFriendsFallback', adapter.getFriendsFallback)
     socket.on('getGroupMemberInfo', adapter.getGroupMemberInfo)
     socket.on('setGroupNick', adapter.setGroupNick)
+    socket.on('getGroupMembers', adapter.getGroupMembers)
     socket.on('requestToken', cb => cb(tokenManager.create()))
 }

@@ -15,6 +15,8 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
     'qun.qq.com' | 'ti.qq.com'
 
 export default interface Adapter {
+    getGroupMembers(group:number):Promise<MemberInfo[]>
+
     setGroupNick(group: number, nick: string): any
 
     getGroupMemberInfo(group: number, member: number): Promise<MemberInfo>

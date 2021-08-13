@@ -98,6 +98,9 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    getGroupMembers(group: number): Promise<MemberInfo[]> {
+        return new Promise(resolve => socket.emit('getGroupMembers', group, resolve))
+    },
     setGroupNick(group: number, nick: string): any {
         socket.emit('setGroupNick', group, nick)
     },
@@ -274,7 +277,7 @@ const adapter: Adapter = {
         return new Promise((resolve, reject) => {
             socket.emit('getRoamingStamp', no_cache, resolve)
         })
-    },
+    }
 }
 
 export default adapter

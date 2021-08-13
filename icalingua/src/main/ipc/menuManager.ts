@@ -43,6 +43,7 @@ import fs from 'fs'
 import atCache from '../utils/atCache'
 import exportContacts from '../utils/exportContacts'
 import querystring from 'querystring'
+import exportGroupMembers from '../utils/exportGroupMembers'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -242,6 +243,12 @@ const buildRoomMenu = (room: Room): Menu => {
                 await win.loadURL(getWinUrl() + '#/groupNickEdit/' +
                     -room.roomId + '/' + querystring.escape(room.roomName) + '/' +
                     querystring.escape(memberInfo.card || memberInfo.nickname))
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '导出群成员',
+            click() {
+                exportGroupMembers(-room.roomId)
             },
         }))
     } else {

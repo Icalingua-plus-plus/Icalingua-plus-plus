@@ -20,7 +20,7 @@ else if (getConfig().adapter === 'socketIo')
     adapter = socketIoAdapter
 
 export const {
-    sendMessage, createBot, getGroupMemberInfo,
+    sendMessage, createBot, getGroupMemberInfo, getGroupMembers,
     getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
     getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
