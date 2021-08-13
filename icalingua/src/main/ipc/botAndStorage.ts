@@ -20,7 +20,7 @@ else if (getConfig().adapter === 'socketIo')
     adapter = socketIoAdapter
 
 export const {
-    sendMessage, createBot,
+    sendMessage, createBot, getGroupMemberInfo, getGroupMembers,
     getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
     getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
@@ -106,3 +106,4 @@ ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())
+ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick))

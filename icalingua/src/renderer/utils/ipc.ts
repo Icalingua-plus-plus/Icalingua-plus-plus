@@ -3,7 +3,7 @@ import Room from '../../types/Room'
 import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import RoamingStamp from "../../types/RoamingStamp";
+import RoamingStamp from '../../types/RoamingStamp'
 
 const ipc = {
     sendMessage(data) {
@@ -106,6 +106,9 @@ const ipc = {
     },
     setLastUsedStickerType(type: 'remote' | 'stickers' | 'emojis') {
         ipcRenderer.send('setLastUsedStickerType', type)
+    },
+    setGroupNick(group: number, nick: string) {
+        ipcRenderer.send('setGroupNick', group, nick)
     },
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)

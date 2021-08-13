@@ -1,11 +1,11 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import {FileElem} from 'oicq'
+import {FileElem, MemberInfo} from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
-import RoamingStamp from "./RoamingStamp";
+import RoamingStamp from './RoamingStamp'
 import OnlineData from './OnlineData'
 import SearchableFriend from './SearchableFriend'
 
@@ -15,6 +15,12 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
     'qun.qq.com' | 'ti.qq.com'
 
 export default interface Adapter {
+    getGroupMembers(group:number):Promise<MemberInfo[]>
+
+    setGroupNick(group: number, nick: string): any
+
+    getGroupMemberInfo(group: number, member: number): Promise<MemberInfo>
+
     sendMessage(data: SendMessageParams): any
 
     createBot(form: LoginForm): any
