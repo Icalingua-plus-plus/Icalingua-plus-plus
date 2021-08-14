@@ -24,6 +24,8 @@ import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
+import fs from 'fs'
+import {config} from '../providers/configManager'
 
 let bot: Client
 let storage: MongoStorageProvider
@@ -40,6 +42,8 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData) {
+        if (config.custom)
+            require('../custom').onMessage(data)
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
