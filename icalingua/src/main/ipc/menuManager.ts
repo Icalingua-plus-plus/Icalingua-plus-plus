@@ -338,6 +338,13 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '清除缓存并重新加载',
+                click: () => {
+                    getMainWindow().webContents.session.clearCache()
+                    getMainWindow().reload()
+                },
+            }),
+            new MenuItem({
                 label: '开发者工具',
                 role: 'toggleDevTools',
             }),
