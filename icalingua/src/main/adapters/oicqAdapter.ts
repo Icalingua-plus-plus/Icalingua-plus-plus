@@ -902,6 +902,27 @@ const adapter: OicqAdapter = {
 
         return stamps
     },
+
+    async getSystemMsg() {
+        const msgs = (await bot.getSystemMsg()).data
+        let ret_msg = {}
+        for (let index in msgs) {
+            const flag = msgs[index].flag
+            ret_msg[flag] = {...msgs[index]}
+            //ret_msg.push({flag: {...msgs[index]}})
+        }
+
+        return ret_msg
+    },
+
+    async handleRequest(type: "friend" | "group", flag: string, accept:boolean = true) {
+        switch (type) {
+            case "friend":
+                return await bot.setFriendAddRequest(flag, accept)
+            case "group":
+                return await bot.setGroupAddRequest(flag, accept)
+        }
+    }
 }
 
 export default adapter
