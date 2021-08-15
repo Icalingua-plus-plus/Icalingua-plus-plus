@@ -92,4 +92,8 @@ export default interface Adapter {
     getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]>
 
     sendOnlineData(): any
+
+    getSystemMsg(): any
+
+    handleRequest(type: "friend" | "group", flag: string, accept?:boolean): any
 }

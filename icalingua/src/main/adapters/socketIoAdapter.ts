@@ -277,6 +277,16 @@ const adapter: Adapter = {
         return new Promise((resolve, reject) => {
             socket.emit('getRoamingStamp', no_cache, resolve)
         })
+    },
+    getSystemMsg(): any {
+        return new Promise((resolve, reject) => {
+            socket.emit('getSystemMsg', resolve)
+        })
+    },
+    handleRequest(type: "friend" | "group", flag: string, accept?: boolean): any {
+        return new Promise((resolve, reject) => {
+            socket.emit('handleRequest', type, flag, accept, resolve)
+        })
     }
 }
 

@@ -6,6 +6,7 @@ import LoginView from '../views/LoginView.vue'
 import Aria2Settings from '../views/Aria2Settings.vue'
 import IgnoreManage from '../views/IgnoreManageView.vue'
 import GroupNickEdit from '../views/GroupNickEdit.vue'
+import FriendRequest from '../views/FriendRequest.vue'
 
 Vue.use(Router);
 
@@ -41,5 +42,10 @@ export default new Router({
       name: "ignore-manage-page",
       component: IgnoreManage
     },
+    {
+      path: "/friendRequest",
+      name: "friend-request-page",
+      component: FriendRequest
+    }
   ],
 });
