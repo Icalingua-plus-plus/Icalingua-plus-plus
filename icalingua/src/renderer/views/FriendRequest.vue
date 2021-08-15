@@ -33,35 +33,7 @@ export default {
   name: "FriendRequest",
   data: function() {
     return {
-      request: {"738f6b3f5c97e5fa0f6c01" : {
-          self_id: 1284114089,
-          time: 1628919491,
-          post_type: 'request',
-          request_type: 'friend',
-          sub_type: 'add',
-          user_id: 1938778943,
-          nickname: '[保留]RainbowBird',
-          source: 'QQ号查找',
-          comment: '我是RainbowBird',
-          sex: 'famale',
-          age: 17,
-          flag: '738f6b3f5c97e5fa0f6c01'
-        },
-        "738f6b3f5c97e5fa0f6c0" : {
-          self_id: 1284114089,
-          time: 1628919491,
-          post_type: 'request',
-          request_type: 'friend',
-          sub_type: 'add',
-          user_id: 1938778943,
-          nickname: '[保留]RainbowBird',
-          source: 'QQ号查找',
-          comment: '我是RainbowBird',
-          sex: 'famale',
-          age: 17,
-          flag: '738f6b3f5c97e5fa0f6c0'
-        }
-      }
+      request: {}
     }
   },
 
