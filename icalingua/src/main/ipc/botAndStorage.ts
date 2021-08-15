@@ -107,3 +107,6 @@ ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId)
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())
 ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick))
+ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
+ipcMain.on('handleRequest', (_, type: "friend" | "group", flag: string, accept: boolean = true) =>
+    adapter.handleRequest(type, flag, accept))
