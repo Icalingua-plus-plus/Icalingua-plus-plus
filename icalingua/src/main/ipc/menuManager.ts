@@ -319,6 +319,21 @@ export const updateAppMenu = async () => {
                 click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
             }),
             new MenuItem({
+                label: '好友申请列表',
+                click: () => {
+                    let winFriend = new BrowserWindow({
+                        width: 750,
+                        height: 600,
+                        webPreferences: {
+                            nodeIntegration: true,
+                            webSecurity: false,
+                            contextIsolation: false,
+                        }
+                    });
+                    winFriend.loadURL(getWinUrl() + "#/friendRequest")
+                }
+            }),
+            new MenuItem({
                 label: '数据导出',
                 submenu: [
                     {

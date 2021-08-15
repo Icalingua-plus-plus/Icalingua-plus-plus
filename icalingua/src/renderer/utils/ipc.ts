@@ -116,5 +116,11 @@ const ipc = {
     async getLastUsedStickerType(): Promise<'remote' | 'stickers' | 'emojis'> {
         return await ipcRenderer.invoke('getLastUsedStickerType')
     },
+    async getSystemMsg() {
+        return await ipcRenderer.invoke('getSystemMsg')
+    },
+    handleRequest(type: "friend" | "group", flag: string, accept: boolean = true): any {
+        return ipcRenderer.send('handleRequest', type, flag, accept)
+    }
 }
 export default ipc
