@@ -251,7 +251,8 @@ const buildRoomMenu = (room: Room): Menu => {
                 exportGroupMembers(-room.roomId)
             },
         }))
-    } else {
+    }
+    else {
         menu.append(new MenuItem({
             label: '互动标识',
             async click() {
@@ -328,10 +329,10 @@ export const updateAppMenu = async () => {
                             nodeIntegration: true,
                             webSecurity: false,
                             contextIsolation: false,
-                        }
-                    });
-                    winFriend.loadURL(getWinUrl() + "#/friendRequest")
-                }
+                        },
+                    })
+                    winFriend.loadURL(getWinUrl() + '#/friendRequest')
+                },
             }),
             new MenuItem({
                 label: '数据导出',
@@ -675,7 +676,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
-        if (!history) {
+        if (!history && !message.flash) {
             menu.append(
                 new MenuItem({
                     label: '回复',
@@ -684,7 +685,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
-            if (!message.file)
+            if (!message.file || message.file.type.startsWith('image/'))
                 menu.append(
                     new MenuItem({
                         label: '+1',
@@ -794,7 +795,8 @@ ipcMain.on('popupAvatarMenu', (e, message: Message) => {
             click: () => {
                 if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                } else {
+                }
+                else {
                     openImage(getAvatarUrl(message.senderId))
                 }
             },
