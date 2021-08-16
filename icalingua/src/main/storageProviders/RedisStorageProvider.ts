@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { compact } from "lodash";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
@@ -282,7 +283,7 @@ export default class RedisStorageProvider implements StorageProvider {
         return pRoom.unreadCount;
       })
     );
-    return roomsUnreadAry.length;
+    return compact(roomsUnreadAry).length;
   }
 
   /** 实现 {@link StorageProvider} 类的 `getFirstUnreadRoom` 方法，
