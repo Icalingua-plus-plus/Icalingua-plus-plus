@@ -72,13 +72,16 @@ const eventHandlers = {
 
         let room = await storage.getRoom(roomId)
         if (!room) {
-            const group = bot.gl.get(groupId)
-            if (group && group.group_name !== roomName) roomName = group.group_name
+            if (groupId) {
+                const group = bot.gl.get(groupId)
+                if (group && group.group_name !== roomName) roomName = group.group_name
+            }
             // create room
             room = createRoom(roomId, roomName, avatar)
             await storage.addRoom(room)
-        } else {
-            if (!room.roomName.startsWith(roomName)) {
+        }
+        else {
+            if (!room.roomName.startsWith(roomName) && data.post_type === 'message') {
                 room.roomName = roomName
             }
         }
@@ -107,14 +110,15 @@ const eventHandlers = {
                 title: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                 hasReply: true,
-                replyPlaceholder: 'Reply to ' + roomName,
+                replyPlaceholder: 'Reply to ' + room.roomName,
             },
         })
 
         if (isSelfMsg) {
             room.unreadCount = 0
             room.at = false
-        } else room.unreadCount++
+        }
+        else room.unreadCount++
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
         message.time = data.time * 1000
@@ -273,7 +277,8 @@ const loginHandlers = {
                     if (roomId < 0) {
                         buffer = Buffer.alloc(21)
                         uid = -uid
-                    } else buffer = Buffer.alloc(17)
+                    }
+                    else buffer = Buffer.alloc(17)
                     buffer.writeUInt32BE(uid, 0)
                     await adapter.fetchHistory(buffer.toString('base64'), roomId)
                     await sleep(500)
@@ -297,7 +302,8 @@ const loginHandlers = {
                 if (roomId < 0) {
                     buffer = Buffer.alloc(21)
                     uid = -uid
-                } else buffer = Buffer.alloc(17)
+                }
+                else buffer = Buffer.alloc(17)
                 buffer.writeUInt32BE(uid, 0)
                 adapter.fetchHistory(buffer.toString('base64'), roomId)
                 await sleep(500)
@@ -329,6 +335,7 @@ const initStorage = async () => {
 }
 const attachEventHandler = () => {
     bot.on('message', eventHandlers.onQQMessage)
+    bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
     bot.on('notice.group.recall', eventHandlers.groupRecall)
     bot.on('system.online', eventHandlers.online)
@@ -477,7 +484,8 @@ const adapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
-        } else if (imgpath) {
+        }
+        else if (imgpath) {
             chain.push({
                 type: 'image',
                 data: {
@@ -488,7 +496,8 @@ const adapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
-        } else if (file) {
+        }
+        else if (file) {
             chain.push({
                 type: 'image',
                 data: {
@@ -570,9 +579,11 @@ const adapter = {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
                 }
-            } else if (roomId === bot.uin) {
+            }
+            else if (roomId === bot.uin) {
                 client.emit('setShutUp', true)
-            } else {
+            }
+            else {
                 client.emit('setShutUp', false)
             }
         }
@@ -663,7 +674,8 @@ const adapter = {
         if (!res.error) {
             clients.deleteMessage(messageId)
             await storage.updateMessage(roomId, messageId, {deleted: true})
-        } else {
+        }
+        else {
             clients.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,

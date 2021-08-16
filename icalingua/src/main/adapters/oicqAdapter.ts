@@ -78,13 +78,16 @@ const eventHandlers = {
 
         let room = await storage.getRoom(roomId)
         if (!room) {
-            const group = bot.gl.get(groupId)
-            if (group && group.group_name !== roomName) roomName = group.group_name
+            if (groupId) {
+                const group = bot.gl.get(groupId)
+                if (group && group.group_name !== roomName) roomName = group.group_name
+            }
             // create room
             room = createRoom(roomId, roomName, avatar)
             await storage.addRoom(room)
-        } else {
-            if (!room.roomName.startsWith(roomName)) {
+        }
+        else {
+            if (!room.roomName.startsWith(roomName) && data.post_type === 'message') {
                 room.roomName = roomName
             }
         }
@@ -118,7 +121,7 @@ const eventHandlers = {
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                 icon: await avatarCache(avatar),
                 hasReply: true,
-                replyPlaceholder: 'Reply to ' + roomName,
+                replyPlaceholder: 'Reply to ' + room.roomName,
             })
             notif.addListener('click', () => {
                 showWindow()
@@ -142,7 +145,8 @@ const eventHandlers = {
             if (isSelfMsg) {
                 room.unreadCount = 0
                 room.at = false
-            } else room.unreadCount++
+            }
+            else room.unreadCount++
         }
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
@@ -421,6 +425,7 @@ const initStorage = async () => {
 }
 const attachEventHandler = () => {
     bot.on('message', eventHandlers.onQQMessage)
+    bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
     bot.on('notice.group.recall', eventHandlers.groupRecall)
     bot.on('system.online', eventHandlers.online)
@@ -559,7 +564,6 @@ const adapter: OicqAdapter = {
                 }
                 splitContent = newParts
             }
-            console.log(splitContent)
             for (const part of splitContent) {
                 const atInfo = at.find(e => e.text === part)
                 chain.push(atInfo ? {
@@ -587,7 +591,8 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
-        } else if (imgpath) {
+        }
+        else if (imgpath) {
             chain.push({
                 type: 'image',
                 data: {
@@ -598,7 +603,8 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
-        } else if (file) {
+        }
+        else if (file) {
             chain.push({
                 type: 'image',
                 data: {
@@ -683,9 +689,11 @@ const adapter: OicqAdapter = {
                     ui.setShutUp(true)
                     ui.message('你已经不是群成员了')
                 }
-            } else if (roomId === bot.uin) {
+            }
+            else if (roomId === bot.uin) {
                 ui.setShutUp(true)
-            } else {
+            }
+            else {
                 ui.setShutUp(false)
             }
         }
@@ -789,7 +797,8 @@ const adapter: OicqAdapter = {
         if (!res.error) {
             ui.deleteMessage(messageId)
             await storage.updateMessage(roomId, messageId, {deleted: true})
-        } else {
+        }
+        else {
             ui.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,
@@ -876,7 +885,8 @@ const adapter: OicqAdapter = {
         if (done) {
             ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
-        } else {
+        }
+        else {
             ui.message(`已拉取 ${messages.length} 条消息，正在后台继续拉取`)
             {
                 const {messages} = await fetchLoop()
@@ -915,14 +925,14 @@ const adapter: OicqAdapter = {
         return ret_msg
     },
 
-    async handleRequest(type: "friend" | "group", flag: string, accept:boolean = true) {
+    async handleRequest(type: 'friend' | 'group', flag: string, accept: boolean = true) {
         switch (type) {
-            case "friend":
+            case 'friend':
                 return await bot.setFriendAddRequest(flag, accept)
-            case "group":
+            case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
-    }
+    },
 }
 
 export default adapter
