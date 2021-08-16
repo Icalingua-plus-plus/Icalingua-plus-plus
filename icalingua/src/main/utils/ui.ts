@@ -4,7 +4,7 @@ import OnlineData from "../../types/OnlineData";
 import Room from "../../types/Room";
 import { updateAppMenu } from "../ipc/menuManager";
 import { updateTrayIcon } from "./trayManager";
-import { sendToMainWindow } from "./windowManager";
+import {sendToMainWindow, sendToRequestWindow} from './windowManager'
 
 let selectedRoomId = 0;
 let selectedRoomName = "";
@@ -99,4 +99,8 @@ export default {
   },
   getSelectedRoomId: () => selectedRoomId,
   getSelectedRoomName: () => selectedRoomName,
+  sendAddRequest(data: any) {
+    sendToMainWindow("sendAddRequest", data)
+    sendToRequestWindow("sendAddRequest", data)
+  }
 };
