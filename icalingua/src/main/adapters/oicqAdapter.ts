@@ -5,8 +5,9 @@ import {
     FriendRecallEventData,
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MessageElem,
+    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
+    FriendAddEventData, GroupAddEventData, GroupInviteEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -15,7 +16,7 @@ import Message from '../../types/Message'
 import formatDate from '../../utils/formatDate'
 import createRoom from '../../utils/createRoom'
 import processMessage from '../utils/processMessage'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import {app, BrowserWindow, dialog, Notification} from 'electron'
@@ -36,6 +37,8 @@ import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
 import {IteratorCallback} from 'mongodb'
+import errorHandler from '../utils/errorHandler'
+import {getUin} from '../ipc/botAndStorage'
 
 let bot: Client
 let storage: StorageProvider
@@ -43,6 +46,7 @@ let loginForm: LoginForm
 
 let currentLoadedMessagesCount = 0
 let loggedIn = false
+let stopFetching = false
 
 //region event handlers
 const eventHandlers = {
@@ -75,13 +79,16 @@ const eventHandlers = {
 
         let room = await storage.getRoom(roomId)
         if (!room) {
-            const group = bot.gl.get(groupId)
-            if (group && group.group_name !== roomName) roomName = group.group_name
+            if (groupId) {
+                const group = bot.gl.get(groupId)
+                if (group && group.group_name !== roomName) roomName = group.group_name
+            }
             // create room
             room = createRoom(roomId, roomName, avatar)
             await storage.addRoom(room)
-        } else {
-            if (!room.roomName.startsWith(roomName)) {
+        }
+        else {
+            if (!room.roomName.startsWith(roomName) && data.post_type === 'message') {
                 room.roomName = roomName
             }
         }
@@ -115,7 +122,7 @@ const eventHandlers = {
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                 icon: await avatarCache(avatar),
                 hasReply: true,
-                replyPlaceholder: 'Reply to ' + roomName,
+                replyPlaceholder: 'Reply to ' + room.roomName,
             })
             notif.addListener('click', () => {
                 showWindow()
@@ -139,7 +146,8 @@ const eventHandlers = {
             if (isSelfMsg) {
                 room.unreadCount = 0
                 room.at = false
-            } else room.unreadCount++
+            }
+            else room.unreadCount++
         }
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
@@ -152,7 +160,7 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         await updateTrayIcon()
-        console.log(data.message)
+        //console.log(data.message)
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
@@ -290,6 +298,21 @@ const eventHandlers = {
         ui.addMessage(roomId, message)
         await storage.addMessage(roomId, message)
     },
+    async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
+        //console.log(data)
+        ui.sendAddRequest(data)
+
+        //notification
+        const notif = new Notification({
+            title: data.nickname,
+            body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
+            icon: await avatarCache(getAvatarUrl(data.user_id)),
+        })
+        notif.addListener('click', () => {
+            showRequestWindow()
+        })
+        notif.show()
+    },
 }
 const loginHandlers = {
     slider(data) {
@@ -307,7 +330,6 @@ const loginHandlers = {
             path.join(getStaticPath(), '/sliderinj.js'),
             'utf-8',
         )
-        console.log(inject)
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(inject)
         })
@@ -419,6 +441,7 @@ const initStorage = async () => {
 }
 const attachEventHandler = () => {
     bot.on('message', eventHandlers.onQQMessage)
+    bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
     bot.on('notice.group.recall', eventHandlers.groupRecall)
     bot.on('system.online', eventHandlers.online)
@@ -427,6 +450,9 @@ const attachEventHandler = () => {
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
+    bot.on('request.friend.add', eventHandlers.requestAdd)
+    bot.on('request.group.invite', eventHandlers.requestAdd)
+    bot.on('request.group.add', eventHandlers.requestAdd)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)
@@ -440,12 +466,26 @@ const attachLoginHandler = () => {
 interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
-    stopFetching: boolean
-
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 }
 
 const adapter: OicqAdapter = {
+    async getGroupMembers(group: number): Promise<MemberInfo[]> {
+        const values = (await bot.getGroupMemberList(group, true)).data.values()
+        let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
+        const all: MemberInfo[] = []
+        while (!iter.done) {
+            all.push(iter.value)
+            iter = values.next()
+        }
+        return all
+    },
+    setGroupNick(group: number, nick: string): any {
+        return bot.setGroupCard(group, getUin(), nick)
+    },
+    async getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
+        return (await bot.getGroupMemberInfo(group, member, true)).data
+    },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
         let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
@@ -543,7 +583,6 @@ const adapter: OicqAdapter = {
                 }
                 splitContent = newParts
             }
-            console.log(splitContent)
             for (const part of splitContent) {
                 const atInfo = at.find(e => e.text === part)
                 chain.push(atInfo ? {
@@ -571,7 +610,8 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
-        } else if (imgpath) {
+        }
+        else if (imgpath) {
             chain.push({
                 type: 'image',
                 data: {
@@ -582,7 +622,8 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
-        } else if (file) {
+        }
+        else if (file) {
             chain.push({
                 type: 'image',
                 data: {
@@ -667,9 +708,11 @@ const adapter: OicqAdapter = {
                     ui.setShutUp(true)
                     ui.message('你已经不是群成员了')
                 }
-            } else if (roomId === bot.uin) {
+            }
+            else if (roomId === bot.uin) {
                 ui.setShutUp(true)
-            } else {
+            }
+            else {
                 ui.setShutUp(false)
             }
         }
@@ -705,7 +748,7 @@ const adapter: OicqAdapter = {
             const data = history.data[i]
             const message: Message = {
                 senderId: data.user_id,
-                username: <string><unknown>data.nickname, //确信
+                username: data.nickname,
                 content: '',
                 timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
                 date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
@@ -773,7 +816,8 @@ const adapter: OicqAdapter = {
         if (!res.error) {
             ui.deleteMessage(messageId)
             await storage.updateMessage(roomId, messageId, {deleted: true})
-        } else {
+        }
+        else {
             ui.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,
@@ -784,62 +828,92 @@ const adapter: OicqAdapter = {
         ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
-    stopFetching: false,
     stopFetchingHistory() {
-        adapter.stopFetching = true
+        stopFetching = true
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
-        const messages = []
-        while (true) {
-            if (adapter.stopFetching) {
-                adapter.stopFetching = false
-                break
-            }
-            const history = await bot.getChatHistory(messageId)
-            if (history.error) {
-                console.log(history.error)
-                ui.messageError('错误：' + history.error.message)
-                break
-            }
-            const newMsgs: Message[] = []
-            for (let i = 0; i < history.data.length; i++) {
-                const data = history.data[i]
-                const message = {
-                    senderId: data.sender.user_id,
-                    username: (<GroupMessageEventData>data).group_id
-                        ? (<GroupMessageEventData>data).anonymous
-                            ? (<GroupMessageEventData>data).anonymous.name
-                            : (<GroupMessageEventData>data).sender.card || data.sender.nickname
-                        : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
-                    content: '',
-                    timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
-                    date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
-                    _id: data.message_id,
-                    time: data.time * 1000,
+        const fetchLoop = async (limit?: number) => {
+            const messages = []
+            let done = false
+            while (true) {
+                if (stopFetching) {
+                    stopFetching = false
+                    done = true
+                    break
                 }
-                await processMessage(
-                    data.message,
-                    message,
-                    {},
-                    roomId,
-                )
-                messages.push(message)
-                newMsgs.push(message)
+                const history = await bot.getChatHistory(messageId)
+                if (history.error) {
+                    errorHandler(history.error, true)
+                    if (history.error.message !== 'msg not exists')
+                        ui.messageError('错误：' + history.error.message)
+                    done = true
+                    break
+                }
+                const newMsgs: Message[] = []
+                for (let i = 0; i < history.data.length; i++) {
+                    const data = history.data[i]
+                    const message = {
+                        senderId: data.sender.user_id,
+                        username: (<GroupMessageEventData>data).group_id
+                            ? (<GroupMessageEventData>data).anonymous
+                                ? (<GroupMessageEventData>data).anonymous.name
+                                : (<GroupMessageEventData>data).sender.card || data.sender.nickname
+                            : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
+                        content: '',
+                        timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                        date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                        _id: data.message_id,
+                        time: data.time * 1000,
+                    }
+                    try {
+                        await processMessage(
+                            data.message,
+                            message,
+                            {},
+                            roomId,
+                        )
+                        messages.push(message)
+                        newMsgs.push(message)
+                    } catch (e) {
+                        errorHandler(e, true)
+                    }
+                }
+                ui.addHistoryCount(newMsgs.length)
+                if (history.data.length < 2) {
+                    done = true
+                    break
+                }
+                messageId = newMsgs[0]._id as string
+                const firstOwnMsg = roomId < 0 ?
+                    newMsgs[0] : //群的话只要第一条消息就行
+                    newMsgs.find(e => e.senderId == bot.uin)
+                if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) {
+                    done = true
+                    break
+                }
+                if (limit && messages.length > limit)
+                    break
             }
-            ui.addHistoryCount(newMsgs.length)
-            if (history.data.length < 2) break
-            messageId = newMsgs[0]._id as string
-            const firstOwnMsg = roomId < 0 ?
-                newMsgs[0] : //群的话只要第一条消息就行
-                newMsgs.find(e => e.senderId == bot.uin)
-            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
+            return {messages, done}
         }
-        ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
-        ui.clearHistoryCount()
+        const {messages, done} = await fetchLoop(60)
         await storage.addMessages(roomId, messages)
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
                 .then(ui.setMessages)
+        if (done) {
+            ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+            ui.clearHistoryCount()
+        }
+        else {
+            ui.message(`已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            {
+                const {messages} = await fetchLoop()
+                await storage.addMessages(roomId, messages)
+                ui.messageSuccess(`已拉取 ${messages.length} 条消息`)
+                ui.clearHistoryCount()
+            }
+        }
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
@@ -856,6 +930,27 @@ const adapter: OicqAdapter = {
         }
 
         return stamps
+    },
+
+    async getSystemMsg() {
+        const msgs = (await bot.getSystemMsg()).data
+        let ret_msg = {}
+        for (let index in msgs) {
+            const flag = msgs[index].flag
+            ret_msg[flag] = {...msgs[index]}
+            //ret_msg.push({flag: {...msgs[index]}})
+        }
+
+        return ret_msg
+    },
+
+    async handleRequest(type: 'friend' | 'group', flag: string, accept: boolean = true) {
+        switch (type) {
+            case 'friend':
+                return await bot.setFriendAddRequest(flag, accept)
+            case 'group':
+                return await bot.setGroupAddRequest(flag, accept)
+        }
     },
 }
 

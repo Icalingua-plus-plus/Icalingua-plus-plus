@@ -15,7 +15,6 @@ try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'image/jpeg']).toString()
     for (const i of VIEWERS) {
         if (xdgDefault.includes(i)) {
-            console.log('xdg', i)
             viewer = i
             break
         }
@@ -27,7 +26,6 @@ if (!viewer) {
     for (const i of VIEWERS) {
         const resolved = which.sync(i, {nothrow: true})
         if (resolved) {
-            console.log('which', i)
             viewer = i
             break
         }
@@ -43,7 +41,7 @@ const openImage = (url: string, external: boolean = false) => {
             autoHideMenuBar: true,
         })
         viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
-        viewerWindow.maximize()
+        //viewerWindow.maximize()
     } else if (viewer) {
         execFile(viewer, [url])
     } else {

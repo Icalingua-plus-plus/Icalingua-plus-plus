@@ -2,7 +2,7 @@ import Adapter, {CookiesDomain} from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {FileElem} from 'oicq'
+import {FileElem, MemberInfo} from 'oicq'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
@@ -98,6 +98,15 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    getGroupMembers(group: number): Promise<MemberInfo[]> {
+        return new Promise(resolve => socket.emit('getGroupMembers', group, resolve))
+    },
+    setGroupNick(group: number, nick: string): any {
+        socket.emit('setGroupNick', group, nick)
+    },
+    getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
+        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, resolve))
+    },
     sendOnlineData() {
         ui.sendOnlineData(cachedOnlineData)
     },
@@ -268,6 +277,14 @@ const adapter: Adapter = {
         return new Promise((resolve, reject) => {
             socket.emit('getRoamingStamp', no_cache, resolve)
         })
+    },
+    getSystemMsg(): any {
+        return new Promise((resolve, reject) => {
+            socket.emit('getSystemMsg', resolve)
+        })
+    },
+    handleRequest(type: 'friend' | 'group', flag: string, accept?: boolean): any {
+        socket.emit('handleRequest', type, flag, accept)
     },
 }
 

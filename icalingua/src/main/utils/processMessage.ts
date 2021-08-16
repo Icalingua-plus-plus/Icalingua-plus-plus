@@ -8,6 +8,8 @@ import LastMessage from '../../types/LastMessage'
 import BilibiliMiniApp from '../../types/BilibiliMiniApp'
 import StructMessageCard from '../../types/StructMessageCard'
 import silkDecode from './silkDecode'
+import errorHandler from './errorHandler'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
@@ -21,6 +23,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'at':
                 if (lastType === 'reply')
                     break
+            // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
                 lastMessage.content += m.data.text
                 message.content += m.data.text
@@ -30,6 +33,9 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     message.at = true
                 }
                 break
+            case 'flash':
+                message.flash=true
+            // noinspection FallThroughInSwitchStatementJS 确信
             case 'image':
             case 'flash':
                 lastMessage.content += '[Image]'
@@ -159,6 +165,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'xml':
                 message.code = m.data.data
                 const urlRegex = /url="([^"]+)"/
+                const md5ImageRegex = /image md5="([A-F\d]{32})"/
                 if (urlRegex.test(m.data.data))
                     appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
                 if (m.data.data.includes('action="viewMultiMsg"')) {
@@ -174,6 +181,14 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     appurl = appurl.replace(/&amp;/g, '&')
                     lastMessage.content = appurl
                     message.content = appurl
+                } else if (md5ImageRegex.test(m.data.data)) {
+                    const imgMd5 = appurl = m.data.data.match(md5ImageRegex)[1]
+                    lastMessage.content += '[Image]'
+                    url = getImageUrlByMd5(imgMd5)
+                    message.file = {
+                        type: 'image/jpeg',
+                        url,
+                    }
                 } else {
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
@@ -192,9 +207,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 }
                 break
             case 'record':
-                message.file = {
-                    type: 'audio/mp3',
-                    url: await silkDecode(m.data.url),
+                try {
+                    message.file = {
+                        type: 'audio/mp3',
+                        url: await silkDecode(m.data.url),
+                    }
+                } catch (e) {
+                    errorHandler(e, true)
+                    message.code = JSON.stringify(e)
+                    message.content = '[语音下载失败]'
                 }
                 lastMessage.content = '[Audio]'
                 break
