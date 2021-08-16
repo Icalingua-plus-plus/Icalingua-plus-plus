@@ -125,7 +125,7 @@ jobs:
 
   build-ia32:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: build-dist-bundle
     defaults:
       run:
@@ -174,7 +174,7 @@ jobs:
 
   build-arm64:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: build-dist-bundle
     defaults:
       run:
