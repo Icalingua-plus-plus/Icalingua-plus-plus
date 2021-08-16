@@ -6634,7 +6634,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq: ^1.18.2
+    oicq: latest
     pg: ^8.6.0
     sass: ^1.34.1
     sass-loader: ^10.1.1
@@ -7647,6 +7647,13 @@ fsevents@~2.3.1:
     json-schema: 0.2.3
     verror: 1.10.0
   checksum: 6bcb20ec265ae18bb48e540a6da2c65f9c844f7522712d6dfcb01039527a49414816f4869000493363f1e1ea96cbad00e46188d5ecc78257a19f152467587373
+  languageName: node
+  linkType: hard
+
+"jsqr@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "jsqr@npm:1.4.0"
+  checksum: 7c572971f90c42772e30d152bde63b84edf1164bde80c53942e6b2068ea31caf00ad704aa46cacc9e71645f52dbeddebc6e84ba15e883c678ee93cde690de339
   languageName: node
   linkType: hard
 
@@ -9396,14 +9403,17 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq@npm:^1.18.2":
-  version: 1.18.2
-  resolution: "oicq@npm:1.18.2"
+"oicq@npm:latest":
+  version: 1.19.2
+  resolution: "oicq@npm:1.19.2"
   dependencies:
+    jsqr: ^1.4.0
     log4js: ^6.3.0
     long: ^4.0.0
-    probe-image-size: ^7.2.0
-  checksum: c18acffae2a39bdb61a9d5d192495d8c9917f148c72f494463a186b58caf20a2c77af874a54671da21f2b474f83fb8331773e62d489780aef0ba256f41a567fe
+    pngjs: ^6.0.0
+    probe-image-size: ^7.2.1
+    qrcode-terminal: ^0.12.0
+  checksum: 8ee53402c45e9c87bcbd0a1daa6b2828fb701531b439bd2c2e12a42113dd5dd8e75f0257fa8bc6cb8e287a1cf7970c49b6f190a1104887b015a69eb88c87aaf8
   languageName: node
   linkType: hard
 
@@ -9980,6 +9990,13 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"pngjs@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "pngjs@npm:6.0.0"
+  checksum: ab6c285086060087097eab9fe6b5a528a24f9e79c03dea2b4fd6264ed4fdb5beff4a3257eeeaf2a9dc18249b539609c2a4e4013c567164a1f6b5ba2c974d5ecb
+  languageName: node
+  linkType: hard
+
 "portfinder@npm:^1.0.26":
   version: 1.0.28
   resolution: "portfinder@npm:1.0.28"
@@ -10425,7 +10442,7 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"probe-image-size@npm:^7.2.0":
+"probe-image-size@npm:^7.2.1":
   version: 7.2.1
   resolution: "probe-image-size@npm:7.2.1"
   dependencies:
@@ -10591,6 +10608,15 @@ fsevents@~2.3.1:
   version: 1.5.1
   resolution: "q@npm:1.5.1"
   checksum: 147baa93c805bc1200ed698bdf9c72e9e42c05f96d007e33a558b5fdfd63e5ea130e99313f28efc1783e90e6bdb4e48b67a36fcc026b7b09202437ae88a1fb12
+  languageName: node
+  linkType: hard
+
+"qrcode-terminal@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "qrcode-terminal@npm:0.12.0"
+  bin:
+    qrcode-terminal: ./bin/qrcode-terminal.js
+  checksum: 51638d11d080e06ef79ef2d5cfe911202159e48d2873d6a80a3c5489b4b767acf4754811ceba4e113db8f41f61a06c163bcb17e6e18e6b34e04a7a5155dac974
   languageName: node
   linkType: hard
 
