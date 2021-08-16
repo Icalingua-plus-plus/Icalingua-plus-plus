@@ -7,6 +7,7 @@ import {
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
+    FriendAddEventData, GroupAddEventData, GroupInviteEventData
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -159,7 +160,7 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         await updateTrayIcon()
-        console.log(data.message)
+        //console.log(data.message)
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
@@ -296,6 +297,10 @@ const eventHandlers = {
         }
         ui.addMessage(roomId, message)
         await storage.addMessage(roomId, message)
+    },
+    async requestAdd(data) {
+        //console.log(data)
+        ui.sendAddRequest(data)
     },
 }
 const loginHandlers = {
@@ -434,6 +439,9 @@ const attachEventHandler = () => {
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
+    bot.on('request.friend.add', eventHandlers.requestAdd)
+    bot.on('request.group.invite', eventHandlers.requestAdd)
+    bot.on('request.group.add', eventHandlers.requestAdd)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)

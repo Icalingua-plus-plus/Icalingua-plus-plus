@@ -11,7 +11,7 @@ import {
 } from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
-import {getMainWindow} from '../utils/windowManager'
+import {getMainWindow, showRequestWindow} from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
@@ -320,18 +320,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '好友申请列表',
-                click: () => {
-                    let winFriend = new BrowserWindow({
-                        width: 750,
-                        height: 600,
-                        webPreferences: {
-                            nodeIntegration: true,
-                            webSecurity: false,
-                            contextIsolation: false,
-                        }
-                    });
-                    winFriend.loadURL(getWinUrl() + "#/friendRequest")
-                }
+                click: () => showRequestWindow()
             }),
             new MenuItem({
                 label: '数据导出',
