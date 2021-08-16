@@ -294,7 +294,6 @@ jobs:
 
   pack-archpkg-i686:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs:
       - version
       - arch-artifacts
@@ -360,7 +359,6 @@ jobs:
 
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs:
       - version
       - arch-artifacts
@@ -468,7 +466,6 @@ jobs:
 
   pack-otherpkg-ia32:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs: build-ia32
     strategy:
       matrix:
@@ -511,7 +508,6 @@ jobs:
 
   pack-otherpkg-arm64:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs: build-arm64
     strategy:
       matrix:
@@ -554,6 +550,7 @@ jobs:
 
   cleanup-dist:
     runs-on: ubuntu-latest
+    if: always()
     needs:
       - build-x86_64
       - build-ia32
@@ -574,7 +571,6 @@ jobs:
 
   cleanup-unpacked-app-ia32:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs:
       - pack-otherpkg-ia32
     steps:
@@ -584,7 +580,6 @@ jobs:
 
   cleanup-unpacked-app-arm64:
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'refs/heads/main' }}
     needs:
       - pack-otherpkg-arm64
     steps:
@@ -594,6 +589,7 @@ jobs:
 
   cleanup-pkgres:
     runs-on: ubuntu-latest
+    if: always()
     needs:
       - pack-archpkg-x86_64
       - pack-archpkg-i686
