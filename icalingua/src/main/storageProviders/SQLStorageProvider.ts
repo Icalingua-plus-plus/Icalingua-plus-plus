@@ -180,7 +180,10 @@ export default class SQLStorageProvider implements StorageProvider {
     }
   }
 
-  /** connect 方法。在这里主要干了这些事情：
+  /** 实现 {@link StorageProvider} 类的 connect 方法。
+   * 名字叫 connect ，实际上只有 `MongoStorageProvider` 在这个方法下真正地干了连接数据库的活儿。
+   *
+   * 这个方法在这里主要干了这些事情：
    * 1. 如果是 PostgreSQL 数据库，那么根据 QQ 号建立一个 Schema，把这个 QQ 号产生的信息存在里面。
    * 2. 检验并建立 `dbVersion` 和 `msgTableName` 这两个特有表 ，目的是存放与升级有关的信息。
    * 其中 `msgTableNameTable` 相当于 `msg${roomId}` 的主表。
