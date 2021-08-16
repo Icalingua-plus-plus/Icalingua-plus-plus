@@ -16,8 +16,8 @@ QwQ 妳们点星星的速度好快，electron-qq 的星星要比 [MtF-Wiki](http
 [![AUR](https://img.shields.io/aur/version/icalingua)](https://aur.archlinux.org/packages/icalingua/)
 [![AUR last modified](https://img.shields.io/aur/last-modified/icalingua)](https://aur.archlinux.org/packages/icalingua/)
 
-[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Clansty/Icalingua/oicq?filename=electron-qq%2Fpackage.json)](https://github.com/takayama-lily/oicq)
-[![GitHub package.json dependency version (dev dep on branch)](https://img.shields.io/github/package-json/dependency-version/clansty/electron-qq/dev/electron?logo=electron&filename=electron-qq%2Fpackage.json)](https://electronjs.org)
+[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Clansty/Icalingua/oicq?filename=icalingua%2Fpackage.json)](https://github.com/takayama-lily/oicq)
+[![GitHub package.json dependency version (dev dep on branch)](https://img.shields.io/github/package-json/dependency-version/clansty/Icalingua/dev/electron?logo=electron&filename=icalingua%2Fpackage.json)](https://electronjs.org)
 
 ##### dev
 [![Build/release](https://github.com/Clansty/electron-qq/actions/workflows/main.yml/badge.svg?branch=dev)](https://github.com/Clansty/electron-qq/actions/workflows/main.yml)

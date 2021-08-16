@@ -11,7 +11,7 @@ import {
 } from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
-import {getMainWindow} from '../utils/windowManager'
+import {getMainWindow, showRequestWindow} from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
@@ -26,7 +26,7 @@ import {
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus, getUin, getCookies,
+    setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -37,10 +37,13 @@ import getStaticPath from '../../utils/getStaticPath'
 import setPriority from '../utils/setPriority'
 import getWinUrl from '../../utils/getWinUrl'
 import openMedia from '../utils/openMedia'
-import getImageUrlByMd5 from '../../renderer/utils/getImageUrlByMd5'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import fs from 'fs'
 import atCache from '../utils/atCache'
+import exportContacts from '../utils/exportContacts'
+import querystring from 'querystring'
+import exportGroupMembers from '../utils/exportGroupMembers'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -224,7 +227,32 @@ const buildRoomMenu = (room: Room): Menu => {
                 await win.loadURL('https://qun.qq.com/interactive/qunhonor?gc=' + -room.roomId)
             },
         }))
-    } else {
+        menu.append(new MenuItem({
+            label: '我的群昵称',
+            async click() {
+                const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
+                const win = new BrowserWindow({
+                    height: 170,
+                    width: 600,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
+                })
+                await win.loadURL(getWinUrl() + '#/groupNickEdit/' +
+                    -room.roomId + '/' + querystring.escape(room.roomName) + '/' +
+                    querystring.escape(memberInfo.card || memberInfo.nickname))
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '导出群成员',
+            click() {
+                exportGroupMembers(-room.roomId)
+            },
+        }))
+    }
+    else {
         menu.append(new MenuItem({
             label: '互动标识',
             async click() {
@@ -292,8 +320,32 @@ export const updateAppMenu = async () => {
                 click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
             }),
             new MenuItem({
+                label: '好友申请列表',
+                click: () => showRequestWindow()
+            }),
+            new MenuItem({
+                label: '数据导出',
+                submenu: [
+                    {
+                        label: '好友列表',
+                        click: () => exportContacts('friend'),
+                    },
+                    {
+                        label: '群列表',
+                        click: () => exportContacts('group'),
+                    },
+                ],
+            }),
+            new MenuItem({
                 label: '重新加载',
                 click: () => {
+                    getMainWindow().reload()
+                },
+            }),
+            new MenuItem({
+                label: '清除缓存并重新加载',
+                click: () => {
+                    getMainWindow().webContents.session.clearCache()
                     getMainWindow().reload()
                 },
             }),
@@ -613,7 +665,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
-        if (!history) {
+        if (!history && !message.flash) {
             menu.append(
                 new MenuItem({
                     label: '回复',
@@ -622,7 +674,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
-            if (!message.file)
+            if (!message.file || message.file.type.startsWith('image/'))
                 menu.append(
                     new MenuItem({
                         label: '+1',
@@ -690,7 +742,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         },
     ]).popup({window: getMainWindow()})
 })
-ipcMain.on('popupAvatarMenu', (_, message: Message) => {
+ipcMain.on('popupAvatarMenu', (e, message: Message) => {
     const menu = Menu.buildFromTemplate([
         {
             label: `复制 "${message.username}"`,
@@ -715,23 +767,25 @@ ipcMain.on('popupAvatarMenu', (_, message: Message) => {
             }),
         )
     }
-    menu.append(new MenuItem({
-        label: 'at',
-        click() {
-            atCache.push({
-                text: '@' + message.username,
-                id: message.senderId,
-            })
-            ui.addMessageText('@' + message.username + ' ')
-        },
-    }))
+    if (e.sender === getMainWindow().webContents)
+        menu.append(new MenuItem({
+            label: 'at',
+            click() {
+                atCache.push({
+                    text: '@' + message.username,
+                    id: message.senderId,
+                })
+                ui.addMessageText('@' + message.username + ' ')
+            },
+        }))
     menu.append(
         new MenuItem({
             label: `查看头像`,
             click: () => {
                 if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                } else {
+                }
+                else {
                     openImage(getAvatarUrl(message.senderId))
                 }
             },

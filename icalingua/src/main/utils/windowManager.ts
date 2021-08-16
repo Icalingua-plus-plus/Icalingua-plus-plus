@@ -3,8 +3,11 @@ import {clearCurrentRoomUnread, sendOnlineData} from '../ipc/botAndStorage'
 import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import {updateTrayIcon} from './trayManager'
+import path from 'path'
 
-let loginWindow: BrowserWindow, mainWindow: BrowserWindow
+let loginWindow: BrowserWindow,
+    mainWindow: BrowserWindow,
+    requestWindow: BrowserWindow
 
 export const loadMainWindow = () => {
     //start main window
@@ -30,20 +33,22 @@ export const loadMainWindow = () => {
         mainWindow.hide()
     })
 
-    if (process.env.NODE_ENV === 'development')
+    if (process.env.NODE_ENV === 'development') {
         mainWindow.webContents.session.loadExtension(
-            '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
+            path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
         )
+        mainWindow.minimize()
+    }
 
-    mainWindow.on('focus', async ()=> {
+    setTimeout(() => mainWindow.on('focus', async () => {
         clearCurrentRoomUnread()
         await updateTrayIcon()
-    })
+    }), 5000)
 
     mainWindow.webContents.setWindowOpenHandler(details => {
         shell.openExternal(details.url)
         return {
-            action: 'deny'
+            action: 'deny',
         }
     })
 
@@ -55,7 +60,8 @@ export const showLoginWindow = () => {
     if (loginWindow) {
         loginWindow.show()
         loginWindow.focus()
-    } else {
+    }
+    else {
         loginWindow = new BrowserWindow({
             height: 720,
             width: 450,
@@ -66,12 +72,38 @@ export const showLoginWindow = () => {
             },
         })
 
-        if (process.env.NODE_ENV === 'development')
+        if (process.env.NODE_ENV === 'development') {
             loginWindow.webContents.session.loadExtension(
-                '/usr/local/share/.config/yarn/global/node_modules/vue-devtools/vender/',
+                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
             )
+            loginWindow.minimize()
+        }
 
         loginWindow.loadURL(getWinUrl() + '#/login')
+    }
+}
+export const showRequestWindow = () => {
+    if (requestWindow && !requestWindow.isDestroyed()) {
+        requestWindow.show()
+        requestWindow.focus()
+    }
+    else {
+        requestWindow = new BrowserWindow({
+            width: 750,
+            height: 600,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
+        })
+
+        if (process.env.NODE_ENV === 'development') {
+            requestWindow.webContents.session.loadExtension(
+                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
+        }
+
+        requestWindow.loadURL(getWinUrl() + '#/friendRequest')
     }
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
@@ -82,17 +114,27 @@ export const sendToMainWindow = (channel: string, payload?: any) => {
     if (mainWindow)
         mainWindow.webContents.send(channel, payload)
 }
+export const sendToRequestWindow = (channel: string, payload?: any) => {
+    if (requestWindow && !requestWindow.isDestroyed())
+        requestWindow.webContents.send(channel, payload)
+}
 export const getMainWindow = () => mainWindow
 export const showWindow = () => {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show()
         mainWindow.focus()
-    } else if (loginWindow) {
+    }
+    else if (loginWindow && !loginWindow.isDestroyed()) {
         loginWindow.show()
         loginWindow.focus()
     }
+    else if (requestWindow && !requestWindow.isDestroyed()) {
+        requestWindow.show()
+        requestWindow.focus()
+    }
 }
 export const destroyWindow = () => {
-    if (mainWindow) mainWindow.destroy()
-    if (loginWindow) loginWindow.destroy()
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
+    if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
+    if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
 }

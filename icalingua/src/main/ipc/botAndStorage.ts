@@ -20,9 +20,9 @@ else if (getConfig().adapter === 'socketIo')
     adapter = socketIoAdapter
 
 export const {
-    sendMessage, createBot,
-    getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom,
-    getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData,
+    sendMessage, createBot, getGroupMemberInfo, getGroupMembers,
+    getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
+    getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter
@@ -54,7 +54,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => {
-    const groups = await adapter.getGroups()
+    const groups = await getGroups()
     let friends: GroupOfFriend[]
     let friendsFallback: SearchableFriend[]
     try {
@@ -62,7 +62,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
     } catch (e) {
         errorHandler(e, true)
         friends = null
-        friendsFallback = await adapter.getFriendsFallback()
+        friendsFallback = await getFriendsFallback()
     }
     return {groups, friends, friendsFallback}
 })
@@ -106,3 +106,7 @@ ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())
+ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick))
+ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
+ipcMain.on('handleRequest', (_, type: "friend" | "group", flag: string, accept: boolean = true) =>
+    adapter.handleRequest(type, flag, accept))
