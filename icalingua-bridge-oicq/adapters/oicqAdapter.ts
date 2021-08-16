@@ -376,8 +376,8 @@ const adapter = {
         }
         cb(friendsAll)
     },
-    getIgnoredChats(resolve) {
-        resolve(storage.getIgnoredChats())
+    async getIgnoredChats(resolve) {
+        resolve(await storage.getIgnoredChats())
     },
     removeIgnoredChat(roomId: number): any {
         return storage.removeIgnoredChat(roomId)
