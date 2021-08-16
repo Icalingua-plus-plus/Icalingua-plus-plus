@@ -29,7 +29,7 @@
         </div>
       </div>
       <el-button-group>
-        <el-button @click="approve(item.request_type, item.userId, item.flag)">同意</el-button>
+        <el-button @click="approve(item.request_type, item.user_id, item.flag)">同意</el-button>
         <el-button @click="reject(item.request_type, item.flag)">拒绝</el-button>
       </el-button-group>
     </div>
@@ -39,6 +39,7 @@
 <script>
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import { ipcRenderer } from 'electron'
 
 export default {
   name: 'FriendRequest',
@@ -51,6 +52,7 @@ export default {
   async created() {
     document.title = '申请列表'
     this.request = {...this.request, ...(await ipc.getSystemMsg())}
+    ipcRenderer.on('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
   },
 
   methods: {
@@ -59,13 +61,11 @@ export default {
     },
     approve(type, userId, flag) {
       ipc.handleRequest(type, flag)
-      //await ipc.sendMessage({content: "我们已经是好友啦，一起来聊天吧！", roomId: userId})
       this.$delete(this.request, flag)
-      console.log(this.request)
     },
     reject(type, flag) {
       ipc.handleRequest(type, flag, false)
-      delete this.request[flag]
+      this.$delete(this.request, flag)
     },
   },
 }
