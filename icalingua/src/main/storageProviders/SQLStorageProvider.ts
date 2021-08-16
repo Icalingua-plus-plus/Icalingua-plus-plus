@@ -401,7 +401,7 @@ export default class SQLStorageProvider implements StorageProvider {
     try {
       const unreadRooms = await this.db<Room>(`rooms`)
         .where("unreadCount", ">", 0)
-        .where("priority", "=", priority)
+        .where("priority", ">=", priority)
         .count("roomId");
       return Number(unreadRooms[0].count);
     } catch (e) {
