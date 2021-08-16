@@ -49,4 +49,7 @@ export default {
     setMessages(roomId: number, messages: Message[]) {
         broadcast('setMessages', {roomId, messages})
     },
+    sendAddRequest(data) {
+        broadcast('sendAddRequest', data)
+    },
 }
