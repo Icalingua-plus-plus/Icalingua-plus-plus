@@ -1,17 +1,19 @@
+import fs from "fs";
 import knex, { Knex } from "knex";
 import lodash from "lodash";
 import path from "path";
-import fs from "fs";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
-import StorageProvider from "../../types/StorageProvider";
 import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
-import upg0to1 from "./SQLUpgradeScript/0to1";
+import StorageProvider from "../../types/StorageProvider";
 import errorHandler from "../utils/errorHandler";
+import logger from "../utils/winstonLogger";
+import upg0to1 from "./SQLUpgradeScript/0to1";
 import upg1to2 from "./SQLUpgradeScript/1to2";
+import upg2to3 from "./SQLUpgradeScript/2to3";
 
-const dbVersionLatest = 2;
+const dbVersionLatest = 3;
 
 interface PgMyOpt {
   host: string;
@@ -151,7 +153,7 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   private async updateDB(dbVersion: number) {
-    console.log("正在升级数据库");
+    logger.log("info", "正在升级数据库");
     // 这个 switch 居然不用 break，好耶！
     try {
       switch (dbVersion) {
@@ -159,6 +161,8 @@ export default class SQLStorageProvider implements StorageProvider {
           await upg0to1(this.db);
         case 1:
           await upg1to2(this.db);
+        case 2:
+          await upg2to3(this.db);
         default:
           break;
       }
@@ -271,6 +275,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.boolean("system").nullable();
           table.text("mirai").nullable();
           table.boolean("reveal").nullable();
+          table.boolean("flash").nullable();
         });
         await this.db<MsgTableName>("msgTableName").insert({
           tableName: `msg${roomId}`,
