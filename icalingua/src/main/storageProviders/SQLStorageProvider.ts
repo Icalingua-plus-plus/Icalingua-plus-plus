@@ -181,7 +181,7 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   /** 实现 {@link StorageProvider} 类的 connect 方法。
-   * 名字叫 connect ，实际上只有 `MongoStorageProvider` 在这个方法下真正地干了连接数据库的活儿。
+   * 名字叫 connect ，实际上只有另外两个 `StorageProvider` 在这个方法下真正地干了连接数据库的活儿。
    *
    * 这个方法在这里主要干了这些事情：
    * 1. 如果是 PostgreSQL 数据库，那么根据 QQ 号建立一个 Schema，把这个 QQ 号产生的信息存在里面。
@@ -274,6 +274,8 @@ export default class SQLStorageProvider implements StorageProvider {
   /** 私有方法，用于建立 `msg${roomId}` 表。例如，若和QQ号为 `114514` 的人建立聊天，
    * 则表名为 `msg114514` ，若在群号为 `114514` 的群进行聊天，则表名为 `msg-114514`。
    * Icalingua 使用 `roomId` 的正/负区分 QQ 号与群号。
+   *
+   * 这个方法同样会修改 `msgTableName` 表，记录下新建的表的信息，方便日后升级。
    */
   private async createMsgTable(roomId: number) {
     try {
@@ -315,7 +317,7 @@ export default class SQLStorageProvider implements StorageProvider {
    * 对应 room 的“增”操作。
    *
    * 若 `msg${roomId}` 表不存在，
-   * 则调用 {@link addMessages} 方法新建一个表。
+   * 则调用 {@link createMsgTable} 方法新建一个表。
    *
    * 在“新房间收到新消息”等需要新增房间的事件时被调用。
    */
@@ -487,7 +489,7 @@ export default class SQLStorageProvider implements StorageProvider {
 
   /** 实现 {@link StorageProvider} 类的 `addMessage` 方法，
    * 是对 `msg${roomId}` 的“增”操作。若 `msg${roomId}` 表不存在，
-   * 则调用 {@link addMessages} 方法新建一个表。
+   * 则调用 {@link createMsgTable} 方法新建一个表。
    *
    * 在收到消息时被调用。
    */
@@ -521,7 +523,7 @@ export default class SQLStorageProvider implements StorageProvider {
 
   /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
    * 是对 `msg${roomId}` 的“查多个”操作。若 `msg${roomId}` 表不存在，
-   * 则调用 {@link addMessages} 方法新建一个表，从而避免因表不存在而报错。
+   * 则调用 {@link createMsgTable} 方法新建一个表，从而避免因表不存在而报错。
    *
    * 在进入房间时，该方法被调用。
    */
