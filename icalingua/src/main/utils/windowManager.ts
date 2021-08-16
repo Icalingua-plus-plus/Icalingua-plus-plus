@@ -35,7 +35,7 @@ export const loadMainWindow = () => {
 
     if (process.env.NODE_ENV === 'development') {
         mainWindow.webContents.session.loadExtension(
-            path.join(process.cwd(), "node_modules/vue-devtools/vender/")
+            path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
         )
         mainWindow.minimize()
     }
@@ -60,7 +60,8 @@ export const showLoginWindow = () => {
     if (loginWindow) {
         loginWindow.show()
         loginWindow.focus()
-    } else {
+    }
+    else {
         loginWindow = new BrowserWindow({
             height: 720,
             width: 450,
@@ -73,7 +74,7 @@ export const showLoginWindow = () => {
 
         if (process.env.NODE_ENV === 'development') {
             loginWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), "node_modules/vue-devtools/vender/")
+                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
             )
             loginWindow.minimize()
         }
@@ -82,10 +83,11 @@ export const showLoginWindow = () => {
     }
 }
 export const showRequestWindow = () => {
-    if (requestWindow) {
+    if (requestWindow && !requestWindow.isDestroyed()) {
         requestWindow.show()
         requestWindow.focus()
-    } else {
+    }
+    else {
         requestWindow = new BrowserWindow({
             width: 750,
             height: 600,
@@ -93,16 +95,15 @@ export const showRequestWindow = () => {
                 nodeIntegration: true,
                 webSecurity: false,
                 contextIsolation: false,
-            }
+            },
         })
 
         if (process.env.NODE_ENV === 'development') {
             requestWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), "node_modules/vue-devtools/vender/")
-            )
+                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
         }
 
-        requestWindow.loadURL(getWinUrl() + "#/friendRequest")
+        requestWindow.loadURL(getWinUrl() + '#/friendRequest')
     }
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
@@ -114,24 +115,26 @@ export const sendToMainWindow = (channel: string, payload?: any) => {
         mainWindow.webContents.send(channel, payload)
 }
 export const sendToRequestWindow = (channel: string, payload?: any) => {
-    if (requestWindow)
+    if (requestWindow && !requestWindow.isDestroyed())
         requestWindow.webContents.send(channel, payload)
 }
 export const getMainWindow = () => mainWindow
 export const showWindow = () => {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show()
         mainWindow.focus()
-    } else if (loginWindow) {
+    }
+    else if (loginWindow && !loginWindow.isDestroyed()) {
         loginWindow.show()
         loginWindow.focus()
-    } else if (requestWindow) {
+    }
+    else if (requestWindow && !requestWindow.isDestroyed()) {
         requestWindow.show()
         requestWindow.focus()
     }
 }
 export const destroyWindow = () => {
-    if (mainWindow) mainWindow.destroy()
-    if (loginWindow) loginWindow.destroy()
-    if (requestWindow) requestWindow.destroy()
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
+    if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
+    if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
 }
