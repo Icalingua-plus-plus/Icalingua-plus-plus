@@ -86,6 +86,8 @@
 						<LottieAnimation
 							v-else-if="lottie"
 							:path="lottie"
+                            :height="250"
+                            :width="250"
 						/>
 
 						<format-message
