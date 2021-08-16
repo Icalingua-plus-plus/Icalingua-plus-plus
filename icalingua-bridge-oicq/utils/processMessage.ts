@@ -21,6 +21,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'at':
                 if (lastType === 'reply')
                     break
+            // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
                 lastMessage.content += m.data.text
                 message.content += m.data.text
@@ -30,8 +31,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     message.at = true
                 }
                 break
-            case 'image':
             case 'flash':
+                message.flash=true
+            // noinspection FallThroughInSwitchStatementJS 确信
+            case 'image':
                 lastMessage.content += '[Image]'
                 url = m.data.url
                 message.file = {
