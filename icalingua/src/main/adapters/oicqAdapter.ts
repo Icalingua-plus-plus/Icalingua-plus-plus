@@ -7,7 +7,7 @@ import {
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
-    FriendAddEventData, GroupAddEventData, GroupInviteEventData
+    FriendAddEventData, GroupAddEventData, GroupInviteEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -16,7 +16,7 @@ import Message from '../../types/Message'
 import formatDate from '../../utils/formatDate'
 import createRoom from '../../utils/createRoom'
 import processMessage from '../utils/processMessage'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, showWindow} from '../utils/windowManager'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
 import {app, BrowserWindow, dialog, Notification} from 'electron'
@@ -298,9 +298,20 @@ const eventHandlers = {
         ui.addMessage(roomId, message)
         await storage.addMessage(roomId, message)
     },
-    async requestAdd(data) {
+    async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
         ui.sendAddRequest(data)
+
+        //notification
+        const notif = new Notification({
+            title: data.nickname,
+            body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
+            icon: await avatarCache(getAvatarUrl(data.user_id)),
+        })
+        notif.addListener('click', () => {
+            showRequestWindow()
+        })
+        notif.show()
     },
 }
 const loginHandlers = {
