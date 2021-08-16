@@ -251,7 +251,8 @@ const buildRoomMenu = (room: Room): Menu => {
                 exportGroupMembers(-room.roomId)
             },
         }))
-    } else {
+    }
+    else {
         menu.append(new MenuItem({
             label: '互动标识',
             async click() {
