@@ -283,11 +283,9 @@ const adapter: Adapter = {
             socket.emit('getSystemMsg', resolve)
         })
     },
-    handleRequest(type: "friend" | "group", flag: string, accept?: boolean): any {
-        return new Promise((resolve, reject) => {
-            socket.emit('handleRequest', type, flag, accept, resolve)
-        })
-    }
+    handleRequest(type: 'friend' | 'group', flag: string, accept?: boolean): any {
+        socket.emit('handleRequest', type, flag, accept)
+    },
 }
 
 export default adapter
