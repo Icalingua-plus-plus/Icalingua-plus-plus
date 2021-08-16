@@ -6651,6 +6651,7 @@ fsevents@~2.3.1:
     v-click-outside: ^3.1.2
     v-emoji-picker: ^2.3.3
     vue: ^2.6.12
+    vue-devtools: ^5.1.4
     vue-electron: ^1.0.6
     vue-emoji-picker: ^1.0.1
     vue-html-loader: ^1.2.4
@@ -13254,6 +13255,13 @@ typescript@^4.2.4:
   peerDependencies:
     vue: ^2.0.0
   checksum: 3b4e1de0328b2af0216cbbf125c4ac3da5701c9585713ee634f887092f4faaa1ff9589130ec9fc0b3240d7709217eb8d03e9c0e27fe80768d2883ffe5faf9a14
+  languageName: node
+  linkType: hard
+
+"vue-devtools@npm:^5.1.4":
+  version: 5.1.4
+  resolution: "vue-devtools@npm:5.1.4"
+  checksum: 437aeb3871f83328ffc3cd52bca13b2c58c7047e28b28314e58063da3f34ba3534784a37e33a748bbdb6fe22956f3545066e553e430b052222bfd593f31843ff
   languageName: node
   linkType: hard
 
