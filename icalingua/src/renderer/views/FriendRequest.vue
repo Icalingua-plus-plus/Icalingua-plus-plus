@@ -29,7 +29,7 @@
         </div>
       </div>
       <el-button-group>
-        <el-button @click="approve(item.request_type, item.userId, item.flag)">同意</el-button>
+        <el-button @click="approve(item.request_type, item.user_id, item.flag)">同意</el-button>
         <el-button @click="reject(item.request_type, item.flag)">拒绝</el-button>
       </el-button-group>
     </div>
