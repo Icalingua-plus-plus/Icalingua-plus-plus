@@ -401,9 +401,9 @@ export default class SQLStorageProvider implements StorageProvider {
     try {
       const unreadRooms = await this.db<Room>(`rooms`)
         .where("unreadCount", ">", 0)
-        .where("priority", "=", priority)
-        .select("roomId"); // 尽可能减小通过 node 的数据量，本来 SQL 有原生方法能实现计数，但是我忘了。
-      return unreadRooms.length;
+        .where("priority", ">=", priority)
+        .count("roomId");
+      return Number(unreadRooms[0].count);
     } catch (e) {
       errorHandler(e);
     }
