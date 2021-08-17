@@ -12,8 +12,9 @@ import logger from "../utils/winstonLogger";
 import upg0to1 from "./SQLUpgradeScript/0to1";
 import upg1to2 from "./SQLUpgradeScript/1to2";
 import upg2to3 from "./SQLUpgradeScript/2to3";
+import upg3to4 from "./SQLUpgradeScript/3to4";
 
-const dbVersionLatest = 3;
+const dbVersionLatest = 4;
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -171,6 +172,8 @@ export default class SQLStorageProvider implements StorageProvider {
           await upg1to2(this.db);
         case 2:
           await upg2to3(this.db);
+        case 3:
+          await upg3to4(this.db);
         default:
           break;
       }
@@ -250,7 +253,7 @@ export default class SQLStorageProvider implements StorageProvider {
       if (!hasIgnoredTable) {
         await this.db.schema.createTable(`ignoredChats`, (table) => {
           table
-            .integer("id")
+            .bigInteger("id") // 在 pgSQL 里会被返回成 string，不知有无 bug
             .unique()
             .primary()
             .index();
