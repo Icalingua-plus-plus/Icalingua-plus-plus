@@ -6,7 +6,7 @@ import {
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
+    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncReadedEventData,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
 import getAvatarUrl from '../utils/getAvatarUrl'
@@ -259,6 +259,10 @@ const eventHandlers = {
         //console.log(data)
         clients.sendAddRequest(data)
     },
+    syncRead(data: SyncReadedEventData){
+        const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
+        clients.syncRead(roomId)
+    }
 }
 const loginHandlers = {
     async onSucceed() {
