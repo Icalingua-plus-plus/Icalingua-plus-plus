@@ -34,9 +34,7 @@ import Adapter, {CookiesDomain} from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 import RoamingStamp from '../../types/RoamingStamp'
-import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
-import {IteratorCallback} from 'mongodb'
 import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
 
@@ -139,16 +137,15 @@ const eventHandlers = {
             notif.show()
         }
 
-        if (
-            room.roomId !== ui.getSelectedRoomId() ||
-            !getMainWindow().isFocused()
-        ) {
-            if (isSelfMsg) {
-                room.unreadCount = 0
-                room.at = false
-            }
-            else room.unreadCount++
+        if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused()) {
+            //当前处于此会话界面
+            adapter.reportRead(data.message_id)
         }
+        else if (isSelfMsg) {
+            room.unreadCount = 0
+            room.at = false
+        }
+        else room.unreadCount++
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
         if (message.file && message.file.name && room.autoDownload) {
@@ -160,7 +157,6 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         await storage.addMessage(roomId, message)
         await updateTrayIcon()
-        //console.log(data.message)
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
@@ -470,6 +466,9 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    reportRead(messageId: string): any {
+        bot.reportReaded(messageId)
+    },
     async getGroupMembers(group: number): Promise<MemberInfo[]> {
         const values = (await bot.getGroupMemberList(group, true)).data.values()
         let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
@@ -693,7 +692,7 @@ const adapter: OicqAdapter = {
         }
         return groupsAll
     },
-    fetchMessages(roomId: number, offset: number) {
+    async fetchMessages(roomId: number, offset: number) {
         if (!offset) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
@@ -717,7 +716,10 @@ const adapter: OicqAdapter = {
             }
         }
         currentLoadedMessagesCount = offset + 20
-        return storage.fetchMessages(roomId, offset, 20)
+        const messages = await storage.fetchMessages(roomId, offset, 20)
+        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+            adapter.reportRead(<string>messages[messages.length - 1]._id)
+        return messages
     },
     sliderLogin(ticket: string) {
         bot.sliderLogin(ticket)

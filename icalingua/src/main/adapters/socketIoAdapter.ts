@@ -23,6 +23,7 @@ import SearchableFriend from '../../types/SearchableFriend'
 
 let socket: Socket
 let uin = 0
+let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
@@ -34,7 +35,11 @@ const attachSocketEvents = () => {
         ui.updateRoom(room)
         await updateTrayIcon()
     })
-    socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
+    socket.on('addMessage', ({roomId, message}: { roomId: number, message: Message }) => {
+        ui.addMessage(roomId, message)
+        if (typeof message._id === 'string')
+            adapter.reportRead(message._id)
+    })
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
@@ -98,6 +103,9 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    reportRead(messageId: string): any {
+        socket.emit('reportRead', messageId)
+    },
     getGroupMembers(group: number): Promise<MemberInfo[]> {
         return new Promise(resolve => socket.emit('getGroupMembers', group, resolve))
     },
@@ -170,13 +178,14 @@ const adapter: Adapter = {
     fetchHistory(messageId: string, roomId?: number) {
         if (!roomId)
             roomId = ui.getSelectedRoomId()
-        socket.emit('fetchHistory', messageId, roomId)
+        socket.emit('fetchHistory', messageId, roomId, currentLoadedMessagesCount)
     },
     stopFetchingHistory() {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
         updateTrayIcon()
+        currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
             socket.emit('fetchMessages', roomId, offset, resolve)
         })
