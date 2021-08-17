@@ -15,6 +15,7 @@ export const loadMainWindow = () => {
     mainWindow = new BrowserWindow({
         height: winSize.height,
         width: winSize.width,
+        show: process.env.NODE_ENV !== 'development',
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,
@@ -25,9 +26,6 @@ export const loadMainWindow = () => {
     if (loginWindow)
         loginWindow.destroy()
 
-    if (winSize.max)
-        mainWindow.maximize()
-
     mainWindow.on('close', (e) => {
         e.preventDefault()
         mainWindow.hide()
@@ -37,8 +35,9 @@ export const loadMainWindow = () => {
         mainWindow.webContents.session.loadExtension(
             path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
         )
-        mainWindow.minimize()
     }
+    else if (winSize.max)
+        mainWindow.maximize()
 
     setTimeout(() => mainWindow.on('focus', async () => {
         clearCurrentRoomUnread()
