@@ -61,6 +61,7 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
+    socket.on('syncRead', ui.clearRoomUnread)
     socket.on('setMessages', ({roomId, messages}: { roomId: number, messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)

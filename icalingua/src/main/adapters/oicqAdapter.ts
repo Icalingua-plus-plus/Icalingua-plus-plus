@@ -7,7 +7,7 @@ import {
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
-    FriendAddEventData, GroupAddEventData, GroupInviteEventData,
+    FriendAddEventData, GroupAddEventData, GroupInviteEventData, SyncReadedEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -309,6 +309,10 @@ const eventHandlers = {
         })
         notif.show()
     },
+    syncRead(data: SyncReadedEventData) {
+        const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
+        adapter.clearRoomUnread(roomId)
+    },
 }
 const loginHandlers = {
     slider(data) {
@@ -449,6 +453,7 @@ const attachEventHandler = () => {
     bot.on('request.friend.add', eventHandlers.requestAdd)
     bot.on('request.group.invite', eventHandlers.requestAdd)
     bot.on('request.group.add', eventHandlers.requestAdd)
+    bot.on('sync.readed', eventHandlers.syncRead)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)
@@ -463,6 +468,8 @@ interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
+
+    clearRoomUnread(roomId: number): Promise<any>
 }
 
 const adapter: OicqAdapter = {
@@ -786,8 +793,11 @@ const adapter: OicqAdapter = {
     async clearCurrentRoomUnread() {
         if (!ui.getSelectedRoomId())
             return
-        ui.clearCurrentRoomUnread()
-        await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
+        await adapter.clearRoomUnread(ui.getSelectedRoomId())
+    },
+    async clearRoomUnread(roomId: number) {
+        ui.clearRoomUnread(roomId)
+        await storage.updateRoom(roomId, {unreadCount: 0})
         await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {

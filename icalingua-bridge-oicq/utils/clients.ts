@@ -52,4 +52,7 @@ export default {
     sendAddRequest(data) {
         broadcast('sendAddRequest', data)
     },
+    syncRead(roomId: number) {
+        broadcast('syncRead', roomId)
+    },
 }
