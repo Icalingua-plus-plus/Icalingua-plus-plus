@@ -15,7 +15,9 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
     'qun.qq.com' | 'ti.qq.com'
 
 export default interface Adapter {
-    getGroupMembers(group:number):Promise<MemberInfo[]>
+    reportRead(messageId: string): any
+
+    getGroupMembers(group: number): Promise<MemberInfo[]>
 
     setGroupNick(group: number, nick: string): any
 
@@ -95,5 +97,5 @@ export default interface Adapter {
 
     getSystemMsg(): any
 
-    handleRequest(type: "friend" | "group", flag: string, accept?:boolean): any
+    handleRequest(type: 'friend' | 'group', flag: string, accept?: boolean): any
 }

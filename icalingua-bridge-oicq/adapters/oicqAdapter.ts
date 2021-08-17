@@ -24,14 +24,11 @@ import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
-import fs from 'fs'
 import {config} from '../providers/configManager'
 
 let bot: Client
 let storage: MongoStorageProvider
 let loginForm: LoginForm
-
-let currentLoadedMessagesCount = 0
 let loggedIn = false
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
@@ -269,25 +266,6 @@ const loginHandlers = {
             await initStorage()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
-            setInterval(async () => {
-                clients.message('获取好友历史消息')
-                const rooms = await storage.getAllRooms()
-                for (const i of rooms) {
-                    if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
-                    const roomId = i.roomId
-                    if (roomId < 0) continue
-                    let buffer: Buffer
-                    let uid = roomId
-                    if (roomId < 0) {
-                        buffer = Buffer.alloc(21)
-                        uid = -uid
-                    }
-                    else buffer = Buffer.alloc(17)
-                    buffer.writeUInt32BE(uid, 0)
-                    await adapter.fetchHistory(buffer.toString('base64'), roomId)
-                    await sleep(500)
-                }
-            }, 1000 * 60 * 60 * 12)
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
@@ -309,7 +287,7 @@ const loginHandlers = {
                 }
                 else buffer = Buffer.alloc(17)
                 buffer.writeUInt32BE(uid, 0)
-                adapter.fetchHistory(buffer.toString('base64'), roomId)
+                adapter.fetchHistory(buffer.toString('base64'), roomId, 0)
                 await sleep(500)
             }
         }
@@ -358,6 +336,9 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    reportRead(messageId: string): any {
+        bot.reportReaded(messageId)
+    },
     async getGroupMembers(group: number, resolve) {
         const values = (await bot.getGroupMemberList(group, true)).data.values()
         let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
@@ -594,8 +575,10 @@ const adapter = {
                 client.emit('setShutUp', false)
             }
         }
-        currentLoadedMessagesCount = offset + 20
-        callback(await storage.fetchMessages(roomId, offset, 20))
+        const messages = await storage.fetchMessages(roomId, offset, 20)
+        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+            adapter.reportRead(<string>messages[messages.length - 1]._id)
+        callback(messages)
     },
     reLogin() {
         bot.login()
@@ -693,7 +676,7 @@ const adapter = {
         clients.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, {reveal: true})
     },
-    async fetchHistory(messageId: string, roomId: number) {
+    async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         const messages = []
         while (true) {
             const history = await bot.getChatHistory(messageId)
