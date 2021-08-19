@@ -476,18 +476,16 @@ export default {
 		this.newMessages = []
 		const isMobile = detectMobile()
 
-		window.addEventListener('keyup', (e) => {
-			if (e.key === 'Enter' && !e.shiftKey && !this.fileDialog) {
-				if (isMobile) {
-					this.message = this.message + '\n'
-					setTimeout(() => this.onChangeInput(), 0)
-				}
-				else {
-					this.sendMessage()
-				}
-			}
-
-			this.updateShowUsersTag()
+		window.addEventListener('keydown', (e) => {
+            if (e.shiftKey) {
+                if (e.key === 'Enter') {
+                    console.log(this.message)
+                    this.message += ''
+                    setTimeout(() => this.onChangeInput(), 0)
+                }
+            } else if (e.key === 'Enter') {
+                this.sendMessage()
+            }
 		})
 
 		this.$refs['roomTextarea'].addEventListener('click', () => {
