@@ -665,7 +665,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
-        if (!history) {
+        if (!history && !message.flash) {
             menu.append(
                 new MenuItem({
                     label: '回复',
@@ -674,7 +674,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
-            if (!message.file)
+            if (!message.file || message.file.type.startsWith('image/'))
                 menu.append(
                     new MenuItem({
                         label: '+1',
