@@ -259,10 +259,11 @@ const eventHandlers = {
         //console.log(data)
         clients.sendAddRequest(data)
     },
-    syncRead(data: SyncReadedEventData){
+    syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         clients.syncRead(roomId)
-    }
+        storage.updateRoom(roomId, {unreadCount: 0})
+    },
 }
 const loginHandlers = {
     async onSucceed() {
