@@ -1,4 +1,6 @@
-# Electron QQ
+# Icalingua
+
+Icalingua 这个名字是 @91khr 起的，是拉丁语中「光」和「语言」的组合。
 
 QwQ 妳们点星星的速度好快，electron-qq 的星星要比 [MtF-Wiki](https://github.com/mtf-wiki/MtF-Wiki) 高了，大家多给 [MtF-Wiki](https://github.com/mtf-wiki/MtF-Wiki) 点点星星吧
 
