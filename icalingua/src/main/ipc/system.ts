@@ -9,7 +9,7 @@ ipcMain.handle('getStorePath', () => app.getPath('userData'))
 
 //Solution for 4764a6, 4cf06e, 509310
 ipcMain.handle('getLastUsedStickerType', () => getConfig().lastUsedStickerType)
-ipcMain.on('setLastUsedStickerType', (_, type: 'remote' | 'stickers' | 'emojis') => {
+ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 'emojis') => {
     getConfig().lastUsedStickerType = type
     saveConfigFile()
 })

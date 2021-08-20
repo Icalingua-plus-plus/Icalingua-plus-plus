@@ -123,6 +123,10 @@
 				                  $refs.room.message += $event.data;
 				                  $refs.room.focusTextarea();
 				                "
+                                @selectFace="
+                                  $refs.room.message += `[Face: ${$event}]`;
+				                  $refs.room.focusTextarea();
+                                "
                             />
                         </transition>
                     </div>
