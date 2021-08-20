@@ -226,6 +226,8 @@ export default {
                 window.close()
             }
             else if (e.key === 'Escape') {
+                if (document.webkitIsFullScreen)
+                    return
                 if (this.$refs.room.messageReply)
                     this.$refs.room.resetMessage()
                 else {
