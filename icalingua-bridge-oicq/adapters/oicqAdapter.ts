@@ -630,7 +630,7 @@ const adapter = {
     },
 
     getUin: () => bot.uin,
-    getGroupFileMeta: (gin: number, fid: string, resolve) => resolve(bot.acquireGfs(gin).download(fid)),
+    getGroupFileMeta: async (gin: number, fid: string, resolve) => resolve(await bot.acquireGfs(gin).download(fid)),
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
     getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getFirstUnreadRoom(priority)),
     getRoom: async (roomId: number, resolve) => resolve(await storage.getRoom(roomId)),
