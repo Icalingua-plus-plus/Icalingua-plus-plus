@@ -882,6 +882,7 @@ const adapter: OicqAdapter = {
         stopFetching = true
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
+        let lastMessage = {}
         const fetchLoop = async (limit?: number) => {
             const messages = []
             let done = false
@@ -916,14 +917,17 @@ const adapter: OicqAdapter = {
                         time: data.time * 1000,
                     }
                     try {
-                        await processMessage(
+                        const retData = await processMessage(
                             data.message,
                             message,
                             {},
                             roomId,
                         )
+
                         messages.push(message)
                         newMsgs.push(message)
+                        console.log(retData)
+                        lastMessage = retData.message
                     } catch (e) {
                         errorHandler(e, true)
                     }
@@ -964,6 +968,10 @@ const adapter: OicqAdapter = {
                 ui.clearHistoryCount()
             }
         }
+
+        let room = await storage.getRoom(roomId)
+        room.lastMessage = lastMessage
+        ui.updateRoom(room)
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
