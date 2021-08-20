@@ -474,7 +474,6 @@ export default {
     },
     mounted() {
         this.newMessages = []
-        const isMobile = detectMobile()
 
         window.addEventListener('keydown', (e) => {
             if (e.key !== 'Enter') return
@@ -489,17 +488,6 @@ export default {
                 this.sendMessage()
             }
         })
-
-        this.$refs['roomTextarea'].addEventListener('click', () => {
-            if (isMobile) this.keepKeyboardOpen = true
-            this.updateShowUsersTag()
-        })
-
-        this.$refs['roomTextarea'].addEventListener('blur', () => {
-            this.resetUsersTag()
-            if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0)
-        })
-
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
@@ -539,86 +527,6 @@ export default {
         })
     },
     methods: {
-        updateShowUsersTag() {
-            if (!this.$refs['roomTextarea']) return
-            if (!this.room.users || this.room.users.length <= 2) return
-
-            if (
-                this.textareaCursorPosition ===
-                this.$refs['roomTextarea'].selectionStart
-            ) {
-                return
-            }
-
-            this.textareaCursorPosition = this.$refs['roomTextarea'].selectionStart
-
-            let position = this.textareaCursorPosition
-
-            while (
-                position > 0 &&
-                this.message.charAt(position - 1) !== '@' &&
-                this.message.charAt(position - 1) !== ' '
-                ) {
-                position--
-            }
-
-            const beforeTag = this.message.charAt(position - 2)
-            const notLetterNumber = !beforeTag.match(/^[0-9a-zA-Z]+$/)
-
-            if (
-                this.message.charAt(position - 1) === '@' &&
-                (!beforeTag || beforeTag === ' ' || notLetterNumber)
-            ) {
-                const query = this.message.substring(
-                    position,
-                    this.textareaCursorPosition,
-                )
-
-                this.filteredUsersTag = filteredUsers(
-                    this.room.users,
-                    'username',
-                    query,
-                    true,
-                ).filter((user) => user._id !== this.currentUserId)
-            }
-            else {
-                this.resetUsersTag()
-            }
-        },
-        selectUserTag(user) {
-            const cursorPosition = this.$refs['roomTextarea'].selectionStart
-
-            let position = cursorPosition
-            while (position > 0 && this.message.charAt(position - 1) !== '@') {
-                position--
-            }
-
-            let endPosition = position
-            while (
-                this.message.charAt(endPosition) &&
-                this.message.charAt(endPosition).trim()
-                ) {
-                endPosition++
-            }
-
-            const space = this.message.substr(endPosition, endPosition).length
-                ? ''
-                : ' '
-
-            this.message =
-                this.message.substr(0, position) +
-                user.username +
-                space +
-                this.message.substr(endPosition, this.message.length - 1)
-
-            this.selectedUsersTag = [...this.selectedUsersTag, {...user}]
-
-            this.focusTextarea()
-        },
-        resetUsersTag() {
-            this.filteredUsersTag = []
-            this.textareaCursorPosition = null
-        },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
             if (height < 30) height = 30
@@ -641,7 +549,6 @@ export default {
             }
 
             this.selectedUsersTag = []
-            this.resetUsersTag()
             this.resetTextareaSize()
             this.message = ''
             this.editedMessage = {}
