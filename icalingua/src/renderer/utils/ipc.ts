@@ -113,7 +113,7 @@ const ipc = {
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
     },
-    async getLastUsedStickerType(): Promise<'remote' | 'stickers' | 'emojis'> {
+    async getLastUsedStickerType(): Promise<'face' | 'remote' | 'stickers' | 'emojis'> {
         return await ipcRenderer.invoke('getLastUsedStickerType')
     },
     async getSystemMsg() {
