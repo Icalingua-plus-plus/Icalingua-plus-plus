@@ -133,7 +133,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 div.head {
   height: 64px;
   min-height: 64px;
@@ -169,6 +169,16 @@ div.head {
 
 .grid.face {
   grid-template-columns: repeat(9, 1fr);
+
+  img {
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    width: 70%;
+    height: unset;
+  }
 }
 
 .grid img {
