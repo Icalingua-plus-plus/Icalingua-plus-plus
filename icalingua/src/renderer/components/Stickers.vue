@@ -163,7 +163,7 @@ div.head {
 .grid {
   display: grid;
   width: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
