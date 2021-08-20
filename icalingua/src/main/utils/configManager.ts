@@ -22,7 +22,7 @@ type AllConfig = {
     server: string
     privateKey: string
     fetchHistoryOnChatOpen: boolean
-    lastUsedStickerType: 'remote' | 'stickers' | 'emojis'
+    lastUsedStickerType: 'face' | 'remote' | 'stickers' | 'emojis'
 }
 
 
