@@ -574,9 +574,13 @@ const adapter: OicqAdapter = {
             })
         }
         if (content) {
+            //这里是处理@人和表情 markup 的逻辑
+            const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]
+            // 把 @xxx 的部分单独分割开
+            // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
             for (const {text} of at) {
-                let newParts: string[] = []
+                const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
                         const index = part.indexOf(text)
@@ -589,20 +593,54 @@ const adapter: OicqAdapter = {
                 }
                 splitContent = newParts
             }
+            // 分离类似 [Face: 265] 的表情
+            const newParts: string[] = []
+            for (let part of splitContent) {
+                if (at.find(e => e.text === part)) {
+                    // @的成分不做处理
+                    newParts.push(part)
+                    continue
+                }
+                while (FACE_REGEX.test(part)) {
+                    const exec = FACE_REGEX.exec(part)
+                    const index = exec.index
+                    const before = part.substr(0, index)
+                    const text = exec[0]
+                    part = part.substr(index + text.length)
+                    before && newParts.push(before)
+                    newParts.push(text)
+                }
+                part && newParts.push(part)
+            }
+            splitContent = newParts
+            // 最后根据每个 string 元素判断类型并且换成对应的 MessageElem
             for (const part of splitContent) {
                 const atInfo = at.find(e => e.text === part)
-                chain.push(atInfo ? {
-                    type: 'at',
-                    data: {
-                        qq: atInfo.id,
-                        text: atInfo.text,
-                    },
-                } : {
-                    type: 'text',
-                    data: {
-                        text: part,
-                    },
-                })
+                const isFace = FACE_REGEX.test(part)
+                let element: MessageElem
+                if (atInfo)
+                    element = {
+                        type: 'at',
+                        data: {
+                            qq: atInfo.id,
+                            text: atInfo.text,
+                        },
+                    }
+                else if (isFace)
+                    element = {
+                        type: 'face',
+                        data: {
+                            id: Number(FACE_REGEX.exec(part)[1]),
+                        },
+                    }
+                else
+                    element = {
+                        type: 'text',
+                        data: {
+                            text: part,
+                        },
+                    }
+                chain.push(element)
             }
         }
         if (b64img) {
