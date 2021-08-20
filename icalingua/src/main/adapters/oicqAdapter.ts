@@ -533,7 +533,7 @@ const adapter: OicqAdapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
-        if (file && file.type && !file.type.includes('image')) {
+        if (file && typeof file.type === 'string' && !file.type.includes('image')) {
             //群文件
             if (roomId > 0) {
                 ui.messageError('暂时无法向好友发送文件')
