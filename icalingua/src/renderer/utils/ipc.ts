@@ -18,6 +18,9 @@ const ipc = {
     async getAria2Settings(): Promise<Aria2Config> {
         return await ipcRenderer.invoke('getAria2Settings')
     },
+    async getKeyToSendMessage(): Promise<'Enter' | 'CtrlEnter' | 'ShiftEnter'> {
+        return await ipcRenderer.invoke('getKeyToSendMessage')
+    },
     async getStorePath(): Promise<string> {
         return await ipcRenderer.invoke('getStorePath')
     },
