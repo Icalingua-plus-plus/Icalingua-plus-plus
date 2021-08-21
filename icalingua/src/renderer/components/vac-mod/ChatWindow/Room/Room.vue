@@ -229,7 +229,7 @@
           }"
                     @input="onChangeInput"
                     @click.right="textctx"
-                    @keydown.enter.exact.prevent=""
+                    @keydown.enter.prevent=""
                 />
 
                 <div class="vac-icon-textarea">
@@ -472,22 +472,60 @@ export default {
             if (this.infiniteState) this.infiniteState.complete()
         },
     },
-    mounted() {
+    async mounted() {
         this.newMessages = []
-
-        window.addEventListener('keydown', (e) => {
-            if (e.key !== 'Enter') return
-            if (e.ctrlKey) {
-                this.message += '\n'
-                setTimeout(() => this.onChangeInput(), 0)
-            }
-            else if (e.shiftKey) {
-                setTimeout(() => this.onChangeInput(), 0)
-            }
-            else {
-                this.sendMessage()
-            }
-        })
+        
+        var keyToSendMessage = await ipc.getKeyToSendMessage()
+    
+        switch (keyToSendMessage) {
+            case 'Enter':
+                window.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return
+                    if (e.ctrlKey) {
+                        this.message += '\n'
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else if (e.shiftKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                    }
+                })
+                break;
+            case 'CtrlEnter':
+                window.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return
+                    if (!e.ctrlKey) {
+                        this.message += '\n'
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else if (e.shiftKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                    }
+                })
+                break;
+            case 'ShiftEnter':
+                window.addEventListener('keydown', (e) => {
+                    if (e.key !== 'Enter') return
+                    if (!e.shiftKey) {
+                        this.message += '\n'
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else if (e.ctrlKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                    }
+                })
+                break;
+            default:
+                console.log('qwq')
+        }
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
