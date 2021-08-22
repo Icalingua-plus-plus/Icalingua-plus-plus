@@ -235,11 +235,7 @@ export default {
                 if (this.$refs.room.messageReply)
                     this.$refs.room.resetMessage()
                 else {
-                    this.selectedRoomId = 0
-                    this.messages = []
-                    this.panel = ''
-                    ipc.setSelectedRoom(0, '')
-                    document.title = 'Icalingua'
+                    this.closeRoom()
                 }
             }
             else if (e.key === 'Tab') {
@@ -398,6 +394,10 @@ Chromium ${process.versions.chrome}`
             this.view = 'chats'
         },
         async chroom(room) {
+            if (room === 0) {
+                this.closeRoom()
+                return
+            }
             if ((typeof room) === 'number')
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
@@ -422,6 +422,13 @@ Chromium ${process.versions.chrome}`
         stopFetchingHistory() {
             ipc.stopFetchMessage()
         },
+        closeRoom(){
+            this.selectedRoomId = 0
+            this.messages = []
+            this.panel = ''
+            ipc.setSelectedRoom(0, '')
+            document.title = 'Icalingua'
+        }
     },
     computed: {
         cssVars() {

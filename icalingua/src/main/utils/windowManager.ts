@@ -4,6 +4,7 @@ import {getConfig} from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import {updateTrayIcon} from './trayManager'
 import path from 'path'
+import ui from './ui'
 
 let loginWindow: BrowserWindow,
     mainWindow: BrowserWindow,
@@ -28,6 +29,7 @@ export const loadMainWindow = () => {
 
     mainWindow.on('close', (e) => {
         e.preventDefault()
+        ui.chroom(0)
         mainWindow.hide()
     })
 
