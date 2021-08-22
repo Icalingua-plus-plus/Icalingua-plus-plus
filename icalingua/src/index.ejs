@@ -11,7 +11,7 @@
 <script>
     "nya"
     if (process.env.NODE_ENV !== 'development')
-        window.__static = require('path').join(process.cwd(), '/static').replace(/\\/g, '\\\\')
+        window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
     else
         window.__static = "file://" + require('path').join(process.cwd(), '/static').replace(/\\/g, '\\\\')
 </script>
