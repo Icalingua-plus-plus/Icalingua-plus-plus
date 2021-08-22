@@ -98,4 +98,8 @@ export default interface Adapter {
     getSystemMsg(): any
 
     handleRequest(type: 'friend' | 'group', flag: string, accept?: boolean): any
+
+    setGroupKick(gin: number, uin: number): any
+
+    setGroupLeave(gin: number): any
 }

@@ -21,7 +21,7 @@
       }"
 		>
 			<slot name="message" v-bind="{ message }">
-				<div class="vac-message-sender-avatar" @click.right="avatarctx" @dblclick="$emit('poke')"
+				<div class="vac-message-sender-avatar" @click.right="$emit('avatar-ctx')" @dblclick="$emit('poke')"
 				     v-if="roomUsers.length > 2 && message.senderId !== currentUserId">
 					<img
 						:src="tgLogo"
@@ -329,9 +329,6 @@ export default {
 			if (!file) return
 			const {type} = file
 			return type.toLowerCase().includes('audio/')
-		},
-		avatarctx() {
-			ipc.popupAvatarMenu(this.message)
 		},
 	},
 }

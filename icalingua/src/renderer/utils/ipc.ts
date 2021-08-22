@@ -74,8 +74,8 @@ const ipc = {
     popupRoomMenu(roomId: number) {
         ipcRenderer.send('popupRoomMenu', roomId)
     },
-    popupAvatarMenu(message: Message) {
-        ipcRenderer.send('popupAvatarMenu', message)
+    popupAvatarMenu(message: Message, room: Room) {
+        ipcRenderer.send('popupAvatarMenu', message, room)
     },
     popupTextAreaMenu() {
         ipcRenderer.send('popupTextAreaMenu')
@@ -124,6 +124,12 @@ const ipc = {
     },
     handleRequest(type: "friend" | "group", flag: string, accept: boolean = true): any {
         return ipcRenderer.send('handleRequest', type, flag, accept)
-    }
+    },
+    setGroupKick(gin: number, uin: number) {
+        ipcRenderer.send('setGroupKick', gin, uin)
+    },
+    setGroupLeave(gin: number) {
+        ipcRenderer.send('setGroupLeave', gin)
+    },
 }
 export default ipc

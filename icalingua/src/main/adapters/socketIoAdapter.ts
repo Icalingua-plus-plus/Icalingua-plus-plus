@@ -104,6 +104,12 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    setGroupKick(gin: number, uin: number): any {
+        socket.emit('setGroupKick', gin, uin)
+    },
+    setGroupLeave(gin: number): any {
+        socket.emit('setGroupLeave', gin)
+    },
     reportRead(messageId: string): any {
         socket.emit('reportRead', messageId)
     },

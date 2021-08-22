@@ -96,6 +96,7 @@
                                 @add-new-message="addNewMessage"
                                 @hide-options="hideOptions = $event"
                                 @ctx="msgctx(m)"
+                                @avatar-ctx="avatarCtx(m)"
                                 @download-image="$emit('download-image', $event)"
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
@@ -780,6 +781,9 @@ export default {
         msgctx(message) {
             const sect = window.getSelection().toString()
             ipc.popupMessageMenu(this.room, message, sect, this.$route.name === 'history-page')
+        },
+        avatarCtx(message) {
+            ipc.popupAvatarMenu(message, this.room)
         },
         containerScroll(e) {
             this.hideOptions = true
