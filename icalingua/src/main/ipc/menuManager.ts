@@ -45,6 +45,7 @@ import exportContacts from '../utils/exportContacts'
 import querystring from 'querystring'
 import exportGroupMembers from '../utils/exportGroupMembers'
 import isAdmin from '../utils/isAdmin'
+import SearchableGroup from '../../types/SearchableGroup'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -839,7 +840,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         }))
     menu.popup({window: getMainWindow()})
 })
-ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number) => {
+ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()
     if (remark) {
         menu.append(
@@ -867,6 +868,31 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 label: `复制 "${displayId}"`,
                 click: () => {
                     clipboard.writeText(displayId.toString())
+                },
+            }),
+        )
+    }
+    if (group) {
+        menu.append(
+            new MenuItem({
+                label: group.owner_id === getUin() ? '解散本群' : '退出本群',
+                click: async () => {
+                    const win = new BrowserWindow({
+                        height: 130,
+                        width: 500,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(getWinUrl() + '#/kickAndExit/' +
+                        (group.owner_id === getUin() ? 'dismiss' : 'exit') + '/' +
+                        displayId + '/0/' +
+                        querystring.escape(remark) + '/0')
                 },
             }),
         )

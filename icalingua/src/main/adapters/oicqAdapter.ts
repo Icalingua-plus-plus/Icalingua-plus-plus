@@ -474,11 +474,12 @@ interface OicqAdapter extends Adapter {
 
 const adapter: OicqAdapter = {
     setGroupKick(gin: number, uin: number): any {
-        console.log(gin, uin)
         bot.setGroupKick(gin, uin)
     },
     setGroupLeave(gin: number): any {
         bot.setGroupLeave(gin)
+        if (ui.getSelectedRoomId() === gin)
+            ui.setShutUp(true)
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)

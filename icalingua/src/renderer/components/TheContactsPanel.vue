@@ -44,6 +44,7 @@
 						:key="i.group_id"
 						:id="-i.group_id"
 						:remark="i.group_name"
+                        :group="i"
 						v-show="i.sc.includes(searchContext)"
 						@dblclick="$emit('dblclick', -i.group_id, i.group_name)"
 					/>
