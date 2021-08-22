@@ -55,6 +55,13 @@ const setOnlineStatus = (status: OnlineStatusType) => {
         .catch(res => console.log(res))
 }
 
+const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
+    getConfig().keyToSendMessage = key
+    saveConfigFile()
+    ui.setKeyToSendMessage(key)
+    updateAppMenu()
+}
+
 Menu.setApplicationMenu(Menu.buildFromTemplate([
     {
         role: 'toggleDevTools',
@@ -321,7 +328,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '好友申请列表',
-                click: () => showRequestWindow()
+                click: () => showRequestWindow(),
             }),
             new MenuItem({
                 label: '数据导出',
@@ -455,6 +462,29 @@ export const updateAppMenu = async () => {
                         autoHideMenuBar: true,
                     }).loadURL(getWinUrl() + '#/aria2')
                 },
+            }),
+            new MenuItem({
+                label: '用于发送消息的按键',
+                submenu: [
+                    {
+                        type: 'radio',
+                        label: 'Enter',
+                        checked: getConfig().keyToSendMessage === 'Enter',
+                        click: () => setKeyToSendMessage('Enter'),
+                    },
+                    {
+                        type: 'radio',
+                        label: 'Ctrl + Enter',
+                        checked: getConfig().keyToSendMessage === 'CtrlEnter',
+                        click: () => setKeyToSendMessage('CtrlEnter'),
+                    },
+                    {
+                        type: 'radio',
+                        label: 'Shift + Enter',
+                        checked: getConfig().keyToSendMessage === 'ShiftEnter',
+                        click: () => setKeyToSendMessage('ShiftEnter'),
+                    },
+                ],
             }),
             new MenuItem({
                 label: '自动登录',
@@ -784,7 +814,8 @@ ipcMain.on('popupAvatarMenu', (e, message: Message) => {
             click: () => {
                 if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                } else {
+                }
+                else {
                     openImage(getAvatarUrl(message.senderId))
                 }
             },

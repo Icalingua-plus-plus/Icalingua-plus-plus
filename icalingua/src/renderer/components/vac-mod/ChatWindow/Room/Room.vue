@@ -313,6 +313,9 @@ const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
 
 import ipc from '../../../../utils/ipc'
 
+/** @type 'Enter'|'CtrlEnter'|'ShiftEnter' */
+let keyToSendMessage
+
 export default {
     name: 'Room',
     components: {
@@ -474,12 +477,9 @@ export default {
     },
     async mounted() {
         this.newMessages = []
-        
-        var keyToSendMessage = await ipc.getKeyToSendMessage()
-    
-        switch (keyToSendMessage) {
-            case 'Enter':
-                window.addEventListener('keydown', (e) => {
+        window.addEventListener('keydown', (e) => {
+            switch (keyToSendMessage) {
+                case 'Enter':
                     if (e.key !== 'Enter') return
                     if (e.ctrlKey) {
                         this.message += '\n'
@@ -491,10 +491,8 @@ export default {
                     else {
                         this.sendMessage()
                     }
-                })
-                break;
-            case 'CtrlEnter':
-                window.addEventListener('keydown', (e) => {
+                    break
+                case 'CtrlEnter':
                     if (e.key !== 'Enter') return
                     if (!e.ctrlKey) {
                         this.message += '\n'
@@ -506,10 +504,8 @@ export default {
                     else {
                         this.sendMessage()
                     }
-                })
-                break;
-            case 'ShiftEnter':
-                window.addEventListener('keydown', (e) => {
+                    break
+                case 'ShiftEnter':
                     if (e.key !== 'Enter') return
                     if (!e.shiftKey) {
                         this.message += '\n'
@@ -521,11 +517,11 @@ export default {
                     else {
                         this.sendMessage()
                     }
-                })
-                break;
-            default:
-                console.log('qwq')
-        }
+                    break
+                default:
+                    console.log('qwq')
+            }
+        })
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
@@ -557,8 +553,10 @@ export default {
             }
         })
     },
-    created() {
+    async created() {
+        keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
+        ipcRenderer.on('setKeyToSendMessage', (_, key) => keyToSendMessage = key)
         ipcRenderer.on('addMessageText', (_, message) => {
             this.message += message
             this.focusTextarea()
