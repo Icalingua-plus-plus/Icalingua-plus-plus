@@ -113,8 +113,8 @@ const adapter: Adapter = {
     setGroupNick(group: number, nick: string): any {
         socket.emit('setGroupNick', group, nick)
     },
-    getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
-        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, resolve))
+    getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
+        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
     sendOnlineData() {
         ui.sendOnlineData(cachedOnlineData)

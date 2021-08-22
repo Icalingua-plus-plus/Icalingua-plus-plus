@@ -358,8 +358,8 @@ const adapter = {
     setGroupNick(group: number, nick: string) {
         bot.setGroupCard(group, bot.uin, nick)
     },
-    async getGroupMemberInfo(group: number, member: number, resolve) {
-        resolve((await bot.getGroupMemberInfo(group, member, true)).data)
+    async getGroupMemberInfo(group: number, member: number, noCache: boolean, resolve) {
+        resolve((await bot.getGroupMemberInfo(group, member, noCache)).data)
     },
     async getFriendsFallback(cb) {
         const friends = bot.fl.values()

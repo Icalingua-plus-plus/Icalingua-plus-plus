@@ -489,8 +489,8 @@ const adapter: OicqAdapter = {
     setGroupNick(group: number, nick: string): any {
         return bot.setGroupCard(group, getUin(), nick)
     },
-    async getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
-        return (await bot.getGroupMemberInfo(group, member, true)).data
+    async getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
+        return (await bot.getGroupMemberInfo(group, member, noCache)).data
     },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
