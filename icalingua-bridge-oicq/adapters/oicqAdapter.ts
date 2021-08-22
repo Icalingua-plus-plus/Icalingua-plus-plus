@@ -633,8 +633,10 @@ const adapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
-    sendGroupPoke(gin: number, uin: number) {
-        return bot.sendGroupPoke(gin, uin)
+    async sendGroupPoke(gin: number, uin: number) {
+        const res = await bot.sendGroupPoke(gin, uin)
+        if (res.error?.code === 1002)
+            clients.messageError('对方已关闭头像双击功能')
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
