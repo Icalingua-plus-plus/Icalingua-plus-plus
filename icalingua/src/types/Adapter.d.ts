@@ -21,7 +21,7 @@ export default interface Adapter {
 
     setGroupNick(group: number, nick: string): any
 
-    getGroupMemberInfo(group: number, member: number): Promise<MemberInfo>
+    getGroupMemberInfo(group: number, member: number, noCache?: boolean): Promise<MemberInfo>
 
     sendMessage(data: SendMessageParams): any
 

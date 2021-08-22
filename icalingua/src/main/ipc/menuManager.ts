@@ -44,6 +44,7 @@ import atCache from '../utils/atCache'
 import exportContacts from '../utils/exportContacts'
 import querystring from 'querystring'
 import exportGroupMembers from '../utils/exportGroupMembers'
+import isAdmin from '../utils/isAdmin'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -54,7 +55,6 @@ const setOnlineStatus = (status: OnlineStatusType) => {
         })
         .catch(res => console.log(res))
 }
-
 const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     getConfig().keyToSendMessage = key
     saveConfigFile()
@@ -677,7 +677,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 },
             }),
         )
-        if (message.senderId === getUin()) {
+        if (message.senderId === getUin() || isAdmin())
             menu.append(
                 new MenuItem({
                     label: '撤回',
@@ -686,6 +686,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
+        if (message.senderId === getUin())
             menu.append(
                 new MenuItem({
                     label: '一分钟后撤回',
@@ -694,7 +695,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                     },
                 }),
             )
-        }
+
         if (!history && !message.flash) {
             menu.append(
                 new MenuItem({
