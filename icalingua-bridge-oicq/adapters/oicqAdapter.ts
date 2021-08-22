@@ -342,6 +342,12 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    setGroupKick(gin: number, uin: number): any {
+        bot.setGroupKick(gin, uin)
+    },
+    setGroupLeave(gin: number): any {
+        bot.setGroupLeave(gin)
+    },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
     },

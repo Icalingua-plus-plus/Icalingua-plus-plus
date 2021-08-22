@@ -9,9 +9,9 @@ export default async () => {
     if (ui.getSelectedRoomId() > -1)
         return false
     if (ui.getSelectedRoomId() === cachedRoomId)
-        return cachedStatus === 'owner' || cachedStatus === 'admin'
+        return (cachedStatus === 'member' || !cachedStatus) ? false : cachedStatus
     const memberInfo = await getGroupMemberInfo(-ui.getSelectedRoomId(), getUin(), false)
     cachedStatus = memberInfo?.role
     cachedRoomId = ui.getSelectedRoomId()
-    return cachedStatus === 'owner' || cachedStatus === 'admin'
+    return (cachedStatus === 'member' || !cachedStatus) ? false : cachedStatus
 }
