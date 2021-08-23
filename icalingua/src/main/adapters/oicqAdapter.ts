@@ -19,7 +19,7 @@ import processMessage from '../utils/processMessage'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
-import {app, BrowserWindow, dialog, Notification} from 'electron'
+import {app, BrowserWindow, dialog} from 'electron'
 import avatarCache from '../utils/avatarCache'
 import {download} from '../ipc/downloadManager'
 import fs from 'fs'
@@ -37,6 +37,7 @@ import RoamingStamp from '../../types/RoamingStamp'
 import SearchableFriend from '../../types/SearchableFriend'
 import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
+import {Notification} from 'freedesktop-notifications'
 
 let bot: Client
 let storage: StorageProvider
@@ -116,17 +117,30 @@ const eventHandlers = {
             //notification
 
             const notif = new Notification({
-                title: room.roomName,
+                summary: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
-                icon: await avatarCache(avatar),
-                hasReply: true,
-                replyPlaceholder: 'Reply to ' + room.roomName,
+                // icon: await avatarCache(avatar), todo
+                'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
+                'x-kde-reply-submit-button-text': '发送',
+                actions: {
+                    default: '',
+                    read: '标为已读',
+                    'inline-reply': '回复...',
+                },
             })
-            notif.addListener('click', () => {
-                showWindow()
-                ui.chroom(room.roomId)
+            notif.on('action', (action: string) => {
+                switch (action) {
+                    case 'default':
+                        showWindow()
+                        ui.chroom(room.roomId)
+                        break
+                    case 'read':
+                        adapter.clearRoomUnread(roomId)
+                        break
+                }
             })
-            notif.addListener('reply', (e, r) => {
+            notif.on('reply', (r: string) => {
+                adapter.clearRoomUnread(roomId)
                 adapter.sendMessage({
                     content: r,
                     room,
@@ -134,7 +148,7 @@ const eventHandlers = {
                     at: [],
                 })
             })
-            notif.show()
+            notif.push()
         }
 
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused()) {
@@ -300,14 +314,17 @@ const eventHandlers = {
 
         //notification
         const notif = new Notification({
-            title: data.nickname,
+            summary: data.nickname,
             body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
-            icon: await avatarCache(getAvatarUrl(data.user_id)),
+            // icon: await avatarCache(getAvatarUrl(data.user_id)),
+            actions: {
+                default: '',
+            },
         })
-        notif.addListener('click', () => {
+        notif.on('action', () => {
             showRequestWindow()
         })
-        notif.show()
+        notif.push()
     },
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
