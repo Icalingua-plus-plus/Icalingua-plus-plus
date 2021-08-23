@@ -320,6 +320,11 @@ const eventHandlers = {
         //notification
         const notif = new Notification({
             summary: data.nickname,
+            appName: 'Icalingua',
+            category: 'im.received',
+            'desktop-entry': 'icalingua',
+            urgency: 1,
+            timeout: 0,
             body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
             icon: await avatarCache(getAvatarUrl(data.user_id)),
             actions: {
