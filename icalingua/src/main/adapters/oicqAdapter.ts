@@ -118,6 +118,11 @@ const eventHandlers = {
 
             const notif = new Notification({
                 summary: room.roomName,
+                appName: 'Icalingua',
+                category: 'im.received',
+                'desktop-entry': 'icalingua',
+                urgency: 1,
+                timeout: 5000,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                 // icon: await avatarCache(avatar), todo
                 'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
