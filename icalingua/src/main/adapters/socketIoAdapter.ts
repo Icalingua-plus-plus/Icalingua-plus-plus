@@ -8,7 +8,7 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
-import {app, dialog, Notification} from 'electron'
+import {app, dialog} from 'electron'
 import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
@@ -20,6 +20,7 @@ import axios from 'axios'
 import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
+import {Notification} from 'freedesktop-notifications'
 
 let socket: Socket
 let uin = 0
@@ -85,7 +86,20 @@ const attachSocketEvents = () => {
 
             const notif = new Notification({
                 ...data.data,
+                summary: data.data.title,
+                appName: 'Icalingua',
+                category: 'im.received',
+                'desktop-entry': 'icalingua',
+                urgency: 1,
+                timeout: 5000,
                 icon: await avatarCache(data.avatar),
+                'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                'x-kde-reply-submit-button-text': '发送',
+                actions: {
+                    default: '',
+                    read: '标为已读',
+                    'inline-reply': '回复...',
+                },
             })
             notif.addListener('click', () => {
                 showWindow()
