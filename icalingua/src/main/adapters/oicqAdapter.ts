@@ -124,7 +124,7 @@ const eventHandlers = {
                 urgency: 1,
                 timeout: 5000,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
-                // icon: await avatarCache(avatar), todo
+                icon: await avatarCache(avatar),
                 'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
                 'x-kde-reply-submit-button-text': '发送',
                 actions: {
@@ -321,7 +321,7 @@ const eventHandlers = {
         const notif = new Notification({
             summary: data.nickname,
             body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
-            // icon: await avatarCache(getAvatarUrl(data.user_id)),
+            icon: await avatarCache(getAvatarUrl(data.user_id)),
             actions: {
                 default: '',
             },
