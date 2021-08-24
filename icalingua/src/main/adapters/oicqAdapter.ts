@@ -38,6 +38,7 @@ import SearchableFriend from '../../types/SearchableFriend'
 import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
 import {Notification} from 'freedesktop-notifications'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
 
 let bot: Client
 let storage: StorageProvider
@@ -115,6 +116,12 @@ const eventHandlers = {
             !isSelfMsg
         ) {
             //notification
+            const actions = {
+                default: '',
+                read: '标为已读',
+            }
+            if (await isInlineReplySupported())
+                actions['inline-reply'] = '回复...'
 
             const notif = new Notification({
                 summary: room.roomName,
@@ -127,11 +134,7 @@ const eventHandlers = {
                 icon: await avatarCache(avatar),
                 'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
                 'x-kde-reply-submit-button-text': '发送',
-                actions: {
-                    default: '',
-                    read: '标为已读',
-                    'inline-reply': '回复...',
-                },
+                actions,
             })
             notif.on('action', (action: string) => {
                 switch (action) {
