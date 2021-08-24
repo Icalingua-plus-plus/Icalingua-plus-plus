@@ -21,6 +21,7 @@ import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
 import {Notification} from 'freedesktop-notifications'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
 
 let socket: Socket
 let uin = 0
@@ -83,6 +84,12 @@ const attachSocketEvents = () => {
             !data.isSelfMsg
         ) {
             //notification
+            const actions = {
+                default: '',
+                read: '标为已读',
+            }
+            if (await isInlineReplySupported())
+                actions['inline-reply'] = '回复...'
 
             const notif = new Notification({
                 ...data.data,
@@ -95,11 +102,7 @@ const attachSocketEvents = () => {
                 icon: await avatarCache(data.avatar),
                 'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
                 'x-kde-reply-submit-button-text': '发送',
-                actions: {
-                    default: '',
-                    read: '标为已读',
-                    'inline-reply': '回复...',
-                },
+                actions,
             })
             notif.on('action', (action: string) => {
                 switch (action) {
