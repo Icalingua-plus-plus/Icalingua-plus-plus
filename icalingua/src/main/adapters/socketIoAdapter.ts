@@ -8,7 +8,7 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
-import {app, dialog, Notification} from 'electron'
+import {app, dialog} from 'electron'
 import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
@@ -20,6 +20,8 @@ import axios from 'axios'
 import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
+import {Notification} from 'freedesktop-notifications'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
 
 let socket: Socket
 let uin = 0
@@ -82,23 +84,50 @@ const attachSocketEvents = () => {
             !data.isSelfMsg
         ) {
             //notification
+            const actions = {
+                default: '',
+                read: '标为已读',
+            }
+            if (await isInlineReplySupported())
+                actions['inline-reply'] = '回复...'
 
             const notif = new Notification({
                 ...data.data,
+                summary: data.data.title,
+                appName: 'Icalingua',
+                category: 'im.received',
+                'desktop-entry': 'icalingua',
+                urgency: 1,
+                timeout: 5000,
                 icon: await avatarCache(data.avatar),
+                'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                'x-kde-reply-submit-button-text': '发送',
+                actions,
             })
-            notif.addListener('click', () => {
-                showWindow()
-                ui.chroom(data.roomId)
+            notif.on('action', (action: string) => {
+                switch (action) {
+                    case 'default':
+                        showWindow()
+                        ui.chroom(data.roomId)
+                        break
+                    case 'read':
+                        ui.clearRoomUnread(data.roomId)
+                        socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                        updateTrayIcon()
+                        break
+                }
             })
-            notif.addListener('reply', (e, r) => {
+            notif.on('reply', (r: string) => {
+                ui.clearRoomUnread(data.roomId)
+                socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                updateTrayIcon()
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
                     at: [],
                 })
             })
-            notif.show()
+            notif.push()
         }
     })
 }
