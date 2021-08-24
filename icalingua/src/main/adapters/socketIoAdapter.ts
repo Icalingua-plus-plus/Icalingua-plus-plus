@@ -112,7 +112,7 @@ const attachSocketEvents = () => {
                     at: [],
                 })
             })
-            notif.show()
+            notif.push()
         }
     })
 }
