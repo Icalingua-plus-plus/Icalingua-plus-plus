@@ -101,11 +101,23 @@ const attachSocketEvents = () => {
                     'inline-reply': '回复...',
                 },
             })
-            notif.addListener('click', () => {
-                showWindow()
-                ui.chroom(data.roomId)
+            notif.on('action', (action: string) => {
+                switch (action) {
+                    case 'default':
+                        showWindow()
+                        ui.chroom(data.roomId)
+                        break
+                    case 'read':
+                        ui.clearRoomUnread(data.roomId)
+                        socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                        updateTrayIcon()
+                        break
+                }
             })
-            notif.addListener('reply', (e, r) => {
+            notif.on('reply', (r: string) => {
+                ui.clearRoomUnread(data.roomId)
+                socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                updateTrayIcon()
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
