@@ -46,6 +46,7 @@ import querystring from 'querystring'
 import exportGroupMembers from '../utils/exportGroupMembers'
 import isAdmin from '../utils/isAdmin'
 import SearchableGroup from '../../types/SearchableGroup'
+import * as themes from '../utils/themes'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -504,6 +505,25 @@ export const updateAppMenu = async () => {
                     getConfig().fetchHistoryOnChatOpen = menuItem.checked
                     saveConfigFile()
                 },
+            }),
+            new MenuItem({
+                label: '主题',
+                submenu: (() => {
+                    let rsp: Electron.MenuItemConstructorOptions[] = [];
+                    for (let theme of themes.getThemeList()) {
+                        rsp.push({
+                            label: theme,
+                            type: 'radio',
+                            checked: getConfig().theme == theme,
+                            click: (t => () => {
+                                getConfig().theme = t;
+                                themes.useTheme(t);
+                                saveConfigFile();
+                            })(theme),
+                        });
+                    }
+                    return rsp;
+                })(),
             }),
         ],
     }
