@@ -1,6 +1,6 @@
 <template>
 	<Room
-		class="vac-card-window"
+		class="vac-card-window icalingua-theme-holder"
 		:current-user-id="0"
 		:rooms="[room]"
 		:messages="messages"
@@ -34,10 +34,10 @@
 </template>
 
 <script>
-import {cssThemeVars, defaultThemeStyles} from '../components/vac-mod/themes'
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import {ipcRenderer, remote} from 'electron'
 import ipc from '../utils/ipc'
+import * as themes from '../utils/themes'
 
 export default {
 	name: 'HistoryView',
@@ -53,11 +53,6 @@ export default {
 				],
 			},
 			messages: [],
-			styles: {
-				container: {
-					boxShadow: 'none',
-				},
-			},
 		}
 	},
 	created() {
@@ -78,17 +73,7 @@ export default {
 	},
 	computed: {
 		cssVars() {
-			const defaultStyles = defaultThemeStyles['light']
-			const customStyles = {}
-
-			Object.keys(defaultStyles).map((key) => {
-				customStyles[key] = {
-					...defaultStyles[key],
-					...(this.styles[key] || {}),
-				}
-			})
-
-			return cssThemeVars(customStyles)
+			return themes.recalcTheme();
 		},
 	},
 	methods: {

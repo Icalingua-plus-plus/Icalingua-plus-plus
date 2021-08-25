@@ -50,7 +50,7 @@
                     <div
                         style="flex: 1"
                         :style="[cssVars]"
-                        class="vac-card-window"
+                        class="vac-card-window icalingua-theme-holder"
                     >
                         <div class="pace-activity" v-show="loading"/>
                         <Room
@@ -162,7 +162,6 @@
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import Stickers from '../components/Stickers'
 import {Multipane, MultipaneResizer} from '../components/multipane'
-import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
 import path from 'path'
 import {ipcRenderer} from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
@@ -172,6 +171,7 @@ import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 import fs from 'fs'
+import * as themes from '../utils/themes'
 
 export default {
     components: {
@@ -195,11 +195,6 @@ export default {
             offline: false,
             offlineReason: '',
             reconnecting: false,
-            styles: {
-                container: {
-                    boxShadow: 'none',
-                },
-            },
             view: 'chats',
             username: '',
             priority: 3,
@@ -259,6 +254,8 @@ export default {
                 document.fonts.add(loadFace)
             })
         }
+
+        themes.$$DON_CALL$$fetchThemes(STORE_PATH);
 
         ipcRenderer.on('closeLoading', () => this.loading = false)
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
@@ -432,17 +429,7 @@ Chromium ${process.versions.chrome}`
     },
     computed: {
         cssVars() {
-            const defaultStyles = defaultThemeStyles['light']
-            const customStyles = {}
-
-            Object.keys(defaultStyles).map((key) => {
-                customStyles[key] = {
-                    ...defaultStyles[key],
-                    ...(this.styles[key] || {}),
-                }
-            })
-
-            return cssThemeVars(customStyles)
+            return themes.recalcTheme()
         },
         selectedRoom() {
             return this.rooms.find(e => e.roomId === this.selectedRoomId) || {roomId: 0}
