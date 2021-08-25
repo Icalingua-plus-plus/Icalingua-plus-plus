@@ -18,11 +18,19 @@ const availableThemes: { [key: string]: any } = {};
 const themeSysDefault = defaultThemeStyles.light;
 
 export function registerTheme(theme: string, style: any) {
-    for (let key in themeSysDefault) {
-        if (!(key in style)) {
-            style[key] = themeSysDefault[key];
+    function patchObject(target, source) {
+        for (let key in source) {
+            if (!(key in target)) {
+                target[key] = source[key];
+            } else {
+                let os = source[key];
+                if (typeof os == 'object') {
+                    patchObject(target[key], os);
+                }
+            }
         }
     }
+    patchObject(style, themeSysDefault);
     availableThemes[theme] = style;
 }
 
