@@ -5,6 +5,9 @@ import * as configMgr from './configManager';
 
 
 var themeList = ['light', 'dark'];
+var themeData: any = {};
+
+export function getThemeData() { return themeData; }
 
 export function getThemeList() { return themeList; }
 
@@ -21,4 +24,8 @@ ipcMain.on('theme:list-complete', (_, list) => {
     menuMgr.updateAppMenu();
     let theme = configMgr.getConfig().theme;
     if (theme != undefined) useTheme(theme);
+});
+
+ipcMain.on('theme:theme-data', (_, data) => {
+    themeData = data;
 });
