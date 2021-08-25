@@ -129,4 +129,8 @@ export default {
 		}
 	}
 }
+
+html, body, #app, .vac-card-window {
+	min-height: 100vh;
+}
 </style>

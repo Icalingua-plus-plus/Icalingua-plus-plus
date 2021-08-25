@@ -35,8 +35,7 @@ export function useTheme(theme: string) {
     updateThemes();
 }
 
-export function updateThemes() {
-    const style = recalcTheme();
+function setupThemeStyles(style: any) {
     document.querySelectorAll('.icalingua-theme-holder').forEach(dom => {
         if (dom instanceof HTMLElement) {
             for (let key in style) {
@@ -44,6 +43,12 @@ export function updateThemes() {
             }
         }
     });
+}
+
+export function updateThemes() {
+    let style = recalcTheme();
+    ipcRenderer.send('theme:theme-data', style);
+    setupThemeStyles(style);
 }
 
 export function $$DON_CALL$$fetchThemes(STORE_PATH: string) {
@@ -87,6 +92,9 @@ export function recalcTheme() {
     return cssThemeVars(customStyles);
 }
 
+ipcRenderer.on('theme:sync-theme-data', (_, msg) => {
+    setupThemeStyles(msg);
+})
 
 
 ipcRenderer.on('theme:refresh', (_, msg) => {
