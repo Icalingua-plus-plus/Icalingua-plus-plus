@@ -14,7 +14,7 @@ export default async (url: string) => {
 }
 
 const conventPcmToMp3 = (pcm: Buffer): Promise<Buffer> => {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const inStream = new PassThrough()
         const outStream = new PassThrough()
         inStream.end(pcm)
@@ -24,6 +24,9 @@ const conventPcmToMp3 = (pcm: Buffer): Promise<Buffer> => {
             '-ac', '1',
         ])
             .outputFormat('mp3')
+            .on('error', err => {
+                reject(err)
+            })
             .on('end', async () => {
                 const buf = await streamToBuffer(outStream)
                 resolve(buf)
