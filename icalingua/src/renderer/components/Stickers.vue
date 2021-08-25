@@ -137,15 +137,28 @@ export default {
 div.head {
   height: 64px;
   min-height: 64px;
-  border-bottom: 1px solid #e1e4e8;
+  border-bottom: var(--chat-border-style);
   display: flex;
   align-items: center;
   font-size: 17px;
   padding: 0 16px;
+  background-color: var(--panel-header-bg);
 }
 
 .title {
   width: 100%;
+  a {
+    margin-right: 8px;
+    color: var(--panel-color-sticker-type);
+
+    &.selected {
+      color: var(--panel-color-sticker-type-selected);
+    }
+
+    &:hover:not(.selected) {
+      color: var(--panel-color-sticker-type-hover);
+    }
+  }
 }
 
 .opinion {
@@ -153,6 +166,7 @@ div.head {
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  color: var(--chat-color);
 }
 
 .opinion:hover {
@@ -186,10 +200,10 @@ div.head {
   width: 96%;
   height: 96%;
   position: absolute;
-  border-color: #fff;
+  border-color: var(--panel-background);
   border-width: 1px;
   border-style: solid;
-  background-color: #fff;
+  background-color: var(--panel-background);
   transition: border-color 0.5s;
 }
 
@@ -198,7 +212,7 @@ div.head {
   height: 0;
   padding-bottom: 100%;
   position: relative;
-  background-color: #fff;
+  background-color: var(--panel-background);
 }
 
 .grid > div img:hover {
@@ -206,27 +220,15 @@ div.head {
 }
 
 .bg {
-  background-color: #fff;
+  background-color: var(--panel-background);
   height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
 }
 
-.title a {
-  margin-right: 8px;
-}
-
-.title a.selected {
-  color: #409eff;
-}
-
-.title a:hover:not(.selected) {
-  color: rgb(102, 177, 255);
-}
-
 @media screen and (min-width: 1200px) {
   .bg {
-    border-left: 1px solid #e1e4e8;
+    border-left: var(--chat-border-style);
   }
 }
 
