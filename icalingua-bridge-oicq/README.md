@@ -11,17 +11,19 @@
 
 ### 常规安装
 
-首先有一台 Linux 系统的服务器，安装有 MongoDB 数据库。
+首先有一台服务器。
 
-1. 运行 `yarn install` 安装必要依赖。
+1. 服务器需要安装 MongoDB 数据库，以及 `ffmpeg` 命令
 
-2. （可选）运行 `yarn compile` 将 ts 转换为 js，不转换也可运行，但是转换后效率可能高点。
+2. 运行 `yarn install` 安装必要依赖。
 
-3. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
+3. （可选）运行 `yarn compile` 将 ts 转换为 js，不转换也可运行，但是转换后效率可能高点。
+
+4. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
 
    ![ECC 密钥生成页面](https://user-images.githubusercontent.com/18461360/130779855-1cdc26ad-0037-4bbf-930c-07e8cbc2f6c9.png)
 
-4. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
+5. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
 
    ```yaml
    account:
@@ -33,7 +35,7 @@
    custom: false # 自定义插件功能，默认禁用
    ```
 
-5. 若没有执行第二步，执行 `yarn start`，否则在 `build` 文件夹中执行 `node index`，然后软件将监听在 `6789` 端口。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP `6789` 端口（不建议，因为这样的话流量将以未加密的方式传输）。
+6. 若没有执行第二步，执行 `yarn start`，否则在 `build` 文件夹中执行 `node index`，然后软件将监听在 `6789` 端口。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP `6789` 端口（不建议，因为这样的话流量将以未加密的方式传输）。
 
 #### 已知问题
 
