@@ -106,7 +106,6 @@ ipcRenderer.on('theme:sync-theme-data', (_, msg) => {
 
 
 ipcRenderer.on('theme:refresh', (_, msg) => {
-    useTheme('light');
     updateThemes();
 });
 
