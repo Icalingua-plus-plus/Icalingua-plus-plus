@@ -404,7 +404,10 @@ const loginHandlers = {
         })
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
-                'mqq.invoke=function(a, b, c){if(b==\'closeWebViews\'){window.close();}}',
+                'console.log=(a)=>{' +
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
             )
         })
         veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
