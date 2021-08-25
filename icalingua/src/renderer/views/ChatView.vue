@@ -1,5 +1,5 @@
 <template>
-    <div ondragstart="return false;">
+    <div ondragstart="return false;" class="icalingua-theme-holder">
         <el-container>
             <!-- sidebar -->
             <el-aside width="65px" ondragstart="return false;">
@@ -32,7 +32,9 @@
             <el-main>
                 <Multipane v-show="view !== 'kench'">
                     <!-- main chat view -->
-                    <div :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
+                    <div
+                        class="panel"
+                        :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
                         <TheRoomsPanel
                             :rooms="rooms"
                             :selected="selectedRoom"
@@ -49,8 +51,7 @@
                     <MultipaneResizer/>
                     <div
                         style="flex: 1"
-                        :style="[cssVars]"
-                        class="vac-card-window icalingua-theme-holder"
+                        class="vac-card-window"
                     >
                         <div class="pace-activity" v-show="loading"/>
                         <Room
@@ -67,7 +68,6 @@
                             :load-first-room="false"
                             :accepted-files="selectedRoom.roomId>0?'image/*':'*'"
                             :message-actions="[]"
-                            :styles="styles"
                             :single-room="true"
                             :room-id="selectedRoom.roomId"
                             :show-rooms-list="false"
@@ -110,9 +110,9 @@
                     </div>
                     <MultipaneResizer class="resize-next" v-show="panel"/>
                     <div
-                        :style="{ minWidth: '300px', width: '300px', maxWidth: '500px' }"
+                        :style="{ minWidth: '300px', width: '310px', maxWidth: '500px' }"
                         v-show="panel"
-                        class="panel"
+                        class="panel panel-right"
                     >
                         <transition name="el-zoom-in-top">
                             <Stickers
@@ -255,7 +255,7 @@ export default {
             })
         }
 
-        themes.$$DON_CALL$$fetchThemes(STORE_PATH);
+        themes.$$DON_CALL$$fetchThemes(STORE_PATH)
 
         ipcRenderer.on('closeLoading', () => this.loading = false)
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
@@ -419,13 +419,13 @@ Chromium ${process.versions.chrome}`
         stopFetchingHistory() {
             ipc.stopFetchMessage()
         },
-        closeRoom(){
+        closeRoom() {
             this.selectedRoomId = 0
             this.messages = []
             this.panel = ''
             ipc.setSelectedRoom(0, '')
             document.title = 'Icalingua'
-        }
+        },
     },
     computed: {
         cssVars() {
@@ -467,7 +467,7 @@ Chromium ${process.versions.chrome}`
 }
 
 .el-aside {
-  background-color: #303133;
+  background-color: var(--panel-sidebar-bg);
   color: #eee;
   text-align: center;
   padding-top: 15px;
@@ -477,6 +477,10 @@ Chromium ${process.versions.chrome}`
 main div {
   height: 100vh;
   overflow: hidden;
+}
+
+.panel{
+  background-color: var(--panel-background);
 }
 
 @keyframes pace-spinner {
@@ -508,14 +512,19 @@ main div {
     display: none
   }
 
-  .panel {
+  .panel-right {
     position: absolute;
     height: 60vh;
     bottom: 70px;
     right: 15px;
     border-radius: 10px;
-    border: solid #DCDFE6 2px;
+    border: var(--chat-border-style);
   }
+}
+
+::v-deep .el-input__inner{
+  background-color: var(--chat-bg-color-input);
+  border: var(--chat-border-style);
 }
 </style>
 

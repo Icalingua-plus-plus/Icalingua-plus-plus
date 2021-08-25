@@ -59,7 +59,7 @@ export default {
 }
 
 .contact-entry-root:hover {
-  background-color: #f2f6fc;
+  background-color: var(--panel-item-bg-hover);
 }
 
 div.contact-entry-entry {
@@ -67,7 +67,7 @@ div.contact-entry-entry {
   height: 50px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: var(--chat-border-style);
 }
 
 .contact-entry-left {
@@ -82,7 +82,7 @@ div.contact-entry-entry {
 }
 
 .contact-entry-desc {
-  color: #606266;
+  color: var(--panel-color-desc);
   font-size: 12px;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -93,7 +93,7 @@ div.contact-entry-entry {
 
 .contact-entry-name {
   font-weight: bold;
-  color: #303133;
+  color: var(--panel-color-name);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -112,7 +112,7 @@ div.contact-entry-entry {
 }
 
 .contact-entry-rawname {
-  color: #909399;
+  color: var(--panel-color-icon);
   font-size: 14px;
 }
 </style>

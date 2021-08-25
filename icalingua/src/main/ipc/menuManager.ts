@@ -519,6 +519,7 @@ export const updateAppMenu = async () => {
                                 getConfig().theme = t;
                                 themes.useTheme(t);
                                 saveConfigFile();
+                                updateAppMenu()
                             })(theme),
                         });
                     }
