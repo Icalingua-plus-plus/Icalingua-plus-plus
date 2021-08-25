@@ -555,7 +555,7 @@ ipcMain.on('popupRoomMenu', async (_, roomId: number) => {
         window: getMainWindow(),
     })
 })
-ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, history?: boolean) => {
+ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: string, history?: boolean) => {
     const menu = new Menu()
     if (message.deleted && !message.reveal)
         menu.append(new MenuItem({
@@ -693,7 +693,7 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 clipboard.writeText(String(message._id))
             },
         }))
-        if (message.senderId === getUin() || isAdmin())
+        if (message.senderId === getUin() || await isAdmin())
             menu.append(new MenuItem({
                 label: '撤回',
                 click: () => {
