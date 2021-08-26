@@ -19,7 +19,7 @@ import Room from '../types/Room'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import clients from '../utils/clients'
 import {Socket} from 'socket.io'
-import {broadcast} from '../providers/socketIoProvider'
+import {broadcast, init as initSocketIo} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
@@ -269,6 +269,7 @@ const loginHandlers = {
     async onSucceed() {
         if (!loggedIn) {
             await initStorage()
+            initSocketIo()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
         }

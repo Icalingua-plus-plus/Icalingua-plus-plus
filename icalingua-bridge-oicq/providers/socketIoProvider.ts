@@ -26,7 +26,8 @@ io.on('connection', (socket) => {
             socket.join('authed')
             registerSocketHandlers(io, socket)
             adapter.sendOnlineData()
-        } else {
+        }
+        else {
             console.log('客户端验证失败')
             socket.emit('authFailed')
             socket.disconnect()
@@ -34,7 +35,7 @@ io.on('connection', (socket) => {
     })
 })
 
-httpServer.listen(6789, '0.0.0.0', () => console.log('listening'))
+export const init = () => httpServer.listen(6789, '0.0.0.0', () => console.log('listening'))
 
 export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
 export const getClientsCount = () => io.sockets.sockets.size
