@@ -213,7 +213,7 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
-        let roomId = -groupId
+        const roomId = -groupId
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
@@ -225,8 +225,27 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
         clients.addMessage(roomId, message)
-        await storage.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
     },
     async groupMemberDecrease(data: MemberDecreaseEventData) {
         const now = new Date(data.time * 1000)
@@ -252,8 +271,27 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
         clients.addMessage(roomId, message)
-        await storage.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
     },
     async requestAdd(data) {
         //console.log(data)
