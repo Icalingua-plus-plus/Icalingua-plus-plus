@@ -1,13 +1,28 @@
 import SendMessageParams from '../../types/SendMessageParams'
 import {
-    Client, createClient,
-    FriendInfo, FriendPokeEventData,
+    Client,
+    createClient,
+    FriendInfo,
+    FriendPokeEventData,
     FriendRecallEventData,
-    GroupMessageEventData, GroupPokeEventData,
+    GroupMessageEventData,
+    GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
-    FriendAddEventData, GroupAddEventData, GroupInviteEventData, SyncReadedEventData,
+    MemberBaseInfo,
+    MemberDecreaseEventData,
+    MemberIncreaseEventData,
+    MemberInfo,
+    MessageElem,
+    MessageEventData,
+    OfflineEventData,
+    PrivateMessageEventData,
+    FriendAddEventData,
+    Ret,
+    GroupAddEventData,
+    GroupInviteEventData,
+    SyncReadedEventData,
+    FriendIncreaseEventData,
+    FriendDecreaseEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -300,7 +315,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -380,6 +395,71 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         adapter.clearRoomUnread(roomId)
+    },
+    //TODO 这里应该有好多重复代码的说，应该可以合并一下
+    async friendIncrease(data: FriendIncreaseEventData) {
+        const now = new Date(data.time * 1000)
+        const senderId = data.user_id
+        const roomId = senderId
+        const roomName = data.nickname
+        const message: Message = {
+            _id: `${now.getTime()}-${senderId}-friendIncrease`,
+            content: '你们成为了好友',
+            username: data.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
+    async friendDecrease(data: FriendDecreaseEventData) {
+        const now = new Date(data.time * 1000)
+        const senderId = data.user_id
+        const roomId = senderId
+        const roomName = data.nickname
+        const message: Message = {
+            _id: `${now.getTime()}-${senderId}-friendIncrease`,
+            content: '好友已删除',
+            username: data.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
     },
 }
 const loginHandlers = {
@@ -521,6 +601,8 @@ const attachEventHandler = () => {
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
+    bot.on('notice.friend.increase', eventHandlers.friendIncrease)
+    bot.on('notice.friend.decrease', eventHandlers.friendDecrease)
     bot.on('request.friend.add', eventHandlers.requestAdd)
     bot.on('request.group.invite', eventHandlers.requestAdd)
     bot.on('request.group.add', eventHandlers.requestAdd)
