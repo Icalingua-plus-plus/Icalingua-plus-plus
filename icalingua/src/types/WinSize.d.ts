@@ -3,3 +3,4 @@ type WinSize={
     height: number,
     max: boolean
 }
+export default WinSize
