@@ -6,6 +6,7 @@ import adapter from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
 import {app} from './expressProvider'
+import {version, protocolVersion} from '../package.json'
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
@@ -18,7 +19,9 @@ io.on('connection', (socket) => {
     console.log('new client connected')
     //客户端对这个服务器发来的时间用私钥签名给服务端验证
     const salt = md5(new Date().getTime().toString())
-    socket.emit('requireAuth', salt)
+    socket.emit('requireAuth', salt, {
+        version, protocolVersion,
+    })
     socket.once('auth', async (sign: string) => {
         if (await verify(sign, salt, config.pubKey)) {
             console.log('客户端验证成功')

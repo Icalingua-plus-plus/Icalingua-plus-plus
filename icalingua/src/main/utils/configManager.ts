@@ -10,6 +10,7 @@ import {app, screen} from 'electron'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import argv from './argv'
 import migrateData from './migrateData'
+import WinSize from '../../types/WinSize'
 
 type AllConfig = {
     account: LoginForm

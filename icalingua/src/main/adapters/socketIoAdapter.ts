@@ -22,11 +22,16 @@ import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
 import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
+import BridgeVersionInfo from '../../types/BridgeVersionInfo'
+
+const EXCEPTED_PROTOCOL_VERSION = '1.2.6'
 
 let socket: Socket
 let uin = 0
 let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData
+let versionInfo: BridgeVersionInfo
+
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
@@ -192,7 +197,20 @@ const adapter: Adapter = {
             })
             app.quit()
         })
-        socket.on('requireAuth', async (salt: string) => {
+        socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
+            versionInfo = version
+            if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
+                const action = await dialog.showMessageBox(getMainWindow(), {
+                    title: '提示',
+                    message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                    buttons: ['继续', '退出'],
+                    defaultId: 1,
+                })
+                if (action.response === 1) {
+                    app.quit()
+                    return
+                }
+            }
             socket.emit('auth', await sign(salt, getConfig().privateKey))
             console.log('已向服务端提交身份验证')
         })
