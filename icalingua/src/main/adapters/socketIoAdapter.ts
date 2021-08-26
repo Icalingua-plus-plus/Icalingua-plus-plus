@@ -24,7 +24,7 @@ import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
 import BridgeVersionInfo from '../../types/BridgeVersionInfo'
 
-const EXCEPTED_PROTOCOL_VERSION = '1.2.6'
+const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
 
 let socket: Socket
 let uin = 0
