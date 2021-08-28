@@ -23,7 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
-    StrangerInfo,
+    StrangerInfo, SyncMessageEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -66,22 +66,22 @@ let stopFetching = false
 
 //region event handlers
 const eventHandlers = {
-    async onQQMessage(data: MessageEventData) {
+    async onQQMessage(data: MessageEventData | SyncMessageEventData) {
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
         let roomId = groupId ? -groupId : data.user_id
         if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = bot.uin === senderId
-        const senderName = groupId
-            ? ((<GroupMessageEventData>data).anonymous)
-                ? (<GroupMessageEventData>data).anonymous.name
-                : isSelfMsg
-                    ? 'You'
-                    : (data.sender as MemberBaseInfo).card || data.sender.nickname
-            : isSelfMsg
-                ? (await adapter.getFriendInfo(data.user_id)).remark || (await adapter.getFriendInfo(data.user_id)).nickname
-                : (data.sender as FriendInfo).remark || data.sender.nickname
+        let senderName: string
+        if (groupId && (<GroupMessageEventData>data).anonymous)
+            senderName = (<GroupMessageEventData>data).anonymous.name
+        else if (groupId && isSelfMsg)
+            senderName = 'You'
+        else if (groupId)
+            senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
+        else
+            senderName = (data.sender as FriendInfo).remark || data.sender.nickname
         const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
@@ -100,6 +100,10 @@ const eventHandlers = {
             if (groupId) {
                 const group = bot.gl.get(groupId)
                 if (group && group.group_name !== roomName) roomName = group.group_name
+            }
+            else if (data.post_type === 'sync') {
+                const info = await adapter.getFriendInfo(data.user_id)
+                roomName = info.remark || info.nickname
             }
             // create room
             room = createRoom(roomId, roomName, avatar)
@@ -675,16 +679,7 @@ const adapter: OicqAdapter = {
         return friendsAll
     },
     async getFriendInfo(user_id: number): Promise<FriendInfo> {
-        const friends = bot.fl.values()
-        let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
-        let friend: FriendInfo
-        while (!iterF.done) {
-            if(iterF.value.user_id == user_id){
-                friend = iterF.value
-                break
-            }
-            iterF = friends.next()
-        }
+        const friend = bot.fl.get(user_id)
         return friend || ((await bot.getStrangerInfo(user_id)).data as FriendInfo)
     },
     async sendOnlineData() {
