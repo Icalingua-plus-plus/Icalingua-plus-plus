@@ -44,6 +44,9 @@ import atCache from '../utils/atCache'
 import exportContacts from '../utils/exportContacts'
 import querystring from 'querystring'
 import exportGroupMembers from '../utils/exportGroupMembers'
+import isAdmin from '../utils/isAdmin'
+import SearchableGroup from '../../types/SearchableGroup'
+import * as themes from '../utils/themes'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -53,6 +56,12 @@ const setOnlineStatus = (status: OnlineStatusType) => {
             saveConfigFile()
         })
         .catch(res => console.log(res))
+}
+const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
+    getConfig().keyToSendMessage = key
+    saveConfigFile()
+    ui.setKeyToSendMessage(key)
+    updateAppMenu()
 }
 
 Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -321,7 +330,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '好友申请列表',
-                click: () => showRequestWindow()
+                click: () => showRequestWindow(),
             }),
             new MenuItem({
                 label: '数据导出',
@@ -457,6 +466,29 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '用于发送消息的按键',
+                submenu: [
+                    {
+                        type: 'radio',
+                        label: 'Enter',
+                        checked: getConfig().keyToSendMessage === 'Enter',
+                        click: () => setKeyToSendMessage('Enter'),
+                    },
+                    {
+                        type: 'radio',
+                        label: 'Ctrl + Enter',
+                        checked: getConfig().keyToSendMessage === 'CtrlEnter',
+                        click: () => setKeyToSendMessage('CtrlEnter'),
+                    },
+                    {
+                        type: 'radio',
+                        label: 'Shift + Enter',
+                        checked: getConfig().keyToSendMessage === 'ShiftEnter',
+                        click: () => setKeyToSendMessage('ShiftEnter'),
+                    },
+                ],
+            }),
+            new MenuItem({
                 label: '自动登录',
                 type: 'checkbox',
                 checked: getConfig().account.autologin,
@@ -473,6 +505,26 @@ export const updateAppMenu = async () => {
                     getConfig().fetchHistoryOnChatOpen = menuItem.checked
                     saveConfigFile()
                 },
+            }),
+            new MenuItem({
+                label: '主题',
+                submenu: (() => {
+                    let rsp: Electron.MenuItemConstructorOptions[] = [];
+                    for (let theme of themes.getThemeList()) {
+                        rsp.push({
+                            label: theme,
+                            type: 'radio',
+                            checked: getConfig().theme == theme,
+                            click: (t => () => {
+                                getConfig().theme = t;
+                                themes.useTheme(t);
+                                saveConfigFile();
+                                updateAppMenu()
+                            })(theme),
+                        });
+                    }
+                    return rsp;
+                })(),
             }),
         ],
     }
@@ -503,18 +555,16 @@ ipcMain.on('popupRoomMenu', async (_, roomId: number) => {
         window: getMainWindow(),
     })
 })
-ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, history?: boolean) => {
+ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: string, history?: boolean) => {
     const menu = new Menu()
     if (message.deleted && !message.reveal)
-        menu.append(
-            new MenuItem({
-                label: '显示',
-                type: 'normal',
-                click: () => {
-                    revealMessage(room.roomId, message._id)
-                },
-            }),
-        )
+        menu.append(new MenuItem({
+            label: '显示',
+            type: 'normal',
+            click: () => {
+                revealMessage(room.roomId, message._id)
+            },
+        }))
     else {
         if (sect) {
             menu.append(
@@ -528,15 +578,13 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
             )
         }
         if (message.content)
-            menu.append(
-                new MenuItem({
-                    label: '复制文本',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.content)
-                    },
-                }),
-            )
+            menu.append(new MenuItem({
+                label: '复制文本',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(message.content)
+                },
+            }))
         if (message.replyMessage && message.replyMessage.content) {
             menu.append(
                 new MenuItem({
@@ -638,66 +686,55 @@ ipcMain.on('popupMessageMenu', (_, room: Room, message: Message, sect?: string, 
                 }),
             )
         }
-        menu.append(
-            new MenuItem({
-                label: '复制消息 ID',
-                type: 'normal',
+        menu.append(new MenuItem({
+            label: '复制消息 ID',
+            type: 'normal',
+            click: () => {
+                clipboard.writeText(String(message._id))
+            },
+        }))
+        if (message.senderId === getUin() || await isAdmin())
+            menu.append(new MenuItem({
+                label: '撤回',
                 click: () => {
-                    clipboard.writeText(String(message._id))
+                    deleteMessage(room.roomId, message._id as string)
                 },
-            }),
-        )
-        if (message.senderId === getUin()) {
-            menu.append(
-                new MenuItem({
-                    label: '撤回',
-                    click: () => {
-                        deleteMessage(room.roomId, message._id as string)
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '一分钟后撤回',
-                    click: () => {
-                        setTimeout(() => deleteMessage(room.roomId, message._id as string), 1000 * 60)
-                    },
-                }),
-            )
-        }
+            }))
+        if (message.senderId === getUin())
+            menu.append(new MenuItem({
+                label: '一分钟后撤回',
+                click: () => {
+                    setTimeout(() => deleteMessage(room.roomId, message._id as string), 1000 * 60)
+                },
+            }))
+
         if (!history && !message.flash) {
-            menu.append(
-                new MenuItem({
-                    label: '回复',
-                    click: () => {
-                        ui.replyMessage(message)
-                    },
-                }),
-            )
+            menu.append(new MenuItem({
+                label: '回复',
+                click: () => {
+                    ui.replyMessage(message)
+                },
+            }))
             if (!message.file || message.file.type.startsWith('image/'))
-                menu.append(
-                    new MenuItem({
-                        label: '+1',
-                        click: () => {
-                            const msgToSend = {
-                                content: message.content,
-                                replyMessage: message.replyMessage,
-                                imgpath: undefined,
-                                at: [],
-                            }
-                            if (message.file) {
-                                msgToSend.imgpath = message.file.url
-                            }
-                            sendMessage(msgToSend)
-                        },
-                    }),
-                )
-            menu.append(
-                new MenuItem({
-                    label: '获取历史消息',
-                    click: () => fetchHistory(message._id as string),
-                }),
-            )
+                menu.append(new MenuItem({
+                    label: '+1',
+                    click: () => {
+                        const msgToSend = {
+                            content: message.content,
+                            replyMessage: message.replyMessage,
+                            imgpath: undefined,
+                            at: [],
+                        }
+                        if (message.file) {
+                            msgToSend.imgpath = message.file.url
+                        }
+                        sendMessage(msgToSend)
+                    },
+                }))
+            menu.append(new MenuItem({
+                label: '获取历史消息',
+                click: () => fetchHistory(message._id as string),
+            }))
         }
     }
     menu.popup({window: getMainWindow()})
@@ -742,7 +779,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         },
     ]).popup({window: getMainWindow()})
 })
-ipcMain.on('popupAvatarMenu', (e, message: Message) => {
+ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
         {
             label: `复制 "${message.username}"`,
@@ -778,34 +815,53 @@ ipcMain.on('popupAvatarMenu', (e, message: Message) => {
                 ui.addMessageText('@' + message.username + ' ')
             },
         }))
-    menu.append(
-        new MenuItem({
-            label: `查看头像`,
-            click: () => {
-                if (message.mirai && message.mirai.eqq.avatarMd5) {
-                    openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                }
-                else {
-                    openImage(getAvatarUrl(message.senderId))
-                }
+    menu.append(new MenuItem({
+        label: `查看头像`,
+        click: () => {
+            if (message.mirai && message.mirai.eqq.avatarMd5) {
+                openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
+            }
+            else {
+                openImage(getAvatarUrl(message.senderId))
+            }
+        },
+    }))
+    menu.append(new MenuItem({
+        label: `下载头像`,
+        click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`),
+    }))
+    menu.append(new MenuItem({
+        label: `发起私聊`,
+        click: () => ui.startChat(message.senderId, message.username),
+    }))
+    if (message.senderId !== getUin() && (
+        await isAdmin() === 'owner' ||
+        await isAdmin() === 'admin' && message.role !== 'owner' && message.role !== 'admin'
+    ))
+        menu.append(new MenuItem({
+            label: `移出本群`,
+            click: async () => {
+                const win = new BrowserWindow({
+                    height: 130,
+                    width: 500,
+                    autoHideMenuBar: true,
+                    maximizable: false,
+                    modal: true,
+                    parent: getMainWindow(),
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
+                })
+                await win.loadURL(getWinUrl() + '#/kickAndExit/kick/' +
+                    -room.roomId + '/' + message.senderId + '/' +
+                    querystring.escape(room.roomName) + '/' +
+                    querystring.escape(message.username))
             },
-        }),
-    )
-    menu.append(
-        new MenuItem({
-            label: `下载头像`,
-            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`),
-        }),
-    )
-    menu.append(
-        new MenuItem({
-            label: `发起私聊`,
-            click: () => ui.startChat(message.senderId, message.username),
-        }),
-    )
+        }))
     menu.popup({window: getMainWindow()})
 })
-ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number) => {
+ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()
     if (remark) {
         menu.append(
@@ -833,6 +889,31 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 label: `复制 "${displayId}"`,
                 click: () => {
                     clipboard.writeText(displayId.toString())
+                },
+            }),
+        )
+    }
+    if (group) {
+        menu.append(
+            new MenuItem({
+                label: group.owner_id === getUin() ? '解散本群' : '退出本群',
+                click: async () => {
+                    const win = new BrowserWindow({
+                        height: 130,
+                        width: 500,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(getWinUrl() + '#/kickAndExit/' +
+                        (group.owner_id === getUin() ? 'dismiss' : 'exit') + '/' +
+                        displayId + '/0/' +
+                        querystring.escape(remark) + '/0')
                 },
             }),
         )

@@ -8,7 +8,7 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
-import {app, dialog, Notification} from 'electron'
+import {app, dialog} from 'electron'
 import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
@@ -20,10 +20,20 @@ import axios from 'axios'
 import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
+import {Notification} from 'freedesktop-notifications'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
+import BridgeVersionInfo from '../../types/BridgeVersionInfo'
+
+// 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
+// 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
+const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
 
 let socket: Socket
 let uin = 0
+let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData
+let versionInfo: BridgeVersionInfo
+
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
@@ -34,7 +44,11 @@ const attachSocketEvents = () => {
         ui.updateRoom(room)
         await updateTrayIcon()
     })
-    socket.on('addMessage', ({roomId, message}) => ui.addMessage(roomId, message))
+    socket.on('addMessage', ({roomId, message}: { roomId: number, message: Message }) => {
+        ui.addMessage(roomId, message)
+        if (typeof message._id === 'string')
+            adapter.reportRead(message._id)
+    })
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
@@ -56,6 +70,7 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
+    socket.on('syncRead', ui.clearRoomUnread)
     socket.on('setMessages', ({roomId, messages}: { roomId: number, messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId())
             ui.setMessages(messages)
@@ -76,36 +91,72 @@ const attachSocketEvents = () => {
             !data.isSelfMsg
         ) {
             //notification
+            const actions = {
+                default: '',
+                read: '标为已读',
+            }
+            if (await isInlineReplySupported())
+                actions['inline-reply'] = '回复...'
 
             const notif = new Notification({
                 ...data.data,
+                summary: data.data.title,
+                appName: 'Icalingua',
+                category: 'im.received',
+                'desktop-entry': 'icalingua',
+                urgency: 1,
+                timeout: 5000,
                 icon: await avatarCache(data.avatar),
+                'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                'x-kde-reply-submit-button-text': '发送',
+                actions,
             })
-            notif.addListener('click', () => {
-                showWindow()
-                ui.chroom(data.roomId)
+            notif.on('action', (action: string) => {
+                switch (action) {
+                    case 'default':
+                        showWindow()
+                        ui.chroom(data.roomId)
+                        break
+                    case 'read':
+                        ui.clearRoomUnread(data.roomId)
+                        socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                        updateTrayIcon()
+                        break
+                }
             })
-            notif.addListener('reply', (e, r) => {
+            notif.on('reply', (r: string) => {
+                ui.clearRoomUnread(data.roomId)
+                socket.emit('updateRoom', data.roomId, {unreadCount: 0})
+                updateTrayIcon()
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
                     at: [],
                 })
             })
-            notif.show()
+            notif.push()
         }
     })
 }
 
 const adapter: Adapter = {
+    setGroupKick(gin: number, uin: number): any {
+        socket.emit('setGroupKick', gin, uin)
+    },
+    setGroupLeave(gin: number): any {
+        socket.emit('setGroupLeave', gin)
+    },
+    reportRead(messageId: string): any {
+        socket.emit('reportRead', messageId)
+    },
     getGroupMembers(group: number): Promise<MemberInfo[]> {
         return new Promise(resolve => socket.emit('getGroupMembers', group, resolve))
     },
     setGroupNick(group: number, nick: string): any {
         socket.emit('setGroupNick', group, nick)
     },
-    getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
-        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, resolve))
+    getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
+        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
     sendOnlineData() {
         ui.sendOnlineData(cachedOnlineData)
@@ -148,7 +199,20 @@ const adapter: Adapter = {
             })
             app.quit()
         })
-        socket.on('requireAuth', async (salt: string) => {
+        socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
+            versionInfo = version
+            if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
+                const action = await dialog.showMessageBox(getMainWindow(), {
+                    title: '提示',
+                    message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                    buttons: ['继续', '退出'],
+                    defaultId: 1,
+                })
+                if (action.response === 1) {
+                    app.quit()
+                    return
+                }
+            }
             socket.emit('auth', await sign(salt, getConfig().privateKey))
             console.log('已向服务端提交身份验证')
         })
@@ -170,13 +234,14 @@ const adapter: Adapter = {
     fetchHistory(messageId: string, roomId?: number) {
         if (!roomId)
             roomId = ui.getSelectedRoomId()
-        socket.emit('fetchHistory', messageId, roomId)
+        socket.emit('fetchHistory', messageId, roomId, currentLoadedMessagesCount)
     },
     stopFetchingHistory() {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
         updateTrayIcon()
+        currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
             socket.emit('fetchMessages', roomId, offset, resolve)
         })

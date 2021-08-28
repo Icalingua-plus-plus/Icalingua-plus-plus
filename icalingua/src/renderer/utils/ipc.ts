@@ -4,6 +4,7 @@ import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import RoamingStamp from '../../types/RoamingStamp'
+import SearchableGroup from '../../types/SearchableGroup'
 
 const ipc = {
     sendMessage(data) {
@@ -17,6 +18,9 @@ const ipc = {
     },
     async getAria2Settings(): Promise<Aria2Config> {
         return await ipcRenderer.invoke('getAria2Settings')
+    },
+    async getKeyToSendMessage(): Promise<'Enter' | 'CtrlEnter' | 'ShiftEnter'> {
+        return await ipcRenderer.invoke('getKeyToSendMessage')
     },
     async getStorePath(): Promise<string> {
         return await ipcRenderer.invoke('getStorePath')
@@ -71,8 +75,8 @@ const ipc = {
     popupRoomMenu(roomId: number) {
         ipcRenderer.send('popupRoomMenu', roomId)
     },
-    popupAvatarMenu(message: Message) {
-        ipcRenderer.send('popupAvatarMenu', message)
+    popupAvatarMenu(message: Message, room: Room) {
+        ipcRenderer.send('popupAvatarMenu', message, room)
     },
     popupTextAreaMenu() {
         ipcRenderer.send('popupTextAreaMenu')
@@ -83,8 +87,8 @@ const ipc = {
     popupStickerItemMenu(itemName: string) {
         ipcRenderer.send('popupStickerItemMenu', itemName)
     },
-    popupContactMenu(remark?: string, name?: string, displayId?: number) {
-        ipcRenderer.send('popupContactMenu', remark, name, displayId)
+    popupContactMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
+        ipcRenderer.send('popupContactMenu', remark, name, displayId, group)
     },
     popupMessageMenu(room: Room, message: Message, sect?: string, history?: boolean) {
         ipcRenderer.send('popupMessageMenu', room, message, sect, history)
@@ -113,14 +117,20 @@ const ipc = {
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp> {
         return await ipcRenderer.invoke('getRoamingStamp', no_cache)
     },
-    async getLastUsedStickerType(): Promise<'remote' | 'stickers' | 'emojis'> {
+    async getLastUsedStickerType(): Promise<'face' | 'remote' | 'stickers' | 'emojis'> {
         return await ipcRenderer.invoke('getLastUsedStickerType')
     },
     async getSystemMsg() {
         return await ipcRenderer.invoke('getSystemMsg')
     },
-    handleRequest(type: "friend" | "group", flag: string, accept: boolean = true): any {
+    handleRequest(type: 'friend' | 'group', flag: string, accept: boolean = true): any {
         return ipcRenderer.send('handleRequest', type, flag, accept)
-    }
+    },
+    setGroupKick(gin: number, uin: number) {
+        ipcRenderer.send('setGroupKick', gin, uin)
+    },
+    setGroupLeave(gin: number) {
+        ipcRenderer.send('setGroupLeave', gin)
+    },
 }
 export default ipc

@@ -91,7 +91,7 @@ export default {
 }
 
 .root:not(.selected):hover {
-  background-color: #f2f6fc;
+  background-color: var(--panel-item-bg-hover);
 }
 
 div.entry {
@@ -99,7 +99,7 @@ div.entry {
   height: 50px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #e4e7ed;
+  border-bottom: var(--chat-border-style);
 }
 
 .left {
@@ -118,7 +118,7 @@ a {
 }
 
 .desc {
-  color: #606266;
+  color: var(--panel-color-desc);
   font-size: 12px;
   text-overflow: ellipsis;
   overflow: hidden;
@@ -128,14 +128,14 @@ a {
 }
 
 .icon {
-  color: #909399;
+  color: var(--panel-color-icon);
   font-size: 11px;
   margin-left: 2px;
 }
 
 .name {
   font-weight: bold;
-  color: #303133;
+  color: var(--panel-color-name);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -146,7 +146,7 @@ a {
 
 .timestamp {
   margin-left: 5px;
-  color: #606266;
+  color: var(--panel-color-timestamp);
   font-size: 11px;
 }
 
@@ -165,7 +165,7 @@ a {
 }
 
 .selected {
-  background-color: #e5effa;
+  background-color: var(--panel-item-bg);
 }
 
 .el-badge {

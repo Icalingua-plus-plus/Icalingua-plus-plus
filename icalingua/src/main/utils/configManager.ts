@@ -10,6 +10,7 @@ import {app, screen} from 'electron'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import argv from './argv'
 import migrateData from './migrateData'
+import WinSize from '../../types/WinSize'
 
 type AllConfig = {
     account: LoginForm
@@ -22,7 +23,9 @@ type AllConfig = {
     server: string
     privateKey: string
     fetchHistoryOnChatOpen: boolean
-    lastUsedStickerType: 'remote' | 'stickers' | 'emojis'
+    lastUsedStickerType: 'face' | 'remote' | 'stickers' | 'emojis'
+    keyToSendMessage: 'Enter' | 'CtrlEnter' | 'ShiftEnter'
+    theme: string
 }
 
 
@@ -80,6 +83,8 @@ const defaultConfig: AllConfig = {
     fetchHistoryOnChatOpen: true,
     //给 @rain15z3 一点面子，而且第一次用的人也没有本地表情
     lastUsedStickerType: 'remote',
+    keyToSendMessage: 'Enter',
+    theme: 'light',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

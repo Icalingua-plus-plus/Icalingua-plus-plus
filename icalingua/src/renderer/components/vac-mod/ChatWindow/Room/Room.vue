@@ -96,6 +96,7 @@
                                 @add-new-message="addNewMessage"
                                 @hide-options="hideOptions = $event"
                                 @ctx="msgctx(m)"
+                                @avatar-ctx="avatarCtx(m)"
                                 @download-image="$emit('download-image', $event)"
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
@@ -229,7 +230,7 @@
           }"
                     @input="onChangeInput"
                     @click.right="textctx"
-                    @keydown.enter.exact.prevent=""
+
                 />
 
                 <div class="vac-icon-textarea">
@@ -312,6 +313,9 @@ const {detectMobile, iOSDevice} = require('../../utils/mobileDetection')
 const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
 
 import ipc from '../../../../utils/ipc'
+
+/** @type 'Enter'|'CtrlEnter'|'ShiftEnter' */
+let keyToSendMessage
 
 export default {
     name: 'Room',
@@ -472,34 +476,54 @@ export default {
             if (this.infiniteState) this.infiniteState.complete()
         },
     },
-    mounted() {
+    async mounted() {
         this.newMessages = []
-        const isMobile = detectMobile()
-
-        window.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !this.fileDialog) {
-                if (isMobile) {
-                    this.message = this.message + '\n'
-                    setTimeout(() => this.onChangeInput(), 0)
-                }
-                else {
-                    this.sendMessage()
-                }
+        this.$refs.roomTextarea.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return
+            switch (keyToSendMessage) {
+                case 'Enter':
+                    if (e.ctrlKey) {
+                        let selectionStart = this.$refs.roomTextarea.selectionStart
+                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else if (e.shiftKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                        e.preventDefault()
+                    }
+                    break
+                case 'CtrlEnter':
+                    if (!e.ctrlKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                        e.preventDefault()
+                    }
+                    break
+                case 'ShiftEnter':
+                    if (e.ctrlKey) {
+                        let selectionStart = this.$refs.roomTextarea.selectionStart
+                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else if (!e.shiftKey) {
+                        setTimeout(() => this.onChangeInput(), 0)
+                    }
+                    else {
+                        this.sendMessage()
+                        e.preventDefault()
+                    }
+                    break
+                default:
+                    console.log('qwq')
             }
-
-            this.updateShowUsersTag()
         })
-
-        this.$refs['roomTextarea'].addEventListener('click', () => {
-            if (isMobile) this.keepKeyboardOpen = true
-            this.updateShowUsersTag()
-        })
-
-        this.$refs['roomTextarea'].addEventListener('blur', () => {
-            this.resetUsersTag()
-            if (isMobile) setTimeout(() => (this.keepKeyboardOpen = false), 0)
-        })
-
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
@@ -531,94 +555,16 @@ export default {
             }
         })
     },
-    created() {
+    async created() {
+        keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
+        ipcRenderer.on('setKeyToSendMessage', (_, key) => keyToSendMessage = key)
         ipcRenderer.on('addMessageText', (_, message) => {
             this.message += message
             this.focusTextarea()
         })
     },
     methods: {
-        updateShowUsersTag() {
-            if (!this.$refs['roomTextarea']) return
-            if (!this.room.users || this.room.users.length <= 2) return
-
-            if (
-                this.textareaCursorPosition ===
-                this.$refs['roomTextarea'].selectionStart
-            ) {
-                return
-            }
-
-            this.textareaCursorPosition = this.$refs['roomTextarea'].selectionStart
-
-            let position = this.textareaCursorPosition
-
-            while (
-                position > 0 &&
-                this.message.charAt(position - 1) !== '@' &&
-                this.message.charAt(position - 1) !== ' '
-                ) {
-                position--
-            }
-
-            const beforeTag = this.message.charAt(position - 2)
-            const notLetterNumber = !beforeTag.match(/^[0-9a-zA-Z]+$/)
-
-            if (
-                this.message.charAt(position - 1) === '@' &&
-                (!beforeTag || beforeTag === ' ' || notLetterNumber)
-            ) {
-                const query = this.message.substring(
-                    position,
-                    this.textareaCursorPosition,
-                )
-
-                this.filteredUsersTag = filteredUsers(
-                    this.room.users,
-                    'username',
-                    query,
-                    true,
-                ).filter((user) => user._id !== this.currentUserId)
-            }
-            else {
-                this.resetUsersTag()
-            }
-        },
-        selectUserTag(user) {
-            const cursorPosition = this.$refs['roomTextarea'].selectionStart
-
-            let position = cursorPosition
-            while (position > 0 && this.message.charAt(position - 1) !== '@') {
-                position--
-            }
-
-            let endPosition = position
-            while (
-                this.message.charAt(endPosition) &&
-                this.message.charAt(endPosition).trim()
-                ) {
-                endPosition++
-            }
-
-            const space = this.message.substr(endPosition, endPosition).length
-                ? ''
-                : ' '
-
-            this.message =
-                this.message.substr(0, position) +
-                user.username +
-                space +
-                this.message.substr(endPosition, this.message.length - 1)
-
-            this.selectedUsersTag = [...this.selectedUsersTag, {...user}]
-
-            this.focusTextarea()
-        },
-        resetUsersTag() {
-            this.filteredUsersTag = []
-            this.textareaCursorPosition = null
-        },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
             if (height < 30) height = 30
@@ -641,7 +587,6 @@ export default {
             }
 
             this.selectedUsersTag = []
-            this.resetUsersTag()
             this.resetTextareaSize()
             this.message = ''
             this.editedMessage = {}
@@ -740,7 +685,6 @@ export default {
         replyMessage(message, e) {
             if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
             if (message.system) return
-            if (message.flash) return // 不可回复闪照
             this.messageReply = message
             this.focusTextarea()
         },
@@ -838,6 +782,9 @@ export default {
         msgctx(message) {
             const sect = window.getSelection().toString()
             ipc.popupMessageMenu(this.room, message, sect, this.$route.name === 'history-page')
+        },
+        avatarCtx(message) {
+            ipc.popupAvatarMenu(message, this.room)
         },
         containerScroll(e) {
             this.hideOptions = true
