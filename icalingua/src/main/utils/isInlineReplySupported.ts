@@ -1,11 +1,15 @@
-import {getCapabilities} from 'freedesktop-notifications'
+import { getCapabilities } from 'freedesktop-notifications'
 
 let cache: boolean = undefined
 
 export default async () => {
     if (cache === undefined) {
-        const capabilities = await getCapabilities()
-        cache = capabilities.includes('inline-reply')
+        try {
+            const capabilities = await getCapabilities()
+            cache = capabilities.includes('inline-reply')
+        } catch (ignore) {
+            return cache = false
+        }
     }
     return cache
 }
