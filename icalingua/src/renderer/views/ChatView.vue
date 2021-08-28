@@ -110,7 +110,7 @@
                     </div>
                     <MultipaneResizer class="resize-next" v-show="panel"/>
                     <div
-                        :style="{ minWidth: '300px', width: '310px', maxWidth: '500px' }"
+                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
                         v-show="panel"
                         class="panel panel-right"
                     >
