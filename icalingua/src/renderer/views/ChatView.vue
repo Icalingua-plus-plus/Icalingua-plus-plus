@@ -446,7 +446,7 @@ Chromium ${process.versions.chrome}`
   top: 75px;
   right: 10px;
   height: 30px;
-  background-color: #F1F3F4;
+  background-color: var(--panel-background);
   align-items: center;
   border-radius: 5px;
 
