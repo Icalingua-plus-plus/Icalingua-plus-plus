@@ -39,5 +39,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('getGroupMembers', adapter.getGroupMembers)
     socket.on('getSystemMsg', adapter.getSystemMsg)
     socket.on('handleRequest', adapter.handleRequest)
+    socket.on('setGroupLeave', adapter.setGroupLeave)
+    socket.on('setGroupKick', adapter.setGroupKick)
     socket.on('requestToken', cb => cb(tokenManager.create()))
 }

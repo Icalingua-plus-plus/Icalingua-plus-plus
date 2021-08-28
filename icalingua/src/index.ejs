@@ -13,7 +13,7 @@
     if (process.env.NODE_ENV !== 'development')
         window.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
     else
-        window.__static = '/home/clansty/repos/electron-qq/icalingua/static/'
+        window.__static = "file://" + require('path').join(process.cwd(), '/static').replace(/\\/g, '\\\\')
 </script>
 </body>
 

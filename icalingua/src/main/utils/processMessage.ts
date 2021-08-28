@@ -37,7 +37,6 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.flash=true
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'image':
-            case 'flash':
                 lastMessage.content += '[Image]'
                 url = m.data.url
                 message.file = {
@@ -64,7 +63,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     size: m.data.size,
                     url: m.data.url,
                     name: m.data.name,
-                    fid: m.data.fileid,
+                    fid: m.data.fid,
                 }
                 break
             case 'share':

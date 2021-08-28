@@ -12,6 +12,7 @@ import atCache from '../utils/atCache'
 import GroupOfFriend from '../../types/GroupOfFriend'
 import errorHandler from '../utils/errorHandler'
 import SearchableFriend from '../../types/SearchableFriend'
+import * as themes from '../utils/themes'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq')
@@ -100,6 +101,8 @@ ipcMain.on('openForward', async (_, resId: string) => {
     win.loadURL(getWinUrl() + '#/history')
     win.webContents.on('did-finish-load', function () {
         win.webContents.send('loadMessages', messages)
+        // theme
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData());
     })
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
@@ -107,6 +110,8 @@ ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId)
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())
 ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick))
+ipcMain.on('setGroupKick', (_, gin, uin) => adapter.setGroupKick(gin, uin))
+ipcMain.on('setGroupLeave', (_, gin) => adapter.setGroupLeave(gin))
 ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: "friend" | "group", flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept))

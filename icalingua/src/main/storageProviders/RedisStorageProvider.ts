@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { compact } from "lodash";
 import IgnoreChatInfo from "../../types/IgnoreChatInfo";
 import Message from "../../types/Message";
 import Room from "../../types/Room";
@@ -265,9 +266,9 @@ export default class RedisStorageProvider implements StorageProvider {
   }
 
   /** 实现 {@link StorageProvider} 类的 `getUnreadCount` 方法，
-   * 是对 room 的自定义查询方法。查询有未读消息的房间数。
+   * 是对 room 的自定义查询方法。查询有未读消息的大于指定通知优先级的房间数。
    *
-   * 在登录成功后调用。
+   * 在登录成功与每次收到消息后调用。
    */
   async getUnreadCount(priority: number): Promise<number> {
     const keyAry = await this.redis.zrangebyscore(
@@ -282,7 +283,7 @@ export default class RedisStorageProvider implements StorageProvider {
         return pRoom.unreadCount;
       })
     );
-    return roomsUnreadAry.length;
+    return compact(roomsUnreadAry).length;
   }
 
   /** 实现 {@link StorageProvider} 类的 `getFirstUnreadRoom` 方法，

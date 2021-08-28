@@ -1,13 +1,29 @@
 import SendMessageParams from '../../types/SendMessageParams'
 import {
-    Client, createClient,
-    FriendInfo, FriendPokeEventData,
+    Client,
+    createClient,
+    FriendInfo,
+    FriendPokeEventData,
     FriendRecallEventData,
-    GroupMessageEventData, GroupPokeEventData,
+    GroupMessageEventData,
+    GroupPokeEventData,
     GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret,
-    FriendAddEventData, GroupAddEventData, GroupInviteEventData,
+    MemberBaseInfo,
+    MemberDecreaseEventData,
+    MemberIncreaseEventData,
+    MemberInfo,
+    MessageElem,
+    MessageEventData,
+    OfflineEventData,
+    PrivateMessageEventData,
+    FriendAddEventData,
+    Ret,
+    GroupAddEventData,
+    GroupInviteEventData,
+    SyncReadedEventData,
+    FriendIncreaseEventData,
+    FriendDecreaseEventData,
+    StrangerInfo, SyncMessageEventData, GroupMuteEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -19,7 +35,7 @@ import processMessage from '../utils/processMessage'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
-import {app, BrowserWindow, dialog, Notification} from 'electron'
+import {app, BrowserWindow, dialog} from 'electron'
 import avatarCache from '../utils/avatarCache'
 import {download} from '../ipc/downloadManager'
 import fs from 'fs'
@@ -34,11 +50,11 @@ import Adapter, {CookiesDomain} from '../../types/Adapter'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 import RoamingStamp from '../../types/RoamingStamp'
-import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
-import {IteratorCallback} from 'mongodb'
 import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
+import {Notification} from 'freedesktop-notifications'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
 
 let bot: Client
 let storage: StorageProvider
@@ -50,20 +66,22 @@ let stopFetching = false
 
 //region event handlers
 const eventHandlers = {
-    async onQQMessage(data: MessageEventData) {
+    async onQQMessage(data: MessageEventData | SyncMessageEventData) {
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
         let roomId = groupId ? -groupId : data.user_id
         if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = bot.uin === senderId
-        const senderName = groupId
-            ? ((<GroupMessageEventData>data).anonymous)
-                ? (<GroupMessageEventData>data).anonymous.name
-                : isSelfMsg
-                    ? 'You'
-                    : (data.sender as MemberBaseInfo).card || data.sender.nickname
-            : (data.sender as FriendInfo).remark || data.sender.nickname
+        let senderName: string
+        if (groupId && (<GroupMessageEventData>data).anonymous)
+            senderName = (<GroupMessageEventData>data).anonymous.name
+        else if (groupId && isSelfMsg)
+            senderName = 'You'
+        else if (groupId)
+            senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
+        else
+            senderName = (data.sender as FriendInfo).remark || data.sender.nickname
         const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
@@ -82,6 +100,10 @@ const eventHandlers = {
             if (groupId) {
                 const group = bot.gl.get(groupId)
                 if (group && group.group_name !== roomName) roomName = group.group_name
+            }
+            else if (data.post_type === 'sync') {
+                const info = await adapter.getFriendInfo(data.user_id)
+                roomName = info.remark || info.nickname
             }
             // create room
             room = createRoom(roomId, roomName, avatar)
@@ -116,19 +138,39 @@ const eventHandlers = {
             !isSelfMsg
         ) {
             //notification
+            const actions = {
+                default: '',
+                read: '标为已读',
+            }
+            if (await isInlineReplySupported())
+                actions['inline-reply'] = '回复...'
 
             const notif = new Notification({
-                title: room.roomName,
+                summary: room.roomName,
+                appName: 'Icalingua',
+                category: 'im.received',
+                'desktop-entry': 'icalingua',
+                urgency: 1,
+                timeout: 5000,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                 icon: await avatarCache(avatar),
-                hasReply: true,
-                replyPlaceholder: 'Reply to ' + room.roomName,
+                'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
+                'x-kde-reply-submit-button-text': '发送',
+                actions,
             })
-            notif.addListener('click', () => {
-                showWindow()
-                ui.chroom(room.roomId)
+            notif.on('action', (action: string) => {
+                switch (action) {
+                    case 'default':
+                        showWindow()
+                        ui.chroom(room.roomId)
+                        break
+                    case 'read':
+                        adapter.clearRoomUnread(roomId)
+                        break
+                }
             })
-            notif.addListener('reply', (e, r) => {
+            notif.on('reply', (r: string) => {
+                adapter.clearRoomUnread(roomId)
                 adapter.sendMessage({
                     content: r,
                     room,
@@ -136,19 +178,18 @@ const eventHandlers = {
                     at: [],
                 })
             })
-            notif.show()
+            notif.push()
         }
 
-        if (
-            room.roomId !== ui.getSelectedRoomId() ||
-            !getMainWindow().isFocused()
-        ) {
-            if (isSelfMsg) {
-                room.unreadCount = 0
-                room.at = false
-            }
-            else room.unreadCount++
+        if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused()) {
+            //当前处于此会话界面
+            adapter.reportRead(data.message_id)
         }
+        else if (isSelfMsg) {
+            room.unreadCount = 0
+            room.at = false
+        }
+        else room.unreadCount++
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
         if (message.file && message.file.name && room.autoDownload) {
@@ -157,10 +198,9 @@ const eventHandlers = {
         message.time = data.time * 1000
         ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
-        await storage.updateRoom(roomId, room)
-        await storage.addMessage(roomId, message)
-        await updateTrayIcon()
-        //console.log(data.message)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+        updateTrayIcon()
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
@@ -255,7 +295,7 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
-        let roomId = -groupId
+        const roomId = -groupId
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
@@ -267,8 +307,27 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
         ui.addMessage(roomId, message)
-        await storage.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
     },
     async groupMemberDecrease(data: MemberDecreaseEventData) {
         console.log(data)
@@ -295,8 +354,85 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             system: true,
         }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
         ui.addMessage(roomId, message)
-        await storage.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
+    async groupMute(data: GroupMuteEventData) {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time)
+        const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
+        let mutedUserName: string
+        let muteAll = false
+        if (data.user_id === 0)
+            muteAll = true
+        else if (data.user_id === 80000000)
+            mutedUserName = data.nickname
+        else {
+            const mutedUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
+            mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
+        }
+        let content = `${operator.card || operator.nickname} `
+        if (muteAll && data.duration > 0)
+            content += '开启了全员禁言'
+        else if (muteAll)
+            content += '关闭了全员禁言'
+        else if (data.duration === 0)
+            content += `将 ${mutedUserName} 解除禁言`
+        else
+            content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        const message: Message = {
+            _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
+            content,
+            username: operator.card || operator.nickname,
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+
     },
     async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
@@ -304,14 +440,91 @@ const eventHandlers = {
 
         //notification
         const notif = new Notification({
-            title: data.nickname,
+            summary: data.nickname,
+            appName: 'Icalingua',
+            category: 'im.received',
+            'desktop-entry': 'icalingua',
+            urgency: 1,
+            timeout: 0,
             body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
             icon: await avatarCache(getAvatarUrl(data.user_id)),
+            actions: {
+                default: '',
+            },
         })
-        notif.addListener('click', () => {
+        notif.on('action', () => {
             showRequestWindow()
         })
-        notif.show()
+        notif.push()
+    },
+    syncRead(data: SyncReadedEventData) {
+        const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
+        adapter.clearRoomUnread(roomId)
+    },
+    //TODO 这里应该有好多重复代码的说，应该可以合并一下
+    async friendIncrease(data: FriendIncreaseEventData) {
+        const now = new Date(data.time * 1000)
+        const senderId = data.user_id
+        const roomId = senderId
+        const roomName = data.nickname
+        const message: Message = {
+            _id: `${now.getTime()}-${senderId}-friendIncrease`,
+            content: '你们成为了好友',
+            username: data.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
+    async friendDecrease(data: FriendDecreaseEventData) {
+        const now = new Date(data.time * 1000)
+        const senderId = data.user_id
+        const roomId = senderId
+        const roomName = data.nickname
+        const message: Message = {
+            _id: `${now.getTime()}-${senderId}-friendIncrease`,
+            content: '好友已删除',
+            username: data.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
     },
 }
 const loginHandlers = {
@@ -374,7 +587,10 @@ const loginHandlers = {
         })
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
-                'mqq.invoke=function(a, b, c){if(b==\'closeWebViews\'){window.close();}}',
+                'console.log=(a)=>{' +
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
             )
         })
         veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
@@ -450,9 +666,13 @@ const attachEventHandler = () => {
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
+    bot.on('notice.group.ban', eventHandlers.groupMute)
+    bot.on('notice.friend.increase', eventHandlers.friendIncrease)
+    bot.on('notice.friend.decrease', eventHandlers.friendDecrease)
     bot.on('request.friend.add', eventHandlers.requestAdd)
     bot.on('request.group.invite', eventHandlers.requestAdd)
     bot.on('request.group.add', eventHandlers.requestAdd)
+    bot.on('sync.readed', eventHandlers.syncRead)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)
@@ -467,9 +687,24 @@ interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
+
+    clearRoomUnread(roomId: number): Promise<any>
+
+    getFriendInfo(user_id: number): Promise<FriendInfo>
 }
 
 const adapter: OicqAdapter = {
+    setGroupKick(gin: number, uin: number): any {
+        bot.setGroupKick(gin, uin)
+    },
+    setGroupLeave(gin: number): any {
+        bot.setGroupLeave(gin)
+        if (ui.getSelectedRoomId() === gin)
+            ui.setShutUp(true)
+    },
+    reportRead(messageId: string): any {
+        bot.reportReaded(messageId)
+    },
     async getGroupMembers(group: number): Promise<MemberInfo[]> {
         const values = (await bot.getGroupMemberList(group, true)).data.values()
         let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
@@ -483,8 +718,8 @@ const adapter: OicqAdapter = {
     setGroupNick(group: number, nick: string): any {
         return bot.setGroupCard(group, getUin(), nick)
     },
-    async getGroupMemberInfo(group: number, member: number): Promise<MemberInfo> {
-        return (await bot.getGroupMemberInfo(group, member, true)).data
+    async getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
+        return (await bot.getGroupMemberInfo(group, member, noCache)).data
     },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
@@ -501,6 +736,10 @@ const adapter: OicqAdapter = {
             iterF = friends.next()
         }
         return friendsAll
+    },
+    async getFriendInfo(user_id: number): Promise<FriendInfo> {
+        const friend = bot.fl.get(user_id)
+        return friend || ((await bot.getStrangerInfo(user_id)).data as FriendInfo)
     },
     async sendOnlineData() {
         ui.sendOnlineData({
@@ -527,7 +766,7 @@ const adapter: OicqAdapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
-        if (file && file.type && !file.type.includes('image')) {
+        if (file && typeof file.type === 'string' && !file.type.includes('image')) {
             //群文件
             if (roomId > 0) {
                 ui.messageError('暂时无法向好友发送文件')
@@ -568,9 +807,13 @@ const adapter: OicqAdapter = {
             })
         }
         if (content) {
+            //这里是处理@人和表情 markup 的逻辑
+            const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]
+            // 把 @xxx 的部分单独分割开
+            // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
             for (const {text} of at) {
-                let newParts: string[] = []
+                const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
                         const index = part.indexOf(text)
@@ -583,20 +826,54 @@ const adapter: OicqAdapter = {
                 }
                 splitContent = newParts
             }
+            // 分离类似 [Face: 265] 的表情
+            const newParts: string[] = []
+            for (let part of splitContent) {
+                if (at.find(e => e.text === part)) {
+                    // @的成分不做处理
+                    newParts.push(part)
+                    continue
+                }
+                while (FACE_REGEX.test(part)) {
+                    const exec = FACE_REGEX.exec(part)
+                    const index = exec.index
+                    const before = part.substr(0, index)
+                    const text = exec[0]
+                    part = part.substr(index + text.length)
+                    before && newParts.push(before)
+                    newParts.push(text)
+                }
+                part && newParts.push(part)
+            }
+            splitContent = newParts
+            // 最后根据每个 string 元素判断类型并且换成对应的 MessageElem
             for (const part of splitContent) {
                 const atInfo = at.find(e => e.text === part)
-                chain.push(atInfo ? {
-                    type: 'at',
-                    data: {
-                        qq: atInfo.id,
-                        text: atInfo.text,
-                    },
-                } : {
-                    type: 'text',
-                    data: {
-                        text: part,
-                    },
-                })
+                const isFace = FACE_REGEX.test(part)
+                let element: MessageElem
+                if (atInfo)
+                    element = {
+                        type: 'at',
+                        data: {
+                            qq: atInfo.id,
+                            text: atInfo.text,
+                        },
+                    }
+                else if (isFace)
+                    element = {
+                        type: 'face',
+                        data: {
+                            id: Number(FACE_REGEX.exec(part)[1]),
+                        },
+                    }
+                else
+                    element = {
+                        type: 'text',
+                        data: {
+                            text: part,
+                        },
+                    }
+                chain.push(element)
             }
         }
         if (b64img) {
@@ -693,7 +970,7 @@ const adapter: OicqAdapter = {
         }
         return groupsAll
     },
-    fetchMessages(roomId: number, offset: number) {
+    async fetchMessages(roomId: number, offset: number) {
         if (!offset) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
@@ -717,7 +994,10 @@ const adapter: OicqAdapter = {
             }
         }
         currentLoadedMessagesCount = offset + 20
-        return storage.fetchMessages(roomId, offset, 20)
+        const messages = await storage.fetchMessages(roomId, offset, 20)
+        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+            adapter.reportRead(<string>messages[messages.length - 1]._id)
+        return messages
     },
     sliderLogin(ticket: string) {
         bot.sliderLogin(ticket)
@@ -731,8 +1011,10 @@ const adapter: OicqAdapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
-    sendGroupPoke(gin: number, uin: number) {
-        return bot.sendGroupPoke(gin, uin)
+    async sendGroupPoke(gin: number, uin: number) {
+        const res = await bot.sendGroupPoke(gin, uin)
+        if (res.error?.code === 1002)
+            ui.messageError('对方已关闭头像双击功能')
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
@@ -784,8 +1066,11 @@ const adapter: OicqAdapter = {
     async clearCurrentRoomUnread() {
         if (!ui.getSelectedRoomId())
             return
-        ui.clearCurrentRoomUnread()
-        await storage.updateRoom(ui.getSelectedRoomId(), {unreadCount: 0})
+        await adapter.clearRoomUnread(ui.getSelectedRoomId())
+    },
+    async clearRoomUnread(roomId: number) {
+        ui.clearRoomUnread(roomId)
+        await storage.updateRoom(roomId, {unreadCount: 0})
         await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
@@ -832,6 +1117,7 @@ const adapter: OicqAdapter = {
         stopFetching = true
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
+        let lastMessage = {}
         const fetchLoop = async (limit?: number) => {
             const messages = []
             let done = false
@@ -866,14 +1152,17 @@ const adapter: OicqAdapter = {
                         time: data.time * 1000,
                     }
                     try {
-                        await processMessage(
+                        const retData = await processMessage(
                             data.message,
                             message,
                             {},
                             roomId,
                         )
+
                         messages.push(message)
                         newMsgs.push(message)
+                        console.log(retData)
+                        lastMessage = retData.message
                     } catch (e) {
                         errorHandler(e, true)
                     }
@@ -914,6 +1203,10 @@ const adapter: OicqAdapter = {
                 ui.clearHistoryCount()
             }
         }
+
+        let room = await storage.getRoom(roomId)
+        room.lastMessage = lastMessage
+        ui.updateRoom(room)
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {

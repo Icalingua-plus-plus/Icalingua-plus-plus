@@ -1,6 +1,6 @@
 {
   "name": "icalingua",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
@@ -51,10 +51,11 @@
     "npmRebuild": false
   },
   "dependencies": {
+    "freedesktop-notifications": "git+https://github.com/Clansty/freedesktop-notifications.git#b6ed78ff8aa5ae4a8798706912bb075aff69770f",
     "knex": "^0.95.8",
     "mongodb": "^3.6.6",
     "mysql": "^2.18.1",
-    "oicq": "latest",
+    "oicq": "^1.19.5",
     "pg": "^8.6.0",
     "silk-sdk": "^0.2.2",
     "sqlite3": "^5.0.2",
