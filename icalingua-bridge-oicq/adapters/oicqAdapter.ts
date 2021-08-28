@@ -1,9 +1,9 @@
 import SendMessageParams from '../types/SendMessageParams'
 import {
-    Client, createClient, FriendDecreaseEventData, FriendIncreaseEventData,
+    Client, createClient, FriendAddEventData, FriendDecreaseEventData, FriendIncreaseEventData,
     FriendInfo, FriendPokeEventData,
-    FriendRecallEventData,
-    GroupMessageEventData, GroupPokeEventData,
+    FriendRecallEventData, GroupAddEventData, GroupInviteEventData,
+    GroupMessageEventData, GroupMuteEventData, GroupPokeEventData,
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
     MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncMessageEventData, SyncReadedEventData,
@@ -299,7 +299,65 @@ const eventHandlers = {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     },
-    async requestAdd(data) {
+    async groupMute(data: GroupMuteEventData) {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time)
+        const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
+        let mutedUserName: string
+        let muteAll = false
+        if (data.user_id === 0)
+            muteAll = true
+        else if (data.user_id === 80000000)
+            mutedUserName = data.nickname
+        else {
+            const mutedUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
+            mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
+        }
+        let content = `${operator.card || operator.nickname} `
+        if (muteAll && data.duration > 0)
+            content += '开启了全员禁言'
+        else if (muteAll)
+            content += '关闭了全员禁言'
+        else if (data.duration === 0)
+            content += `将 ${mutedUserName} 解除禁言`
+        else
+            content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        const message: Message = {
+            _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
+            content,
+            username: operator.card || operator.nickname,
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('dd/MM/yyyy', now),
+            system: true,
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+
+    },
+    async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
         clients.sendAddRequest(data)
     },
@@ -441,6 +499,7 @@ const attachEventHandler = () => {
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
+    bot.on('notice.group.ban', eventHandlers.groupMute)
     bot.on('notice.friend.increase', eventHandlers.friendIncrease)
     bot.on('notice.friend.decrease', eventHandlers.friendDecrease)
     bot.on('request.friend.add', eventHandlers.requestAdd)
