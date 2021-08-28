@@ -6,7 +6,7 @@ import {
     GroupMessageEventData, GroupPokeEventData,
     GroupRecallEventData,
     MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncReadedEventData,
+    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncMessageEventData, SyncReadedEventData,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
 import getAvatarUrl from '../utils/getAvatarUrl'
@@ -38,7 +38,7 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
 
 //region event handlers
 const eventHandlers = {
-    async onQQMessage(data: MessageEventData) {
+    async onQQMessage(data: MessageEventData | SyncMessageEventData) {
         if (config.custom)
             require('../custom').onMessage(data)
         const now = new Date(data.time * 1000)
@@ -47,13 +47,15 @@ const eventHandlers = {
         let roomId = groupId ? -groupId : data.user_id
         if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = bot.uin === senderId
-        const senderName = groupId
-            ? ((<GroupMessageEventData>data).anonymous)
-                ? (<GroupMessageEventData>data).anonymous.name
-                : isSelfMsg
-                    ? 'You'
-                    : (data.sender as MemberBaseInfo).card || data.sender.nickname
-            : (data.sender as FriendInfo).remark || data.sender.nickname
+        let senderName: string
+        if (groupId && (<GroupMessageEventData>data).anonymous)
+            senderName = (<GroupMessageEventData>data).anonymous.name
+        else if (groupId && isSelfMsg)
+            senderName = 'You'
+        else if (groupId)
+            senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
+        else
+            senderName = (data.sender as FriendInfo).remark || data.sender.nickname
         const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
@@ -72,6 +74,10 @@ const eventHandlers = {
             if (groupId) {
                 const group = bot.gl.get(groupId)
                 if (group && group.group_name !== roomName) roomName = group.group_name
+            }
+            else if (data.post_type === 'sync') {
+                const info = await adapter.getFriendInfo(data.user_id)
+                roomName = info.remark || info.nickname
             }
             // create room
             room = createRoom(roomId, roomName, avatar)
@@ -488,6 +494,10 @@ const adapter = {
             iterF = friends.next()
         }
         cb(friendsAll)
+    },
+    async getFriendInfo(user_id: number): Promise<FriendInfo> {
+        const friend = bot.fl.get(user_id)
+        return friend || ((await bot.getStrangerInfo(user_id)).data as FriendInfo)
     },
     async getIgnoredChats(resolve) {
         resolve(await storage.getIgnoredChats())
