@@ -230,7 +230,7 @@
           }"
                     @input="onChangeInput"
                     @click.right="textctx"
-                    @keydown.enter.prevent=""
+
                 />
 
                 <div class="vac-icon-textarea">
@@ -478,12 +478,14 @@ export default {
     },
     async mounted() {
         this.newMessages = []
-        window.addEventListener('keydown', (e) => {
+        this.$refs.roomTextarea.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return
             switch (keyToSendMessage) {
                 case 'Enter':
-                    if (e.key !== 'Enter') return
                     if (e.ctrlKey) {
-                        this.message += '\n'
+                        let selectionStart = this.$refs.roomTextarea.selectionStart
+                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
                         setTimeout(() => this.onChangeInput(), 0)
                     }
                     else if (e.shiftKey) {
@@ -491,32 +493,31 @@ export default {
                     }
                     else {
                         this.sendMessage()
+                        e.preventDefault()
                     }
                     break
                 case 'CtrlEnter':
-                    if (e.key !== 'Enter') return
                     if (!e.ctrlKey) {
-                        this.message += '\n'
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else if (e.shiftKey) {
                         setTimeout(() => this.onChangeInput(), 0)
                     }
                     else {
                         this.sendMessage()
+                        e.preventDefault()
                     }
                     break
                 case 'ShiftEnter':
-                    if (e.key !== 'Enter') return
-                    if (!e.shiftKey) {
-                        this.message += '\n'
+                    if (e.ctrlKey) {
+                        let selectionStart = this.$refs.roomTextarea.selectionStart
+                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
                         setTimeout(() => this.onChangeInput(), 0)
                     }
-                    else if (e.ctrlKey) {
+                    else if (!e.shiftKey) {
                         setTimeout(() => this.onChangeInput(), 0)
                     }
                     else {
                         this.sendMessage()
+                        e.preventDefault()
                     }
                     break
                 default:
