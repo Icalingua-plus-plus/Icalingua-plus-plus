@@ -17,7 +17,7 @@ A clear and concise description of what the bug is. / 请简要描述出现的 b
 **Screenshots / 截图**
 If applicable, add screenshots to help explain your problem. / 如果可能的话，请附上相关截图
 
-**System informations / 系统信息**
+**System information / 系统信息**
  - OS: [e.g. Arch Linux]
  - Version [e.g. 2.1.4]
 
