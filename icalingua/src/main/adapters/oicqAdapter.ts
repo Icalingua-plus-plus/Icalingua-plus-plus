@@ -23,6 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
+    StrangerInfo,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -78,7 +79,9 @@ const eventHandlers = {
                 : isSelfMsg
                     ? 'You'
                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
-            : (data.sender as FriendInfo).remark || data.sender.nickname
+            : isSelfMsg
+                ? (await adapter.getFriendInfo(data.user_id)).remark || (await adapter.getFriendInfo(data.user_id)).nickname
+                : (data.sender as FriendInfo).remark || data.sender.nickname
         const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
@@ -623,6 +626,8 @@ interface OicqAdapter extends Adapter {
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 
     clearRoomUnread(roomId: number): Promise<any>
+
+    getFriendInfo(user_id: number): Promise<FriendInfo>
 }
 
 const adapter: OicqAdapter = {
@@ -668,6 +673,19 @@ const adapter: OicqAdapter = {
             iterF = friends.next()
         }
         return friendsAll
+    },
+    async getFriendInfo(user_id: number): Promise<FriendInfo> {
+        const friends = bot.fl.values()
+        let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()
+        let friend: FriendInfo
+        while (!iterF.done) {
+            if(iterF.value.user_id == user_id){
+                friend = iterF.value
+                break
+            }
+            iterF = friends.next()
+        }
+        return friend || ((await bot.getStrangerInfo(user_id)).data as FriendInfo)
     },
     async sendOnlineData() {
         ui.sendOnlineData({
