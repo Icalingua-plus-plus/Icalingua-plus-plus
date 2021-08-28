@@ -61,7 +61,7 @@
 						>
 							<span style="width: 100%">{{ message.username }}</span>
 							<span
-								v-show="message.role && message.role !== 'member'"
+								v-show="message.role && message.role !== 'member'&&!(message.mirai&&message.mirai.eqq.type==='tg')"
 								style="margin-left: 10px"
 							>
                 {{ message.role }}
