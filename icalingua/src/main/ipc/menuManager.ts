@@ -613,6 +613,11 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     label: '复制图片',
                     type: 'normal',
                     click: async () => {
+                        if(message.file.url.startsWith('data:')){
+                            // base64 图片
+                            clipboard.writeImage(nativeImage.createFromDataURL(message.file.url))
+                            return
+                        }
                         const res = await axios.get(message.file.url, {
                             responseType: 'arraybuffer',
                         })
