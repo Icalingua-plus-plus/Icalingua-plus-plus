@@ -229,6 +229,8 @@ export default {
                     return
                 if (this.$refs.room.messageReply)
                     this.$refs.room.resetMessage()
+                else if (this.$refs.room.file)
+                    this.$refs.room.resetMediaFile()
                 else {
                     this.closeRoom()
                 }
