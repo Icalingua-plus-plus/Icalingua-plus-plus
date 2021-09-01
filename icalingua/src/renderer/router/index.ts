@@ -8,6 +8,7 @@ import IgnoreManage from '../views/IgnoreManageView.vue'
 import GroupNickEdit from '../views/GroupNickEdit.vue'
 import FriendRequest from '../views/FriendRequest.vue'
 import KickAndExit from '../views/KickAndExit.vue'
+import OpenForward from '../views/OpenForward.vue'
 
 Vue.use(Router)
 
@@ -52,6 +53,11 @@ export default new Router({
             path: '/friendRequest',
             name: 'friend-request-page',
             component: FriendRequest,
+        },
+        {
+            path: '/openForward',
+            name: 'open-forward-page',
+            component: OpenForward,
         },
     ],
 })
