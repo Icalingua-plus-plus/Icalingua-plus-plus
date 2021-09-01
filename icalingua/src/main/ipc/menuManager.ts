@@ -346,6 +346,21 @@ export const updateAppMenu = async () => {
                 ],
             }),
             new MenuItem({
+                label: '查看合并转发消息',
+                async click() {
+                    const win = new BrowserWindow({
+                        height: 170,
+                        width: 600,
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(getWinUrl() + '#/openForward')
+                },
+            }),
+            new MenuItem({
                 label: '重新加载',
                 click: () => {
                     getMainWindow().reload()
