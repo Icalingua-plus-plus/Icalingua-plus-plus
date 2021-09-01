@@ -292,7 +292,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm', now),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -303,7 +303,7 @@ const eventHandlers = {
         console.log(data)
         const roomId = -data.group_id
         if (await storage.isChatIgnored(roomId)) return
-        const now = new Date(data.time)
+        const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         let mutedUserName: string
         let muteAll = false
