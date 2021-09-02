@@ -26,6 +26,8 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 [![Build/release](https://github.com/Clansty/electron-qq/actions/workflows/main.yml/badge.svg?branch=dev)](https://github.com/Clansty/electron-qq/actions/workflows/main.yml)
 
 
+### 鸣谢
+<a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Transgender_Pride_flag.svg" alt="跨性别旗帜" height="50px" align="left"/>本项目的维护者中有一些 [MtF](https://zh.wikipedia.org/wiki/%E8%B7%A8%E6%80%A7%E5%88%A5%E5%A5%B3%E6%80%A7)，感谢像你这样的人对我们这个群体的关爱。同时也欢迎为 [MtF Wiki](https://github.com/mtf-wiki/MtF-Wiki) 点一个星星
+<img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Transgender_Pride_flag.svg" alt="跨性别旗帜" height="60px" align="left"/>本项目的维护者中有一些 [MtF](https://zh.wikipedia.org/wiki/%E8%B7%A8%E6%80%A7%E5%88%A5%E5%A5%B3%E6%80%A7)，感谢像你这样的人对我们这个群体的关爱。同时也欢迎为 [MtF Wiki](https://github.com/mtf-wiki/MtF-Wiki) 点一个星星
 
