@@ -43,6 +43,11 @@ const attachSocketEvents = () => {
             adapter.clearRoomUnread(room.roomId)
         }
         ui.updateRoom(room)
+        try {
+            Object.assign(rooms.find(e => e.roomId === room.roomId), room)
+        } catch (e) {
+            errorHandler(e, true)
+        }
         await updateTrayIcon()
     })
     socket.on('addMessage', ({roomId, message}: { roomId: number, message: Message }) => {
