@@ -55,6 +55,9 @@ jobs:
       - name: check version and write version info
         run: node .github/check-version.js
         id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
 
       - name: build
         run: yarn build:ci
