@@ -126,9 +126,9 @@ const eventHandlers = {
         room.lastMessage = lastMessage
         message.time = data.time * 1000
         clients.addMessage(room.roomId, message)
-        clients.updateRoom(room)
         await storage.updateRoom(roomId, room)
-        await storage.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.addMessage(roomId, message)
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
