@@ -34,12 +34,13 @@ let uin = 0
 let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData
 let versionInfo: BridgeVersionInfo
-let rooms: Room[]
+let rooms: Room[] = []
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
+            room.unreadCount = 0
             adapter.clearRoomUnread(room.roomId)
         }
         ui.updateRoom(room)
