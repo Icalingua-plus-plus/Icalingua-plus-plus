@@ -198,8 +198,8 @@ const eventHandlers = {
         message.time = data.time * 1000
         ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
-        storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
+        await storage.updateRoom(roomId, room)
         updateTrayIcon()
     },
     friendRecall(data: FriendRecallEventData) {
