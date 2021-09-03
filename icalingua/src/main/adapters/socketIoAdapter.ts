@@ -61,7 +61,12 @@ const attachSocketEvents = () => {
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
-    socket.on('onlineData', async (data: { online: boolean, nick: string, uin: number }) => {
+    socket.on('onlineData', async (data: {
+        online: boolean,
+        nick: string,
+        uin: number,
+        sysInfo: string
+    }) => {
         uin = data.uin
         const buildInfo = getBuildInfo()
         cachedOnlineData = {
