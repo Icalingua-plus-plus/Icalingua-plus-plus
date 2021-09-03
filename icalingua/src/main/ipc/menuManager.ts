@@ -47,6 +47,7 @@ import exportGroupMembers from '../utils/exportGroupMembers'
 import isAdmin from '../utils/isAdmin'
 import SearchableGroup from '../../types/SearchableGroup'
 import * as themes from '../utils/themes'
+import version from '../utils/version'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -321,7 +322,7 @@ export const updateAppMenu = async () => {
         //应用菜单
         app: [
             new MenuItem({
-                label: app.getVersion(),
+                label: version.version,
                 enabled: false,
             }),
             new MenuItem({

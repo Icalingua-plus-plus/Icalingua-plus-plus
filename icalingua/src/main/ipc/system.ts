@@ -1,8 +1,9 @@
 import {ipcMain} from 'electron'
 import {app} from 'electron'
 import {getConfig, saveConfigFile} from '../utils/configManager'
+import version from '../utils/version'
 
-ipcMain.handle('getVersion', app.getVersion)
+ipcMain.handle('getVersion', () => version.version)
 ipcMain.handle('getAccount', () => getConfig().account)
 ipcMain.handle('getAria2Settings', () => getConfig().aria2)
 ipcMain.handle('getKeyToSendMessage', () => getConfig().keyToSendMessage)
