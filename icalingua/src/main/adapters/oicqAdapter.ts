@@ -688,12 +688,14 @@ interface OicqAdapter extends Adapter {
 
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 
-    clearRoomUnread(roomId: number): Promise<any>
-
     getFriendInfo(user_id: number): Promise<FriendInfo>
 }
 
 const adapter: OicqAdapter = {
+    async getUnreadRooms(): Promise<Room[]> {
+        const rooms = await storage.getAllRooms()
+        return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority)
+    },
     setGroupKick(gin: number, uin: number): any {
         bot.setGroupKick(gin, uin)
     },

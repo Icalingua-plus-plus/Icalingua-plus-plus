@@ -23,6 +23,7 @@ import SearchableFriend from '../../types/SearchableFriend'
 import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
 import BridgeVersionInfo from '../../types/BridgeVersionInfo'
+import errorHandler from '../utils/errorHandler'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -33,20 +34,21 @@ let uin = 0
 let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData
 let versionInfo: BridgeVersionInfo
+let rooms: Room[]
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
-            room.unreadCount = 0
-            socket.emit('updateRoom', room.roomId, {unreadCount: 0})
+            adapter.clearRoomUnread(room.roomId)
         }
         ui.updateRoom(room)
         await updateTrayIcon()
     })
     socket.on('addMessage', ({roomId, message}: { roomId: number, message: Message }) => {
         ui.addMessage(roomId, message)
-        if (typeof message._id === 'string')
+        if (typeof message._id === 'string' &&
+            roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible())
             adapter.reportRead(message._id)
     })
     socket.on('deleteMessage', ui.deleteMessage)
@@ -66,7 +68,10 @@ const attachSocketEvents = () => {
     socket.on('message', ui.message)
     socket.on('messageError', ui.messageError)
     socket.on('messageSuccess', ui.messageSuccess)
-    socket.on('setAllRooms', ui.setAllRooms)
+    socket.on('setAllRooms', (serverRooms: Room[]) => {
+        rooms = serverRooms
+        ui.setAllRooms(rooms)
+    })
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
@@ -118,16 +123,12 @@ const attachSocketEvents = () => {
                         ui.chroom(data.roomId)
                         break
                     case 'read':
-                        ui.clearRoomUnread(data.roomId)
-                        socket.emit('updateRoom', data.roomId, {unreadCount: 0})
-                        updateTrayIcon()
+                        adapter.clearRoomUnread(data.roomId)
                         break
                 }
             })
             notif.on('reply', (r: string) => {
-                ui.clearRoomUnread(data.roomId)
-                socket.emit('updateRoom', data.roomId, {unreadCount: 0})
-                updateTrayIcon()
+                adapter.clearRoomUnread(data.roomId)
                 adapter.sendMessage({
                     content: r,
                     roomId: data.roomId,
@@ -140,6 +141,9 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    async getUnreadRooms(): Promise<Room[]> {
+        return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority)
+    },
     setGroupKick(gin: number, uin: number): any {
         socket.emit('setGroupKick', gin, uin)
     },
@@ -179,10 +183,15 @@ const adapter: Adapter = {
         socket.emit('addRoom', room)
     },
     clearCurrentRoomUnread() {
-        if (!(socket && ui.getSelectedRoomId()))
+        if (!ui.getSelectedRoomId())
             return
-        ui.clearCurrentRoomUnread()
-        socket.emit('updateRoom', ui.getSelectedRoomId(), {unreadCount: 0})
+        adapter.clearRoomUnread(ui.getSelectedRoomId())
+    },
+    clearRoomUnread(roomId: number) {
+        if (!socket)
+            return
+        ui.clearRoomUnread(roomId)
+        adapter.updateRoom(roomId, {unreadCount: 0})
         updateTrayIcon()
     },
     async createBot(_?: LoginForm) {
@@ -336,6 +345,11 @@ const adapter: Adapter = {
         socket.emit('updateMessage', roomId, messageId, message)
     },
     updateRoom(roomId: number, room: object) {
+        try {
+            Object.assign(rooms.find(e => e.roomId === roomId), room)
+        } catch (e) {
+            errorHandler(e, true)
+        }
         socket.emit('updateRoom', roomId, room)
     },
     getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
