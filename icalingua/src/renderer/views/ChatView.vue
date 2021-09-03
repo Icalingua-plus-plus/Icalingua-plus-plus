@@ -316,10 +316,10 @@ export default {
             this.account = uin
             this.priority = priority
             this.username = nick
-            this.sysInfo = (sysInfo ? (sysInfo + '\n\n') : '') + `Client ${ver}
+            this.sysInfo = sysInfo ? sysInfo + `\n\nClient ${ver}
 Electron ${process.versions.electron}
 Node ${process.versions.node}
-Chromium ${process.versions.chrome}`
+Chromium ${process.versions.chrome}` : ''
         })
         console.log('加载完成')
     },
@@ -481,7 +481,7 @@ main div {
   overflow: hidden;
 }
 
-.panel{
+.panel {
   background-color: var(--panel-background);
 }
 
@@ -524,7 +524,7 @@ main div {
   }
 }
 
-::v-deep .el-input__inner{
+::v-deep .el-input__inner {
   background-color: var(--chat-bg-color-input);
   border: var(--chat-border-style);
 }

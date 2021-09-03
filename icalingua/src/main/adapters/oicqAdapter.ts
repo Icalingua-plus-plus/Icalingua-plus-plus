@@ -55,6 +55,7 @@ import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
 import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
+import getBuildInfo from '../utils/getBuildInfo'
 
 let bot: Client
 let storage: StorageProvider
@@ -756,6 +757,7 @@ const adapter: OicqAdapter = {
             nick: bot.nickname,
             uin: bot.uin,
             priority: getConfig().priority,
+            sysInfo: getBuildInfo()
         })
         ui.setAllRooms(await storage.getAllRooms())
     },
