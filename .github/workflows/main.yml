@@ -22,23 +22,6 @@ jobs:
       - name: Yarn install
         run: yarn install
 
-  version:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: icalingua
-    outputs:
-      version: ${{ steps.version.outputs.value }}
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: get-version
-        id: version
-        uses: ashley-taylor/read-json-property-action@v1.0
-        with:
-          path: ./icalingua/package.json
-          property: version
-
   arch-artifacts:
     runs-on: ubuntu-latest
     defaults:
@@ -57,9 +40,8 @@ jobs:
   build-dist-bundle:
     runs-on: ubuntu-latest
     needs: install
-    defaults:
-      run:
-        working-directory: icalingua
+    outputs:
+      version: ${{ steps.version.outputs.value }}
     steps:
       - uses: actions/checkout@v2
 
@@ -70,8 +52,13 @@ jobs:
         env:
           WORKING_DIR: icalingua
 
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+
       - name: build
         run: yarn build:ci
+        working-directory: icalingua
 
       - name: upload dist
         uses: actions/upload-artifact@v2
@@ -232,16 +219,16 @@ jobs:
   pack-archpkg-x86_64:
     runs-on: ubuntu-latest
     needs:
-      - version
       - arch-artifacts
       - build-x86_64
+      - build-dist-bundle
     steps:
       - name: print the PKGBUILD for x86_64
         shell: bash
         run: |
           cat << EOFMeow > PKGBUILD
             pkgname=icalingua
-            pkgver=${{ needs.version.outputs.version }}
+            pkgver=${{ needs.build-dist-bundle.outputs.version }}
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
@@ -295,7 +282,7 @@ jobs:
   pack-archpkg-i686:
     runs-on: ubuntu-latest
     needs:
-      - version
+      - build-dist-bundle
       - arch-artifacts
       - build-ia32
     steps:
@@ -305,7 +292,7 @@ jobs:
         run: |
           cat << EOFMeow > PKGBUILD
             pkgname=icalingua
-            pkgver=${{ needs.version.outputs.version }}
+            pkgver=${{ needs.build-dist-bundle.outputs.version }}
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
@@ -360,7 +347,7 @@ jobs:
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
     needs:
-      - version
+      - build-dist-bundle
       - arch-artifacts
       - build-arm64
     steps:
@@ -369,7 +356,7 @@ jobs:
         run: |
           cat << EOFMeow > PKGBUILD
             pkgname=icalingua
-            pkgver=${{ needs.version.outputs.version }}
+            pkgver=${{ needs.build-dist-bundle.outputs.version }}
             pkgrel=1
             pkgdesc='A Linux client for QQ and more'
             license=('GPL')
@@ -634,7 +621,7 @@ jobs:
       - pack-otherpkg-x86_64
       - pack-otherpkg-ia32
       - pack-otherpkg-arm64
-      - version
+      - build-dist-bundle
     steps:
       - name: Make dir
         run: mkdir release
@@ -763,5 +750,5 @@ jobs:
           GHR_PATH: release/
           GITHUB_TOKEN: ${{ github.token }}
           GHR_REPLACE: true
-          GHR_TITLE: ${{ needs.version.outputs.version }}
+          GHR_TITLE: ${{ needs.build-dist-bundle.outputs.version }}
           GHR_DRAFT: true
