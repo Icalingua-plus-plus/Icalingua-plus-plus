@@ -123,6 +123,13 @@ const eventHandlers = {
         }
         ////process message////
         await processMessage(data.message, message, lastMessage, roomId)
+
+        // 自动回复消息作为小通知短暂显示
+        if ('auto_reply' in data && data.auto_reply) {
+            ui.message(message.content)
+            return
+        }
+
         const at = message.at
         if (at) room.at = at
 
