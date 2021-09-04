@@ -25,6 +25,7 @@ import isInlineReplySupported from '../utils/isInlineReplySupported'
 import BridgeVersionInfo from '../../types/BridgeVersionInfo'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
+import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -33,7 +34,7 @@ const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
 let socket: Socket
 let uin = 0
 let currentLoadedMessagesCount = 0
-let cachedOnlineData: OnlineData
+let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
 let rooms: Room[] = []
 
@@ -68,14 +69,13 @@ const attachSocketEvents = () => {
         sysInfo: string
     }) => {
         uin = data.uin
-        const buildInfo = getBuildInfo()
         cachedOnlineData = {
             ...data,
             priority: getConfig().priority,
-            sysInfo: buildInfo + (buildInfo ? '\n\n' : '') + data.sysInfo,
+            serverInfo: data.sysInfo,
             updateCheck: getConfig().updateCheck,
         }
-        ui.sendOnlineData(cachedOnlineData)
+        adapter.sendOnlineData()
         updateTrayIcon()
         updateAppMenu()
     })
@@ -178,7 +178,21 @@ const adapter: Adapter = {
         return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
     sendOnlineData() {
+        let sysInfo = getBuildInfo()
+        const updateInfo = getCachedUpdate()
+        if (updateInfo && updateInfo.hasUpdate) {
+            if (sysInfo)
+                sysInfo += '\n\n'
+            sysInfo += '新版本可用: ' + updateInfo.latestVersion
+        }
+        if (sysInfo)
+            sysInfo += '\n\n'
+        sysInfo += cachedOnlineData.serverInfo
+        cachedOnlineData.sysInfo = sysInfo
         ui.sendOnlineData(cachedOnlineData)
+        if (!updateInfo) {
+            checkUpdate().then(adapter.sendOnlineData)
+        }
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
