@@ -132,5 +132,8 @@ const ipc = {
     setGroupLeave(gin: number) {
         ipcRenderer.send('setGroupLeave', gin)
     },
+    setCheckUpdate(enabled: boolean) {
+        ipcRenderer.send('setCheckUpdate', enabled)
+    },
 }
 export default ipc

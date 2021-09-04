@@ -73,6 +73,7 @@ const attachSocketEvents = () => {
             ...data,
             priority: getConfig().priority,
             sysInfo: buildInfo + (buildInfo ? '\n\n' : '') + data.sysInfo,
+            updateCheck: getConfig().updateCheck,
         }
         ui.sendOnlineData(cachedOnlineData)
         updateTrayIcon()

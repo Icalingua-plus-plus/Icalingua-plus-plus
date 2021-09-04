@@ -155,6 +155,7 @@
         </el-button>
       </span>
         </el-dialog>
+        <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible"/>
     </div>
 </template>
 
@@ -172,9 +173,11 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 import fs from 'fs'
 import * as themes from '../utils/themes'
+import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate'
 
 export default {
     components: {
+        DialogAskCheckUpdate,
         Room,
         Stickers,
         SideBarIcon,
@@ -190,7 +193,6 @@ export default {
             selectedRoomId: 0,
             account: 0,
             messagesLoaded: false,
-            ignoredChats: [],
             panel: '',
             offline: false,
             offlineReason: '',
@@ -199,11 +201,11 @@ export default {
             username: '',
             priority: 3,
             theme: 'default',
-            menu: [],
             loading: false,
             isShutUp: false,
             sysInfo: '',
             historyCount: 0,
+            dialogAskCheckUpdateVisible: false,
         }
     },
     async created() {
@@ -311,7 +313,7 @@ export default {
         })
         ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
         ipcRenderer.on('closePanel', () => this.panel = '')
-        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo}) => {
+        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo, updateCheck}) => {
             this.offline = !online
             this.account = uin
             this.priority = priority
@@ -320,6 +322,8 @@ export default {
 Electron ${process.versions.electron}
 Node ${process.versions.node}
 Chromium ${process.versions.chrome}` : ''
+            if (updateCheck === 'ask')
+                this.dialogAskCheckUpdateVisible = true
         })
         console.log('加载完成')
     },

@@ -26,6 +26,7 @@ type AllConfig = {
     lastUsedStickerType: 'face' | 'remote' | 'stickers' | 'emojis'
     keyToSendMessage: 'Enter' | 'CtrlEnter' | 'ShiftEnter'
     theme: string
+    updateCheck: 'ask' | boolean
 }
 
 
@@ -85,6 +86,7 @@ const defaultConfig: AllConfig = {
     lastUsedStickerType: 'remote',
     keyToSendMessage: 'Enter',
     theme: 'light',
+    updateCheck: 'ask',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
@@ -98,7 +100,8 @@ if (fs.existsSync(configFilePath)) {
         }
     }
     saveConfigFile()
-} else {
+}
+else {
     config = defaultConfig
     saveConfigFile()
 }
