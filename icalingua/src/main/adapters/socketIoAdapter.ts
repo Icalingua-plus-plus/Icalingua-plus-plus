@@ -178,6 +178,7 @@ const adapter: Adapter = {
         return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
     sendOnlineData() {
+        if (!cachedOnlineData) return
         let sysInfo = getBuildInfo()
         const updateInfo = getCachedUpdate()
         if (updateInfo && updateInfo.hasUpdate) {
