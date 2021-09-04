@@ -523,23 +523,32 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '启动时检查更新',
+                type: 'checkbox',
+                checked: getConfig().updateCheck === true,
+                click: (menuItem) => {
+                    getConfig().updateCheck = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '主题',
                 submenu: (() => {
-                    let rsp: Electron.MenuItemConstructorOptions[] = [];
+                    let rsp: Electron.MenuItemConstructorOptions[] = []
                     for (let theme of themes.getThemeList()) {
                         rsp.push({
                             label: theme,
                             type: 'radio',
                             checked: getConfig().theme == theme,
                             click: (t => () => {
-                                getConfig().theme = t;
-                                themes.useTheme(t);
-                                saveConfigFile();
+                                getConfig().theme = t
+                                themes.useTheme(t)
+                                saveConfigFile()
                                 updateAppMenu()
                             })(theme),
-                        });
+                        })
                     }
-                    return rsp;
+                    return rsp
                 })(),
             }),
         ],
@@ -629,7 +638,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     label: '复制图片',
                     type: 'normal',
                     click: async () => {
-                        if(message.file.url.startsWith('data:')){
+                        if (message.file.url.startsWith('data:')) {
                             // base64 图片
                             clipboard.writeImage(nativeImage.createFromDataURL(message.file.url))
                             return
