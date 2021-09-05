@@ -38,7 +38,11 @@ io.on('connection', (socket) => {
     })
 })
 
-export const init = () => httpServer.listen(config.port || 6789, '0.0.0.0', () => console.log('listening'))
+const port = config.port || 6789
+const host = config.host || '0.0.0.0'
+
+export const init = () => httpServer.listen(port, host,
+    () => console.log(`listening on http://${host}:${port}`))
 
 export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
 export const getClientsCount = () => io.sockets.sockets.size
