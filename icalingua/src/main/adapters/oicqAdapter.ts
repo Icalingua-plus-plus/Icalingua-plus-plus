@@ -23,7 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
-    StrangerInfo, SyncMessageEventData, GroupMuteEventData,
+    StrangerInfo, SyncMessageEventData, GroupMuteEventData, QrcodeEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -604,6 +604,9 @@ const loginHandlers = {
         })
         veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
     },
+    qrcode(data: QrcodeEventData) {
+        console.log(data)
+    },
 }
 //endregion
 //region utility functions
@@ -688,6 +691,7 @@ const attachLoginHandler = () => {
     bot.on('system.login.error', loginHandlers.onErr)
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
+    bot.on('system.login.qrcode', loginHandlers.qrcode)
 }
 
 //endregion
