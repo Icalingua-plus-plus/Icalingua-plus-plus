@@ -1,0 +1,9 @@
+account:
+  qq:
+  passwd:
+  protocol: 5
+
+db: mongodb://localhost
+pubKey:
+port: 6789
+custom: false
