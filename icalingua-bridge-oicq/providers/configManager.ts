@@ -19,6 +19,7 @@ type Config = {
     db: string
     pubKey: string
     custom: boolean
+    port: number
 }
 
 export let config: Config
