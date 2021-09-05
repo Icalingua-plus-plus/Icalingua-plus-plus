@@ -1,5 +1,6 @@
 import fs from 'fs'
 import YAML from 'yaml'
+import argv from './argv'
 
 type Config = {
     account: {
@@ -23,10 +24,13 @@ type Config = {
     host: string
 }
 
+const CONFIG_PATH = argv.config || 'config.yaml'
+
 export let config: Config
-if (fs.existsSync('config.yaml')) {
-    config = YAML.parse(fs.readFileSync('config.yaml', 'utf8'))
-} else {
+if (fs.existsSync(CONFIG_PATH)) {
+    config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+}
+else {
     console.error('配置文件不存在')
     process.exit(2)
 }

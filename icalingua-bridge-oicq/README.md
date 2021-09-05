@@ -32,6 +32,7 @@
      protocol: 5 # 1:安卓手机(默认) 2:aPad 3:安卓手表 4:MacOS 5:iPad
    db: mongodb://localhost # MongoDB 连接字符串
    pubKey: 第三步生成的公钥
+   host: 0.0.0.0 # 如果有反代工具，可以改成 localhost 或者 127.0.0.1
    port: 6789 # 如果需要运行多个实例，可以设置不同端口
    custom: false # 自定义插件功能，默认禁用
    ```
