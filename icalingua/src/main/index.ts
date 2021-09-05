@@ -25,7 +25,7 @@ app.on('ready', async () => {
     ])()
 
     if(argv.version){
-        console.log(app.getVersion())
+        console.log(require('./utils/version').version)
         app.quit()
     }
     if (!argv.config && !app.requestSingleInstanceLock()) app.quit()
