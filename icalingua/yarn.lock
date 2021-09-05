@@ -6715,7 +6715,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq: ^1.19.5
+    oicq: ^1.19.7
     pg: ^8.6.0
     sass: ^1.34.1
     sass-loader: ^10.1.1
@@ -9499,9 +9499,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq@npm:^1.19.5":
-  version: 1.19.5
-  resolution: "oicq@npm:1.19.5"
+"oicq@npm:^1.19.7":
+  version: 1.19.7
+  resolution: "oicq@npm:1.19.7"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9509,7 +9509,7 @@ fsevents@~2.3.1:
     pngjs: ^6.0.0
     probe-image-size: ^7.2.1
     qrcode-terminal: ^0.12.0
-  checksum: 651f0139d74af4c208eb5dfa5972c9bce1bee943c8567b6291a46ed8802a16151338dbaa28b66ae4274f7d731187380b1969aa71559d517265b91317fc5ee895
+  checksum: 42e2b49507298ef126bb9043f6fc14d02683a5a49ecd535d1990d6f3c0712c3a0193c2c3a1949ea9ac1fb20977113749580bc41ac4808fae1e22152a59db9a20
   languageName: node
   linkType: hard
 
