@@ -55,6 +55,8 @@ import errorHandler from '../utils/errorHandler'
 import {getUin} from '../ipc/botAndStorage'
 import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
+import getBuildInfo from '../utils/getBuildInfo'
+import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
 
 let bot: Client
 let storage: StorageProvider
@@ -751,13 +753,25 @@ const adapter: OicqAdapter = {
         return friend || ((await bot.getStrangerInfo(user_id)).data as FriendInfo)
     },
     async sendOnlineData() {
+        let sysInfo = getBuildInfo()
+        const updateInfo = getCachedUpdate()
+        if (updateInfo && updateInfo.hasUpdate) {
+            if (sysInfo)
+                sysInfo += '\n\n'
+            sysInfo += '新版本可用: ' + updateInfo.latestVersion
+        }
         ui.sendOnlineData({
             online: bot.getStatus().data.online,
             nick: bot.nickname,
             uin: bot.uin,
             priority: getConfig().priority,
+            sysInfo,
+            updateCheck: getConfig().updateCheck,
         })
         ui.setAllRooms(await storage.getAllRooms())
+        if (!updateInfo) {
+            checkUpdate().then(adapter.sendOnlineData)
+        }
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return storage.getIgnoredChats()
