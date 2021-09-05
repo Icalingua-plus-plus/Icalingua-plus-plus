@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "md5": "^2.3.0",
+    "minimist": "^1.2.5",
     "mongodb": "^4.0.0",
     "noble-ed25519": "^1.2.5",
     "nodejs-base64": "^2.0.0",
