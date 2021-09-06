@@ -68,6 +68,7 @@ export const showLoginWindow = () => {
             width: 450,
             maximizable: false,
             webPreferences: {
+                webSecurity: false,
                 nodeIntegration: true,
                 contextIsolation: false,
             },
@@ -80,7 +81,7 @@ export const showLoginWindow = () => {
             loginWindow.minimize()
         }
 
-        loginWindow.loadURL(getWinUrl() + '#/login')
+        return loginWindow.loadURL(getWinUrl() + '#/login')
     }
 }
 export const showRequestWindow = () => {
@@ -110,9 +111,11 @@ export const showRequestWindow = () => {
 export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow)
         loginWindow.webContents.send(channel, payload)
+    else
+        showLoginWindow().then(() => loginWindow.webContents.send(channel, payload))
 }
 export const sendToMainWindow = (channel: string, payload?: any) => {
-    if (mainWindow)
+    if (mainWindow && !mainWindow.isDestroyed())
         mainWindow.webContents.send(channel, payload)
 }
 export const sendToRequestWindow = (channel: string, payload?: any) => {

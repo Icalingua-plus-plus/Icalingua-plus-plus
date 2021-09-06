@@ -23,7 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
-    StrangerInfo, SyncMessageEventData, GroupMuteEventData,
+    StrangerInfo, SyncMessageEventData, GroupMuteEventData, QrcodeEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -35,7 +35,7 @@ import processMessage from '../utils/processMessage'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
-import {app, BrowserWindow, dialog} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, NativeImage} from 'electron'
 import avatarCache from '../utils/avatarCache'
 import {download} from '../ipc/downloadManager'
 import fs from 'fs'
@@ -604,6 +604,10 @@ const loginHandlers = {
         })
         veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
     },
+    qrcode(data: QrcodeEventData) {
+        console.log(data)
+        sendToLoginWindow('qrcodeLogin', getUin())
+    },
 }
 //endregion
 //region utility functions
@@ -688,6 +692,7 @@ const attachLoginHandler = () => {
     bot.on('system.login.error', loginHandlers.onErr)
     bot.on('system.online', loginHandlers.onSucceed)
     bot.on('system.login.device', loginHandlers.verify)
+    bot.on('system.login.qrcode', loginHandlers.qrcode)
 }
 
 //endregion
@@ -969,16 +974,18 @@ const adapter: OicqAdapter = {
         }
     },
     createBot(form: LoginForm) {
-        bot = createClient(Number(form.username), {
-            platform: Number(form.protocol),
-            data_dir: path.join(app.getPath('userData'), '/data'),
-            ignore_self: false,
-            brief: true,
-            log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
-        })
-        bot.setMaxListeners(233)
+        if (!bot || form.username != bot.uin) {
+            bot = createClient(Number(form.username), {
+                platform: Number(form.protocol),
+                data_dir: path.join(app.getPath('userData'), '/data'),
+                ignore_self: false,
+                brief: true,
+                log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
+            })
+            bot.setMaxListeners(233)
+            attachLoginHandler()
+        }
         loginForm = form
-        attachLoginHandler()
         bot.login(form.password)
     },
     async getGroups() {
