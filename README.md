@@ -25,6 +25,9 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 ##### dev
 [![Build/release](https://github.com/Clansty/electron-qq/actions/workflows/main.yml/badge.svg?branch=dev)](https://github.com/Clansty/electron-qq/actions/workflows/main.yml)
 
+### 统计
+
+[![Stargazers over time](https://starchart.cc/Clansty/Icalingua.svg)](https://github.com/Clansty/Icalingua/stargazers)
 
 ### 鸣谢
 <a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
