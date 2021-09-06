@@ -99,7 +99,7 @@
                 </el-button>
             </el-form-item>
         </el-form>
-        <QrcodeDrawer/>
+        <QrcodeDrawer @login="onSubmit('loginForm')"/>
     </div>
 </template>
 

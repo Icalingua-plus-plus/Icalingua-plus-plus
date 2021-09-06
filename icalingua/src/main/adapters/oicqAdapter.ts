@@ -974,16 +974,18 @@ const adapter: OicqAdapter = {
         }
     },
     createBot(form: LoginForm) {
-        bot = createClient(Number(form.username), {
-            platform: Number(form.protocol),
-            data_dir: path.join(app.getPath('userData'), '/data'),
-            ignore_self: false,
-            brief: true,
-            log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
-        })
-        bot.setMaxListeners(233)
+        if (!bot || form.username != bot.uin) {
+            bot = createClient(Number(form.username), {
+                platform: Number(form.protocol),
+                data_dir: path.join(app.getPath('userData'), '/data'),
+                ignore_self: false,
+                brief: true,
+                log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
+            })
+            bot.setMaxListeners(233)
+            attachLoginHandler()
+        }
         loginForm = form
-        attachLoginHandler()
         bot.login(form.password)
     },
     async getGroups() {

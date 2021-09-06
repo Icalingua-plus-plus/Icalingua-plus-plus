@@ -9,6 +9,11 @@
         size="100%"
     >
         <img :src="image" alt="">
+        <center>
+            <el-button @click="$emit('login')">
+                已扫码
+            </el-button>
+        </center>
     </el-drawer>
 </template>
 
