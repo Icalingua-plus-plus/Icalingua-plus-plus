@@ -29,16 +29,21 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += m.data.text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
-                } else if ((m as AtElem).data.qq == oicq.getUin()) {
+                }
+                else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true
                 }
                 break
             case 'flash':
-                message.flash=true
+                message.flash = true
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'image':
                 lastMessage.content += '[Image]'
                 url = m.data.url
+                if (typeof m.data.file === 'string') {
+                    const md5 = m.data.file.substr(0, 32);
+                    /^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
+                }
                 message.file = {
                     type: 'image/jpeg',
                     url,
@@ -156,7 +161,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
 
                     lastMessage.content += appurl
                     message.content += appurl
-                } else {
+                }
+                else {
                     lastMessage.content = '[JSON]'
                     message.content = '[JSON]'
                 }
@@ -176,11 +182,13 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         console.log(resId)
                         message.content = `[Forward: ${resId}]`
                     }
-                } else if (appurl) {
+                }
+                else if (appurl) {
                     appurl = appurl.replace(/&amp;/g, '&')
                     lastMessage.content = appurl
                     message.content = appurl
-                } else if (md5ImageRegex.test(m.data.data)) {
+                }
+                else if (md5ImageRegex.test(m.data.data)) {
                     const imgMd5 = appurl = m.data.data.match(md5ImageRegex)[1]
                     lastMessage.content += '[Image]'
                     url = getImageUrlByMd5(imgMd5)
@@ -188,7 +196,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         type: 'image/jpeg',
                         url,
                     }
-                } else {
+                }
+                else {
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
                 }
@@ -224,13 +233,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (!message.mirai.eqq) {
                         message.mirai = null
                         break
-                    } else if (message.mirai.eqq.type === 'tg') {
+                    }
+                    else if (message.mirai.eqq.type === 'tg') {
                         const index = message.content.indexOf('：\n')
                         let sender = ''
                         if (index > -1) {
                             sender = message.content.substr(0, index)
                             message.content = message.content.substr(index + 2)
-                        } else {
+                        }
+                        else {
                             //是图片之类没有真实文本内容的
                             //去除尾部：
                             sender = message.content.substr(0, message.content.length - 1)
