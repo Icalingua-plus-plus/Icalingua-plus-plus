@@ -10,7 +10,7 @@
     >
         <img :src="image" alt="">
         <center>
-            <el-button @click="$emit('login')">
+            <el-button @click="$emit('login')" type="primary">
                 已扫码
             </el-button>
         </center>
