@@ -99,6 +99,7 @@
                 </el-button>
             </el-form-item>
         </el-form>
+        <QrcodeDrawer/>
     </div>
 </template>
 
@@ -106,9 +107,11 @@
 import {ipcRenderer} from 'electron'
 import ipc from '../utils/ipc'
 import md5 from 'md5'
+import QrcodeDrawer from '../components/QrcodeDrawer'
 
 export default {
     name: 'LoginView',
+    components: {QrcodeDrawer},
     data() {
         return {
             ver: '',
