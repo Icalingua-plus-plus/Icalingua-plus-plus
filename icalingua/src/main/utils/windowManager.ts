@@ -68,6 +68,7 @@ export const showLoginWindow = () => {
             width: 450,
             maximizable: false,
             webPreferences: {
+                webSecurity: false,
                 nodeIntegration: true,
                 contextIsolation: false,
             },

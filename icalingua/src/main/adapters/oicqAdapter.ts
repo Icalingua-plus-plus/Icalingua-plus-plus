@@ -35,7 +35,7 @@ import processMessage from '../utils/processMessage'
 import {getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow} from '../utils/windowManager'
 import ui from '../utils/ui'
 import {getConfig, saveConfigFile} from '../utils/configManager'
-import {app, BrowserWindow, dialog} from 'electron'
+import {app, BrowserWindow, dialog, ipcMain, NativeImage} from 'electron'
 import avatarCache from '../utils/avatarCache'
 import {download} from '../ipc/downloadManager'
 import fs from 'fs'
@@ -606,6 +606,7 @@ const loginHandlers = {
     },
     qrcode(data: QrcodeEventData) {
         console.log(data)
+        sendToLoginWindow('qrcodeLogin', getUin())
     },
 }
 //endregion
