@@ -10,7 +10,6 @@ require('./utils/configManager')
 require('./ipc/system')
 require('./ipc/botAndStorage')
 require('./ipc/openImage')
-app.allowRendererProcessReuse = false
 protocol.registerBufferProtocol('jsbridge', ()=>{})
 if (process.env.NODE_ENV === 'development')
     protocol.registerFileProtocol('file', (request, cb) => {
