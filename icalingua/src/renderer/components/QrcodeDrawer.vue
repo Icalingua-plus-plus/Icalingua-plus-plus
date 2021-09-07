@@ -33,7 +33,7 @@ export default {
         ipcRenderer.on('qrcodeLogin', async (_, uin) => {
             console.log(uin)
             const STORE_PATH = await ipc.getStorePath()
-            this.image = `file://${STORE_PATH}/data/${uin}/qrcode.png`
+            this.image = `file://${STORE_PATH}/data/${uin}/qrcode.png?${Math.random()}`
             this.drawerVisible = true
         })
     },
