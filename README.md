@@ -10,6 +10,7 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 
 [![GitHub release (latest by date)](https://img.shields.io/github/downloads/Clansty/Icalingua/latest/total)](https://github.com/Clansty/electron-qq/releases/latest)
 [![AUR votes](https://img.shields.io/aur/votes/icalingua)](https://aur.archlinux.org/packages/icalingua/)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_shield)
 
 #### 分支状态
 
@@ -18,7 +19,6 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 [![Build/release](https://github.com/Clansty/electron-qq/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/Clansty/electron-qq/actions/workflows/main.yml)
 [![AUR](https://img.shields.io/aur/version/icalingua)](https://aur.archlinux.org/packages/icalingua/)
 [![AUR last modified](https://img.shields.io/aur/last-modified/icalingua)](https://aur.archlinux.org/packages/icalingua/)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_shield)
 
 [![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Clansty/Icalingua/oicq?filename=icalingua%2Fpackage.json)](https://github.com/takayama-lily/oicq)
 [![GitHub package.json dependency version (dev dep on branch)](https://img.shields.io/github/package-json/dependency-version/clansty/Icalingua/dev/electron?logo=electron&filename=icalingua%2Fpackage.json)](https://electronjs.org)
@@ -30,6 +30,9 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 
 [![Stargazers over time](https://starchart.cc/Clansty/Icalingua.svg)](https://github.com/Clansty/Icalingua/stargazers)
 
+### License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_large)
+
 ### 鸣谢
 <a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
 
@@ -40,5 +43,3 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 <div><p><img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Gay_Pride_Flag.svg" alt="LGBT 旗" width="100px" align="left" />项目贡献者中也有其它的性少数。在理解与包容之上，你还可以进一步<a href="https://github.com/LGBT-CN/LGBTQIA-In-China">支持我们</a>。</p></div>
 
 
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_large)
