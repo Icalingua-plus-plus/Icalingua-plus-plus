@@ -5744,13 +5744,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"freedesktop-notifications@git+https://github.com/Clansty/freedesktop-notifications.git#b6ed78ff8aa5ae4a8798706912bb075aff69770f":
-  version: 2.0.0
-  resolution: "freedesktop-notifications@https://github.com/Clansty/freedesktop-notifications.git#commit=b6ed78ff8aa5ae4a8798706912bb075aff69770f"
+"freedesktop-notifications@npm:^2.1.0":
+  version: 2.1.0
+  resolution: "freedesktop-notifications@npm:2.1.0"
   dependencies:
     dbus-native: ^0.4.0
     seventh: ^0.7.40
-  checksum: f21629bcf95bde913e0fc6198012bbbdbaba77435fd18043d756be397c96296ca5259639e6c6fc0db2d13c78dd266fa0491f3f1d19c8bb6c50c44a7566da290e
+  checksum: 7e0c8772d557e633d76b71402ea7cace5ae7ed77d9dd21c357e7c8717159daf1df68e8bda6c88c4ed939452dd1a8253b3d0f77300f0a59529d0035ae4c9c3b3b
   languageName: node
   linkType: hard
 
@@ -6698,7 +6698,7 @@ fsevents@~2.3.1:
     file-loader: ^1.1.11
     file-type: ^16.5.1
     fluent-ffmpeg: ^2.1.2
-    freedesktop-notifications: "git+https://github.com/Clansty/freedesktop-notifications.git#b6ed78ff8aa5ae4a8798706912bb075aff69770f"
+    freedesktop-notifications: ^2.1.0
     html-webpack-plugin: ^3.2.0
     ioredis: ^4.27.5
     knex: ^0.95.8
