@@ -150,7 +150,6 @@ export default {
   height: 64px;
   width: 100%;
   z-index: 10;
-  margin-right: 1px;
   background: var(--chat-header-bg-color);
   border-top-right-radius: var(--chat-container-border-radius);
 }
