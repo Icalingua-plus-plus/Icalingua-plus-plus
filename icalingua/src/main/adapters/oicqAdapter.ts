@@ -95,7 +95,10 @@ const eventHandlers = {
             date: formatDate('dd/MM/yyyy', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
+            title: (data.sender as MemberBaseInfo).title
         }
+
+        console.log(data.sender)
 
         let room = await storage.getRoom(roomId)
         if (!room) {
