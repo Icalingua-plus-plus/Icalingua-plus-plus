@@ -51,7 +51,7 @@
     "npmRebuild": false
   },
   "dependencies": {
-    "freedesktop-notifications": "git+https://github.com/Clansty/freedesktop-notifications.git#b6ed78ff8aa5ae4a8798706912bb075aff69770f",
+    "freedesktop-notifications": "^2.1.0",
     "knex": "^0.95.8",
     "mongodb": "^3.6.6",
     "mysql": "^2.18.1",
