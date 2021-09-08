@@ -37,6 +37,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'image':
                 lastMessage.content += '[Image]'
                 url = m.data.url
+                if (typeof m.data.file === 'string') {
+                    const md5 = m.data.file.substr(0, 32);
+                    /^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
+                }
                 message.file = {
                     type: 'image/jpeg',
                     url,
