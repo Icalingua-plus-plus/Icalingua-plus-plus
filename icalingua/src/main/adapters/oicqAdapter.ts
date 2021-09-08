@@ -98,8 +98,6 @@ const eventHandlers = {
             title: (data.sender as MemberBaseInfo).title
         }
 
-        console.log(data.sender)
-
         let room = await storage.getRoom(roomId)
         if (!room) {
             if (groupId) {

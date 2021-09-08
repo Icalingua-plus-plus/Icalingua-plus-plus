@@ -9,7 +9,7 @@ const upg4to5 = async (db: Knex) => {
   if (msgTableNamesAry.length !== 0) {
     const PAry = msgTableNamesAry.map(async (msgTableName) => {
       await db.schema.alterTable(msgTableName, (table) => {
-        table.text("title").nullable();
+        table.string("title", 24).nullable();
       });
     });
     await Promise.all(PAry);
