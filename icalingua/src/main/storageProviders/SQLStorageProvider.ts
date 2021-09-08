@@ -309,7 +309,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.text("mirai").nullable();
           table.boolean("reveal").nullable();
           table.boolean("flash").nullable();
-          table.text("title").nullable();
+          table.string("title", 24).nullable();
         });
         await this.db<MsgTableName>("msgTableName").insert({
           tableName: `msg${roomId}`,
