@@ -681,10 +681,10 @@ object-assign@^4:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
-oicq@^1.19.7:
-  version "1.19.7"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.19.7.tgz#a3b0f236b0cb0e464e63217e0de137d1d134b892"
-  integrity sha512-r5C3Ju1MwbbUFDIDLW620zRplGBQR315RebFsb52B+o33boqwL7XsOqcuwiqR9bahxpaoGGXepDu7rDISZWnmQ==
+oicq@^1.20.0:
+  version "1.20.0"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.20.0.tgz#940e24bb41fcaeb03f6d83649d8722a8182107d2"
+  integrity sha512-45tMeuFO6fFyCKR6Rcz3EkhYwi+lR6gzxJPLNDfGQPQF4UjfEneLngv7Vefb6Ksw7wIQ0N1Lpr/sD4Vk0/HgGw==
   dependencies:
     jsqr "^1.4.0"
     log4js "^6.3.0"
@@ -692,6 +692,7 @@ oicq@^1.19.7:
     pngjs "^6.0.0"
     probe-image-size "^7.2.1"
     qrcode-terminal "^0.12.0"
+    ws "^7.5.4"
 
 on-finished@~2.3.0:
   version "2.3.0"
@@ -982,6 +983,11 @@ which@^1.1.1:
   integrity sha512-HxJdYWq1MTIQbJ3nw0cqssHoTNU267KlrDuGZ1WYlxDStUtKUhOaJmh112/TZmHxxUfuJqPXSOm7tDyas0OSIQ==
   dependencies:
     isexe "^2.0.0"
+
+ws@^7.5.4:
+  version "7.5.4"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.4.tgz#56bfa20b167427e138a7795de68d134fe92e21f9"
+  integrity sha512-zP9z6GXm6zC27YtspwH99T3qTG7bBFv2VIkeHstMLrLlDJuzA7tQ5ls3OJ1hOGGCzTQPniNJoHXIAOS0Jljohg==
 
 ws@~7.4.2:
   version "7.4.6"
