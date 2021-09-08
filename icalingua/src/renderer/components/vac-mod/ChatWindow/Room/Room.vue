@@ -840,7 +840,6 @@ export default {
   background: var(--chat-content-bg-color);
   flex: 1;
   overflow-y: auto;
-  margin-right: 1px;
   margin-top: 60px;
   -webkit-overflow-scrolling: touch;
 }
