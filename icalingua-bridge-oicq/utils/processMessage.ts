@@ -193,7 +193,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 break
             case 'face':
                 message.content += `[Face: ${m.data.id}]`
-                lastMessage.content += m.data.text ? m.data.text : '[表情]'
+                lastMessage.content += `[${m.data.text ? m.data.text : '表情'}]`
                 break
             case 'video':
                 message.content = ''
