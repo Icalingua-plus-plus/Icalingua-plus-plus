@@ -26,6 +26,7 @@ export default interface Message {
   mirai?: MessageMirai;
   reveal?: boolean;
   flash?: boolean;
+  title?: string;
 }
 
 interface MessageInIDB extends Message {
