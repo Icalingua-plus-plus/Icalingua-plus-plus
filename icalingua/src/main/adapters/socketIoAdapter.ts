@@ -33,6 +33,7 @@ const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
 
 let socket: Socket
 let uin = 0
+let nickname = ''
 let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
@@ -69,6 +70,7 @@ const attachSocketEvents = () => {
         sysInfo: string
     }) => {
         uin = data.uin
+        nickname = data.nick
         cachedOnlineData = {
             ...data,
             priority: getConfig().priority,
@@ -314,6 +316,7 @@ const adapter: Adapter = {
         return adapter.getRoom(ui.getSelectedRoomId())
     },
     getUin: () => uin,
+    getNickname: () => nickname,
     getUnreadCount(): Promise<number> {
         return new Promise((resolve, reject) => {
             socket.emit('getUnreadCount', getConfig().priority, resolve)

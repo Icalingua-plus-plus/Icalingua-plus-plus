@@ -2,13 +2,12 @@ import {app, Menu, MenuItem, Tray} from 'electron'
 import path from 'path'
 import {getMainWindow} from './windowManager'
 import exit from './exit'
-import {getFirstUnreadRoom, getUnreadCount, getUnreadRooms} from '../ipc/botAndStorage'
+import {getUin, getNickname, getFirstUnreadRoom, getUnreadCount, getUnreadRooms} from '../ipc/botAndStorage'
 import {getConfig, saveConfigFile} from './configManager'
 import getStaticPath from '../../utils/getStaticPath'
 import {pushUnreadCount} from './socketIoSlave'
 import setPriority from './setPriority'
 import ui from './ui'
-import OicqAdapter from '../adapters/oicqAdapter'
 
 let tray: Tray
 
@@ -29,7 +28,7 @@ export const updateTrayMenu = async () => {
     const unreadRooms = await getUnreadRooms()
     const menu = Menu.buildFromTemplate([
         {
-            label: `${OicqAdapter.getUin()}`,
+            label: `${getNickname()} (${getUin()})`,
             enabled: false,
         },
     ])

@@ -1080,6 +1080,7 @@ const adapter: OicqAdapter = {
     },
 
     getUin: () => bot.uin,
+    getNickname: () => bot.nickname,
     getGroupFileMeta: (gin: number, fid: string) => bot.acquireGfs(gin).download(fid),
     getUnreadCount: async () => await storage.getUnreadCount(getConfig().priority),
     getFirstUnreadRoom: async () => await storage.getFirstUnreadRoom(getConfig().priority),
