@@ -8,6 +8,7 @@ import getStaticPath from '../../utils/getStaticPath'
 import {pushUnreadCount} from './socketIoSlave'
 import setPriority from './setPriority'
 import ui from './ui'
+import OicqAdapter from '../adapters/oicqAdapter'
 
 let tray: Tray
 
@@ -28,15 +29,19 @@ export const updateTrayMenu = async () => {
     const unreadRooms = await getUnreadRooms()
     const menu = Menu.buildFromTemplate([
         {
-            label: '打开',
-            type: 'normal',
-            click: () => {
-                const window = getMainWindow()
-                window.show()
-                window.focus()
-            },
+            label: `${OicqAdapter.getUin()}`,
+            enabled: false,
         },
     ])
+    menu.append(new MenuItem({
+        label: '打开',
+        type: 'normal',
+        click: () => {
+            const window = getMainWindow()
+            window.show()
+            window.focus()
+        },
+    }))
     menu.append(new MenuItem({type: 'separator'}))
     if (unreadRooms.length) {
         for (const unreadRoom of unreadRooms) {
