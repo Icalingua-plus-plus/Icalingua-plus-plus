@@ -22,7 +22,7 @@ else if (getConfig().adapter === 'socketIo')
 
 export const {
     sendMessage, createBot, getGroupMemberInfo, getGroupMembers, getUnreadRooms,
-    getUin, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
+    getUin, getNickname, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
     getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
     clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,

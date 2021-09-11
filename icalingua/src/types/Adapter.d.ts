@@ -53,6 +53,8 @@ export default interface Adapter {
 
     getUin(): number
 
+    getNickname(): string
+
     getGroupFileMeta(gin: number, fid: string): Promise<FileElem['data']>
 
     getUnreadCount(): Promise<number>
