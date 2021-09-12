@@ -256,6 +256,24 @@ const buildRoomMenu = (room: Room): Menu => {
             },
         }))
         menu.append(new MenuItem({
+            label: '群成员',
+            async click() {
+                const win = new BrowserWindow({
+                    autoHideMenuBar: true,
+                })
+                win.maximize()
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
             label: '导出群成员',
             click() {
                 exportGroupMembers(-room.roomId)
