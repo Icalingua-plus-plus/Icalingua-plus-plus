@@ -273,11 +273,9 @@ const buildRoomMenu = (room: Room): Menu => {
                         value: cookies[i],
                     })
                 }
-                win.webContents.on('did-finish-load', () => win.webContents.executeJavaScript(
-                    '$(\'.header\').remove();' +
-                    '$(\'.body\').css(\'padding-top\', 0).css(\'margin\', 0);' +
-                    '$(\'.footer>p:not(:last-child)\').remove();' +
-                    '$(\'#changeGroup\').remove();'))
+                win.webContents.on('dom-ready', () => win.webContents.insertCSS(
+                    '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
+                    '.body{padding-top:0 !important;margin:0 !important}'))
                 await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
             },
         }))
