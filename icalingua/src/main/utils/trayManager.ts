@@ -31,16 +31,16 @@ export const updateTrayMenu = async () => {
             label: `${getNickname()} (${getUin()})`,
             enabled: false,
         },
-    ])
-    menu.append(new MenuItem({
-        label: '打开',
-        type: 'normal',
-        click: () => {
-            const window = getMainWindow()
-            window.show()
-            window.focus()
+        {
+            label: '打开',
+            type: 'normal',
+            click: () => {
+                const window = getMainWindow()
+                window.show()
+                window.focus()
+            },
         },
-    }))
+    ])
     menu.append(new MenuItem({type: 'separator'}))
     if (unreadRooms.length) {
         for (const unreadRoom of unreadRooms) {
