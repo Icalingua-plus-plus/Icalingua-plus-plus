@@ -85,7 +85,7 @@ const defaultConfig: AllConfig = {
     //给 @rain15z3 一点面子，而且第一次用的人也没有本地表情
     lastUsedStickerType: 'remote',
     keyToSendMessage: 'Enter',
-    theme: 'light',
+    theme: 'auto',
     updateCheck: 'ask',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {

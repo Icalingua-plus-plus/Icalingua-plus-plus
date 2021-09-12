@@ -534,7 +534,17 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: '主题',
                 submenu: (() => {
-                    let rsp: Electron.MenuItemConstructorOptions[] = []
+                    let rsp: Electron.MenuItemConstructorOptions[] = [{
+                        label: '跟随系统',
+                        type: 'radio',
+                        checked: getConfig().theme == 'auto',
+                        click(){
+                            getConfig().theme = 'auto'
+                            themes.autoSetTheme()
+                            saveConfigFile()
+                            updateAppMenu()
+                        }
+                    }]
                     for (let theme of themes.getThemeList()) {
                         rsp.push({
                             label: theme,
