@@ -13,13 +13,12 @@ type CheckUpdateResult = {
 let cache: CheckUpdateResult
 
 export const checkUpdate = async () => {
-    if (/*process.env.NODE_ENV === 'development' || */getConfig().updateCheck !== true)
+    if (process.env.NODE_ENV === 'development' || getConfig().updateCheck !== true)
         cache = {
             hasUpdate: false,
             latestVersion: '',
         }
-
-    if (version.isProduction) {
+    else if (version.isProduction) {
         try {
             const res = await axios.get('https://api.github.com/repos/clansty/icalingua/releases/latest')
             const latestVersion = res.data.tag_name
