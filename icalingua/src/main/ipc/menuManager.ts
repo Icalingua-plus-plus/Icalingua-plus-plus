@@ -260,6 +260,9 @@ const buildRoomMenu = (room: Room): Menu => {
             async click() {
                 const win = new BrowserWindow({
                     autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                    },
                 })
                 win.maximize()
                 const cookies = await getCookies('qun.qq.com')
@@ -270,6 +273,11 @@ const buildRoomMenu = (room: Room): Menu => {
                         value: cookies[i],
                     })
                 }
+                win.webContents.on('did-finish-load', () => win.webContents.executeJavaScript(
+                    '$(\'.header\').remove();' +
+                    '$(\'.body\').css(\'padding-top\', 0).css(\'margin\', 0);' +
+                    '$(\'.footer>p:not(:last-child)\').remove();' +
+                    '$(\'#changeGroup\').remove();'))
                 await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
             },
         }))
@@ -556,12 +564,12 @@ export const updateAppMenu = async () => {
                         label: '跟随系统',
                         type: 'radio',
                         checked: getConfig().theme == 'auto',
-                        click(){
+                        click() {
                             getConfig().theme = 'auto'
                             themes.autoSetTheme()
                             saveConfigFile()
                             updateAppMenu()
-                        }
+                        },
                     }]
                     for (let theme of themes.getThemeList()) {
                         rsp.push({
