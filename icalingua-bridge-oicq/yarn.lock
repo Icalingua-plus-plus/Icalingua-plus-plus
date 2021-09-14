@@ -688,10 +688,10 @@ object-assign@^4:
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
 
-oicq@^1.20.0:
-  version "1.20.0"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.20.0.tgz#940e24bb41fcaeb03f6d83649d8722a8182107d2"
-  integrity sha512-45tMeuFO6fFyCKR6Rcz3EkhYwi+lR6gzxJPLNDfGQPQF4UjfEneLngv7Vefb6Ksw7wIQ0N1Lpr/sD4Vk0/HgGw==
+oicq@^1.20.2:
+  version "1.20.2"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.20.2.tgz#663788f45c55670a9cceec073d4148f24c3a8ecb"
+  integrity sha512-OXYFbLnogA7WqRCoqaWNowBuMaKpaooHaxnNGgpXAH0ImZPDegoAx80MmrIY9tPIaxXSK4fcJhCtrisZSkG4DA==
   dependencies:
     jsqr "^1.4.0"
     log4js "^6.3.0"
