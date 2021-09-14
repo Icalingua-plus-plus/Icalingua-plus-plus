@@ -92,7 +92,7 @@ const eventHandlers = {
             username: senderName,
             content: '',
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
             title: (data.sender as MemberBaseInfo).title
@@ -251,7 +251,7 @@ const eventHandlers = {
                 content: msg,
                 senderId: data.operator_id,
                 timestamp: formatDate('hh:mm'),
-                date: formatDate('dd/MM/yyyy'),
+                date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
@@ -289,7 +289,7 @@ const eventHandlers = {
                 content: msg,
                 senderId: data.operator_id,
                 timestamp: formatDate('hh:mm'),
-                date: formatDate('dd/MM/yyyy'),
+                date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
@@ -314,7 +314,7 @@ const eventHandlers = {
             senderId,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             system: true,
         }
         let room = await storage.getRoom(roomId)
@@ -361,7 +361,7 @@ const eventHandlers = {
             senderId: data.operator_id,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             system: true,
         }
         let room = await storage.getRoom(roomId)
@@ -418,7 +418,7 @@ const eventHandlers = {
             senderId: data.operator_id,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             system: true,
         }
         let room = await storage.getRoom(roomId)
@@ -484,7 +484,7 @@ const eventHandlers = {
             senderId,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             system: true,
         }
         let room = await storage.getRoom(roomId)
@@ -516,7 +516,7 @@ const eventHandlers = {
             senderId,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
-            date: formatDate('dd/MM/yyyy', now),
+            date: formatDate('yyyy/MM/dd', now),
             system: true,
         }
         let room = await storage.getRoom(roomId)
@@ -813,7 +813,7 @@ const adapter: OicqAdapter = {
             username: 'You',
             content,
             timestamp: formatDate('hh:mm'),
-            date: formatDate('dd/MM/yyyy'),
+            date: formatDate('yyyy/MM/dd'),
         }
 
         const chain: MessageElem[] = []
@@ -1064,7 +1064,7 @@ const adapter: OicqAdapter = {
                 username: data.nickname,
                 content: '',
                 timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
-                date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: i,
                 time: data.time * 1000,
             }
@@ -1179,7 +1179,7 @@ const adapter: OicqAdapter = {
                             : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
                         content: '',
                         timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
-                        date: formatDate('dd/MM/yyyy', new Date(data.time * 1000)),
+                        date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                         _id: data.message_id,
                         time: data.time * 1000,
                     }
