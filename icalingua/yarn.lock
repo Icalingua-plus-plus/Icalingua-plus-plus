@@ -6715,7 +6715,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq: ^1.20.0
+    oicq: ^1.20.2
     pg: ^8.6.0
     sass: ^1.34.1
     sass-loader: ^10.1.1
@@ -9499,9 +9499,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq@npm:^1.20.0":
-  version: 1.20.0
-  resolution: "oicq@npm:1.20.0"
+"oicq@npm:^1.20.2":
+  version: 1.20.2
+  resolution: "oicq@npm:1.20.2"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9512,7 +9512,7 @@ fsevents@~2.3.1:
     ws: ^7.5.4
   bin:
     oicq: bin/oicq
-  checksum: c001e5d0a5d6ec7bb35efc6dd58f392c541ce98fc1817084519a37bfdf31856253701b94bae933591d7e503e6a7efdacde1e7e32386638d6648cfb4111ad1726
+  checksum: 2db75c83298a2895f576106e9c730e6a03083de44e819d75d00df43db447150b6e80d9200e79b57783fbd51fc10e685e8011c013107db3d37257e566bfd8d833
   languageName: node
   linkType: hard
 
