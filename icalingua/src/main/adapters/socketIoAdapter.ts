@@ -309,20 +309,16 @@ const adapter: Adapter = {
             socket.emit('getGroupFileMeta', gin, fid, resolve)
         })
     },
-    getRoom(roomId: number): Promise<Room> {
-        return new Promise((resolve, reject) => {
-            socket.emit('getRoom', roomId, resolve)
-        })
+    async getRoom(roomId: number): Promise<Room> {
+        return rooms.find(e => e.roomId === roomId)
     },
     getSelectedRoom(): Promise<Room> {
         return adapter.getRoom(ui.getSelectedRoomId())
     },
     getUin: () => uin,
     getNickname: () => nickname,
-    getUnreadCount(): Promise<number> {
-        return new Promise((resolve, reject) => {
-            socket.emit('getUnreadCount', getConfig().priority, resolve)
-        })
+    async getUnreadCount(): Promise<number> {
+        return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority).length
     },
     ignoreChat(data: IgnoreChatInfo) {
         socket.emit('ignoreChat', data)
