@@ -142,6 +142,14 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
                 else if (jsonAppLinkRegex.test(json))
                     appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
+                else {
+                    //作为一般通过小程序解析内部 URL，像腾讯文档就可以
+                    try {
+                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
+                        appurl = meta.qqdocurl
+                    } catch (e) {
+                    }
+                }
                 if (appurl) {
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
