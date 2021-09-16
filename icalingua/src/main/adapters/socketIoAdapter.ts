@@ -179,7 +179,7 @@ const adapter: Adapter = {
     getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
         return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
-    sendOnlineData() {
+    sendOnlineData(init = false) {
         if (!cachedOnlineData) return
         let sysInfo = getBuildInfo()
         const updateInfo = getCachedUpdate()
@@ -196,6 +196,8 @@ const adapter: Adapter = {
         if (!updateInfo) {
             checkUpdate().then(adapter.sendOnlineData)
         }
+        if (!init)
+            ui.setAllRooms(rooms)
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
