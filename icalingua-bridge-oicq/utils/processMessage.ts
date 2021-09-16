@@ -166,7 +166,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'xml':
                 message.code = m.data.data
                 const urlRegex = /url="([^"]+)"/
-                const md5ImageRegex = /image md5="([A-F\d]{32})"/
+                const md5ImageRegex = /image [^<>]*md5="([A-F\d]{32})"/
                 if (urlRegex.test(m.data.data))
                     appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
                 if (m.data.data.includes('action="viewMultiMsg"')) {
