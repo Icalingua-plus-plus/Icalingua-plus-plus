@@ -580,7 +580,7 @@ const adapter = {
         }
     },
     //roomId 和 room 必有一个
-    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at}: SendMessageParams) {
+    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker}: SendMessageParams) {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && file.type && !file.type.includes('image')) {
@@ -699,6 +699,7 @@ const adapter = {
                 type: 'image',
                 data: {
                     file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
@@ -711,6 +712,7 @@ const adapter = {
                 type: 'image',
                 data: {
                     file: imgpath,
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
