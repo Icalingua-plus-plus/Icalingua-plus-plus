@@ -95,7 +95,7 @@ const eventHandlers = {
             date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
-            title: (data.sender as MemberBaseInfo).title
+            title: (data.sender as MemberBaseInfo).title,
         }
 
         let room = await storage.getRoom(roomId)
@@ -788,7 +788,7 @@ const adapter: OicqAdapter = {
     async getCookies(domain: CookiesDomain) {
         return (await bot.getCookies(domain)).data.cookies
     },
-    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at}: SendMessageParams) {
+    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker}: SendMessageParams) {
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()
             room = await storage.getRoom(roomId)
@@ -910,6 +910,7 @@ const adapter: OicqAdapter = {
                 type: 'image',
                 data: {
                     file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
@@ -922,6 +923,7 @@ const adapter: OicqAdapter = {
                 type: 'image',
                 data: {
                     file: imgpath,
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
@@ -934,6 +936,7 @@ const adapter: OicqAdapter = {
                 type: 'image',
                 data: {
                     file: file.path,
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {

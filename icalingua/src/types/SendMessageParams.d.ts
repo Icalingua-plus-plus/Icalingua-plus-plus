@@ -14,5 +14,6 @@ type SendMessageParams = {
     b64img?: string,
     imgpath?: string,
     at: AtCacheItem[]
+    sticker?: boolean
 }
 export default SendMessageParams
