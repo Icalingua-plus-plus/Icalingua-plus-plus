@@ -27,12 +27,13 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += m.data.text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
-                } else if ((m as AtElem).data.qq == adapter.getUin()) {
+                }
+                else if ((m as AtElem).data.qq == adapter.getUin()) {
                     message.at = true
                 }
                 break
             case 'flash':
-                message.flash=true
+                message.flash = true
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'image':
                 lastMessage.content += '[Image]'
@@ -139,6 +140,14 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
                 else if (jsonAppLinkRegex.test(json))
                     appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
+                else {
+                    //作为一般通过小程序解析内部 URL，像腾讯文档就可以
+                    try {
+                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
+                        appurl = meta.qqdocurl
+                    } catch (e) {
+                    }
+                }
                 if (appurl) {
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
@@ -158,7 +167,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
 
                     lastMessage.content += appurl
                     message.content += appurl
-                } else {
+                }
+                else {
                     lastMessage.content = '[JSON]'
                     message.content = '[JSON]'
                 }
@@ -178,11 +188,13 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         console.log(resId)
                         message.content = `[Forward: ${resId}]`
                     }
-                } else if (appurl) {
+                }
+                else if (appurl) {
                     appurl = appurl.replace(/&amp;/g, '&')
                     lastMessage.content = appurl
                     message.content = appurl
-                } else if (md5ImageRegex.test(m.data.data)) {
+                }
+                else if (md5ImageRegex.test(m.data.data)) {
                     const imgMd5 = appurl = m.data.data.match(md5ImageRegex)[1]
                     lastMessage.content += '[Image]'
                     url = getImageUrlByMd5(imgMd5)
@@ -190,7 +202,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         type: 'image/jpeg',
                         url,
                     }
-                } else {
+                }
+                else {
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
                 }
@@ -226,13 +239,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (!message.mirai.eqq) {
                         message.mirai = null
                         break
-                    } else if (message.mirai.eqq.type === 'tg') {
+                    }
+                    else if (message.mirai.eqq.type === 'tg') {
                         const index = message.content.indexOf('：\n')
                         let sender = ''
                         if (index > -1) {
                             sender = message.content.substr(0, index)
                             message.content = message.content.substr(index + 2)
-                        } else {
+                        }
+                        else {
                             //是图片之类没有真实文本内容的
                             //去除尾部：
                             sender = message.content.substr(0, message.content.length - 1)
