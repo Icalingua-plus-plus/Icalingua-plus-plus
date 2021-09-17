@@ -304,6 +304,7 @@ export default {
             const room = this.rooms.find(e => e.roomId === roomId)
             if (room) {
                 room.unreadCount = 0
+                room.at = false
             }
         })
         ipcRenderer.on('updatePriority', (_, p) => this.priority = p)
@@ -357,8 +358,6 @@ Chromium ${process.versions.chrome}` : ''
             if (reset) {
                 this.messagesLoaded = false
                 this.messages = []
-                this.selectedRoom.unreadCount = 0
-                this.selectedRoom.at = false
             }
             const msgs2add = await ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
             setTimeout(() => {
