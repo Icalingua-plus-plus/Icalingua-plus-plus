@@ -1006,10 +1006,7 @@ const adapter: OicqAdapter = {
     },
     async fetchMessages(roomId: number, offset: number) {
         if (!offset) {
-            storage.updateRoom(roomId, {
-                unreadCount: 0,
-                at: false,
-            }).then(updateTrayIcon)
+            adapter.clearRoomUnread(roomId).then(updateTrayIcon)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
@@ -1105,7 +1102,7 @@ const adapter: OicqAdapter = {
     },
     async clearRoomUnread(roomId: number) {
         ui.clearRoomUnread(roomId)
-        await storage.updateRoom(roomId, {unreadCount: 0})
+        await storage.updateRoom(roomId, {unreadCount: 0, at: false})
         await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {

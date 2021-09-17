@@ -225,7 +225,12 @@ const adapter: Adapter = {
         if (!socket)
             return
         ui.clearRoomUnread(roomId)
-        adapter.updateRoom(roomId, {unreadCount: 0})
+        const room = rooms.find(e => e.roomId === roomId)
+        if (room) {
+            room.unreadCount = 0
+            room.at = false
+        }
+        adapter.updateRoom(roomId, {unreadCount: 0, at: false})
         updateTrayIcon()
     },
     async createBot(_?: LoginForm) {
@@ -283,6 +288,8 @@ const adapter: Adapter = {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
+        if(!offset)
+            adapter.clearCurrentRoomUnread()
         updateTrayIcon()
         currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
