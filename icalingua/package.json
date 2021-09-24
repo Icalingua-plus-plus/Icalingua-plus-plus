@@ -1,6 +1,6 @@
 {
   "name": "icalingua",
-  "version": "2.2.3",
+  "version": "2.2.3-loongarch",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
