@@ -822,7 +822,7 @@ ipcMain.on('popupStickerMenu', () => {
             label: 'Open stickers folder',
             type: 'normal',
             click() {
-                shell.openPath(path.join(app.getPath('userData'), 'stickers'))
+                shell.openItem(path.join(app.getPath('userData'), 'stickers'))
             },
         },
         {

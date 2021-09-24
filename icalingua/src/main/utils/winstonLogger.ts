@@ -3,7 +3,7 @@ import winston from "winston";
 import path from "path";
 import DailyRotateFile from "winston-daily-rotate-file";
 
-const errPath = app.getPath("crashDumps");
+const errPath = app.getPath('logs');
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.json(),

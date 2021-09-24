@@ -121,11 +121,11 @@ export const updateTrayIcon = async () => {
         )
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
-        getMainWindow().title = `(${unread}${extra}) ${title}`
+        getMainWindow().setTitle(`(${unread}${extra}) ${title}`)
     }
     else {
         p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
-        getMainWindow().title = title
+        getMainWindow().setTitle(title)
     }
     tray.setImage(p)
     app.setBadgeCount(unread)

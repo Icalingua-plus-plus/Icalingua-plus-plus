@@ -33,12 +33,12 @@ export const loadMainWindow = () => {
         mainWindow.hide()
     })
 
-    if (process.env.NODE_ENV === 'development') {
-        mainWindow.webContents.session.loadExtension(
-            path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
-        )
-    }
-    else if (winSize.max)
+    // if (process.env.NODE_ENV === 'development') {
+    //     mainWindow.webContents.session.loadExtension(
+    //         path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
+    //     )
+    // }
+    if (winSize.max)
         mainWindow.maximize()
 
     setTimeout(() => mainWindow.on('focus', async () => {
@@ -46,12 +46,12 @@ export const loadMainWindow = () => {
         await updateTrayIcon()
     }), 5000)
 
-    mainWindow.webContents.setWindowOpenHandler(details => {
-        shell.openExternal(details.url)
-        return {
-            action: 'deny',
-        }
-    })
+    // mainWindow.webContents.setWindowOpenHandler(details => {
+    //     shell.openExternal(details.url)
+    //     return {
+    //         action: 'deny',
+    //     }
+    // })
 
     mainWindow.webContents.on('did-finish-load', sendOnlineData)
 
@@ -75,9 +75,9 @@ export const showLoginWindow = () => {
         })
 
         if (process.env.NODE_ENV === 'development') {
-            loginWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
-            )
+            // loginWindow.webContents.session.loadExtension(
+            //     path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
+            // )
             loginWindow.minimize()
         }
 
@@ -100,10 +100,10 @@ export const showRequestWindow = () => {
             },
         })
 
-        if (process.env.NODE_ENV === 'development') {
-            requestWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //     requestWindow.webContents.session.loadExtension(
+        //         path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
+        // }
 
         requestWindow.loadURL(getWinUrl() + '#/friendRequest')
     }
