@@ -11,6 +11,10 @@ type Config = {
     host: string
 }
 
+type UserConfig = {
+    account: LoginForm
+}
+
 const emptyLoginForm: LoginForm = {
     mdbConnStr: 'mongodb://localhost',
     rdsHost: '127.0.0.1',
@@ -29,13 +33,13 @@ const emptyLoginForm: LoginForm = {
 const CONFIG_PATH = argv.config || 'config.yaml'
 export const config: Config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
 
-if(!fs.existsSync('data'))
+if (!fs.existsSync('data'))
     fs.mkdirSync('data')
 
 const USER_CONFIG_PATH = argv.data || `data/${config.port}.json`
-export const userConfig: LoginForm = fs.existsSync(USER_CONFIG_PATH) ?
+export const userConfig: UserConfig = fs.existsSync(USER_CONFIG_PATH) ?
     JSON.parse(fs.readFileSync(USER_CONFIG_PATH, 'utf8')) :
-    emptyLoginForm
+    {account: emptyLoginForm}
 export const saveUserConfig = () => {
     fs.writeFileSync(USER_CONFIG_PATH, JSON.stringify(userConfig), 'utf-8')
 }

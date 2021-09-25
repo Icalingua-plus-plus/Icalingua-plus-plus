@@ -15,6 +15,8 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
     'qun.qq.com' | 'ti.qq.com'
 
 export default interface Adapter {
+    getAccount(): LoginForm
+
     clearRoomUnread(roomId: number): any
 
     getUnreadRooms(): Promise<Room[]>

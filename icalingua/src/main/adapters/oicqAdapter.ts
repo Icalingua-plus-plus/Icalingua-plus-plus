@@ -1086,6 +1086,7 @@ const adapter: OicqAdapter = {
     getFirstUnreadRoom: async () => await storage.getFirstUnreadRoom(getConfig().priority),
     getSelectedRoom: async () => await storage.getRoom(ui.getSelectedRoomId()),
     getRoom: (roomId: number) => storage.getRoom(roomId),
+    getAccount: () => getConfig().account,
 
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {

@@ -19,15 +19,16 @@ import Room from '../types/Room'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import clients from '../utils/clients'
 import {Socket} from 'socket.io'
-import {broadcast, init as initSocketIo} from '../providers/socketIoProvider'
+import {broadcast} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
-import {config} from '../providers/configManager'
+import {config, saveUserConfig, userConfig} from '../providers/configManager'
+import StorageProvider from '../types/StorageProvider'
 
 let bot: Client
-let storage: MongoStorageProvider
+let storage: StorageProvider
 let loginForm: LoginForm
 export let loggedIn = false
 
@@ -446,11 +447,14 @@ const loginHandlers = {
             await initStorage()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
+            userConfig.account=loginForm
+            saveUserConfig()
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
         console.log('上线成功')
+        adapter.sendOnlineData()
 
         await sleep(3000)
         console.log('正在获取历史消息')

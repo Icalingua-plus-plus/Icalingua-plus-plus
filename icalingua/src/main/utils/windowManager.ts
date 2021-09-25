@@ -57,7 +57,7 @@ export const loadMainWindow = () => {
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
 }
-export const showLoginWindow = () => {
+export const showLoginWindow = (isConfiguringBridge = false) => {
     if (loginWindow) {
         loginWindow.show()
         loginWindow.focus()
@@ -81,7 +81,7 @@ export const showLoginWindow = () => {
             loginWindow.minimize()
         }
 
-        return loginWindow.loadURL(getWinUrl() + '#/login')
+        return loginWindow.loadURL(getWinUrl() + `#/login?bridge=${isConfiguringBridge}`)
     }
 }
 export const showRequestWindow = () => {

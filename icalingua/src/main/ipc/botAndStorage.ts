@@ -33,7 +33,8 @@ export const fetchLatestHistory = (roomId: number) => {
     if (roomId < 0) {
         buffer = Buffer.alloc(21)
         uid = -uid
-    } else buffer = Buffer.alloc(17)
+    }
+    else buffer = Buffer.alloc(17)
     buffer.writeUInt32BE(uid, 0)
     fetchHistory(buffer.toString('base64'), roomId)
 }
@@ -102,7 +103,7 @@ ipcMain.on('openForward', async (_, resId: string) => {
     win.webContents.on('did-finish-load', function () {
         win.webContents.send('loadMessages', messages)
         // theme
-        win.webContents.send('theme:sync-theme-data', themes.getThemeData());
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData())
     })
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
@@ -113,5 +114,6 @@ ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick)
 ipcMain.on('setGroupKick', (_, gin, uin) => adapter.setGroupKick(gin, uin))
 ipcMain.on('setGroupLeave', (_, gin) => adapter.setGroupLeave(gin))
 ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
-ipcMain.on('handleRequest', (_, type: "friend" | "group", flag: string, accept: boolean = true) =>
+ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept))
+ipcMain.handle('getAccount', adapter.getAccount)
