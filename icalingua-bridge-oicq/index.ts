@@ -1,10 +1,8 @@
 import adapter from './adapters/oicqAdapter'
-import {config} from './providers/configManager'
+import {userConfig} from './providers/configManager'
+import {init as initSocketIo} from './providers/socketIoProvider'
 
-adapter.createBot({
-    username: config.account.qq,
-    password: config.account.passwd,
-    storageType: 'mdb',
-    mdbConnStr: config.db,
-    protocol: config.account.protocol
-})
+initSocketIo()
+
+if (userConfig.autologin)
+    adapter.createBot(userConfig)

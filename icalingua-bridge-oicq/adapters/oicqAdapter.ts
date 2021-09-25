@@ -29,7 +29,7 @@ import {config} from '../providers/configManager'
 let bot: Client
 let storage: MongoStorageProvider
 let loginForm: LoginForm
-let loggedIn = false
+export let loggedIn = false
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
     'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
@@ -444,7 +444,6 @@ const loginHandlers = {
     async onSucceed() {
         if (!loggedIn) {
             await initStorage()
-            initSocketIo()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
         }
