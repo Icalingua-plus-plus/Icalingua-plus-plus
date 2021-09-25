@@ -8,8 +8,8 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
-import {app, dialog} from 'electron'
-import {getMainWindow, loadMainWindow, showLoginWindow, showWindow} from '../utils/windowManager'
+import {app, dialog, BrowserWindow} from 'electron'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
@@ -26,6 +26,8 @@ import BridgeVersionInfo from '../../types/BridgeVersionInfo'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
+import path from 'path'
+import getStaticPath from '../../utils/getStaticPath'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -175,6 +177,56 @@ const attachSocketEvents = () => {
             type: 'error',
         })
         app.quit()
+    })
+    socket.on('login-verify', async (url: string) => {
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+            },
+        })
+        veriWin.on('close', () => {
+            socket.emit('login-verify-reLogin')
+        })
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(
+                'console.log=(a)=>{' +
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
+            )
+        })
+        veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
+    })
+    socket.on('login-qrcodeLogin', (uin: number) => {
+        sendToLoginWindow('qrcodeLogin', uin)
+    })
+    socket.on('login-error', (message: string) => {
+        sendToLoginWindow('error', message)
+    })
+    socket.on('login-slider', (url: string) => {
+        sendToLoginWindow('qrcodeLogin', uin)
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        })
+        const inject = fs.readFileSync(
+            path.join(getStaticPath(), '/sliderinj.js'),
+            'utf-8',
+        )
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(inject)
+        })
+        veriWin.loadURL(url, {
+            userAgent:
+                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712',
+        })
     })
 }
 
@@ -403,6 +455,7 @@ const adapter: Adapter = {
         socket.emit('setRoomPriority', roomId, priority)
     },
     sliderLogin(ticket: string): void {
+        socket.emit('login-slider-ticket', ticket)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         socket.emit('updateMessage', roomId, messageId, message)

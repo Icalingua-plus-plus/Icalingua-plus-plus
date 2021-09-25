@@ -44,4 +44,6 @@ export default (io: Server, socket: Socket) => {
     socket.on('setGroupKick', adapter.setGroupKick)
     socket.on('login', adapter.createBot)
     socket.on('requestToken', cb => cb(tokenManager.create()))
+    socket.on('login-verify-reLogin', adapter.reLogin)
+    socket.on('login-slider-ticket', adapter.sliderLogin)
 }

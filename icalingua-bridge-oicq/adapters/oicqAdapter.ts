@@ -1,12 +1,31 @@
 import SendMessageParams from '../types/SendMessageParams'
 import {
-    Client, createClient, FriendAddEventData, FriendDecreaseEventData, FriendIncreaseEventData,
-    FriendInfo, FriendPokeEventData,
-    FriendRecallEventData, GroupAddEventData, GroupInviteEventData,
-    GroupMessageEventData, GroupMuteEventData, GroupPokeEventData,
-    GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncMessageEventData, SyncReadedEventData,
+    Client,
+    createClient, DeviceEventData,
+    FriendAddEventData,
+    FriendDecreaseEventData,
+    FriendIncreaseEventData,
+    FriendInfo,
+    FriendPokeEventData,
+    FriendRecallEventData,
+    GroupAddEventData,
+    GroupInviteEventData,
+    GroupMessageEventData,
+    GroupMuteEventData,
+    GroupPokeEventData,
+    GroupRecallEventData, LoginErrorEventData,
+    MemberBaseInfo,
+    MemberDecreaseEventData,
+    MemberIncreaseEventData,
+    MemberInfo,
+    MessageElem,
+    MessageEventData,
+    OfflineEventData,
+    PrivateMessageEventData,
+    QrcodeEventData,
+    Ret, SliderEventData,
+    SyncMessageEventData,
+    SyncReadedEventData,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
 import getAvatarUrl from '../utils/getAvatarUrl'
@@ -479,6 +498,18 @@ const loginHandlers = {
             }
         }
     },
+    verify(data: DeviceEventData) {
+        broadcast('login-verify', data.url)
+    },
+    qrcode(data: QrcodeEventData) {
+        broadcast('login-qrcodeLogin', bot.uin)
+    },
+    slider(data: SliderEventData) {
+        broadcast('login-slider', data.url)
+    },
+    onErr(data: LoginErrorEventData) {
+        broadcast('login-error', data.message)
+    },
 }
 //endregion
 //region utility functions
@@ -555,6 +586,10 @@ const attachEventHandler = () => {
 }
 const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
+    bot.on('system.login.slider', loginHandlers.slider)
+    bot.on('system.login.error', loginHandlers.onErr)
+    bot.on('system.login.device', loginHandlers.verify)
+    bot.on('system.login.qrcode', loginHandlers.qrcode)
 }
 //endregion
 
@@ -1043,6 +1078,9 @@ const adapter = {
             case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
+    },
+    sliderLogin(ticket: string) {
+        bot.sliderLogin(ticket)
     },
 }
 
