@@ -444,10 +444,11 @@ const eventHandlers = {
 const loginHandlers = {
     async onSucceed() {
         if (!loggedIn) {
+            loggedIn = true
             await initStorage()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
-            userConfig.account=loginForm
+            userConfig.account = loginForm
             saveUserConfig()
         }
         if (loginForm.onlineStatus) {
@@ -814,7 +815,7 @@ const adapter = {
             }
         }
         const messages = await storage.fetchMessages(roomId, offset, 20)
-        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+        if (!offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
