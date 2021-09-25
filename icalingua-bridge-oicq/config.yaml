@@ -1,0 +1,4 @@
+db: mongodb://localhost
+pubKey: 207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6
+custom: false
+port: 6789

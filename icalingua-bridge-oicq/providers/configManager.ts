@@ -1,38 +1,47 @@
 import fs from 'fs'
 import YAML from 'yaml'
 import argv from './argv'
+import LoginForm from '../../icalingua/src/types/LoginForm'
+import OnlineStatusType from '../../icalingua/src/types/OnlineStatusType'
 
 type Config = {
-    account: {
-        /**
-         * QQ号
-         */
-        qq: number
-        /**
-         * 密码
-         */
-        passwd: string
-        protocol: 1 | 2 | 3 | 4 | 5
-    }
-    /**
-     * MongoDB 连接字符串
-     */
-    db: string
     pubKey: string
     custom: boolean
     port: number
     host: string
 }
 
-const CONFIG_PATH = argv.config || 'config.yaml'
-
-export let config: Config
-if (fs.existsSync(CONFIG_PATH)) {
-    config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+type UserConfig = {
+    account: LoginForm
 }
-else {
-    console.error('配置文件不存在')
-    process.exit(2)
+
+const emptyLoginForm: LoginForm = {
+    mdbConnStr: 'mongodb://localhost',
+    rdsHost: '127.0.0.1',
+    storageType: 'sqlite',
+    sqlHost: '127.0.0.1',
+    sqlUsername: '',
+    sqlPassword: '',
+    sqlDatabase: '',
+    username: '',
+    password: '',
+    protocol: 5,
+    autologin: false,
+    onlineStatus: OnlineStatusType.Online,
+}
+
+const CONFIG_PATH = argv.config || 'config.yaml'
+export const config: Config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+
+if (!fs.existsSync('data'))
+    fs.mkdirSync('data')
+
+const USER_CONFIG_PATH = argv.data || `data/${config.port}.json`
+export const userConfig: UserConfig = fs.existsSync(USER_CONFIG_PATH) ?
+    JSON.parse(fs.readFileSync(USER_CONFIG_PATH, 'utf8')) :
+    {account: emptyLoginForm}
+export const saveUserConfig = () => {
+    fs.writeFileSync(USER_CONFIG_PATH, JSON.stringify(userConfig), 'utf-8')
 }
 
 

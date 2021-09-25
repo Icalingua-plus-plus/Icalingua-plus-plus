@@ -72,7 +72,7 @@ const defaultWinSize: WinSize = {
 if (defaultWinSize.width > 1440)
     defaultWinSize.width = 1440
 const defaultConfig: AllConfig = {
-    privateKey: '',
+    privateKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     server: '',
     account: emptyLoginForm,
     priority: 3,

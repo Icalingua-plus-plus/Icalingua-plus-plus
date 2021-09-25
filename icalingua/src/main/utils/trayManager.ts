@@ -22,7 +22,7 @@ export const createTray = () => {
         window.show()
         window.focus()
     })
-    updateTrayMenu()
+    return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
     const unreadRooms = await getUnreadRooms()

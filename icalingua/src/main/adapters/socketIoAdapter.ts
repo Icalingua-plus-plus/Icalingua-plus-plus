@@ -8,8 +8,8 @@ import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
-import {app, dialog} from 'electron'
-import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
+import {app, dialog, BrowserWindow} from 'electron'
+import {getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
@@ -26,10 +26,12 @@ import BridgeVersionInfo from '../../types/BridgeVersionInfo'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
+import path from 'path'
+import getStaticPath from '../../utils/getStaticPath'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
-const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
+const EXCEPTED_PROTOCOL_VERSION = '2.0.0'
 
 let socket: Socket
 let uin = 0
@@ -38,6 +40,8 @@ let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
 let rooms: Room[] = []
+let loggedIn = false
+let account: LoginForm
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
@@ -69,6 +73,11 @@ const attachSocketEvents = () => {
         uin: number,
         sysInfo: string
     }) => {
+        if (!loggedIn) {
+            await loadMainWindow()
+            await createTray()
+            loggedIn = true
+        }
         uin = data.uin
         nickname = data.nick
         cachedOnlineData = {
@@ -78,8 +87,8 @@ const attachSocketEvents = () => {
             updateCheck: getConfig().updateCheck,
         }
         adapter.sendOnlineData()
-        updateTrayIcon()
-        updateAppMenu()
+        await updateTrayIcon()
+        await updateAppMenu()
     })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
@@ -154,6 +163,70 @@ const attachSocketEvents = () => {
             })
             notif.push()
         }
+    })
+    socket.on('requestSetup', async (data: LoginForm) => {
+        console.log('bridge 未登录')
+        account = data
+        showLoginWindow(true)
+    })
+    socket.on('fatal', async (message: string) => {
+        socket.off('connect_error')
+        await dialog.showMessageBox(getMainWindow(), {
+            title: '服务端错误',
+            message,
+            type: 'error',
+        })
+        app.quit()
+    })
+    socket.on('login-verify', async (url: string) => {
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+            },
+        })
+        veriWin.on('close', () => {
+            socket.emit('login-verify-reLogin')
+        })
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(
+                'console.log=(a)=>{' +
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
+            )
+        })
+        veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
+    })
+    socket.on('login-qrcodeLogin', (uin: number) => {
+        sendToLoginWindow('qrcodeLogin', uin)
+    })
+    socket.on('login-error', (message: string) => {
+        sendToLoginWindow('error', message)
+    })
+    socket.on('login-slider', (url: string) => {
+        sendToLoginWindow('qrcodeLogin', uin)
+        const veriWin = new BrowserWindow({
+            height: 500,
+            width: 500,
+            webPreferences: {
+                nativeWindowOpen: true,
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        })
+        const inject = fs.readFileSync(
+            path.join(getStaticPath(), '/sliderinj.js'),
+            'utf-8',
+        )
+        veriWin.webContents.on('did-finish-load', function () {
+            veriWin.webContents.executeJavaScript(inject)
+        })
+        veriWin.loadURL(url, {
+            userAgent:
+                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712',
+        })
     })
 }
 
@@ -233,48 +306,51 @@ const adapter: Adapter = {
         adapter.updateRoom(roomId, {unreadCount: 0, at: false})
         updateTrayIcon()
     },
-    async createBot(_?: LoginForm) {
-        await loadMainWindow()
-        createTray()
-        socket = io(getConfig().server, {
-            transports: ['websocket'],
-        })
-        socket.once('connect_error', async () => {
-            await dialog.showMessageBox(getMainWindow(), {
-                title: '错误',
-                message: '连接失败',
-                type: 'error',
+    async createBot(form: LoginForm) {
+        if (account) {
+            //是登录远端
+            socket.emit('login', form)
+        }
+        else {
+            //是初始化程序
+            socket = io(getConfig().server, {
+                transports: ['websocket'],
             })
-            app.quit()
-        })
-        socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
-            versionInfo = version
-            if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
-                const action = await dialog.showMessageBox(getMainWindow(), {
-                    title: '提示',
-                    message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
-                    buttons: ['继续', '退出'],
-                    defaultId: 1,
+            socket.once('connect_error', async () => {
+                await dialog.showMessageBox(getMainWindow(), {
+                    title: '错误',
+                    message: '连接失败',
+                    type: 'error',
                 })
-                if (action.response === 1) {
-                    app.quit()
-                    return
-                }
-            }
-            socket.emit('auth', await sign(salt, getConfig().privateKey))
-            console.log('已向服务端提交身份验证')
-        })
-        socket.once('authSucceed', attachSocketEvents)
-        socket.once('authFailed', async () => {
-            await dialog.showMessageBox(getMainWindow(), {
-                title: '错误',
-                message: '认证失败',
-                type: 'error',
+                app.quit()
             })
-            app.quit()
-        })
-        await updateAppMenu()
-        await updateTrayIcon()
+            socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
+                versionInfo = version
+                if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
+                    const action = await dialog.showMessageBox(getMainWindow(), {
+                        title: '提示',
+                        message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                        buttons: ['继续', '退出'],
+                        defaultId: 1,
+                    })
+                    if (action.response === 1) {
+                        app.quit()
+                        return
+                    }
+                }
+                socket.emit('auth', await sign(salt, getConfig().privateKey))
+                console.log('已向服务端提交身份验证')
+            })
+            socket.once('authSucceed', attachSocketEvents)
+            socket.once('authFailed', async () => {
+                await dialog.showMessageBox(getMainWindow(), {
+                    title: '错误',
+                    message: '认证失败',
+                    type: 'error',
+                })
+                app.quit()
+            })
+        }
     },
     deleteMessage(roomId: number, messageId: string) {
         socket.emit('deleteMessage', roomId, messageId)
@@ -288,7 +364,7 @@ const adapter: Adapter = {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        if(!offset)
+        if (!offset)
             adapter.clearCurrentRoomUnread()
         updateTrayIcon()
         currentLoadedMessagesCount = offset + 20
@@ -324,6 +400,7 @@ const adapter: Adapter = {
     },
     getUin: () => uin,
     getNickname: () => nickname,
+    getAccount: () => account,
     async getUnreadCount(): Promise<number> {
         return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority).length
     },
@@ -378,6 +455,7 @@ const adapter: Adapter = {
         socket.emit('setRoomPriority', roomId, priority)
     },
     sliderLogin(ticket: string): void {
+        socket.emit('login-slider-ticket', ticket)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         socket.emit('updateMessage', roomId, messageId, message)

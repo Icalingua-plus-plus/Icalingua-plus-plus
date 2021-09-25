@@ -1,12 +1,31 @@
 import SendMessageParams from '../types/SendMessageParams'
 import {
-    Client, createClient, FriendAddEventData, FriendDecreaseEventData, FriendIncreaseEventData,
-    FriendInfo, FriendPokeEventData,
-    FriendRecallEventData, GroupAddEventData, GroupInviteEventData,
-    GroupMessageEventData, GroupMuteEventData, GroupPokeEventData,
-    GroupRecallEventData,
-    MemberBaseInfo, MemberDecreaseEventData, MemberIncreaseEventData, MemberInfo, MessageElem,
-    MessageEventData, OfflineEventData, PrivateMessageEventData, Ret, SyncMessageEventData, SyncReadedEventData,
+    Client,
+    createClient, DeviceEventData,
+    FriendAddEventData,
+    FriendDecreaseEventData,
+    FriendIncreaseEventData,
+    FriendInfo,
+    FriendPokeEventData,
+    FriendRecallEventData,
+    GroupAddEventData,
+    GroupInviteEventData,
+    GroupMessageEventData,
+    GroupMuteEventData,
+    GroupPokeEventData,
+    GroupRecallEventData, LoginErrorEventData,
+    MemberBaseInfo,
+    MemberDecreaseEventData,
+    MemberIncreaseEventData,
+    MemberInfo,
+    MessageElem,
+    MessageEventData,
+    OfflineEventData,
+    PrivateMessageEventData,
+    QrcodeEventData,
+    Ret, SliderEventData,
+    SyncMessageEventData,
+    SyncReadedEventData,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
 import getAvatarUrl from '../utils/getAvatarUrl'
@@ -14,22 +33,25 @@ import Message from '../types/Message'
 import formatDate from '../utils/formatDate'
 import createRoom from '../utils/createRoom'
 import processMessage from '../utils/processMessage'
-import MongoStorageProvider from '../providers/MongoStorageProvider'
+import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../types/Room'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import clients from '../utils/clients'
 import {Socket} from 'socket.io'
-import {broadcast, init as initSocketIo} from '../providers/socketIoProvider'
+import {broadcast} from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
-import {config} from '../providers/configManager'
+import {config, saveUserConfig, userConfig} from '../providers/configManager'
+import StorageProvider from '../types/StorageProvider'
+import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
+import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 
 let bot: Client
-let storage: MongoStorageProvider
+let storage: StorageProvider
 let loginForm: LoginForm
-let loggedIn = false
+export let loggedIn = false
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
     'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
@@ -443,15 +465,18 @@ const eventHandlers = {
 const loginHandlers = {
     async onSucceed() {
         if (!loggedIn) {
+            loggedIn = true
             await initStorage()
-            initSocketIo()
             attachEventHandler()
             setInterval(adapter.sendOnlineData, 1000 * 60)
+            userConfig.account = loginForm
+            saveUserConfig()
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
         console.log('上线成功')
+        adapter.sendOnlineData()
 
         await sleep(3000)
         console.log('正在获取历史消息')
@@ -473,12 +498,54 @@ const loginHandlers = {
             }
         }
     },
+    verify(data: DeviceEventData) {
+        broadcast('login-verify', data.url)
+    },
+    qrcode(data: QrcodeEventData) {
+        broadcast('login-qrcodeLogin', bot.uin)
+    },
+    slider(data: SliderEventData) {
+        broadcast('login-slider', data.url)
+    },
+    onErr(data: LoginErrorEventData) {
+        broadcast('login-error', data.message)
+    },
 }
 //endregion
 //region utility functions
 const initStorage = async () => {
     try {
-        storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+        switch (loginForm.storageType) {
+            case 'mdb':
+                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                break
+            case 'redis':
+                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                break
+            case 'sqlite':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'sqlite3', {
+                    dataPath: 'data',
+                })
+                break
+            case 'mysql':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'mysql', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            case 'pg':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'pg', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            default:
+                break
+        }
         await storage.connect()
         storage.getAllRooms()
             .then(e => {
@@ -494,6 +561,8 @@ const initStorage = async () => {
     } catch (err) {
         console.log(err)
         console.log('无法连接数据库')
+        broadcast('fatal', '无法连接数据库')
+        process.exit(2)
     }
 }
 const attachEventHandler = () => {
@@ -517,6 +586,10 @@ const attachEventHandler = () => {
 }
 const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
+    bot.on('system.login.slider', loginHandlers.slider)
+    bot.on('system.login.error', loginHandlers.onErr)
+    bot.on('system.login.device', loginHandlers.verify)
+    bot.on('system.login.qrcode', loginHandlers.qrcode)
 }
 //endregion
 
@@ -811,7 +884,7 @@ const adapter = {
             }
         }
         const messages = await storage.fetchMessages(roomId, offset, 20)
-        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+        if (!offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
@@ -1005,6 +1078,9 @@ const adapter = {
             case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
+    },
+    sliderLogin(ticket: string) {
+        bot.sliderLogin(ticket)
     },
 }
 

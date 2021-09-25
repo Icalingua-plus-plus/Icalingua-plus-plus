@@ -43,12 +43,12 @@ import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import {updateAppMenu} from '../ipc/menuManager'
-import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
+import MongoStorageProvider from '../../storageProviders/MongoStorageProvider'
 import Room from '../../types/Room'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import Adapter, {CookiesDomain} from '../../types/Adapter'
-import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
-import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
+import RedisStorageProvider from '../../storageProviders/RedisStorageProvider'
+import SQLStorageProvider from '../../storageProviders/SQLStorageProvider'
 import RoamingStamp from '../../types/RoamingStamp'
 import SearchableFriend from '../../types/SearchableFriend'
 import errorHandler from '../utils/errorHandler'
@@ -1086,6 +1086,7 @@ const adapter: OicqAdapter = {
     getFirstUnreadRoom: async () => await storage.getFirstUnreadRoom(getConfig().priority),
     getSelectedRoom: async () => await storage.getRoom(ui.getSelectedRoomId()),
     getRoom: (roomId: number) => storage.getRoom(roomId),
+    getAccount: () => getConfig().account,
 
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {

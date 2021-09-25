@@ -1,8 +1,8 @@
 import {createServer} from 'http'
 import {Server} from 'socket.io'
 import {verify} from 'noble-ed25519'
-import {config} from './configManager'
-import adapter from '../adapters/oicqAdapter'
+import {config, userConfig} from './configManager'
+import adapter, {loggedIn} from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
 import {app} from './expressProvider'
@@ -28,7 +28,10 @@ io.on('connection', (socket) => {
             socket.emit('authSucceed')
             socket.join('authed')
             registerSocketHandlers(io, socket)
-            adapter.sendOnlineData()
+            if (loggedIn)
+                adapter.sendOnlineData()
+            else
+                socket.emit('requestSetup', userConfig.account)
         }
         else {
             console.log('客户端验证失败')
