@@ -33,9 +33,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/get@npm:^1.0.1":
-  version: 1.12.4
-  resolution: "@electron/get@npm:1.12.4"
+"@electron/get@npm:^1.13.0":
+  version: 1.13.0
+  resolution: "@electron/get@npm:1.13.0"
   dependencies:
     debug: ^4.1.1
     env-paths: ^2.2.0
@@ -51,7 +51,7 @@ __metadata:
       optional: true
     global-tunnel-ng:
       optional: true
-  checksum: 7cdcbaec202c30fa8f57299ac4304117637ad46215b1c9fcbafbd6db8aadb64b321b67125ada6f694f877b49c11c84cd4b404fbea51b285caa5505387cea7209
+  checksum: a5158bb2f81ed68491d1ece5f4acfb9d497dbec1f126d0db2212c2fa6b2851a752900fd24b7620cd2e23563a356127134366027e7a98993f035c6d0c8e643577
   languageName: node
   linkType: hard
 
@@ -4853,16 +4853,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^14.0.0":
-  version: 14.0.0
-  resolution: "electron@npm:14.0.0"
+"electron@npm:15":
+  version: 15.0.0
+  resolution: "electron@npm:15.0.0"
   dependencies:
-    "@electron/get": ^1.0.1
+    "@electron/get": ^1.13.0
     "@types/node": ^14.6.2
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: f07d52aab130ea596a295de0d1f620af73e0ce46462e5d73dc0f0e591daf92ef9c661e260ac00657e46d82e598758ad818a9d3eb3260968289bd44123119a1cf
+  checksum: d3b6be55074edfd08f8e3477d41cf00969f9f0b518b4ed5d9813e35b021efaf93f965b61f44d4c6d443b2fa3073686a809d2ab493444a2596a5bffb8c963d073
   languageName: node
   linkType: hard
 
@@ -6689,7 +6689,7 @@ fsevents@~2.3.1:
     csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
-    electron: ^14.0.0
+    electron: 15
     electron-builder: ^22.11.7
     electron-debug: ^3.2.0
     electron-devtools-installer: ^3.1.1
