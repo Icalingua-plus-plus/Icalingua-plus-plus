@@ -9,7 +9,7 @@ import {io, Socket} from 'socket.io-client'
 import {getConfig} from '../utils/configManager'
 import {sign} from 'noble-ed25519'
 import {app, dialog} from 'electron'
-import {getMainWindow, loadMainWindow, showWindow} from '../utils/windowManager'
+import {getMainWindow, loadMainWindow, showLoginWindow, showWindow} from '../utils/windowManager'
 import {createTray, updateTrayIcon} from '../utils/trayManager'
 import ui from '../utils/ui'
 import {updateAppMenu} from '../ipc/menuManager'
@@ -29,7 +29,7 @@ import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
-const EXCEPTED_PROTOCOL_VERSION = '1.2.5'
+const EXCEPTED_PROTOCOL_VERSION = '2.0.0'
 
 let socket: Socket
 let uin = 0
@@ -38,6 +38,8 @@ let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
 let rooms: Room[] = []
+let loggedIn = false
+let account: LoginForm
 
 const attachSocketEvents = () => {
     socket.on('updateRoom', async (room: Room) => {
@@ -69,6 +71,11 @@ const attachSocketEvents = () => {
         uin: number,
         sysInfo: string
     }) => {
+        if (!loggedIn) {
+            await loadMainWindow()
+            await createTray()
+            loggedIn = true
+        }
         uin = data.uin
         nickname = data.nick
         cachedOnlineData = {
@@ -78,8 +85,8 @@ const attachSocketEvents = () => {
             updateCheck: getConfig().updateCheck,
         }
         adapter.sendOnlineData()
-        updateTrayIcon()
-        updateAppMenu()
+        await updateTrayIcon()
+        await updateAppMenu()
     })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
@@ -154,6 +161,11 @@ const attachSocketEvents = () => {
             })
             notif.push()
         }
+    })
+    socket.on('requestSetup', async (data: LoginForm) => {
+        console.log('bridge 未登录')
+        account = data
+        showLoginWindow(true)
     })
 }
 
@@ -233,48 +245,51 @@ const adapter: Adapter = {
         adapter.updateRoom(roomId, {unreadCount: 0, at: false})
         updateTrayIcon()
     },
-    async createBot(_?: LoginForm) {
-        await loadMainWindow()
-        createTray()
-        socket = io(getConfig().server, {
-            transports: ['websocket'],
-        })
-        socket.once('connect_error', async () => {
-            await dialog.showMessageBox(getMainWindow(), {
-                title: '错误',
-                message: '连接失败',
-                type: 'error',
+    async createBot(form: LoginForm) {
+        if (account) {
+            //是登录远端
+            socket.emit('login', form)
+        }
+        else {
+            //是初始化程序
+            socket = io(getConfig().server, {
+                transports: ['websocket'],
             })
-            app.quit()
-        })
-        socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
-            versionInfo = version
-            if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
-                const action = await dialog.showMessageBox(getMainWindow(), {
-                    title: '提示',
-                    message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
-                    buttons: ['继续', '退出'],
-                    defaultId: 1,
+            socket.once('connect_error', async () => {
+                await dialog.showMessageBox(getMainWindow(), {
+                    title: '错误',
+                    message: '连接失败',
+                    type: 'error',
                 })
-                if (action.response === 1) {
-                    app.quit()
-                    return
-                }
-            }
-            socket.emit('auth', await sign(salt, getConfig().privateKey))
-            console.log('已向服务端提交身份验证')
-        })
-        socket.once('authSucceed', attachSocketEvents)
-        socket.once('authFailed', async () => {
-            await dialog.showMessageBox(getMainWindow(), {
-                title: '错误',
-                message: '认证失败',
-                type: 'error',
+                app.quit()
             })
-            app.quit()
-        })
-        await updateAppMenu()
-        await updateTrayIcon()
+            socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
+                versionInfo = version
+                if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
+                    const action = await dialog.showMessageBox(getMainWindow(), {
+                        title: '提示',
+                        message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                        buttons: ['继续', '退出'],
+                        defaultId: 1,
+                    })
+                    if (action.response === 1) {
+                        app.quit()
+                        return
+                    }
+                }
+                socket.emit('auth', await sign(salt, getConfig().privateKey))
+                console.log('已向服务端提交身份验证')
+            })
+            socket.once('authSucceed', attachSocketEvents)
+            socket.once('authFailed', async () => {
+                await dialog.showMessageBox(getMainWindow(), {
+                    title: '错误',
+                    message: '认证失败',
+                    type: 'error',
+                })
+                app.quit()
+            })
+        }
     },
     deleteMessage(roomId: number, messageId: string) {
         socket.emit('deleteMessage', roomId, messageId)
@@ -288,7 +303,7 @@ const adapter: Adapter = {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        if(!offset)
+        if (!offset)
             adapter.clearCurrentRoomUnread()
         updateTrayIcon()
         currentLoadedMessagesCount = offset + 20
@@ -324,6 +339,7 @@ const adapter: Adapter = {
     },
     getUin: () => uin,
     getNickname: () => nickname,
+    getAccount: () => account,
     async getUnreadCount(): Promise<number> {
         return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority).length
     },

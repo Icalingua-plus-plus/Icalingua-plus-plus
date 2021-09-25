@@ -4,5 +4,5 @@ import {init as initSocketIo} from './providers/socketIoProvider'
 
 initSocketIo()
 
-if (userConfig.autologin)
-    adapter.createBot(userConfig)
+if (userConfig.account.autologin)
+    adapter.createBot(userConfig.account)
