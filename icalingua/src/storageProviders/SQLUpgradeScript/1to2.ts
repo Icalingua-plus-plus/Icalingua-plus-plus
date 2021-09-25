@@ -1,7 +1,7 @@
 import { Knex } from "knex";
-import { DBVersion, MsgTableName } from "../../../types/SQLTableTypes";
+import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 
-const upg2to3 = async (db: Knex) => {
+const upg1to2 = async (db: Knex) => {
   const msgTableNames = await db<MsgTableName>("msgTableName").select(
     "tableName"
   );
@@ -9,12 +9,15 @@ const upg2to3 = async (db: Knex) => {
   if (msgTableNamesAry.length !== 0) {
     const PAry = msgTableNamesAry.map(async (msgTableName) => {
       await db.schema.alterTable(msgTableName, (table) => {
-        table.boolean("flash").nullable();
+        table.boolean("deleted").nullable();
+        table.boolean("system").nullable();
+        table.text("mirai").nullable();
+        table.boolean("reveal").nullable();
       });
     });
     await Promise.all(PAry);
   }
-  await db<DBVersion>("dbVersion").update({ dbVersion: 3 });
+  await db<DBVersion>("dbVersion").update({ dbVersion: 2 });
 };
 
-export default upg2to3;
+export default upg1to2;
