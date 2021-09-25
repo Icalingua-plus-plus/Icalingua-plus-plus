@@ -167,6 +167,15 @@ const attachSocketEvents = () => {
         account = data
         showLoginWindow(true)
     })
+    socket.on('fatal', async (message: string) => {
+        socket.off('connect_error')
+        await dialog.showMessageBox(getMainWindow(), {
+            title: '服务端错误',
+            message,
+            type: 'error',
+        })
+        app.quit()
+    })
 }
 
 const adapter: Adapter = {

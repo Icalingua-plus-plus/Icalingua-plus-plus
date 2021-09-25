@@ -26,6 +26,8 @@ import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
 import {config, saveUserConfig, userConfig} from '../providers/configManager'
 import StorageProvider from '../types/StorageProvider'
+import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
+import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
 
 let bot: Client
 let storage: StorageProvider
@@ -482,7 +484,37 @@ const loginHandlers = {
 //region utility functions
 const initStorage = async () => {
     try {
-        storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+        switch (loginForm.storageType) {
+            case 'mdb':
+                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                break
+            case 'redis':
+                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                break
+            case 'sqlite':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'sqlite3', {
+                    dataPath: 'data',
+                })
+                break
+            case 'mysql':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'mysql', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            case 'pg':
+                storage = new SQLStorageProvider(`${loginForm.username}`, 'pg', {
+                    host: loginForm.sqlHost,
+                    user: loginForm.sqlUsername,
+                    password: loginForm.sqlPassword,
+                    database: loginForm.sqlDatabase,
+                })
+                break
+            default:
+                break
+        }
         await storage.connect()
         storage.getAllRooms()
             .then(e => {
@@ -498,6 +530,8 @@ const initStorage = async () => {
     } catch (err) {
         console.log(err)
         console.log('无法连接数据库')
+        broadcast('fatal', '无法连接数据库')
+        process.exit(2)
     }
 }
 const attachEventHandler = () => {
