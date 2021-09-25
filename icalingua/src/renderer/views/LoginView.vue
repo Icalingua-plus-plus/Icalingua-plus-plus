@@ -94,7 +94,7 @@
             </p>
             <el-form-item align="center">
                 <el-button type="primary" v-on:click="onSubmit('loginForm')">
-                    <span v-show="!form.password">QR Code</span>
+                    <span v-show="!form.password&&$route.query.bridge!=='true'">QR Code</span>
                     Login
                 </el-button>
             </el-form-item>
@@ -138,6 +138,10 @@ export default {
         onSubmit(formName) {
             (this.$refs[formName]).validate(async (valid) => {
                 if (valid) {
+                    if (!this.form.password && this.$route.query.bridge === 'true') {
+                        this.$message('Bridge 模式下暂不支持扫码登录')
+                        return
+                    }
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
