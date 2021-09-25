@@ -52,13 +52,6 @@
   },
   "dependencies": {
     "freedesktop-notifications": "^2.1.0",
-    "knex": "^0.95.8",
-    "mongodb": "^3.6.6",
-    "mysql": "^2.18.1",
-    "oicq": "^1.20.2",
-    "pg": "^8.6.0",
-    "silk-sdk": "^0.2.2",
-    "sqlite3": "^5.0.2",
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.5.5"
   },
