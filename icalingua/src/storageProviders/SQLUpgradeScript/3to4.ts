@@ -1,6 +1,6 @@
 import { Knex } from "knex";
-import IgnoreChatInfo from "../../../types/IgnoreChatInfo";
-import { DBVersion } from "../../../types/SQLTableTypes";
+import IgnoreChatInfo from "../../types/IgnoreChatInfo";
+import { DBVersion } from "../../types/SQLTableTypes";
 
 const upg3to4 = async (db: Knex) => {
   const ignoredChats = await db<IgnoreChatInfo>("ignoredChats").select("*");

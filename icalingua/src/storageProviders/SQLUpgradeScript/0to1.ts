@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DBVersion, MsgTableName } from "../../../types/SQLTableTypes";
+import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 
 const upg0to1 = async (db: Knex) => {
   await db.schema.alterTable("rooms", (table) => {
