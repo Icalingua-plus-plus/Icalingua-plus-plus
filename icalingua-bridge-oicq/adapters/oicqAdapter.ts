@@ -478,25 +478,25 @@ const loginHandlers = {
         console.log('上线成功')
         adapter.sendOnlineData()
 
-        await sleep(3000)
-        console.log('正在获取历史消息')
-        {
-            const rooms = await storage.getAllRooms()
-            for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
-                const roomId = i.roomId
-                let buffer: Buffer
-                let uid = roomId
-                if (roomId < 0) {
-                    buffer = Buffer.alloc(21)
-                    uid = -uid
-                }
-                else buffer = Buffer.alloc(17)
-                buffer.writeUInt32BE(uid, 0)
-                adapter.fetchHistory(buffer.toString('base64'), roomId, 0)
-                await sleep(500)
-            }
-        }
+        // await sleep(3000)
+        // console.log('正在获取历史消息')
+        // {
+        //     const rooms = await storage.getAllRooms()
+        //     for (const i of rooms) {
+        //         if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+        //         const roomId = i.roomId
+        //         let buffer: Buffer
+        //         let uid = roomId
+        //         if (roomId < 0) {
+        //             buffer = Buffer.alloc(21)
+        //             uid = -uid
+        //         }
+        //         else buffer = Buffer.alloc(17)
+        //         buffer.writeUInt32BE(uid, 0)
+        //         adapter.fetchHistory(buffer.toString('base64'), roomId, 0)
+        //         await sleep(500)
+        //     }
+        // }
     },
     verify(data: DeviceEventData) {
         broadcast('login-verify', data.url)
