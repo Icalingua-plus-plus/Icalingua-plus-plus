@@ -13,13 +13,12 @@ import migrateData from './migrateData'
 import WinSize from '../../types/WinSize'
 
 type AllConfig = {
-    account: LoginForm
     priority: 1 | 2 | 3 | 4 | 5
     aria2: Aria2Config
     darkTaskIcon: boolean
     winSize: WinSize
     socketIo: string
-    adapter: 'oicq' | 'socketIo'
+    adapter: 'socketIo'
     server: string
     privateKey: string
     fetchHistoryOnChatOpen: boolean
@@ -73,20 +72,19 @@ if (defaultWinSize.width > 1440)
     defaultWinSize.width = 1440
 const defaultConfig: AllConfig = {
     privateKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-    server: '',
-    account: emptyLoginForm,
+    server: 'http://localhost:6789',
     priority: 3,
     aria2: defaultAria2Config,
     darkTaskIcon: false,
     winSize: defaultWinSize,
     socketIo: '',
-    adapter: 'oicq',
+    adapter: 'socketIo',
     fetchHistoryOnChatOpen: false,
     //给 @rain15z3 一点面子，而且第一次用的人也没有本地表情
     lastUsedStickerType: 'remote',
     keyToSendMessage: 'Enter',
     theme: 'auto',
-    updateCheck: 'ask',
+    updateCheck: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

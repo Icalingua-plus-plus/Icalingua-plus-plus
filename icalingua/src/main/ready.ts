@@ -1,7 +1,6 @@
 import {app, protocol} from 'electron'
 import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
 import {createBot, logOut} from './ipc/botAndStorage'
-import {getConfig} from './utils/configManager'
 import repl from 'repl'
 
 //防止连接自签名的 aria2 出错
@@ -10,17 +9,14 @@ require('./utils/configManager')
 require('./ipc/system')
 require('./ipc/botAndStorage')
 require('./ipc/openImage')
-protocol.registerBufferProtocol('jsbridge', ()=>{})
+protocol.registerBufferProtocol('jsbridge', () => {
+})
 if (process.env.NODE_ENV === 'development')
     protocol.registerFileProtocol('file', (request, cb) => {
         const pathname = request.url.replace('file:///', '')
         cb(pathname)
     })
-if (getConfig().account.autologin || getConfig().adapter === 'socketIo') {
-    createBot(getConfig().account)
-} else {
-    showLoginWindow()
-}
+createBot(null)
 app.on('window-all-closed', () => {
     logOut()
     setTimeout(() => {

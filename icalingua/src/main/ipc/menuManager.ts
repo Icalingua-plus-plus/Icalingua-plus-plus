@@ -52,7 +52,7 @@ import version from '../utils/version'
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
         .then(() => {
-            getConfig().account.onlineStatus = status
+            // getConfig().account.onlineStatus = status
             updateAppMenu()
             saveConfigFile()
         })
@@ -451,29 +451,29 @@ export const updateAppMenu = async () => {
         }),
         //设置
         options: [
-            new MenuItem({
-                label: '在线状态',
-                submenu: [
-                    {
-                        type: 'radio',
-                        label: '在线',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Online,
-                        click: () => setOnlineStatus(OnlineStatusType.Online),
-                    },
-                    {
-                        type: 'radio',
-                        label: '离开',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Afk,
-                        click: () => setOnlineStatus(OnlineStatusType.Afk),
-                    },
-                    {
-                        type: 'radio',
-                        label: '隐身',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
-                        click: () => setOnlineStatus(OnlineStatusType.Hide),
-                    },
-                ],
-            }),
+            // new MenuItem({
+            //     label: '在线状态',
+            //     submenu: [
+            //         {
+            //             type: 'radio',
+            //             label: '在线',
+            //             checked: getConfig().account.onlineStatus === OnlineStatusType.Online,
+            //             click: () => setOnlineStatus(OnlineStatusType.Online),
+            //         },
+            //         {
+            //             type: 'radio',
+            //             label: '离开',
+            //             checked: getConfig().account.onlineStatus === OnlineStatusType.Afk,
+            //             click: () => setOnlineStatus(OnlineStatusType.Afk),
+            //         },
+            //         {
+            //             type: 'radio',
+            //             label: '隐身',
+            //             checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
+            //             click: () => setOnlineStatus(OnlineStatusType.Hide),
+            //         },
+            //     ],
+            // }),
             new MenuItem({
                 label: '管理屏蔽的会话',
                 click: () => {
@@ -528,15 +528,15 @@ export const updateAppMenu = async () => {
                     },
                 ],
             }),
-            new MenuItem({
-                label: '自动登录',
-                type: 'checkbox',
-                checked: getConfig().account.autologin,
-                click: (menuItem) => {
-                    getConfig().account.autologin = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
+            // new MenuItem({
+            //     label: '自动登录',
+            //     type: 'checkbox',
+            //     checked: getConfig().account.autologin,
+            //     click: (menuItem) => {
+            //         getConfig().account.autologin = menuItem.checked
+            //         saveConfigFile()
+            //     },
+            // }),
             new MenuItem({
                 label: '切换会话窗口时自动获取历史消息',
                 type: 'checkbox',
