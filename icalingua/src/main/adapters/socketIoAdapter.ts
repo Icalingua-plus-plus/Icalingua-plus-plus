@@ -206,7 +206,6 @@ const attachSocketEvents = () => {
         sendToLoginWindow('error', message)
     })
     socket.on('login-slider', (url: string) => {
-        sendToLoginWindow('qrcodeLogin', uin)
         const veriWin = new BrowserWindow({
             height: 500,
             width: 500,
