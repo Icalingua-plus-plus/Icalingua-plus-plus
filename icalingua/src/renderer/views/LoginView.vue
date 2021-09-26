@@ -165,7 +165,7 @@ div#login {
   background-position: bottom;
   background-repeat: no-repeat;
   background-size: contain;
-  background-image: url("../assets/loginbg.jpg");
+  background-image: url("../assets/loongson.svg");
   font-family: "CircularSpotifyTxT Light Web", sans-serif;
 }
 
