@@ -31,7 +31,13 @@ const emptyLoginForm: LoginForm = {
 }
 
 const CONFIG_PATH = argv.config || 'config.yaml'
-export const config: Config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+export const config: Config = fs.existsSync(CONFIG_PATH) ?
+    YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) : {
+        pubKey: '207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6',
+        host: 'localhost',
+        port: 6789,
+        custom: false,
+    }
 
 if (!fs.existsSync('data'))
     fs.mkdirSync('data')
