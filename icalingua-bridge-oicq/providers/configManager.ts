@@ -1,8 +1,8 @@
 import fs from 'fs'
 import YAML from 'yaml'
 import argv from './argv'
-import LoginForm from '../../icalingua/src/types/LoginForm'
-import OnlineStatusType from '../../icalingua/src/types/OnlineStatusType'
+import LoginForm from '../types/LoginForm'
+import OnlineStatusType from '../types/OnlineStatusType'
 
 type Config = {
     pubKey: string
