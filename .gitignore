@@ -106,3 +106,5 @@ dist
 build
 
 .directory
+
+loongarch-launcher/bridge

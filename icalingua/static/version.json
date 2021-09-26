@@ -1,6 +1,6 @@
 {
   "commitId": "Manual Build",
   "ref": "Manual Build",
-  "isProduction": false,
+  "isProduction": true,
   "buildTime": "Manual Build"
 }
