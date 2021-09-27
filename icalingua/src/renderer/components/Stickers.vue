@@ -236,8 +236,8 @@ div.head {
 
 <style scoped>
 .emoji-picker {
-  --ep-color-bg: #fff !important;
-  --ep-color-border: #fff !important;
+  --ep-color-bg: auto !important;
+  --ep-color-border: auto !important;
   --ep-color-sbg: #fff !important;
   --ep-color-active: #409eff !important;
   width: 100% !important;
