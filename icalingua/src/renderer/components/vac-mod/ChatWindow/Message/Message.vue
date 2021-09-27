@@ -273,6 +273,12 @@ export default {
             if (this.message.mirai && this.message.mirai.eqq.avatarMd5) {
                 return getImageUrlByMd5(this.message.mirai.eqq.avatarMd5)
             }
+            if (this.message.mirai && this.message.mirai.eqq.avatarUrl) {
+                //安全起见，防追踪型链接，限制为腾讯云域名
+                const QCLOUD_AVATAR_REGEX = /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
+                if (QCLOUD_AVATAR_REGEX.test(this.message.mirai.eqq.avatarUrl))
+                    return this.message.mirai.eqq.avatarUrl
+            }
             return getAvatarUrl(this.message.senderId)
         },
     },
