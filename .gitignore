@@ -106,3 +106,9 @@ dist
 build
 
 .directory
+
+loongarch-launcher/bridge
+loongarch-launcher/electron
+loongarch-launcher/app
+loongarch-launcher/data
+loongarch-launcher/icalinguarc
