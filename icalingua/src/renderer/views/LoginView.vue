@@ -11,6 +11,9 @@
         >
             <center>
                 <h5>Version {{ ver }}</h5>
+                <h4 v-if="$route.query.bridge==='true'">
+                    正在配置 Bridge 服务器
+                </h4>
             </center>
             <el-form-item prop="username">
                 <el-input type="text" placeholder="QQ ID" v-model.number="form.username"/>
