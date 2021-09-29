@@ -135,5 +135,8 @@ const ipc = {
     setCheckUpdate(enabled: boolean) {
         ipcRenderer.send('setCheckUpdate', enabled)
     },
+    deleteMessage(roomId: number, messageId: string){
+        ipcRenderer.send('deleteMessage', roomId, messageId)
+    }
 }
 export default ipc
