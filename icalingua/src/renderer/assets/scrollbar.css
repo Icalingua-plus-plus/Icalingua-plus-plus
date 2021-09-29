@@ -1,11 +1,6 @@
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
-    background-color: #F5F5F5;
-}
-::-webkit-scrollbar-track{
-    -webkit-box-shadow: 0 0 3px rgba(0,0,0,0.3) inset;
-    background-color: #F5F5F5;
 }
 ::-webkit-scrollbar-thumb{
     border-radius: 3px;
