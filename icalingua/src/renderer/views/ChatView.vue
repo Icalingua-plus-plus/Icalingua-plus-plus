@@ -229,7 +229,7 @@ export default {
             else if (e.key === 'Escape') {
                 if (document.webkitIsFullScreen)
                     return
-                if (this.$refs.room.messageReply)
+                if (this.$refs.room.messageReply || this.$refs.room.editAndResend || this.$refs.room.message)
                     this.$refs.room.resetMessage()
                 else if (this.$refs.room.file)
                     this.$refs.room.resetMediaFile()
@@ -330,7 +330,7 @@ Chromium ${process.versions.chrome}` : ''
         console.log('加载完成')
     },
     methods: {
-        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {
+        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, resend}) {
             this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
@@ -352,6 +352,8 @@ Chromium ${process.versions.chrome}` : ''
                     }
 
             }
+            if (resend)
+                ipc.deleteMessage(roomId, resend)
             ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
         },
         async fetchMessage(reset) {
