@@ -24,6 +24,7 @@
             :room-info="roomInfo"
             :menu-actions="menuActions"
             :room="room"
+            :members-count="membersCount"
             @toggle-rooms-list="$emit('toggle-rooms-list')"
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
@@ -353,9 +354,9 @@ export default {
         acceptedFiles: {type: String, required: true},
         textFormatting: {type: Boolean, required: true},
         loadingRooms: {type: Boolean, required: true},
-        mongodb: {type: Boolean, default: false},
         roomInfo: {type: Function, default: null},
         textareaAction: {type: Function, default: null},
+        membersCount: {type: Number, default: 0},
     },
     data() {
         return {
@@ -644,7 +645,7 @@ export default {
                 file: this.file,
                 replyMessage: this.messageReply,
                 usersTag: this.selectedUsersTag,
-                resend: this.editAndResend
+                resend: this.editAndResend,
             })
 
             this.resetMessage(true)
