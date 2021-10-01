@@ -37,7 +37,7 @@
                 <p>No remote stickers found</p>
             </center>
             <div class="grid" v-show="remote_pics.length">
-                <div v-for="i in remote_pics" :key="i">
+                <div v-for="i in remote_pics" :key="i.id">
                     <img :src="i.url" @click="picClick(i.url)"/>
                 </div>
             </div>
@@ -96,7 +96,6 @@ export default {
         }
         fs.readdir(this.dir_face, (_err, files) => {
             this.face = files
-            console.log(this.face)
         })
 
         // Stickers
