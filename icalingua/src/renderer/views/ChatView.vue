@@ -33,8 +33,8 @@
                 <Multipane v-show="view !== 'kench'">
                     <!-- main chat view -->
                     <div
-                        class="panel"
-                        :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
+                        class="panel rooms-panel"
+                    >
                         <TheRoomsPanel
                             :rooms="rooms"
                             :selected="selectedRoom"
@@ -533,6 +533,22 @@ main div {
 ::v-deep .el-input__inner {
   background-color: var(--chat-bg-color-input);
   border: var(--chat-border-style);
+}
+
+.rooms-panel {
+  min-width: 140px;
+  width: 300px;
+  max-width: 500px;
+
+  @media (max-width: 900px) {
+    width: 200px;
+  }
+  @media (min-width: 1500px) {
+    width: 350px;
+  }
+  @media (min-width: 2000px) {
+    width: 400px;
+  }
 }
 </style>
 
