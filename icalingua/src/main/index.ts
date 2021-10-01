@@ -15,6 +15,11 @@ import argv from './utils/argv'
     '都是笑话 不值一提 该放弃',
 ])()
 
+//防止连接自签名的 aria2 出错
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = String(0)
+//启用一些 flag
+app.commandLine.appendSwitch('enable-features', 'CSSContainerQueries')
+
 app.on('ready', async () => {
     (() => [
         '#5bcffa',

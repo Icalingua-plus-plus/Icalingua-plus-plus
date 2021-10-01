@@ -4,8 +4,6 @@ import {createBot, logOut} from './ipc/botAndStorage'
 import {getConfig} from './utils/configManager'
 import repl from 'repl'
 
-//防止连接自签名的 aria2 出错
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = String(0)
 require('./utils/configManager')
 require('./ipc/system')
 require('./ipc/botAndStorage')
