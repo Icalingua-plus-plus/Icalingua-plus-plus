@@ -13,8 +13,10 @@ import GroupOfFriend from '../../types/GroupOfFriend'
 import errorHandler from '../utils/errorHandler'
 import SearchableFriend from '../../types/SearchableFriend'
 import * as themes from '../utils/themes'
+import SearchableGroup from '../../types/SearchableGroup'
 
 let adapter: Adapter
+let groups: SearchableGroup[]
 if (getConfig().adapter === 'oicq')
     adapter = oicqAdapter
 else if (getConfig().adapter === 'socketIo')
@@ -56,7 +58,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => {
-    const groups = await getGroups()
+    groups = await getGroups()
     let friends: GroupOfFriend[]
     let friendsFallback: SearchableFriend[]
     try {
@@ -118,3 +120,4 @@ ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept))
 ipcMain.handle('getAccount', adapter.getAccount)
+ipcMain.handle('getGroup', (_, gin: number) => groups.find(e => e.group_id === gin))

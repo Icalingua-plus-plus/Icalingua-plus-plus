@@ -79,7 +79,7 @@
                             :show-footer="!isShutUp"
                             :loading-rooms="false"
                             :text-formatting="true"
-                            :mongodb="true"
+                            :members-count="membersCount"
                             @send-message="sendMessage"
                             @open-file="openImage"
                             @pokefriend="pokeFriend"
@@ -206,6 +206,7 @@ export default {
             sysInfo: '',
             historyCount: 0,
             dialogAskCheckUpdateVisible: false,
+            membersCount: 0,
         }
     },
     async created() {
@@ -410,7 +411,12 @@ Chromium ${process.versions.chrome}` : ''
             this.selectedRoom.at = false
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
-            await this.fetchMessage(true)
+            this.fetchMessage(true)
+            if (this.selectedRoomId < 0)
+                ipc.getGroup(-this.selectedRoomId).then(e =>
+                    this.membersCount = e.member_count)
+            else
+                this.membersCount = 0
         },
         downloadImage: ipc.downloadImage,
         pokeGroup(uin) {
