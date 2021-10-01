@@ -5,6 +5,7 @@ import path from 'path'
 import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
 import ui from '../utils/ui'
+import md5 from 'md5'
 
 let viewer = ''
 const VIEWERS = [
@@ -35,16 +36,29 @@ if (!viewer) {
 if (!viewer) {
     console.log('Cannot find an external image viewer')
 }
+
+const builtinViewers = new Map<string, BrowserWindow>()
 const openImage = (url: string, external: boolean = false) => {
     if (!external) {
-        const viewerWindow = new BrowserWindow({
-            autoHideMenuBar: true,
-        })
-        viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
-        //viewerWindow.maximize()
-    } else if (viewer) {
+        const urlMd5 = md5(url)
+        if (builtinViewers.get(urlMd5)) {
+            const viewerWindow = builtinViewers.get(urlMd5)
+            viewerWindow.focus()
+        }
+        else {
+            const viewerWindow = new BrowserWindow({
+                autoHideMenuBar: true,
+            })
+            viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
+            //viewerWindow.maximize()
+            viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
+            builtinViewers.set(urlMd5, viewerWindow)
+        }
+    }
+    else if (viewer) {
         execFile(viewer, [url])
-    } else {
+    }
+    else {
         ui.messageError('找不到可用的本地查看器')
     }
 }
