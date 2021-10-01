@@ -315,10 +315,11 @@ const adapter: Adapter = {
             socket = io(getConfig().server, {
                 transports: ['websocket'],
             })
-            socket.once('connect_error', async () => {
+            socket.once('connect_error', async (e) => {
+                console.log(e)
                 await dialog.showMessageBox(getMainWindow(), {
                     title: '错误',
-                    message: '连接失败',
+                    message: e && e.message ? e.message : '连接失败',
                     type: 'error',
                 })
                 app.quit()
