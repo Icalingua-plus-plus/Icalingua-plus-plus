@@ -5,6 +5,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import {updateTrayIcon} from './trayManager'
 import path from 'path'
 import ui from './ui'
+import argv from './argv'
 
 let loginWindow: BrowserWindow,
     mainWindow: BrowserWindow,
@@ -16,7 +17,7 @@ export const loadMainWindow = () => {
     mainWindow = new BrowserWindow({
         height: winSize.height,
         width: winSize.width,
-        show: process.env.NODE_ENV !== 'development',
+        show: process.env.NODE_ENV !== 'development' || argv.hide,
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,
