@@ -1,8 +1,9 @@
 import {app, protocol} from 'electron'
-import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
+import {destroyWindow, getMainWindow, showLoginWindow, showWindow} from './utils/windowManager'
 import {createBot, logOut} from './ipc/botAndStorage'
 import {getConfig} from './utils/configManager'
 import repl from 'repl'
+import argv from './utils/argv'
 
 require('./utils/configManager')
 require('./ipc/system')
@@ -16,6 +17,9 @@ if (process.env.NODE_ENV === 'development')
     })
 if (getConfig().account.autologin || getConfig().adapter === 'socketIo') {
     createBot(getConfig().account)
+    if (argv.hide) {
+        getMainWindow().hide();
+    }
 } else {
     showLoginWindow()
 }
