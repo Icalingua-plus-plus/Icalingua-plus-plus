@@ -17,7 +17,7 @@ export const loadMainWindow = () => {
     mainWindow = new BrowserWindow({
         height: winSize.height,
         width: winSize.width,
-        show: process.env.NODE_ENV !== 'development' || argv.hide,
+        show: process.env.NODE_ENV !== 'development' && !argv.hide,
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,
@@ -39,8 +39,6 @@ export const loadMainWindow = () => {
             path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
         )
     }
-    else if (winSize.max)
-        mainWindow.maximize()
 
     setTimeout(() => mainWindow.on('focus', async () => {
         clearCurrentRoomUnread()
