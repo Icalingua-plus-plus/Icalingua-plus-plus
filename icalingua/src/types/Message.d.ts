@@ -18,7 +18,7 @@ export default interface Message {
     date?: string;
     role?: string;
     file?: MessageFile;
-    files?: MessageFile[];
+    files: MessageFile[];
     time?: number;
     replyMessage?: Message;
     at?: boolean | 'all';
