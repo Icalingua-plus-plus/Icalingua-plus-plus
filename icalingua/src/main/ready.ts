@@ -1,5 +1,5 @@
 import {app, protocol} from 'electron'
-import {destroyWindow, showLoginWindow, showWindow} from './utils/windowManager'
+import {destroyWindow, getMainWindow, showLoginWindow, showWindow} from './utils/windowManager'
 import {createBot, logOut} from './ipc/botAndStorage'
 import {getConfig} from './utils/configManager'
 import repl from 'repl'
