@@ -12,8 +12,9 @@ import upg1to2 from './SQLUpgradeScript/1to2'
 import upg2to3 from './SQLUpgradeScript/2to3'
 import upg3to4 from './SQLUpgradeScript/3to4'
 import upg4to5 from './SQLUpgradeScript/4to5'
+import upg5to6 from './SQLUpgradeScript/5to6'
 
-const dbVersionLatest = 5
+const dbVersionLatest = 6
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -127,6 +128,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     senderId: `${message.senderId}`,
                     _id: `${message._id}`,
                     file: JSON.stringify(message.file),
+                    files: JSON.stringify(message.files),
                     replyMessage: JSON.stringify(message.replyMessage),
                     at: JSON.stringify(message.at),
                     mirai: JSON.stringify(message.mirai),
@@ -145,6 +147,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     senderId: Number(message.senderId),
                     time: Number(message.time),
                     file: JSON.parse(message.file),
+                    files: JSON.parse(message.files),
                     replyMessage: JSON.parse(message.replyMessage),
                     at: JSON.parse(message.at),
                     mirai: JSON.parse(message.mirai),
@@ -172,6 +175,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     await upg3to4(this.db)
                 case 4:
                     await upg4to5(this.db)
+                case 5:
+                    await upg5to6(this.db)
                 default:
                     break
             }
@@ -296,6 +301,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('date')
                     table.string('role')
                     table.text('file').nullable()
+                    table.text('files').nullable()
                     table.bigInteger('time')
                     table.text('replyMessage').nullable()
                     table.string('at').nullable()

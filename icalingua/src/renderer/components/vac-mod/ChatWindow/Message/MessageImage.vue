@@ -24,12 +24,12 @@
         >
             <img
                 :src="lightning"
-                v-if="message.flash"
+                v-if="flash"
                 class="vac-image-lightning"
             />
             <el-image
-                :src="message.file.url"
-                :class="{'vac-image-flash': message.flash}"
+                :src="file.url"
+                :class="{'vac-image-flash': flash}"
                 fit="cover"
                 referrer-policy="no-referrer"
                 @load="imageLoading = false"
@@ -43,25 +43,10 @@
                 </div>
             </el-image>
         </div>
-        <format-message
-            :content="message.content"
-            v-if="!isHidden"
-            :users="roomUsers"
-            :text-formatting="textFormatting"
-            @open-user-tag="$emit('open-user-tag')"
-        />
 
         <details v-if="isHidden">
-            <summary v-if="!summary" style="cursor:pointer">
+            <summary style="cursor:pointer">
                 Hidden image
-            </summary>
-            <summary v-if="summary" style="cursor:pointer">
-                <format-message
-                    :content="summary"
-                    :users="roomUsers"
-                    :text-formatting="textFormatting"
-                    @open-user-tag="$emit('open-user-tag')"
-                />
             </summary>
             <loader
                 :style="{ top: `${imageResponsive.loaderTop}px` }"
@@ -80,7 +65,7 @@
                 @click="openImage"
             >
                 <el-image
-                    :src="message.file.url"
+                    :src="file.url"
                     fit="cover"
                     referrer-policy="no-referrer"
                     @load="imageLoading = false"
@@ -110,10 +95,12 @@ export default {
 
     props: {
         currentUserId: {type: [String, Number], required: true},
-        message: {type: Object, required: true},
+        file: {type: Object, required: true},
         roomUsers: {type: Array, required: true},
         textFormatting: {type: Boolean, required: true},
         imageHover: {type: Boolean, required: true},
+        flash: {type: Boolean, default: false},
+        content: {type: String, default: ''},
     },
 
     data() {
@@ -128,14 +115,11 @@ export default {
     computed: {
         isImageLoading() {
             return (
-                this.message.file.url.indexOf('blob:http') !== -1 || this.imageLoading
+                this.file.url.indexOf('blob:http') !== -1 || this.imageLoading
             )
         },
         isHidden() {
-            return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.message.content)
-        },
-        summary() {
-            return this.message.content.replace(/[!！] *[Hh] *[Ii] *[Dd] *[Ee]/, '').trim()
+            return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.content)
         },
     },
 
@@ -148,7 +132,7 @@ export default {
 
     methods: {
         openImage() {
-            ipcRenderer.send('openImage', this.message.file.url, false)
+            ipcRenderer.send('openImage', this.file.url, false)
         },
     },
 }

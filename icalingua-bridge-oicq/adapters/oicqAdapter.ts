@@ -90,6 +90,7 @@ const eventHandlers = {
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
             title: (data.sender as MemberBaseInfo).title,
+            files: [],
         }
 
         let room = await storage.getRoom(roomId)
@@ -201,6 +202,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
+                files: [],
             }
             clients.addMessage(roomId, message)
             clients.updateRoom(room)
@@ -238,6 +240,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
+                files: [],
             }
             clients.addMessage(room.roomId, message)
             clients.updateRoom(room)
@@ -260,6 +263,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -306,6 +310,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -363,6 +368,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -411,6 +417,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -443,6 +450,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -676,6 +684,7 @@ const adapter = {
             content,
             timestamp: formatDate('hh:mm'),
             date: formatDate('yyyy/MM/dd'),
+            files: [],
         }
 
         const chain: MessageElem[] = []
@@ -685,6 +694,7 @@ const adapter = {
                 _id: replyMessage._id,
                 username: replyMessage.username,
                 content: replyMessage.content,
+                files: [],
             }
             if (replyMessage.file) {
                 message.replyMessage.file = replyMessage.file
@@ -922,6 +932,7 @@ const adapter = {
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: i,
                 time: data.time * 1000,
+                files: [],
             }
             await processMessage(
                 data.message,
@@ -998,7 +1009,7 @@ const adapter = {
             const newMsgs: Message[] = []
             for (let i = 0; i < history.data.length; i++) {
                 const data = history.data[i]
-                const message = {
+                const message: Message = {
                     senderId: data.sender.user_id,
                     username: (<GroupMessageEventData>data).group_id
                         ? (<GroupMessageEventData>data).anonymous
@@ -1010,6 +1021,7 @@ const adapter = {
                     date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                     _id: data.message_id,
                     time: data.time * 1000,
+                    files: [],
                 }
                 await processMessage(
                     data.message,
