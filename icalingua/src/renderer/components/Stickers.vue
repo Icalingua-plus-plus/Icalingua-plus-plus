@@ -38,7 +38,7 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img :src="i.url" @click="picClick(i.url)"/>
+                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)"/>
                 </div>
             </div>
         </div>
