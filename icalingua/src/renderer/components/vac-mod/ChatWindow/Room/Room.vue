@@ -681,7 +681,7 @@ export default {
         },
         replyMessage(message, e) {
             if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
-            if (message.system) return
+            if (message.system || message.flash) return
             this.messageReply = message
             this.focusTextarea()
         },
