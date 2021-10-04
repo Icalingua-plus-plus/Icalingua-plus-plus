@@ -156,6 +156,7 @@
                         </div>
 
                         <format-message
+                            v-if="!message.deleted||message.reveal"
                             :content="message.content"
                             :users="roomUsers"
                             :text-formatting="textFormatting"
