@@ -331,7 +331,7 @@ Chromium ${process.versions.chrome}` : ''
         console.log('加载完成')
     },
     methods: {
-        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, resend}) {
+        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, resend, sticker}) {
             this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
@@ -355,7 +355,7 @@ Chromium ${process.versions.chrome}` : ''
             }
             if (resend)
                 ipc.deleteMessage(roomId, resend)
-            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
+            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, sticker})
         },
         async fetchMessage(reset) {
             if (reset) {
@@ -379,6 +379,7 @@ Chromium ${process.versions.chrome}` : ''
                     content: '',
                     room: this.selectedRoom,
                     imgpath: url,
+                    sticker: true
                 })
             this.$refs.room.focusTextarea()
         },
