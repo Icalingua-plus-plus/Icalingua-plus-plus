@@ -80,6 +80,7 @@
               "
                             :message="message"
                             :room-users="roomUsers"
+                            @open-forward="$emit('open-forward', $event)"
                         />
 
                         <div v-if="message.deleted && !message.reveal">
