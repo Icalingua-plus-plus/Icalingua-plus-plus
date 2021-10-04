@@ -1,6 +1,6 @@
 <template>
     <div class="vac-room-header vac-app-border-b">
-        <slot name="room-header" v-bind="{ room, typingUsers, userStatus }">
+        <slot name="room-header" v-bind="{ room, typingUsers }">
             <div class="vac-room-wrapper">
                 <div
                     v-if="!singleRoom"
