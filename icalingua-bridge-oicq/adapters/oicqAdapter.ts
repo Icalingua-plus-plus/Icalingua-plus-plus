@@ -789,6 +789,7 @@ const adapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
+            message.files.push(message.file)
         }
         else if (imgpath) {
             chain.push({
@@ -802,12 +803,14 @@ const adapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
+            message.files.push(message.file)
         }
         else if (file) {
             chain.push({
                 type: 'image',
                 data: {
                     file: file.path,
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
@@ -815,6 +818,7 @@ const adapter = {
                 size: file.size,
                 type: file.type,
             }
+            message.files.push(message.file)
         }
         //发送消息链
         let data: Ret<{ message_id: string }>

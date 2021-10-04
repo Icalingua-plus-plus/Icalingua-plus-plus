@@ -96,7 +96,7 @@ const eventHandlers = {
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
             title: (data.sender as MemberBaseInfo).title,
-            files: []
+            files: [],
         }
 
         let room = await storage.getRoom(roomId)
@@ -256,7 +256,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
-                files: []
+                files: [],
             }
             ui.addMessage(roomId, message)
             ui.updateRoom(room)
@@ -295,7 +295,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
-                files: []
+                files: [],
             }
             ui.addMessage(room.roomId, message)
             ui.updateRoom(room)
@@ -319,7 +319,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
-            files: []
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -367,7 +367,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
-            files: []
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -425,7 +425,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
-            files: []
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -492,7 +492,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
-            files: []
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -525,7 +525,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
-            files: []
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -822,7 +822,7 @@ const adapter: OicqAdapter = {
             content,
             timestamp: formatDate('hh:mm'),
             date: formatDate('yyyy/MM/dd'),
-            files: []
+            files: [],
         }
 
         const chain: MessageElem[] = []
@@ -832,7 +832,7 @@ const adapter: OicqAdapter = {
                 _id: replyMessage._id,
                 username: replyMessage.username,
                 content: replyMessage.content,
-                files: []
+                files: [],
             }
             if (replyMessage.file) {
                 message.replyMessage.file = replyMessage.file
@@ -927,6 +927,7 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
+            message.files.push(message.file)
         }
         else if (imgpath) {
             chain.push({
@@ -940,6 +941,7 @@ const adapter: OicqAdapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
+            message.files.push(message.file)
         }
         else if (file) {
             chain.push({
@@ -954,6 +956,7 @@ const adapter: OicqAdapter = {
                 size: file.size,
                 type: file.type,
             }
+            message.files.push(message.file)
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
@@ -1077,7 +1080,7 @@ const adapter: OicqAdapter = {
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: i,
                 time: data.time * 1000,
-                files: []
+                files: [],
             }
             await processMessage(
                 data.message,
@@ -1194,7 +1197,7 @@ const adapter: OicqAdapter = {
                         date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                         _id: data.message_id,
                         time: data.time * 1000,
-                        files: []
+                        files: [],
                     }
                     try {
                         const retData = await processMessage(
