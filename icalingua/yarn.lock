@@ -6715,7 +6715,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq: ^1.20.2
+    oicq: ^1.21.0
     pg: ^8.6.0
     sass: ^1.34.1
     sass-loader: ^10.1.1
@@ -9499,9 +9499,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq@npm:^1.20.2":
-  version: 1.20.2
-  resolution: "oicq@npm:1.20.2"
+"oicq@npm:^1.21.0":
+  version: 1.21.0
+  resolution: "oicq@npm:1.21.0"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9509,10 +9509,10 @@ fsevents@~2.3.1:
     pngjs: ^6.0.0
     probe-image-size: ^7.2.1
     qrcode-terminal: ^0.12.0
-    ws: ^7.5.4
+    ws: ^7.5.5
   bin:
     oicq: bin/oicq
-  checksum: 2db75c83298a2895f576106e9c730e6a03083de44e819d75d00df43db447150b6e80d9200e79b57783fbd51fc10e685e8011c013107db3d37257e566bfd8d833
+  checksum: 1e3cf94edb65176b8d0d394de253b2ad5a46cae11c6e094f07bf89a4e52634654cccadd443d52b6bc364da8f2f4718bc4ef7b822331220927175219255b48098
   languageName: node
   linkType: hard
 
@@ -14021,9 +14021,9 @@ typescript@^4.2.4:
   languageName: node
   linkType: hard
 
-"ws@npm:^7.5.4":
-  version: 7.5.4
-  resolution: "ws@npm:7.5.4"
+"ws@npm:^7.5.5":
+  version: 7.5.5
+  resolution: "ws@npm:7.5.5"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ^5.0.2
@@ -14032,7 +14032,7 @@ typescript@^4.2.4:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 48582e4feb1fc6b6b977a0ee6136e5cd1c6a14bc5cb6ce5acf596652b34be757cdf0c225235b3263d56d057bc5d6e528dbe27fc88a3d09828aa803c6696f4b2c
+  checksum: bd2b437256012af526c69c03d6670a132e7ab0fe5853f3b7092826acea4203fad4ee2a8d0d9bd44834b2b968e747bf34f753ab535f4a3edf40d262da4b1d0805
   languageName: node
   linkType: hard
 
