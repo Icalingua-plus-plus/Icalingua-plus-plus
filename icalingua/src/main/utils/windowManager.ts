@@ -97,6 +97,7 @@ export const showRequestWindow = () => {
                 webSecurity: false,
                 contextIsolation: false,
             },
+            autoHideMenuBar: true,
         })
 
         if (process.env.NODE_ENV === 'development') {
