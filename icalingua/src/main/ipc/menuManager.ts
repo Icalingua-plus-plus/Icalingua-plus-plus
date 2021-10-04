@@ -869,15 +869,26 @@ ipcMain.on('popupStickerMenu', () => {
     ]).popup({window: getMainWindow()})
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
-    Menu.buildFromTemplate([
-        {
+    const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
+    if (/^https?:\/\//i.test(itemName)) {
+        menu.push({
+            label: '添加到本地表情',
+            type: 'normal',
+            click() {
+                download(itemName, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+            },
+        })
+    }
+    else {
+        menu.push({
             label: '删除',
             type: 'normal',
             click() {
                 fs.unlink(path.join(app.getPath('userData'), 'stickers', itemName), () => ui.message('删除成功'))
             },
-        },
-    ]).popup({window: getMainWindow()})
+        })
+    }
+    Menu.buildFromTemplate(menu).popup({window: getMainWindow()})
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
