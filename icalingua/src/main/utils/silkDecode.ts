@@ -2,7 +2,7 @@ import axios from 'axios'
 import ffmpeg from 'fluent-ffmpeg/lib/fluent-ffmpeg'
 import {PassThrough} from 'stream'
 import silk from 'silk-sdk'
-import {streamToBuffer} from '../../utils/steamToBuffer'
+import {streamToBuffer} from '../../utils/streamToBuffer'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
