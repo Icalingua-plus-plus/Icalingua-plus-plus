@@ -156,7 +156,7 @@ const eventHandlers = {
             if (await isInlineReplySupported())
                 actions['inline-reply'] = '回复...'
 
-            const notif = new Notification({
+            const notifParams = {
                 summary: room.roomName,
                 appName: 'Icalingua',
                 category: 'im.received',
@@ -168,7 +168,10 @@ const eventHandlers = {
                 'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
                 'x-kde-reply-submit-button-text': '发送',
                 actions,
-            })
+            }
+            if (message.file && message.file.type.startsWith('image/'))
+                notifParams['x-kde-urls'] = await avatarCache(message.file.url)
+            const notif = new Notification(notifParams)
             notif.on('action', (action: string) => {
                 switch (action) {
                     case 'default':

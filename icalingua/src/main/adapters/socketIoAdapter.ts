@@ -113,6 +113,7 @@ const attachSocketEvents = () => {
         at: string | boolean,
         data: { title: string, body: string, hasReply: boolean, replyPlaceholder: string },
         isSelfMsg: boolean
+        image?: string
     }) => {
         if (
             (!getMainWindow().isFocused() ||
@@ -129,7 +130,7 @@ const attachSocketEvents = () => {
             if (await isInlineReplySupported())
                 actions['inline-reply'] = '回复...'
 
-            const notif = new Notification({
+            const notifParams = {
                 ...data.data,
                 summary: data.data.title,
                 appName: 'Icalingua',
@@ -141,7 +142,10 @@ const attachSocketEvents = () => {
                 'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
                 'x-kde-reply-submit-button-text': '发送',
                 actions,
-            })
+            }
+            if (data.image)
+                notifParams['x-kde-urls'] = await avatarCache(data.image)
+            const notif = new Notification(notifParams)
             notif.on('action', (action: string) => {
                 switch (action) {
                     case 'default':
