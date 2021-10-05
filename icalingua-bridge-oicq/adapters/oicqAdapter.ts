@@ -140,6 +140,7 @@ const eventHandlers = {
             avatar: avatar,
             priority: room.priority,
             roomId, at, isSelfMsg,
+            image: message.file?.url,
             data: {
                 title: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
