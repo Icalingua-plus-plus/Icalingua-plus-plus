@@ -26,7 +26,7 @@ export const {
     sendMessage, createBot, getGroupMemberInfo, getGroupMembers, getUnreadRooms,
     getUin, getNickname, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
     getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
-    clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
+    clearCurrentRoomUnread, clearRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
