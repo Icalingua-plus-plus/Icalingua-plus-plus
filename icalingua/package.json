@@ -6,7 +6,7 @@
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "icalingua.desktop",
-  "homepage": "https://github.com/Clansty/Icalingua",
+  "homepage": "https://github.com/Icalingua/Icalingua",
   "scripts": {
     "build": "ts-node .electron-vue/build.ts && electron-builder",
     "build:win": "electron-builder --win",
