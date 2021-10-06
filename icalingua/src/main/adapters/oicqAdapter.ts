@@ -1041,8 +1041,8 @@ const adapter: OicqAdapter = {
             }
         }
         currentLoadedMessagesCount = offset + 20
-        const messages = await storage.fetchMessages(roomId, offset, 20)
-        if (!offset && typeof messages[messages.length - 1]._id === 'string')
+        const messages = await storage.fetchMessages(roomId, offset, 20) || []
+        if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         return messages
     },
