@@ -101,7 +101,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             _id: '', date: '', senderId: 0, timestamp: '',
                             username: senderName,
                             content: '',
-                            files: []
+                            files: [],
                         }
                         await processMessage(data.message, replyMessage, {})
                     }
@@ -111,7 +111,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         _id: m.data.id,
                         username: replyMessage.username,
                         content: replyMessage.content,
-                        files: []
+                        files: [],
                     }
                     if (replyMessage.file) {
                         //兼容旧版本
@@ -120,6 +120,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (replyMessage.files) {
                         message.replyMessage.files = replyMessage.files
                     }
+                    if (replyMessage.senderId === oicq.getUin())
+                        message.at = true
                 }
                 break
             case 'json':
