@@ -1,6 +1,6 @@
 # Icalingua Bridge OICQ
 
-[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Clansty/Icalingua/oicq?filename=icalingua-bridge-oicq%2Fpackage.json)](https://github.com/takayama-lily/oicq)
+[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Icalingua/Icalingua/oicq?filename=icalingua-bridge-oicq%2Fpackage.json)](https://github.com/takayama-lily/oicq)
 
 这是基于 OICQ 的 Icalingua 中继，可以部署在自己的服务器上，服务器通过 OICQ 库与上级服务器通信，本地电脑与自己的服务器通信。这样可以实现一些原先无法实现的功能：
 
