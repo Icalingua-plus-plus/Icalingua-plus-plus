@@ -14,7 +14,7 @@ const upg5to6 = async (db: Knex) => {
     });
     await Promise.all(PAry);
   }
-  await db<DBVersion>("dbVersion").update({ dbVersion: 5 });
+  await db<DBVersion>("dbVersion").update({ dbVersion: 6 });
 };
 
 export default upg5to6;
