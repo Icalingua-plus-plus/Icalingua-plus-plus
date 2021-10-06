@@ -3,7 +3,6 @@
 process.env.BABEL_ENV = 'main'
 
 import path from 'path'
-import {dependencies} from '../package.json'
 import webpack from 'webpack'
 
 let mainConfig = {
@@ -11,7 +10,7 @@ let mainConfig = {
     main: path.join(__dirname, '../src/main/index.ts')
   },
   externals: [
-    ...Object.keys(dependencies || {})
+    ...Object.keys({})
   ],
   module: {
     rules: [

@@ -3,7 +3,6 @@
 import path from 'path'
 
 process.env.BABEL_ENV = 'renderer'
-import {dependencies} from '../package.json'
 import webpack from 'webpack'
 
 import CopyWebpackPlugin from 'copy-webpack-plugin'
@@ -26,7 +25,7 @@ let rendererConfig = {
     renderer: path.join(__dirname, '../src/renderer/main.ts')
   },
   externals: [
-    ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
+    ...Object.keys({}).filter(d => !whiteListedModules.includes(d))
   ],
   module: {
     rules: [

@@ -50,9 +50,6 @@
     },
     "npmRebuild": false
   },
-  "dependencies": {
-
-  },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.18",
     "@types/ioredis": "^4.26.4",
