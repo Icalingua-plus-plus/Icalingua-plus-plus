@@ -135,5 +135,11 @@ const ipc = {
     setCheckUpdate(enabled: boolean) {
         ipcRenderer.send('setCheckUpdate', enabled)
     },
+    deleteMessage(roomId: number, messageId: string) {
+        ipcRenderer.send('deleteMessage', roomId, messageId)
+    },
+    async getGroup(gin: number):Promise<SearchableGroup> {
+        return await ipcRenderer.invoke('getGroup', gin)
+    },
 }
 export default ipc

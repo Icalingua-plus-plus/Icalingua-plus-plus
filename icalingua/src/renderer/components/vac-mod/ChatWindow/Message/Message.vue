@@ -80,6 +80,7 @@
               "
                             :message="message"
                             :room-users="roomUsers"
+                            @open-forward="$emit('open-forward', $event)"
                         />
 
                         <div v-if="message.deleted && !message.reveal">
@@ -96,23 +97,30 @@
                             :width="250"
                         />
 
-                        <format-message
-                            v-else-if="!message.file"
+                        <message-image
+                            v-else-if="isImage && message.files"
+                            v-for="(file,i) in message.files"
+                            :key="i"
+                            :current-user-id="currentUserId"
+                            :file="file"
+                            :flash="message.flash"
                             :content="message.content"
-                            :users="roomUsers"
+                            :room-users="roomUsers"
                             :text-formatting="textFormatting"
-                            @open-user-tag="openUserTag"
-                            @open-forward="$emit('open-forward', $event)"
+                            :image-hover="imageHover"
+                            @open-file="openFile"
                         >
-                            <template #deleted-icon="data">
-                                <slot name="deleted-icon" v-bind="data"/>
+                            <template v-for="(i, name) in $scopedSlots" #[name]="data">
+                                <slot :name="name" v-bind="data"/>
                             </template>
-                        </format-message>
+                        </message-image>
 
                         <message-image
                             v-else-if="isImage"
                             :current-user-id="currentUserId"
-                            :message="message"
+                            :file="message.file"
+                            :flash="message.flash"
+                            :content="message.content"
                             :room-users="roomUsers"
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
@@ -137,7 +145,7 @@
                             </div>
                         </div>
 
-                        <div v-else class="vac-file-message">
+                        <div v-else-if="message.file" class="vac-file-message">
                             <div
                                 class="vac-svg-button vac-icon-file"
                                 @click.stop="openFile('download')"
@@ -146,30 +154,23 @@
                                     <svg-icon name="document"/>
                                 </slot>
                             </div>
-                            <span>{{ message.content }}</span>
                         </div>
 
+                        <format-message
+                            v-if="!message.deleted||message.reveal"
+                            :content="message.content"
+                            :users="roomUsers"
+                            :text-formatting="textFormatting"
+                            @open-user-tag="openUserTag"
+                            @open-forward="$emit('open-forward', $event)"
+                        >
+                            <template #deleted-icon="data">
+                                <slot name="deleted-icon" v-bind="data"/>
+                            </template>
+                        </format-message>
+
                         <div class="vac-text-timestamp">
-                            <div
-                                v-if="message.edited && !message.deleted"
-                                class="vac-icon-edited"
-                            >
-                                <slot name="pencil-icon">
-                                    <svg-icon name="pencil"/>
-                                </slot>
-                            </div>
                             <span>{{ message.timestamp }}</span>
-                            <span v-if="isCheckmarkVisible">
-                <slot name="checkmark-icon" v-bind="{ message }">
-                  <svg-icon
-                      :name="
-                      message.distributed ? 'double-checkmark' : 'checkmark'
-                    "
-                      :param="message.seen ? 'seen' : ''"
-                      class="vac-icon-check"
-                  />
-                </slot>
-              </span>
                         </div>
                     </div>
                 </div>
@@ -272,6 +273,12 @@ export default {
         avatar() {
             if (this.message.mirai && this.message.mirai.eqq.avatarMd5) {
                 return getImageUrlByMd5(this.message.mirai.eqq.avatarMd5)
+            }
+            if (this.message.mirai && this.message.mirai.eqq.avatarUrl) {
+                //安全起见，防追踪型链接，限制为腾讯云域名
+                const QCLOUD_AVATAR_REGEX = /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
+                if (QCLOUD_AVATAR_REGEX.test(this.message.mirai.eqq.avatarUrl))
+                    return this.message.mirai.eqq.avatarUrl
             }
             return getAvatarUrl(this.message.senderId)
         },

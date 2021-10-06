@@ -38,7 +38,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'image':
                 lastMessage.content += '[Image]'
                 url = m.data.url
-                if (typeof m.data.file === 'string') {
+                if (typeof m.data.file === 'string' && url.includes('c2cpicdw.qpic.cn')) {
                     const md5 = m.data.file.substr(0, 32);
                     /^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
                 }
@@ -46,6 +46,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     type: 'image/jpeg',
                     url,
                 }
+                message.files.push(message.file)
                 break
             case 'bface':
                 lastMessage.content += '[Sticker]' + m.data.text
@@ -57,6 +58,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     type: 'image/webp',
                     url,
                 }
+                message.files.push(message.file)
                 break
             case 'file':
                 lastMessage.content += '[File]' + m.data.name
@@ -66,8 +68,9 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     size: m.data.size,
                     url: m.data.url,
                     name: m.data.name,
-                    fid: m.data.fileid,
+                    fid: m.data.fid,
                 }
+                message.files.push(message.file)
                 break
             case 'share':
                 lastMessage.content += '[Link]' + m.data.title
@@ -96,6 +99,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             _id: '', date: '', senderId: 0, timestamp: '',
                             username: senderName,
                             content: '',
+                            files: [],
                         }
                         await processMessage(data.message, replyMessage, {})
                     }
@@ -105,10 +109,17 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         _id: m.data.id,
                         username: replyMessage.username,
                         content: replyMessage.content,
+                        files: [],
                     }
                     if (replyMessage.file) {
+                        //兼容旧版本
                         message.replyMessage.file = replyMessage.file
                     }
+                    if (replyMessage.files) {
+                        message.replyMessage.files = replyMessage.files
+                    }
+                    if (replyMessage.senderId === adapter.getUin())
+                        message.at = true
                 }
                 break
             case 'json':
@@ -162,6 +173,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             type: 'image/jpeg',
                             url: previewUrl,
                         }
+                        message.files.push(message.file)
                     } catch (e) {
                     }
 
@@ -202,6 +214,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         type: 'image/jpeg',
                         url,
                     }
+                    message.files.push(message.file)
                 }
                 else {
                     lastMessage.content += '[XML]'
@@ -219,6 +232,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     type: 'video/mp4',
                     url: m.data.url,
                 }
+                message.files.push(message.file)
                 break
             case 'record':
                 try {
@@ -226,12 +240,13 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         type: 'audio/mp3',
                         url: await silkDecode(m.data.url),
                     }
+                    message.files.push(message.file)
                 } catch (e) {
                     message.file = null
                     message.content = '[无法处理的语音]'
                     message.code = JSON.stringify(e)
                 }
-                lastMessage.content = `[Audio]`
+                lastMessage.content = '[Audio]'
                 break
             case 'mirai':
                 try {

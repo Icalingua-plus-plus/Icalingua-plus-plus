@@ -37,8 +37,8 @@
                 <p>No remote stickers found</p>
             </center>
             <div class="grid" v-show="remote_pics.length">
-                <div v-for="i in remote_pics" :key="i">
-                    <img :src="i.url" @click="picClick(i.url)"/>
+                <div v-for="i in remote_pics" :key="i.id">
+                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)"/>
                 </div>
             </div>
         </div>
@@ -96,7 +96,6 @@ export default {
         }
         fs.readdir(this.dir_face, (_err, files) => {
             this.face = files
-            console.log(this.face)
         })
 
         // Stickers
@@ -236,8 +235,8 @@ div.head {
 
 <style scoped>
 .emoji-picker {
-  --ep-color-bg: #fff !important;
-  --ep-color-border: #fff !important;
+  --ep-color-bg: auto !important;
+  --ep-color-border: auto !important;
   --ep-color-sbg: #fff !important;
   --ep-color-active: #409eff !important;
   width: 100% !important;

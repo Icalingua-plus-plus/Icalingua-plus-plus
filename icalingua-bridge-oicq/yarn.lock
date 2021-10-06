@@ -1453,10 +1453,10 @@ object-hash@^2.0.1:
   resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.2.0.tgz#5ad518581eefc443bd763472b8ff2e9c2c0d54a5"
   integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
 
-oicq@^1.20.2:
-  version "1.20.2"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.20.2.tgz#663788f45c55670a9cceec073d4148f24c3a8ecb"
-  integrity sha512-OXYFbLnogA7WqRCoqaWNowBuMaKpaooHaxnNGgpXAH0ImZPDegoAx80MmrIY9tPIaxXSK4fcJhCtrisZSkG4DA==
+oicq@^1.21.0:
+  version "1.21.0"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.21.0.tgz#b46c2c8f4bd6e9fdc492fbef2c1a5f0d85807a56"
+  integrity sha512-QsLYKP2VNGzf/52UsgsQnAFWYf/kxAANMzEvh7EmSvVJ0rjMmypq1i1cMGVLIu+8vMU4jNpK4vZ1oiOeZl1KeA==
   dependencies:
     jsqr "^1.4.0"
     log4js "^6.3.0"
@@ -1464,7 +1464,7 @@ oicq@^1.20.2:
     pngjs "^6.0.0"
     probe-image-size "^7.2.1"
     qrcode-terminal "^0.12.0"
-    ws "^7.5.4"
+    ws "^7.5.5"
 
 on-finished@~2.3.0:
   version "2.3.0"
@@ -2270,10 +2270,10 @@ wrappy@1:
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
 
-ws@^7.5.4:
-  version "7.5.4"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.4.tgz#56bfa20b167427e138a7795de68d134fe92e21f9"
-  integrity sha512-zP9z6GXm6zC27YtspwH99T3qTG7bBFv2VIkeHstMLrLlDJuzA7tQ5ls3OJ1hOGGCzTQPniNJoHXIAOS0Jljohg==
+ws@^7.5.5:
+  version "7.5.5"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.5.tgz#8b4bc4af518cfabd0473ae4f99144287b33eb881"
+  integrity sha512-BAkMFcAzl8as1G/hArkxOxq3G7pjUqQ3gzYbLL0/5zNkph70e+lCoxBGnm6AW1+/aiNeV4fnKqZ8m4GZewmH2w==
 
 ws@~7.4.2:
   version "7.4.6"

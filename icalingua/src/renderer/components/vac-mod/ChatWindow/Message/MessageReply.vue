@@ -23,6 +23,7 @@
                 :users="roomUsers"
                 :text-formatting="true"
                 :reply="true"
+                @open-forward="$emit('open-forward', $event)"
             />
         </div>
     </div>

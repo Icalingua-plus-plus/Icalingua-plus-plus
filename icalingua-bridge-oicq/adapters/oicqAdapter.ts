@@ -90,6 +90,7 @@ const eventHandlers = {
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
             title: (data.sender as MemberBaseInfo).title,
+            files: [],
         }
 
         let room = await storage.getRoom(roomId)
@@ -135,10 +136,14 @@ const eventHandlers = {
         }
 
         //可能要发通知，所以由客户端来决定
+        let image
+        if (message.file && message.file.type.startsWith('image/'))
+            image = message.file.url
         broadcast('notify', {
             avatar: avatar,
             priority: room.priority,
             roomId, at, isSelfMsg,
+            image,
             data: {
                 title: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
@@ -201,6 +206,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
+                files: [],
             }
             clients.addMessage(roomId, message)
             clients.updateRoom(room)
@@ -238,6 +244,7 @@ const eventHandlers = {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
+                files: [],
             }
             clients.addMessage(room.roomId, message)
             clients.updateRoom(room)
@@ -260,6 +267,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -306,6 +314,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -363,6 +372,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -411,6 +421,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -443,6 +454,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
+            files: [],
         }
         let room = await storage.getRoom(roomId)
         if (!room) {
@@ -676,6 +688,7 @@ const adapter = {
             content,
             timestamp: formatDate('hh:mm'),
             date: formatDate('yyyy/MM/dd'),
+            files: [],
         }
 
         const chain: MessageElem[] = []
@@ -685,6 +698,7 @@ const adapter = {
                 _id: replyMessage._id,
                 username: replyMessage.username,
                 content: replyMessage.content,
+                files: [],
             }
             if (replyMessage.file) {
                 message.replyMessage.file = replyMessage.file
@@ -779,6 +793,7 @@ const adapter = {
                 type: 'image/jpeg',
                 url: b64img,
             }
+            message.files.push(message.file)
         }
         else if (imgpath) {
             chain.push({
@@ -792,12 +807,14 @@ const adapter = {
                 type: 'image/jpeg',
                 url: imgpath.replace(/\\/g, '/'),
             }
+            message.files.push(message.file)
         }
         else if (file) {
             chain.push({
                 type: 'image',
                 data: {
                     file: file.path,
+                    type: sticker ? 'face' : 'image',
                 },
             })
             message.file = {
@@ -805,6 +822,7 @@ const adapter = {
                 size: file.size,
                 type: file.type,
             }
+            message.files.push(message.file)
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
@@ -883,8 +901,8 @@ const adapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = await storage.fetchMessages(roomId, offset, 20)
-        if (!offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
+        const messages = await storage.fetchMessages(roomId, offset, 20) || []
+        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
@@ -922,6 +940,7 @@ const adapter = {
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: i,
                 time: data.time * 1000,
+                files: [],
             }
             await processMessage(
                 data.message,
@@ -998,7 +1017,7 @@ const adapter = {
             const newMsgs: Message[] = []
             for (let i = 0; i < history.data.length; i++) {
                 const data = history.data[i]
-                const message = {
+                const message: Message = {
                     senderId: data.sender.user_id,
                     username: (<GroupMessageEventData>data).group_id
                         ? (<GroupMessageEventData>data).anonymous
@@ -1010,6 +1029,7 @@ const adapter = {
                     date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                     _id: data.message_id,
                     time: data.time * 1000,
+                    files: [],
                 }
                 await processMessage(
                     data.message,

@@ -24,6 +24,7 @@
             :room-info="roomInfo"
             :menu-actions="menuActions"
             :room="room"
+            :members-count="membersCount"
             @toggle-rooms-list="$emit('toggle-rooms-list')"
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
@@ -147,19 +148,18 @@
             :filtered-users-tag="filteredUsersTag"
             @select-user-tag="selectUserTag($event)"
           /> -->
+            <div style="padding-top: 10px;
+                        padding-left: 10px;
+                        color: var(--panel-color-desc);"
+                 v-if="editAndResend"
+            >
+                编辑重发
+            </div>
 
             <div
                 class="vac-box-footer"
                 :class="{ 'vac-app-box-shadow': filteredUsersTag.length }"
             >
-                <room-audio
-                    v-if="showAudio && !imageFile && !videoFile"
-                    @update-file="file = $event"
-                >
-                    <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                        <slot :name="name" v-bind="data"/>
-                    </template>
-                </room-audio>
 
                 <div v-if="imageFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
@@ -220,7 +220,7 @@
                     :placeholder="textMessages.TYPE_MESSAGE"
                     class="vac-textarea"
                     :class="{
-            'vac-textarea-outline': editedMessage._id,
+            'vac-textarea-outline': editAndResend,
           }"
                     :style="{
             'min-height': `${mediaDimensions ? mediaDimensions.height : 20}px`,
@@ -235,7 +235,7 @@
 
                 <div class="vac-icon-textarea">
                     <div
-                        v-if="editedMessage._id"
+                        v-if="editAndResend"
                         class="vac-svg-button"
                         @click="resetMessage"
                     >
@@ -354,9 +354,9 @@ export default {
         acceptedFiles: {type: String, required: true},
         textFormatting: {type: Boolean, required: true},
         loadingRooms: {type: Boolean, required: true},
-        mongodb: {type: Boolean, default: false},
         roomInfo: {type: Function, default: null},
         textareaAction: {type: Function, default: null},
+        membersCount: {type: Number, default: 0},
     },
     data() {
         return {
@@ -381,6 +381,7 @@ export default {
             selectedUsersTag: [],
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
+            editAndResend: false,
         }
     },
     computed: {
@@ -421,6 +422,7 @@ export default {
                     this.message = this.roomMessage
                     setTimeout(() => this.onChangeInput(), 0)
                 }
+                this.editAndResend = false
             }
         },
         roomMessage: {
@@ -479,49 +481,62 @@ export default {
     async mounted() {
         this.newMessages = []
         this.$refs.roomTextarea.addEventListener('keydown', (e) => {
-            if (e.key !== 'Enter') return
-            switch (keyToSendMessage) {
-                case 'Enter':
-                    if (e.ctrlKey) {
-                        let selectionStart = this.$refs.roomTextarea.selectionStart
-                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else if (e.shiftKey) {
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else {
-                        this.sendMessage()
-                        e.preventDefault()
-                    }
-                    break
-                case 'CtrlEnter':
-                    if (!e.ctrlKey) {
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else {
-                        this.sendMessage()
-                        e.preventDefault()
-                    }
-                    break
-                case 'ShiftEnter':
-                    if (e.ctrlKey) {
-                        let selectionStart = this.$refs.roomTextarea.selectionStart
-                        let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                        this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else if (!e.shiftKey) {
-                        setTimeout(() => this.onChangeInput(), 0)
-                    }
-                    else {
-                        this.sendMessage()
-                        e.preventDefault()
-                    }
-                    break
-                default:
-                    console.log('qwq')
+            if (e.key === 'Enter') {
+                switch (keyToSendMessage) {
+                    case 'Enter':
+                        if (e.ctrlKey) {
+                            let selectionStart = this.$refs.roomTextarea.selectionStart
+                            let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                            this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            setTimeout(() => this.onChangeInput(), 0)
+                        }
+                        else if (e.shiftKey) {
+                            setTimeout(() => this.onChangeInput(), 0)
+                        }
+                        else {
+                            this.sendMessage()
+                            e.preventDefault()
+                        }
+                        break
+                    case 'CtrlEnter':
+                        if (!e.ctrlKey) {
+                            setTimeout(() => this.onChangeInput(), 0)
+                        }
+                        else {
+                            this.sendMessage()
+                            e.preventDefault()
+                        }
+                        break
+                    case 'ShiftEnter':
+                        if (e.ctrlKey) {
+                            let selectionStart = this.$refs.roomTextarea.selectionStart
+                            let selectionEnd = this.$refs.roomTextarea.selectionEnd
+                            this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            setTimeout(() => this.onChangeInput(), 0)
+                        }
+                        else if (!e.shiftKey) {
+                            setTimeout(() => this.onChangeInput(), 0)
+                        }
+                        else {
+                            this.sendMessage()
+                            e.preventDefault()
+                        }
+                        break
+                    default:
+                        console.log('qwq')
+                }
+            }
+            else if (e.key === 'ArrowUp') {
+                if (this.message) return
+                //编辑重发上一条消息
+                const ownMessages = this.messages.filter(e => e.senderId === this.currentUserId)
+                if (!ownMessages.length) return
+                const lastMessage = ownMessages[ownMessages.length - 1]
+                this.file = lastMessage.file
+                this.messageReply = lastMessage.replyMessage
+                this.message = lastMessage.content
+                this.$nextTick(() => this.$refs.roomTextarea.selectionStart = this.$refs.roomTextarea.selectionEnd = this.message.length)
+                this.editAndResend = lastMessage._id
             }
         })
 
@@ -596,6 +611,7 @@ export default {
             this.imageFile = null
             this.videoFile = null
             this.emojiOpened = false
+            this.editAndResend = false
             this.preventKeyboardFromClosing()
             setTimeout(() => this.focusTextarea(disableMobileFocus), 0)
         },
@@ -624,32 +640,13 @@ export default {
 
             if (!this.file && !message) return
 
-            this.selectedUsersTag.forEach((user) => {
-                message = message.replace(
-                    `@${user.username}`,
-                    `<usertag>${user._id}</usertag>`,
-                )
+            this.$emit('send-message', {
+                content: message,
+                file: this.file,
+                replyMessage: this.messageReply,
+                usersTag: this.selectedUsersTag,
+                resend: this.editAndResend,
             })
-
-            if (this.editedMessage._id) {
-                if (this.editedMessage.content !== message || this.file) {
-                    this.$emit('edit-message', {
-                        messageId: this.editedMessage._id,
-                        newContent: message,
-                        file: this.file,
-                        replyMessage: this.messageReply,
-                        usersTag: this.selectedUsersTag,
-                    })
-                }
-            }
-            else {
-                this.$emit('send-message', {
-                    content: message,
-                    file: this.file,
-                    replyMessage: this.messageReply,
-                    usersTag: this.selectedUsersTag,
-                })
-            }
 
             this.resetMessage(true)
         },
@@ -684,7 +681,7 @@ export default {
         },
         replyMessage(message, e) {
             if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
-            if (message.system) return
+            if (message.system || message.flash) return
             this.messageReply = message
             this.focusTextarea()
         },

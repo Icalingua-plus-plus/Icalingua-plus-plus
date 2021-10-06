@@ -33,8 +33,8 @@
                 <Multipane v-show="view !== 'kench'">
                     <!-- main chat view -->
                     <div
-                        class="panel"
-                        :style="{ minWidth: '150px', width: '300px', maxWidth: '500px' }">
+                        class="panel rooms-panel"
+                    >
                         <TheRoomsPanel
                             :rooms="rooms"
                             :selected="selectedRoom"
@@ -79,7 +79,7 @@
                             :show-footer="!isShutUp"
                             :loading-rooms="false"
                             :text-formatting="true"
-                            :mongodb="true"
+                            :members-count="membersCount"
                             @send-message="sendMessage"
                             @open-file="openImage"
                             @pokefriend="pokeFriend"
@@ -206,6 +206,7 @@ export default {
             sysInfo: '',
             historyCount: 0,
             dialogAskCheckUpdateVisible: false,
+            membersCount: 0,
         }
     },
     async created() {
@@ -226,10 +227,14 @@ export default {
             else if (e.key === 'w' && e.ctrlKey === true) {
                 window.close()
             }
+            else if (e.key === 'F1') {
+                if (this.selectedRoomId)
+                    this.panel = this.panel === 'stickers' ? '' : 'stickers'
+            }
             else if (e.key === 'Escape') {
                 if (document.webkitIsFullScreen)
                     return
-                if (this.$refs.room.messageReply)
+                if (this.$refs.room.messageReply || this.$refs.room.editAndResend || this.$refs.room.message)
                     this.$refs.room.resetMessage()
                 else if (this.$refs.room.file)
                     this.$refs.room.resetMediaFile()
@@ -330,7 +335,7 @@ Chromium ${process.versions.chrome}` : ''
         console.log('加载完成')
     },
     methods: {
-        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath}) {
+        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, resend, sticker}) {
             this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
@@ -352,7 +357,9 @@ Chromium ${process.versions.chrome}` : ''
                     }
 
             }
-            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath})
+            if (resend)
+                ipc.deleteMessage(roomId, resend)
+            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, sticker})
         },
         async fetchMessage(reset) {
             if (reset) {
@@ -376,6 +383,7 @@ Chromium ${process.versions.chrome}` : ''
                     content: '',
                     room: this.selectedRoom,
                     imgpath: url,
+                    sticker: true,
                 })
             this.$refs.room.focusTextarea()
         },
@@ -408,7 +416,12 @@ Chromium ${process.versions.chrome}` : ''
             this.selectedRoom.at = false
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
-            await this.fetchMessage(true)
+            this.fetchMessage(true)
+            if (this.selectedRoomId < 0)
+                ipc.getGroup(-this.selectedRoomId).then(e =>
+                    this.membersCount = e.member_count)
+            else
+                this.membersCount = 0
         },
         downloadImage: ipc.downloadImage,
         pokeGroup(uin) {
@@ -531,6 +544,22 @@ main div {
 ::v-deep .el-input__inner {
   background-color: var(--chat-bg-color-input);
   border: var(--chat-border-style);
+}
+
+.rooms-panel {
+  min-width: 140px;
+  width: 300px;
+  max-width: 500px;
+
+  @media (max-width: 900px) {
+    width: 200px;
+  }
+  @media (min-width: 1500px) {
+    width: 350px;
+  }
+  @media (min-width: 2000px) {
+    width: 400px;
+  }
 }
 </style>
 

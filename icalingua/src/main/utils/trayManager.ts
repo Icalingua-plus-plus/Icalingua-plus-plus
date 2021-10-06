@@ -2,12 +2,20 @@ import {app, Menu, MenuItem, Tray} from 'electron'
 import path from 'path'
 import {getMainWindow} from './windowManager'
 import exit from './exit'
-import {getUin, getNickname, getFirstUnreadRoom, getUnreadCount, getUnreadRooms} from '../ipc/botAndStorage'
+import {
+    getUin,
+    getNickname,
+    getFirstUnreadRoom,
+    getUnreadCount,
+    getUnreadRooms,
+    clearRoomUnread,
+} from '../ipc/botAndStorage'
 import {getConfig, saveConfigFile} from './configManager'
 import getStaticPath from '../../utils/getStaticPath'
 import {pushUnreadCount} from './socketIoSlave'
 import setPriority from './setPriority'
 import ui from './ui'
+import Room from '../../types/Room'
 
 let tray: Tray
 
@@ -25,7 +33,7 @@ export const createTray = () => {
     return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
-    const unreadRooms = await getUnreadRooms()
+    const unreadRooms: Room[] = await getUnreadRooms()
     const menu = Menu.buildFromTemplate([
         {
             label: `${getNickname()} (${getUin()})`,
@@ -53,7 +61,17 @@ export const updateTrayMenu = async () => {
                     ui.chroom(unreadRoom.roomId)
                 },
             }))
+            menu.append(new MenuItem({
+                label: unreadRoom.lastMessage.content,
+                enabled: false,
+            }))
         }
+        menu.append(new MenuItem({
+            label: '全部已读',
+            click() {
+                unreadRooms.forEach(e => clearRoomUnread(e.roomId))
+            },
+        }))
         menu.append(new MenuItem({type: 'separator'}))
     }
     menu.append(new MenuItem({

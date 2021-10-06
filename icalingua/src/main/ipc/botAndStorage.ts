@@ -12,14 +12,16 @@ import GroupOfFriend from '../../types/GroupOfFriend'
 import errorHandler from '../utils/errorHandler'
 import SearchableFriend from '../../types/SearchableFriend'
 import * as themes from '../utils/themes'
+import SearchableGroup from '../../types/SearchableGroup'
 
 let adapter = socketIoAdapter
+let groups: SearchableGroup[]
 
 export const {
     sendMessage, createBot, getGroupMemberInfo, getGroupMembers, getUnreadRooms,
     getUin, getNickname, getGroupFileMeta, getUnreadCount, getFirstUnreadRoom, getGroups,
     getSelectedRoom, getRoom, setOnlineStatus, logOut, sendOnlineData, getFriendsFallback,
-    clearCurrentRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
+    clearCurrentRoomUnread, clearRoomUnread, setRoomPriority, setRoomAutoDownload, setRoomAutoDownloadPath,
     pinRoom, ignoreChat, removeChat, deleteMessage, revealMessage, fetchHistory, stopFetchingHistory,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
@@ -51,7 +53,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.handle('getFriendsAndGroups', async () => {
-    const groups = await getGroups()
+    groups = await getGroups()
     let friends: GroupOfFriend[]
     let friendsFallback: SearchableFriend[]
     try {
@@ -68,6 +70,7 @@ ipcMain.on('sendMessage', (_, data) => {
     sendMessage(data)
     atCache.clear()
 })
+ipcMain.on('deleteMessage', (_, roomId: number, messageId: string) => deleteMessage(roomId, messageId))
 ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number, offset: number }) => {
     offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
@@ -112,3 +115,4 @@ ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept))
 ipcMain.handle('getAccount', adapter.getAccount)
+ipcMain.handle('getGroup', (_, gin: number) => groups.find(e => e.group_id === gin))

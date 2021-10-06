@@ -19,8 +19,11 @@
             <span v-if="item.request_type === 'friend'">
               来源：{{ item.source }}
             </span>
-            <span v-if="item.request_type === 'group'">
+            <span v-if="item.request_type === 'group'&&item.sub_type==='add'">
               申请加入：{{ item.group_name }}({{ item.group_id }})
+            </span>
+            <span v-if="item.request_type === 'group'&&item.sub_type==='invite'">
+              邀请你加入：{{ item.group_name }}({{ item.group_id }})
             </span>
           </div>
           <div>
@@ -29,7 +32,7 @@
         </div>
       </div>
       <el-button-group>
-        <el-button @click="approve(item.request_type, item.user_id, item.flag)">同意</el-button>
+        <el-button @click="approve(item.request_type, item.flag)">同意</el-button>
         <el-button @click="reject(item.request_type, item.flag)">拒绝</el-button>
       </el-button-group>
     </div>
@@ -59,7 +62,7 @@ export default {
     getAvatar(uid, group = false) {
       return getAvatarUrl(group ? -uid : uid)
     },
-    approve(type, userId, flag) {
+    approve(type, flag) {
       ipc.handleRequest(type, flag)
       this.$delete(this.request, flag)
     },

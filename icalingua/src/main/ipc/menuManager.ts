@@ -626,15 +626,13 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         }))
     else {
         if (sect) {
-            menu.append(
-                new MenuItem({
-                    label: '复制选区',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(sect)
-                    },
-                }),
-            )
+            menu.append(new MenuItem({
+                label: '复制选区',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(sect)
+                },
+            }))
         }
         if (message.content)
             menu.append(new MenuItem({
@@ -645,80 +643,124 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 },
             }))
         if (message.replyMessage && message.replyMessage.content) {
-            menu.append(
-                new MenuItem({
-                    label: '复制回复文本',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.replyMessage.content)
-                    },
-                }),
-            )
+            menu.append(new MenuItem({
+                label: '复制回复文本',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(message.replyMessage.content)
+                },
+            }))
         }
         if (message.code) {
-            menu.append(
-                new MenuItem({
-                    label: '复制代码',
-                    type: 'normal',
-                    click() {
-                        clipboard.writeText(message.code)
-                    },
-                }),
-            )
+            menu.append(new MenuItem({
+                label: '复制代码',
+                type: 'normal',
+                click() {
+                    clipboard.writeText(message.code)
+                },
+            }))
         }
-        if (message.file && message.file.type.includes('image')) {
-            menu.append(
-                new MenuItem({
+        if (message.replyMessage && message.replyMessage.file) {
+            if (message.replyMessage.file.type.startsWith('image/'))
+                menu.append(new MenuItem({
+                    label: '复制回复图片',
+                    type: 'normal',
+                    click: async () => copyImage(message.replyMessage.file.url),
+                }))
+            menu.append(new MenuItem({
+                label: '复制回复文件 URL',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(message.replyMessage.file.url)
+                },
+            }))
+            menu.append(new MenuItem({
+                label: '下载回复文件',
+                click: () => downloadFileByMessageData({
+                    message: message.replyMessage,
+                    room,
+                    action: 'download',
+                }),
+            }))
+        }
+        if (message.files) {
+            for (let i = 0; i < message.files.length; i++) {
+                const file = message.files[i]
+                if (menu.items.length && menu.items[menu.items.length - 1].type !== 'separator')
+                    //只有在上面有内容而且不是分隔符的时候加
+                    menu.append(new MenuItem({
+                        type: 'separator',
+                    }))
+                menu.append(new MenuItem({
+                    enabled: false,
+                    label: `文件#${i}`,
+                }))
+                if (file.type.startsWith('image/')) {
+                    menu.append(new MenuItem({
+                        label: '复制图片',
+                        type: 'normal',
+                        click: async () => copyImage(file.url),
+                    }))
+                    menu.append(new MenuItem({
+                        label: '添加为表情',
+                        type: 'normal',
+                        click: () => {
+                            download(file.url, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+                        },
+                    }))
+                }
+                menu.append(new MenuItem({
+                    label: '复制 URL',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(file.url)
+                    },
+                }))
+                if (file.type.startsWith('image/'))
+                    menu.append(new MenuItem({
+                        label: '使用本地查看器打开',
+                        click: () =>
+                            openImage(file.url, true),
+                    }))
+                if (file.type.startsWith('video/') || file.type.startsWith('audio/'))
+                    menu.append(new MenuItem({
+                        label: '使用本地播放器打开',
+                        click: () =>
+                            openMedia(file.url),
+                    }))
+                if (file.type.startsWith('image/'))
+                    menu.append(new MenuItem({
+                        label: '下载',
+                        click: () =>
+                            downloadImage(file.url),
+                    }))
+                else
+                    menu.append(new MenuItem({
+                        label: '下载',
+                        click: () =>
+                            downloadFileByMessageData({action: 'download', message, room}),
+                    }))
+                menu.append(new MenuItem({
+                    type: 'separator',
+                }))
+            }
+        }
+        else if (message.file) {
+            if (message.file.type.includes('image')) {
+                menu.append(new MenuItem({
                     label: '复制图片',
                     type: 'normal',
-                    click: async () => {
-                        if (message.file.url.startsWith('data:')) {
-                            // base64 图片
-                            clipboard.writeImage(nativeImage.createFromDataURL(message.file.url))
-                            return
-                        }
-                        const res = await axios.get(message.file.url, {
-                            responseType: 'arraybuffer',
-                        })
-                        const buf = Buffer.from(res.data, 'binary')
-                        clipboard.writeImage(nativeImage.createFromBuffer(buf))
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
+                    click: async () => copyImage(message.file.url),
+                }))
+                menu.append(new MenuItem({
                     label: '添加为表情',
                     type: 'normal',
                     click: () => {
                         download(message.file.url, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
                     },
-                }),
-            )
-        }
-        if (message.replyMessage && message.replyMessage.file) {
-            menu.append(
-                new MenuItem({
-                    label: '复制回复文件 URL',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.replyMessage.file.url)
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '下载回复文件',
-                    click: () => downloadFileByMessageData({
-                        message: message.replyMessage,
-                        room,
-                        action: 'download',
-                    }),
-                }),
-            )
-        }
-        if (message.file) {
-            menu.append(
-                new MenuItem({
+                }))
+            }
+            menu.append(new MenuItem({
                     label: '复制 URL',
                     type: 'normal',
                     click: () => {
@@ -727,28 +769,22 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }),
             )
             if (message.file.type.startsWith('image/'))
-                menu.append(
-                    new MenuItem({
-                        label: '使用本地查看器打开',
-                        click: () =>
-                            openImage(message.file.url, true),
-                    }),
-                )
-            if (message.file.type.startsWith('video/') || message.file.type.startsWith('audio/'))
-                menu.append(
-                    new MenuItem({
-                        label: '使用本地播放器打开',
-                        click: () =>
-                            openMedia(message.file.url),
-                    }),
-                )
-            menu.append(
-                new MenuItem({
-                    label: '下载',
+                menu.append(new MenuItem({
+                    label: '使用本地查看器打开',
                     click: () =>
-                        downloadFileByMessageData({action: 'download', message, room}),
-                }),
-            )
+                        openImage(message.file.url, true),
+                }))
+            if (message.file.type.startsWith('video/') || message.file.type.startsWith('audio/'))
+                menu.append(new MenuItem({
+                    label: '使用本地播放器打开',
+                    click: () =>
+                        openMedia(message.file.url),
+                }))
+            menu.append(new MenuItem({
+                label: '下载',
+                click: () =>
+                    downloadFileByMessageData({action: 'download', message, room}),
+            }))
         }
         menu.append(new MenuItem({
             label: '复制消息 ID',
@@ -833,15 +869,26 @@ ipcMain.on('popupStickerMenu', () => {
     ]).popup({window: getMainWindow()})
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
-    Menu.buildFromTemplate([
-        {
+    const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
+    if (/^https?:\/\//i.test(itemName)) {
+        menu.push({
+            label: '添加到本地表情',
+            type: 'normal',
+            click() {
+                download(itemName, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+            },
+        })
+    }
+    else {
+        menu.push({
             label: '删除',
             type: 'normal',
             click() {
                 fs.unlink(path.join(app.getPath('userData'), 'stickers', itemName), () => ui.message('删除成功'))
             },
-        },
-    ]).popup({window: getMainWindow()})
+        })
+    }
+    Menu.buildFromTemplate(menu).popup({window: getMainWindow()})
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
@@ -884,6 +931,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         click: () => {
             if (message.mirai && message.mirai.eqq.avatarMd5) {
                 openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
+            }
+            else if (message.mirai && message.mirai.eqq.avatarUrl) {
+                const QCLOUD_AVATAR_REGEX = /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
+                if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl))
+                    openImage(message.mirai.eqq.avatarUrl)
             }
             else {
                 openImage(getAvatarUrl(message.senderId))
@@ -984,3 +1036,16 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
     }
     menu.popup({window: getMainWindow()})
 })
+
+const copyImage = async (url: string) => {
+    if (url.startsWith('data:')) {
+        // base64 图片
+        clipboard.writeImage(nativeImage.createFromDataURL(url))
+        return
+    }
+    const res = await axios.get(url, {
+        responseType: 'arraybuffer',
+    })
+    const buf = Buffer.from(res.data, 'binary')
+    clipboard.writeImage(nativeImage.createFromBuffer(buf))
+}

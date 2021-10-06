@@ -1,6 +1,8 @@
 name: CI
 
-on: push
+on:
+  - push
+  - workflow_dispatch
 
 jobs:
   install:
@@ -239,7 +241,7 @@ jobs:
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('x86_64')
-            url="https://github.com/Clansty/Icalingua"
+            url="https://github.com/Icalingua/Icalingua"
             provides=('electron-qq')
             conflicts=('electron-qq')
             replaces=('electron-qq')
@@ -303,7 +305,7 @@ jobs:
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('i686')
-            url="https://github.com/Clansty/Icalingua"
+            url="https://github.com/Icalingua/Icalingua"
             provides=('electron-qq')
             conflicts=('electron-qq')
             replaces=('electron-qq')
@@ -367,7 +369,7 @@ jobs:
             optdepends=('mongodb-bin: Provides storage'
                         'redis: Provides storage')
             arch=('aarch64')
-            url="https://github.com/Clansty/Icalingua"
+            url="https://github.com/Icalingua/Icalingua"
             provides=('electron-qq')
             conflicts=('electron-qq')
             replaces=('electron-qq')
