@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
+import { DBVersion, MsgTableName } from "../../../icalingua/src/types/SQLTableTypes";
 
 const upg5to6 = async (db: Knex) => {
   const msgTableNames = await db<MsgTableName>("msgTableName").select(
