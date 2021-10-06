@@ -898,8 +898,8 @@ const adapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = await storage.fetchMessages(roomId, offset, 20)
-        if (!offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
+        const messages = await storage.fetchMessages(roomId, offset, 20) || []
+        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
