@@ -129,7 +129,6 @@ export const updateTrayMenu = async () => {
 export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
-    console.log(unread)
     const title = ui.getSelectedRoomName()
         ? ui.getSelectedRoomName() + ' — Icalingua'
         : 'Icalingua'
