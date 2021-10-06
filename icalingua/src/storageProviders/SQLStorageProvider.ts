@@ -411,7 +411,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 .where('unreadCount', '>', 0)
                 .where('priority', '>=', priority)
                 .count('roomId')
-            return Number(unreadRooms[0].count)
+            return Number(unreadRooms[0]['count(`roomId`)'])
         } catch (e) {
 
         }
