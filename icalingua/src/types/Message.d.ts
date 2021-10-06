@@ -29,7 +29,3 @@ export default interface Message {
     flash?: boolean;
     title?: string;
 }
-
-interface MessageInIDB extends Message {
-    roomId: number;
-}
