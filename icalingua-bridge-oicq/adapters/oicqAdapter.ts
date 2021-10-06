@@ -136,11 +136,14 @@ const eventHandlers = {
         }
 
         //可能要发通知，所以由客户端来决定
+        let image
+        if (message.file && message.file.type.startsWith('image/'))
+            image = message.file.url
         broadcast('notify', {
             avatar: avatar,
             priority: room.priority,
             roomId, at, isSelfMsg,
-            image: message.file?.url,
+            image,
             data: {
                 title: room.roomName,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
