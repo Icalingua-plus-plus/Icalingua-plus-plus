@@ -204,14 +204,10 @@ export default class SQLStorageProvider implements StorageProvider {
    *
    * 这个方法在这里主要干了这些事情：
    * 1. 如果是 PostgreSQL 数据库，那么根据 QQ 号建立一个 Schema，把这个 QQ 号产生的信息存在里面。
-   * 2. 检验并建立 `dbVersion` 和 `msgTableName` 这两个特有表 ，目的是存放与升级有关的信息。
-   * 其中 `msgTableNameTable` 相当于 `msg${roomId}` 的主表。
-   * 3. 检验并建立 `rooms` 和 `ignoredChats` 这两个 Icalingua 需要的表。前者存放聊天房间，
-   * 后者存放被忽略的聊天房间。
+   * 2. 检验并建立 `dbVersion` 这个特有表 ，目的是存放与升级有关的信息。
+   * 3. 检验并建立 `rooms`、`messages` 和 `ignoredChats` 这三个 Icalingua 需要的表。`rooms` 存放聊天房间，
+   * `messages` 存放**所有房间的**聊天记录，`ignoredChats` 存放被忽略的聊天房间。
    * 4. 检查 `dbVersion` 中存放的数据库版本与最新版本是否一致，若不一致，则启动升级脚本 {@link updateDB}。
-   *
-   * 值得注意的是，并非所有的表都在这里建立。`msg${roomId}`——也就是存放特定房间聊天记录的表——
-   * 并不在这里检测与建立，而是由一个独立的方法 {@link createMsgTable} 负责
    */
   async connect(): Promise<void> {
     // PostgreSQL 特有功能，可用一个数据库存放所有用户的聊天数据
@@ -310,9 +306,6 @@ export default class SQLStorageProvider implements StorageProvider {
 
   /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
    * 对应 room 的“增”操作。
-   *
-   * 若 `msg${roomId}` 表不存在，
-   * 则调用 {@link createMsgTable} 方法新建一个表。
    *
    * 在“新房间收到新消息”等需要新增房间的事件时被调用。
    */
@@ -482,8 +475,7 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   /** 实现 {@link StorageProvider} 类的 `addMessage` 方法，
-   * 是对 `msg${roomId}` 的“增”操作。若 `msg${roomId}` 表不存在，
-   * 则调用 {@link createMsgTable} 方法新建一个表。
+   * 是对 `msg${roomId}` 的“增”操作。
    *
    * 在收到消息时被调用。
    */
@@ -517,8 +509,7 @@ export default class SQLStorageProvider implements StorageProvider {
   }
 
   /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
-   * 是对 `msg${roomId}` 的“查多个”操作。若 `msg${roomId}` 表不存在，
-   * 则调用 {@link createMsgTable} 方法新建一个表，从而避免因表不存在而报错。
+   * 是对 `msg${roomId}` 的“查多个”操作。
    *
    * 在进入房间时，该方法被调用。
    */
