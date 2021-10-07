@@ -1,12 +1,12 @@
 {
   "name": "icalingua",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "GPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "icalingua.desktop",
-  "homepage": "https://github.com/Clansty/Icalingua",
+  "homepage": "https://github.com/Icalingua/Icalingua",
   "scripts": {
     "build": "ts-node .electron-vue/build.ts && electron-builder",
     "build:win": "electron-builder --win",
