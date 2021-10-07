@@ -2,6 +2,7 @@ import fs from "fs";
 import knex, { Knex } from "knex";
 import lodash from "lodash";
 import path from "path";
+import errorHandler from "../main/utils/errorHandler";
 import IgnoreChatInfo from "../types/IgnoreChatInfo";
 import Message from "../types/Message";
 import Room from "../types/Room";
@@ -101,7 +102,9 @@ export default class SQLStorageProvider implements StorageProvider {
         };
       }
       return null;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 私有方法，将 room 从数据库内格式转换成 icalingua 使用的格式 */
@@ -118,7 +121,9 @@ export default class SQLStorageProvider implements StorageProvider {
           at: JSON.parse(room.at),
         } as Room;
       return null;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 私有方法，将 icalingua 的 message 转换成适合放在数据库里的格式 */
@@ -137,7 +142,9 @@ export default class SQLStorageProvider implements StorageProvider {
           roomId,
         };
       return null;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 私有方法，将 message 从数据库内格式转换成 icalingua 使用的格式 */
@@ -157,7 +164,9 @@ export default class SQLStorageProvider implements StorageProvider {
         // 实际上 roomId 也被返回了，姑且不管
       }
       return null;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 私有方法，用来根据当前数据库版本对数据库进行升级，从而在 Icalingua 使用的数据类型发生改变时，数据库可以存放下它们 */
@@ -182,7 +191,9 @@ export default class SQLStorageProvider implements StorageProvider {
           break;
       }
       return true;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 connect 方法。
@@ -216,17 +227,6 @@ export default class SQLStorageProvider implements StorageProvider {
         await this.db(`dbVersion`).insert({ dbVersion: dbVersionLatest });
       }
 
-      // 建表存放聊天数据库名以便日后升级
-      const hasMsgTableNameTable = await this.db.schema.hasTable(
-        `msgTableName`
-      );
-      if (!hasMsgTableNameTable) {
-        await this.db.schema.createTable("msgTableName", (table) => {
-          table.increments("id").primary();
-          table.string("tableName");
-        });
-      }
-
       // 建表存放聊天房间
       const hasRoomTable = await this.db.schema.hasTable(`rooms`);
       if (!hasRoomTable) {
@@ -234,7 +234,6 @@ export default class SQLStorageProvider implements StorageProvider {
           table
             .string("roomId")
             .unique()
-            .index()
             .primary();
           table.string("roomName");
           table.string("avatar");
@@ -257,7 +256,6 @@ export default class SQLStorageProvider implements StorageProvider {
           table
             .string("_id")
             .unique()
-            .index()
             .primary();
           table.string("senderId");
           table.string("username");
@@ -278,6 +276,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.boolean("flash").nullable();
           table.string("title", 24).nullable();
           table.bigInteger("roomId").index();
+          table.foreign("roomId").references("rooms.roomId");
         });
       }
 
@@ -288,8 +287,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table
             .bigInteger("id") // 在 pgSQL 里会被返回成 string，不知有无 bug
             .unique()
-            .primary()
-            .index();
+            .primary();
           table.string("name");
         });
       }
@@ -302,7 +300,9 @@ export default class SQLStorageProvider implements StorageProvider {
       if (dbVersion[0].dbVersion < dbVersionLatest) {
         await this.updateDB(dbVersion[0].dbVersion);
       }
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
@@ -316,7 +316,9 @@ export default class SQLStorageProvider implements StorageProvider {
   async addRoom(room: Room): Promise<any> {
     try {
       return await this.db(`rooms`).insert(this.roomConToDB(room));
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `updateRoom` 方法，
@@ -329,7 +331,9 @@ export default class SQLStorageProvider implements StorageProvider {
       await this.db(`rooms`)
         .where("roomId", "=", roomId)
         .update(this.roomConToDB(room));
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `removeRoom` 方法，
@@ -342,7 +346,9 @@ export default class SQLStorageProvider implements StorageProvider {
       await this.db(`rooms`)
         .where("roomId", "=", roomId)
         .delete();
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getAllRooms` 方法，
@@ -356,7 +362,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .select("*")
         .orderBy("utime", "desc");
       return rooms.map((room) => this.roomConFromDB(room));
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getRoom` 方法，
@@ -370,7 +378,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("roomId", "=", roomId)
         .select("*");
       return this.roomConFromDB(room[0]);
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getUnreadCount` 方法，
@@ -385,7 +395,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("priority", ">=", priority)
         .count("roomId");
       return Number(unreadRooms[0]["count(`roomId`)"]);
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getFirstUnreadRoom` 方法，
@@ -402,7 +414,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .select("*");
       if (unreadRooms.length >= 1) return unreadRooms[0];
       return null;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getIgnoredChats` 方法，
@@ -413,7 +427,9 @@ export default class SQLStorageProvider implements StorageProvider {
   async getIgnoredChats(): Promise<IgnoreChatInfo[]> {
     try {
       return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `isChatIgnored` 方法，
@@ -429,7 +445,9 @@ export default class SQLStorageProvider implements StorageProvider {
         id
       );
       return ignoredChats.length !== 0;
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `addIgnoredChat` 方法，
@@ -440,7 +458,9 @@ export default class SQLStorageProvider implements StorageProvider {
   async addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
     try {
       await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info);
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `removeIgnoredChat` 方法，
@@ -453,7 +473,9 @@ export default class SQLStorageProvider implements StorageProvider {
       await this.db<IgnoreChatInfo>(`ignoredChats`)
         .where("id", "=", roomId)
         .delete();
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `addMessage` 方法，
@@ -467,7 +489,9 @@ export default class SQLStorageProvider implements StorageProvider {
       await this.db<Message>("messages").insert(
         this.msgConToDB(message, roomId)
       );
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `updateMessage` 方法，
@@ -484,7 +508,9 @@ export default class SQLStorageProvider implements StorageProvider {
       await this.db<Message>("messages")
         .where("_id", "=", `${messageId}`)
         .update(message);
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
@@ -506,7 +532,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .offset(skip)
         .select("*");
       return messages.reverse().map((message) => this.msgConFromDB(message));
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `getMessage` 方法，
@@ -522,7 +550,9 @@ export default class SQLStorageProvider implements StorageProvider {
         .select("*");
       if (message.length === 0) return null;
       return this.msgConFromDB(message[0]);
-    } catch (e) {}
+    } catch (e) {
+      errorHandler(e);
+    }
   }
 
   /** 实现 {@link StorageProvider} 类的 `addMessages` 方法，
