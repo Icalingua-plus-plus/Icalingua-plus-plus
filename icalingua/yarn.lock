@@ -6716,7 +6716,8 @@ fsevents@~2.3.1:
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
     oicq: ^1.21.0
-    pg: ^8.6.0
+    pg: ^8.7.1
+    pg-query-stream: ^4.2.1
     sass: ^1.34.1
     sass-loader: ^10.1.1
     silk-sdk: ^0.2.2
@@ -9970,6 +9971,15 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
+"pg-cursor@npm:^2.7.1":
+  version: 2.7.1
+  resolution: "pg-cursor@npm:2.7.1"
+  peerDependencies:
+    pg: ^8
+  checksum: 8e1c5d20f64f7afd74947e5c1ee4edd6eef45d85d42952fc86e80dfe763deb2c9aba5050638398ca6f8e8eda0e4dff22f8fea6ed40a4eedae471f0150b4b67ca
+  languageName: node
+  linkType: hard
+
 "pg-int8@npm:1.0.1":
   version: 1.0.1
   resolution: "pg-int8@npm:1.0.1"
@@ -9977,12 +9987,12 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"pg-pool@npm:^3.3.0":
-  version: 3.3.0
-  resolution: "pg-pool@npm:3.3.0"
+"pg-pool@npm:^3.4.1":
+  version: 3.4.1
+  resolution: "pg-pool@npm:3.4.1"
   peerDependencies:
     pg: ">=8.0"
-  checksum: f85cef5b3f40005c4ab06be0d985447c1518fd90b2f0436e5855a6c95b1c0033f3f9d40cd2b27b10a690fb2a09255828ecc9f6ec44644d01a7388a1efa42f6ed
+  checksum: 50d68bd99a5c7ca32ad93ba97462528d6a8df87c5cf5a0743a3f0946bc57be82a45025e67eb8a6e522ed25316747864e5ce043339577a71f8f430e1364da2727
   languageName: node
   linkType: hard
 
@@ -9990,6 +10000,15 @@ fsevents@~2.3.1:
   version: 1.5.0
   resolution: "pg-protocol@npm:1.5.0"
   checksum: b839d12cafe942ef9cbc5b13c174eb2356804fb4fe8ead8279f46a36be90722d19a91409955beb8a3d5301639c44854e49749de4aef02dc361fee3e2a61fb1e4
+  languageName: node
+  linkType: hard
+
+"pg-query-stream@npm:^4.2.1":
+  version: 4.2.1
+  resolution: "pg-query-stream@npm:4.2.1"
+  dependencies:
+    pg-cursor: ^2.7.1
+  checksum: 699b3b78ce8e5c080a49913aa50a00c264421ce839cce362920072c615dc3d3b4105896f0953d1b4acd95554a46e8b752eba3038ff5262da97654d234f8cdbb7
   languageName: node
   linkType: hard
 
@@ -10006,14 +10025,14 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"pg@npm:^8.6.0":
-  version: 8.6.0
-  resolution: "pg@npm:8.6.0"
+"pg@npm:^8.7.1":
+  version: 8.7.1
+  resolution: "pg@npm:8.7.1"
   dependencies:
     buffer-writer: 2.0.0
     packet-reader: 1.0.0
     pg-connection-string: ^2.5.0
-    pg-pool: ^3.3.0
+    pg-pool: ^3.4.1
     pg-protocol: ^1.5.0
     pg-types: ^2.1.0
     pgpass: 1.x
@@ -10022,7 +10041,7 @@ fsevents@~2.3.1:
   peerDependenciesMeta:
     pg-native:
       optional: true
-  checksum: 37d5d656bf827409c33b3f44cbefc2a435238252f69dfae38112dc35c191090194ab2d5b221ae7b8dc9beed24c71f7f8a97f891130272c6db831d2f9f689d07c
+  checksum: 3a17d9a73df9c9f5f99400751144f9d5e8dbe1948ca44f5b5eecb2166ad78cab36d070c2a97438cd3a5d1d083e70af1d3e0aad4554a45fe74b77d98ed4487242
   languageName: node
   linkType: hard
 
