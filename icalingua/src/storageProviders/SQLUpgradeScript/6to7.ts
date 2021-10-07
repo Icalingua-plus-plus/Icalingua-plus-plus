@@ -1,9 +1,12 @@
 import { Knex } from "knex";
 import Message from "../../types/Message";
-import Room from "../../types/Room";
 import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 
 const upg6to7 = async (db: Knex) => {
+  console.log(
+    "Applying SQL Storage Provider Update:",
+    "Version 7 Fill the Rabbit Hole"
+  );
   const msgTableNames = await db<MsgTableName>("msgTableName").select(
     "tableName"
   );
@@ -12,20 +15,23 @@ const upg6to7 = async (db: Knex) => {
     const PAry = msgTableNamesAry.map(async (msgTableName) => {
       return new Promise<void>((resolve) => {
         const roomId = msgTableName.substring(3);
-          const messageStream = db<Message>(msgTableName)
-            .select("*")
-            .stream();
-          messageStream.on("data", async (data) => {
-            try {
-              await db<Message>("messages").insert({ ...data, roomId: Number(roomId) });
-            } catch (e) {
-              console.error(e);
-            }
-          });
-          messageStream.on("end", async () => {
-            await db.schema.dropTable(msgTableName);
-            resolve();
-          });
+        const messageStream = db<Message>(msgTableName)
+          .select("*")
+          .stream();
+        messageStream.on("data", async (data) => {
+          try {
+            await db<Message>("messages").insert({
+              ...data,
+              roomId: Number(roomId),
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        });
+        messageStream.on("end", async () => {
+          await db.schema.dropTable(msgTableName);
+          resolve();
+        });
       });
     });
     await Promise.all(PAry);
