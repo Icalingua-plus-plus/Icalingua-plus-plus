@@ -274,8 +274,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.boolean("reveal").nullable();
           table.boolean("flash").nullable();
           table.string("title", 24).nullable();
-          table.string("roomId").index();
-          table.foreign("roomId").references("rooms.roomId");
+          table.bigInteger("roomId").index();
         });
       }
 
