@@ -14,6 +14,7 @@ import upg2to3 from "./SQLUpgradeScript/2to3";
 import upg3to4 from "./SQLUpgradeScript/3to4";
 import upg4to5 from "./SQLUpgradeScript/4to5";
 import upg5to6 from "./SQLUpgradeScript/5to6";
+import upg6to7 from "./SQLUpgradeScript/6to7";
 
 const dbVersionLatest = 7;
 
@@ -187,6 +188,8 @@ export default class SQLStorageProvider implements StorageProvider {
           await upg4to5(this.db);
         case 5:
           await upg5to6(this.db);
+        case 6:
+          await upg6to7(this.db);
         default:
           break;
       }
@@ -275,7 +278,7 @@ export default class SQLStorageProvider implements StorageProvider {
           table.boolean("reveal").nullable();
           table.boolean("flash").nullable();
           table.string("title", 24).nullable();
-          table.bigInteger("roomId").index();
+          table.string("roomId").index();
           table.foreign("roomId").references("rooms.roomId");
         });
       }
