@@ -1102,6 +1102,10 @@ const adapter = {
     sliderLogin(ticket: string) {
         bot.sliderLogin(ticket)
     },
+
+    acquireGfs(gin: number) {
+        return bot.acquireGfs(gin)
+    },
 }
 
 export default adapter

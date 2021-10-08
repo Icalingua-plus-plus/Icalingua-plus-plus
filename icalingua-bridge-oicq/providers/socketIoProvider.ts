@@ -7,6 +7,9 @@ import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
 import {app} from './expressProvider'
 import {version, protocolVersion} from '../package.json'
+import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
+
+type ClientRoles = 'main' | 'fileMgr'
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
@@ -22,16 +25,23 @@ io.on('connection', (socket) => {
     socket.emit('requireAuth', salt, {
         version, protocolVersion,
     })
-    socket.once('auth', async (sign: string) => {
+    socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
         if (await verify(sign, salt, config.pubKey)) {
             console.log('客户端验证成功')
             socket.emit('authSucceed')
-            socket.join('authed')
-            registerSocketHandlers(io, socket)
-            if (loggedIn)
-                adapter.sendOnlineData()
-            else
-                socket.emit('requestSetup', userConfig.account)
+            switch (role) {
+                case 'main':
+                    socket.join('authed')
+                    registerSocketHandlers(io, socket)
+                    if (loggedIn)
+                        adapter.sendOnlineData()
+                    else
+                        socket.emit('requestSetup', userConfig.account)
+                    break
+                case 'fileMgr':
+                    registerFileMgrHandler(io, socket)
+                    break
+            }
         }
         else {
             console.log('客户端验证失败')
