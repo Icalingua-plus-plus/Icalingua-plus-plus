@@ -44,6 +44,11 @@ let loggedIn = false
 let account: LoginForm
 
 const attachSocketEvents = () => {
+    socket.off('connect_error')
+    socket.on('connect_error', (e) => {
+        ui.setOffline(`与服务器连接断开：${e.message}`)
+    })
+    socket.on('connect', () => ui.setOnline())
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
