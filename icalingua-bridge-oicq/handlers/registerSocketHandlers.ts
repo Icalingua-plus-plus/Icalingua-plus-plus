@@ -2,6 +2,7 @@ import {Server, Socket} from 'socket.io'
 import adapter from '../adapters/oicqAdapter'
 import Message from '../types/Message'
 import SendImgTokenManager from '../utils/SendImgTokenManager'
+import gfsTokenManager from '../utils/gfsTokenManager'
 
 export default (io: Server, socket: Socket) => {
     socket.on('addRoom', adapter.addRoom)
@@ -43,6 +44,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('setGroupKick', adapter.setGroupKick)
     socket.on('login', adapter.createBot)
     socket.on('requestToken', cb => cb(SendImgTokenManager.create()))
+    socket.on('requestGfsToken', (gin: number, cb) => cb(gfsTokenManager.create(gin)))
     socket.on('login-verify-reLogin', adapter.reLogin)
     socket.on('login-slider-ticket', adapter.sliderLogin)
 }
