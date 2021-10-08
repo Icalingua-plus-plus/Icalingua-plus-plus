@@ -8,6 +8,7 @@ import md5 from 'md5'
 import {app} from './expressProvider'
 import {version, protocolVersion} from '../package.json'
 import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
+import gfsTokenManager from '../utils/gfsTokenManager'
 
 type ClientRoles = 'main' | 'fileMgr'
 
@@ -26,27 +27,34 @@ io.on('connection', (socket) => {
         version, protocolVersion,
     })
     socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
-        if (await verify(sign, salt, config.pubKey)) {
-            console.log('客户端验证成功')
-            socket.emit('authSucceed')
-            switch (role) {
-                case 'main':
+        switch (role) {
+            case 'main':
+                if (await verify(sign, salt, config.pubKey)) {
+                    console.log('客户端验证成功')
+                    socket.emit('authSucceed')
                     socket.join('authed')
                     registerSocketHandlers(io, socket)
                     if (loggedIn)
                         adapter.sendOnlineData()
                     else
                         socket.emit('requestSetup', userConfig.account)
-                    break
-                case 'fileMgr':
-                    registerFileMgrHandler(io, socket)
-                    break
-            }
-        }
-        else {
-            console.log('客户端验证失败')
-            socket.emit('authFailed')
-            socket.disconnect()
+                }
+                else {
+                    console.log('客户端验证失败')
+                    socket.emit('authFailed')
+                    socket.disconnect()
+                }
+                break
+            case 'fileMgr':
+                const gin = gfsTokenManager.verify(sign)
+                if (gin)
+                    registerFileMgrHandler(io, socket, gin)
+                else {
+                    console.log('客户端验证失败')
+                    socket.emit('authFailed')
+                    socket.disconnect()
+                }
+                break
         }
     })
 })
