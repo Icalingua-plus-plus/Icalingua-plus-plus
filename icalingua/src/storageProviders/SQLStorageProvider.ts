@@ -148,6 +148,7 @@ export default class SQLStorageProvider implements StorageProvider {
   private msgConFromDB(message: Record<string, any>): Message {
     try {
       if (message) {
+        delete(message.roomId)
         return {
           ...message,
           senderId: Number(message.senderId),
@@ -158,7 +159,6 @@ export default class SQLStorageProvider implements StorageProvider {
           at: JSON.parse(message.at),
           mirai: JSON.parse(message.mirai),
         } as Message;
-        // 实际上 roomId 也被返回了，姑且不管
       }
       return null;
     } catch (e) {
@@ -256,12 +256,12 @@ export default class SQLStorageProvider implements StorageProvider {
           table.string("username");
           table.text("content").nullable();
           table.text("code").nullable();
-          table.string("timestamp").index();
+          table.string("timestamp");
           table.string("date");
           table.string("role");
           table.text("file").nullable();
           table.text("files").nullable();
-          table.bigInteger("time");
+          table.bigInteger("time").index();
           table.text("replyMessage").nullable();
           table.string("at").nullable();
           table.boolean("deleted").nullable();
