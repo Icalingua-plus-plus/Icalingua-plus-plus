@@ -29,7 +29,3 @@ export default interface Message {
     flash?: boolean;
     title?: string;
 }
-
-export interface MessageInSQLDB extends Message {
-    roomId: number | string;
-}
