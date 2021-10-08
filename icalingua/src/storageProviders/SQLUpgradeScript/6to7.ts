@@ -1,11 +1,12 @@
 import { Knex } from "knex";
-import Message from "../../types/Message";
+import Message, { MessageInSQLDB } from "../../types/Message";
 import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
 
 const upg6to7 = async (db: Knex) => {
   console.log(
-    "Applying SQL Storage Provider Update:",
-    "Version 7 Fill the Rabbit Hole"
+    "Applying SQL Storage Provider Update:\n",
+    "Version 7\n",
+    "Fill the Rabbit Hole"
   );
   const msgTableNames = await db<MsgTableName>("msgTableName").select(
     "tableName"
@@ -18,9 +19,9 @@ const upg6to7 = async (db: Knex) => {
         const messageStream = db<Message>(msgTableName)
           .select("*")
           .stream();
-        messageStream.on("data", async (data) => {
+        messageStream.on("data", async (data: Message) => {
           try {
-            await db<Message>("messages").insert({
+            await db<MessageInSQLDB>("messages").insert({
               ...data,
               roomId: Number(roomId),
             });

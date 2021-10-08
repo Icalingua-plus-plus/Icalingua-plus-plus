@@ -4,7 +4,7 @@ import lodash from "lodash";
 import path from "path";
 import errorHandler from "../main/utils/errorHandler";
 import IgnoreChatInfo from "../types/IgnoreChatInfo";
-import Message from "../types/Message";
+import Message, { MessageInSQLDB } from "../types/Message";
 import Room from "../types/Room";
 import { DBVersion, MsgTableName } from "../types/SQLTableTypes";
 import StorageProvider from "../types/StorageProvider";
@@ -25,10 +25,6 @@ interface PgMyOpt {
   password: string;
   database: string;
   dataPath?: never;
-}
-
-interface MessageInSQLDB extends Message {
-  roomId: number | string;
 }
 
 /** SQLite 存放 DB 文件需要的信息的类型定义 */
