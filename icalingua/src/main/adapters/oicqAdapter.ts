@@ -23,7 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
-    StrangerInfo, SyncMessageEventData, GroupMuteEventData, QrcodeEventData,
+    SyncMessageEventData, GroupMuteEventData, QrcodeEventData,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -813,7 +813,9 @@ const adapter: OicqAdapter = {
                 return
             }
             const gfs = bot.acquireGfs(-roomId)
-            gfs.upload(file.path).then(ui.closeLoading)
+            //TODO: 在界面上反应上传进度
+            gfs.upload(file.path, undefined, undefined, console.log)
+                .then(ui.closeLoading)
             ui.message('文件上传中')
             return
         }
