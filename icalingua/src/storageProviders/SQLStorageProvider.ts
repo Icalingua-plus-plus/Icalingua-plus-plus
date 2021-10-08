@@ -2,11 +2,10 @@ import fs from "fs";
 import knex, { Knex } from "knex";
 import lodash from "lodash";
 import path from "path";
-import errorHandler from "../main/utils/errorHandler";
 import IgnoreChatInfo from "../types/IgnoreChatInfo";
-import Message, { MessageInSQLDB } from "../types/Message";
+import Message from "../types/Message";
 import Room from "../types/Room";
-import { DBVersion, MsgTableName } from "../types/SQLTableTypes";
+import { DBVersion, MessageInSQLDB } from "../types/SQLTableTypes";
 import StorageProvider from "../types/StorageProvider";
 import upg0to1 from "./SQLUpgradeScript/0to1";
 import upg1to2 from "./SQLUpgradeScript/1to2";
@@ -100,7 +99,7 @@ export default class SQLStorageProvider implements StorageProvider {
       }
       return null;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -119,7 +118,7 @@ export default class SQLStorageProvider implements StorageProvider {
         } as Room;
       return null;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -140,7 +139,7 @@ export default class SQLStorageProvider implements StorageProvider {
         };
       return null;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -148,7 +147,7 @@ export default class SQLStorageProvider implements StorageProvider {
   private msgConFromDB(message: Record<string, any>): Message {
     try {
       if (message) {
-        delete(message.roomId)
+        delete message.roomId;
         return {
           ...message,
           senderId: Number(message.senderId),
@@ -162,7 +161,7 @@ export default class SQLStorageProvider implements StorageProvider {
       }
       return null;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -191,7 +190,7 @@ export default class SQLStorageProvider implements StorageProvider {
       }
       return true;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -295,7 +294,7 @@ export default class SQLStorageProvider implements StorageProvider {
         await this.updateDB(dbVersion[0].dbVersion);
       }
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -308,7 +307,7 @@ export default class SQLStorageProvider implements StorageProvider {
     try {
       return await this.db(`rooms`).insert(this.roomConToDB(room));
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -323,7 +322,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("roomId", "=", roomId)
         .update(this.roomConToDB(room));
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -338,7 +337,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("roomId", "=", roomId)
         .delete();
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -354,7 +353,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .orderBy("utime", "desc");
       return rooms.map((room) => this.roomConFromDB(room));
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -370,7 +369,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .select("*");
       return this.roomConFromDB(room[0]);
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -387,7 +386,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .count("roomId");
       return Number(unreadRooms[0]["count(`roomId`)"]);
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -406,7 +405,7 @@ export default class SQLStorageProvider implements StorageProvider {
       if (unreadRooms.length >= 1) return unreadRooms[0];
       return null;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -419,7 +418,7 @@ export default class SQLStorageProvider implements StorageProvider {
     try {
       return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -437,7 +436,7 @@ export default class SQLStorageProvider implements StorageProvider {
       );
       return ignoredChats.length !== 0;
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -450,7 +449,7 @@ export default class SQLStorageProvider implements StorageProvider {
     try {
       await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info);
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -465,7 +464,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("id", "=", roomId)
         .delete();
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -480,7 +479,7 @@ export default class SQLStorageProvider implements StorageProvider {
         this.msgConToDB(message, roomId)
       );
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -499,7 +498,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .where("_id", "=", `${messageId}`)
         .update(message);
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -522,7 +521,7 @@ export default class SQLStorageProvider implements StorageProvider {
         .select("*");
       return messages.reverse().map((message) => this.msgConFromDB(message));
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 
@@ -540,7 +539,7 @@ export default class SQLStorageProvider implements StorageProvider {
       if (message.length === 0) return null;
       return this.msgConFromDB(message[0]);
     } catch (e) {
-      errorHandler(e);
+      throw e;
     }
   }
 

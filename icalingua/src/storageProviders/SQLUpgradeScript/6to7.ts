@@ -1,6 +1,10 @@
 import { Knex } from "knex";
-import Message, { MessageInSQLDB } from "../../types/Message";
-import { DBVersion, MsgTableName } from "../../types/SQLTableTypes";
+import Message from "../../types/Message";
+import {
+  DBVersion,
+  MessageInSQLDB,
+  MsgTableName,
+} from "../../types/SQLTableTypes";
 
 const upg6to7 = async (db: Knex) => {
   console.log(
