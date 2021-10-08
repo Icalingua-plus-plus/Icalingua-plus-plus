@@ -23,14 +23,13 @@
 
    ![ECC 密钥生成页面](https://user-images.githubusercontent.com/18461360/130779855-1cdc26ad-0037-4bbf-930c-07e8cbc2f6c9.png)
 
+   **注意：**请不要使用自带的公钥 `207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6`，它对应的私钥为 `0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`。
+
+   该密钥仅适用于本地环境及测试环境，暴露在公网中是非常危险的。
+
 5. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
 
    ```yaml
-   account:
-     qq: 帐号
-     passwd: 密码
-     protocol: 5 # 1:安卓手机(默认) 2:aPad 3:安卓手表 4:MacOS 5:iPad
-   db: mongodb://localhost # MongoDB 连接字符串
    pubKey: 第三步生成的公钥
    host: 0.0.0.0 # 如果有反代工具，可以改成 localhost 或者 127.0.0.1
    port: 6789 # 如果需要运行多个实例，可以设置不同端口
@@ -56,6 +55,8 @@ adapter: socketIo # 将 Icalingua 切换到自有协议
 server: http(s)://服务器的地址，若非 HTTP80 或 HTTPS443 需要:端口号
 privateKey: 安装的第三步生成的私钥
 ```
+
+首次运行的时候会弹出登录界面，给 Bridge 配置账号和数据库。需要注意的是数据库是相对于服务器的地址
 
 ## 登录握手细节
 
