@@ -110,4 +110,6 @@ export default interface Adapter {
     setGroupKick(gin: number, uin: number): any
 
     setGroupLeave(gin: number): any
+
+    requestGfsToken(gin:number): Promise<string>
 }
