@@ -26,7 +26,7 @@ import {
     removeChat, revealMessage, sendMessage,
     setRoomAutoDownload, setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo,
+    setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo, requestGfsToken,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -215,6 +215,14 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '群文件',
+            async click() {
+                const token = await requestGfsToken(-room.roomId)
+                ui.message(token)
+                clipboard.writeText(token)
             },
         }))
         menu.append(new MenuItem({

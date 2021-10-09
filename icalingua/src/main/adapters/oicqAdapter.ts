@@ -718,6 +718,9 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    requestGfsToken(gin: number): Promise<string> {
+        return Promise.resolve('');
+    },
     async getUnreadRooms(): Promise<Room[]> {
         const rooms = await storage.getAllRooms()
         return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority)
@@ -1297,7 +1300,7 @@ const adapter: OicqAdapter = {
             case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
-    },
+    }
 }
 
 export default adapter
