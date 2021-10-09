@@ -2,7 +2,7 @@ import {createServer} from 'http'
 import {Server} from 'socket.io'
 import {verify} from 'noble-ed25519'
 import {config, userConfig} from './configManager'
-import adapter, {loggedIn} from '../adapters/oicqAdapter'
+import adapter, {getBot, loggedIn} from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
 import {app} from './expressProvider'
@@ -47,8 +47,11 @@ io.on('connection', (socket) => {
                 break
             case 'fileMgr':
                 const gin = gfsTokenManager.verify(sign)
-                if (gin)
+                if (gin) {
                     registerFileMgrHandler(io, socket, gin)
+                    console.log('客户端验证成功')
+                    socket.emit('authSucceed', gin, getBot().gl.get(gin))
+                }
                 else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')

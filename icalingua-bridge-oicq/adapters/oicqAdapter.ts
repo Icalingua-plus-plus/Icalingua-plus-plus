@@ -1109,3 +1109,4 @@ const adapter = {
 }
 
 export default adapter
+export const getBot = () => bot
