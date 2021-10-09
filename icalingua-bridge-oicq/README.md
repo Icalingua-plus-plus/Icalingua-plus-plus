@@ -30,6 +30,7 @@
 5. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
 
    ```yaml
+   host: 0.0.0.0 # 监听地址。如果有反代工具，可以改成 localhost 或者 127.0.0.1
    pubKey: 第三步生成的公钥
    custom: false # 自定义插件功能，默认禁用
    port: 6789 # 如果需要运行多个实例，可以设置不同端口
