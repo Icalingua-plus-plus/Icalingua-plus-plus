@@ -13,9 +13,9 @@
 
 首先有一台服务器。
 
-1. 服务器需要安装 MongoDB 数据库，以及 `ffmpeg` 命令
+1. 服务器需要安装 `ffmpeg` 命令，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
 
-2. 运行 `yarn install` 安装必要依赖。
+2. 运行 `yarn` 安装必要依赖。
 
 3. （可选）运行 `yarn compile` 将 ts 转换为 js，不转换也可运行，但是转换后效率可能高点。
 
@@ -30,10 +30,10 @@
 5. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
 
    ```yaml
+   host: 0.0.0.0 # 监听地址。如果有反代工具，可以改成 localhost 或者 127.0.0.1
    pubKey: 第三步生成的公钥
-   host: 0.0.0.0 # 如果有反代工具，可以改成 localhost 或者 127.0.0.1
-   port: 6789 # 如果需要运行多个实例，可以设置不同端口
    custom: false # 自定义插件功能，默认禁用
+   port: 6789 # 如果需要运行多个实例，可以设置不同端口
    ```
 
 6. 若没有执行第二步，执行 `yarn start`，否则在 `build` 文件夹中执行 `node index`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）。
