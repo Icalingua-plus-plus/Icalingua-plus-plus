@@ -220,9 +220,15 @@ const buildRoomMenu = (room: Room): Menu => {
         menu.append(new MenuItem({
             label: '群文件',
             async click() {
+                if (getConfig().adapter !== 'socketIo')
+                    return ui.messageError('暂时只支持 bridge 后端')
                 const token = await requestGfsToken(-room.roomId)
-                ui.message(token)
-                clipboard.writeText(token)
+                const size = screen.getPrimaryDisplay().size
+                new BrowserWindow({
+                    autoHideMenuBar: true,
+                    height: size.height - 200,
+                    width: 1500,
+                }).loadURL(getConfig().server + '/file-manager/?' + token)
             },
         }))
         menu.append(new MenuItem({
