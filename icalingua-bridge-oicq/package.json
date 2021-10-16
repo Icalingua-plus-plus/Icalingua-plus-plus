@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "start": "ts-node .",
-    "compile": "tsc",
+    "compile": "tsc && cp -a --reflink=auto --remove-destination ./static ./build/",
     "detach-start": "screen -U yarn start",
     "dev": "NODE_ENV=development ts-node ."
   },
