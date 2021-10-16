@@ -12,6 +12,9 @@ app.post('/api/:token/sendMessage', parser, (req, res) => {
     if (req.params.token && sendImgTokenManager.verify(req.params.token)) {
         adapter.sendMessage(req.body)
         res.sendStatus(202).end()
-    } else
+    }
+    else
         res.sendStatus(403).end()
 })
+
+app.use('/file-manager', express.static('static/file-manager'))
