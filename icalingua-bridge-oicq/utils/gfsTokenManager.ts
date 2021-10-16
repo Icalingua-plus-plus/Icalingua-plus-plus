@@ -9,7 +9,7 @@ export default {
         map.set(token, {
             gin,
             //有效期一分钟
-            expire: new Date().getTime() + 1000 * 60 * 60,
+            expire: new Date().getTime() + 1000 * 60,
         })
         return token
     },
@@ -17,7 +17,7 @@ export default {
         const res = map.get(token)
         if (!res)
             return false
-        // map.delete(token)
+        map.delete(token)
         if (new Date().getTime() > res.expire)
             return false
         return res.gin
