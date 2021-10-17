@@ -224,11 +224,16 @@ const buildRoomMenu = (room: Room): Menu => {
                     return ui.messageError('暂时只支持 bridge 后端')
                 const token = await requestGfsToken(-room.roomId)
                 const size = screen.getPrimaryDisplay().size
-                new BrowserWindow({
+                const win = new BrowserWindow({
                     autoHideMenuBar: true,
                     height: size.height - 200,
                     width: 1500,
-                }).loadURL(getConfig().server + '/file-manager/?' + token)
+                })
+                win.webContents.session.on('will-download', (e, item) => {
+                    item.cancel()
+                    download(item.getURL(), item.getFilename())
+                })
+                win.loadURL(getConfig().server + '/file-manager/?' + token)
             },
         }))
         menu.append(new MenuItem({
