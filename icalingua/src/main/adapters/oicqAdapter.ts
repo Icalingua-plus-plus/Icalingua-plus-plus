@@ -744,9 +744,9 @@ const adapter: OicqAdapter = {
         const friendsAll: SearchableFriend[] = []
         while (!iterF.done) {
             const f: SearchableFriend = {
+                ...iterF.value,
                 uin: iterF.value.user_id,
                 nick: iterF.value.nickname,
-                remark: iterF.value.remark,
                 sc: iterF.value.nickname + iterF.value.remark + iterF.value.user_id,
             }
             friendsAll.push(f)
