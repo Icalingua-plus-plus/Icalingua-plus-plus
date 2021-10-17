@@ -2,14 +2,14 @@
     <div class="contacts-root">
         <div class="contacts-head-container">
             <div class="contacts-head">
-            <el-input
-                v-model="searchContext"
-                placeholder="Search"
-                prefix-icon="el-icon-search"
-                clearable
-            />
-            <span class="el-icon-refresh-right contacts-refresh" @click="refresh"/>
-        </div>
+                <el-input
+                    v-model="searchContext"
+                    placeholder="Search"
+                    prefix-icon="el-icon-search"
+                    clearable
+                />
+                <span class="el-icon-refresh-right contacts-refresh" @click="refresh"/>
+            </div>
         </div>
 
         <div class="contacts-content">
@@ -121,7 +121,7 @@ export default {
   background-color: var(--panel-background);
 }
 
-.el-collapse-item__wrap{
+.el-collapse-item__wrap {
   border-bottom: var(--chat-border-style);
 }
 
@@ -138,25 +138,22 @@ export default {
   color: var(--panel-color-name);
 }
 
-.el-tabs__nav-wrap::after{
+.el-tabs__nav-wrap::after {
   background-color: var(--panel-color-navi-bottom-bar);
 }
 
 .contacts-root {
-  border-right: var(--chat-border-style);
-  height: 100vh;
+  height: 75vh;
   display: flex;
   flex-direction: column;
 }
 
-.contacts-head-container{
+.contacts-head-container {
   background-color: var(--panel-header-bg);
 }
 
 .contacts-head {
-  margin: 0 12px;
-  height: 64px;
-  min-height: 64px;
+  margin-right: 12px;
   display: flex;
   align-items: center;
 }
