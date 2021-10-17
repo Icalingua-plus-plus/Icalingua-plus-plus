@@ -338,18 +338,18 @@ const adapter: Adapter = {
             })
             socket.on('requireAuth', async (salt: string, version: BridgeVersionInfo) => {
                 versionInfo = version
-                if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
-                    const action = await dialog.showMessageBox(getMainWindow(), {
-                        title: '提示',
-                        message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
-                        buttons: ['继续', '退出'],
-                        defaultId: 1,
-                    })
-                    if (action.response === 1) {
-                        app.quit()
-                        return
-                    }
-                }
+                //if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION) {
+                //    const action = await dialog.showMessageBox(getMainWindow(), {
+                //        title: '提示',
+                //        message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                //        buttons: ['继续', '退出'],
+                //        defaultId: 1,
+                //    })
+                //    if (action.response === 1) {
+                //        app.quit()
+                //        return
+                //    }
+                //}
                 socket.emit('auth', await sign(salt, getConfig().privateKey))
                 console.log('已向服务端提交身份验证')
             })
