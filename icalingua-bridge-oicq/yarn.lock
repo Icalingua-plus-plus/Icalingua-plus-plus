@@ -1453,10 +1453,10 @@ object-hash@^2.0.1:
   resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.2.0.tgz#5ad518581eefc443bd763472b8ff2e9c2c0d54a5"
   integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
 
-oicq@^1.21.0:
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.21.0.tgz#b46c2c8f4bd6e9fdc492fbef2c1a5f0d85807a56"
-  integrity sha512-QsLYKP2VNGzf/52UsgsQnAFWYf/kxAANMzEvh7EmSvVJ0rjMmypq1i1cMGVLIu+8vMU4jNpK4vZ1oiOeZl1KeA==
+oicq@^1.21.2:
+  version "1.21.2"
+  resolved "https://registry.yarnpkg.com/oicq/-/oicq-1.21.2.tgz#92bfc4031dc7a8bf4abe4500ff3d40512a36a5a3"
+  integrity sha512-dnVGCZ1geAviISijvWOVFk1oP7Y/bjcIm0uoxXm4UdP308UvquMoKu5un0iuzyMJVB1jjudrobClf5nF26/0Cg==
   dependencies:
     jsqr "^1.4.0"
     log4js "^6.3.0"
