@@ -5,7 +5,7 @@
   "main": "index.ts",
   "repository": "git@git.lwqwq.com:Clansty/eqq-bridge.git",
   "author": "Clansty <i@gao4.pw>",
-  "license": "MIT",
+  "license": "GPL-3.0",
   "scripts": {
     "start": "ts-node .",
     "compile": "tsc && cp -a --reflink=auto --remove-destination ./static ./build/",
