@@ -1,6 +1,18 @@
 <template>
     <div class="root">
         <div class="head">
+            <el-popover
+                placement="right-end"
+                :title="username"
+                trigger="hover"
+                :content="`${account}`"
+            >
+                <a slot="reference">
+                    <el-avatar
+                        :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
+                    />
+                </a>
+            </el-popover>
             <el-input
                 v-model="input"
                 placeholder="Search"
@@ -8,6 +20,7 @@
                 class="input"
                 clearable
             />
+            <span class="el-icon-user contacts-refresh" @click="$emit('show-contacts')"/>
         </div>
         <div class="content">
             <RoomEntry
@@ -47,6 +60,8 @@ export default {
         rooms: Array,
         selected: Object,
         priority: Number,
+        account: Number,
+        username: String
     },
     data() {
         return {
@@ -75,6 +90,7 @@ div.head {
   min-height: 64px;
   display: flex;
   align-items: center;
+  padding: 0 10px;
 }
 
 .content {
@@ -82,6 +98,6 @@ div.head {
 }
 
 .input {
-  margin: 0 12px;
+  margin-left: 10px;
 }
 </style>

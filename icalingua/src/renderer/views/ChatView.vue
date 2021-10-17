@@ -1,145 +1,103 @@
 <template>
     <div ondragstart="return false;" class="icalingua-theme-holder">
-        <el-container>
-            <!-- sidebar -->
-            <el-aside width="65px" ondragstart="return false;">
-                <!-- sidebar -->
-                <el-popover
-                    placement="right-end"
-                    :title="username"
-                    trigger="hover"
-                    :content="`${account}`"
+        <Multipane class="el-main">
+            <!-- main chat view -->
+            <div
+                class="panel rooms-panel"
+            >
+                <TheRoomsPanel
+                    :rooms="rooms"
+                    :selected="selectedRoom"
+                    :priority="priority"
+                    :account="account"
+                    :username="username"
+                    @chroom="chroom"
+                    @show-contacts="contactsShown=true"
+                />
+            </div>
+            <MultipaneResizer/>
+            <div
+                style="flex: 1"
+                class="vac-card-window"
+            >
+                <div class="pace-activity" v-show="loading"/>
+                <Room
+                    ref="room"
+                    :current-user-id="account"
+                    :rooms="rooms"
+                    :messages="messages"
+                    height="100vh"
+                    :rooms-loaded="true"
+                    :messages-loaded="messagesLoaded"
+                    :show-audio="false"
+                    :show-reaction-emojis="false"
+                    :show-new-messages-divider="false"
+                    :load-first-room="false"
+                    :accepted-files="selectedRoom.roomId>0?'image/*':'*'"
+                    :message-actions="[]"
+                    :single-room="true"
+                    :room-id="selectedRoom.roomId"
+                    :show-rooms-list="false"
+                    :is-mobile="false"
+                    :menu-actions="[]"
+                    :show-send-icon="true"
+                    :show-files="true"
+                    :show-emojis="true"
+                    :show-footer="!isShutUp"
+                    :loading-rooms="false"
+                    :text-formatting="true"
+                    :members-count="membersCount"
+                    @send-message="sendMessage"
+                    @open-file="openImage"
+                    @pokefriend="pokeFriend"
+                    @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
+                    @download-image="downloadImage"
+                    @pokegroup="pokeGroup"
+                    @open-forward="openForward"
+                    @fetch-messages="fetchMessage"
                 >
-                    <a slot="reference">
-                        <el-avatar
-                            :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
-                        />
-                    </a>
-                </el-popover>
-                <SideBarIcon
-                    icon="el-icon-chat-round"
-                    name="Chats"
-                    :selected="view === 'chats'"
-                    @click="view = 'chats'"
-                />
-                <SideBarIcon
-                    icon="el-icon-user"
-                    name="Contacts"
-                    :selected="view === 'contacts'"
-                    @click="view = 'contacts'"
-                />
-            </el-aside>
-            <el-main>
-                <Multipane v-show="view !== 'kench'">
-                    <!-- main chat view -->
-                    <div
-                        class="panel rooms-panel"
-                    >
-                        <TheRoomsPanel
-                            :rooms="rooms"
-                            :selected="selectedRoom"
-                            :priority="priority"
-                            @chroom="chroom"
-                            v-show="view === 'chats'"
-                        />
-
-                        <TheContactsPanel
-                            @dblclick="startChat"
-                            v-show="view === 'contacts'"
-                        />
-                    </div>
-                    <MultipaneResizer/>
-                    <div
-                        style="flex: 1"
-                        class="vac-card-window"
-                    >
-                        <div class="pace-activity" v-show="loading"/>
-                        <Room
-                            ref="room"
-                            :current-user-id="account"
-                            :rooms="rooms"
-                            :messages="messages"
-                            height="100vh"
-                            :rooms-loaded="true"
-                            :messages-loaded="messagesLoaded"
-                            :show-audio="false"
-                            :show-reaction-emojis="false"
-                            :show-new-messages-divider="false"
-                            :load-first-room="false"
-                            :accepted-files="selectedRoom.roomId>0?'image/*':'*'"
-                            :message-actions="[]"
-                            :single-room="true"
-                            :room-id="selectedRoom.roomId"
-                            :show-rooms-list="false"
-                            :is-mobile="false"
-                            :menu-actions="[]"
-                            :show-send-icon="true"
-                            :show-files="true"
-                            :show-emojis="true"
-                            :show-footer="!isShutUp"
-                            :loading-rooms="false"
-                            :text-formatting="true"
-                            :members-count="membersCount"
-                            @send-message="sendMessage"
-                            @open-file="openImage"
-                            @pokefriend="pokeFriend"
-                            @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
-                            @download-image="downloadImage"
-                            @pokegroup="pokeGroup"
-                            @open-forward="openForward"
-                            @fetch-messages="fetchMessage"
-                        >
-                            <template v-slot:menu-icon>
-                                <i class="el-icon-more"></i>
-                            </template>
-                        </Room>
-                        <pre v-show="selectedRoomId===0&&sysInfo"
-                             style="position: absolute;
+                    <template v-slot:menu-icon>
+                        <i class="el-icon-more"></i>
+                    </template>
+                </Room>
+                <pre v-show="selectedRoomId===0&&sysInfo"
+                     style="position: absolute;
 						         right: 13px;
 							     top: 0;
 							     font-family: monospace;
 							     color: rgb(156, 166, 175);
 							 ">{{ sysInfo }}</pre>
-                        <div class="getting-history" v-if="historyCount">
-                            <div class="pace-activity"/>
-                            <span>
+                <div class="getting-history" v-if="historyCount">
+                    <div class="pace-activity"/>
+                    <span>
 								正在获取历史消息... {{ historyCount }}
 							</span>
-                            <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
-                        </div>
-                    </div>
-                    <MultipaneResizer class="resize-next" v-show="panel"/>
-                    <div
-                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                        v-show="panel"
-                        class="panel panel-right"
-                    >
-                        <transition name="el-zoom-in-top">
-                            <Stickers
-                                v-if="panel === 'stickers'"
-                                @send="sendSticker"
-                                @close="panel = ''"
-                                @selectEmoji="
+                    <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
+                </div>
+            </div>
+            <MultipaneResizer class="resize-next" v-show="panel"/>
+            <div
+                :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                v-show="panel"
+                class="panel panel-right"
+            >
+                <transition name="el-zoom-in-top">
+                    <Stickers
+                        v-if="panel === 'stickers'"
+                        @send="sendSticker"
+                        @close="panel = ''"
+                        @selectEmoji="
 				                  $refs.room.message += $event.data;
 				                  $refs.room.focusTextarea();
 				                "
-                                @selectFace="
+                        @selectFace="
                                   $refs.room.message += `[Face: ${$event}]`;
 				                  $refs.room.focusTextarea();
                                 "
-                            />
-                        </transition>
-                    </div>
-                </Multipane>
-                <div v-show="view === 'kench'">
-                    <div style="background-color: #5bcffa; height: 20vh"/>
-                    <div style="background-color: #f5abb9; height: 20vh"/>
-                    <div style="background-color: #ffffff; height: 20vh"/>
-                    <div style="background-color: #f5abb9; height: 20vh"/>
-                    <div style="background-color: #5bcffa; height: 20vh"/>
-                </div>
-            </el-main>
-        </el-container>
+                    />
+                </transition>
+            </div>
+        </Multipane>
         <el-dialog
             title="You are offline"
             :visible.sync="offline"
@@ -154,6 +112,15 @@
           Reconnect now
         </el-button>
       </span>
+        </el-dialog>
+        <el-dialog
+            title="联系人"
+            :visible.sync="contactsShown"
+            top="5vh"
+        >
+            <TheContactsPanel
+                @dblclick="startChat"
+            />
         </el-dialog>
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible"/>
     </div>
@@ -197,7 +164,6 @@ export default {
             offline: false,
             offlineReason: '',
             reconnecting: false,
-            view: 'chats',
             username: '',
             priority: 3,
             theme: 'default',
@@ -207,6 +173,7 @@ export default {
             historyCount: 0,
             dialogAskCheckUpdateVisible: false,
             membersCount: 0,
+            contactsShown: false,
         }
     },
     async created() {
@@ -251,7 +218,6 @@ export default {
                 if (unreadRoom) this.chroom(unreadRoom)
             }
         })
-        window.flag = () => this.view = 'kench'
         //endregion
 
         if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
@@ -402,7 +368,7 @@ Chromium ${process.versions.chrome}` : ''
                 ipc.addRoom(room)
             }
             this.chroom(room)
-            this.view = 'chats'
+            this.contactsShown = false
         },
         async chroom(room) {
             if (room === 0) {
