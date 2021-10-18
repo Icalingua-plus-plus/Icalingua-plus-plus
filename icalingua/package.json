@@ -3,7 +3,7 @@
   "version": "2.3.2",
   "author": "clansty <i@gao4.pw>",
   "description": "A client for (maybe) any IM made with Electron",
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "main": "./dist/electron/main.js",
   "desktopName": "icalingua.desktop",
   "homepage": "https://github.com/Icalingua/Icalingua",
