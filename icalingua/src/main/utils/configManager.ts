@@ -27,6 +27,7 @@ type AllConfig = {
     keyToSendMessage: 'Enter' | 'CtrlEnter' | 'ShiftEnter'
     theme: string
     updateCheck: 'ask' | boolean
+    disableBridgeVersionCheck: boolean
 }
 
 
@@ -87,6 +88,7 @@ const defaultConfig: AllConfig = {
     keyToSendMessage: 'Enter',
     theme: 'auto',
     updateCheck: 'ask',
+    disableBridgeVersionCheck: false
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
