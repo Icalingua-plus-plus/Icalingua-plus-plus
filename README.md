@@ -35,6 +35,7 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是拉丁�
 
 ### License
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_large)
+[![](https://camo.githubusercontent.com/473b62766b498e4f2b008ada39f1d56fb3183649f24447866e25d958ac3fd79a/68747470733a2f2f7777772e676e752e6f72672f67726170686963732f6167706c76332d3135357835312e706e67)](https://www.gnu.org/licenses/agpl-3.0.txt)
 
 ### 鸣谢
 <a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
