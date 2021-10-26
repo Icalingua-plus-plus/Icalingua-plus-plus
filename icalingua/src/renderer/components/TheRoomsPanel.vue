@@ -61,7 +61,7 @@ export default {
         selected: Object,
         priority: Number,
         account: Number,
-        username: String
+        username: String,
     },
     data() {
         return {
@@ -76,7 +76,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .root {
   border-right: var(--chat-border-style);
   height: 100vh;
@@ -94,7 +94,7 @@ div.head {
 }
 
 .content {
-  overflow: auto;
+  overflow: overlay;
 }
 
 .input {
