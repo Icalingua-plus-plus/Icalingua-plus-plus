@@ -429,6 +429,7 @@ const adapter: Adapter = {
     },
     removeChat(roomId: number) {
         socket.emit('removeChat', roomId)
+        ui.chroom(0)
     },
     revealMessage(roomId: number, messageId: string | number) {
         socket.emit('revealMessage', roomId, messageId)
