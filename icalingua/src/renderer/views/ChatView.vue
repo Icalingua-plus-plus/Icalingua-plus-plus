@@ -81,21 +81,19 @@
                 v-show="panel"
                 class="panel panel-right"
             >
-                <transition name="el-zoom-in-top">
-                    <Stickers
-                        v-if="panel === 'stickers'"
-                        @send="sendSticker"
-                        @close="panel = ''"
-                        @selectEmoji="
+                <Stickers
+                    v-show="panel === 'stickers'"
+                    @send="sendSticker"
+                    @close="panel = ''"
+                    @selectEmoji="
 				                  $refs.room.message += $event.data;
 				                  $refs.room.focusTextarea();
 				                "
-                        @selectFace="
+                    @selectFace="
                                   $refs.room.message += `[Face: ${$event}]`;
 				                  $refs.room.focusTextarea();
                                 "
-                    />
-                </transition>
+                />
             </div>
         </Multipane>
         <el-dialog
@@ -352,6 +350,9 @@ Chromium ${process.versions.chrome}` : ''
                     sticker: true,
                 })
             this.$refs.room.focusTextarea()
+            if (window.innerWidth < 1200) {
+                this.panel = ''
+            }
         },
         reconnect() {
             this.reconnecting = true
