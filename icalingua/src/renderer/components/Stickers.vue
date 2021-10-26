@@ -86,7 +86,7 @@ export default {
         this.panel = await ipc.getLastUsedStickerType()
 
         // Remote Stickers
-        this.remote_pics = await ipc.getRoamingStamp()
+        setTimeout(async () => this.remote_pics = await ipc.getRoamingStamp(), 10 * 1000)
 
         // Face
         this.dir_face = path.join(getStaticPath(), 'face/')
@@ -146,6 +146,7 @@ div.head {
 
 .title {
   width: 100%;
+
   a {
     margin-right: 8px;
     color: var(--panel-color-sticker-type);
