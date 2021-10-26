@@ -1149,6 +1149,7 @@ const adapter: OicqAdapter = {
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
         ui.setAllRooms(await storage.getAllRooms())
+        ui.chroom(0)
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)
