@@ -42,7 +42,7 @@
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'stickers'" style="overflow: auto">
+        <div v-if="panel === 'stickers'" style="overflow: auto">
             <center v-show="!pics.length">
                 <p>No stickers found</p>
                 <p>
