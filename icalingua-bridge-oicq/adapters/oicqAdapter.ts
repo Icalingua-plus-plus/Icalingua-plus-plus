@@ -927,6 +927,17 @@ const adapter = {
         const history = await bot.getForwardMsg(resId)
         if (history.error) {
             console.log(history.error)
+            const res: [Message] = [{
+                senderId: 0,
+                username: '错误',
+                content: history.error.message,
+                timestamp: formatDate('hh:mm'),
+                date: formatDate('yyyy/MM/dd'),
+                _id: 0,
+                time: 0,
+                files: [],
+            }]
+            resolve(res)
             return
         }
         const messages = []
