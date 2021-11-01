@@ -774,7 +774,7 @@ const adapter = {
                     element = {
                         type: 'face',
                         data: {
-                            id: Number(temp),
+                            id: temp,
                             //id: Number(FACE_REGEX.exec(part)[1]),
                         },
                     }
