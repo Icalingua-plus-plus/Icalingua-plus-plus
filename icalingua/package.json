@@ -43,10 +43,26 @@
         },
         {
           "target": "AppImage"
+        },
+        {
+          "target": "snap"
         }
       ],
       "executableName": "icalingua",
       "category": "Network"
+    },
+    "snap": {
+      "summary": "A Linux IM client for QQ and more",
+      "environment": {
+        "HOME": "$SNAP_REAL_HOME",
+        "XDG_CONFIG_HOME": "$SNAP_USER_DATA/.config",
+        "XDG_CACHE_HOME": "$SNAP_USER_DATA/.cache",
+        "XDG_DATA_HOME": "$SNAP_USER_DATA/.local/share"
+      },
+      "stagePackages": [
+        "default",
+        "ffmpeg"
+      ]
     },
     "npmRebuild": false
   },
