@@ -48,6 +48,8 @@ import isAdmin from '../utils/isAdmin'
 import SearchableGroup from '../../types/SearchableGroup'
 import * as themes from '../utils/themes'
 import version from '../utils/version'
+import gfsTokenManager from '../utils/gfsTokenManager'
+import socketIoProvider from '../providers/socketIoProvider'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -220,20 +222,30 @@ const buildRoomMenu = (room: Room): Menu => {
         menu.append(new MenuItem({
             label: '群文件',
             async click() {
-                if (getConfig().adapter !== 'socketIo')
-                    return ui.messageError('暂时只支持 bridge 后端')
-                const token = await requestGfsToken(-room.roomId)
+                let url
+                if (getConfig().adapter === 'socketIo') {
+                    const token = await requestGfsToken(-room.roomId)
+                    url = `${getConfig().server}/file-manager/?${token}`
+                }
+                else {
+                    const token = gfsTokenManager.create(-room.roomId)
+                    url = `http://localhost:${socketIoProvider.getPort()}/file-manager/?${token}`
+                }
                 const size = screen.getPrimaryDisplay().size
                 const win = new BrowserWindow({
                     autoHideMenuBar: true,
                     height: size.height - 200,
                     width: 1500,
+                    webPreferences: {
+                        // 修复循环触发下载的问题
+                        partition: 'file-manager',
+                    },
                 })
                 win.webContents.session.on('will-download', (e, item) => {
                     item.cancel()
                     download(item.getURL(), item.getFilename())
                 })
-                win.loadURL(getConfig().server + '/file-manager/?' + token)
+                win.loadURL(url)
             },
         }))
         menu.append(new MenuItem({

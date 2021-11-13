@@ -67,6 +67,7 @@
     "npmRebuild": false
   },
   "dependencies": {
+    "express": "^4.17.1",
     "knex": "^0.95.8",
     "mongodb": "^3.6.6",
     "mysql": "^2.18.1",
@@ -74,6 +75,7 @@
     "pg": "^8.7.1",
     "pg-query-stream": "^4.2.1",
     "silk-sdk": "^0.2.2",
+    "socket.io": "^4.3.2",
     "sqlite3": "^5.0.2"
   },
   "devDependencies": {

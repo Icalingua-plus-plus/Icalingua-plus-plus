@@ -23,7 +23,7 @@ import {
     SyncReadedEventData,
     FriendIncreaseEventData,
     FriendDecreaseEventData,
-    SyncMessageEventData, GroupMuteEventData, QrcodeEventData,
+    SyncMessageEventData, GroupMuteEventData, QrcodeEventData, GroupInfo, Gfs,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -57,6 +57,7 @@ import {Notification} from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
 import getBuildInfo from '../utils/getBuildInfo'
 import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
+import socketIoProvider from '../providers/socketIoProvider'
 
 let bot: Client
 let storage: StorageProvider
@@ -588,6 +589,7 @@ const loginHandlers = {
             await loadMainWindow()
             createTray()
             attachEventHandler()
+            socketIoProvider.init()
         }
         if (loginForm.onlineStatus) {
             await bot.setOnlineStatus(loginForm.onlineStatus)
@@ -715,9 +717,19 @@ interface OicqAdapter extends Adapter {
     getMsg(id: string): Promise<Ret<PrivateMessageEventData | GroupMessageEventData>>
 
     getFriendInfo(user_id: number): Promise<FriendInfo>
+
+    getGroupInfo(group_id: number): GroupInfo
+
+    acquireGfs(group_id: number): Gfs
 }
 
 const adapter: OicqAdapter = {
+    acquireGfs(group_id: number) {
+        return bot.acquireGfs(group_id)
+    },
+    getGroupInfo(group_id: number): GroupInfo {
+        return bot.gl.get(group_id)
+    },
     requestGfsToken(gin: number): Promise<string> {
         return Promise.resolve('')
     },

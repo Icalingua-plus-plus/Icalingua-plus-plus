@@ -43,6 +43,7 @@ export const download = (url: string, out: string, dir?: string) => {
             filename: out,
             onCompleted: () => ui.messageSuccess('下载完成'),
         })
+        ui.message('已开始下载')
     }
 }
 
