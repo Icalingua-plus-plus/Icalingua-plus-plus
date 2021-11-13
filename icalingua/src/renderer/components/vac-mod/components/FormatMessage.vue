@@ -49,7 +49,7 @@
                     class="face"
                     v-if="message.face"
                     :key="i"
-                    :src="facepath + message.value"
+                    :src="'file://' + facepath + preZeroFill(Number(message.value),3)"
                     :alt="message.value"
                 />
                 <a
@@ -164,6 +164,15 @@ export default {
         openForward(message) {
             if (!message.forward) return
             this.$emit('open-forward', message.value)
+        },
+        preZeroFill(num, size) {
+            if (num >= Math.pow(10, size)) { //如果num本身位数不小于size位
+                return num.toString()
+            }
+            else {
+                var _str = Array(size + 1).join('0') + num
+                return _str.slice(_str.length - size)
+            }
         },
     },
 }

@@ -719,7 +719,7 @@ interface OicqAdapter extends Adapter {
 
 const adapter: OicqAdapter = {
     requestGfsToken(gin: number): Promise<string> {
-        return Promise.resolve('');
+        return Promise.resolve('')
     },
     async getUnreadRooms(): Promise<Room[]> {
         const rooms = await storage.getAllRooms()
@@ -907,17 +907,11 @@ const adapter: OicqAdapter = {
                         },
                     }
                 else if (isFace) {
-                    var temp: string = FACE_REGEX.exec(part)[1];
-                    if (Number(temp) < 10) {
-                        temp = '00'.concat(temp)
-                    } else if (Number(temp) < 100) {
-                        temp = '0'.concat(temp)
-                    }
+                    var temp: string = FACE_REGEX.exec(part)[1]
                     element = {
                         type: 'face',
                         data: {
-                            id: temp,
-                            //id: Number(FACE_REGEX.exec(part)[1]),
+                            id: Number.parseInt(temp, 10),
                         },
                     }
                 }
@@ -1309,7 +1303,7 @@ const adapter: OicqAdapter = {
             case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
-    }
+    },
 }
 
 export default adapter

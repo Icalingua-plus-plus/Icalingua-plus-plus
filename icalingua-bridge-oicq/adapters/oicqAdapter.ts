@@ -766,16 +766,10 @@ const adapter = {
                     }
                 else if (isFace) {
                     var temp: string = FACE_REGEX.exec(part)[1];
-                    if (Number(temp) < 10) {
-                        temp = '00'.concat(temp)
-                    } else if (Number(temp) < 100) {
-                        temp = '0'.concat(temp)
-                    }
                     element = {
                         type: 'face',
                         data: {
-                            id: temp,
-                            //id: Number(FACE_REGEX.exec(part)[1]),
+                            id: Number.parseInt(temp, 10),
                         },
                     }
                 }
