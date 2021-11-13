@@ -169,7 +169,7 @@ export default {
   }
 }
 
-@media only screen and (min-width: 950px) {
+@media only screen and (min-width: 1000px) {
   .vac-message-image-mod {
     max-width: 250px;
 
