@@ -465,6 +465,7 @@ jobs:
           if-no-files-found: error
 
       - uses: snapcore/action-publish@v1
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         with:
           store_login: ${{ secrets.SNAP_TOKEN }}
           snap: ${{ steps.pack.outputs.snap }}
