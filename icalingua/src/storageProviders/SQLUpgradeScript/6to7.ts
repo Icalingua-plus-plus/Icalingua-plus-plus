@@ -51,19 +51,23 @@ const upg6to7 = async (db: Knex, dbType: "pg" | "mysql" | "sqlite3") => {
         const msgCount = await db<Message>(msgTableName).count("_id");
         const msgCountNum = Number(msgCount[0].count);
         for (let i = 0; i <= msgCountNum; i += 200) {
-          const messages = await db<Message>(msgTableName)
-            .select("*")
-            .offset(i)
-            .limit(200);
-          await db<MessageInSQLDB>("messages")
-            .insert(
-              messages.map((data) => ({
-                ...data,
-                roomId: Number(roomId),
-              }))
-            )
-            .onConflict("_id")
-            .ignore();
+          try {
+            const messages = await db<Message>(msgTableName)
+              .select("*")
+              .offset(i)
+              .limit(200);
+            await db<MessageInSQLDB>("messages")
+              .insert(
+                messages.map((data) => ({
+                  ...data,
+                  roomId: Number(roomId),
+                }))
+              )
+              .onConflict("_id")
+              .ignore();
+          } catch (e) {
+            console.error(e);
+          }
         }
         await db.schema.dropTable(msgTableName);
       }
