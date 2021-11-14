@@ -184,7 +184,7 @@ export default class SQLStorageProvider implements StorageProvider {
         case 5:
           await upg5to6(this.db);
         case 6:
-          await upg6to7(this.db);
+          await upg6to7(this.db, this.type);
         default:
           break;
       }
