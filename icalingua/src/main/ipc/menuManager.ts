@@ -200,13 +200,14 @@ const buildRoomMenu = (room: Room): Menu => {
             },
         }))
         menu.append(new MenuItem({
-            label: '查看群公告',
+            label: '群公告',
             async click() {
                 const size = screen.getPrimaryDisplay().size
                 const win = new BrowserWindow({
                     height: size.height - 200,
                     width: 500,
                     autoHideMenuBar: true,
+                    title: '群公告'
                 })
                 const cookies = await getCookies('qun.qq.com')
                 for (const i in cookies) {
@@ -269,6 +270,26 @@ const buildRoomMenu = (room: Room): Menu => {
             },
         }))
         menu.append(new MenuItem({
+            label: '群幸运字符',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://qun.qq.com/v2/luckyword/index?qunid=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
             label: '我的群昵称',
             async click() {
                 const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
@@ -318,6 +339,26 @@ const buildRoomMenu = (room: Room): Menu => {
         }))
     }
     else {
+        // menu.append(new MenuItem({
+        //     label: 'ta 的线索',
+        //     async click() {
+        //         const size = screen.getPrimaryDisplay().size
+        //         const win = new BrowserWindow({
+        //             height: size.height - 200,
+        //             width: 500,
+        //             autoHideMenuBar: true,
+        //         })
+        //         const cookies = await getCookies('ti.qq.com')
+        //         for (const i in cookies) {
+        //             await win.webContents.session.cookies.set({
+        //                 url: 'https://ti.qq.com',
+        //                 name: i,
+        //                 value: cookies[i],
+        //             })
+        //         }
+        //         await win.loadURL('https://ti.qq.com/friends/recall?uin=' + room.roomId)
+        //     },
+        // }))
         menu.append(new MenuItem({
             label: '互动标识',
             async click() {
@@ -336,6 +377,26 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                 }
                 await win.loadURL('https://ti.qq.com/hybrid-h5/interactive_logo/inter?target_uin=' + room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
+            label: '幸运字符',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('ti.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://ti.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://ti.qq.com/interactive_logo/word?target_uin=' + room.roomId)
             },
         }))
         menu.append(new MenuItem({
