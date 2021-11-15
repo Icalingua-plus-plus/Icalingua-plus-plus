@@ -308,6 +308,26 @@ const buildRoomMenu = (room: Room): Menu => {
             },
         }))
         menu.append(new MenuItem({
+            label: '成员活跃数据',
+            async click() {
+                const size = screen.getPrimaryDisplay().size
+                const win = new BrowserWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                await win.loadURL('https://qun.qq.com/m/qun/activedata/active.html?gc=' + -room.roomId)
+            },
+        }))
+        menu.append(new MenuItem({
             label: '群成员',
             async click() {
                 const win = new BrowserWindow({
