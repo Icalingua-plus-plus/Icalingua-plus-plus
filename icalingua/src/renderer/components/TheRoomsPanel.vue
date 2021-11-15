@@ -7,7 +7,7 @@
                 trigger="hover"
                 :content="`${account}`"
             >
-                <a slot="reference">
+                <a slot="reference" @click="$emit('chroom',account)" style="cursor: pointer;">
                     <el-avatar
                         :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
                     />

@@ -993,7 +993,7 @@ const adapter: OicqAdapter = {
             })
             return
         }
-        if (roomId > 0) {
+        if (roomId > 0 && roomId !== bot.uin) {
             console.log(data)
             room.lastMessage = {
                 content,
@@ -1051,9 +1051,6 @@ const adapter: OicqAdapter = {
                     ui.setShutUp(true)
                     ui.message('你已经不是群成员了')
                 }
-            }
-            else if (roomId === bot.uin) {
-                ui.setShutUp(true)
             }
             else {
                 ui.setShutUp(false)

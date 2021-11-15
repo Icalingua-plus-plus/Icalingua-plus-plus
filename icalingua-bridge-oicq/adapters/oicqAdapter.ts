@@ -765,7 +765,7 @@ const adapter = {
                         },
                     }
                 else if (isFace) {
-                    var temp: string = FACE_REGEX.exec(part)[1];
+                    var temp: string = FACE_REGEX.exec(part)[1]
                     element = {
                         type: 'face',
                         data: {
@@ -828,7 +828,7 @@ const adapter = {
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
-        if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true)
+        if (roomId > 0 && roomId !== bot.uin) data = await bot.sendPrivateMsg(roomId, chain, true)
         else data = await bot.sendGroupMsg(-roomId, chain, true)
 
         clients.closeLoading()
@@ -895,9 +895,6 @@ const adapter = {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
                 }
-            }
-            else if (roomId === bot.uin) {
-                client.emit('setShutUp', true)
             }
             else {
                 client.emit('setShutUp', false)

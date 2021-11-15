@@ -376,6 +376,8 @@ Chromium ${process.versions.chrome}` : ''
                 this.closeRoom()
                 return
             }
+            if (room === this.account)
+                return this.startChat(this.account, this.username)
             if ((typeof room) === 'number')
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
