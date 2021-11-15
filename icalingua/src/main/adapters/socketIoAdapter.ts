@@ -28,6 +28,7 @@ import getBuildInfo from '../utils/getBuildInfo'
 import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
 import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
+import formatDate from '../../utils/formatDate'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -271,6 +272,11 @@ const adapter: Adapter = {
             if (sysInfo)
                 sysInfo += '\n\n'
             sysInfo += '新版本可用: ' + updateInfo.latestVersion
+        }
+        if (formatDate('MM-dd') === '11-20') {
+            if (sysInfo)
+                sysInfo += '\n\n'
+            sysInfo += '11月20日是跨性别纪念日，纪念那些因暴力而不幸逝世的跨性别者们\n愿你也能被他人温柔以待'
         }
         if (sysInfo)
             sysInfo += '\n\n'
