@@ -9,7 +9,7 @@
             >
                 <a slot="reference" @click="$emit('chroom',account)" style="cursor: pointer;">
                     <el-avatar
-                        :src="`https://q1.qlogo.cn/g?b=qq&nk=${account}&s=640`"
+                        :src="getAvatarUrl(account)"
                     />
                 </a>
             </el-popover>
@@ -39,6 +39,7 @@
 <script type="ts">
 import RoomEntry from './RoomEntry.vue'
 import ipc from '../utils/ipc'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 
 export default {
     name: 'TheRoomsPanel',
@@ -72,6 +73,7 @@ export default {
         roomMenu(room) {
             ipc.popupRoomMenu(room.roomId)
         },
+        getAvatarUrl
     },
 }
 </script>

@@ -5,18 +5,14 @@
                 <div class="contact-entry-left">
                     <el-avatar
                         size="large"
-                        :src="
-              id < 0
-                ? `https://p.qlogo.cn/gh/${-id}/${-id}/0`
-                : `https://q1.qlogo.cn/g?b=qq&nk=${id}&s=640`
-            "
+                        :src="getAvatarUrl(id)"
                     />
                 </div>
                 <div class="contact-entry-right">
                     <div class="contact-entry-flex contact-entry-l1">
                         <div class="contact-entry-name">
                             {{ remark }}
-                            <span class="contact-entry-rawname" v-show="name && name != remark">
+                            <span class="contact-entry-rawname" v-show="name && name !== remark">
                 ({{ name }})
               </span>
                         </div>
@@ -34,6 +30,7 @@
 
 <script>
 import ipc from '../utils/ipc'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 
 export default {
     name: 'ContactEntry',
@@ -47,6 +44,7 @@ export default {
         ctx() {
             ipc.popupContactMenu(this.remark, this.name, this.displayId, this.group)
         },
+        getAvatarUrl
     },
 }
 </script>
