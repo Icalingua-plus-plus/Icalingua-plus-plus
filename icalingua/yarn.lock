@@ -33,14 +33,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/get@npm:^1.13.0":
-  version: 1.13.0
-  resolution: "@electron/get@npm:1.13.0"
+"@electron/get@npm:^1.0.1":
+  version: 1.13.1
+  resolution: "@electron/get@npm:1.13.1"
   dependencies:
     debug: ^4.1.1
     env-paths: ^2.2.0
     fs-extra: ^8.1.0
-    global-agent: ^2.0.2
+    global-agent: ^3.0.0
     global-tunnel-ng: ^2.7.1
     got: ^9.6.0
     progress: ^2.0.3
@@ -51,7 +51,7 @@ __metadata:
       optional: true
     global-tunnel-ng:
       optional: true
-  checksum: a5158bb2f81ed68491d1ece5f4acfb9d497dbec1f126d0db2212c2fa6b2851a752900fd24b7620cd2e23563a356127134366027e7a98993f035c6d0c8e643577
+  checksum: ea9863b73e8aedefb19cfe9b849c585b8bda29e11b90189b115680da4e9ab0167405efe63e5d141da2d13cde24eacacfde62f730f2730d047e58819fe69352f8
   languageName: node
   linkType: hard
 
@@ -346,6 +346,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: e99fc7cc6265407987b30deda54c1c24bb1478803faf6037557a774b2f034c5b097ffd65847daa87e82a61a250d919f35c3588654b0fdaa816906650f596d1b0
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:^8.3.1":
+  version: 8.3.1
+  resolution: "@types/uuid@npm:8.3.1"
+  checksum: b41bdc5e86c6f0f1899306be10455636da0f2168c9489b869edd6837ddeb7c0e501b1ff7d857402462986bada2a379125743dd895fa801d03437cd632116a373
   languageName: node
   linkType: hard
 
@@ -3948,13 +3955,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:^3.6.5":
-  version: 3.14.0
-  resolution: "core-js@npm:3.14.0"
-  checksum: a450089e5796496c7f4a84b13139d853fec5233077833ed142fe401bf9ff4ec2a5bae781f3879ef76cefcfe8a274218d3d4d7d813f5f7f32911fbd36e13a6dc4
-  languageName: node
-  linkType: hard
-
 "core-util-is@npm:1.0.2, core-util-is@npm:~1.0.0":
   version: 1.0.2
   resolution: "core-util-is@npm:1.0.2"
@@ -4905,16 +4905,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:15.0.0":
-  version: 15.0.0
-  resolution: "electron@npm:15.0.0"
+"electron@npm:13":
+  version: 13.6.1
+  resolution: "electron@npm:13.6.1"
   dependencies:
-    "@electron/get": ^1.13.0
+    "@electron/get": ^1.0.1
     "@types/node": ^14.6.2
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: d3b6be55074edfd08f8e3477d41cf00969f9f0b518b4ed5d9813e35b021efaf93f965b61f44d4c6d443b2fa3073686a809d2ab493444a2596a5bffb8c963d073
+  checksum: 31634a59971d03e242d74eae2178186ff637e215183b92b5777742f7d3685e83e8f500e828e2fbdb94c264d0013022a5622aae7368f824d51cecf56fe7e9bd12
   languageName: node
   linkType: hard
 
@@ -6100,18 +6100,17 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"global-agent@npm:^2.0.2":
-  version: 2.2.0
-  resolution: "global-agent@npm:2.2.0"
+"global-agent@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "global-agent@npm:3.0.0"
   dependencies:
     boolean: ^3.0.1
-    core-js: ^3.6.5
     es6-error: ^4.1.1
     matcher: ^3.0.0
     roarr: ^2.15.3
     semver: ^7.3.2
     serialize-error: ^7.0.1
-  checksum: 09627d2cfc4ae0bee187730d6301cebb80c96c2adadb403d114c5574481b388d491e9c8a6fb2b935e5c0eda886a249bf954e4095d26ca553635cc1ae6d0feb95
+  checksum: 75074d80733b4bd5386c47f5df028e798018025beac0ab310e9908c72bf5639e408203e7bca0130d5ee01b5f4abc6d34385d96a9f950ea5fe1979bb431c808f7
   languageName: node
   linkType: hard
 
@@ -6748,6 +6747,7 @@ fsevents@~2.3.1:
     "@types/md5": ^2.3.0
     "@types/minimist": ^1.2.2
     "@types/mongodb": ^3.6.17
+    "@types/uuid": ^8.3.1
     "@types/webpack": ^5.28.0
     "@types/winston": ^2.4.4
     ajv: ^6.5.0
@@ -6768,7 +6768,7 @@ fsevents@~2.3.1:
     csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
-    electron: 15.0.0
+    electron: 13
     electron-builder: ^22.11.7
     electron-debug: ^3.2.0
     electron-devtools-installer: ^3.1.1
@@ -6811,6 +6811,7 @@ fsevents@~2.3.1:
     tsconfig-paths: ^3.9.0
     typescript: ^4.2.4
     url-loader: ^1.0.1
+    uuid: ^8.3.2
     v-click-outside: ^3.1.2
     v-emoji-picker: ^2.3.3
     vue: ^2.6.12
@@ -13461,6 +13462,15 @@ typescript@^4.2.4:
   bin:
     uuid: ./bin/uuid
   checksum: 58de2feed61c59060b40f8203c0e4ed7fd6f99d42534a499f1741218a1dd0c129f4aa1de797bcf822c8ea5da7e4137aa3673431a96dae729047f7aca7b27866f
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^8.3.2":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
 

@@ -1,11 +1,11 @@
-import {randomUUID} from 'crypto'
+import {v4 as uuid} from 'uuid'
 
 //token，{群号，到期时间}
 const map = new Map<string, { gin: number, expire: number }>()
 
 export default {
     create(gin: number) {
-        const token = randomUUID()
+        const token = uuid()
         map.set(token, {
             gin,
             expire: new Date().getTime() + 1000 * 60 * 60,
