@@ -62,7 +62,9 @@ export const updateTrayMenu = async () => {
                 },
             }))
             menu.append(new MenuItem({
-                label: unreadRoom.lastMessage.content,
+                label: unreadRoom.lastMessage.content.length > 25
+                    ? `${unreadRoom.lastMessage.content.slice(0, 25)}...`
+                    : unreadRoom.lastMessage.content,
                 enabled: false,
             }))
         }
