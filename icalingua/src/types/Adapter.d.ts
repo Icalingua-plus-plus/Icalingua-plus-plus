@@ -6,7 +6,6 @@ import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
 import RoamingStamp from './RoamingStamp'
-import OnlineData from './OnlineData'
 import SearchableFriend from './SearchableFriend'
 
 type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
