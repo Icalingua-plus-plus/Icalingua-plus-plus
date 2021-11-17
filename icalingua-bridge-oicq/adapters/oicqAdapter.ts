@@ -404,7 +404,7 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         clients.syncRead(roomId)
-        storage.updateRoom(roomId, {unreadCount: 0})
+        storage.updateRoom(roomId, {unreadCount: 0, at: false})
     },
     //TODO 这里应该有好多重复代码的说，应该可以合并一下
     async friendIncrease(data: FriendIncreaseEventData) {
