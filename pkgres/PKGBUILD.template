@@ -1,0 +1,24 @@
+pkgname=icalingua
+pkgver=VERSION
+pkgrel=1
+pkgdesc='A Linux client for QQ and more'
+license=('GPL')
+depends=('electron13' 'ffmpeg' 'libappindicator-gtk3')
+optdepends=('mongodb-bin: Provides storage'
+            'redis: Provides storage')
+arch=('ARCH')
+url="https://github.com/Icalingua/Icalingua"
+provides=('electron-qq')
+conflicts=('electron-qq')
+replaces=('electron-qq')
+source=(app.asar
+        512x512.png
+        ${pkgname}.desktop
+        ${pkgname})
+package() {
+  install -Dm644 -t "${pkgdir}/usr/share/applications" "${pkgname}.desktop"
+  install -Dm644 "512x512.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/$pkgname.png"
+  install -Dm644 "app.asar" "${pkgdir}/usr/share/${pkgname}/${pkgname}.asar"
+  install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+  ln -s "/usr/bin/${pkgname}" "${pkgdir}/usr/bin/electron-qq"
+}
