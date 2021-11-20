@@ -46,6 +46,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
