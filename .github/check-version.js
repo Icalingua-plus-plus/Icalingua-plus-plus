@@ -35,6 +35,8 @@ const isProduction = ref.startsWith('refs/tags/v')
 const buildTime = now.toLocaleString(undefined, {timeZone: 'Asia/Shanghai'})
 const version = process.env.GIT_VER
 
+packageJson.version = version
+
 console.log(`commitId: ${commitId}
 ref: ${ref}
 isProduction: ${isProduction}
@@ -45,3 +47,6 @@ console.log(`::set-output name=version::${version.replace('-', '_')}`)
 
 fs.writeFileSync('icalingua/static/version.json',
     JSON.stringify({commitId, ref, isProduction, buildTime, version}), 'utf-8')
+
+fs.writeFileSync('icalingua/package.json',
+    JSON.stringify(packageJson), 'utf-8')
