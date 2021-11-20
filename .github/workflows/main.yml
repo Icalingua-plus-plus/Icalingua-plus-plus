@@ -235,14 +235,14 @@ jobs:
       - build-x86_64
       - build-dist-bundle
     steps:
-      - name: print the PKGBUILD for x86_64
-        shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' PKGBUILD.template > PKGBUILD
-
       - name: get the assets
         uses: actions/download-artifact@v2
         with:
           name: pkgres
+
+      - name: print the PKGBUILD for x86_64
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' PKGBUILD.template > PKGBUILD
 
       - name: get binary for x86_64
         uses: actions/download-artifact@v2
@@ -273,14 +273,14 @@ jobs:
       - build-ia32
     steps:
 
-      - name: print the PKGBUILD for i686
-        shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' PKGBUILD.template > PKGBUILD
-
       - name: get the assets
         uses: actions/download-artifact@v2
         with:
           name: pkgres
+
+      - name: print the PKGBUILD for i686
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' PKGBUILD.template > PKGBUILD
 
       - name: get binary for i686
         uses: actions/download-artifact@v2
@@ -311,14 +311,14 @@ jobs:
       - arch-artifacts
       - build-arm64
     steps:
-      - name: print the PKGBUILD for aarch64
-        shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' PKGBUILD.template > PKGBUILD
-
       - name: get the assets
         uses: actions/download-artifact@v2
         with:
           name: pkgres
+
+      - name: print the PKGBUILD for aarch64
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' PKGBUILD.template > PKGBUILD
 
       - name: get binary for aarch64
         uses: actions/download-artifact@v2
