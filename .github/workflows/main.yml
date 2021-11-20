@@ -43,7 +43,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: install
     outputs:
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.git-ver.outputs.version }}
+      arch-version: ${{ steps.version.outputs.arch-version }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -105,7 +106,7 @@ jobs:
         run: yarn build:electron install-app-deps
 
       - name: build
-        run: yarn build:electron --dir
+        run: yarn build:electron --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload app-x86_64.asar
@@ -154,7 +155,7 @@ jobs:
         run: yarn build:electron install-app-deps --arch ia32
 
       - name: build
-        run: yarn build:electron --ia32 --dir
+        run: yarn build:electron --ia32 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload app.asar
@@ -211,7 +212,7 @@ jobs:
             su builduser -c 'yarn build:electron install-app-deps'
 
       - name: build
-        run: yarn build:electron --arm64 --dir
+        run: yarn build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload app.asar
@@ -236,7 +237,7 @@ jobs:
     steps:
       - name: print the PKGBUILD for x86_64
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.version }}/;s/ARCH/x86_64/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' PKGBUILD.template > PKGBUILD
 
       - name: get the assets
         uses: actions/download-artifact@v2
@@ -274,7 +275,7 @@ jobs:
 
       - name: print the PKGBUILD for i686
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.version }}/;s/ARCH/i686/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' PKGBUILD.template > PKGBUILD
 
       - name: get the assets
         uses: actions/download-artifact@v2
@@ -312,7 +313,7 @@ jobs:
     steps:
       - name: print the PKGBUILD for aarch64
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.version }}/;s/ARCH/aarch64/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' PKGBUILD.template > PKGBUILD
 
       - name: get the assets
         uses: actions/download-artifact@v2
@@ -408,7 +409,9 @@ jobs:
 
   pack-otherpkg-x86_64:
     runs-on: ubuntu-latest
-    needs: build-x86_64
+    needs:
+      - build-x86_64
+      - build-dist-bundle
     strategy:
       matrix:
         package:
@@ -439,7 +442,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked -l ${{ matrix.package }}
+        run: yarn build:electron --pd unpacked -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -450,7 +453,9 @@ jobs:
 
   pack-otherpkg-ia32:
     runs-on: ubuntu-latest
-    needs: build-ia32
+    needs:
+      - build-ia32
+      - build-dist-bundle
     strategy:
       matrix:
         package:
@@ -481,7 +486,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }}
+        run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -492,7 +497,9 @@ jobs:
 
   pack-otherpkg-arm64:
     runs-on: ubuntu-latest
-    needs: build-arm64
+    needs:
+      - build-arm64
+      - build-dist-bundle
     strategy:
       matrix:
         package:
@@ -523,7 +530,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }}
+        run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}

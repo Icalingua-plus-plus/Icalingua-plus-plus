@@ -43,7 +43,7 @@ isProduction: ${isProduction}
 buildTime: ${buildTime}
 version: ${version}`)
 
-console.log(`::set-output name=version::${version.replace(/-/g, '_')}`)
+console.log(`::set-output name=arch-version::${version.replace(/-/g, '_')}`)
 
 fs.writeFileSync('icalingua/static/version.json',
     JSON.stringify({commitId, ref, isProduction, buildTime, version}), 'utf-8')
