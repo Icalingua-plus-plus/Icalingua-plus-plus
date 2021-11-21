@@ -125,7 +125,6 @@ jobs:
 
   build-ia32:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: build-dist-bundle
     defaults:
       run:
@@ -174,7 +173,6 @@ jobs:
 
   build-arm64:
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs: build-dist-bundle
     defaults:
       run:
@@ -295,7 +293,7 @@ jobs:
 
       - name: print the PKGBUILD for i686
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
 
       - name: get binary for i686
         uses: actions/download-artifact@v2
@@ -312,12 +310,26 @@ jobs:
           namcap: false
           updpkgsums: true
 
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-i686.pkg.*)
+
       - uses: actions/upload-artifact@v2
         name: upload i686
         with:
           name: i686.pkg.tar.zst
-          path: '*-i686.pkg.*'
+          path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
+
+      - name: deploy file
+        uses: wlixcc/SFTP-Deploy-Action@v1.0
+        with:
+          username: 'repo-builder'
+          server: ${{ secrets.REPO_BUILDER_HOST }}
+          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
+          local_path: ${{ steps.pkgname.outputs.pkgname }}
+          remote_path: '/home/repo-builder/tmp'
+
+      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
@@ -333,7 +345,7 @@ jobs:
 
       - name: print the PKGBUILD for aarch64
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
 
       - name: get binary for aarch64
         uses: actions/download-artifact@v2
@@ -351,12 +363,26 @@ jobs:
           namcap: false
           updpkgsums: true
 
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-aarch64.pkg.*)
+
       - uses: actions/upload-artifact@v2
         name: upload aarch64
         with:
           name: aarch64.pkg.tar.zst
-          path: '*-aarch64.pkg.*'
+          path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
+
+      - name: deploy file
+        uses: wlixcc/SFTP-Deploy-Action@v1.0
+        with:
+          username: 'repo-builder'
+          server: ${{ secrets.REPO_BUILDER_HOST }}
+          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
+          local_path: ${{ steps.pkgname.outputs.pkgname }}
+          remote_path: '/home/repo-builder/tmp'
+
+      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
   pack-snap-x86_64:
     runs-on: ubuntu-latest
