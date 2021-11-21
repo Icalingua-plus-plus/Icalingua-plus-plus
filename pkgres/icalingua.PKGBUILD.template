@@ -8,8 +8,8 @@ optdepends=('mongodb-bin: Provides storage'
             'redis: Provides storage')
 arch=('ARCH')
 url="https://github.com/Icalingua/Icalingua"
-provides=('electron-qq')
-conflicts=('electron-qq')
+provides=('electron-qq' 'icalingua')
+conflicts=('icalingua')
 replaces=('electron-qq')
 source=(app.asar
         512x512.png

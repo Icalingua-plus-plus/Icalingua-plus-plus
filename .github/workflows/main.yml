@@ -45,6 +45,7 @@ jobs:
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
+      pkg-name: ${{ steps.version.outputs.pkg-name }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -242,7 +243,7 @@ jobs:
 
       - name: print the PKGBUILD for x86_64
         shell: bash
-        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' PKGBUILD.template > PKGBUILD
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
 
       - name: get binary for x86_64
         uses: actions/download-artifact@v2
@@ -258,12 +259,26 @@ jobs:
           namcap: false
           updpkgsums: true
 
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-x86_64.pkg.*)
+
       - uses: actions/upload-artifact@v2
         name: upload x86_64
         with:
           name: x86_64.pkg.tar.zst
-          path: '*-x86_64.pkg.*'
+          path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
+
+      - name: deploy file
+        uses: wlixcc/SFTP-Deploy-Action@v1.0
+        with:
+          username: 'repo-builder'
+          server: ${{ secrets.REPO_BUILDER_HOST }}
+          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
+          local_path: ${{ steps.pkgname.outputs.pkgname }}
+          remote_path: '/home/repo-builder/tmp'
+
+      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-i686:
     runs-on: ubuntu-latest
