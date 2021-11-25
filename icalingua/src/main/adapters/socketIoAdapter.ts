@@ -33,7 +33,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
-const EXCEPTED_PROTOCOL_VERSION = '2.1.1'
+const EXCEPTED_PROTOCOL_VERSION = '2.1.5'
 
 let socket: Socket
 let uin = 0
