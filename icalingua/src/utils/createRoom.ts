@@ -1,10 +1,9 @@
 import Room from "../types/Room";
 
-export default (roomId: number, roomName: string, avatar: string): Room => {
+export default (roomId: number, roomName: string): Room => {
     const room = {
         roomId,
         roomName,
-        avatar,
         index: 0,
         unreadCount: 0,
         priority: roomId > 0 ? 4 : 2,

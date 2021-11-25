@@ -8,7 +8,7 @@
                         :type="room.at === 'all' ? 'warning' : undefined"
                         :hidden="!room.at"
                     >
-                        <el-avatar size="large" :src="room.avatar"/>
+                        <el-avatar size="large" :src="roomAvatar"/>
                     </el-badge>
                 </div>
                 <div class="right">
@@ -44,6 +44,8 @@
 </template>
 
 <script>
+import getAvatarUrl from '../../utils/getAvatarUrl'
+
 export default {
     name: 'RoomEntry',
     props: {
@@ -78,6 +80,9 @@ export default {
             )
                 return '昨天'
             else return time.getDate() + '/' + (time.getMonth() + 1)
+        },
+        roomAvatar() {
+            return getAvatarUrl(this.room.roomId)
         },
     },
 }
@@ -181,7 +186,7 @@ a {
 }
 
 @container (max-width: 130px) {
-  .name,.desc{
+  .name, .desc {
     display: none;
   }
 }

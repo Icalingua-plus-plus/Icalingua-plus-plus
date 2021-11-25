@@ -85,7 +85,6 @@ const eventHandlers = {
             senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
         else
             senderName = (data.sender as FriendInfo).remark || data.sender.nickname
-        const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
         const message: Message = {
@@ -111,7 +110,7 @@ const eventHandlers = {
                 roomName = info.remark || info.nickname
             }
             // create room
-            room = createRoom(roomId, roomName, avatar)
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         else {
@@ -165,7 +164,7 @@ const eventHandlers = {
                 urgency: 1,
                 timeout: 5000,
                 body: (groupId ? senderName + ': ' : '') + lastMessage.content,
-                icon: await avatarCache(avatar),
+                icon: await avatarCache(getAvatarUrl(roomId, true)),
                 'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
                 'x-kde-reply-submit-button-text': '发送',
                 actions,
@@ -333,7 +332,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -381,7 +380,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -439,7 +438,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -501,7 +500,7 @@ const eventHandlers = {
         let room = await storage.getRoom(roomId)
         if (!room) {
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -534,7 +533,7 @@ const eventHandlers = {
         let room = await storage.getRoom(roomId)
         if (!room) {
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000

@@ -28,7 +28,6 @@ import {
     SyncReadedEventData,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
-import getAvatarUrl from '../utils/getAvatarUrl'
 import Message from '../types/Message'
 import formatDate from '../utils/formatDate'
 import createRoom from '../utils/createRoom'
@@ -78,7 +77,6 @@ const eventHandlers = {
             senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
         else
             senderName = (data.sender as FriendInfo).remark || data.sender.nickname
-        const avatar = getAvatarUrl(roomId)
         let roomName = ('group_name' in data) ? data.group_name : senderName
 
         const message: Message = {
@@ -104,7 +102,7 @@ const eventHandlers = {
                 roomName = info.remark || info.nickname
             }
             // create room
-            room = createRoom(roomId, roomName, avatar)
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         else {
@@ -276,7 +274,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -323,7 +321,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -381,7 +379,7 @@ const eventHandlers = {
                 roomName = group.group_name
             }
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -425,7 +423,7 @@ const eventHandlers = {
         let room = await storage.getRoom(roomId)
         if (!room) {
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
@@ -458,7 +456,7 @@ const eventHandlers = {
         let room = await storage.getRoom(roomId)
         if (!room) {
             // create room
-            room = createRoom(roomId, roomName, getAvatarUrl(roomId))
+            room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         }
         room.utime = data.time * 1000
