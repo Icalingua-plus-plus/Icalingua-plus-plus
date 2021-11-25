@@ -29,6 +29,7 @@ import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
 import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import formatDate from '../../utils/formatDate'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -113,7 +114,6 @@ const attachSocketEvents = () => {
             ui.setMessages(messages)
     })
     socket.on('notify', async (data: {
-        avatar: string,
         priority: 1 | 2 | 3 | 4 | 5,
         roomId: number,
         at: string | boolean,
@@ -144,7 +144,7 @@ const attachSocketEvents = () => {
                 'desktop-entry': 'icalingua',
                 urgency: 1,
                 timeout: 5000,
-                icon: await avatarCache(data.avatar),
+                icon: await avatarCache(getAvatarUrl(data.roomId, true)),
                 'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
                 'x-kde-reply-submit-button-text': '发送',
                 actions,

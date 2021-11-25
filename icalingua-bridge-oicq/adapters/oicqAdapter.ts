@@ -140,7 +140,6 @@ const eventHandlers = {
         if (message.file && message.file.type.startsWith('image/'))
             image = message.file.url
         broadcast('notify', {
-            avatar: avatar,
             priority: room.priority,
             roomId, at, isSelfMsg,
             image,
