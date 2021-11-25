@@ -1,7 +1,7 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import {FileElem, MemberInfo} from 'oicq'
+import {FileElem, GroupInfo, MemberInfo} from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
@@ -14,6 +14,8 @@ type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.q
     'qun.qq.com' | 'ti.qq.com'
 
 export default interface Adapter {
+    getGroup(gin: number): Promise<GroupInfo>
+
     getAccount(): LoginForm
 
     clearRoomUnread(roomId: number): any

@@ -2,7 +2,7 @@ import Adapter, {CookiesDomain} from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {FileElem, MemberInfo} from 'oicq'
+import {FileElem, GroupInfo, MemberInfo} from 'oicq'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import {io, Socket} from 'socket.io-client'
@@ -240,6 +240,11 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    getGroup(gin: number): Promise<GroupInfo> {
+        return new Promise((resolve) => {
+            socket.emit('getGroup', gin, resolve)
+        })
+    },
     requestGfsToken(gin: number): Promise<string> {
         return new Promise(resolve => socket.emit('requestGfsToken', gin, resolve))
     },

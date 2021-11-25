@@ -723,6 +723,9 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    async getGroup(gin): Promise<GroupInfo> {
+        return bot.gl.get(gin)
+    },
     acquireGfs(group_id: number) {
         return bot.acquireGfs(group_id)
     },
