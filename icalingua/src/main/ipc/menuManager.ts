@@ -207,7 +207,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     height: size.height - 200,
                     width: 500,
                     autoHideMenuBar: true,
-                    title: '群公告'
+                    title: '群公告',
                 })
                 const cookies = await getCookies('qun.qq.com')
                 for (const i in cookies) {
@@ -698,6 +698,13 @@ export const updateAppMenu = async () => {
                 })(),
             }),
         ],
+        //捷径
+        shortcuts: Object.entries(getConfig().shortcuts).map(([key, value]) => new MenuItem({
+            label: key,
+            click: () => {
+                ui.chroom(value)
+            },
+        })),
     }
     const menu = Menu.buildFromTemplate([
         {
@@ -710,6 +717,14 @@ export const updateAppMenu = async () => {
             submenu: Menu.buildFromTemplate(globalMenu.options),
         },
     ])
+    if (globalMenu.shortcuts.length) {
+        menu.append(
+            new MenuItem({
+                label: '捷径',
+                submenu: Menu.buildFromTemplate(globalMenu.shortcuts),
+            }),
+        )
+    }
     const selectedRoom = await getSelectedRoom()
     if (selectedRoom) {
         menu.append(
