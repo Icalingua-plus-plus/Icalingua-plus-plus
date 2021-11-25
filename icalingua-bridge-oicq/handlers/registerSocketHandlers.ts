@@ -47,4 +47,5 @@ export default (io: Server, socket: Socket) => {
     socket.on('requestGfsToken', (gin: number, cb) => cb(gfsTokenManager.create(gin)))
     socket.on('login-verify-reLogin', adapter.reLogin)
     socket.on('login-slider-ticket', adapter.sliderLogin)
+    socket.on('getGroup', adapter.getGroup)
 }

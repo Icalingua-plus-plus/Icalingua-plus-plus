@@ -603,6 +603,9 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    getGroup(gin: number, resolve) {
+        resolve(bot.gl.get(gin))
+    },
     setGroupKick(gin: number, uin: number): any {
         bot.setGroupKick(gin, uin)
     },
