@@ -86,12 +86,12 @@ export default {
         },
     },
     created() {
-        setTimeout(() => ipcRenderer.invoke('getFriendsAndGroups')
+        ipcRenderer.invoke('getFriendsAndGroups')
             .then(({friends, groups, friendsFallback}) => {
                 this.friendsAll = friends ? Object.freeze(friends) : null
                 this.groupsAll = Object.freeze(groups)
                 friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-            }), 10 * 1000)
+            })
     },
     methods: {
         refresh() {
