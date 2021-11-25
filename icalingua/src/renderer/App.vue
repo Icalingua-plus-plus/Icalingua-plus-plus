@@ -1,13 +1,33 @@
 <template>
-  <div id="app">
-    <router-view></router-view>
-  </div>
+    <div id="app">
+        <router-view></router-view>
+    </div>
 </template>
 
 <script>
+import fs from 'fs'
+import path from 'path'
+import ipc from './utils/ipc'
+
+function dynamicLoadCss(url) {
+    const head = document.getElementsByTagName('head')[0]
+    const link = document.createElement('link')
+    link.type = 'text/css'
+    link.rel = 'stylesheet'
+    link.href = url
+    head.appendChild(link)
+}
+
 export default {
-  name: "app",
-};
+    name: 'app',
+    async created() {
+        const STORE_PATH = await ipc.getStorePath()
+        if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
+            console.log('custom CSS applied')
+            dynamicLoadCss('file://' + path.join(STORE_PATH, 'style.css'))
+        }
+    },
+}
 </script>
 
 <style>
@@ -18,6 +38,7 @@ export default {
   font-family: "msyh";
   src: url("./assets/msyh.ttf");
 }
+
 @font-face {
   font-family: "twemoji";
   src: url("./assets/Twemoji.ttf");
