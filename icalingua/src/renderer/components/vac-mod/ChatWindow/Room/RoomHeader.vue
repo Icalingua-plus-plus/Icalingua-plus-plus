@@ -20,9 +20,9 @@
                     <slot name="room-header-avatar" v-bind="{ room }">
                         <a @dblclick="$emit('pokefriend')">
                             <div
-                                v-if="room.avatar"
+                                v-if="roomAvatar"
                                 class="vac-room-avatar"
-                                :style="{ 'background-image': `url('${room.avatar}')` }"
+                                :style="{ 'background-image': `url('${roomAvatar}')` }"
                             />
                         </a>
                     </slot>
@@ -76,6 +76,7 @@ import vClickOutside from 'v-click-outside'
 import SvgIcon from '../../components/SvgIcon'
 
 import typingText from '../../utils/typingText'
+import getAvatarUrl from '../../../../../utils/getAvatarUrl'
 
 export default {
     name: 'RoomHeader',
@@ -108,6 +109,9 @@ export default {
     computed: {
         typingUsers() {
             return typingText(this.room, this.currentUserId, this.textMessages)
+        },
+        roomAvatar() {
+            return getAvatarUrl(this.room.roomId)
         },
     },
 

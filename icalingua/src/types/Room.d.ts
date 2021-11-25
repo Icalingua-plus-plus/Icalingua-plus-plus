@@ -3,7 +3,6 @@ import LastMessage from "./LastMessage";
 export default interface Room {
   roomId: number;
   roomName: string;
-  avatar: string;
   index: number;
   unreadCount: number;
   priority: 1 | 2 | 3 | 4 | 5;
