@@ -386,7 +386,9 @@ jobs:
 
   pack-snap-x86_64:
     runs-on: ubuntu-latest
-    needs: build-x86_64
+    needs:
+      - build-x86_64
+      - build-dist-bundle
     defaults:
       run:
         working-directory: icalingua
@@ -422,7 +424,7 @@ jobs:
       - name: pack
         id: pack
         run: |
-          sg lxd -c 'yarn build:electron --pd unpacked -l snap -p never'
+          sg lxd -c 'yarn build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
           echo "::set-output name=snap::$(readlink -f $(ls build/*.snap))"
         env:
           SNAPCRAFT_BUILD_ENVIRONMENT: lxd
