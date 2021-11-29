@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'emojis'">
+        <div class="emoji-panel" v-show="panel === 'emojis'">
             <VEmojiPicker @select="$emit('selectEmoji', $event)"/>
         </div>
     </div>
@@ -232,6 +232,31 @@ div.head {
   }
 }
 
+
+// 修复 emoji 面板溢出
+@mixin emoji-flex {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.emoji-panel {
+    @include emoji-flex;
+}
+
+::v-deep #Emojis {
+    @include emoji-flex;
+    display: flex !important;
+}
+
+::v-deep #Categories,::v-deep #InputSearch {
+    flex-shrink: 0;
+}
+
+::v-deep .container-emoji {
+    height: auto !important;;
+}
+
 </style>
 
 <style scoped>
@@ -244,7 +269,4 @@ div.head {
   border: none !important;
 }
 
-::v-deep .container-emoji {
-  height: calc(100vh - 147px) !important;
-}
 </style>
