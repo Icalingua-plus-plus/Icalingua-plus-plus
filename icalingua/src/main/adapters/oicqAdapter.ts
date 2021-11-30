@@ -1237,7 +1237,9 @@ const adapter: OicqAdapter = {
                         messages.push(message)
                         newMsgs.push(message)
                         console.log(retData)
-                        lastMessage = retData.message
+                        lastMessage = Object.assign(retData.message,retData.lastMessage,{
+                            username: getUin() == retData.message.senderId ? "You": retData.message.username
+                        }) 
                     } catch (e) {
                         errorHandler(e, true)
                     }
