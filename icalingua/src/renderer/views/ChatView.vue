@@ -115,6 +115,7 @@
             title="联系人"
             :visible.sync="contactsShown"
             top="5vh"
+            class="dialog"
         >
             <TheContactsPanel
                 @dblclick="startChat"
@@ -570,5 +571,13 @@ main div {
       -webkit-appearance: none;
     }
   }
+}
+
+.dialog .el-dialog__body,.el-dialog__header {
+  background-color: var(--panel-background);
+}
+
+.dialog .el-dialog__title {
+  color: var(--panel-color-name);
 }
 </style>
