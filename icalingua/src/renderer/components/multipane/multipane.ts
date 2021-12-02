@@ -37,7 +37,7 @@ export default {
 
   methods: {
     onMouseDown({ target: resizer, pageX: initialPageX, pageY: initialPageY }) {
-      if (resizer.className && resizer.className.match('multipane-resizer')) {
+      if (typeof resizer.className === 'string' && resizer.className.match('multipane-resizer')) {
         const resizeNext = resizer.className.match('resize-next')
         let self = this;
         let { $el: container, layout } = self;
