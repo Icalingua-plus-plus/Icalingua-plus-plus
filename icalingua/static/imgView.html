@@ -1,236 +1,237 @@
 <html>
 <head>
-    <style>
-      body {
-        background: black;
-      }
+	<style>
+	body {
+		background: black;
+	}
 
-      .btn {
-        width: 100%;
-        height: 100%;
-        border: none;
-        text-align: center;
-        background-size: 100% 100%;
-        background-color: transparent;
-      }
+	.btn {
+		width: 100%;
+		height: 100%;
+		border: none;
+		text-align: center;
+		background-size: 100% 100%;
+		background-color: transparent;
+		outline: none;
+	}
 
-        .btn:hover {
-            background-color: rgba(0, 0, 0, 0.3);
-        }
+	.btn:hover {
+		background-color: rgba(0, 0, 0, 0.3);
+	}
 
-      td {
-        text-align: center;
-      }
+	td {
+			text-align: center;
+	}
 
-      * {
-        -webkit-user-select: none;
-        -webkit-user-drag: none;
-      }
+	* {
+		-webkit-user-select: none;
+		-webkit-user-drag: none;
+	}
 
-      #BAR {
-        background: rgba(255, 255, 255, 0.7);
-        position: absolute;
-        z-index: 3;
-        left: 50%;
-        bottom: 0;
-        text-align: center;
-        height: 8vh;
-        width: 50%;
-        border-radius: 10px;
-        backdrop-filter: blur(2px);
-        transform: translateX(-50%);
-      }
-    </style>
-    <title>图片查看</title>
+	#BAR {
+		background: rgba(255, 255, 255, 0.7);
+		position: absolute;
+		z-index: 3;
+		left: 50%;
+		bottom: 0;
+		text-align: center;
+		height: 8vh;
+		width: 50%;
+		border-radius: 10px;
+		backdrop-filter: blur(2px);
+		transform: translateX(-50%);
+	}
+	</style>
+	<title>图片查看</title>
 </head>
 <body style="overflow: hidden;">
 <img id='IMG' style="position: absolute; z-index: 1" src="">
 <div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%;"></div>
 <div id='BAR'>
-    <table style="width: 100%; height: 100%;">
-        <tr>
-            <!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
-            <!-- toggle -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3QzNjMiCiAgICAgdHJhbnNmb3JtPSJzY2FsZSgwLjI2NDU4MzMzKSIKICAgICBkPSJNIDY0Ljc5ODgyOCAyNDUuMzIyMjcgTCA2NC43OTg4MjggNzU0LjY3NzczIEwgMjUyLjA2MjUgNzU0LjY3NzczIEwgMjUyLjA2MjUgNjgwLjUyMTQ4IEwgMTM3LjQ1NzAzIDY4MC41MjE0OCBMIDEzNy40NTcwMyAzMTkuNDc4NTIgTCAyNTIuMDYyNSAzMTkuNDc4NTIgTCAyNTIuMDYyNSAyNDUuMzIyMjcgTCA2NC43OTg4MjggMjQ1LjMyMjI3IHogTSA3NDcuOTM3NSAyNDUuMzIyMjcgTCA3NDcuOTM3NSAzMTkuNDc4NTIgTCA4NjIuNTQyOTcgMzE5LjQ3ODUyIEwgODYyLjU0Mjk3IDY4MC41MjE0OCBMIDc0Ny45Mzc1IDY4MC41MjE0OCBMIDc0Ny45Mzc1IDc1NC42Nzc3MyBMIDkzNS4yMDExNyA3NTQuNjc3NzMgTCA5MzUuMjAxMTcgMjQ1LjMyMjI3IEwgNzQ3LjkzNzUgMjQ1LjMyMjI3IHogIgogICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC45OTk5OTk5NCIgLz4KICA8ZwogICAgIGlkPSJmbG93Um9vdDM3MyIKICAgICBzdHlsZT0iZm9udC1zdHlsZTpub3JtYWw7Zm9udC13ZWlnaHQ6bm9ybWFsO2ZvbnQtc2l6ZToyNjYuNjY2NjU2NDlweDtsaW5lLWhlaWdodDoxLjI1O2ZvbnQtZmFtaWx5OnNhbnMtc2VyaWY7bGV0dGVyLXNwYWNpbmc6MHB4O3dvcmQtc3BhY2luZzowcHg7ZmlsbDojMDAwMDAwO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lIgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuMjY0NTgzMzMsMCwwLDAuMjY0NTgzMzMsMTEuMDgwMTIyLDMuNDIzOTEyKSIKICAgICBhcmlhLWxhYmVsPSIxOjEiPgogICAgPHBhdGgKICAgICAgIGlkPSJwYXRoNDA5IgogICAgICAgc3R5bGU9ImZvbnQtc2l6ZToyNjYuNjY2NjU2NDlweCIKICAgICAgIGQ9Im0gMjc0LjI2ODIzLDU2Mi4xMjQzNCBoIDQyLjk2ODc1IFYgNDEzLjgxNzA1IGwgLTQ2Ljc0NDc5LDkuMzc1IHYgLTIzLjk1ODMzIGwgNDYuNDg0MzcsLTkuMzc1IGggMjYuMzAyMDggdiAxNzIuMjY1NjIgaCA0Mi45Njg3NSB2IDIyLjEzNTQyIEggMjc0LjI2ODIzIFoiIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg0MTEiCiAgICAgICBzdHlsZT0iZm9udC1zaXplOjI2Ni42NjY2NTY0OXB4IgogICAgICAgZD0ibSA0NDIuMTA2NzYsNTUxLjE4Njg0IGggMjcuNDczOTYgdiAzMy4wNzI5MiBoIC0yNy40NzM5NiB6IG0gMCwtMTA0LjgxNzcgaCAyNy40NzM5NiB2IDMzLjA3MjkxIGggLTI3LjQ3Mzk2IHoiIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg0MTMiCiAgICAgICBzdHlsZT0iZm9udC1zaXplOjI2Ni42NjY2NTY0OXB4IgogICAgICAgZD0ibSA1MzMuNzczNDIsNTYyLjEyNDM0IGggNDIuOTY4NzQgViA0MTMuODE3MDUgbCAtNDYuNzQ0NzksOS4zNzUgdiAtMjMuOTU4MzMgbCA0Ni40ODQzOCwtOS4zNzUgaCAyNi4zMDIwOCB2IDE3Mi4yNjU2MiBoIDQyLjk2ODc1IHYgMjIuMTM1NDIgSCA1MzMuNzczNDIgWiIgLz4KICA8L2c+Cjwvc3ZnPgo=);'></button>
-            </td>
-            <!-- Rotate Left -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxnCiAgICAgaWQ9ImxheWVyMSIKICAgICB0cmFuc2Zvcm09Im1hdHJpeCgtMSwwLDAsMSwyNjQuMzY5MzksLTMyLjQxNjY1KSI+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI0NzczNTM0IgogICAgICAgZD0iTSAxMjguODMzNjMsNzkuNTgxNTI5IEEgODUuMzM1NDE1LDg1LjMzNTQxNSAwIDAgMCA0Ni45MjM3NTEsMTY0Ljc0NTU2IDg1LjMzNTQxNSw4NS4zMzU0MTUgMCAwIDAgMTMyLjI1OTI3LDI1MC4wODEwOCA4NS4zMzU0MTUsODUuMzM1NDE1IDAgMCAwIDIxNy40NDU2NCwxNjguOTYxNiBIIDIwMy43MDM0NSBBIDcxLjIzNjE0OSw3MS4yMzYxNDkgMCAwIDEgMTMyLjcyOTc2LDIzNC45NTIyOCA3MS4yMzYxNDksNzEuMjM2MTQ5IDAgMCAxIDYxLjQ5MzgwMSwxNjMuNzE1OTYgNzEuMjM2MTQ5LDcxLjIzNjE0OSAwIDAgMSAxMjguODMzNjMsOTIuNjE3OTgzIFoiCiAgICAgICBpZD0icGF0aDM3MTciIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg3NCIKICAgICAgIGQ9Im0gMTYzLjA5NjcyLDgyLjEyMDUxOCAtMjMuOTY2NTcsMTcuOTAwMzUyIC0yMy45NjY1NywxNy45MDAzNCAtMy41MTg4NywtMjkuNzA1ODI2IC0zLjUxODg3LC0yOS43MDU4MzEgMjcuNDg1NDQsMTEuODA1NDgyIHoiCiAgICAgICBzdHlsZT0ic3Ryb2tlLXdpZHRoOjAuMjY0NTgzMzIiIC8+CiAgPC9nPgo8L3N2Zz4K);'></button>
-            </td>
-            <!-- Rotate Right -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICBpZD0ic3ZnOCIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgaGVpZ2h0PSIxMDAwIgogICB3aWR0aD0iMTAwMCI+CiAgPGcKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLC0zMi40MTY2NSkiCiAgICAgaWQ9ImxheWVyMSI+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGgzNzE3IgogICAgICAgZD0iTSAxMjguODMzNjMsNzkuNTgxNTI5IEEgODUuMzM1NDE1LDg1LjMzNTQxNSAwIDAgMCA0Ni45MjM3NTEsMTY0Ljc0NTU2IDg1LjMzNTQxNSw4NS4zMzU0MTUgMCAwIDAgMTMyLjI1OTI3LDI1MC4wODEwOCA4NS4zMzU0MTUsODUuMzM1NDE1IDAgMCAwIDIxNy40NDU2NCwxNjguOTYxNiBIIDIwMy43MDM0NSBBIDcxLjIzNjE0OSw3MS4yMzYxNDkgMCAwIDEgMTMyLjcyOTc2LDIzNC45NTIyOCA3MS4yMzYxNDksNzEuMjM2MTQ5IDAgMCAxIDYxLjQ5MzgwMSwxNjMuNzE1OTYgNzEuMjM2MTQ5LDcxLjIzNjE0OSAwIDAgMSAxMjguODMzNjMsOTIuNjE3OTgzIFoiCiAgICAgICBzdHlsZT0ic3Ryb2tlLXdpZHRoOjAuMjQ3NzM1MzQiIC8+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI2NDU4MzMyIgogICAgICAgZD0ibSAxNjMuMDk2NzIsODIuMTIwNTE4IC0yMy45NjY1NywxNy45MDAzNTIgLTIzLjk2NjU3LDE3LjkwMDM0IC0zLjUxODg3LC0yOS43MDU4MjYgLTMuNTE4ODcsLTI5LjcwNTgzMSAyNy40ODU0NCwxMS44MDU0ODIgeiIKICAgICAgIGlkPSJwYXRoNzQiIC8+CiAgPC9nPgo8L3N2Zz4K);'></button>
-            </td>
-            <!-- Zoom In -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEiCiAgICAgdHJhbnNmb3JtPSJzY2FsZSgwLjI2NDU4MzMzKSIKICAgICBkPSJNIDQ1My4zMjYxNyAxMDMuNzUgTCA1MzQuOTcyNjYgMTg1LjM5NjQ4IEwgODE0LjYwMzUyIDE4NS4zOTY0OCBMIDgxNC42MDM1MiA0NjUuMDI3MzQgTCA4OTYuMjUgNTQ2LjY3MzgzIEwgODk2LjI1IDEwMy43NSBMIDQ1My4zMjYxNyAxMDMuNzUgeiBNIDEwMy43NSA0NTMuMzI2MTcgTCAxMDMuNzUgODk2LjI1IEwgNTQ2LjY3MzgzIDg5Ni4yNSBMIDQ2NS4wMjczNCA4MTQuNjAzNTIgTCAxODUuMzk2NDggODE0LjYwMzUyIEwgMTg1LjM5NjQ4IDUzNC45NzI2NiBMIDEwMy43NSA0NTMuMzI2MTcgeiAiCiAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjk5OTk5OTk0IiAvPgo8L3N2Zz4K);'></button>
-            </td>
-            <!-- Zoom Out -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEiCiAgICAgZD0ibSAyNi40NTgzMzMsMTY2LjUxNzc4IDEzLjE5OTc0LDEzLjE5OTc0IGggNDUuMjA3Nzc2IHYgNDUuMjA3NzQgTCA5OC4wNjU1OSwyMzguMTI1IHYgLTcxLjYwNzIyIHoiCiAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjE2MTY2OTM2IiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEtMyIKICAgICBkPSJNIDIzOC4yOTQ3Niw5Ny44OTU4MzQgMjI1LjA5NTAyLDg0LjY5NjA5NCBIIDE3OS44ODcyNCBWIDM5LjQ4ODM1MiBMIDE2Ni42ODc1LDI2LjI4ODYxMiB2IDcxLjYwNzIyMiB6IgogICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC4xNjE2NjkzNiIgLz4KPC9zdmc+Cg==);'></button>
-            </td>
-            <!-- Download -->
-            <td>
-                <button class='btn'
-                        style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICBpZD0ic3ZnOCIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgaGVpZ2h0PSIxMDAwIgogICB3aWR0aD0iMTAwMCI+CiAgPGRlZnMKICAgICBpZD0iZGVmczIiIC8+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhNSI+CiAgICA8cmRmOlJERj4KICAgICAgPGNjOldvcmsKICAgICAgICAgcmRmOmFib3V0PSIiPgogICAgICAgIDxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0PgogICAgICAgIDxkYzp0eXBlCiAgICAgICAgICAgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIgLz4KICAgICAgICA8ZGM6dGl0bGU+PC9kYzp0aXRsZT4KICAgICAgPC9jYzpXb3JrPgogICAgPC9yZGY6UkRGPgogIDwvbWV0YWRhdGE+CiAgPGcKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLC0zMi40MTY2NSkiCiAgICAgaWQ9ImxheWVyMSI+CiAgICA8cGF0aAogICAgICAgaWQ9InJlY3QxNTAiCiAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjI2NDU4MzMzLDAsMCwwLjI2NDU4MzMzLDAsMzIuNDE2NjUpIgogICAgICAgZD0iTSAxNDcuODU3NDIsNTAyLjg1NzQyIFYgODkwIEggODUyLjE0MjU4IFYgNTAyLjg1NzQyIGggLTUyLjg1NzQyIHYgMzQwIEggMjAwLjcxNDg0IHYgLTM0MCB6IgogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDoxLjA2MDQxNTYzIiAvPgogICAgPHJlY3QKICAgICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC4yNjQ1ODMzMiIKICAgICAgIHk9IjU3Ljc0MTA1NSIKICAgICAgIHg9IjEyMy41OTgyMSIKICAgICAgIGhlaWdodD0iMTc2LjEzNjkiCiAgICAgICB3aWR0aD0iMTcuMzg2OTA2IgogICAgICAgaWQ9InJlY3QxNzMiIC8+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI2NDU4MzMyIgogICAgICAgZD0ibSAxMzIuODU4NjMsMjQ4LjI0MTE0IC0yMi4wNTEzOSwtMzcuNTM5NDYgLTIyLjA1MTM5NSwtMzcuNTM5NDUgNDMuNTM1ODE1LC0wLjMyNzM0IDQzLjUzNTgyLC0wLjMyNzM0IC0yMS40ODQ0MiwzNy44NjY4IHoiCiAgICAgICBpZD0icGF0aDE4MSIgLz4KICA8L2c+Cjwvc3ZnPgo=);'></button>
-            </td>
-        </tr>
-    </table>
+	<table style="width: 100%; height: 100%;">
+		<tr>
+			<!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
+			<!-- toggle -->
+			<td>
+				<button class='btn'2lvbj0iMS4xIgogICB2aWV3Q
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3QzNjMiCiAgICAgdHJhbnNmb3JtPSJzY2FsZSgwLjI2NDU4MzMzKSIKICAgICBkPSJNIDY0Ljc5ODgyOCAyNDUuMzIyMjcgTCA2NC43OTg4MjggNzU0LjY3NzczIEwgMjUyLjA2MjUgNzU0LjY3NzczIEwgMjUyLjA2MjUgNjgwLjUyMTQ4IEwgMTM3LjQ1NzAzIDY4MC41MjE0OCBMIDEzNy40NTcwMyAzMTkuNDc4NTIgTCAyNTIuMDYyNSAzMTkuNDc4NTIgTCAyNTIuMDYyNSAyNDUuMzIyMjcgTCA2NC43OTg4MjggMjQ1LjMyMjI3IHogTSA3NDcuOTM3NSAyNDUuMzIyMjcgTCA3NDcuOTM3NSAzMTkuNDc4NTIgTCA4NjIuNTQyOTcgMzE5LjQ3ODUyIEwgODYyLjU0Mjk3IDY4MC41MjE0OCBMIDc0Ny45Mzc1IDY4MC41MjE0OCBMIDc0Ny45Mzc1IDc1NC42Nzc3MyBMIDkzNS4yMDExNyA3NTQuNjc3NzMgTCA5MzUuMjAxMTcgMjQ1LjMyMjI3IEwgNzQ3LjkzNzUgMjQ1LjMyMjI3IHogIgogICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC45OTk5OTk5NCIgLz4KICA8ZwogICAgIGlkPSJmbG93Um9vdDM3MyIKICAgICBzdHlsZT0iZm9udC1zdHlsZTpub3JtYWw7Zm9udC13ZWlnaHQ6bm9ybWFsO2ZvbnQtc2l6ZToyNjYuNjY2NjU2NDlweDtsaW5lLWhlaWdodDoxLjI1O2ZvbnQtZmFtaWx5OnNhbnMtc2VyaWY7bGV0dGVyLXNwYWNpbmc6MHB4O3dvcmQtc3BhY2luZzowcHg7ZmlsbDojMDAwMDAwO2ZpbGwtb3BhY2l0eToxO3N0cm9rZTpub25lIgogICAgIHRyYW5zZm9ybT0ibWF0cml4KDAuMjY0NTgzMzMsMCwwLDAuMjY0NTgzMzMsMTEuMDgwMTIyLDMuNDIzOTEyKSIKICAgICBhcmlhLWxhYmVsPSIxOjEiPgogICAgPHBhdGgKICAgICAgIGlkPSJwYXRoNDA5IgogICAgICAgc3R5bGU9ImZvbnQtc2l6ZToyNjYuNjY2NjU2NDlweCIKICAgICAgIGQ9Im0gMjc0LjI2ODIzLDU2Mi4xMjQzNCBoIDQyLjk2ODc1IFYgNDEzLjgxNzA1IGwgLTQ2Ljc0NDc5LDkuMzc1IHYgLTIzLjk1ODMzIGwgNDYuNDg0MzcsLTkuMzc1IGggMjYuMzAyMDggdiAxNzIuMjY1NjIgaCA0Mi45Njg3NSB2IDIyLjEzNTQyIEggMjc0LjI2ODIzIFoiIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg0MTEiCiAgICAgICBzdHlsZT0iZm9udC1zaXplOjI2Ni42NjY2NTY0OXB4IgogICAgICAgZD0ibSA0NDIuMTA2NzYsNTUxLjE4Njg0IGggMjcuNDczOTYgdiAzMy4wNzI5MiBoIC0yNy40NzM5NiB6IG0gMCwtMTA0LjgxNzcgaCAyNy40NzM5NiB2IDMzLjA3MjkxIGggLTI3LjQ3Mzk2IHoiIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg0MTMiCiAgICAgICBzdHlsZT0iZm9udC1zaXplOjI2Ni42NjY2NTY0OXB4IgogICAgICAgZD0ibSA1MzMuNzczNDIsNTYyLjEyNDM0IGggNDIuOTY4NzQgViA0MTMuODE3MDUgbCAtNDYuNzQ0NzksOS4zNzUgdiAtMjMuOTU4MzMgbCA0Ni40ODQzOCwtOS4zNzUgaCAyNi4zMDIwOCB2IDE3Mi4yNjU2MiBoIDQyLjk2ODc1IHYgMjIuMTM1NDIgSCA1MzMuNzczNDIgWiIgLz4KICA8L2c+Cjwvc3ZnPgo=);'></button>
+			</td>
+			<!-- Rotate Left -->
+			<td>
+				<button class='btn'
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxnCiAgICAgaWQ9ImxheWVyMSIKICAgICB0cmFuc2Zvcm09Im1hdHJpeCgtMSwwLDAsMSwyNjQuMzY5MzksLTMyLjQxNjY1KSI+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI0NzczNTM0IgogICAgICAgZD0iTSAxMjguODMzNjMsNzkuNTgxNTI5IEEgODUuMzM1NDE1LDg1LjMzNTQxNSAwIDAgMCA0Ni45MjM3NTEsMTY0Ljc0NTU2IDg1LjMzNTQxNSw4NS4zMzU0MTUgMCAwIDAgMTMyLjI1OTI3LDI1MC4wODEwOCA4NS4zMzU0MTUsODUuMzM1NDE1IDAgMCAwIDIxNy40NDU2NCwxNjguOTYxNiBIIDIwMy43MDM0NSBBIDcxLjIzNjE0OSw3MS4yMzYxNDkgMCAwIDEgMTMyLjcyOTc2LDIzNC45NTIyOCA3MS4yMzYxNDksNzEuMjM2MTQ5IDAgMCAxIDYxLjQ5MzgwMSwxNjMuNzE1OTYgNzEuMjM2MTQ5LDcxLjIzNjE0OSAwIDAgMSAxMjguODMzNjMsOTIuNjE3OTgzIFoiCiAgICAgICBpZD0icGF0aDM3MTciIC8+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGg3NCIKICAgICAgIGQ9Im0gMTYzLjA5NjcyLDgyLjEyMDUxOCAtMjMuOTY2NTcsMTcuOTAwMzUyIC0yMy45NjY1NywxNy45MDAzNCAtMy41MTg4NywtMjkuNzA1ODI2IC0zLjUxODg3LC0yOS43MDU4MzEgMjcuNDg1NDQsMTEuODA1NDgyIHoiCiAgICAgICBzdHlsZT0ic3Ryb2tlLXdpZHRoOjAuMjY0NTgzMzIiIC8+CiAgPC9nPgo8L3N2Zz4K);'></button>
+			</td>
+			<!-- Rotate Right -->
+			<td>
+				<button class='btn'
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICBpZD0ic3ZnOCIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgaGVpZ2h0PSIxMDAwIgogICB3aWR0aD0iMTAwMCI+CiAgPGcKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLC0zMi40MTY2NSkiCiAgICAgaWQ9ImxheWVyMSI+CiAgICA8cGF0aAogICAgICAgaWQ9InBhdGgzNzE3IgogICAgICAgZD0iTSAxMjguODMzNjMsNzkuNTgxNTI5IEEgODUuMzM1NDE1LDg1LjMzNTQxNSAwIDAgMCA0Ni45MjM3NTEsMTY0Ljc0NTU2IDg1LjMzNTQxNSw4NS4zMzU0MTUgMCAwIDAgMTMyLjI1OTI3LDI1MC4wODEwOCA4NS4zMzU0MTUsODUuMzM1NDE1IDAgMCAwIDIxNy40NDU2NCwxNjguOTYxNiBIIDIwMy43MDM0NSBBIDcxLjIzNjE0OSw3MS4yMzYxNDkgMCAwIDEgMTMyLjcyOTc2LDIzNC45NTIyOCA3MS4yMzYxNDksNzEuMjM2MTQ5IDAgMCAxIDYxLjQ5MzgwMSwxNjMuNzE1OTYgNzEuMjM2MTQ5LDcxLjIzNjE0OSAwIDAgMSAxMjguODMzNjMsOTIuNjE3OTgzIFoiCiAgICAgICBzdHlsZT0ic3Ryb2tlLXdpZHRoOjAuMjQ3NzM1MzQiIC8+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI2NDU4MzMyIgogICAgICAgZD0ibSAxNjMuMDk2NzIsODIuMTIwNTE4IC0yMy45NjY1NywxNy45MDAzNTIgLTIzLjk2NjU3LDE3LjkwMDM0IC0zLjUxODg3LC0yOS43MDU4MjYgLTMuNTE4ODcsLTI5LjcwNTgzMSAyNy40ODU0NCwxMS44MDU0ODIgeiIKICAgICAgIGlkPSJwYXRoNzQiIC8+CiAgPC9nPgo8L3N2Zz4K);'></button>
+			</td>
+			<!-- Zoom In -->
+			<td>
+				<button class='btn'
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEiCiAgICAgdHJhbnNmb3JtPSJzY2FsZSgwLjI2NDU4MzMzKSIKICAgICBkPSJNIDQ1My4zMjYxNyAxMDMuNzUgTCA1MzQuOTcyNjYgMTg1LjM5NjQ4IEwgODE0LjYwMzUyIDE4NS4zOTY0OCBMIDgxNC42MDM1MiA0NjUuMDI3MzQgTCA4OTYuMjUgNTQ2LjY3MzgzIEwgODk2LjI1IDEwMy43NSBMIDQ1My4zMjYxNyAxMDMuNzUgeiBNIDEwMy43NSA0NTMuMzI2MTcgTCAxMDMuNzUgODk2LjI1IEwgNTQ2LjY3MzgzIDg5Ni4yNSBMIDQ2NS4wMjczNCA4MTQuNjAzNTIgTCAxODUuMzk2NDggODE0LjYwMzUyIEwgMTg1LjM5NjQ4IDUzNC45NzI2NiBMIDEwMy43NSA0NTMuMzI2MTcgeiAiCiAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjk5OTk5OTk0IiAvPgo8L3N2Zz4K);'></button>
+			</td>
+			<!-- Zoom Out -->
+			<td>
+				<button class='btn'
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB3aWR0aD0iMTAwMCIKICAgaGVpZ2h0PSIxMDAwIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnOCI+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhMjk0Ij4KICAgIDxyZGY6UkRGPgogICAgICA8Y2M6V29yawogICAgICAgICByZGY6YWJvdXQ9IiI+CiAgICAgICAgPGRjOmZvcm1hdD5pbWFnZS9zdmcreG1sPC9kYzpmb3JtYXQ+CiAgICAgICAgPGRjOnR5cGUKICAgICAgICAgICByZGY6cmVzb3VyY2U9Imh0dHA6Ly9wdXJsLm9yZy9kYy9kY21pdHlwZS9TdGlsbEltYWdlIiAvPgogICAgICAgIDxkYzp0aXRsZT48L2RjOnRpdGxlPgogICAgICA8L2NjOldvcms+CiAgICA8L3JkZjpSREY+CiAgPC9tZXRhZGF0YT4KICA8ZGVmcwogICAgIGlkPSJkZWZzMjkyIiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEiCiAgICAgZD0ibSAyNi40NTgzMzMsMTY2LjUxNzc4IDEzLjE5OTc0LDEzLjE5OTc0IGggNDUuMjA3Nzc2IHYgNDUuMjA3NzQgTCA5OC4wNjU1OSwyMzguMTI1IHYgLTcxLjYwNzIyIHoiCiAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjE2MTY2OTM2IiAvPgogIDxwYXRoCiAgICAgaWQ9InJlY3Q0OTEtMyIKICAgICBkPSJNIDIzOC4yOTQ3Niw5Ny44OTU4MzQgMjI1LjA5NTAyLDg0LjY5NjA5NCBIIDE3OS44ODcyNCBWIDM5LjQ4ODM1MiBMIDE2Ni42ODc1LDI2LjI4ODYxMiB2IDcxLjYwNzIyMiB6IgogICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC4xNjE2NjkzNiIgLz4KPC9zdmc+Cg==);'></button>
+			</td>
+			<!-- Download -->
+			<td>
+				<button class='btn'
+						style='background-image: url(data:image/svg+xml;base64,PHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICBpZD0ic3ZnOCIKICAgdmVyc2lvbj0iMS4xIgogICB2aWV3Qm94PSIwIDAgMjY0LjU4MzMzIDI2NC41ODMzNCIKICAgaGVpZ2h0PSIxMDAwIgogICB3aWR0aD0iMTAwMCI+CiAgPGRlZnMKICAgICBpZD0iZGVmczIiIC8+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhNSI+CiAgICA8cmRmOlJERj4KICAgICAgPGNjOldvcmsKICAgICAgICAgcmRmOmFib3V0PSIiPgogICAgICAgIDxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0PgogICAgICAgIDxkYzp0eXBlCiAgICAgICAgICAgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIgLz4KICAgICAgICA8ZGM6dGl0bGU+PC9kYzp0aXRsZT4KICAgICAgPC9jYzpXb3JrPgogICAgPC9yZGY6UkRGPgogIDwvbWV0YWRhdGE+CiAgPGcKICAgICB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLC0zMi40MTY2NSkiCiAgICAgaWQ9ImxheWVyMSI+CiAgICA8cGF0aAogICAgICAgaWQ9InJlY3QxNTAiCiAgICAgICB0cmFuc2Zvcm09Im1hdHJpeCgwLjI2NDU4MzMzLDAsMCwwLjI2NDU4MzMzLDAsMzIuNDE2NjUpIgogICAgICAgZD0iTSAxNDcuODU3NDIsNTAyLjg1NzQyIFYgODkwIEggODUyLjE0MjU4IFYgNTAyLjg1NzQyIGggLTUyLjg1NzQyIHYgMzQwIEggMjAwLjcxNDg0IHYgLTM0MCB6IgogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDoxLjA2MDQxNTYzIiAvPgogICAgPHJlY3QKICAgICAgIHN0eWxlPSJzdHJva2Utd2lkdGg6MC4yNjQ1ODMzMiIKICAgICAgIHk9IjU3Ljc0MTA1NSIKICAgICAgIHg9IjEyMy41OTgyMSIKICAgICAgIGhlaWdodD0iMTc2LjEzNjkiCiAgICAgICB3aWR0aD0iMTcuMzg2OTA2IgogICAgICAgaWQ9InJlY3QxNzMiIC8+CiAgICA8cGF0aAogICAgICAgc3R5bGU9InN0cm9rZS13aWR0aDowLjI2NDU4MzMyIgogICAgICAgZD0ibSAxMzIuODU4NjMsMjQ4LjI0MTE0IC0yMi4wNTEzOSwtMzcuNTM5NDYgLTIyLjA1MTM5NSwtMzcuNTM5NDUgNDMuNTM1ODE1LC0wLjMyNzM0IDQzLjUzNTgyLC0wLjMyNzM0IC0yMS40ODQ0MiwzNy44NjY4IHoiCiAgICAgICBpZD0icGF0aDE4MSIgLz4KICA8L2c+Cjwvc3ZnPgo=);'></button>
+			</td>
+		</tr>
+	</table>
 </div>
 <a style="display: none" id='download' download href=""></a>
 </body>
 <script>
-    const body = document.body
-    const IMG = document.getElementById('IMG')
-    const DRAG = document.getElementById('DRAG')
-    const BAR = document.getElementById('BAR')
-    const DOWNLOAD = document.getElementById('download')
-    const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
-    IMG.src = url
-    DOWNLOAD.href = url
+	const body = document.body
+	const IMG = document.getElementById('IMG')
+	const DRAG = document.getElementById('DRAG')
+	const BAR = document.getElementById('BAR')
+	const DOWNLOAD = document.getElementById('download')
+	const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
+	IMG.src = url
+	DOWNLOAD.href = url
 
-    var centerX = -1	// to center, with % instead
-    var centerY = -1
-    var rotate = 0	// degree
-    var zoom = 1
+	var centerX = -1	// to center, with % instead
+	var centerY = -1
+	var rotate = 0	// degree
+	var zoom = 1
 
-    var toggle = false
+	var toggle = false
 
-    function deployLT() {
-        if (centerX < 0 || centerY < 0) {
-            centerX = 50
-            centerY = 50
-        }
-        var cX = centerX * body.clientWidth / 100
-        var hX = IMG.offsetWidth / 2
-        var cY = centerY * body.clientHeight / 100
-        var hY = IMG.offsetHeight / 2
-        IMG.style.left = cX - hX
-        IMG.style.right = cX + hX
-        IMG.style.top = cY - hY
-        IMG.style.bottom = cY + hY
-    }
+	function deployLT() {
+		if (centerX < 0 || centerY < 0) {
+			centerX = 50
+			centerY = 50
+		}
+		var cX = centerX * body.clientWidth / 100
+		var hX = IMG.offsetWidth / 2
+		var cY = centerY * body.clientHeight / 100
+		var hY = IMG.offsetHeight / 2
+		IMG.style.left = cX - hX
+		IMG.style.right = cX + hX
+		IMG.style.top = cY - hY
+		IMG.style.bottom = cY + hY
+	}
 
-    function adapt(relative = null) {
-        var absX, absY
+	function adapt(relative = null) {
+		var absX, absY
 
-        centerX = 50
-        centerY = 50
+		centerX = 50
+		centerY = 50
 
-        if (relative) {
-            // force adjust
-            if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
-                // use height
-                var ratio = IMG.offsetWidth / IMG.offsetHeight
-                IMG.style.height = body.clientHeight
-                IMG.style.width = IMG.offsetHeight * ratio
-            }
-            else {
-                var ratio = IMG.offsetHeight / IMG.offsetWidth
-                IMG.style.width = body.clientWidth
-                IMG.style.height = IMG.offsetWidth * ratio
-            }
-        }
-        else if (relative == false) {
-            // force adjust
-            IMG.style.width = IMG.naturalWidth
-            IMG.style.height = IMG.naturalHeight
-        }
-        const w = IMG.offsetWidth, h = IMG.offsetHheight
-        deployLT()
-    }
+		if (relative) {
+			// force adjust
+			if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
+				// use height
+				var ratio = IMG.offsetWidth / IMG.offsetHeight
+				IMG.style.height = body.clientHeight
+				IMG.style.width = IMG.offsetHeight * ratio
+			}
+			else {
+				var ratio = IMG.offsetHeight / IMG.offsetWidth
+				IMG.style.width = body.clientWidth
+				IMG.style.height = IMG.offsetWidth * ratio
+			}
+		}
+		else if (relative == false) {
+			// force adjust
+			IMG.style.width = IMG.naturalWidth
+			IMG.style.height = IMG.naturalHeight
+		}
+		const w = IMG.offsetWidth, h = IMG.offsetHheight
+		deployLT()
+	}
 
-    // Drag support
-    var starT, starTLT
-    DRAG.onmousedown = function (ev) {
-        var e = ev || window.event
-        starT = [e.clientX, e.clientY]
-        starTLT = [IMG.offsetLeft, IMG.offsetTop]
-    }
-    DRAG.onmousemove = function (ev) {
-        var e = ev || window.event
+	// Drag support
+	var starT, starTLT
+	DRAG.onmousedown = function (ev) {
+		var e = ev || window.event
+		starT = [e.clientX, e.clientY]
+		starTLT = [IMG.offsetLeft, IMG.offsetTop]
+	}
+	DRAG.onmousemove = function (ev) {
+		var e = ev || window.event
 
-        if (starT == null) return
+		if (starT == null) return
 
-        if (centerX < 0 || centerY < 0) {
-            centerX = 50
-            centerY = 50
-        }
+		if (centerX < 0 || centerY < 0) {
+			centerX = 50
+			centerY = 50
+		}
 
-        IMG.style.left = e.clientX - starT[0] + starTLT[0]
-        IMG.style.top = e.clientY - starT[1] + starTLT[1]
+		IMG.style.left = e.clientX - starT[0] + starTLT[0]
+		IMG.style.top = e.clientY - starT[1] + starTLT[1]
 
-        centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
-        centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
-    }
+		centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
+		centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
+	}
 
 
-    DRAG.onmouseup = function (ev) {
-        starT = null
-    }
+	DRAG.onmouseup = function (ev) {
+		starT = null
+	}
 
-    // deploy buttons
+	// deploy buttons
 
-    function mkTransform(rotate, zoom) {
-        return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
-    }
+	function mkTransform(rotate, zoom) {
+		return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
+	}
 
-    var btnactions = [
-        function () {
-            // toggle
-            toggle = !toggle
-            zoom = 1
-            IMG.style.transform = mkTransform(rotate, zoom)
-            adapt(toggle)
-        }, function () {
-            rotate -= 90
-            if (!rotate % 360) rotate = 0
-            IMG.style.transform = mkTransform(rotate, zoom)
-        }, function () {
-            rotate += 90
-            if (!rotate % 360) rotate = 0
-            IMG.style.transform = mkTransform(rotate, zoom)
-        }, function () {
-            // zoom in
-            zoom += 0.2
-            IMG.style.transform = mkTransform(rotate, zoom)
-        }, function () {
-            if (zoom < 0.3) return
-            zoom -= 0.2
-            IMG.style.transform = mkTransform(rotate, zoom)
-        }, function () {
-            // Download!
-            DOWNLOAD.dispatchEvent(new MouseEvent('click'))
-        },
-    ]
+	var btnactions = [
+		function () {
+			// toggle
+			toggle = !toggle
+			zoom = 1
+			IMG.style.transform = mkTransform(rotate, zoom)
+			adapt(toggle)
+		}, function () {
+			rotate -= 90
+			if (!rotate % 360) rotate = 0
+			IMG.style.transform = mkTransform(rotate, zoom)
+		}, function () {
+			rotate += 90
+			if (!rotate % 360) rotate = 0
+			IMG.style.transform = mkTransform(rotate, zoom)
+		}, function () {
+			// zoom in
+			zoom += 0.2
+			IMG.style.transform = mkTransform(rotate, zoom)
+		}, function () {
+			if (zoom < 0.3) return
+			zoom -= 0.2
+			IMG.style.transform = mkTransform(rotate, zoom)
+		}, function () {
+			// Download!
+			DOWNLOAD.dispatchEvent(new MouseEvent('click'))
+		},
+	]
 
-    var btns = document.getElementsByTagName('button')
-    for (var i in btns) {
-        btns[i].onclick = btnactions[i]
-    }
+	var btns = document.getElementsByTagName('button')
+	for (var i in btns) {
+		btns[i].onclick = btnactions[i]
+	}
 
-    IMG.onload = btnactions[0]
+	IMG.onload = btnactions[0]
 
-    DRAG.onwheel = e => {
-        if (e.wheelDeltaY > 0) {
-            btnactions[3]()
-        }
-        else if (e.wheelDeltaY < 0) {
-            btnactions[4]()
-        }
-    }
+	DRAG.onwheel = e => {
+		if (e.wheelDeltaY > 0) {
+			btnactions[3]()
+		}
+		else if (e.wheelDeltaY < 0) {
+			btnactions[4]()
+		}
+	}
 
-    document.addEventListener('keydown', (e) => {
-        if (e.repeat) return
-        if (e.key === 'w' && e.ctrlKey === true || e.key === 'Escape') {
-            window.close()
-        }
-    })
+	document.addEventListener('keydown', (e) => {
+		if (e.repeat) return
+		if (e.key === 'w' && e.ctrlKey === true || e.key === 'Escape') {
+			window.close()
+		}
+	})
 </script>
 </html>
