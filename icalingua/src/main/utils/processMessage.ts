@@ -14,6 +14,9 @@ import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage: LastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage))
         oicqMessage = [oicqMessage]
+    
+    lastMessage.content = lastMessage.content ?? "" // 初始化最近信息内容
+
     let lastType
     for (let i = 0; i < oicqMessage.length; i++) {
         const m = oicqMessage[i]

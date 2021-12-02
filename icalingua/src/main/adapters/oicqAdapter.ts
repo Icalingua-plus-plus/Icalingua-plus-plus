@@ -1237,7 +1237,9 @@ const adapter: OicqAdapter = {
                         messages.push(message)
                         newMsgs.push(message)
                         console.log(retData)
-                        lastMessage = retData.message
+                        lastMessage = Object.assign(retData.message,retData.lastMessage,{
+                            username: getUin() == retData.message.senderId ? "You": retData.message.username
+                        }) 
                     } catch (e) {
                         errorHandler(e, true)
                     }
@@ -1279,6 +1281,8 @@ const adapter: OicqAdapter = {
             }
         }
 
+        // 更新最近消息
+        if (!messages.length) return
         let room = await storage.getRoom(roomId)
         room.lastMessage = lastMessage
         ui.updateRoom(room)
