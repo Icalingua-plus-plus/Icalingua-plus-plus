@@ -3,7 +3,6 @@
     <div
       v-if="messageReply"
       class="vac-reply-container"
-      :style="{ bottom: `${$parent.$refs.roomFooter.clientHeight}px` }"
     >
       <div class="vac-reply-box">
         <img
@@ -65,7 +64,7 @@ export default {
 
 <style lang="scss">
 .vac-reply-container {
-  position: absolute;
+  position: relative;
   display: flex;
   padding: 10px 10px 0 10px;
   background: var(--chat-footer-bg-color);
