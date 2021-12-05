@@ -886,6 +886,8 @@ export default {
 }
 
 .vac-room-footer {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   border-bottom-right-radius: 4px;
   z-index: 10;
