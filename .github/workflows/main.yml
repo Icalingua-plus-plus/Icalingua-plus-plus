@@ -270,11 +270,11 @@ jobs:
       - name: deploy file
         uses: wlixcc/SFTP-Deploy-Action@v1.0
         with:
-          username: 'repo-builder'
+          username: 'repobuilder'
           server: ${{ secrets.REPO_BUILDER_HOST }}
           ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
           local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repo-builder/tmp'
+          remote_path: '/home/repobuilder/repo-builder/tmp'
 
       - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
@@ -323,11 +323,11 @@ jobs:
       - name: deploy file
         uses: wlixcc/SFTP-Deploy-Action@v1.0
         with:
-          username: 'repo-builder'
+          username: 'repobuilder'
           server: ${{ secrets.REPO_BUILDER_HOST }}
           ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
           local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repo-builder/tmp'
+          remote_path: '/home/repobuilder/repo-builder/tmp'
 
       - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
@@ -376,11 +376,11 @@ jobs:
       - name: deploy file
         uses: wlixcc/SFTP-Deploy-Action@v1.0
         with:
-          username: 'repo-builder'
+          username: 'repobuilder'
           server: ${{ secrets.REPO_BUILDER_HOST }}
           ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
           local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repo-builder/tmp'
+          remote_path: '/home/repobuilder/repo-builder/tmp'
 
       - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
 
