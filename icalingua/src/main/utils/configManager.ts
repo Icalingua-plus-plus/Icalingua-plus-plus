@@ -28,7 +28,8 @@ type AllConfig = {
     theme: string
     updateCheck: 'ask' | boolean
     disableBridgeVersionCheck: boolean
-    shortcuts: { [key: string]: number }
+    shortcuts: { [key: string]: number },
+    zoomFactor: number
 }
 
 
@@ -91,6 +92,7 @@ const defaultConfig: AllConfig = {
     updateCheck: 'ask',
     disableBridgeVersionCheck: false,
     shortcuts: {},
+    zoomFactor: 100
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

@@ -701,8 +701,12 @@ export const updateAppMenu = async () => {
                 submenu: [100, 110, 125, 150, 175, 200].map(factor => ({
                     type: 'radio',
                     label: `${factor}%`,
-                    checked: false,
-                    click: () => getMainWindow().webContents.setZoomFactor(factor / 100),
+                    checked: getConfig().zoomFactor === factor,
+                    click: () => {
+                        getMainWindow().webContents.setZoomFactor(factor / 100);
+                        getConfig().zoomFactor = factor;
+                        saveConfigFile();
+                    },
                 }))
             }),
         ],
