@@ -9,9 +9,9 @@ import {
     nativeImage, screen,
     shell,
 } from 'electron'
-import {getConfig, saveConfigFile} from '../utils/configManager'
+import { getConfig, saveConfigFile } from '../utils/configManager'
 import exit from '../utils/exit'
-import {getMainWindow, showRequestWindow} from '../utils/windowManager'
+import { getMainWindow, showRequestWindow } from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
@@ -29,7 +29,7 @@ import {
     setOnlineStatus as setStatus, getUin, getCookies, getGroupMemberInfo, requestGfsToken,
 } from './botAndStorage'
 import Room from '../../types/Room'
-import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
+import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
@@ -122,7 +122,7 @@ const buildRoomMenu = (room: Room): Menu => {
         },
         {
             label: '屏蔽消息',
-            click: () => ignoreChat({id: room.roomId, name: room.roomName}),
+            click: () => ignoreChat({ id: room.roomId, name: room.roomName }),
         },
         {
             label: '复制名称',
@@ -446,10 +446,9 @@ const buildRoomMenu = (room: Room): Menu => {
         }))
     }
     menu.append(new MenuItem({
-            label: '获取历史消息',
-            click: () => fetchLatestHistory(room.roomId),
-        },
-    ))
+        label: '获取历史消息',
+        click: () => fetchLatestHistory(room.roomId),
+    }))
     return menu
 }
 
@@ -697,6 +696,15 @@ export const updateAppMenu = async () => {
                     return rsp
                 })(),
             }),
+            new MenuItem({
+                label: '缩放比例',
+                submenu: [100, 110, 125, 150, 175, 200].map(factor => ({
+                    type: 'radio',
+                    label: `${factor}%`,
+                    checked: false,
+                    click: () => { },
+                }))
+            }),
         ],
         //捷径
         shortcuts: Object.entries(getConfig().shortcuts).map(([key, value]) => new MenuItem({
@@ -865,7 +873,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     menu.append(new MenuItem({
                         label: '下载',
                         click: () =>
-                            downloadFileByMessageData({action: 'download', message, room}),
+                            downloadFileByMessageData({ action: 'download', message, room }),
                     }))
                 menu.append(new MenuItem({
                     type: 'separator',
@@ -888,13 +896,12 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }))
             }
             menu.append(new MenuItem({
-                    label: '复制 URL',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.file.url)
-                    },
-                }),
-            )
+                label: '复制 URL',
+                type: 'normal',
+                click: () => {
+                    clipboard.writeText(message.file.url)
+                },
+            }))
             if (message.file.type.startsWith('image/'))
                 menu.append(new MenuItem({
                     label: '使用本地查看器打开',
@@ -910,7 +917,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             menu.append(new MenuItem({
                 label: '下载',
                 click: () =>
-                    downloadFileByMessageData({action: 'download', message, room}),
+                    downloadFileByMessageData({ action: 'download', message, room }),
             }))
         }
         menu.append(new MenuItem({
@@ -964,7 +971,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             }))
         }
     }
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 ipcMain.on('popupTextAreaMenu', () => {
     Menu.buildFromTemplate([
@@ -977,7 +984,7 @@ ipcMain.on('popupTextAreaMenu', () => {
         {
             role: 'paste',
         },
-    ]).popup({window: getMainWindow()})
+    ]).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
@@ -993,7 +1000,7 @@ ipcMain.on('popupStickerMenu', () => {
             type: 'normal',
             click: ui.closePanel,
         },
-    ]).popup({window: getMainWindow()})
+    ]).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
@@ -1015,7 +1022,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
             },
         })
     }
-    Menu.buildFromTemplate(menu).popup({window: getMainWindow()})
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
@@ -1102,7 +1109,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     querystring.escape(message.username))
             },
         }))
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()
@@ -1161,7 +1168,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 
 const copyImage = async (url: string) => {
