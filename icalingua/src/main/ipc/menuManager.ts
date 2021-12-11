@@ -702,7 +702,7 @@ export const updateAppMenu = async () => {
                     type: 'radio',
                     label: `${factor}%`,
                     checked: false,
-                    click: () => { },
+                    click: () => getMainWindow().webContents.setZoomFactor(factor / 100),
                 }))
             }),
         ],
