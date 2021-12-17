@@ -2,9 +2,7 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main">
             <!-- main chat view -->
-            <div
-                class="panel rooms-panel"
-            >
+            <div class="panel rooms-panel">
                 <TheRoomsPanel
                     :rooms="rooms"
                     :selected="selectedRoom"
@@ -16,11 +14,8 @@
                 />
             </div>
             <MultipaneResizer/>
-            <div
-                style="flex: 1"
-                class="vac-card-window"
-            >
-                <div class="pace-activity" v-show="loading"/>
+            <div style="flex: 1" class="vac-card-window">
+                <div class="pace-activity" v-show="loading" />
                 <Room
                     ref="room"
                     :current-user-id="account"
@@ -60,22 +55,21 @@
                         <i class="el-icon-more"></i>
                     </template>
                 </Room>
-                <pre v-show="selectedRoomId===0&&sysInfo"
+                <pre v-show="selectedRoomId === 0 && sysInfo"
                      style="position: absolute;
-						         right: 13px;
-							     top: 0;
-							     font-family: monospace;
-							     color: rgb(156, 166, 175);
-							 ">{{ sysInfo }}</pre>
+                            right: 13px;
+                            top: 0;
+                            font-family: monospace;
+                            color: rgb(156, 166, 175);
+                         "
+                > {{ sysInfo }} </pre>
                 <div class="getting-history" v-if="historyCount">
-                    <div class="pace-activity"/>
-                    <span>
-								正在获取历史消息... {{ historyCount }}
-							</span>
+                    <div class="pace-activity" />
+                    <span> 正在获取历史消息... {{ historyCount }} </span>
                     <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
                 </div>
             </div>
-            <MultipaneResizer class="resize-next" v-show="panel"/>
+            <MultipaneResizer class="resize-next" v-show="panel" />
             <div
                 :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
                 v-show="panel"
@@ -86,12 +80,12 @@
                     @send="sendSticker"
                     @close="panel = ''"
                     @selectEmoji="
-				                  $refs.room.message += $event.data;
-				                  $refs.room.focusTextarea();
-				                "
+                                  $refs.room.message += $event.data;
+                                  $refs.room.focusTextarea();
+                                "
                     @selectFace="
                                   $refs.room.message += `[Face: ${$event}]`;
-				                  $refs.room.focusTextarea();
+                                  $refs.room.focusTextarea();
                                 "
                 />
             </div>
@@ -106,10 +100,10 @@
         >
             <span>{{ offlineReason }}</span>
             <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="reconnect" :loading="reconnecting">
-          Reconnect now
-        </el-button>
-      </span>
+                <el-button type="primary" @click="reconnect" :loading="reconnecting">
+                    Reconnect now
+                </el-button>
+            </span>
         </el-dialog>
         <el-dialog
             title="联系人"
@@ -117,11 +111,9 @@
             top="5vh"
             class="dialog"
         >
-            <TheContactsPanel
-                @dblclick="startChat"
-            />
+            <TheContactsPanel @dblclick="startChat" />
         </el-dialog>
-        <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible"/>
+        <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
     </div>
 </template>
 
@@ -429,107 +421,107 @@ Chromium ${process.versions.chrome}` : ''
 
 <style scoped lang="scss">
 .getting-history {
-  display: flex;
-  padding: 5px;
-  position: absolute;
-  top: 75px;
-  right: 10px;
-  height: 30px;
-  background-color: var(--panel-background);
-  align-items: center;
-  border-radius: 5px;
+    display: flex;
+    padding: 5px;
+    position: absolute;
+    top: 75px;
+    right: 10px;
+    height: 30px;
+    background-color: var(--panel-background);
+    align-items: center;
+    border-radius: 5px;
 
-  .pace-activity {
-    position: relative;
-    bottom: unset;
-    right: unset;
-  }
+    .pace-activity {
+        position: relative;
+        bottom: unset;
+        right: unset;
+    }
 
-  span {
-    margin: 0 5px;
-  }
+    span {
+        margin: 0 5px;
+    }
 }
 
 .el-main {
-  padding: 0;
-  height: 100vh;
+    padding: 0;
+    height: 100vh;
 }
 
 .el-aside {
-  background-color: var(--panel-sidebar-bg);
-  color: #eee;
-  text-align: center;
-  padding-top: 15px;
-  -webkit-user-select: none;
+    background-color: var(--panel-sidebar-bg);
+    color: #eee;
+    text-align: center;
+    padding-top: 15px;
+    -webkit-user-select: none;
 }
 
 main div {
-  height: 100vh;
-  overflow: hidden;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .panel {
-  background-color: var(--panel-background);
+    background-color: var(--panel-background);
 }
 
 @keyframes pace-spinner {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .pace-activity {
-  display: block;
-  position: absolute;
-  z-index: 2000;
-  bottom: 66px;
-  right: 15px;
-  width: 14px;
-  height: 14px;
-  border: solid 2px transparent;
-  border-top-color: #29d;
-  border-left-color: #29d;
-  border-radius: 10px;
-  animation: pace-spinner 400ms linear infinite;
+    display: block;
+    position: absolute;
+    z-index: 2000;
+    bottom: 66px;
+    right: 15px;
+    width: 14px;
+    height: 14px;
+    border: solid 2px transparent;
+    border-top-color: #29d;
+    border-left-color: #29d;
+    border-radius: 10px;
+    animation: pace-spinner 400ms linear infinite;
 }
 
 @media screen and (max-width: 1200px) {
-  .resize-next {
-    display: none
-  }
+    .resize-next {
+        display: none
+    }
 
-  .panel-right {
-    position: absolute;
-    height: 60vh;
-    bottom: 70px;
-    right: 15px;
-    border-radius: 10px;
-    border: var(--chat-border-style);
-  }
+    .panel-right {
+        position: absolute;
+        height: 60vh;
+        bottom: 70px;
+        right: 15px;
+        border-radius: 10px;
+        border: var(--chat-border-style);
+    }
 }
 
 ::v-deep .el-input__inner {
-  background-color: var(--chat-bg-color-input);
-  border: var(--chat-border-style);
+    background-color: var(--chat-bg-color-input);
+    border: var(--chat-border-style);
 }
 
 .rooms-panel {
-  min-width: 140px;
-  width: 300px;
-  max-width: 500px;
+    min-width: 140px;
+    width: 300px;
+    max-width: 500px;
 
-  @media (max-width: 900px) {
-    width: 200px;
-  }
-  @media (min-width: 1500px) {
-    width: 350px;
-  }
-  @media (min-width: 2000px) {
-    width: 400px;
-  }
+    @media (max-width: 900px) {
+        width: 200px;
+    }
+    @media (min-width: 1500px) {
+        width: 350px;
+    }
+    @media (min-width: 2000px) {
+        width: 400px;
+    }
 }
 </style>
 
@@ -537,47 +529,47 @@ main div {
 @import "../components/vac-mod/styles/index.scss";
 
 .vac-card-window {
-  display: block;
-  background: var(--chat-content-bg-color);
-  color: var(--chat-color);
-  overflow-wrap: break-word;
-  position: relative;
-  white-space: normal;
-  border: var(--chat-container-border);
-  border-radius: var(--chat-container-border-radius);
-  box-shadow: var(--chat-container-box-shadow);
-  -webkit-tap-highlight-color: transparent;
+    display: block;
+    background: var(--chat-content-bg-color);
+    color: var(--chat-color);
+    overflow-wrap: break-word;
+    position: relative;
+    white-space: normal;
+    border: var(--chat-container-border);
+    border-radius: var(--chat-container-border-radius);
+    box-shadow: var(--chat-container-box-shadow);
+    -webkit-tap-highlight-color: transparent;
 
-  * {
-    font-family: inherit;
-  }
-
-  a {
-    color: #0d579c;
-    font-weight: 500;
-  }
-
-  .vac-chat-container {
-    height: 100%;
-    display: flex;
-
-    input {
-      min-width: 10px;
+    * {
+        font-family: inherit;
     }
 
-    textarea,
-    input[type="text"],
-    input[type="search"] {
-      -webkit-appearance: none;
+    a {
+        color: #0d579c;
+        font-weight: 500;
     }
-  }
+
+    .vac-chat-container {
+        height: 100%;
+        display: flex;
+
+        input {
+            min-width: 10px;
+        }
+
+        textarea,
+        input[type="text"],
+        input[type="search"] {
+            -webkit-appearance: none;
+        }
+    }
 }
 
 .dialog .el-dialog__body,.el-dialog__header {
-  background-color: var(--panel-background);
+    background-color: var(--panel-background);
 }
 
 .dialog .el-dialog__title {
-  color: var(--panel-color-name);
+    color: var(--panel-color-name);
 }
 </style>

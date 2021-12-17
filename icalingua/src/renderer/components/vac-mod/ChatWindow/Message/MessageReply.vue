@@ -60,35 +60,35 @@ export default {
 
 <style lang="scss">
 .vac-reply-message {
-  background: var(--chat-message-bg-color-reply);
-  border-radius: 4px;
-  margin: -1px -5px 8px;
-  padding: 8px 10px;
+    background: var(--chat-message-bg-color-reply);
+    border-radius: 4px;
+    margin: -1px -5px 8px;
+    padding: 8px 10px;
 
-  .vac-reply-username {
-    color: var(--chat-message-color-reply-username);
-    font-size: 12px;
-    line-height: 15px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .vac-image-reply-container {
-    width: 70px;
-
-    .vac-message-image-reply {
-      height: 70px;
-      width: 70px;
-      margin: 4px auto 3px;
-      cursor: pointer;
+    .vac-reply-username {
+        color: var(--chat-message-color-reply-username);
+        font-size: 12px;
+        line-height: 15px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-  }
 
-  .vac-reply-content {
-    font-size: 12px;
-    color: var(--chat-message-color-reply-content);
-  }
+    .vac-image-reply-container {
+        width: 70px;
+
+        .vac-message-image-reply {
+            height: 70px;
+            width: 70px;
+            margin: 4px auto 3px;
+            cursor: pointer;
+        }
+    }
+
+    .vac-reply-content {
+        font-size: 12px;
+        color: var(--chat-message-color-reply-content);
+    }
 }
 </style>

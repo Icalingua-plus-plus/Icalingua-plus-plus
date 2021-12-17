@@ -1,8 +1,8 @@
 <template>
     <div class="settings">
         <p v-if="this.$route.params.action==='kick'">
-            在 <b>{{ $route.params.groupName }}</b> 中踢出 <b>{{ $route.params.userName }}
-            ({{ uin }})</b>？
+            在 <b>{{ $route.params.groupName }}</b> 中踢出
+            <b>{{ $route.params.userName }} ({{ uin }})</b>？
         </p>
         <p v-if="this.$route.params.action==='exit'">
             确认退出 <b>{{ $route.params.groupName }}</b>？
@@ -52,16 +52,16 @@ export default {
 
 <style scoped>
 .settings {
-  padding: 0 16px
+    padding: 0 16px
 }
 
 .dialog-footer {
-  text-align: center;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-  padding-bottom: 20px;
+    text-align: center;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    padding-bottom: 20px;
 }
 </style>

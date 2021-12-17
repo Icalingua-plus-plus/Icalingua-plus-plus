@@ -4,9 +4,7 @@
         class="vac-col-messages"
     >
         <slot
-            v-if="
-        (!rooms.length && !loadingRooms) || (!room.roomId && !loadFirstRoom)
-      "
+            v-if="(!rooms.length && !loadingRooms) || (!room.roomId && !loadFirstRoom)"
             name="no-room-selected"
         >
             <div class="vac-container-center vac-room-empty">
@@ -31,7 +29,7 @@
             @room-menu="roomMenu"
         >
             <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                <slot :name="name" v-bind="data"/>
+                <slot :name="name" v-bind="data" />
             </template>
         </room-header>
 
@@ -40,7 +38,7 @@
             class="vac-container-scroll"
             @scroll="containerScroll"
         >
-            <loader :show="loadingMessages"/>
+            <loader :show="loadingMessages" />
             <div class="vac-messages-container">
                 <div :class="{ 'vac-messages-hidden': loadingMessages }">
                     <transition name="vac-fade-message">
@@ -64,10 +62,10 @@
                             @infinite="loadMoreMessages"
                         >
                             <div slot="spinner">
-                                <loader :show="true" :infinite="true"/>
+                                <loader :show="true" :infinite="true" />
                             </div>
-                            <div slot="no-results"/>
-                            <div slot="no-more"/>
+                            <div slot="no-results" />
+                            <div slot="no-more" />
                         </infinite-loading>
                     </transition>
                     <transition-group :key="roomId" name="vac-fade-message">
@@ -104,7 +102,7 @@
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                                    <slot :name="name" v-bind="data"/>
+                                    <slot :name="name" v-bind="data" />
                                 </template>
                             </message>
                         </div>
@@ -124,7 +122,7 @@
                         </div>
                     </transition>
                     <slot name="scroll-icon">
-                        <svg-icon name="dropdown" param="scroll"/>
+                        <svg-icon name="dropdown" param="scroll" />
                     </slot>
                 </div>
             </transition>
@@ -140,18 +138,21 @@
                 @reset-message="resetMessage"
             >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                    <slot :name="name" v-bind="data"/>
+                    <slot :name="name" v-bind="data" />
                 </template>
             </room-message-reply>
 
             <!-- <room-users-tag
-            :filtered-users-tag="filteredUsersTag"
-            @select-user-tag="selectUserTag($event)"
-          /> -->
-            <div style="padding-top: 10px;
+                    :filtered-users-tag="filteredUsersTag"
+                    @select-user-tag="selectUserTag($event)"
+                  /> -->
+            <div
+                style="
+                        padding-top: 10px;
                         padding-left: 10px;
-                        color: var(--panel-color-desc);"
-                 v-if="editAndResend"
+                        color: var(--panel-color-desc);
+                    "
+                v-if="editAndResend"
             >
                 编辑重发
             </div>
@@ -164,25 +165,25 @@
                 <div v-if="imageFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
-                            <svg-icon name="close" param="image"/>
+                            <svg-icon name="close" param="image" />
                         </slot>
                     </div>
                     <div class="vac-media-file">
-                        <img ref="mediaFile" :src="imageFile" @load="onMediaLoad"/>
+                        <img ref="mediaFile" :src="imageFile" @load="onMediaLoad" />
                     </div>
                 </div>
 
                 <div v-else-if="videoFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
-                            <svg-icon name="close" param="image"/>
+                            <svg-icon name="close" param="image" />
                         </slot>
                     </div>
                     <div ref="mediaFile" class="vac-media-file">
                         <video width="100%" height="100%" controls>
-                            <source :src="videoFile" type="video/mp4"/>
-                            <source :src="videoFile" type="video/ogg"/>
-                            <source :src="videoFile" type="video/webm"/>
+                            <source :src="videoFile" type="video/mp4" />
+                            <source :src="videoFile" type="video/ogg" />
+                            <source :src="videoFile" type="video/webm" />
                         </video>
                     </div>
                 </div>
@@ -194,7 +195,7 @@
                 >
                     <div class="vac-icon-file-room">
                         <slot name="file-icon">
-                            <svg-icon name="file"/>
+                            <svg-icon name="file" />
                         </slot>
                     </div>
                     <div v-if="file && file.audio" class="vac-file-message-room">
@@ -208,7 +209,7 @@
                         @click="resetMessage(null, true)"
                     >
                         <slot name="file-close-icon">
-                            <svg-icon name="close"/>
+                            <svg-icon name="close" />
                         </slot>
                     </div>
                 </div>
@@ -220,14 +221,12 @@
                     :placeholder="textMessages.TYPE_MESSAGE"
                     class="vac-textarea"
                     :class="{
-            'vac-textarea-outline': editAndResend,
-          }"
+                        'vac-textarea-outline': editAndResend,
+                    }"
                     :style="{
-            'min-height': `${mediaDimensions ? mediaDimensions.height : 20}px`,
-            'padding-left': `${
-              mediaDimensions ? mediaDimensions.width - 10 : 12
-            }px`,
-          }"
+                        'min-height': `${mediaDimensions ? mediaDimensions.height : 20}px`,
+                        'padding-left': `${mediaDimensions ? mediaDimensions.width - 10 : 12}px`,
+                    }"
                     @input="onChangeInput"
                     @click.right="textctx"
 
@@ -240,12 +239,12 @@
                         @click="resetMessage"
                     >
                         <slot name="edit-close-icon">
-                            <svg-icon name="close-outline"/>
+                            <svg-icon name="close-outline" />
                         </slot>
                     </div>
 
                     <div class="vac-svg-button" @click="$emit('stickers-panel')">
-                        <svg-icon name="emoji"/>
+                        <svg-icon name="emoji" />
                     </div>
 
                     <div
@@ -254,7 +253,7 @@
                         @click="launchFilePicker"
                     >
                         <slot name="paperclip-icon">
-                            <svg-icon name="paperclip"/>
+                            <svg-icon name="paperclip" />
                         </slot>
                     </div>
 
@@ -264,7 +263,7 @@
                         @click="textareaActionHandler"
                     >
                         <slot name="custom-action-icon">
-                            <svg-icon name="deleted"/>
+                            <svg-icon name="deleted" />
                         </slot>
                     </div>
 
@@ -803,303 +802,303 @@ export default {
 
 <style lang="scss">
 .vac-container-center {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .vac-room-empty {
-  font-size: 14px;
-  color: #9ca6af;
-  font-style: italic;
-  line-height: 20px;
-  white-space: pre-line;
+    font-size: 14px;
+    color: #9ca6af;
+    font-style: italic;
+    line-height: 20px;
+    white-space: pre-line;
 
-  div {
-    padding: 0 10%;
-  }
+    div {
+        padding: 0 10%;
+    }
 }
 
 .vac-col-messages {
-  position: relative;
-  height: 100%;
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-flow: column;
+    position: relative;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-flow: column;
 }
 
 .vac-container-scroll {
-  background: var(--chat-content-bg-color);
-  flex: 1;
-  overflow-y: auto;
-  margin-top: 60px;
-  -webkit-overflow-scrolling: touch;
+    background: var(--chat-content-bg-color);
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 60px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .vac-messages-container {
-  padding: 0 5px 5px;
+    padding: 0 5px 5px;
 }
 
 .vac-text-started {
-  font-size: 14px;
-  color: var(--chat-message-color-started);
-  font-style: italic;
-  text-align: center;
-  margin-top: 30px;
-  margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--chat-message-color-started);
+    font-style: italic;
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 20px;
 }
 
 .vac-infinite-loading {
-  height: 68px;
+    height: 68px;
 }
 
 .vac-icon-scroll {
-  position: absolute;
-  bottom: 80px;
-  right: 20px;
-  padding: 8px;
-  background: var(--chat-bg-scroll-icon);
-  border-radius: 50%;
-  box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
-  0 1px 2px 0 rgba(0, 0, 0, 0.12);
-  display: flex;
-  cursor: pointer;
-  z-index: 10;
+    position: absolute;
+    bottom: 80px;
+    right: 20px;
+    padding: 8px;
+    background: var(--chat-bg-scroll-icon);
+    border-radius: 50%;
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    display: flex;
+    cursor: pointer;
+    z-index: 10;
 
-  svg {
-    height: 25px;
-    width: 25px;
-  }
+    svg {
+        height: 25px;
+        width: 25px;
+    }
 }
 
 .vac-messages-count {
-  position: absolute;
-  top: -8px;
-  left: 11px;
-  background-color: var(--chat-message-bg-color-scroll-counter);
-  color: var(--chat-message-color-scroll-counter);
+    position: absolute;
+    top: -8px;
+    left: 11px;
+    background-color: var(--chat-message-bg-color-scroll-counter);
+    color: var(--chat-message-color-scroll-counter);
 }
 
 .vac-room-footer {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  border-bottom-right-radius: 4px;
-  z-index: 10;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-bottom-right-radius: 4px;
+    z-index: 10;
 }
 
 .vac-box-footer {
-  display: flex;
-  position: relative;
-  background: var(--chat-footer-bg-color);
-  padding: 10px 8px 10px;
+    display: flex;
+    position: relative;
+    background: var(--chat-footer-bg-color);
+    padding: 10px 8px 10px;
 }
 
 .vac-textarea {
-  height: 20px;
-  width: 100%;
-  line-height: 20px;
-  overflow: hidden;
-  outline: 0;
-  resize: none;
-  border-radius: 20px;
-  padding: 12px 16px;
-  box-sizing: content-box;
-  font-size: 16px;
-  background: var(--chat-bg-color-input);
-  color: var(--chat-color);
-  caret-color: var(--chat-color-caret);
-  border: var(--chat-border-style-input);
-
-  &::placeholder {
-    color: var(--chat-color-placeholder);
-    white-space: nowrap;
+    height: 20px;
+    width: 100%;
+    line-height: 20px;
     overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    outline: 0;
+    resize: none;
+    border-radius: 20px;
+    padding: 12px 16px;
+    box-sizing: content-box;
+    font-size: 16px;
+    background: var(--chat-bg-color-input);
+    color: var(--chat-color);
+    caret-color: var(--chat-color-caret);
+    border: var(--chat-border-style-input);
+
+    &::placeholder {
+        color: var(--chat-color-placeholder);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 .vac-textarea-outline {
-  border: 1px solid var(--chat-border-color-input-selected);
-  box-shadow: inset 0px 0px 0px 1px var(--chat-border-color-input-selected);
+    border: 1px solid var(--chat-border-color-input-selected);
+    box-shadow: inset 0px 0px 0px 1px var(--chat-border-color-input-selected);
 }
 
 .vac-icon-textarea {
-  display: flex;
-  margin: 12px 0 0 5px;
+    display: flex;
+    margin: 12px 0 0 5px;
 
-  svg,
-  .vac-wrapper {
-    margin: 0 7px;
-  }
+    svg,
+    .vac-wrapper {
+        margin: 0 7px;
+    }
 }
 
 .vac-media-container {
-  position: absolute;
-  max-width: 25%;
-  left: 16px;
-  top: 18px;
+    position: absolute;
+    max-width: 25%;
+    left: 16px;
+    top: 18px;
 }
 
 .vac-media-file {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  min-height: 30px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    min-height: 30px;
 
-  img {
-    border-radius: 15px;
-    width: 100%;
-    max-width: 150px;
-    max-height: 100%;
-  }
+    img {
+        border-radius: 15px;
+        width: 100%;
+        max-width: 150px;
+        max-height: 100%;
+    }
 
-  video {
-    border-radius: 15px;
-    width: 100%;
-    max-width: 250px;
-    max-height: 100%;
-  }
+    video {
+        border-radius: 15px;
+        width: 100%;
+        max-width: 250px;
+        max-height: 100%;
+    }
 }
 
 .vac-icon-media {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  z-index: 10;
-
-  svg {
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-  }
-
-  &:before {
-    content: " ";
     position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    z-index: -1;
-  }
+    top: 6px;
+    left: 6px;
+    z-index: 10;
+
+    svg {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+    }
+
+    &:before {
+        content: " ";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        z-index: -1;
+    }
 }
 
 .vac-file-container {
-  display: flex;
-  align-items: center;
-  width: calc(100% - 115px);
-  height: 20px;
-  padding: 12px 0;
-  box-sizing: content-box;
-  background: var(--chat-bg-color-input);
-  border: var(--chat-border-style-input);
-  border-radius: 20px;
+    display: flex;
+    align-items: center;
+    width: calc(100% - 115px);
+    height: 20px;
+    padding: 12px 0;
+    box-sizing: content-box;
+    background: var(--chat-bg-color-input);
+    border: var(--chat-border-style-input);
+    border-radius: 20px;
 }
 
 .vac-file-container-edit {
-  width: calc(100% - 150px);
+    width: calc(100% - 150px);
 }
 
 .vac-file-message-room {
-  max-width: calc(100% - 75px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    max-width: calc(100% - 75px);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .vac-icon-file-room {
-  display: flex;
-  margin: 0 8px 0 15px;
+    display: flex;
+    margin: 0 8px 0 15px;
 }
 
 .vac-icon-remove {
-  margin: 0 8px;
+    margin: 0 8px;
 
-  svg {
-    height: 18px;
-    width: 18px;
-  }
+    svg {
+        height: 18px;
+        width: 18px;
+    }
 }
 
 .vac-send-disabled,
 .vac-send-disabled svg {
-  cursor: none !important;
-  pointer-events: none !important;
-  transform: none !important;
+    cursor: none !important;
+    pointer-events: none !important;
+    transform: none !important;
 }
 
 .vac-messages-hidden {
-  opacity: 0;
+    opacity: 0;
 }
 
 @media only screen and (max-width: 768px) {
-  .vac-container-scroll {
-    margin-top: 50px;
-  }
-
-  .vac-infinite-loading {
-    height: 58px;
-  }
-
-  .vac-box-footer {
-    border-top: var(--chat-border-style-input);
-    padding: 7px 2px 7px 7px;
-  }
-
-  .vac-text-started {
-    margin-top: 20px;
-  }
-
-  .vac-textarea {
-    padding: 7px;
-    line-height: 18px;
-
-    &::placeholder {
-      color: transparent;
+    .vac-container-scroll {
+        margin-top: 50px;
     }
-  }
 
-  .vac-icon-textarea {
-    margin: 6px 0 0 5px;
-
-    svg,
-    .wrapper {
-      margin: 0 5px;
+    .vac-infinite-loading {
+        height: 58px;
     }
-  }
 
-  .vac-media-container {
-    top: 10px;
-    left: 10px;
-  }
-
-  .vac-media-file {
-    img,
-    video {
-      transform: scale(0.97);
+    .vac-box-footer {
+        border-top: var(--chat-border-style-input);
+        padding: 7px 2px 7px 7px;
     }
-  }
 
-  .vac-room-footer {
-    width: 100%;
-  }
-
-  .vac-file-container {
-    padding: 7px 0;
-
-    .icon-file {
-      margin-left: 10px;
+    .vac-text-started {
+        margin-top: 20px;
     }
-  }
 
-  .vac-icon-scroll {
-    bottom: 70px;
-  }
+    .vac-textarea {
+        padding: 7px;
+        line-height: 18px;
+
+        &::placeholder {
+            color: transparent;
+        }
+    }
+
+    .vac-icon-textarea {
+        margin: 6px 0 0 5px;
+
+        svg,
+        .wrapper {
+            margin: 0 5px;
+        }
+    }
+
+    .vac-media-container {
+        top: 10px;
+        left: 10px;
+    }
+
+    .vac-media-file {
+        img,
+        video {
+            transform: scale(0.97);
+        }
+    }
+
+    .vac-room-footer {
+        width: 100%;
+    }
+
+    .vac-file-container {
+        padding: 7px 0;
+
+        .icon-file {
+            margin-left: 10px;
+        }
+    }
+
+    .vac-icon-scroll {
+        bottom: 70px;
+    }
 }
 </style>
