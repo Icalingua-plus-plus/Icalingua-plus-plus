@@ -7,7 +7,7 @@ export default (items, prop, val, startsWith = false) => {
 	})
 }
 
-function formatString(string) {
+function formatString(string: string): string {
 	return string
 		.toLowerCase()
 		.normalize('NFD')
