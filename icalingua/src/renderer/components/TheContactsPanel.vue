@@ -8,7 +8,7 @@
                     prefix-icon="el-icon-search"
                     clearable
                 />
-                <span class="el-icon-refresh-right contacts-refresh" @click="refresh"/>
+                <span class="el-icon-refresh-right contacts-refresh" @click="refresh" />
             </div>
         </div>
 
@@ -16,9 +16,13 @@
             <el-tabs v-model="activeName" :stretch="true">
                 <el-tab-pane label="Friends" name="friends">
                     <el-collapse v-model="activeFriendGroup">
-                        <el-collapse-item v-for="(v, i) in friendsAll"
-                                          :title="`${v.name} (${v.friends.filter(e=>e.sc.includes(searchContext)).length})`"
-                                          :name="i" :key="i">
+                        <el-collapse-item
+                            v-for="(v, i) in friendsAll"
+                            :title="`${v.name} ` +
+                                    `(${v.friends.filter(e => e.sc.includes(searchContext)).length})`
+                                "
+                            :name="i" :key="i"
+                        >
                             <ContactEntry
                                 v-for="i in v.friends"
                                 :key="i.uin"
@@ -110,62 +114,62 @@ export default {
 
 <style>
 .el-collapse-item__header {
-  padding-left: 12px;
-  border-bottom: var(--chat-border-style);
-  background-color: var(--panel-background);
-  color: var(--panel-color-name);
+    padding-left: 12px;
+    border-bottom: var(--chat-border-style);
+    background-color: var(--panel-background);
+    color: var(--panel-color-name);
 }
 
 .el-collapse-item__content {
-  padding-bottom: 0;
-  background-color: var(--panel-background);
+    padding-bottom: 0;
+    background-color: var(--panel-background);
 }
 
 .el-collapse-item__wrap {
-  border-bottom: var(--chat-border-style);
+    border-bottom: var(--chat-border-style);
 }
 
 .el-collapse-item__wrap > div > div:last-child > div > div {
-  border-bottom: unset !important;
+    border-bottom: unset !important;
 }
 
 .el-tabs__header {
-  margin: unset !important;
+    margin: unset !important;
 }
 
 .el-tabs__item {
-  padding: 0;
-  color: var(--panel-color-name);
+    padding: 0;
+    color: var(--panel-color-name);
 }
 
 .el-tabs__nav-wrap::after {
-  background-color: var(--panel-color-navi-bottom-bar);
+    background-color: var(--panel-color-navi-bottom-bar);
 }
 
 .contacts-root {
-  height: 75vh;
-  display: flex;
-  flex-direction: column;
+    height: 75vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .contacts-head-container {
-  background-color: var(--panel-header-bg);
+    background-color: var(--panel-header-bg);
 }
 
 .contacts-head {
-  margin-right: 12px;
-  display: flex;
-  align-items: center;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
 }
 
 .contacts-content {
-  overflow: auto;
+    overflow: auto;
 }
 
 .contacts-refresh {
-  cursor: pointer;
-  font-size: larger;
-  color: #909399;
-  margin-left: 10px;
+    cursor: pointer;
+    font-size: larger;
+    color: #909399;
+    margin-left: 10px;
 }
 </style>

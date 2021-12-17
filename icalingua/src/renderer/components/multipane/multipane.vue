@@ -1,7 +1,11 @@
 <template>
-  <div :class="classnames" :style="{ cursor, userSelect }" @mousedown="onMouseDown">
-    <slot></slot>
-  </div>
+    <div
+        :class="classnames"
+        :style="{ cursor, userSelect }"
+        @mousedown="onMouseDown"
+    >
+        <slot></slot>
+    </div>
 </template>
 
 <script src="./multipane.ts" lang="ts"></script>
@@ -20,29 +24,29 @@
 }
 
 .multipane > div {
-  position: relative;
-  z-index: 1;
+    position: relative;
+    z-index: 1;
 }
 
 .multipane-resizer {
-  display: block;
-  position: relative;
-  z-index: 2;
+    display: block;
+    position: relative;
+    z-index: 2;
 }
 
 .layout-h > .multipane-resizer {
-  width: 100%;
-  height: 10px;
-  margin-top: -10px;
-  top: 5px;
-  cursor: row-resize;
+    width: 100%;
+    height: 10px;
+    margin-top: -10px;
+    top: 5px;
+    cursor: row-resize;
 }
 
 .layout-v > .multipane-resizer {
-  width: 10px;
-  height: 100%;
-  margin-left: -10px;
-  left: 8px;
-  cursor: col-resize;
+    width: 10px;
+    height: 100%;
+    margin-left: -10px;
+    left: 8px;
+    cursor: col-resize;
 }
 </style>

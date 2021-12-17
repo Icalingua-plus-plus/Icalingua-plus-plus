@@ -8,7 +8,7 @@
         :wrapper-closable="false"
         size="100%"
     >
-        <img :src="image" alt="">
+        <img :src="image" alt="" />
         <center>
             <el-button @click="$emit('login')" type="primary">
                 已扫码
@@ -39,7 +39,3 @@ export default {
     },
 }
 </script>
-
-<style scoped>
-
-</style>
