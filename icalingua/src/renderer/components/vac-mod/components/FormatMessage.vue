@@ -42,7 +42,7 @@
                     </template>
                     <template v-else>
                         <br v-if="message.breakLine"/>
-                        <span>{{ message.value }}</span>
+                        <span class="vac-message-content">{{ message.value }}</span>
                     </template>
                 </component>
                 <img
@@ -61,7 +61,7 @@
                 </a>
             </template>
         </div>
-        <div v-else>
+        <div v-else class="vac-message-content">
             {{ formattedContent }}
         </div>
     </div>
@@ -179,6 +179,10 @@ export default {
 </script>
 
 <style>
+.vac-message-content {
+  white-space: pre-wrap;
+}
+
 .vac-icon-deleted {
   height: 14px;
   width: 14px;
