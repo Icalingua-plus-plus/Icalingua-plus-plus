@@ -14,13 +14,13 @@
 
 <script>
 export default {
-    name: "Loader",
+    name: 'Loader',
 
     props: {
         show: { type: Boolean, default: false },
         infinite: { type: Boolean, default: false },
     },
-};
+}
 </script>
 
 <style lang="scss">

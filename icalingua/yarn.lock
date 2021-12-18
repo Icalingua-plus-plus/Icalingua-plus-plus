@@ -260,13 +260,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lovefield@npm:^2.1.3":
-  version: 2.1.3
-  resolution: "@types/lovefield@npm:2.1.3"
-  checksum: 600e6dce1d348a131d58dc40eb4cf6a856d9ee71e3da23afcfc927331f0c48423a0a428e3fadc7f4bd2aa815b5db624acfd510ede7904f1e80ebc5f6bb2b4de8
-  languageName: node
-  linkType: hard
-
 "@types/lowdb@npm:^1.0.10":
   version: 1.0.10
   resolution: "@types/lowdb@npm:1.0.10"
@@ -1082,16 +1075,6 @@ __metadata:
   version: 2.0.1
   resolution: "argparse@npm:2.0.1"
   checksum: 83644b56493e89a254bae05702abf3a1101b4fa4d0ca31df1c9985275a5a5bd47b3c27b7fa0b71098d41114d8ca000e6ed90cad764b306f8a503665e4d517ced
-  languageName: node
-  linkType: hard
-
-"argparse@npm:~ 0.1.11":
-  version: 0.1.16
-  resolution: "argparse@npm:0.1.16"
-  dependencies:
-    underscore: ~1.7.0
-    underscore.string: ~2.4.0
-  checksum: 0bcb0509074a6f65b5df37f9064421aa942855dff78b0176010c4ab5fd8a9a4951f244088aa1718e33c3efaed57cf885bc5ba6bf182a358eab7baac555c161f1
   languageName: node
   linkType: hard
 
@@ -5246,16 +5229,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esprima@npm:~ 1.0.2":
-  version: 1.0.4
-  resolution: "esprima@npm:1.0.4"
-  bin:
-    esparse: ./bin/esparse.js
-    esvalidate: ./bin/esvalidate.js
-  checksum: 6dcc6aa86ae37d1bb1f0f4d374fa9f0ca34d4293e80398cf4cd6fa4471a2be770cbf9ee9b2158b529888b5a9f0db7a4d7e78d4e88f8c90649b963d294c8a44ad
-  languageName: node
-  linkType: hard
-
 "esprima@npm:~3.1.0":
   version: 3.1.3
   resolution: "esprima@npm:3.1.3"
@@ -6742,7 +6715,6 @@ fsevents@~2.3.1:
   dependencies:
     "@types/fluent-ffmpeg": ^2.1.18
     "@types/ioredis": ^4.26.4
-    "@types/lovefield": ^2.1.3
     "@types/lowdb": ^1.0.10
     "@types/md5": ^2.3.0
     "@types/minimist": ^1.2.2
@@ -6785,7 +6757,6 @@ fsevents@~2.3.1:
     linkifyjs: 3.0.4
     lodash: ^4.17.21
     lottie-web: ^5.7.11
-    lovefield: ^2.1.12
     md5: ^2.3.0
     mini-css-extract-plugin: 0.4.0
     minimist: ^1.2.5
@@ -6798,6 +6769,7 @@ fsevents@~2.3.1:
     oicq: ^1.21.2
     pg: ^8.7.1
     pg-query-stream: ^4.2.1
+    prettier: ^2.5.1
     sass: ^1.34.1
     sass-loader: ^10.1.1
     silk-sdk: ^0.2.2
@@ -7656,18 +7628,6 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:~3.1.0":
-  version: 3.1.0
-  resolution: "js-yaml@npm:3.1.0"
-  dependencies:
-    argparse: ~ 0.1.11
-    esprima: ~ 1.0.2
-  bin:
-    js-yaml: bin/js-yaml.js
-  checksum: 4e81cc3a561eb2822518b40bdac0eea6efcf1f0ca57639a89631143ed8849d2eb8523aa2314e5696c4b7722ff051c74c87c103565923db9b4759be7969c032fe
-  languageName: node
-  linkType: hard
-
 "js-yaml@npm:~3.7.0":
   version: 3.7.0
   resolution: "js-yaml@npm:3.7.0"
@@ -8378,18 +8338,6 @@ fsevents@~2.3.1:
   version: 5.7.11
   resolution: "lottie-web@npm:5.7.11"
   checksum: 490d643609729b572c3444a3b34aec1313b4b7e0d594faaec885be3d8c836eda3de5858dbaf851c8029c2d3bee5b3d0cfcf80f8aaeea6678baf20c2e7af3a3b6
-  languageName: node
-  linkType: hard
-
-"lovefield@npm:^2.1.12":
-  version: 2.1.12
-  resolution: "lovefield@npm:2.1.12"
-  dependencies:
-    js-yaml: ~3.1.0
-    nopt: ~2.2.1
-  bin:
-    lovefield-spac: spac/lovefield-spac
-  checksum: 9964493603a73db1e95079cf4fafd7d6a0378215359fb0652a9e4b86fc64d52280214431b95cb536a68d1d81ea26752a619407b49484f1b98bd25391c1d185c6
   languageName: node
   linkType: hard
 
@@ -9330,17 +9278,6 @@ fsevents@~2.3.1:
   bin:
     nopt: bin/nopt.js
   checksum: d35fdec187269503843924e0114c0c6533fb54bbf1620d0f28b4b60ba01712d6687f62565c55cc20a504eff0fbe5c63e22340c3fad549ad40469ffb611b04f2f
-  languageName: node
-  linkType: hard
-
-"nopt@npm:~2.2.1":
-  version: 2.2.1
-  resolution: "nopt@npm:2.2.1"
-  dependencies:
-    abbrev: 1
-  bin:
-    nopt: ./bin/nopt.js
-  checksum: d4856b60356815ecf7d61afabedb0214b427e12314c5253cf80dff110bd49e7eec54b2e1e9ae7360f026a79acb5e0ece0415cde29abea14d3156ea75ec692e75
   languageName: node
   linkType: hard
 
@@ -10637,6 +10574,15 @@ fsevents@~2.3.1:
   bin:
     prettier: ./bin-prettier.js
   checksum: bc78219e0f8173a808f4c6c8e0a137dd8ebd4fbe013e63fe1a37a82b48612f17b8ae8e18a992adf802ee2cf7428f14f084e7c2846ca5759cf4013c6e54810e1f
+  languageName: node
+  linkType: hard
+
+"prettier@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "prettier@npm:2.5.1"
+  bin:
+    prettier: bin-prettier.js
+  checksum: 21b9408476ea1c544b0e45d51ceb94a84789ff92095abb710942d780c862d0daebdb29972d47f6b4d0f7ebbfb0ffbf56cc2cfa3e3e9d1cca54864af185b15b66
   languageName: node
   linkType: hard
 
@@ -13162,20 +13108,6 @@ typescript@^4.2.4:
     has-symbols: ^1.0.2
     which-boxed-primitive: ^1.0.2
   checksum: 89d950e18fb45672bc6b3c961f1e72c07beb9640c7ceed847b571ba6f7d2af570ae1a2584cfee268b9d9ea1e3293f7e33e0bc29eaeb9f8e8a0bab057ff9e6bba
-  languageName: node
-  linkType: hard
-
-"underscore.string@npm:~2.4.0":
-  version: 2.4.0
-  resolution: "underscore.string@npm:2.4.0"
-  checksum: fe112a26b51b0721912cd33226f041a76073d8e4fd7fe9a89115e12f676d265805fc5cb35df560e935a80e981802208b17c8cccda3351f5635ff3b155cc765fc
-  languageName: node
-  linkType: hard
-
-"underscore@npm:~1.7.0":
-  version: 1.7.0
-  resolution: "underscore@npm:1.7.0"
-  checksum: 20be2ca8b0c3f7bd6c271c752f7d930011e20d1abb5ff953950bd37a523515b4edf2c34077c93bece21b2c3eafa0c25ab6052eaa7aea7c26809f5b869143cdfd
   languageName: node
   linkType: hard
 

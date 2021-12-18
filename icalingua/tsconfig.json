@@ -1,12 +1,10 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
-    "esModuleInterop": true,
-    "sourceMap": false,
-    "resolveJsonModule": true
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "esModuleInterop": true,
+        "sourceMap": false,
+        "resolveJsonModule": true
+    },
+    "exclude": ["node_modules"]
 }

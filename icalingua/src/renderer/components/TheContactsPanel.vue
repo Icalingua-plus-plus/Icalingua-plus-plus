@@ -2,12 +2,7 @@
     <div class="contacts-root">
         <div class="contacts-head-container">
             <div class="contacts-head">
-                <el-input
-                    v-model="searchContext"
-                    placeholder="Search"
-                    prefix-icon="el-icon-search"
-                    clearable
-                />
+                <el-input v-model="searchContext" placeholder="Search" prefix-icon="el-icon-search" clearable />
                 <span class="el-icon-refresh-right contacts-refresh" @click="refresh" />
             </div>
         </div>
@@ -18,10 +13,9 @@
                     <el-collapse v-model="activeFriendGroup">
                         <el-collapse-item
                             v-for="(v, i) in friendsAll"
-                            :title="`${v.name} ` +
-                                    `(${v.friends.filter(e => e.sc.includes(searchContext)).length})`
-                                "
-                            :name="i" :key="i"
+                            :title="`${v.name} ` + `(${v.friends.filter((e) => e.sc.includes(searchContext)).length})`"
+                            :name="i"
+                            :key="i"
                         >
                             <ContactEntry
                                 v-for="i in v.friends"
@@ -61,11 +55,11 @@
 </template>
 
 <script>
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 import ContactEntry from './ContactEntry.vue'
 
 export default {
-    components: {ContactEntry},
+    components: { ContactEntry },
     data() {
         return {
             activeName: 'friends',
@@ -90,23 +84,21 @@ export default {
         },
     },
     created() {
-        ipcRenderer.invoke('getFriendsAndGroups')
-            .then(({friends, groups, friendsFallback}) => {
-                this.friendsAll = friends ? Object.freeze(friends) : null
-                this.groupsAll = Object.freeze(groups)
-                friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-            })
+        ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
+            this.friendsAll = friends ? Object.freeze(friends) : null
+            this.groupsAll = Object.freeze(groups)
+            friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
+        })
     },
     methods: {
         refresh() {
             this.friendsAll = this.groupsAll = this.friendsFallback = []
-            ipcRenderer.invoke('getFriendsAndGroups')
-                .then(({friends, groups, friendsFallback}) => {
-                    this.friendsAll = friends ? Object.freeze(friends) : null
-                    this.groupsAll = Object.freeze(groups)
-                    friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-                    this.$message.success('已刷新')
-                })
+            ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
+                this.friendsAll = friends ? Object.freeze(friends) : null
+                this.groupsAll = Object.freeze(groups)
+                friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
+                this.$message.success('已刷新')
+            })
         },
     },
 }

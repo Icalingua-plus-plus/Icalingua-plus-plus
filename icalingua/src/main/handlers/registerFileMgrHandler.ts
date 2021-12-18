@@ -1,4 +1,4 @@
-import {Server, Socket} from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import adapter from '../adapters/oicqAdapter'
 
 export default (io: Server, socket: Socket, gin: number) => {
@@ -45,5 +45,4 @@ export default (io: Server, socket: Socket, gin: number) => {
         const res = await gfs.rename(fid, name)
         cb(res)
     })
-
 }

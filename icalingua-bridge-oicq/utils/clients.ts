@@ -1,5 +1,5 @@
 import Room from '../types/Room'
-import {broadcast} from '../providers/socketIoProvider'
+import { broadcast } from '../providers/socketIoProvider'
 import Message from '../types/Message'
 import OnlineData from '../types/OnlineData'
 
@@ -8,7 +8,7 @@ export default {
         broadcast('updateRoom', room)
     },
     addMessage(roomId: number, message: Message) {
-        broadcast('addMessage', {roomId, message})
+        broadcast('addMessage', { roomId, message })
     },
     deleteMessage(messageId: string) {
         broadcast('deleteMessage', messageId)
@@ -47,7 +47,7 @@ export default {
         broadcast('revealMessage', messageId)
     },
     setMessages(roomId: number, messages: Message[]) {
-        broadcast('setMessages', {roomId, messages})
+        broadcast('setMessages', { roomId, messages })
     },
     sendAddRequest(data) {
         broadcast('sendAddRequest', data)

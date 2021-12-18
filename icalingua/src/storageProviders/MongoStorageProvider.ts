@@ -1,7 +1,7 @@
 import StorageProvider from '../types/StorageProvider'
 import Message from '../types/Message'
 import Room from '../types/Room'
-import {Db, MongoClient} from 'mongodb'
+import { Db, MongoClient } from 'mongodb'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 
 export default class MongoStorageProvider implements StorageProvider {
@@ -15,17 +15,15 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     removeIgnoredChat(id: number): Promise<any> {
-        return this.mdb
-            .collection('ignoredChats')
-            .deleteOne({id})
+        return this.mdb.collection('ignoredChats').deleteOne({ id })
     }
 
     async getAllRooms(): Promise<Room[]> {
         try {
             return await this.mdb
-            .collection('rooms')
-            .find({}, {sort: [['utime', -1]]})
-            .toArray()
+                .collection('rooms')
+                .find({}, { sort: [['utime', -1]] })
+                .toArray()
         } catch (e) {
             return []
         }
@@ -38,14 +36,20 @@ export default class MongoStorageProvider implements StorageProvider {
             background: true,
             unique: true,
         })
-        await this.mdb.collection('rooms').createIndex({utime: -1}, {
-            background: true,
-        })
+        await this.mdb.collection('rooms').createIndex(
+            { utime: -1 },
+            {
+                background: true,
+            },
+        )
         const rooms = await this.getAllRooms()
         for (const i of rooms) {
-            await this.mdb.collection('msg' + i.roomId).createIndex({time: -1}, {
-                background: true,
-            })
+            await this.mdb.collection('msg' + i.roomId).createIndex(
+                { time: -1 },
+                {
+                    background: true,
+                },
+            )
         }
         await this.mdb.collection('ignoredChats').createIndex('id', {
             background: true,
@@ -56,26 +60,19 @@ export default class MongoStorageProvider implements StorageProvider {
     async addMessage(roomId: number, message: Message): Promise<any> {
         try {
             return await this.mdb.collection('msg' + roomId).insertOne(message as object)
-        } catch (e) {
-        }
+        } catch (e) {}
     }
 
     async addRoom(room: Room): Promise<any> {
         try {
             return await this.mdb.collection('rooms').insertOne(room)
-        } catch (e) {
-        }
+        } catch (e) {}
     }
 
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
-            return await this.mdb
-            .collection('msg' + roomId)
-            .updateOne({_id: messageId}, {$set: message})
-    }
-        catch (e) {
-
-        }
+            return await this.mdb.collection('msg' + roomId).updateOne({ _id: messageId }, { $set: message })
+        } catch (e) {}
     }
 
     async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
@@ -95,47 +92,30 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async removeRoom(roomId: number): Promise<any> {
         try {
-            return await this.mdb.collection('rooms').findOneAndDelete({roomId: roomId})
-    }
-        catch (e) {
-
-        }
+            return await this.mdb.collection('rooms').findOneAndDelete({ roomId: roomId })
+        } catch (e) {}
     }
 
     async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         try {
-            return await this.mdb
-            .collection('rooms')
-            .updateOne(
-                {roomId: roomId},
-                {$set: room},
-            )
-    }
-        catch (e) {
-
-        }
+            return await this.mdb.collection('rooms').updateOne({ roomId: roomId }, { $set: room })
+        } catch (e) {}
     }
 
     getMessage(roomId: number, messageId: string): Promise<Message> {
-        return this.mdb
-            .collection<any>('msg' + roomId)
-            .findOne({_id: messageId})
+        return this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
     }
 
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
-            return await this.mdb
-                .collection('msg' + roomId)
-                .insertMany(messages as object[], {ordered: false})//确信
+            return await this.mdb.collection('msg' + roomId).insertMany(messages as object[], { ordered: false }) //确信
         } catch (e) {
             return e
         }
     }
 
     getRoom(roomId: number): Promise<Room> {
-        return this.mdb
-            .collection<any>('rooms')
-            .findOne({roomId})
+        return this.mdb.collection<any>('rooms').findOne({ roomId })
     }
 
     getUnreadCount(priority: number): Promise<number> {
@@ -170,6 +150,6 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async isChatIgnored(id: number): Promise<boolean> {
-        return !!await this.mdb.collection('ignoredChats').findOne({id})
+        return !!(await this.mdb.collection('ignoredChats').findOne({ id }))
     }
 }

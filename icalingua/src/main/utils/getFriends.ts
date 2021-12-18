@@ -1,4 +1,4 @@
-import {getCookies, getUin} from '../ipc/botAndStorage'
+import { getCookies, getUin } from '../ipc/botAndStorage'
 import getGTk from '../../utils/getGTk'
 import GetFriendsRet from '../../types/GetFriendsRet'
 import axios from 'axios'
@@ -9,12 +9,17 @@ export default async (): Promise<GroupOfFriend[]> => {
     const gTk = getGTk(cookies.p_skey)
     const uin = getUin()
 
-    const data: GetFriendsRet = (await axios.get(`https://mobile.qzone.qq.com/friend/mfriend_list?qzonetoken=&g_tk=${gTk}&res_uin=${uin}&res_type=normal&format=json&count_per_page=10&page_index=0&page_type=0&mayknowuin=&qqmailstat=`, {
-        headers: {
-            Cookie: `uin=${cookies.uin}; skey=${cookies.skey}; p_uin=${cookies.p_uin}; p_skey=${cookies.p_skey}`,
-        },
-        proxy: false,
-    })).data
+    const data: GetFriendsRet = (
+        await axios.get(
+            `https://mobile.qzone.qq.com/friend/mfriend_list?qzonetoken=&g_tk=${gTk}&res_uin=${uin}&res_type=normal&format=json&count_per_page=10&page_index=0&page_type=0&mayknowuin=&qqmailstat=`,
+            {
+                headers: {
+                    Cookie: `uin=${cookies.uin}; skey=${cookies.skey}; p_uin=${cookies.p_uin}; p_skey=${cookies.p_skey}`,
+                },
+                proxy: false,
+            },
+        )
+    ).data
 
     if (!(data && data.code === 0)) return []
 
@@ -31,7 +36,10 @@ export default async (): Promise<GroupOfFriend[]> => {
             nick: i.nick,
             remark: i.remark,
             sc: i.searchField.toUpperCase(),
-            age: 0, nickname: i.nick, sex: undefined, user_id: i.uin
+            age: 0,
+            nickname: i.nick,
+            sex: undefined,
+            user_id: i.uin,
         })
     }
     return Object.values(map)

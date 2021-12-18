@@ -1,5 +1,5 @@
-const LAYOUT_HORIZONTAL = 'horizontal';
-const LAYOUT_VERTICAL = 'vertical';
+const LAYOUT_HORIZONTAL = 'horizontal'
+const LAYOUT_VERTICAL = 'vertical'
 
 export default {
     name: 'multipane',
@@ -14,102 +14,89 @@ export default {
     data() {
         return {
             isResizing: false,
-        };
+        }
     },
 
     computed: {
         classnames() {
-            return [
-                'multipane',
-                'layout-' + this.layout.slice(0, 1),
-                this.isResizing ? 'is-resizing' : '',
-            ];
+            return ['multipane', 'layout-' + this.layout.slice(0, 1), this.isResizing ? 'is-resizing' : '']
         },
         cursor() {
-            return this.isResizing
-                ? this.layout == LAYOUT_VERTICAL ? 'col-resize' : 'row-resize'
-                : '';
+            return this.isResizing ? (this.layout == LAYOUT_VERTICAL ? 'col-resize' : 'row-resize') : ''
         },
         userSelect() {
-            return this.isResizing ? 'none' : '';
+            return this.isResizing ? 'none' : ''
         },
     },
 
     methods: {
         onMouseDown({ target: resizer, pageX: initialPageX, pageY: initialPageY }) {
-            if (typeof resizer.className !== 'string' || !resizer.className.match('multipane-resizer'))
-                return;
-            const resizeNext = resizer.className.match('resize-next');
-            let self = this;
-            let { $el: container, layout } = self;
+            if (typeof resizer.className !== 'string' || !resizer.className.match('multipane-resizer')) return
+            const resizeNext = resizer.className.match('resize-next')
+            let self = this
+            let { $el: container, layout } = self
 
-            let pane = resizeNext ? resizer.nextElementSibling : resizer.previousElementSibling;
+            let pane = resizeNext ? resizer.nextElementSibling : resizer.previousElementSibling
 
-            let {
-                offsetWidth: initialPaneWidth,
-                offsetHeight: initialPaneHeight,
-            } = pane;
+            let { offsetWidth: initialPaneWidth, offsetHeight: initialPaneHeight } = pane
 
-            let usePercentage = !!(pane.style.width + '').match('%');
+            let usePercentage = !!(pane.style.width + '').match('%')
 
-            const { addEventListener, removeEventListener } = window;
+            const { addEventListener, removeEventListener } = window
 
             const resize = (initialSize?, offset = 0) => {
                 if (layout == LAYOUT_VERTICAL) {
-                    let containerWidth = container.clientWidth;
-                    let paneWidth = initialSize + (resizeNext ? -offset : offset);
+                    let containerWidth = container.clientWidth
+                    let paneWidth = initialSize + (resizeNext ? -offset : offset)
 
                     return (pane.style.width = usePercentage
-                        ? paneWidth / containerWidth * 100 + '%'
-                        : paneWidth + 'px');
+                        ? (paneWidth / containerWidth) * 100 + '%'
+                        : paneWidth + 'px')
                 }
 
                 if (layout == LAYOUT_HORIZONTAL) {
-                    let containerHeight = container.clientHeight;
-                    let paneHeight = initialSize + (resizeNext ? -offset : offset);
+                    let containerHeight = container.clientHeight
+                    let paneHeight = initialSize + (resizeNext ? -offset : offset)
 
                     return (pane.style.height = usePercentage
-                        ? paneHeight / containerHeight * 100 + '%'
-                        : paneHeight + 'px');
+                        ? (paneHeight / containerHeight) * 100 + '%'
+                        : paneHeight + 'px')
                 }
-            };
+            }
 
             // This adds is-resizing class to container
-            self.isResizing = true;
+            self.isResizing = true
 
             // Resize once to get current computed size
-            let size = resize();
+            let size = resize()
 
             // Trigger paneResizeStart event
-            self.$emit('paneResizeStart', pane, resizer, size);
+            self.$emit('paneResizeStart', pane, resizer, size)
 
-            const onMouseMove = function({ pageX, pageY }) {
+            const onMouseMove = function ({ pageX, pageY }) {
                 size =
                     layout == LAYOUT_VERTICAL
                         ? resize(initialPaneWidth, pageX - initialPageX)
-                        : resize(initialPaneHeight, pageY - initialPageY);
+                        : resize(initialPaneHeight, pageY - initialPageY)
 
-                self.$emit('paneResize', pane, resizer, size);
-            };
+                self.$emit('paneResize', pane, resizer, size)
+            }
 
-            const onMouseUp = function() {
+            const onMouseUp = function () {
                 // Run resize one more time to set computed width/height.
-                size =
-                    layout == LAYOUT_VERTICAL
-                        ? resize(pane.clientWidth)
-                        : resize(pane.clientHeight);
+                size = layout == LAYOUT_VERTICAL ? resize(pane.clientWidth) : resize(pane.clientHeight)
 
                 // This removes is-resizing class to container
-                self.isResizing = false;
+                self.isResizing = false
 
-                removeEventListener('mousemove', onMouseMove);
-                removeEventListener('mouseup', onMouseUp);
+                removeEventListener('mousemove', onMouseMove)
+                removeEventListener('mouseup', onMouseUp)
 
-                self.$emit('paneResizeStop', pane, resizer, size);
-            };
+                self.$emit('paneResizeStop', pane, resizer, size)
+            }
 
-            addEventListener('mousemove', onMouseMove);
-            addEventListener('mouseup', onMouseUp);
+            addEventListener('mousemove', onMouseMove)
+            addEventListener('mouseup', onMouseUp)
         },
     },
-};
+}

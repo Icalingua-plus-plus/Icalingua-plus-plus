@@ -1,24 +1,13 @@
 <template>
     <div class="root">
         <div class="head">
-            <el-popover
-                placement="right-end"
-                :title="username"
-                trigger="hover"
-                :content="`${account}`"
-            >
-                <a slot="reference" @click="$emit('chroom',account)" style="cursor: pointer;">
+            <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`">
+                <a slot="reference" @click="$emit('chroom', account)" style="cursor: pointer">
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
             </el-popover>
-            <el-input
-                v-model="input"
-                placeholder="Search"
-                prefix-icon="el-icon-search"
-                class="input"
-                clearable
-            />
-            <span class="el-icon-user contacts-refresh" @click="$emit('show-contacts')"/>
+            <el-input v-model="input" placeholder="Search" prefix-icon="el-icon-search" class="input" clearable />
+            <span class="el-icon-user contacts-refresh" @click="$emit('show-contacts')" />
         </div>
         <div class="content">
             <RoomEntry
@@ -27,7 +16,10 @@
                 :room="room"
                 :selected="room.roomId === selected.roomId"
                 :priority="priority"
-                @click="input=''; $emit('chroom', room)"
+                @click="
+                    input = ''
+                    $emit('chroom', room)
+                "
                 @contextmenu="roomMenu(room)"
             />
         </div>

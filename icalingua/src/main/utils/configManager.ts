@@ -6,7 +6,7 @@ import Aria2Config from '../../types/Aria2Config'
 import fs from 'fs'
 import path from 'path'
 import YAML from 'yaml'
-import {app, screen} from 'electron'
+import { app, screen } from 'electron'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import argv from './argv'
 import migrateData from './migrateData'
@@ -28,10 +28,9 @@ type AllConfig = {
     theme: string
     updateCheck: 'ask' | boolean
     disableBridgeVersionCheck: boolean
-    shortcuts: { [key: string]: number },
+    shortcuts: { [key: string]: number }
     zoomFactor: number
 }
-
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
 const oldConfigFilePath = argv.config || path.join(app.getPath('userData'), '../electron-qq/config.yaml')
@@ -72,8 +71,7 @@ const defaultWinSize: WinSize = {
     width: size.width - 300,
     max: false,
 }
-if (defaultWinSize.width > 1440)
-    defaultWinSize.width = 1440
+if (defaultWinSize.width > 1440) defaultWinSize.width = 1440
 const defaultConfig: AllConfig = {
     privateKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     server: '',
@@ -92,7 +90,7 @@ const defaultConfig: AllConfig = {
     updateCheck: 'ask',
     disableBridgeVersionCheck: false,
     shortcuts: {},
-    zoomFactor: 100
+    zoomFactor: 100,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
@@ -106,9 +104,7 @@ if (fs.existsSync(configFilePath)) {
         }
     }
     saveConfigFile()
-}
-else {
+} else {
     config = defaultConfig
     saveConfigFile()
 }
-

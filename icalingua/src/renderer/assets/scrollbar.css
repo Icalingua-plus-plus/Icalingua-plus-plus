@@ -2,7 +2,7 @@
     width: 6px;
     height: 6px;
 }
-::-webkit-scrollbar-thumb{
+::-webkit-scrollbar-thumb {
     border-radius: 3px;
     -webkit-box-shadow: none !important;
 }
@@ -11,20 +11,20 @@
     background-image: none !important;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background-color: #DD5E89 !important;
+    background-color: #dd5e89 !important;
 }
 
 ::selection {
-    background:#d3d3d3;
-    color:#555;
+    background: #d3d3d3;
+    color: #555;
 }
 
 ::-moz-selection {
-    background:#d3d3d3;
-    color:#555;
+    background: #d3d3d3;
+    color: #555;
 }
 
 ::-webkit-selection {
-    background:#d3d3d3;
-    color:#555;
+    background: #d3d3d3;
+    color: #555;
 }

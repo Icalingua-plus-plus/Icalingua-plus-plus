@@ -1,10 +1,10 @@
-import {ipcMain} from 'electron'
+import { ipcMain } from 'electron'
 import Message from '../../types/Message'
 import OnlineData from '../../types/OnlineData'
 import Room from '../../types/Room'
-import {updateAppMenu} from '../ipc/menuManager'
-import {updateTrayIcon} from './trayManager'
-import {sendToMainWindow, sendToRequestWindow} from './windowManager'
+import { updateAppMenu } from '../ipc/menuManager'
+import { updateTrayIcon } from './trayManager'
+import { sendToMainWindow, sendToRequestWindow } from './windowManager'
 
 let selectedRoomId = 0
 let selectedRoomName = ''
@@ -44,7 +44,7 @@ export default {
         sendToMainWindow('setShutUp', isShutUp)
     },
     addMessage(roomId: number, message: Message) {
-        sendToMainWindow('addMessage', {roomId, message})
+        sendToMainWindow('addMessage', { roomId, message })
     },
     chroom(roomId: number) {
         sendToMainWindow('chroom', roomId)
@@ -77,7 +77,7 @@ export default {
         sendToMainWindow('replyMessage', message)
     },
     startChat(id: number, name: string) {
-        sendToMainWindow('startChat', {id, name})
+        sendToMainWindow('startChat', { id, name })
     },
     closePanel() {
         sendToMainWindow('closePanel')

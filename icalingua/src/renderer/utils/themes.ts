@@ -1,8 +1,7 @@
-import {defaultThemeStyles, cssThemeVars} from '../components/vac-mod/themes'
-import {ipcRenderer} from 'electron'
+import { defaultThemeStyles, cssThemeVars } from '../components/vac-mod/themes'
+import { ipcRenderer } from 'electron'
 import fs from 'fs'
 import path from 'path'
-
 
 var currentTheme = 'light'
 
@@ -12,7 +11,6 @@ const styles = {
     },
 }
 
-
 const availableThemes: { [key: string]: any } = {}
 const themeSysDefault = defaultThemeStyles.light
 
@@ -21,8 +19,7 @@ export function registerTheme(theme: string, style: any) {
         for (let key in source) {
             if (!(key in target)) {
                 target[key] = source[key]
-            }
-            else {
+            } else {
                 let os = source[key]
                 if (typeof os == 'object') {
                     patchObject(target[key], os)
@@ -38,17 +35,16 @@ export function registerTheme(theme: string, style: any) {
 availableThemes.light = defaultThemeStyles.light
 registerTheme('dark', defaultThemeStyles.dark)
 
-
 export function useTheme(theme: string) {
     currentTheme = theme
     updateThemes()
 }
 
 function setupThemeStyles(style: any) {
-    document.querySelectorAll('.icalingua-theme-holder').forEach(dom => {
+    document.querySelectorAll('.icalingua-theme-holder').forEach((dom) => {
         if (dom instanceof HTMLElement) {
             for (let key in style) {
-                (dom as any).attributeStyleMap.set(key, style[key])
+                ;(dom as any).attributeStyleMap.set(key, style[key])
             }
         }
     })
@@ -62,8 +58,7 @@ export function updateThemes() {
 
 export function $$DON_CALL$$fetchThemes(STORE_PATH: string) {
     let themesFolder = path.join(STORE_PATH, 'themes')
-    if (!fs.existsSync(themesFolder))
-        fs.mkdirSync(themesFolder)
+    if (!fs.existsSync(themesFolder)) fs.mkdirSync(themesFolder)
     let files = fs.readdirSync(themesFolder)
     for (let file of files) {
         try {
@@ -83,7 +78,6 @@ export function $$DON_CALL$$fetchThemes(STORE_PATH: string) {
                 throw Error('Exception in parsing json: ' + e + '\n\n' + json)
             }
             registerTheme(themeName, content)
-
         } catch (e) {
             console.log(e)
         }
@@ -109,7 +103,6 @@ ipcRenderer.on('theme:sync-theme-data', (_, msg) => {
     setupThemeStyles(msg)
 })
 
-
 ipcRenderer.on('theme:refresh', (_, msg) => {
     updateThemes()
 })
@@ -117,4 +110,3 @@ ipcRenderer.on('theme:refresh', (_, msg) => {
 ipcRenderer.on('theme:use', (_, msg) => {
     useTheme(msg)
 })
-

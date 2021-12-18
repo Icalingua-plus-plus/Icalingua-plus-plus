@@ -1,6 +1,6 @@
-import {execFileSync, execFile} from 'child_process'
+import { execFileSync, execFile } from 'child_process'
 import which from 'which'
-import {BrowserWindow, ipcMain} from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
@@ -8,9 +8,7 @@ import ui from '../utils/ui'
 import md5 from 'md5'
 
 let viewer = ''
-const VIEWERS = [
-    'gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp',
-]
+const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
 
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'image/jpeg']).toString()
@@ -20,12 +18,11 @@ try {
             break
         }
     }
-} catch (e) {
-}
+} catch (e) {}
 
 if (!viewer) {
     for (const i of VIEWERS) {
-        const resolved = which.sync(i, {nothrow: true})
+        const resolved = which.sync(i, { nothrow: true })
         if (resolved) {
             viewer = i
             break
@@ -44,21 +41,20 @@ const openImage = (url: string, external: boolean = false) => {
         if (builtinViewers.get(urlMd5)) {
             const viewerWindow = builtinViewers.get(urlMd5)
             viewerWindow.focus()
-        }
-        else {
+        } else {
             const viewerWindow = new BrowserWindow({
                 autoHideMenuBar: true,
             })
-            viewerWindow.loadURL('file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({url}))
+            viewerWindow.loadURL(
+                'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
+            )
             //viewerWindow.maximize()
             viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
             builtinViewers.set(urlMd5, viewerWindow)
         }
-    }
-    else if (viewer) {
+    } else if (viewer) {
         execFile(viewer, [url])
-    }
-    else {
+    } else {
         ui.messageError('找不到可用的本地查看器')
     }
 }

@@ -4,12 +4,7 @@
             <p v-if="ignoredChats.length">点击可删除</p>
             <p v-else>暂无屏蔽会话</p>
         </div>
-        <GroupEntry
-            v-for="chat in ignoredChats"
-            :key="chat.id"
-            :chat="chat"
-            @click="rm(chat)"
-        />
+        <GroupEntry v-for="chat in ignoredChats" :key="chat.id" :chat="chat" @click="rm(chat)" />
     </div>
 </template>
 
@@ -28,8 +23,8 @@ export default {
     },
     name: 'IgnoreManageView',
     methods: {
-        rm({id}) {
-            this.ignoredChats = this.ignoredChats.filter(e => e.id !== id)
+        rm({ id }) {
+            this.ignoredChats = this.ignoredChats.filter((e) => e.id !== id)
             ipc.removeIgnoredChat(id)
         },
     },

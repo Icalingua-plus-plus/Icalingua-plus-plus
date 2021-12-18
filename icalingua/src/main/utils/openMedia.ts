@@ -1,11 +1,9 @@
-import {execFileSync, execFile} from 'child_process'
+import { execFileSync, execFile } from 'child_process'
 import which from 'which'
 import ui from '../utils/ui'
 
 let viewer = ''
-const VIEWERS = [
-    'vlc', 'mpv'
-]
+const VIEWERS = ['vlc', 'mpv']
 
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'video/mp4']).toString()
@@ -15,12 +13,11 @@ try {
             break
         }
     }
-} catch (e) {
-}
+} catch (e) {}
 
 if (!viewer) {
     for (const i of VIEWERS) {
-        const resolved = which.sync(i, {nothrow: true})
+        const resolved = which.sync(i, { nothrow: true })
         if (resolved) {
             viewer = i
             break

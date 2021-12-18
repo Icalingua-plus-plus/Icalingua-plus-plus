@@ -1,7 +1,8 @@
 import SendMessageParams from '../types/SendMessageParams'
 import {
     Client,
-    createClient, DeviceEventData,
+    createClient,
+    DeviceEventData,
     FriendAddEventData,
     FriendDecreaseEventData,
     FriendIncreaseEventData,
@@ -13,7 +14,8 @@ import {
     GroupMessageEventData,
     GroupMuteEventData,
     GroupPokeEventData,
-    GroupRecallEventData, LoginErrorEventData,
+    GroupRecallEventData,
+    LoginErrorEventData,
     MemberBaseInfo,
     MemberDecreaseEventData,
     MemberIncreaseEventData,
@@ -23,7 +25,8 @@ import {
     OfflineEventData,
     PrivateMessageEventData,
     QrcodeEventData,
-    Ret, SliderEventData,
+    Ret,
+    SliderEventData,
     SyncMessageEventData,
     SyncReadedEventData,
 } from 'oicq'
@@ -36,13 +39,13 @@ import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
 import Room from '../types/Room'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import clients from '../utils/clients'
-import {Socket} from 'socket.io'
-import {broadcast} from '../providers/socketIoProvider'
+import { Socket } from 'socket.io'
+import { broadcast } from '../providers/socketIoProvider'
 import sleep from '../utils/sleep'
 import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
 import SearchableFriend from '../types/SearchableFriend'
-import {config, saveUserConfig, userConfig} from '../providers/configManager'
+import { config, saveUserConfig, userConfig } from '../providers/configManager'
 import StorageProvider from '../types/StorageProvider'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
@@ -52,16 +55,26 @@ let storage: StorageProvider
 let loginForm: LoginForm
 export let loggedIn = false
 
-type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
-    'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
-    'mma.qq.com' | 'game.qq.com' | 'qqweb.qq.com' | 'openmobile.qq.com' |
-    'qun.qq.com' | 'ti.qq.com'
+type CookiesDomain =
+    | 'tenpay.com'
+    | 'docs.qq.com'
+    | 'office.qq.com'
+    | 'connect.qq.com'
+    | 'vip.qq.com'
+    | 'mail.qq.com'
+    | 'qzone.qq.com'
+    | 'gamecenter.qq.com'
+    | 'mma.qq.com'
+    | 'game.qq.com'
+    | 'qqweb.qq.com'
+    | 'openmobile.qq.com'
+    | 'qun.qq.com'
+    | 'ti.qq.com'
 
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
-        if (config.custom)
-            require('../custom').onMessage(data)
+        if (config.custom) require('../custom').onMessage(data)
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
@@ -71,13 +84,10 @@ const eventHandlers = {
         let senderName: string
         if (groupId && (<GroupMessageEventData>data).anonymous)
             senderName = (<GroupMessageEventData>data).anonymous.name
-        else if (groupId && isSelfMsg)
-            senderName = 'You'
-        else if (groupId)
-            senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
-        else
-            senderName = (data.sender as FriendInfo).remark || data.sender.nickname
-        let roomName = ('group_name' in data) ? data.group_name : senderName
+        else if (groupId && isSelfMsg) senderName = 'You'
+        else if (groupId) senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
+        else senderName = (data.sender as FriendInfo).remark || data.sender.nickname
+        let roomName = 'group_name' in data ? data.group_name : senderName
 
         const message: Message = {
             senderId: senderId,
@@ -96,16 +106,14 @@ const eventHandlers = {
             if (groupId) {
                 const group = bot.gl.get(groupId)
                 if (group && group.group_name !== roomName) roomName = group.group_name
-            }
-            else if (data.post_type === 'sync') {
+            } else if (data.post_type === 'sync') {
                 const info = await adapter.getFriendInfo(data.user_id)
                 roomName = info.remark || info.nickname
             }
             // create room
             room = createRoom(roomId, roomName)
             await storage.addRoom(room)
-        }
-        else {
+        } else {
             if (!room.roomName.startsWith(roomName) && data.post_type === 'message') {
                 room.roomName = roomName
             }
@@ -135,11 +143,12 @@ const eventHandlers = {
 
         //可能要发通知，所以由客户端来决定
         let image
-        if (message.file && message.file.type.startsWith('image/'))
-            image = message.file.url
+        if (message.file && message.file.type.startsWith('image/')) image = message.file.url
         broadcast('notify', {
             priority: room.priority,
-            roomId, at, isSelfMsg,
+            roomId,
+            at,
+            isSelfMsg,
             image,
             data: {
                 title: room.roomName,
@@ -152,8 +161,7 @@ const eventHandlers = {
         if (isSelfMsg) {
             room.unreadCount = 0
             room.at = false
-        }
-        else room.unreadCount++
+        } else room.unreadCount++
         room.utime = data.time * 1000
         room.lastMessage = lastMessage
         message.time = data.time * 1000
@@ -164,11 +172,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, {deleted: true})
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true })
     },
     groupRecall(data: GroupRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: true})
+        storage.updateMessage(-data.group_id, data.message_id, { deleted: true })
     },
     online() {
         clients.setOnline()
@@ -297,15 +305,17 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
-            content: data.dismiss ? '群解散了' : (
-                (data.member ?
-                    (data.member.card ? data.member.card : data.member.nickname) :
-                    data.user_id) +
-                (data.operator_id === data.user_id ? ' 离开了本群' :
-                    ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`)),
-            username: data.member ?
-                (data.member.card ? data.member.card : data.member.nickname) :
-                data.user_id.toString(),
+            content: data.dismiss
+                ? '群解散了'
+                : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
+                  (data.operator_id === data.user_id
+                      ? ' 离开了本群'
+                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+            username: data.member
+                ? data.member.card
+                    ? data.member.card
+                    : data.member.nickname
+                : data.user_id.toString(),
             senderId: data.operator_id,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm', now),
@@ -343,23 +353,17 @@ const eventHandlers = {
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         let mutedUserName: string
         let muteAll = false
-        if (data.user_id === 0)
-            muteAll = true
-        else if (data.user_id === 80000000)
-            mutedUserName = data.nickname
+        if (data.user_id === 0) muteAll = true
+        else if (data.user_id === 80000000) mutedUserName = data.nickname
         else {
             const mutedUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
             mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
         }
         let content = `${operator.card || operator.nickname} `
-        if (muteAll && data.duration > 0)
-            content += '开启了全员禁言'
-        else if (muteAll)
-            content += '关闭了全员禁言'
-        else if (data.duration === 0)
-            content += `将 ${mutedUserName} 解除禁言`
-        else
-            content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        if (muteAll && data.duration > 0) content += '开启了全员禁言'
+        else if (muteAll) content += '关闭了全员禁言'
+        else if (data.duration === 0) content += `将 ${mutedUserName} 解除禁言`
+        else content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
         const message: Message = {
             _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -392,7 +396,6 @@ const eventHandlers = {
         clients.updateRoom(room)
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
-
     },
     async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
@@ -401,7 +404,7 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         clients.syncRead(roomId)
-        storage.updateRoom(roomId, {unreadCount: 0, at: false})
+        storage.updateRoom(roomId, { unreadCount: 0, at: false })
     },
     //TODO 这里应该有好多重复代码的说，应该可以合并一下
     async friendIncrease(data: FriendIncreaseEventData) {
@@ -499,8 +502,7 @@ const loginHandlers = {
                 if (roomId < 0) {
                     buffer = Buffer.alloc(21)
                     uid = -uid
-                }
-                else buffer = Buffer.alloc(17)
+                } else buffer = Buffer.alloc(17)
                 buffer.writeUInt32BE(uid, 0)
                 adapter.fetchHistory(buffer.toString('base64'), roomId, 0)
                 await sleep(500)
@@ -556,17 +558,16 @@ const initStorage = async () => {
                 break
         }
         await storage.connect()
-        storage.getAllRooms()
-            .then(e => {
-                e.forEach((e) => {
-                    //更新群的名称
-                    if (e.roomId > -1) return
-                    const group = bot.gl.get(-e.roomId)
-                    if (group && group.group_name !== e.roomName) {
-                        storage.updateRoom(e.roomId, {roomName: group.group_name})
-                    }
-                })
+        storage.getAllRooms().then((e) => {
+            e.forEach((e) => {
+                //更新群的名称
+                if (e.roomId > -1) return
+                const group = bot.gl.get(-e.roomId)
+                if (group && group.group_name !== e.roomName) {
+                    storage.updateRoom(e.roomId, { roomName: group.group_name })
+                }
             })
+        })
     } catch (err) {
         console.log(err)
         console.log('无法连接数据库')
@@ -665,7 +666,7 @@ const adapter = {
         }
     },
     //roomId 和 room 必有一个
-    async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker}: SendMessageParams) {
+    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker }: SendMessageParams) {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && file.type && !file.type.includes('image')) {
@@ -717,7 +718,7 @@ const adapter = {
             let splitContent = [content]
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
-            for (const {text} of at) {
+            for (const { text } of at) {
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
@@ -734,7 +735,7 @@ const adapter = {
             // 分离类似 [Face: 265] 的表情
             const newParts: string[] = []
             for (let part of splitContent) {
-                if (at.find(e => e.text === part)) {
+                if (at.find((e) => e.text === part)) {
                     // @的成分不做处理
                     newParts.push(part)
                     continue
@@ -753,7 +754,7 @@ const adapter = {
             splitContent = newParts
             // 最后根据每个 string 元素判断类型并且换成对应的 MessageElem
             for (const part of splitContent) {
-                const atInfo = at.find(e => e.text === part)
+                const atInfo = at.find((e) => e.text === part)
                 const isFace = FACE_REGEX.test(part)
                 let element: MessageElem
                 if (atInfo)
@@ -772,8 +773,7 @@ const adapter = {
                             id: Number.parseInt(temp, 10),
                         },
                     }
-                }
-                else
+                } else
                     element = {
                         type: 'text',
                         data: {
@@ -796,8 +796,7 @@ const adapter = {
                 url: b64img,
             }
             message.files.push(message.file)
-        }
-        else if (imgpath) {
+        } else if (imgpath) {
             chain.push({
                 type: 'image',
                 data: {
@@ -810,8 +809,7 @@ const adapter = {
                 url: imgpath.replace(/\\/g, '/'),
             }
             message.files.push(message.file)
-        }
-        else if (file) {
+        } else if (file) {
             chain.push({
                 type: 'image',
                 data: {
@@ -873,7 +871,7 @@ const adapter = {
         let iterG = groups.next()
         const groupsAll = []
         while (!iterG.done) {
-            const f = {...iterG.value}
+            const f = { ...iterG.value }
             f.sc = (f.group_name + f.group_id).toUpperCase()
             groupsAll.push(f)
             iterG = groups.next()
@@ -889,18 +887,16 @@ const adapter = {
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
-                if (group)
-                    client.emit('setShutUp', !!group.shutup_time_me)
+                if (group) client.emit('setShutUp', !!group.shutup_time_me)
                 else {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
                 }
-            }
-            else {
+            } else {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = await storage.fetchMessages(roomId, offset, 20) || []
+        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
         if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
@@ -916,8 +912,7 @@ const adapter = {
     },
     async sendGroupPoke(gin: number, uin: number) {
         const res = await bot.sendGroupPoke(gin, uin)
-        if (res.error?.code === 1002)
-            clients.messageError('对方已关闭头像双击功能')
+        if (res.error?.code === 1002) clients.messageError('对方已关闭头像双击功能')
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
@@ -926,16 +921,18 @@ const adapter = {
         const history = await bot.getForwardMsg(resId)
         if (history.error) {
             console.log(history.error)
-            const res: [Message] = [{
-                senderId: 0,
-                username: '错误',
-                content: history.error.message,
-                timestamp: formatDate('hh:mm'),
-                date: formatDate('yyyy/MM/dd'),
-                _id: 0,
-                time: 0,
-                files: [],
-            }]
+            const res: [Message] = [
+                {
+                    senderId: 0,
+                    username: '错误',
+                    content: history.error.message,
+                    timestamp: formatDate('hh:mm'),
+                    date: formatDate('yyyy/MM/dd'),
+                    _id: 0,
+                    time: 0,
+                    files: [],
+                },
+            ]
             resolve(res)
             return
         }
@@ -952,11 +949,7 @@ const adapter = {
                 time: data.time * 1000,
                 files: [],
             }
-            await processMessage(
-                data.message,
-                message,
-                {},
-            )
+            await processMessage(data.message, message, {})
             messages.push(message)
         }
         resolve(messages)
@@ -965,29 +958,29 @@ const adapter = {
     getUin: () => bot.uin,
     getGroupFileMeta: async (gin: number, fid: string, resolve) => resolve(await bot.acquireGfs(gin).download(fid)),
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
-    getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getFirstUnreadRoom(priority)),
+    getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) =>
+        resolve(await storage.getFirstUnreadRoom(priority)),
     getRoom: async (roomId: number, resolve) => resolve(await storage.getRoom(roomId)),
 
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {
-        if (bot)
-            bot.logout()
+        if (bot) bot.logout()
     },
     getMessageFromStorage: (roomId: number, msgId: string) => storage.getMessage(roomId, msgId),
     getMsg: (id: string) => bot.getMsg(id),
 
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, {priority})
+        await storage.updateRoom(roomId, { priority })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
-        await storage.updateRoom(roomId, {autoDownload})
+        await storage.updateRoom(roomId, { autoDownload })
     },
     async setRoomAutoDownloadPath(roomId: number, downloadPath: string) {
-        await storage.updateRoom(roomId, {downloadPath})
+        await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, {index: pin ? 1 : 0})
+        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async ignoreChat(data: IgnoreChatInfo) {
@@ -1002,9 +995,8 @@ const adapter = {
         const res = await bot.deleteMsg(messageId)
         if (!res.error) {
             clients.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, {deleted: true})
-        }
-        else {
+            await storage.updateMessage(roomId, messageId, { deleted: true })
+        } else {
             clients.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,
@@ -1013,7 +1005,7 @@ const adapter = {
     },
     async revealMessage(roomId: number, messageId: string | number) {
         clients.revealMessage(messageId)
-        await storage.updateMessage(roomId, messageId, {reveal: true})
+        await storage.updateMessage(roomId, messageId, { reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         const messages = []
@@ -1041,28 +1033,25 @@ const adapter = {
                     time: data.time * 1000,
                     files: [],
                 }
-                await processMessage(
-                    data.message,
-                    message,
-                    {},
-                    roomId,
-                )
+                await processMessage(data.message, message, {}, roomId)
                 messages.push(message)
                 newMsgs.push(message)
             }
             if (history.data.length < 2) break
             messageId = newMsgs[0]._id as string
             //todo 所有消息都过一遍，数据库里面都有才能结束
-            const firstOwnMsg = roomId < 0 ?
-                newMsgs[0] : //群的话只要第一条消息就行
-                newMsgs.find(e => e.senderId == bot.uin)
-            if (!firstOwnMsg || await storage.getMessage(roomId, firstOwnMsg._id as string)) break
+            const firstOwnMsg =
+                roomId < 0
+                    ? newMsgs[0] //群的话只要第一条消息就行
+                    : newMsgs.find((e) => e.senderId == bot.uin)
+            if (!firstOwnMsg || (await storage.getMessage(roomId, firstOwnMsg._id as string))) break
         }
         console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
         clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
         await storage.addMessages(roomId, messages)
-        storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
-            .then(messages => clients.setMessages(roomId, messages))
+        storage
+            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .then((messages) => clients.setMessages(roomId, messages))
     },
     async sendOnlineData() {
         clients.sendOnlineData({
@@ -1094,7 +1083,7 @@ const adapter = {
         let ret_msg = {}
         for (let index in msgs) {
             const flag = msgs[index].flag
-            ret_msg[flag] = {...msgs[index]}
+            ret_msg[flag] = { ...msgs[index] }
             //ret_msg.push({flag: {...msgs[index]}})
         }
 

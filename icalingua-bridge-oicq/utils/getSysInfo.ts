@@ -1,6 +1,6 @@
-import {version, name} from '../package.json'
+import { version, name } from '../package.json'
 import os from 'os'
-import {getClientsCount} from '../providers/socketIoProvider'
+import { getClientsCount } from '../providers/socketIoProvider'
 
 export default () => {
     const used = process.memoryUsage()

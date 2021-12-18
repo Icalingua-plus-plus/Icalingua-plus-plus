@@ -1,12 +1,6 @@
 <template>
-    <div
-        v-show="(isMobile && !showRoomsList) || !isMobile || singleRoom"
-        class="vac-col-messages"
-    >
-        <slot
-            v-if="(!rooms.length && !loadingRooms) || (!room.roomId && !loadFirstRoom)"
-            name="no-room-selected"
-        >
+    <div v-show="(isMobile && !showRoomsList) || !isMobile || singleRoom" class="vac-col-messages">
+        <slot v-if="(!rooms.length && !loadingRooms) || (!room.roomId && !loadFirstRoom)" name="no-room-selected">
             <div class="vac-container-center vac-room-empty">
                 <div>{{ textMessages.ROOM_EMPTY }}</div>
             </div>
@@ -33,11 +27,7 @@
             </template>
         </room-header>
 
-        <div
-            ref="scrollContainer"
-            class="vac-container-scroll"
-            @scroll="containerScroll"
-        >
+        <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <loader :show="loadingMessages" />
             <div class="vac-messages-container">
                 <div :class="{ 'vac-messages-hidden': loadingMessages }">
@@ -69,11 +59,7 @@
                         </infinite-loading>
                     </transition>
                     <transition-group :key="roomId" name="vac-fade-message">
-                        <div
-                            v-for="(m, i) in messages"
-                            :key="m._id"
-                            @dblclick="replyMessage(m, $event)"
-                        >
+                        <div v-for="(m, i) in messages" :key="m._id" @dblclick="replyMessage(m, $event)">
                             <message
                                 :current-user-id="currentUserId"
                                 :message="m"
@@ -114,10 +100,7 @@
             <transition name="vac-bounce">
                 <div v-if="scrollIcon" class="vac-icon-scroll" @click="scrollToBottom">
                     <transition name="vac-bounce">
-                        <div
-                            v-if="scrollMessagesCount"
-                            class="vac-badge-counter vac-messages-count"
-                        >
+                        <div v-if="scrollMessagesCount" class="vac-badge-counter vac-messages-count">
                             {{ scrollMessagesCount }}
                         </div>
                     </transition>
@@ -127,16 +110,8 @@
                 </div>
             </transition>
         </div>
-        <div
-            v-show="Object.keys(room).length && showFooter"
-            ref="roomFooter"
-            class="vac-room-footer"
-        >
-            <room-message-reply
-                :room="room"
-                :message-reply="messageReply"
-                @reset-message="resetMessage"
-            >
+        <div v-show="Object.keys(room).length && showFooter" ref="roomFooter" class="vac-room-footer">
+            <room-message-reply :room="room" :message-reply="messageReply" @reset-message="resetMessage">
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                     <slot :name="name" v-bind="data" />
                 </template>
@@ -146,22 +121,11 @@
                     :filtered-users-tag="filteredUsersTag"
                     @select-user-tag="selectUserTag($event)"
                   /> -->
-            <div
-                style="
-                        padding-top: 10px;
-                        padding-left: 10px;
-                        color: var(--panel-color-desc);
-                    "
-                v-if="editAndResend"
-            >
+            <div style="padding-top: 10px; padding-left: 10px; color: var(--panel-color-desc)" v-if="editAndResend">
                 编辑重发
             </div>
 
-            <div
-                class="vac-box-footer"
-                :class="{ 'vac-app-box-shadow': filteredUsersTag.length }"
-            >
-
+            <div class="vac-box-footer" :class="{ 'vac-app-box-shadow': filteredUsersTag.length }">
                 <div v-if="imageFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
@@ -204,10 +168,7 @@
                     <div v-else class="vac-file-message-room">
                         {{ message }}
                     </div>
-                    <div
-                        class="vac-svg-button vac-icon-remove"
-                        @click="resetMessage(null, true)"
-                    >
+                    <div class="vac-svg-button vac-icon-remove" @click="resetMessage(null, true)">
                         <slot name="file-close-icon">
                             <svg-icon name="close" />
                         </slot>
@@ -229,15 +190,10 @@
                     }"
                     @input="onChangeInput"
                     @click.right="textctx"
-
                 />
 
                 <div class="vac-icon-textarea">
-                    <div
-                        v-if="editAndResend"
-                        class="vac-svg-button"
-                        @click="resetMessage"
-                    >
+                    <div v-if="editAndResend" class="vac-svg-button" @click="resetMessage">
                         <slot name="edit-close-icon">
                             <svg-icon name="close-outline" />
                         </slot>
@@ -247,21 +203,13 @@
                         <svg-icon name="emoji" />
                     </div>
 
-                    <div
-                        v-if="showFiles"
-                        class="vac-svg-button"
-                        @click="launchFilePicker"
-                    >
+                    <div v-if="showFiles" class="vac-svg-button" @click="launchFilePicker">
                         <slot name="paperclip-icon">
                             <svg-icon name="paperclip" />
                         </slot>
                     </div>
 
-                    <div
-                        v-if="textareaAction"
-                        class="vac-svg-button"
-                        @click="textareaActionHandler"
-                    >
+                    <div v-if="textareaAction" class="vac-svg-button" @click="textareaActionHandler">
                         <slot name="custom-action-icon">
                             <svg-icon name="deleted" />
                         </slot>
@@ -283,7 +231,7 @@
                         @click="sendMessage"
                     >
                         <slot name="send-icon">
-                            <svg-icon name="send" :param="isMessageEmpty ? 'disabled' : ''"/>
+                            <svg-icon name="send" :param="isMessageEmpty ? 'disabled' : ''" />
                         </slot>
                     </div>
                 </div>
@@ -305,11 +253,11 @@ import RoomMessageReply from './RoomMessageReply'
 import Message from '../Message/Message'
 
 import filteredUsers from '../../utils/filterItems'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 
-const {messagesValid} = require('../../utils/roomValidation')
-const {detectMobile, iOSDevice} = require('../../utils/mobileDetection')
-const {isImageFile, isVideoFile} = require('../../utils/mediaFile')
+const { messagesValid } = require('../../utils/roomValidation')
+const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
+const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
 
 import ipc from '../../../../utils/ipc'
 
@@ -330,32 +278,32 @@ export default {
         clickOutside: vClickOutside.directive,
     },
     props: {
-        currentUserId: {type: [String, Number], required: true},
-        singleRoom: {type: Boolean, required: true},
-        showRoomsList: {type: Boolean, required: true},
-        isMobile: {type: Boolean, required: true},
-        rooms: {type: Array, required: true},
-        roomId: {type: [String, Number], required: true},
-        loadFirstRoom: {type: Boolean, required: true},
-        messages: {type: Array, required: true},
-        roomMessage: {type: String, default: null},
-        messagesLoaded: {type: Boolean, required: true},
-        menuActions: {type: Array, required: true},
-        messageActions: {type: Array, required: true},
-        showSendIcon: {type: Boolean, required: true},
-        showFiles: {type: Boolean, required: true},
-        showAudio: {type: Boolean, required: true},
-        showEmojis: {type: Boolean, required: true},
-        showReactionEmojis: {type: Boolean, required: true},
-        showNewMessagesDivider: {type: Boolean, required: true},
-        showFooter: {type: Boolean, required: true},
-        showHeader: {type: Boolean, default: true},
-        acceptedFiles: {type: String, required: true},
-        textFormatting: {type: Boolean, required: true},
-        loadingRooms: {type: Boolean, required: true},
-        roomInfo: {type: Function, default: null},
-        textareaAction: {type: Function, default: null},
-        membersCount: {type: Number, default: 0},
+        currentUserId: { type: [String, Number], required: true },
+        singleRoom: { type: Boolean, required: true },
+        showRoomsList: { type: Boolean, required: true },
+        isMobile: { type: Boolean, required: true },
+        rooms: { type: Array, required: true },
+        roomId: { type: [String, Number], required: true },
+        loadFirstRoom: { type: Boolean, required: true },
+        messages: { type: Array, required: true },
+        roomMessage: { type: String, default: null },
+        messagesLoaded: { type: Boolean, required: true },
+        menuActions: { type: Array, required: true },
+        messageActions: { type: Array, required: true },
+        showSendIcon: { type: Boolean, required: true },
+        showFiles: { type: Boolean, required: true },
+        showAudio: { type: Boolean, required: true },
+        showEmojis: { type: Boolean, required: true },
+        showReactionEmojis: { type: Boolean, required: true },
+        showNewMessagesDivider: { type: Boolean, required: true },
+        showFooter: { type: Boolean, required: true },
+        showHeader: { type: Boolean, default: true },
+        acceptedFiles: { type: String, required: true },
+        textFormatting: { type: Boolean, required: true },
+        loadingRooms: { type: Boolean, required: true },
+        roomInfo: { type: Function, default: null },
+        textareaAction: { type: Function, default: null },
+        membersCount: { type: Number, default: 0 },
     },
     data() {
         return {
@@ -392,12 +340,7 @@ export default {
             return this.rooms.find((room) => room.roomId === this.roomId) || {}
         },
         showNoMessages() {
-            return (
-                this.room.roomId &&
-                !this.messages.length &&
-                !this.loadingMessages &&
-                !this.loadingRooms
-            )
+            return this.room.roomId && !this.messages.length && !this.loadingMessages && !this.loadingRooms
         },
         showMessagesStarted() {
             return this.messages.length && this.messagesLoaded
@@ -445,16 +388,12 @@ export default {
             if (oldVal && newVal && oldVal.length === newVal.length - 1) {
                 this.loadingMessages = false
 
-                if (
-                    newVal[newVal.length - 1].senderId === this.currentUserId ||
-                    this.getBottomScroll(element) < 60
-                ) {
+                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60) {
                     return setTimeout(() => {
-                        const options = {top: element.scrollHeight, behavior: 'smooth'}
+                        const options = { top: element.scrollHeight, behavior: 'smooth' }
                         element.scrollTo(options)
                     }, 50)
-                }
-                else {
+                } else {
                     this.scrollIcon = true
                     return this.scrollMessagesCount++
                 }
@@ -462,10 +401,9 @@ export default {
 
             if (this.infiniteState) {
                 this.infiniteState.loaded()
-            }
-            else if (newVal.length && !this.scrollIcon) {
+            } else if (newVal.length && !this.scrollIcon) {
                 setTimeout(() => {
-                    element.scrollTo({top: element.scrollHeight})
+                    element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
                 }, 0)
             }
@@ -486,13 +424,12 @@ export default {
                         if (e.ctrlKey) {
                             let selectionStart = this.$refs.roomTextarea.selectionStart
                             let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                            this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            this.message =
+                                this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
                             setTimeout(() => this.onChangeInput(), 0)
-                        }
-                        else if (e.shiftKey) {
+                        } else if (e.shiftKey) {
                             setTimeout(() => this.onChangeInput(), 0)
-                        }
-                        else {
+                        } else {
                             this.sendMessage()
                             e.preventDefault()
                         }
@@ -500,8 +437,7 @@ export default {
                     case 'CtrlEnter':
                         if (!e.ctrlKey) {
                             setTimeout(() => this.onChangeInput(), 0)
-                        }
-                        else {
+                        } else {
                             this.sendMessage()
                             e.preventDefault()
                         }
@@ -510,13 +446,12 @@ export default {
                         if (e.ctrlKey) {
                             let selectionStart = this.$refs.roomTextarea.selectionStart
                             let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                            this.message = this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            this.message =
+                                this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
                             setTimeout(() => this.onChangeInput(), 0)
-                        }
-                        else if (!e.shiftKey) {
+                        } else if (!e.shiftKey) {
                             setTimeout(() => this.onChangeInput(), 0)
-                        }
-                        else {
+                        } else {
                             this.sendMessage()
                             e.preventDefault()
                         }
@@ -524,17 +459,20 @@ export default {
                     default:
                         console.log('qwq')
                 }
-            }
-            else if (e.key === 'ArrowUp') {
+            } else if (e.key === 'ArrowUp') {
                 if (this.message) return
                 //编辑重发上一条消息
-                const ownMessages = this.messages.filter(e => e.senderId === this.currentUserId)
+                const ownMessages = this.messages.filter((e) => e.senderId === this.currentUserId)
                 if (!ownMessages.length) return
                 const lastMessage = ownMessages[ownMessages.length - 1]
                 this.file = lastMessage.file
                 this.messageReply = lastMessage.replyMessage
                 this.message = lastMessage.content
-                this.$nextTick(() => this.$refs.roomTextarea.selectionStart = this.$refs.roomTextarea.selectionEnd = this.message.length)
+                this.$nextTick(
+                    () =>
+                        (this.$refs.roomTextarea.selectionStart = this.$refs.roomTextarea.selectionEnd =
+                            this.message.length),
+                )
                 this.editAndResend = lastMessage._id
             }
         })
@@ -562,8 +500,10 @@ export default {
                 const f = event.dataTransfer.files[0]
                 const index = f.name.lastIndexOf('.')
                 const ext = f.name.substr(index + 1).toLowerCase()
-                if (['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) ||
-                    process.platform === 'linux') {
+                if (
+                    ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) ||
+                    process.platform === 'linux'
+                ) {
                     this.onFileChange(event.dataTransfer.files)
                 }
             }
@@ -572,7 +512,7 @@ export default {
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
-        ipcRenderer.on('setKeyToSendMessage', (_, key) => keyToSendMessage = key)
+        ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
             this.message += message
             this.focusTextarea()
@@ -666,7 +606,7 @@ export default {
                 iOSDevice() ? 500 : 0,
             )
         },
-        messageActionHandler({action, message}) {
+        messageActionHandler({ action, message }) {
             switch (action.name) {
                 case 'replyMessage':
                     return this.replyMessage(message)
@@ -675,7 +615,7 @@ export default {
                 case 'deleteMessage':
                     return this.$emit('delete-message', message._id)
                 default:
-                    return this.$emit('message-action-handler', {action, message})
+                    return this.$emit('message-action-handler', { action, message })
             }
         },
         replyMessage(message, e) {
@@ -686,14 +626,13 @@ export default {
         },
         editMessage(message) {
             this.resetMessage()
-            this.editedMessage = {...message}
+            this.editedMessage = { ...message }
             this.file = message.file
 
             if (isImageFile(this.file)) {
                 this.imageFile = message.file.url
                 setTimeout(() => this.onMediaLoad(), 0)
-            }
-            else if (isVideoFile(this.file)) {
+            } else if (isVideoFile(this.file)) {
                 this.videoFile = message.file.url
                 setTimeout(() => this.onMediaLoad(), 50)
             }
@@ -701,12 +640,12 @@ export default {
             this.message = message.content
         },
         getBottomScroll(element) {
-            const {scrollHeight, clientHeight, scrollTop} = element
+            const { scrollHeight, clientHeight, scrollTop } = element
             return scrollHeight - clientHeight - scrollTop
         },
         scrollToBottom() {
             const element = this.$refs.scrollContainer
-            element.scrollTo({top: element.scrollHeight, behavior: 'smooth'})
+            element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
         },
         onChangeInput() {
             this.keepKeyboardOpen = true
@@ -718,10 +657,7 @@ export default {
 
             if (!el) return
 
-            const padding = window
-                .getComputedStyle(el, null)
-                .getPropertyValue('padding-top')
-                .replace('px', '')
+            const padding = window.getComputedStyle(el, null).getPropertyValue('padding-top').replace('px', '')
 
             el.style.height = 0
             el.style.height = el.scrollHeight - padding * 2 + 'px'
@@ -755,19 +691,17 @@ export default {
 
             if (isImageFile(this.file)) {
                 this.imageFile = fileURL
-            }
-            else if (isVideoFile(this.file)) {
+            } else if (isVideoFile(this.file)) {
                 this.videoFile = fileURL
                 setTimeout(() => this.onMediaLoad(), 50)
-            }
-            else {
+            } else {
                 this.message = file.name
             }
 
             setTimeout(() => (this.fileDialog = false), 500)
         },
-        openFile({message, action}) {
-            this.$emit('open-file', {message, action, room: this.room})
+        openFile({ message, action }) {
+            this.$emit('open-file', { message, action, room: this.room })
         },
         openUserTag(user) {
             this.$emit('open-user-tag', user)
@@ -864,8 +798,7 @@ export default {
     padding: 8px;
     background: var(--chat-bg-scroll-icon);
     border-radius: 50%;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14),
-    0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
     display: flex;
     cursor: pointer;
     z-index: 10;
@@ -979,7 +912,7 @@ export default {
     }
 
     &:before {
-        content: " ";
+        content: ' ';
         position: absolute;
         width: 100%;
         height: 100%;

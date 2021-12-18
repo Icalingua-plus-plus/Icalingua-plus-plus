@@ -1,26 +1,26 @@
-export default interface StructMessageCard{
-    "app": "com.tencent.structmsg",
-    "config": any,
-    "desc": "新闻",
-    "extra": any,
-    "meta": {
-        "news": {
-            "action": string,
-            "android_pkg_name": string,
-            "app_type": number,
-            "appid": number,
-            "desc": string,
-            "jumpUrl": string,
-            "preview": string,
-            "source_icon": string,
-            "source_url": string,
-            "tag": string,
-            "title": string
+export default interface StructMessageCard {
+    app: 'com.tencent.structmsg'
+    config: any
+    desc: '新闻'
+    extra: any
+    meta: {
+        news: {
+            action: string
+            android_pkg_name: string
+            app_type: number
+            appid: number
+            desc: string
+            jumpUrl: string
+            preview: string
+            source_icon: string
+            source_url: string
+            tag: string
+            title: string
         }
-    },
-    "prompt": string,
-    "ver": string,
-    "view": "news"
+    }
+    prompt: string
+    ver: string
+    view: 'news'
 }
 
 /*

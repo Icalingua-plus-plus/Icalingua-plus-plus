@@ -10,10 +10,10 @@
                     :account="account"
                     :username="username"
                     @chroom="chroom"
-                    @show-contacts="contactsShown=true"
+                    @show-contacts="contactsShown = true"
                 />
             </div>
-            <MultipaneResizer/>
+            <MultipaneResizer />
             <div style="flex: 1" class="vac-card-window">
                 <div class="pace-activity" v-show="loading" />
                 <Room
@@ -28,7 +28,7 @@
                     :show-reaction-emojis="false"
                     :show-new-messages-divider="false"
                     :load-first-room="false"
-                    :accepted-files="selectedRoom.roomId>0?'image/*':'*'"
+                    :accepted-files="selectedRoom.roomId > 0 ? 'image/*' : '*'"
                     :message-actions="[]"
                     :single-room="true"
                     :room-id="selectedRoom.roomId"
@@ -55,14 +55,12 @@
                         <i class="el-icon-more"></i>
                     </template>
                 </Room>
-                <pre v-show="selectedRoomId === 0 && sysInfo"
-                     style="position: absolute;
-                            right: 13px;
-                            top: 0;
-                            font-family: monospace;
-                            color: rgb(156, 166, 175);
-                         "
-                > {{ sysInfo }} </pre>
+                <pre
+                    v-show="selectedRoomId === 0 && sysInfo"
+                    style="position: absolute; right: 13px; top: 0; font-family: monospace; color: rgb(156, 166, 175)"
+                >
+ {{ sysInfo }} </pre
+                >
                 <div class="getting-history" v-if="historyCount">
                     <div class="pace-activity" />
                     <span> 正在获取历史消息... {{ historyCount }} </span>
@@ -80,13 +78,13 @@
                     @send="sendSticker"
                     @close="panel = ''"
                     @selectEmoji="
-                                  $refs.room.message += $event.data;
-                                  $refs.room.focusTextarea();
-                                "
+                        $refs.room.message += $event.data
+                        $refs.room.focusTextarea()
+                    "
                     @selectFace="
-                                  $refs.room.message += `[Face: ${$event}]`;
-                                  $refs.room.focusTextarea();
-                                "
+                        $refs.room.message += `[Face: ${$event}]`
+                        $refs.room.focusTextarea()
+                    "
                 />
             </div>
         </Multipane>
@@ -100,17 +98,10 @@
         >
             <span>{{ offlineReason }}</span>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="reconnect" :loading="reconnecting">
-                    Reconnect now
-                </el-button>
+                <el-button type="primary" @click="reconnect" :loading="reconnecting"> Reconnect now </el-button>
             </span>
         </el-dialog>
-        <el-dialog
-            title="联系人"
-            :visible.sync="contactsShown"
-            top="5vh"
-            class="dialog"
-        >
+        <el-dialog title="联系人" :visible.sync="contactsShown" top="5vh" class="dialog">
             <TheContactsPanel @dblclick="startChat" />
         </el-dialog>
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
@@ -490,7 +481,7 @@ main div {
 
 @media screen and (max-width: 1200px) {
     .resize-next {
-        display: none
+        display: none;
     }
 
     .panel-right {
@@ -526,7 +517,7 @@ main div {
 </style>
 
 <style lang="scss">
-@import "../components/vac-mod/styles/index.scss";
+@import '../components/vac-mod/styles/index.scss';
 
 .vac-card-window {
     display: block;
@@ -558,14 +549,15 @@ main div {
         }
 
         textarea,
-        input[type="text"],
-        input[type="search"] {
+        input[type='text'],
+        input[type='search'] {
             -webkit-appearance: none;
         }
     }
 }
 
-.dialog .el-dialog__body,.el-dialog__header {
+.dialog .el-dialog__body,
+.el-dialog__header {
     background-color: var(--panel-background);
 }
 

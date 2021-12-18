@@ -3,11 +3,7 @@
         <div class="root" :class="{ selected }">
             <div class="entry">
                 <div class="left">
-                    <el-badge
-                        value="@"
-                        :type="room.at === 'all' ? 'warning' : undefined"
-                        :hidden="!room.at"
-                    >
+                    <el-badge value="@" :type="room.at === 'all' ? 'warning' : undefined" :hidden="!room.at">
                         <el-avatar size="large" :src="roomAvatar" />
                     </el-badge>
                 </div>
@@ -31,10 +27,7 @@
                             {{ desc }}
                         </div>
                         <div v-show="room.unreadCount !== 0">
-                            <el-badge
-                                :value="room.unreadCount"
-                                :type="room.priority < priority ? 'info' : undefined"
-                            />
+                            <el-badge :value="room.unreadCount" :type="room.priority < priority ? 'info' : undefined" />
                         </div>
                     </div>
                 </div>
@@ -186,7 +179,8 @@ a {
 }
 
 @container (max-width: 130px) {
-    .name, .desc {
+    .name,
+    .desc {
         display: none;
     }
 }

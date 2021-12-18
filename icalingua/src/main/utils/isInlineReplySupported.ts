@@ -8,7 +8,7 @@ export default async () => {
             const capabilities = await getCapabilities()
             cache = capabilities.includes('inline-reply')
         } catch (ignore) {
-            return cache = false
+            return (cache = false)
         }
     }
     return cache

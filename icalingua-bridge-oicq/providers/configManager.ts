@@ -33,15 +33,12 @@ const emptyLoginForm: LoginForm = {
 const CONFIG_PATH = argv.config || 'config.yaml'
 export const config: Config = YAML.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
 
-if (!fs.existsSync('data'))
-    fs.mkdirSync('data')
+if (!fs.existsSync('data')) fs.mkdirSync('data')
 
 const USER_CONFIG_PATH = argv.data || `data/${config.port}.json`
-export const userConfig: UserConfig = fs.existsSync(USER_CONFIG_PATH) ?
-    JSON.parse(fs.readFileSync(USER_CONFIG_PATH, 'utf8')) :
-    {account: emptyLoginForm}
+export const userConfig: UserConfig = fs.existsSync(USER_CONFIG_PATH)
+    ? JSON.parse(fs.readFileSync(USER_CONFIG_PATH, 'utf8'))
+    : { account: emptyLoginForm }
 export const saveUserConfig = () => {
     fs.writeFileSync(USER_CONFIG_PATH, JSON.stringify(userConfig), 'utf-8')
 }
-
-

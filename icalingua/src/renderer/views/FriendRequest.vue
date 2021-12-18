@@ -4,10 +4,7 @@
         <h3 v-if="!Object.keys(request).length" style="text-align: center">暂无未处理的请求</h3>
         <div class="item" v-for="item in request" :key="item.flag">
             <div style="position: sticky">
-                <img class="group-avatar"
-                     :src="getAvatar(item.group_id, true)"
-                     v-if="item.request_type ===' group'"
-                />
+                <img class="group-avatar" :src="getAvatar(item.group_id, true)" v-if="item.request_type === ' group'" />
                 <el-avatar :size="60" :src="getAvatar(item.user_id, false)" />
             </div>
             <div class="info">
@@ -16,13 +13,11 @@
                         <span>{{ item.nickname }}({{ item.user_id }})</span>
                     </div>
                     <div>
-                        <span v-if="item.request_type === 'friend'">
-                            来源：{{ item.source }}
-                        </span>
-                        <span v-if="item.request_type === 'group'&&item.sub_type==='add'">
+                        <span v-if="item.request_type === 'friend'"> 来源：{{ item.source }} </span>
+                        <span v-if="item.request_type === 'group' && item.sub_type === 'add'">
                             申请加入：{{ item.group_name }}({{ item.group_id }})
                         </span>
-                        <span v-if="item.request_type === 'group'&&item.sub_type==='invite'">
+                        <span v-if="item.request_type === 'group' && item.sub_type === 'invite'">
                             邀请你加入：{{ item.group_name }}({{ item.group_id }})
                         </span>
                     </div>
@@ -54,7 +49,7 @@ export default {
 
     async created() {
         document.title = '申请列表'
-        this.request = {...this.request, ...(await ipc.getSystemMsg())}
+        this.request = { ...this.request, ...(await ipc.getSystemMsg()) }
         ipcRenderer.on('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
     },
 

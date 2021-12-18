@@ -1,6 +1,6 @@
-import {AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem} from 'oicq'
+import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq'
 import Message from '../types/Message'
-import {base64decode} from 'nodejs-base64'
+import { base64decode } from 'nodejs-base64'
 import mime from './mime'
 import path from 'path'
 import adapter from '../adapters/oicqAdapter'
@@ -10,8 +10,7 @@ import silkDecode from './silkDecode'
 import getImageUrlByMd5 from './getImageUrlByMd5'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
-    if (!Array.isArray(oicqMessage))
-        oicqMessage = [oicqMessage]
+    if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]
     let lastType
     for (let i = 0; i < oicqMessage.length; i++) {
         const m = oicqMessage[i]
@@ -19,16 +18,14 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
         let url
         switch (m.type) {
             case 'at':
-                if (lastType === 'reply')
-                    break
+                if (lastType === 'reply') break
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
                 lastMessage.content += m.data.text
                 message.content += m.data.text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
-                }
-                else if ((m as AtElem).data.qq == adapter.getUin()) {
+                } else if ((m as AtElem).data.qq == adapter.getUin()) {
                     message.at = true
                 }
                 break
@@ -39,8 +36,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 lastMessage.content += '[Image]'
                 url = m.data.url
                 if (typeof m.data.file === 'string' && url.includes('c2cpicdw.qpic.cn')) {
-                    const md5 = m.data.file.substr(0, 32);
-                    /^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
+                    const md5 = m.data.file.substr(0, 32)
+                    ;/^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
                 }
                 message.file = {
                     type: 'image/jpeg',
@@ -50,10 +47,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 break
             case 'bface':
                 lastMessage.content += '[Sticker]' + m.data.text
-                url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
+                url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(
                     0,
-                    2,
-                )}/${m.data.file.substr(0, 32)}/300x300.png`
+                    32,
+                )}/300x300.png`
                 message.file = {
                     type: 'image/webp',
                     url,
@@ -88,15 +85,19 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
                         const data = getRet.data
-                        const senderName = ('group_id' in data)
-                            ? (data as GroupMessageEventData).anonymous
-                                ? (data as GroupMessageEventData).anonymous.name
-                                : adapter.getUin() === data.sender.user_id
+                        const senderName =
+                            'group_id' in data
+                                ? (data as GroupMessageEventData).anonymous
+                                    ? (data as GroupMessageEventData).anonymous.name
+                                    : adapter.getUin() === data.sender.user_id
                                     ? 'You'
                                     : (data.sender as MemberBaseInfo).card || data.sender.nickname
-                            : (data.sender as FriendInfo).remark || data.sender.nickname
+                                : (data.sender as FriendInfo).remark || data.sender.nickname
                         replyMessage = {
-                            _id: '', date: '', senderId: 0, timestamp: '',
+                            _id: '',
+                            date: '',
+                            senderId: 0,
+                            timestamp: '',
                             username: senderName,
                             content: '',
                             files: [],
@@ -118,8 +119,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (replyMessage.files) {
                         message.replyMessage.files = replyMessage.files
                     }
-                    if (replyMessage.senderId === adapter.getUin())
-                        message.at = true
+                    if (replyMessage.senderId === adapter.getUin()) message.at = true
                 }
                 break
             case 'json':
@@ -133,31 +133,24 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         lastMessage.content = `[${title}]`
                         message.content = title + '\n\n' + content
                         break
-                    } catch (err) {
-                    }
+                    } catch (err) {}
                 }
                 const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                 const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
                 const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/
                 const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/
                 const jsonAppLinkRegex = /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
-                if (biliRegex.test(json))
-                    appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
-                else if (biliRegex2.test(json))
-                    appurl = json.match(biliRegex2)[1].replace(/\\\//g, '/')
-                else if (zhihuRegex.test(json))
-                    appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
-                else if (jsonLinkRegex.test(json))
-                    appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
-                else if (jsonAppLinkRegex.test(json))
-                    appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
+                if (biliRegex.test(json)) appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
+                else if (biliRegex2.test(json)) appurl = json.match(biliRegex2)[1].replace(/\\\//g, '/')
+                else if (zhihuRegex.test(json)) appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
+                else if (jsonLinkRegex.test(json)) appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
+                else if (jsonAppLinkRegex.test(json)) appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
                 else {
                     //作为一般通过小程序解析内部 URL，像腾讯文档就可以
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
                         appurl = meta.qqdocurl
-                    } catch (e) {
-                    }
+                    } catch (e) {}
                 }
                 if (appurl) {
                     try {
@@ -174,13 +167,11 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             url: previewUrl,
                         }
                         message.files.push(message.file)
-                    } catch (e) {
-                    }
+                    } catch (e) {}
 
                     lastMessage.content += appurl
                     message.content += appurl
-                }
-                else {
+                } else {
                     lastMessage.content = '[JSON]'
                     message.content = '[JSON]'
                 }
@@ -189,8 +180,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.code = m.data.data
                 const urlRegex = /url="([^"]+)"/
                 const md5ImageRegex = /image [^<>]*md5="([A-F\d]{32})"/
-                if (urlRegex.test(m.data.data))
-                    appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
+                if (urlRegex.test(m.data.data)) appurl = m.data.data.match(urlRegex)[1].replace(/\\\//g, '/')
                 if (m.data.data.includes('action="viewMultiMsg"')) {
                     lastMessage.content += '[Forward multiple messages]'
                     message.content += '[Forward multiple messages]'
@@ -200,14 +190,12 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         console.log(resId)
                         message.content = `[Forward: ${resId}]`
                     }
-                }
-                else if (appurl) {
+                } else if (appurl) {
                     appurl = appurl.replace(/&amp;/g, '&')
                     lastMessage.content = appurl
                     message.content = appurl
-                }
-                else if (md5ImageRegex.test(m.data.data)) {
-                    const imgMd5 = appurl = m.data.data.match(md5ImageRegex)[1]
+                } else if (md5ImageRegex.test(m.data.data)) {
+                    const imgMd5 = (appurl = m.data.data.match(md5ImageRegex)[1])
                     lastMessage.content += '[Image]'
                     url = getImageUrlByMd5(imgMd5)
                     message.file = {
@@ -215,8 +203,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         url,
                     }
                     message.files.push(message.file)
-                }
-                else {
+                } else {
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
                 }
@@ -254,15 +241,13 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (!message.mirai.eqq) {
                         message.mirai = null
                         break
-                    }
-                    else if (message.mirai.eqq.type === 'tg') {
+                    } else if (message.mirai.eqq.type === 'tg') {
                         const index = message.content.indexOf('：\n')
                         let sender = ''
                         if (index > -1) {
                             sender = message.content.substr(0, index)
                             message.content = message.content.substr(index + 2)
-                        }
-                        else {
+                        } else {
                             //是图片之类没有真实文本内容的
                             //去除尾部：
                             sender = message.content.substr(0, message.content.length - 1)
@@ -271,13 +256,12 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         message.username = lastMessage.username = sender
                         lastMessage.content = lastMessage.content.substr(sender.length + 1)
                     }
-                } catch (e) {
-                }
+                } catch (e) {}
                 break
         }
         lastType = m.type
     }
-    return {message, lastMessage}
+    return { message, lastMessage }
 }
 
 export default processMessage

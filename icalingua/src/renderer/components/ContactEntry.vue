@@ -3,21 +3,13 @@
         <div class="contact-entry-root">
             <div class="contact-entry-entry">
                 <div class="contact-entry-left">
-                    <el-avatar
-                        size="large"
-                        :src="getAvatarUrl(id)"
-                    />
+                    <el-avatar size="large" :src="getAvatarUrl(id)" />
                 </div>
                 <div class="contact-entry-right">
                     <div class="contact-entry-flex contact-entry-l1">
                         <div class="contact-entry-name">
                             {{ remark }}
-                            <span
-                                class="contact-entry-rawname"
-                                v-show="name && name !== remark"
-                            >
-                                ({{ name }})
-                            </span>
+                            <span class="contact-entry-rawname" v-show="name && name !== remark"> ({{ name }}) </span>
                         </div>
                     </div>
                     <div class="contact-entry-flex">
@@ -47,7 +39,7 @@ export default {
         ctx() {
             ipc.popupContactMenu(this.remark, this.name, this.displayId, this.group)
         },
-        getAvatarUrl
+        getAvatarUrl,
     },
 }
 </script>

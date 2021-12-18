@@ -1,15 +1,8 @@
 <template>
     <transition name="vac-slide-up">
-        <div
-            v-if="messageReply"
-            class="vac-reply-container"
-        >
+        <div v-if="messageReply" class="vac-reply-container">
             <div class="vac-reply-box">
-                <img
-                    v-if="isImageFile"
-                    :src="messageReply.file.url"
-                    class="vac-image-reply"
-                />
+                <img v-if="isImageFile" :src="messageReply.file.url" class="vac-image-reply" />
                 <div class="vac-reply-info">
                     <div class="vac-reply-username">
                         {{ messageReply.username }}
@@ -37,13 +30,13 @@
 </template>
 
 <script>
-import SvgIcon from "../../components/SvgIcon";
-import FormatMessage from "../../components/FormatMessage";
+import SvgIcon from '../../components/SvgIcon'
+import FormatMessage from '../../components/FormatMessage'
 
-const { isImageFile } = require("../../utils/mediaFile");
+const { isImageFile } = require('../../utils/mediaFile')
 
 export default {
-    name: "RoomMessageReply",
+    name: 'RoomMessageReply',
     components: {
         SvgIcon,
         FormatMessage,
@@ -56,10 +49,10 @@ export default {
 
     computed: {
         isImageFile() {
-            return isImageFile(this.messageReply.file);
+            return isImageFile(this.messageReply.file)
         },
     },
-};
+}
 </script>
 
 <style lang="scss">

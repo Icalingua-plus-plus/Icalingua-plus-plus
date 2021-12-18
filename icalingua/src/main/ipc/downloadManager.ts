@@ -2,11 +2,11 @@ import Aria2 from 'aria2'
 import Aria2Config from '../../types/Aria2Config'
 import ui from '../utils/ui'
 import edl from 'electron-dl'
-import {getMainWindow} from '../utils/windowManager'
-import {app, ipcMain} from 'electron'
+import { getMainWindow } from '../utils/windowManager'
+import { app, ipcMain } from 'electron'
 import path from 'path'
-import {getGroupFileMeta} from './botAndStorage'
-import {getConfig, saveConfigFile} from '../utils/configManager'
+import { getGroupFileMeta } from './botAndStorage'
+import { getConfig, saveConfigFile } from '../utils/configManager'
 import Message from '../../types/Message'
 import Room from '../../types/Room'
 
@@ -24,14 +24,12 @@ export const loadConfig = (config: Aria2Config) => {
                 ui.messageError('Aria2 failed')
                 console.log('Aria2 failed', err)
             })
-    } else
-        aria = null
+    } else aria = null
 }
 
 export const download = (url: string, out: string, dir?: string) => {
     if (aria) {
-        aria
-            .call('aria2.addUri', [url], {out, dir})
+        aria.call('aria2.addUri', [url], { out, dir })
             .then(() => ui.messageSuccess('Pushed to Aria2 JSON RPC'))
             .catch((err) => {
                 console.log(err)
@@ -73,22 +71,22 @@ export const downloadGroupFile = async (gin: number, fid: string) => {
     }
 }
 
-export const downloadFileByMessageData = (data: { action: string, message: Message, room: Room }) => {
+export const downloadFileByMessageData = (data: { action: string; message: Message; room: Room }) => {
     if (data.action === 'download') {
         if (data.message.file.type.includes('image')) {
             downloadImage(data.message.file.url)
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
                 downloadGroupFile(-data.room.roomId, data.message.file.fid)
-            else
-                download(data.message.file.url, data.message.content)
+            else download(data.message.file.url, data.message.content)
         }
     }
 }
 
 ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
-ipcMain.on('downloadFileByMessageData',
-    (_, data: { action: string, message: Message, room: Room }) => downloadFileByMessageData(data))
+ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Message; room: Room }) =>
+    downloadFileByMessageData(data),
+)
 ipcMain.on('downloadImage', (_, url) => downloadImage(url))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {

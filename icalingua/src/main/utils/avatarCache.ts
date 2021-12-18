@@ -1,4 +1,4 @@
-import {app} from 'electron'
+import { app } from 'electron'
 import axios from 'axios'
 import path from 'path'
 import fs from 'fs'

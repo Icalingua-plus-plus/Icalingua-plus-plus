@@ -1,15 +1,15 @@
-import {getMainWindow} from "./windowManager";
-import {getConfig, saveConfigFile} from './configManager'
+import { getMainWindow } from './windowManager'
+import { getConfig, saveConfigFile } from './configManager'
 
 const exit = () => {
     const win = getMainWindow()
     const size = win.getSize()
-    getConfig().winSize={
+    getConfig().winSize = {
         width: size[0],
         height: size[1],
-        max: win.isMaximized()
+        max: win.isMaximized(),
     }
     saveConfigFile()
-    win.destroy();
+    win.destroy()
 }
 export default exit

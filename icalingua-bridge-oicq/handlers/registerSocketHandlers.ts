@@ -1,4 +1,4 @@
-import {Server, Socket} from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import adapter from '../adapters/oicqAdapter'
 import Message from '../types/Message'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
@@ -9,8 +9,11 @@ export default (io: Server, socket: Socket) => {
     socket.on('updateRoom', adapter.updateRoom)
     socket.on('deleteMessage', adapter.deleteMessage)
     socket.on('fetchHistory', adapter.fetchHistory)
-    socket.on('fetchMessages', (roomId: number, offset: number, resolve: (value: (Message[] | PromiseLike<Message[]>)) => void) =>
-        adapter.fetchMessages(roomId, offset, socket, resolve))
+    socket.on(
+        'fetchMessages',
+        (roomId: number, offset: number, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
+            adapter.fetchMessages(roomId, offset, socket, resolve),
+    )
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)
     socket.on('getForwardMsg', adapter.getForwardMsg)
     socket.on('getGroups', adapter.getGroups)
@@ -43,7 +46,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('setGroupLeave', adapter.setGroupLeave)
     socket.on('setGroupKick', adapter.setGroupKick)
     socket.on('login', adapter.createBot)
-    socket.on('requestToken', cb => cb(sendImgTokenManager.create()))
+    socket.on('requestToken', (cb) => cb(sendImgTokenManager.create()))
     socket.on('requestGfsToken', (gin: number, cb) => cb(gfsTokenManager.create(gin)))
     socket.on('login-verify-reLogin', adapter.reLogin)
     socket.on('login-slider-ticket', adapter.sliderLogin)

@@ -1,0 +1,1 @@
+../icalingua/.prettierrc.js

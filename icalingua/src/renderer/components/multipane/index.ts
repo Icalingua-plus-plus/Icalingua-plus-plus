@@ -1,4 +1,4 @@
-import Multipane from './multipane.vue';
-import MultipaneResizer from './multipane-resizer.vue';
+import Multipane from './multipane.vue'
+import MultipaneResizer from './multipane-resizer.vue'
 
-export { Multipane, MultipaneResizer };
+export { Multipane, MultipaneResizer }

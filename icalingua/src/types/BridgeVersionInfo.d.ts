@@ -1,4 +1,4 @@
-export default interface BridgeVersionInfo{
-    version: string,
+export default interface BridgeVersionInfo {
+    version: string
     protocolVersion: string
 }

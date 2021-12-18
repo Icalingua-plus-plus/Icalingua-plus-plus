@@ -2,10 +2,7 @@
     <a @click="$emit('click')">
         <el-card class="card">
             <div class="left">
-                <el-avatar
-                    size="large"
-                    :src="getAvatarUrl(chat.id)"
-                />
+                <el-avatar size="large" :src="getAvatarUrl(chat.id)" />
             </div>
             <div class="right">
                 <p class="name withoutdesc">{{ chat.name }}</p>
