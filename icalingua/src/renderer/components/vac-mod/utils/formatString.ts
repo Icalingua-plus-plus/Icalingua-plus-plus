@@ -1,5 +1,4 @@
-const linkify = require('linkifyjs')
-
+import * as linkify from "linkifyjs"
 export default (text, doLinkify) => {
 	const json = compileToJSON(text)
 
