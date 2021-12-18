@@ -1,36 +1,36 @@
 //一般通过小程序应该也适用
-export default interface BilibiliMiniApp{
-    "app": "com.tencent.miniapp_01",
-    "config": any,
-    "desc": "哔哩哔哩",
-    "extra": any,
-    "meta": {
-        "detail_1": {
-            "appid": string,
+export default interface BilibiliMiniApp {
+    app: 'com.tencent.miniapp_01'
+    config: any
+    desc: '哔哩哔哩'
+    extra: any
+    meta: {
+        detail_1: {
+            appid: string
             //视频名字
-            "desc": string,
-            "gamePoints": "",
-            "gamePointsUrl": "",
-            "host": {
-                "nick": string,
-                "uin": number
-            },
-            "icon": string,
+            desc: string
+            gamePoints: ''
+            gamePointsUrl: ''
+            host: {
+                nick: string
+                uin: number
+            }
+            icon: string
             //预览图
-            "preview": string,
-            "qqdocurl": string,
-            "scene": number,
-            "shareTemplateData": {},
-            "shareTemplateId": string,
-            "showLittleTail": "",
-            "title": "哔哩哔哩",
-            "url": string
+            preview: string
+            qqdocurl: string
+            scene: number
+            shareTemplateData: {}
+            shareTemplateId: string
+            showLittleTail: ''
+            title: '哔哩哔哩'
+            url: string
         }
-    },
-    "needShareCallBack": boolean,
-    "prompt": "[QQ小程序]哔哩哔哩",
-    "ver": string,
-    "view": string
+    }
+    needShareCallBack: boolean
+    prompt: '[QQ小程序]哔哩哔哩'
+    ver: string
+    view: string
 }
 
 /*

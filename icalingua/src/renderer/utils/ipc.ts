@@ -1,4 +1,4 @@
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
 import Aria2Config from '../../types/Aria2Config'
@@ -29,7 +29,7 @@ const ipc = {
         return await ipcRenderer.invoke('getUin')
     },
     async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
+        return await ipcRenderer.invoke('fetchMessage', { roomId, offset })
     },
     stopFetchMessage() {
         ipcRenderer.send('stopFetchMessage')
@@ -59,7 +59,7 @@ const ipc = {
     downloadImage(url: string) {
         ipcRenderer.send('downloadImage', url)
     },
-    downloadFileByMessageData(data: { action: string, message: Message, room: Room }) {
+    downloadFileByMessageData(data: { action: string; message: Message; room: Room }) {
         ipcRenderer.send('downloadFileByMessageData', data)
     },
     sendGroupPoke(gin: number, uin: number) {
@@ -137,7 +137,7 @@ const ipc = {
     deleteMessage(roomId: number, messageId: string) {
         ipcRenderer.send('deleteMessage', roomId, messageId)
     },
-    async getGroup(gin: number):Promise<SearchableGroup> {
+    async getGroup(gin: number): Promise<SearchableGroup> {
         return await ipcRenderer.invoke('getGroup', gin)
     },
 }

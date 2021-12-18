@@ -35,7 +35,7 @@
 
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
-import {ipcRenderer, remote} from 'electron'
+import { ipcRenderer, remote } from 'electron'
 import ipc from '../utils/ipc'
 import * as themes from '../utils/themes'
 
@@ -47,9 +47,9 @@ export default {
                 roomId: 0,
                 roomName: 'Forwarded Messages',
                 users: [
-                    {_id: 3, username: '3'},
-                    {_id: 31, username: '3'},
-                    {_id: 32, username: '3'},
+                    { _id: 3, username: '3' },
+                    { _id: 31, username: '3' },
+                    { _id: 32, username: '3' },
                 ],
             },
             messages: [],
@@ -91,7 +91,7 @@ export default {
 </style>
 
 <style lang="scss">
-@import "../components/vac-mod/styles/index.scss";
+@import '../components/vac-mod/styles/index.scss';
 
 .vac-card-window {
     min-height: 100vh;
@@ -124,8 +124,8 @@ export default {
         }
 
         textarea,
-        input[type="text"],
-        input[type="search"] {
+        input[type='text'],
+        input[type='search'] {
             -webkit-appearance: none;
         }
     }

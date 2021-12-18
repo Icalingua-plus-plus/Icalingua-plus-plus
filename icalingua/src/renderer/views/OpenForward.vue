@@ -1,6 +1,6 @@
 <template>
     <div class="settings">
-        <p> 输入 Res ID </p>
+        <p>输入 Res ID</p>
         <el-input v-model="res" />
         <div class="dialog-footer">
             <el-button type="primary" @click="view">打开</el-button>
@@ -15,7 +15,7 @@ export default {
     name: 'OpenForward',
     data() {
         return {
-            res: ''
+            res: '',
         }
     },
     created() {
@@ -32,11 +32,11 @@ export default {
 
 <style scoped>
 .settings {
-    padding: 0 16px
+    padding: 0 16px;
 }
 
 .dialog-footer {
     margin-top: 14px;
-    text-align: center
+    text-align: center;
 }
 </style>

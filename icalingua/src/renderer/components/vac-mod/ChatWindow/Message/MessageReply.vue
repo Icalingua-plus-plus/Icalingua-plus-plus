@@ -31,17 +31,17 @@
 
 <script>
 import FormatMessage from '../../components/FormatMessage'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 
-const {isImageFile} = require('../../utils/mediaFile')
+const { isImageFile } = require('../../utils/mediaFile')
 
 export default {
     name: 'MessageReply',
-    components: {FormatMessage},
+    components: { FormatMessage },
 
     props: {
-        message: {type: Object, required: true},
-        roomUsers: {type: Array, required: true},
+        message: { type: Object, required: true },
+        roomUsers: { type: Array, required: true },
     },
 
     computed: {

@@ -1,8 +1,8 @@
 import axios from 'axios'
 import ffmpeg from 'fluent-ffmpeg'
-import {PassThrough} from 'stream'
+import { PassThrough } from 'stream'
 import silk from 'silk-sdk'
-import {streamToBuffer} from './streamToBuffer'
+import { streamToBuffer } from './streamToBuffer'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
@@ -18,18 +18,16 @@ const conventPcmToMp3 = (pcm: Buffer): Promise<Buffer> => {
         const inStream = new PassThrough()
         const outStream = new PassThrough()
         inStream.end(pcm)
-        ffmpeg(inStream).inputOption([
-            '-f', 's16le',
-            '-ar', '24000',
-            '-ac', '1',
-        ])
+        ffmpeg(inStream)
+            .inputOption(['-f', 's16le', '-ar', '24000', '-ac', '1'])
             .outputFormat('mp3')
-            .on('error', err => {
+            .on('error', (err) => {
                 reject(err)
             })
             .on('end', async () => {
                 const buf = await streamToBuffer(outStream)
                 resolve(buf)
-            }).pipe(outStream, {end: true})
+            })
+            .pipe(outStream, { end: true })
     })
 }

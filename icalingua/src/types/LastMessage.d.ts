@@ -1,5 +1,5 @@
 export default interface LastMessage {
-    content?: string;
-    timestamp?: string;
-    username?: string;
+    content?: string
+    timestamp?: string
+    username?: string
 }

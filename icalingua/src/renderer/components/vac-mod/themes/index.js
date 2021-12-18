@@ -13,8 +13,7 @@ export const defaultThemeStyles = {
         container: {
             border: 'none',
             borderRadius: '0',
-            boxShadow:
-                '0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
         },
 
         header: {
@@ -143,7 +142,7 @@ export const defaultThemeStyles = {
             colorStickerType: '#303133',
             colorStickerSelected: '#409eff',
             colorStickerHover: '#66b1ff',
-            colorNaviBottomBar: '#E4E7ED'
+            colorNaviBottomBar: '#E4E7ED',
         },
     },
     dark: {
@@ -160,8 +159,7 @@ export const defaultThemeStyles = {
         container: {
             border: 'none',
             borderRadius: '0',
-            boxShadow:
-                '0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
+            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.14), 0px 1px 5px 0px rgba(0, 0, 0, 0.12)',
         },
 
         header: {
@@ -290,26 +288,26 @@ export const defaultThemeStyles = {
             colorStickerType: '#C0C4CC',
             colorStickerSelected: '#409eff',
             colorStickerHover: '#66b1ff',
-            colorNaviBottomBar: '#343536'
+            colorNaviBottomBar: '#343536',
         },
     },
 }
 
 export const cssThemeVars = ({
-                                 general,
-                                 container,
-                                 header,
-                                 footer,
-                                 sidemenu,
-                                 content,
-                                 dropdown,
-                                 message,
-                                 markdown,
-                                 room,
-                                 emoji,
-                                 icons,
-                                 panel,
-                             }) => {
+    general,
+    container,
+    header,
+    footer,
+    sidemenu,
+    content,
+    dropdown,
+    message,
+    markdown,
+    room,
+    emoji,
+    icons,
+    panel,
+}) => {
     return {
         // general
         '--chat-color': general.color,
@@ -376,15 +374,12 @@ export const cssThemeVars = ({
         '--chat-message-bg-color-reaction': message.backgroundReaction,
         '--chat-message-border-style-reaction': message.borderStyleReaction,
         '--chat-message-bg-color-reaction-hover': message.backgroundReactionHover,
-        '--chat-message-border-style-reaction-hover':
-        message.borderStyleReactionHover,
+        '--chat-message-border-style-reaction-hover': message.borderStyleReactionHover,
         '--chat-message-color-reaction-counter': message.colorReactionCounter,
         '--chat-message-bg-color-reaction-me': message.backgroundReactionMe,
         '--chat-message-border-style-reaction-me': message.borderStyleReactionMe,
-        '--chat-message-bg-color-reaction-hover-me':
-        message.backgroundReactionHoverMe,
-        '--chat-message-border-style-reaction-hover-me':
-        message.borderStyleReactionHoverMe,
+        '--chat-message-bg-color-reaction-hover-me': message.backgroundReactionHoverMe,
+        '--chat-message-border-style-reaction-hover-me': message.borderStyleReactionHoverMe,
         '--chat-message-color-reaction-counter-me': message.colorReactionCounterMe,
 
         // markdown

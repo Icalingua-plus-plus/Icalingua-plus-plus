@@ -6,12 +6,25 @@ The most important rule is to keep consistent,
 since nothing can be uglier than a heap of inconsistent components.
 Even if some rules are being broken, they should be broken consistently.
 
-Generally, the styles are specified in [the editorconfig](.editorconfig).
+Generally, the styles are specified in [the editorconfig](.editorconfig)
+and [prettier](icalingua/.prettierrc.js).  
 Please follow them to keep the styles of the project unified
-and make following contributions easier. >_<
+and make following contributions easier. >\_<  
+You should run prettier before every commit to [icalingua](icalingua), like this:
+
+```bash
+yarn prettier -m .
+```
+
 However, in order to avoid ugly spaces before too deeply-nested code,
 or to align, the indent rules can sometimes be broken,
 but please be cautious before doing so.
+If you are not sure what will happen if you run prettier, you can preview it using the
+command follow:
+
+```bash
+yarn prettier -c .
+```
 
 And please keep the lines within a moderate length and indent level.
 If some code are inevitably nested too deeply,

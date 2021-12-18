@@ -1,18 +1,18 @@
-import Adapter, {CookiesDomain} from '../../types/Adapter'
+import Adapter, { CookiesDomain } from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import {FileElem, GroupInfo, MemberInfo} from 'oicq'
+import { FileElem, GroupInfo, MemberInfo } from 'oicq'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
-import {io, Socket} from 'socket.io-client'
-import {getConfig} from '../utils/configManager'
-import {sign} from 'noble-ed25519'
-import {app, dialog, BrowserWindow} from 'electron'
-import {getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow} from '../utils/windowManager'
-import {createTray, updateTrayIcon} from '../utils/trayManager'
+import { io, Socket } from 'socket.io-client'
+import { getConfig } from '../utils/configManager'
+import { sign } from 'noble-ed25519'
+import { app, dialog, BrowserWindow } from 'electron'
+import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow } from '../utils/windowManager'
+import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
-import {updateAppMenu} from '../ipc/menuManager'
+import { updateAppMenu } from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
 import fs from 'fs'
 import fileType from 'file-type'
@@ -20,12 +20,12 @@ import axios from 'axios'
 import RoamingStamp from '../../types/RoamingStamp'
 import OnlineData from '../../types/OnlineData'
 import SearchableFriend from '../../types/SearchableFriend'
-import {Notification} from 'freedesktop-notifications'
+import { Notification } from 'freedesktop-notifications'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
 import BridgeVersionInfo from '../../types/BridgeVersionInfo'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
-import {checkUpdate, getCachedUpdate} from '../utils/updateChecker'
+import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import formatDate from '../../utils/formatDate'
@@ -59,27 +59,29 @@ const attachSocketEvents = () => {
         }
         ui.updateRoom(room)
         try {
-            Object.assign(rooms.find(e => e.roomId === room.roomId), room)
+            Object.assign(
+                rooms.find((e) => e.roomId === room.roomId),
+                room,
+            )
         } catch (e) {
             errorHandler(e, true)
         }
         await updateTrayIcon()
     })
-    socket.on('addMessage', ({roomId, message}: { roomId: number, message: Message }) => {
+    socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
         ui.addMessage(roomId, message)
-        if (typeof message._id === 'string' &&
-            roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible())
+        if (
+            typeof message._id === 'string' &&
+            roomId === ui.getSelectedRoomId() &&
+            getMainWindow().isFocused() &&
+            getMainWindow().isVisible()
+        )
             adapter.reportRead(message._id)
     })
     socket.on('deleteMessage', ui.deleteMessage)
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
-    socket.on('onlineData', async (data: {
-        online: boolean,
-        nick: string,
-        uin: number,
-        sysInfo: string
-    }) => {
+    socket.on('onlineData', async (data: { online: boolean; nick: string; uin: number; sysInfo: string }) => {
         if (!loggedIn) {
             await loadMainWindow()
             await createTray()
@@ -109,71 +111,71 @@ const attachSocketEvents = () => {
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
     socket.on('syncRead', ui.clearRoomUnread)
-    socket.on('setMessages', ({roomId, messages}: { roomId: number, messages: Message[] }) => {
-        if (roomId === ui.getSelectedRoomId())
-            ui.setMessages(messages)
+    socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
+        if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
     })
-    socket.on('notify', async (data: {
-        priority: 1 | 2 | 3 | 4 | 5,
-        roomId: number,
-        at: string | boolean,
-        data: { title: string, body: string, hasReply: boolean, replyPlaceholder: string },
-        isSelfMsg: boolean
-        image?: string
-    }) => {
-        if (
-            (!getMainWindow().isFocused() ||
-                !getMainWindow().isVisible() ||
-                data.roomId !== ui.getSelectedRoomId()) &&
-            (data.priority >= getConfig().priority || data.at) &&
-            !data.isSelfMsg
-        ) {
-            //notification
-            const actions = {
-                default: '',
-                read: '标为已读',
-            }
-            if (await isInlineReplySupported())
-                actions['inline-reply'] = '回复...'
-
-            const notifParams = {
-                ...data.data,
-                summary: data.data.title,
-                appName: 'Icalingua',
-                category: 'im.received',
-                'desktop-entry': 'icalingua',
-                urgency: 1,
-                timeout: 5000,
-                icon: await avatarCache(getAvatarUrl(data.roomId, true)),
-                'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
-                'x-kde-reply-submit-button-text': '发送',
-                actions,
-            }
-            if (data.image)
-                notifParams['x-kde-urls'] = await avatarCache(data.image)
-            const notif = new Notification(notifParams)
-            notif.on('action', (action: string) => {
-                switch (action) {
-                    case 'default':
-                        showWindow()
-                        ui.chroom(data.roomId)
-                        break
-                    case 'read':
-                        adapter.clearRoomUnread(data.roomId)
-                        break
+    socket.on(
+        'notify',
+        async (data: {
+            priority: 1 | 2 | 3 | 4 | 5
+            roomId: number
+            at: string | boolean
+            data: { title: string; body: string; hasReply: boolean; replyPlaceholder: string }
+            isSelfMsg: boolean
+            image?: string
+        }) => {
+            if (
+                (!getMainWindow().isFocused() ||
+                    !getMainWindow().isVisible() ||
+                    data.roomId !== ui.getSelectedRoomId()) &&
+                (data.priority >= getConfig().priority || data.at) &&
+                !data.isSelfMsg
+            ) {
+                //notification
+                const actions = {
+                    default: '',
+                    read: '标为已读',
                 }
-            })
-            notif.on('reply', (r: string) => {
-                adapter.clearRoomUnread(data.roomId)
-                adapter.sendMessage({
-                    content: r,
-                    roomId: data.roomId,
-                    at: [],
+                if (await isInlineReplySupported()) actions['inline-reply'] = '回复...'
+
+                const notifParams = {
+                    ...data.data,
+                    summary: data.data.title,
+                    appName: 'Icalingua',
+                    category: 'im.received',
+                    'desktop-entry': 'icalingua',
+                    urgency: 1,
+                    timeout: 5000,
+                    icon: await avatarCache(getAvatarUrl(data.roomId, true)),
+                    'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                    'x-kde-reply-submit-button-text': '发送',
+                    actions,
+                }
+                if (data.image) notifParams['x-kde-urls'] = await avatarCache(data.image)
+                const notif = new Notification(notifParams)
+                notif.on('action', (action: string) => {
+                    switch (action) {
+                        case 'default':
+                            showWindow()
+                            ui.chroom(data.roomId)
+                            break
+                        case 'read':
+                            adapter.clearRoomUnread(data.roomId)
+                            break
+                    }
                 })
-            })
-            notif.push()
-        }
-    })
+                notif.on('reply', (r: string) => {
+                    adapter.clearRoomUnread(data.roomId)
+                    adapter.sendMessage({
+                        content: r,
+                        roomId: data.roomId,
+                        at: [],
+                    })
+                })
+                notif.push()
+            }
+        },
+    )
     socket.on('requestSetup', async (data: LoginForm) => {
         console.log('bridge 未登录')
         account = data
@@ -202,9 +204,9 @@ const attachSocketEvents = () => {
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
                 'console.log=(a)=>{' +
-                'if(typeof a === "string"&&' +
-                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                'window.close()}',
+                    'if(typeof a === "string"&&' +
+                    'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                    'window.close()}',
             )
         })
         veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
@@ -225,10 +227,7 @@ const attachSocketEvents = () => {
                 contextIsolation: false,
             },
         })
-        const inject = fs.readFileSync(
-            path.join(getStaticPath(), '/sliderinj.js'),
-            'utf-8',
-        )
+        const inject = fs.readFileSync(path.join(getStaticPath(), '/sliderinj.js'), 'utf-8')
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(inject)
         })
@@ -246,10 +245,10 @@ const adapter: Adapter = {
         })
     },
     requestGfsToken(gin: number): Promise<string> {
-        return new Promise(resolve => socket.emit('requestGfsToken', gin, resolve))
+        return new Promise((resolve) => socket.emit('requestGfsToken', gin, resolve))
     },
     async getUnreadRooms(): Promise<Room[]> {
-        return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority)
+        return rooms.filter((e) => e.unreadCount && e.priority >= getConfig().priority)
     },
     setGroupKick(gin: number, uin: number): any {
         socket.emit('setGroupKick', gin, uin)
@@ -261,30 +260,27 @@ const adapter: Adapter = {
         socket.emit('reportRead', messageId)
     },
     getGroupMembers(group: number): Promise<MemberInfo[]> {
-        return new Promise(resolve => socket.emit('getGroupMembers', group, resolve))
+        return new Promise((resolve) => socket.emit('getGroupMembers', group, resolve))
     },
     setGroupNick(group: number, nick: string): any {
         socket.emit('setGroupNick', group, nick)
     },
     getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
-        return new Promise(resolve => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
+        return new Promise((resolve) => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
     sendOnlineData() {
         if (!cachedOnlineData) return
         let sysInfo = getBuildInfo()
         const updateInfo = getCachedUpdate()
         if (updateInfo && updateInfo.hasUpdate) {
-            if (sysInfo)
-                sysInfo += '\n\n'
+            if (sysInfo) sysInfo += '\n\n'
             sysInfo += '新版本可用: ' + updateInfo.latestVersion
         }
         if (formatDate('MM-dd') === '11-20') {
-            if (sysInfo)
-                sysInfo += '\n\n'
+            if (sysInfo) sysInfo += '\n\n'
             sysInfo += '11月20日是跨性别纪念日，纪念那些因暴力而不幸逝世的跨性别者们\n愿你也能被他人温柔以待'
         }
-        if (sysInfo)
-            sysInfo += '\n\n'
+        if (sysInfo) sysInfo += '\n\n'
         sysInfo += cachedOnlineData.serverInfo
         cachedOnlineData.sysInfo = sysInfo
         ui.sendOnlineData(cachedOnlineData)
@@ -294,10 +290,10 @@ const adapter: Adapter = {
         }
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
-        return new Promise(resolve => socket.emit('getIgnoredChats', resolve))
+        return new Promise((resolve) => socket.emit('getIgnoredChats', resolve))
     },
     getFriendsFallback(): Promise<SearchableFriend[]> {
-        return new Promise(resolve => socket.emit('getFriendsFallback', resolve))
+        return new Promise((resolve) => socket.emit('getFriendsFallback', resolve))
     },
     removeIgnoredChat(roomId: number): any {
         socket.emit('removeIgnoredChat', roomId)
@@ -312,28 +308,25 @@ const adapter: Adapter = {
         socket.emit('addRoom', room)
     },
     clearCurrentRoomUnread() {
-        if (!ui.getSelectedRoomId())
-            return
+        if (!ui.getSelectedRoomId()) return
         adapter.clearRoomUnread(ui.getSelectedRoomId())
     },
     clearRoomUnread(roomId: number) {
-        if (!socket)
-            return
+        if (!socket) return
         ui.clearRoomUnread(roomId)
-        const room = rooms.find(e => e.roomId === roomId)
+        const room = rooms.find((e) => e.roomId === roomId)
         if (room) {
             room.unreadCount = 0
             room.at = false
         }
-        adapter.updateRoom(roomId, {unreadCount: 0, at: false})
+        adapter.updateRoom(roomId, { unreadCount: 0, at: false })
         updateTrayIcon()
     },
     async createBot(form: LoginForm) {
         if (account) {
             //是登录远端
             socket.emit('login', form)
-        }
-        else {
+        } else {
             //是初始化程序
             socket = io(getConfig().server, {
                 transports: ['websocket'],
@@ -379,16 +372,14 @@ const adapter: Adapter = {
         socket.emit('deleteMessage', roomId, messageId)
     },
     fetchHistory(messageId: string, roomId?: number) {
-        if (!roomId)
-            roomId = ui.getSelectedRoomId()
+        if (!roomId) roomId = ui.getSelectedRoomId()
         socket.emit('fetchHistory', messageId, roomId, currentLoadedMessagesCount)
     },
     stopFetchingHistory() {
         socket.emit('stopFetchingHistory')
     },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        if (!offset)
-            adapter.clearCurrentRoomUnread()
+        if (!offset) adapter.clearCurrentRoomUnread()
         updateTrayIcon()
         currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
@@ -416,7 +407,7 @@ const adapter: Adapter = {
         })
     },
     async getRoom(roomId: number): Promise<Room> {
-        return rooms.find(e => e.roomId === roomId)
+        return rooms.find((e) => e.roomId === roomId)
     },
     getSelectedRoom(): Promise<Room> {
         return adapter.getRoom(ui.getSelectedRoomId())
@@ -425,13 +416,12 @@ const adapter: Adapter = {
     getNickname: () => nickname,
     getAccount: () => account,
     async getUnreadCount(): Promise<number> {
-        return rooms.filter(e => e.unreadCount && e.priority >= getConfig().priority).length
+        return rooms.filter((e) => e.unreadCount && e.priority >= getConfig().priority).length
     },
     ignoreChat(data: IgnoreChatInfo) {
         socket.emit('ignoreChat', data)
     },
-    logOut(): void {
-    },
+    logOut(): void {},
     pinRoom(roomId: number, pin: boolean) {
         socket.emit('pinRoom', roomId, pin)
     },
@@ -449,22 +439,22 @@ const adapter: Adapter = {
         socket.emit('sendGroupPoke', gin, uin)
     },
     async sendMessage(data: SendMessageParams) {
-        if (!data.roomId && !data.room)
-            data.roomId = ui.getSelectedRoomId()
+        if (!data.roomId && !data.room) data.roomId = ui.getSelectedRoomId()
         if (data.imgpath && !/^https?:\/\//.test(data.imgpath)) {
             const fileContent = fs.readFileSync(data.imgpath)
             const type = await fileType.fromBuffer(fileContent)
             data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
             data.imgpath = null
         }
-        data.b64img ?
-            socket.emit('requestToken', (token: string) =>
-                axios.post(getConfig().server + `/api/${token}/sendMessage`, data, {
-                    proxy: false,
-                })
-                    .catch(console.log),
-            ) :
-            socket.emit('sendMessage', data)
+        data.b64img
+            ? socket.emit('requestToken', (token: string) =>
+                  axios
+                      .post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                          proxy: false,
+                      })
+                      .catch(console.log),
+              )
+            : socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
         socket.emit('setOnlineStatus', status)
@@ -486,7 +476,10 @@ const adapter: Adapter = {
     },
     updateRoom(roomId: number, room: object) {
         try {
-            Object.assign(rooms.find(e => e.roomId === roomId), room)
+            Object.assign(
+                rooms.find((e) => e.roomId === roomId),
+                room,
+            )
         } catch (e) {
             errorHandler(e, true)
         }

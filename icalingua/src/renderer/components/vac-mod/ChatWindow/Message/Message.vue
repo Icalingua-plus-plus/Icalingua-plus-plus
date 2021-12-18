@@ -16,7 +16,7 @@
             v-else
             :id="message._id"
             class="vac-message-box"
-            :class="{ 'vac-offset-current': message.senderId === currentUserId, }"
+            :class="{ 'vac-offset-current': message.senderId === currentUserId }"
         >
             <slot name="message" v-bind="{ message }">
                 <div
@@ -27,22 +27,22 @@
                 >
                     <img
                         :src="tgLogo"
-                        v-if="message.mirai&&message.mirai.eqq.type==='tg'"
+                        v-if="message.mirai && message.mirai.eqq.type === 'tg'"
                         style="
-                                position: absolute;
-                                right: -4px;
-                                bottom: 5px;
-                                object-fit: cover;
-                                height: 18px;
-                                width: 18px;
-                                line-height: 18px;
-                            "
+                            position: absolute;
+                            right: -4px;
+                            bottom: 5px;
+                            object-fit: cover;
+                            height: 18px;
+                            width: 18px;
+                            line-height: 18px;
+                        "
                     />
                     <el-avatar size="medium" :src="avatar" />
                 </div>
                 <div
                     class="vac-message-container"
-                    :class="{ 'vac-message-container-offset': messageOffset, }"
+                    :class="{ 'vac-message-container-offset': messageOffset }"
                     @click.right="$emit('ctx')"
                 >
                     <div
@@ -59,25 +59,24 @@
                             v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
                             class="vac-text-username"
                             :class="{
-                                'vac-username-reply':
-                                (!message.deleted || message.reveal) && message.replyMessage,
+                                'vac-username-reply': (!message.deleted || message.reveal) && message.replyMessage,
                             }"
                             style="display: flex"
                         >
                             <span style="width: 100%">{{ message.username }}</span>
                             <span
-                                v-show="message.role && message.role !== 'member'
-                                        && !(message.mirai && message.mirai.eqq.type === 'tg')
-                                    "
+                                v-show="
+                                    message.role &&
+                                    message.role !== 'member' &&
+                                    !(message.mirai && message.mirai.eqq.type === 'tg')
+                                "
                                 style="margin-left: 10px"
                             >
                                 {{ message.role }}
                             </span>
                             <span
-                                v-show="message.title
-                                        && !(message.mirai && message.mirai.eqq.type === 'tg')
-                                    "
-                                style="margin-left: 10px; min-width: fit-content;"
+                                v-show="message.title && !(message.mirai && message.mirai.eqq.type === 'tg')"
+                                style="margin-left: 10px; min-width: fit-content"
                             >
                                 {{ message.title }}
                             </span>
@@ -97,12 +96,7 @@
                             <span>{{ textMessages.MESSAGE_DELETED }}</span>
                         </div>
 
-                        <LottieAnimation
-                            v-else-if="lottie"
-                            :path="lottie"
-                            :height="250"
-                            :width="250"
-                        />
+                        <LottieAnimation v-else-if="lottie" :path="lottie" :height="250" :width="250" />
 
                         <message-image
                             v-else-if="isImage && message.files"
@@ -153,10 +147,7 @@
                         </div>
 
                         <div v-else-if="message.file" class="vac-file-message">
-                            <div
-                                class="vac-svg-button vac-icon-file"
-                                @click.stop="openFile('download')"
-                            >
+                            <div class="vac-svg-button vac-icon-file" @click.stop="openFile('download')">
                                 <slot name="document-icon">
                                     <svg-icon name="document" />
                                 </slot>
@@ -195,7 +186,7 @@ import MessageImage from './MessageImage'
 
 import getLottieFace from '../../../../utils/getLottieFace'
 
-const {isImageFile} = require('../../utils/mediaFile')
+const { isImageFile } = require('../../utils/mediaFile')
 
 import LottieAnimation from '../../../LottieAnimation'
 import ipc from '../../../../utils/ipc'
@@ -213,20 +204,20 @@ export default {
     },
 
     props: {
-        currentUserId: {type: [String, Number], required: true},
-        textMessages: {type: Object, required: true},
-        index: {type: Number, required: true},
-        message: {type: Object, required: true},
-        messages: {type: Array, required: true},
-        editedMessage: {type: Object, required: true},
-        roomUsers: {type: Array, default: () => []},
-        roomFooterRef: {type: HTMLDivElement, default: null},
-        newMessages: {type: Array, default: () => []},
-        showReactionEmojis: {type: Boolean, required: true},
-        showNewMessagesDivider: {type: Boolean, required: true},
-        textFormatting: {type: Boolean, required: true},
-        emojisList: {type: Object, required: true},
-        hideOptions: {type: Boolean, required: true},
+        currentUserId: { type: [String, Number], required: true },
+        textMessages: { type: Object, required: true },
+        index: { type: Number, required: true },
+        message: { type: Object, required: true },
+        messages: { type: Array, required: true },
+        editedMessage: { type: Object, required: true },
+        roomUsers: { type: Array, default: () => [] },
+        roomFooterRef: { type: HTMLDivElement, default: null },
+        newMessages: { type: Array, default: () => [] },
+        showReactionEmojis: { type: Boolean, required: true },
+        showNewMessagesDivider: { type: Boolean, required: true },
+        textFormatting: { type: Boolean, required: true },
+        emojisList: { type: Object, required: true },
+        hideOptions: { type: Boolean, required: true },
     },
 
     data() {
@@ -244,22 +235,13 @@ export default {
 
     computed: {
         showDate() {
-            return (
-                this.index > 0 &&
-                this.message.date !== this.messages[this.index - 1].date
-            )
+            return this.index > 0 && this.message.date !== this.messages[this.index - 1].date
         },
         messageOffset() {
-            return (
-                this.index > 0 &&
-                this.message.senderId !== this.messages[this.index - 1].senderId
-            )
+            return this.index > 0 && this.message.senderId !== this.messages[this.index - 1].senderId
         },
         isMessageHover() {
-            return (
-                this.editedMessage._id === this.message._id ||
-                this.hoverMessageId === this.message._id
-            )
+            return this.editedMessage._id === this.message._id || this.hoverMessageId === this.message._id
         },
         isImage() {
             return isImageFile(this.message.file)
@@ -284,8 +266,7 @@ export default {
             if (this.message.mirai && this.message.mirai.eqq.avatarUrl) {
                 //安全起见，防追踪型链接，限制为腾讯云域名
                 const QCLOUD_AVATAR_REGEX = /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
-                if (QCLOUD_AVATAR_REGEX.test(this.message.mirai.eqq.avatarUrl))
-                    return this.message.mirai.eqq.avatarUrl
+                if (QCLOUD_AVATAR_REGEX.test(this.message.mirai.eqq.avatarUrl)) return this.message.mirai.eqq.avatarUrl
             }
             return getAvatarUrl(this.message.senderId)
         },
@@ -294,9 +275,7 @@ export default {
     watch: {
         newMessages(val) {
             if (!val.length || !this.showNewMessagesDivider) return
-            this.newMessage = val.reduce((res, obj) =>
-                obj.index < res.index ? obj : res,
-            )
+            this.newMessage = val.reduce((res, obj) => (obj.index < res.index ? obj : res))
         },
     },
 
@@ -324,10 +303,10 @@ export default {
             this.hoverMessageId = null
         },
         openFile(action) {
-            this.$emit('open-file', {message: this.message, action})
+            this.$emit('open-file', { message: this.message, action })
         },
         openUserTag(user) {
-            this.$emit('open-user-tag', {user})
+            this.$emit('open-user-tag', { user })
         },
         messageActionHandler(action) {
             this.messageHover = false
@@ -342,12 +321,12 @@ export default {
         },
         checkVideoType(file) {
             if (!file) return
-            const {type} = file
+            const { type } = file
             return type.toLowerCase().includes('video/')
         },
         checkAudioType(file) {
             if (!file) return
-            const {type} = file
+            const { type } = file
             return type.toLowerCase().includes('audio/')
         },
     },
@@ -370,8 +349,8 @@ export default {
     overflow-wrap: break-word;
     position: relative;
     white-space: normal;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1),
-    0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1), 0 1px 1px -1px rgba(0, 0, 0, 0.11),
+        0 1px 2px -1px rgba(0, 0, 0, 0.11);
 }
 
 .vac-card-date {
@@ -400,7 +379,7 @@ export default {
 .vac-line-new:after,
 .vac-line-new:before {
     border-top: 1px solid var(--chat-message-color-new-messages);
-    content: "";
+    content: '';
     left: 0;
     position: absolute;
     top: 50%;
@@ -456,14 +435,14 @@ export default {
     transition-property: box-shadow, opacity;
     transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
     will-change: box-shadow;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1),
-    0 1px 1px -1px rgba(0, 0, 0, 0.11), 0 1px 2px -1px rgba(0, 0, 0, 0.11);
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1), 0 1px 1px -1px rgba(0, 0, 0, 0.11),
+        0 1px 2px -1px rgba(0, 0, 0, 0.11);
     -webkit-user-select: text;
 }
 
 .vac-message-highlight {
-    box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1),
-    0 1px 2px -1px rgba(0, 0, 0, 0.11), 0 1px 5px -1px rgba(0, 0, 0, 0.11);
+    box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.11),
+        0 1px 5px -1px rgba(0, 0, 0, 0.11);
 }
 
 .vac-message-current {

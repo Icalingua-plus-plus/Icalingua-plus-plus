@@ -54,10 +54,10 @@ export default {
 
 <style scoped>
 .settings {
-    padding: 16px
+    padding: 16px;
 }
 
 .dialog-footer {
-    text-align: center
+    text-align: center;
 }
 </style>

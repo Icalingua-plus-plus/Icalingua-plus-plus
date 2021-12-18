@@ -1,15 +1,13 @@
-import {BrowserWindow, shell} from 'electron'
-import {clearCurrentRoomUnread, sendOnlineData} from '../ipc/botAndStorage'
-import {getConfig} from './configManager'
+import { BrowserWindow, shell } from 'electron'
+import { clearCurrentRoomUnread, sendOnlineData } from '../ipc/botAndStorage'
+import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
-import {updateTrayIcon} from './trayManager'
+import { updateTrayIcon } from './trayManager'
 import path from 'path'
 import ui from './ui'
 import argv from './argv'
 
-let loginWindow: BrowserWindow,
-    mainWindow: BrowserWindow,
-    requestWindow: BrowserWindow
+let loginWindow: BrowserWindow, mainWindow: BrowserWindow, requestWindow: BrowserWindow
 
 export const loadMainWindow = () => {
     //start main window
@@ -25,8 +23,7 @@ export const loadMainWindow = () => {
         },
     })
 
-    if (loginWindow)
-        loginWindow.destroy()
+    if (loginWindow) loginWindow.destroy()
 
     mainWindow.on('close', (e) => {
         e.preventDefault()
@@ -35,17 +32,19 @@ export const loadMainWindow = () => {
     })
 
     if (process.env.NODE_ENV === 'development') {
-        mainWindow.webContents.session.loadExtension(
-            path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
-        )
+        mainWindow.webContents.session.loadExtension(path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
     }
 
-    setTimeout(() => mainWindow.on('focus', async () => {
-        clearCurrentRoomUnread()
-        await updateTrayIcon()
-    }), 5000)
+    setTimeout(
+        () =>
+            mainWindow.on('focus', async () => {
+                clearCurrentRoomUnread()
+                await updateTrayIcon()
+            }),
+        5000,
+    )
 
-    mainWindow.webContents.setWindowOpenHandler(details => {
+    mainWindow.webContents.setWindowOpenHandler((details) => {
         shell.openExternal(details.url)
         return {
             action: 'deny',
@@ -60,8 +59,7 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
     if (loginWindow) {
         loginWindow.show()
         loginWindow.focus()
-    }
-    else {
+    } else {
         loginWindow = new BrowserWindow({
             height: 720,
             width: 450,
@@ -74,9 +72,7 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
         })
 
         if (process.env.NODE_ENV === 'development') {
-            loginWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
-            )
+            loginWindow.webContents.session.loadExtension(path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
             loginWindow.minimize()
         }
 
@@ -87,8 +83,7 @@ export const showRequestWindow = () => {
     if (requestWindow && !requestWindow.isDestroyed()) {
         requestWindow.show()
         requestWindow.focus()
-    }
-    else {
+    } else {
         requestWindow = new BrowserWindow({
             width: 750,
             height: 600,
@@ -102,37 +97,32 @@ export const showRequestWindow = () => {
 
         if (process.env.NODE_ENV === 'development') {
             requestWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
+                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
+            )
         }
 
         requestWindow.loadURL(getWinUrl() + '#/friendRequest')
     }
 }
 export const sendToLoginWindow = (channel: string, payload?: any) => {
-    if (loginWindow)
-        loginWindow.webContents.send(channel, payload)
-    else
-        showLoginWindow().then(() => loginWindow.webContents.send(channel, payload))
+    if (loginWindow) loginWindow.webContents.send(channel, payload)
+    else showLoginWindow().then(() => loginWindow.webContents.send(channel, payload))
 }
 export const sendToMainWindow = (channel: string, payload?: any) => {
-    if (mainWindow && !mainWindow.isDestroyed())
-        mainWindow.webContents.send(channel, payload)
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
 }
 export const sendToRequestWindow = (channel: string, payload?: any) => {
-    if (requestWindow && !requestWindow.isDestroyed())
-        requestWindow.webContents.send(channel, payload)
+    if (requestWindow && !requestWindow.isDestroyed()) requestWindow.webContents.send(channel, payload)
 }
 export const getMainWindow = () => mainWindow
 export const showWindow = () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show()
         mainWindow.focus()
-    }
-    else if (loginWindow && !loginWindow.isDestroyed()) {
+    } else if (loginWindow && !loginWindow.isDestroyed()) {
         loginWindow.show()
         loginWindow.focus()
-    }
-    else if (requestWindow && !requestWindow.isDestroyed()) {
+    } else if (requestWindow && !requestWindow.isDestroyed()) {
         requestWindow.show()
         requestWindow.focus()
     }

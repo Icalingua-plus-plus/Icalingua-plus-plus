@@ -1,5 +1,5 @@
 import Redis from 'ioredis'
-import {compact} from 'lodash'
+import { compact } from 'lodash'
 import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import Message from '../types/Message'
 import Room from '../types/Room'
@@ -38,10 +38,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在收到消息时被调用。
      */
     async isChatIgnored(id: number): Promise<boolean> {
-        const existance = await this.redis.hexists(
-            `${this.qid}:rooms:ignored`,
-            `${id}`,
-        )
+        const existance = await this.redis.hexists(`${this.qid}:rooms:ignored`, `${id}`)
         return existance === 1
     }
 
@@ -51,11 +48,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在忽略聊天时被调用。
      */
     async addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
-        await this.redis.hset(
-            `${this.qid}:rooms:ignored`,
-            `${info.id}`,
-            JSON.stringify(info),
-        )
+        await this.redis.hset(`${this.qid}:rooms:ignored`, `${info.id}`, JSON.stringify(info))
     }
 
     /** 实现 {@link StorageProvider} 类的 `removeIgnoredChat` 方法，
@@ -78,7 +71,7 @@ export default class RedisStorageProvider implements StorageProvider {
         if (!pRoom) {
             return null
         }
-        return {...pRoom, roomId: Number(pRoom.roomId)}
+        return { ...pRoom, roomId: Number(pRoom.roomId) }
     }
 
     /** 实现 {@link StorageProvider} 类的 `updateRoom` 方法，
@@ -87,25 +80,11 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在“收到新消息”等引起房间信息变化的事件时调用。
      */
     async updateRoom(roomId: number, room: Partial<Room>): Promise<void> {
-        const roomInDB = JSON.parse(
-            await this.redis.hget(`${this.qid}:rooms:rooms`, `${roomId}`),
-        )
-        const roomToUpdate = {...roomInDB, ...room}
-        await this.redis.hset(
-            `${this.qid}:rooms:rooms`,
-            `${roomId}`,
-            JSON.stringify(roomToUpdate),
-        )
-        await this.redis.zadd(
-            `${this.qid}:rooms:keyList`,
-            roomToUpdate.utime,
-            `${roomId}`,
-        )
-        await this.redis.zadd(
-            `${this.qid}:rooms:priority`,
-            roomToUpdate.priority,
-            `${roomId}`,
-        )
+        const roomInDB = JSON.parse(await this.redis.hget(`${this.qid}:rooms:rooms`, `${roomId}`))
+        const roomToUpdate = { ...roomInDB, ...room }
+        await this.redis.hset(`${this.qid}:rooms:rooms`, `${roomId}`, JSON.stringify(roomToUpdate))
+        await this.redis.zadd(`${this.qid}:rooms:keyList`, roomToUpdate.utime, `${roomId}`)
+        await this.redis.zadd(`${this.qid}:rooms:priority`, roomToUpdate.priority, `${roomId}`)
     }
 
     /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
@@ -114,23 +93,10 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在“新房间收到新消息”等需要新增房间的事件时被调用。
      */
     async addRoom(room: Room): Promise<void> {
-        await this.redis.hset(
-            `${this.qid}:rooms:rooms`,
-            `${room.roomId}`,
-            JSON.stringify(room),
-        )
-        if (room.utime)
-            await this.redis.zadd(
-                `${this.qid}:rooms:keyList`,
-                room.utime,
-                `${room.roomId}`,
-            )
+        await this.redis.hset(`${this.qid}:rooms:rooms`, `${room.roomId}`, JSON.stringify(room))
+        if (room.utime) await this.redis.zadd(`${this.qid}:rooms:keyList`, room.utime, `${room.roomId}`)
         if (room.priority) {
-            await this.redis.zadd(
-                `${this.qid}:rooms:priority`,
-                room.priority,
-                `${room.roomId}`,
-            )
+            await this.redis.zadd(`${this.qid}:rooms:priority`, room.priority, `${room.roomId}`)
         }
     }
 
@@ -151,17 +117,13 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在登录成功后调用。
      */
     async getAllRooms(): Promise<Room[]> {
-        const roomKeys = await this.redis.zrevrange(
-            `${this.qid}:rooms:keyList`,
-            0,
-            -1,
-        )
+        const roomKeys = await this.redis.zrevrange(`${this.qid}:rooms:keyList`, 0, -1)
         const roomsPAry = roomKeys.map(async (key) => {
             const room = await this.redis.hget(`${this.qid}:rooms:rooms`, key)
             const pRoom = JSON.parse(room) as Room
-            return {...pRoom, roomId: Number(pRoom.roomId)}
+            return { ...pRoom, roomId: Number(pRoom.roomId) }
         })
-        const rooms = await Promise.all(roomsPAry) as Room[]
+        const rooms = (await Promise.all(roomsPAry)) as Room[]
         return rooms
     }
 
@@ -171,16 +133,8 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在“新房间收到新消息”等需要新增房间的事件时被调用。
      */
     async addMessage(roomId: number, message: Message): Promise<void> {
-        await this.redis.hset(
-            `${this.qid}:msg${roomId}:messages`,
-            `${message._id}`,
-            JSON.stringify(message),
-        )
-        await this.redis.zadd(
-            `${this.qid}:msg${roomId}:msgIdList`,
-            message.time,
-            message._id,
-        )
+        await this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
+        await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
     }
 
     /** 实现 {@link StorageProvider} 类的 `updateMessage` 方法，
@@ -188,20 +142,10 @@ export default class RedisStorageProvider implements StorageProvider {
      *
      * 在“用户撤回消息”等需要改动消息内容的事件中被调用。
      */
-    async updateMessage(
-        roomId: number,
-        messageId: string | number,
-        message: Partial<Message>,
-    ): Promise<any> {
-        const msgInDB = JSON.parse(
-            await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`),
-        )
-        const msgToUpdate = {...msgInDB, ...message}
-        return this.redis.hset(
-            `${this.qid}:msg${roomId}:messages`,
-            `${messageId}`,
-            JSON.stringify(msgToUpdate),
-        )
+    async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
+        const msgInDB = JSON.parse(await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`))
+        const msgToUpdate = { ...msgInDB, ...message }
+        return this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${messageId}`, JSON.stringify(msgToUpdate))
     }
 
     /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
@@ -209,24 +153,13 @@ export default class RedisStorageProvider implements StorageProvider {
      *
      * 在进入房间时，该方法被调用。
      */
-    async fetchMessages(
-        roomId: number,
-        skip: number,
-        limit: number,
-    ): Promise<Message[]> {
-        const msgKeys = await this.redis.zrevrange(
-            `${this.qid}:msg${roomId}:msgIdList`,
-            skip,
-            skip + limit - 1,
-        )
+    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
+        const msgKeys = await this.redis.zrevrange(`${this.qid}:msg${roomId}:msgIdList`, skip, skip + limit - 1)
         const messagesPAry = msgKeys.map(async (key) => {
-            const msg = await this.redis.hget(
-                `${this.qid}:msg${roomId}:messages`,
-                key,
-            )
+            const msg = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, key)
             return JSON.parse(msg) as Message
         })
-        const messages = await Promise.all(messagesPAry) as Message[]
+        const messages = (await Promise.all(messagesPAry)) as Message[]
         messages.sort((a, b) => a.time - b.time)
         return messages
     }
@@ -237,10 +170,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在获取聊天历史消息时，该方法被调用。
      */
     async getMessage(roomId: number, messageId: string): Promise<Message> {
-        const msgString = await this.redis.hget(
-            `${this.qid}:msg${roomId}:messages`,
-            `${messageId}`,
-        )
+        const msgString = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
         return JSON.parse(msgString)
     }
 
@@ -251,16 +181,8 @@ export default class RedisStorageProvider implements StorageProvider {
      */
     addMessages(roomId: number, messages: Message[]): Promise<any> {
         messages.forEach((message) => {
-            this.redis.hset(
-                `${this.qid}:msg${roomId}:messages`,
-                `${message._id}`,
-                JSON.stringify(message),
-            )
-            this.redis.zadd(
-                `${this.qid}:msg${roomId}:msgIdList`,
-                message.time,
-                message._id,
-            )
+            this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
+            this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
         })
         return Promise.resolve()
     }
@@ -271,11 +193,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在登录成功与每次收到消息后调用。
      */
     async getUnreadCount(priority: number): Promise<number> {
-        const keyAry = await this.redis.zrangebyscore(
-            `${this.qid}:rooms:priority`,
-            priority,
-            priority,
-        )
+        const keyAry = await this.redis.zrangebyscore(`${this.qid}:rooms:priority`, priority, priority)
         const roomsUnreadAry = await Promise.all(
             keyAry.map(async (key) => {
                 const room = await this.redis.hget(`${this.qid}:rooms:rooms`, key)
@@ -292,11 +210,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 调用情况未知。
      */
     async getFirstUnreadRoom(priority: number): Promise<Room> {
-        const keyAry = await this.redis.zrangebyscore(
-            `${this.qid}:rooms:priority`,
-            priority,
-            priority,
-        )
+        const keyAry = await this.redis.zrangebyscore(`${this.qid}:rooms:priority`, priority, priority)
         if (keyAry.length === 0) {
             return undefined
         }

@@ -1,4 +1,4 @@
-type Aria2Config={
+type Aria2Config = {
     enabled: boolean
     host: string
     port: number

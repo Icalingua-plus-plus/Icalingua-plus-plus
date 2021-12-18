@@ -1,5 +1,5 @@
-import {createServer} from 'http'
-import {Server} from 'socket.io'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
 import express from 'express'
 import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
 import gfsTokenManager from '../utils/gfsTokenManager'
@@ -23,7 +23,8 @@ const io = new Server(httpServer, {
 io.on('connection', (socket) => {
     console.log('new client connected')
     socket.emit('requireAuth', '', {
-        version: '', protocolVersion: '',
+        version: '',
+        protocolVersion: '',
     })
     socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
         switch (role) {
@@ -34,8 +35,7 @@ io.on('connection', (socket) => {
                     registerFileMgrHandler(io, socket, gin)
                     console.log('客户端验证成功')
                     socket.emit('authSucceed', gin, oicqAdapter.getGroupInfo(gin))
-                }
-                else {
+                } else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')
                     socket.disconnect()
@@ -50,8 +50,7 @@ const host = '127.0.0.1'
 
 export default {
     init() {
-        httpServer.listen(port, host,
-            () => port = (httpServer.address() as net.AddressInfo).port)
+        httpServer.listen(port, host, () => (port = (httpServer.address() as net.AddressInfo).port))
     },
     getPort() {
         return port

@@ -16,11 +16,11 @@
                         'vac-text-multiline-code': !singleLine && message.multiline,
                         'vac-text-tag': !singleLine && !reply && message.tag,
                         'vac-text-spoiler': !showSpoiler && message.spoiler,
-                        'vac-text-spoiler-transition': message.spoiler
+                        'vac-text-spoiler-transition': message.spoiler,
                     }"
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
-                    @click="showSpoiler=true"
+                    @click="showSpoiler = true"
                     style="word-break: break-word"
                 >
                     <slot name="deleted-icon" v-bind="{ deleted }">
@@ -32,7 +32,7 @@
                                 class="vac-image-link"
                                 :style="{
                                     'background-image': `url('${message.value}')`,
-                                    'height': message.height,
+                                    height: message.height,
                                 }"
                             />
                         </div>
@@ -52,11 +52,7 @@
                     :src="'file://' + facepath + preZeroFill(Number(message.value), 3)"
                     :alt="message.value"
                 />
-                <a
-                    v-if="message.forward"
-                    style="cursor: pointer"
-                    @click="openForward(message)"
-                >
+                <a v-if="message.forward" style="cursor: pointer" @click="openForward(message)">
                     View Forwarded Messages
                 </a>
             </template>
@@ -76,16 +72,16 @@ import formatString from '../utils/formatString'
 
 export default {
     name: 'FormatMessage',
-    components: {SvgIcon},
+    components: { SvgIcon },
 
     props: {
-        content: {type: [String, Number], required: true},
-        deleted: {type: Boolean, default: false},
-        users: {type: Array, default: () => []},
-        linkify: {type: Boolean, default: true},
-        singleLine: {type: Boolean, default: false},
-        reply: {type: Boolean, default: false},
-        textFormatting: {type: Boolean, required: true},
+        content: { type: [String, Number], required: true },
+        deleted: { type: Boolean, default: false },
+        users: { type: Array, default: () => [] },
+        linkify: { type: Boolean, default: true },
+        singleLine: { type: Boolean, default: false },
+        reply: { type: Boolean, default: false },
+        textFormatting: { type: Boolean, required: true },
     },
 
     data() {
@@ -133,8 +129,7 @@ export default {
 
             const type = message.value.substring(index + 1, message.value.length)
 
-            const isMedia =
-                index > 0 && type.toLowerCase().startsWith('image/')
+            const isMedia = index > 0 && type.toLowerCase().startsWith('image/')
 
             if (isMedia) this.setImageSize(message)
 
@@ -166,10 +161,10 @@ export default {
             this.$emit('open-forward', message.value)
         },
         preZeroFill(num, size) {
-            if (num >= Math.pow(10, size)) { //如果num本身位数不小于size位
+            if (num >= Math.pow(10, size)) {
+                //如果num本身位数不小于size位
                 return num.toString()
-            }
-            else {
+            } else {
                 var _str = Array(size + 1).join('0') + num
                 return _str.slice(_str.length - size)
             }

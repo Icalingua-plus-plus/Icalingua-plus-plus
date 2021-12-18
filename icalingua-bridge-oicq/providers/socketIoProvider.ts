@@ -1,12 +1,12 @@
-import {createServer} from 'http'
-import {Server} from 'socket.io'
-import {verify} from 'noble-ed25519'
-import {config, userConfig} from './configManager'
-import adapter, {getBot, loggedIn} from '../adapters/oicqAdapter'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
+import { verify } from 'noble-ed25519'
+import { config, userConfig } from './configManager'
+import adapter, { getBot, loggedIn } from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
-import {app} from './expressProvider'
-import {version, protocolVersion} from '../package.json'
+import { app } from './expressProvider'
+import { version, protocolVersion } from '../package.json'
 import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
 import gfsTokenManager from '../utils/gfsTokenManager'
 
@@ -24,7 +24,8 @@ io.on('connection', (socket) => {
     //客户端对这个服务器发来的时间用私钥签名给服务端验证
     const salt = md5(new Date().getTime().toString())
     socket.emit('requireAuth', salt, {
-        version, protocolVersion,
+        version,
+        protocolVersion,
     })
     socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
         switch (role) {
@@ -34,12 +35,9 @@ io.on('connection', (socket) => {
                     socket.emit('authSucceed')
                     socket.join('authed')
                     registerSocketHandlers(io, socket)
-                    if (loggedIn)
-                        adapter.sendOnlineData()
-                    else
-                        socket.emit('requestSetup', userConfig.account)
-                }
-                else {
+                    if (loggedIn) adapter.sendOnlineData()
+                    else socket.emit('requestSetup', userConfig.account)
+                } else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')
                     socket.disconnect()
@@ -51,8 +49,7 @@ io.on('connection', (socket) => {
                     registerFileMgrHandler(io, socket, gin)
                     console.log('客户端验证成功')
                     socket.emit('authSucceed', gin, getBot().gl.get(gin))
-                }
-                else {
+                } else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')
                     socket.disconnect()
@@ -65,8 +62,7 @@ io.on('connection', (socket) => {
 const port = config.port || 6789
 const host = config.host || '0.0.0.0'
 
-export const init = () => httpServer.listen(port, host,
-    () => console.log(`listening on http://${host}:${port}`))
+export const init = () => httpServer.listen(port, host, () => console.log(`listening on http://${host}:${port}`))
 
 export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
 export const getClientsCount = () => io.sockets.sockets.size

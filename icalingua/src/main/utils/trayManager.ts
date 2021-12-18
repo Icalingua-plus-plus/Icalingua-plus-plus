@@ -1,6 +1,6 @@
-import {app, Menu, MenuItem, Tray} from 'electron'
+import { app, Menu, MenuItem, Tray } from 'electron'
 import path from 'path'
-import {getMainWindow} from './windowManager'
+import { getMainWindow } from './windowManager'
 import exit from './exit'
 import {
     getUin,
@@ -10,9 +10,9 @@ import {
     getUnreadRooms,
     clearRoomUnread,
 } from '../ipc/botAndStorage'
-import {getConfig, saveConfigFile} from './configManager'
+import { getConfig, saveConfigFile } from './configManager'
 import getStaticPath from '../../utils/getStaticPath'
-import {pushUnreadCount} from './socketIoSlave'
+import { pushUnreadCount } from './socketIoSlave'
 import setPriority from './setPriority'
 import ui from './ui'
 import Room from '../../types/Room'
@@ -20,10 +20,7 @@ import Room from '../../types/Room'
 let tray: Tray
 
 export const createTray = () => {
-    tray = new Tray(path.join(
-        getStaticPath(),
-        getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
-    ))
+    tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
     tray.setToolTip('Icalingua')
     tray.on('click', () => {
         const window = getMainWindow()
@@ -49,101 +46,108 @@ export const updateTrayMenu = async () => {
             },
         },
     ])
-    menu.append(new MenuItem({type: 'separator'}))
+    menu.append(new MenuItem({ type: 'separator' }))
     if (unreadRooms.length) {
         for (const unreadRoom of unreadRooms) {
-            menu.append(new MenuItem({
-                label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
-                click() {
-                    const window = getMainWindow()
-                    window.show()
-                    window.focus()
-                    ui.chroom(unreadRoom.roomId)
-                },
-            }))
-            menu.append(new MenuItem({
-                label: unreadRoom.lastMessage.content.length > 25
-                    ? `${unreadRoom.lastMessage.content.slice(0, 25)}...`
-                    : unreadRoom.lastMessage.content,
-                enabled: false,
-            }))
+            menu.append(
+                new MenuItem({
+                    label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
+                    click() {
+                        const window = getMainWindow()
+                        window.show()
+                        window.focus()
+                        ui.chroom(unreadRoom.roomId)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label:
+                        unreadRoom.lastMessage.content.length > 25
+                            ? `${unreadRoom.lastMessage.content.slice(0, 25)}...`
+                            : unreadRoom.lastMessage.content,
+                    enabled: false,
+                }),
+            )
         }
-        menu.append(new MenuItem({
-            label: '全部已读',
-            click() {
-                unreadRooms.forEach(e => clearRoomUnread(e.roomId))
-            },
-        }))
-        menu.append(new MenuItem({type: 'separator'}))
+        menu.append(
+            new MenuItem({
+                label: '全部已读',
+                click() {
+                    unreadRooms.forEach((e) => clearRoomUnread(e.roomId))
+                },
+            }),
+        )
+        menu.append(new MenuItem({ type: 'separator' }))
     }
-    menu.append(new MenuItem({
-        label: '通知优先级',
-        submenu: [
-            {
-                type: 'radio',
-                label: '1',
-                checked: getConfig().priority === 1,
-                click: () => setPriority(1),
+    menu.append(
+        new MenuItem({
+            label: '通知优先级',
+            submenu: [
+                {
+                    type: 'radio',
+                    label: '1',
+                    checked: getConfig().priority === 1,
+                    click: () => setPriority(1),
+                },
+                {
+                    type: 'radio',
+                    label: '2',
+                    checked: getConfig().priority === 2,
+                    click: () => setPriority(2),
+                },
+                {
+                    type: 'radio',
+                    label: '3',
+                    checked: getConfig().priority === 3,
+                    click: () => setPriority(3),
+                },
+                {
+                    type: 'radio',
+                    label: '4',
+                    checked: getConfig().priority === 4,
+                    click: () => setPriority(4),
+                },
+                {
+                    type: 'radio',
+                    label: '5',
+                    checked: getConfig().priority === 5,
+                    click: () => setPriority(5),
+                },
+            ],
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: '深色图标',
+            type: 'checkbox',
+            checked: getConfig().darkTaskIcon,
+            click(item) {
+                getConfig().darkTaskIcon = item.checked
+                updateTrayIcon()
+                saveConfigFile()
             },
-            {
-                type: 'radio',
-                label: '2',
-                checked: getConfig().priority === 2,
-                click: () => setPriority(2),
-            },
-            {
-                type: 'radio',
-                label: '3',
-                checked: getConfig().priority === 3,
-                click: () => setPriority(3),
-            },
-            {
-                type: 'radio',
-                label: '4',
-                checked: getConfig().priority === 4,
-                click: () => setPriority(4),
-            },
-            {
-                type: 'radio',
-                label: '5',
-                checked: getConfig().priority === 5,
-                click: () => setPriority(5),
-            },
-        ],
-    }))
-    menu.append(new MenuItem({
-        label: '深色图标',
-        type: 'checkbox',
-        checked: getConfig().darkTaskIcon,
-        click(item) {
-            getConfig().darkTaskIcon = item.checked
-            updateTrayIcon()
-            saveConfigFile()
-        },
-    }))
-    menu.append(new MenuItem({
-        label: '退出',
-        type: 'normal',
-        click: exit,
-    }))
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: '退出',
+            type: 'normal',
+            click: exit,
+        }),
+    )
     tray.setContextMenu(menu)
 }
 export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
-    const title = ui.getSelectedRoomName()
-        ? ui.getSelectedRoomName() + ' — Icalingua'
-        : 'Icalingua'
+    const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua' : 'Icalingua'
     if (unread) {
-        p = path.join(
-            getStaticPath(),
-            getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png',
-        )
+        p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')
         const newMsgRoom = await getFirstUnreadRoom()
-        const extra = newMsgRoom ? (' : ' + newMsgRoom.roomName) : ''
+        const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
-    }
-    else {
+    } else {
         p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
     }

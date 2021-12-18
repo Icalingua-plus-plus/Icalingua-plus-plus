@@ -1,4 +1,4 @@
-import path from "path";
+import path from 'path'
 
 const map = new Map<string, number>([
     ['[打call]请使用最新版手机QQ体验新功能', 1],
@@ -11,7 +11,6 @@ const map = new Map<string, number>([
     ['[庆祝]请使用最新版手机QQ体验新功能', 10],
     ['[吃糖]请使用最新版手机QQ体验新功能', 12],
 ])
-
 
 export default (msgText: string): string => {
     const id = map.get(msgText)

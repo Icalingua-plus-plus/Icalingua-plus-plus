@@ -26,10 +26,7 @@
                             />
                         </a>
                     </slot>
-                    <slot
-                        name="room-header-info"
-                        v-bind="{ room, typingUsers, roomInfo }"
-                    >
+                    <slot name="room-header-info" v-bind="{ room, typingUsers, roomInfo }">
                         <div class="vac-text-ellipsis">
                             <div class="vac-room-name vac-text-ellipsis">
                                 {{ room.roomName }}
@@ -41,20 +38,13 @@
                     </slot>
                 </div>
                 <slot v-if="room.roomId" name="room-options">
-                    <div
-                        class="vac-svg-button vac-room-options"
-                        @click="$emit('room-menu')"
-                    >
+                    <div class="vac-svg-button vac-room-options" @click="$emit('room-menu')">
                         <slot name="menu-icon">
                             <svg-icon name="menu" />
                         </slot>
                     </div>
                     <transition v-if="menuActions.length" name="vac-slide-left">
-                        <div
-                            v-if="menuOpened"
-                            v-click-outside="closeMenu"
-                            class="vac-menu-options"
-                        >
+                        <div v-if="menuOpened" v-click-outside="closeMenu" class="vac-menu-options">
                             <div class="vac-menu-list">
                                 <div v-for="action in menuActions" :key="action.name">
                                     <div class="vac-menu-item" @click="menuActionHandler(action)">
@@ -89,15 +79,15 @@ export default {
     },
 
     props: {
-        currentUserId: {type: [String, Number], required: true},
-        textMessages: {type: Object, required: true},
-        singleRoom: {type: Boolean, required: true},
-        showRoomsList: {type: Boolean, required: true},
-        isMobile: {type: Boolean, required: true},
-        roomInfo: {type: Function, default: null},
-        menuActions: {type: Array, required: true},
-        room: {type: Object, required: true},
-        membersCount: {type: Number, default: 0},
+        currentUserId: { type: [String, Number], required: true },
+        textMessages: { type: Object, required: true },
+        singleRoom: { type: Boolean, required: true },
+        showRoomsList: { type: Boolean, required: true },
+        isMobile: { type: Boolean, required: true },
+        roomInfo: { type: Function, default: null },
+        menuActions: { type: Array, required: true },
+        room: { type: Object, required: true },
+        membersCount: { type: Number, default: 0 },
     },
 
     data() {

@@ -1,17 +1,28 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import {FileElem, GroupInfo, MemberInfo} from 'oicq'
+import { FileElem, GroupInfo, MemberInfo } from 'oicq'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
 import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 
-type CookiesDomain = 'tenpay.com' | 'docs.qq.com' | 'office.qq.com' | 'connect.qq.com' |
-    'vip.qq.com' | 'mail.qq.com' | 'qzone.qq.com' | 'gamecenter.qq.com' |
-    'mma.qq.com' | 'game.qq.com' | 'qqweb.qq.com' | 'openmobile.qq.com' |
-    'qun.qq.com' | 'ti.qq.com'
+type CookiesDomain =
+    | 'tenpay.com'
+    | 'docs.qq.com'
+    | 'office.qq.com'
+    | 'connect.qq.com'
+    | 'vip.qq.com'
+    | 'mail.qq.com'
+    | 'qzone.qq.com'
+    | 'gamecenter.qq.com'
+    | 'mma.qq.com'
+    | 'game.qq.com'
+    | 'qqweb.qq.com'
+    | 'openmobile.qq.com'
+    | 'qun.qq.com'
+    | 'ti.qq.com'
 
 export default interface Adapter {
     getGroup(gin: number): Promise<GroupInfo>
@@ -112,5 +123,5 @@ export default interface Adapter {
 
     setGroupLeave(gin: number): any
 
-    requestGfsToken(gin:number): Promise<string>
+    requestGfsToken(gin: number): Promise<string>
 }

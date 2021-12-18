@@ -10,13 +10,13 @@
 
 <script>
 export default {
-    name: "SideBarIcon",
+    name: 'SideBarIcon',
     props: {
         icon: String,
         name: String,
         selected: Boolean,
     },
-};
+}
 </script>
 
 <style scoped>

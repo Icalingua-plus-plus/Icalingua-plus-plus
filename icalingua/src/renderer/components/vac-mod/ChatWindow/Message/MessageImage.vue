@@ -1,20 +1,12 @@
 <template>
-    <div
-        ref="imageRef"
-        class="vac-image-container"
-        :class="{ 'vac-image-container-loading': isImageLoading || err }"
-    >
-        <loader
-            :style="{ top: `${imageResponsive.loaderTop}px` }"
-            :show="isImageLoading"
-            v-if="!isHidden"
-        />
+    <div ref="imageRef" class="vac-image-container" :class="{ 'vac-image-container-loading': isImageLoading || err }">
+        <loader :style="{ top: `${imageResponsive.loaderTop}px` }" :show="isImageLoading" v-if="!isHidden" />
         <div
             class="vac-message-image-mod"
             :class="{
                 'vac-image-loading': isImageLoading,
                 'vac-image-err': err,
-                'vac-el-image-loaded':!isImageLoading
+                'vac-el-image-loaded': !isImageLoading,
             }"
             :style="{
                 'max-height': `${imageResponsive.maxHeight}px`,
@@ -22,21 +14,17 @@
             v-if="!isHidden"
             @click="openImage"
         >
-            <img
-                :src="lightning"
-                v-if="flash"
-                class="vac-image-lightning"
-            />
+            <img :src="lightning" v-if="flash" class="vac-image-lightning" />
             <el-image
                 :src="file.url"
-                :class="{'vac-image-flash': flash}"
+                :class="{ 'vac-image-flash': flash }"
                 fit="cover"
                 referrer-policy="no-referrer"
                 @load="imageLoading = false"
                 @error="
-                        imageLoading = false;
-                        err = true;
-                    "
+                    imageLoading = false
+                    err = true
+                "
             >
                 <div slot="error" class="image-slot">
                     <i class="el-icon-picture-outline"></i>
@@ -45,19 +33,14 @@
         </div>
 
         <details v-if="isHidden">
-            <summary style="cursor:pointer">
-                Hidden image
-            </summary>
-            <loader
-                :style="{ top: `${imageResponsive.loaderTop}px` }"
-                :show="isImageLoading"
-            />
+            <summary style="cursor: pointer">Hidden image</summary>
+            <loader :style="{ top: `${imageResponsive.loaderTop}px` }" :show="isImageLoading" />
             <div
                 class="vac-message-image-mod"
                 :class="{
                     'vac-image-loading': isImageLoading,
                     'vac-image-err': err,
-                    'vac-el-image-loaded': !isImageLoading
+                    'vac-el-image-loaded': !isImageLoading,
                 }"
                 :style="{
                     'max-height': `${imageResponsive.maxHeight}px`,
@@ -70,8 +53,8 @@
                     referrer-policy="no-referrer"
                     @load="imageLoading = false"
                     @error="
-                            imageLoading = false;
-                            err = true;
+                        imageLoading = false
+                        err = true
                     "
                 >
                     <div slot="error" class="image-slot">
@@ -87,20 +70,20 @@
 import Loader from '../../components/Loader'
 import SvgIcon from '../../components/SvgIcon'
 import FormatMessage from '../../components/FormatMessage'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 
 export default {
     name: 'MessageImage',
-    components: {SvgIcon, Loader, FormatMessage},
+    components: { SvgIcon, Loader, FormatMessage },
 
     props: {
-        currentUserId: {type: [String, Number], required: true},
-        file: {type: Object, required: true},
-        roomUsers: {type: Array, required: true},
-        textFormatting: {type: Boolean, required: true},
-        imageHover: {type: Boolean, required: true},
-        flash: {type: Boolean, default: false},
-        content: {type: String, default: ''},
+        currentUserId: { type: [String, Number], required: true },
+        file: { type: Object, required: true },
+        roomUsers: { type: Array, required: true },
+        textFormatting: { type: Boolean, required: true },
+        imageHover: { type: Boolean, required: true },
+        flash: { type: Boolean, default: false },
+        content: { type: String, default: '' },
     },
 
     data() {
@@ -114,9 +97,7 @@ export default {
 
     computed: {
         isImageLoading() {
-            return (
-                this.file.url.indexOf('blob:http') !== -1 || this.imageLoading
-            )
+            return this.file.url.indexOf('blob:http') !== -1 || this.imageLoading
         },
         isHidden() {
             return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.content)
@@ -235,7 +216,6 @@ export default {
             font-size: 30px;
             color: #909399;
         }
-
     }
 }
 
@@ -243,7 +223,7 @@ export default {
     filter: blur(20px);
 }
 
-.vac-image-lightning{
+.vac-image-lightning {
     position: absolute;
     height: 50%;
     z-index: 1;

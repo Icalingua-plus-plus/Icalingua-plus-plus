@@ -2,22 +2,10 @@
     <div class="bg" ondragstart="return false;">
         <div class="head">
             <div class="title">
-                <a
-                    @click="setPanel('stickers')"
-                    :class="{ selected: panel === 'stickers' }"
-                >Stickers</a>
-                <a
-                    @click="setPanel('face')"
-                    :class="{ selected: panel === 'face' }"
-                >Face</a>
-                <a
-                    @click="setPanel('remote')"
-                    :class="{ selected: panel === 'remote' }"
-                >Remote</a>
-                <a
-                    @click="setPanel('emojis')"
-                    :class="{ selected: panel === 'emojis' }"
-                >Emojis</a>
+                <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">Stickers</a>
+                <a @click="setPanel('face')" :class="{ selected: panel === 'face' }">Face</a>
+                <a @click="setPanel('remote')" :class="{ selected: panel === 'remote' }">Remote</a>
+                <a @click="setPanel('emojis')" :class="{ selected: panel === 'emojis' }">Emojis</a>
             </div>
             <a @click="menu">
                 <div class="opinion">
@@ -50,12 +38,8 @@
                 </p>
             </center>
             <div class="grid" v-show="pics.length">
-                <div v-for="i in pics.filter(i => i[0] !== '.')" :key="i">
-                    <img
-                        :src="'file://' + dir + i"
-                        @click="picClick(dir + i)"
-                        @click.right="itemMenu(i)"
-                    />
+                <div v-for="i in pics.filter((i) => i[0] !== '.')" :key="i">
+                    <img :src="'file://' + dir + i" @click="picClick(dir + i)" @click.right="itemMenu(i)" />
                 </div>
             </div>
         </div>
@@ -66,8 +50,8 @@
 </template>
 
 <script>
-import {VEmojiPicker} from 'v-emoji-picker'
-import {shell} from 'electron'
+import { VEmojiPicker } from 'v-emoji-picker'
+import { shell } from 'electron'
 import ipc from '../utils/ipc'
 import fs from 'fs'
 import path from 'path'
@@ -75,7 +59,7 @@ import getStaticPath from '../../utils/getStaticPath'
 
 export default {
     name: 'Stickers',
-    components: {VEmojiPicker},
+    components: { VEmojiPicker },
     data() {
         return {
             remote_pics: [],
@@ -90,7 +74,7 @@ export default {
         this.panel = await ipc.getLastUsedStickerType()
 
         // Remote Stickers
-        setTimeout(async () => this.remote_pics = await ipc.getRoamingStamp(), 10 * 1000)
+        setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp()), 10 * 1000)
 
         // Face
         this.dir_face = path.join(getStaticPath(), 'face/')
@@ -236,7 +220,6 @@ div.head {
     }
 }
 
-
 // 修复 emoji 面板溢出
 @mixin emoji-flex {
     display: flex;
@@ -253,14 +236,14 @@ div.head {
     display: flex !important;
 }
 
-::v-deep #Categories,::v-deep #InputSearch {
+::v-deep #Categories,
+::v-deep #InputSearch {
     flex-shrink: 0;
 }
 
 ::v-deep .container-emoji {
-    height: auto !important;;
+    height: auto !important;
 }
-
 </style>
 
 <style scoped>
@@ -272,5 +255,4 @@ div.head {
     width: 100% !important;
     border: none !important;
 }
-
 </style>

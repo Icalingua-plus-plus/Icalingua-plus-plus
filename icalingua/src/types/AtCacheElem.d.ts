@@ -1,6 +1,6 @@
 type AtCacheItem = {
     text: string
-    id: number|'all'
+    id: number | 'all'
 }
 
 export default AtCacheItem

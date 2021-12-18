@@ -1,14 +1,14 @@
-import Message from "./Message";
+import Message from './Message'
 
 export interface MsgTableName {
-  id: number;
-  tableName: string;
+    id: number
+    tableName: string
 }
 
 export interface DBVersion {
-  dbVersion: number;
+    dbVersion: number
 }
 
 export interface MessageInSQLDB extends Message {
-  roomId: number | string;
+    roomId: number | string
 }

@@ -1,14 +1,15 @@
 <template>
     <div class="settings">
-        <p v-if="this.$route.params.action==='kick'">
-            在 <b>{{ $route.params.groupName }}</b> 中踢出
-            <b>{{ $route.params.userName }} ({{ uin }})</b>？
+        <p v-if="this.$route.params.action === 'kick'">
+            在 <b>{{ $route.params.groupName }}</b> 中踢出 <b>{{ $route.params.userName }} ({{ uin }})</b>？
         </p>
-        <p v-if="this.$route.params.action==='exit'">
-            确认退出 <b>{{ $route.params.groupName }}</b>？
+        <p v-if="this.$route.params.action === 'exit'">
+            确认退出 <b>{{ $route.params.groupName }}</b
+            >？
         </p>
-        <p v-if="this.$route.params.action==='dismiss'">
-            确认解散 <b>{{ $route.params.groupName }}</b>？
+        <p v-if="this.$route.params.action === 'dismiss'">
+            确认解散 <b>{{ $route.params.groupName }}</b
+            >？
         </p>
         <div class="dialog-footer">
             <el-button type="danger" @click="confirm">确认</el-button>
@@ -37,8 +38,7 @@ export default {
         confirm() {
             if (this.$route.params.action === 'kick') {
                 ipc.setGroupKick(this.gin, this.uin)
-            }
-            else {
+            } else {
                 ipc.setGroupLeave(this.gin)
             }
             window.close()
@@ -52,7 +52,7 @@ export default {
 
 <style scoped>
 .settings {
-    padding: 0 16px
+    padding: 0 16px;
 }
 
 .dialog-footer {

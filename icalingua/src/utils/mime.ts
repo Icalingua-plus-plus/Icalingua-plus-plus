@@ -40,9 +40,7 @@ const mimes = {
 
 export default (ext: string) => {
     ext = ext.toLowerCase()
-    if (ext.startsWith('.'))
-        ext = ext.substr(1)
-    if (mimes[ext])
-        return mimes[ext]
+    if (ext.startsWith('.')) ext = ext.substr(1)
+    if (mimes[ext]) return mimes[ext]
     return 'application/octet-stream'
 }
