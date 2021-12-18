@@ -7,33 +7,33 @@
                     v-if="!message.face && !message.forward"
                     :key="i"
                     :class="{
-            'vac-text-ellipsis': singleLine,
-            'vac-text-bold': message.bold,
-            'vac-text-italic': deleted || message.italic,
-            'vac-text-strike': message.strike,
-            'vac-text-underline': message.underline,
-            'vac-text-inline-code': !singleLine && message.inline,
-            'vac-text-multiline-code': !singleLine && message.multiline,
-            'vac-text-tag': !singleLine && !reply && message.tag,
-            'vac-text-spoiler': !showSpoiler && message.spoiler,
-            'vac-text-spoiler-transition': message.spoiler
-          }"
+                        'vac-text-ellipsis': singleLine,
+                        'vac-text-bold': message.bold,
+                        'vac-text-italic': deleted || message.italic,
+                        'vac-text-strike': message.strike,
+                        'vac-text-underline': message.underline,
+                        'vac-text-inline-code': !singleLine && message.inline,
+                        'vac-text-multiline-code': !singleLine && message.multiline,
+                        'vac-text-tag': !singleLine && !reply && message.tag,
+                        'vac-text-spoiler': !showSpoiler && message.spoiler,
+                        'vac-text-spoiler-transition': message.spoiler
+                    }"
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
                     @click="showSpoiler=true"
                     style="word-break: break-word"
                 >
                     <slot name="deleted-icon" v-bind="{ deleted }">
-                        <svg-icon v-if="deleted" name="deleted" class="vac-icon-deleted"/>
+                        <svg-icon v-if="deleted" name="deleted" class="vac-icon-deleted" />
                     </slot>
                     <template v-if="message.url && message.image">
                         <div class="vac-image-link-container">
                             <div
                                 class="vac-image-link"
                                 :style="{
-                  'background-image': `url('${message.value}')`,
-                  height: message.height,
-                }"
+                                    'background-image': `url('${message.value}')`,
+                                    'height': message.height,
+                                }"
                             />
                         </div>
                         <div class="vac-image-link-message">
@@ -41,7 +41,7 @@
                         </div>
                     </template>
                     <template v-else>
-                        <br v-if="message.breakLine"/>
+                        <br v-if="message.breakLine" />
                         <span class="vac-message-content">{{ message.value }}</span>
                     </template>
                 </component>
@@ -49,7 +49,7 @@
                     class="face"
                     v-if="message.face"
                     :key="i"
-                    :src="'file://' + facepath + preZeroFill(Number(message.value),3)"
+                    :src="'file://' + facepath + preZeroFill(Number(message.value), 3)"
                     :alt="message.value"
                 />
                 <a
@@ -180,61 +180,61 @@ export default {
 
 <style>
 .vac-message-content {
-  white-space: pre-wrap;
+    white-space: pre-wrap;
 }
 
 .vac-icon-deleted {
-  height: 14px;
-  width: 14px;
-  vertical-align: middle;
-  margin: -3px 1px 0 0;
-  fill: var(--chat-room-color-message);
+    height: 14px;
+    width: 14px;
+    vertical-align: middle;
+    margin: -3px 1px 0 0;
+    fill: var(--chat-room-color-message);
 }
 
 .vac-text-ellipsis {
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .vac-image-link-container {
-  background-color: var(--chat-message-bg-color-media);
-  padding: 8px;
-  margin: 2px auto;
-  border-radius: 4px;
+    background-color: var(--chat-message-bg-color-media);
+    padding: 8px;
+    margin: 2px auto;
+    border-radius: 4px;
 }
 
 .vac-image-link {
-  position: relative;
-  background-color: var(--chat-message-bg-color-image) !important;
-  background-size: contain;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-  height: 150px;
-  width: 150px;
-  max-width: 100%;
-  border-radius: 4px;
-  margin: 0 auto;
+    position: relative;
+    background-color: var(--chat-message-bg-color-image) !important;
+    background-size: contain;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    height: 150px;
+    width: 150px;
+    max-width: 100%;
+    border-radius: 4px;
+    margin: 0 auto;
 }
 
 .vac-image-link-message {
-  max-width: 166px;
-  font-size: 12px;
+    max-width: 166px;
+    font-size: 12px;
 }
 
 img.face {
-  width: 18px;
-  height: 18px;
-  margin-bottom: -4px;
+    width: 18px;
+    height: 18px;
+    margin-bottom: -4px;
 }
 
 .vac-text-spoiler {
-  background-color: #0a0a0a;
-  cursor: pointer;
+    background-color: #0a0a0a;
+    cursor: pointer;
 }
 
 .vac-text-spoiler-transition {
-  transition: all 0.5s;
+    transition: all 0.5s;
 }
 </style>

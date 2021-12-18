@@ -8,7 +8,7 @@
                         :type="room.at === 'all' ? 'warning' : undefined"
                         :hidden="!room.at"
                     >
-                        <el-avatar size="large" :src="roomAvatar"/>
+                        <el-avatar size="large" :src="roomAvatar" />
                     </el-badge>
                 </div>
                 <div class="right">
@@ -90,104 +90,104 @@ export default {
 
 <style scoped>
 .root {
-  padding: 0 15px;
-  transition: background-color 0.3s;
-  cursor: default;
-  container-type: inline-size;
+    padding: 0 15px;
+    transition: background-color 0.3s;
+    cursor: default;
+    container-type: inline-size;
 }
 
 .root:not(.selected):hover {
-  background-color: var(--panel-item-bg-hover);
+    background-color: var(--panel-item-bg-hover);
 }
 
 div.entry {
-  padding: 10px 0;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  border-bottom: var(--chat-border-style);
+    padding: 10px 0;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    border-bottom: var(--chat-border-style);
 }
 
 .left {
-  width: max-content;
-  float: left;
-  padding-top: 5px;
+    width: max-content;
+    float: left;
+    padding-top: 5px;
 }
 
 .right {
-  margin-left: 15px;
-  width: 100%;
+    margin-left: 15px;
+    width: 100%;
 }
 
 a {
-  text-decoration: none;
+    text-decoration: none;
 }
 
 .desc {
-  color: var(--panel-color-desc);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 0;
-  flex: 1;
+    color: var(--panel-color-desc);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 0;
+    flex: 1;
 }
 
 .icon {
-  color: var(--panel-color-icon);
-  font-size: 11px;
-  margin-left: 2px;
+    color: var(--panel-color-icon);
+    font-size: 11px;
+    margin-left: 2px;
 }
 
 .name {
-  font-weight: bold;
-  color: var(--panel-color-name);
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
-  width: 0;
-  flex: 1;
-  font-size: 16px;
+    font-weight: bold;
+    color: var(--panel-color-name);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 0;
+    flex: 1;
+    font-size: 16px;
 }
 
 .timestamp {
-  margin-left: 5px;
-  color: var(--panel-color-timestamp);
-  font-size: 11px;
-  white-space: nowrap;
+    margin-left: 5px;
+    color: var(--panel-color-timestamp);
+    font-size: 11px;
+    white-space: nowrap;
 }
 
 .withoutdesc {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .flex {
-  display: flex;
-  height: 18px;
-  justify-content: flex-end;
+    display: flex;
+    height: 18px;
+    justify-content: flex-end;
 }
 
 .l1 {
-  height: 25px;
+    height: 25px;
 }
 
 .selected {
-  background-color: var(--panel-item-bg);
+    background-color: var(--panel-item-bg);
 }
 
 .el-badge {
-  margin-top: -2px;
-  margin-left: 2px;
+    margin-top: -2px;
+    margin-left: 2px;
 }
 
 ::v-deep .el-badge * {
-  font-family: msyh;
+    font-family: msyh;
 }
 
 @container (max-width: 130px) {
-  .name, .desc {
-    display: none;
-  }
+    .name, .desc {
+        display: none;
+    }
 }
 </style>

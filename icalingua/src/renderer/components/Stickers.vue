@@ -28,7 +28,7 @@
         <div v-show="panel === 'face'" style="overflow: auto">
             <div class="face grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
-                    <img :src="'file://' + dir_face + i" @click="pickFace(i)"/>
+                    <img :src="'file://' + dir_face + i" @click="pickFace(i)" />
                 </div>
             </div>
         </div>
@@ -38,7 +38,7 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)"/>
+                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" />
                 </div>
             </div>
         </div>
@@ -50,13 +50,17 @@
                 </p>
             </center>
             <div class="grid" v-show="pics.length">
-                <div v-for="i in pics" :key="i" v-if="i[0]!=='.'">
-                    <img :src="'file://' + dir + i" @click="picClick(dir + i)" @click.right="itemMenu(i)"/>
+                <div v-for="i in pics.filter(i => i[0] !== '.')" :key="i">
+                    <img
+                        :src="'file://' + dir + i"
+                        @click="picClick(dir + i)"
+                        @click.right="itemMenu(i)"
+                    />
                 </div>
             </div>
         </div>
         <div class="emoji-panel" v-show="panel === 'emojis'">
-            <VEmojiPicker @select="$emit('selectEmoji', $event)"/>
+            <VEmojiPicker @select="$emit('selectEmoji', $event)" />
         </div>
     </div>
 </template>
@@ -134,102 +138,102 @@ export default {
 
 <style scoped lang="scss">
 div.head {
-  height: 64px;
-  min-height: 64px;
-  border-bottom: var(--chat-border-style);
-  display: flex;
-  align-items: center;
-  font-size: 17px;
-  padding: 0 16px;
-  background-color: var(--panel-header-bg);
+    height: 64px;
+    min-height: 64px;
+    border-bottom: var(--chat-border-style);
+    display: flex;
+    align-items: center;
+    font-size: 17px;
+    padding: 0 16px;
+    background-color: var(--panel-header-bg);
 }
 
 .title {
-  width: 100%;
+    width: 100%;
 
-  a {
-    margin-right: 8px;
-    color: var(--panel-color-sticker-type);
+    a {
+        margin-right: 8px;
+        color: var(--panel-color-sticker-type);
 
-    &.selected {
-      color: var(--panel-color-sticker-type-selected);
+        &.selected {
+            color: var(--panel-color-sticker-type-selected);
+        }
+
+        &:hover:not(.selected) {
+            color: var(--panel-color-sticker-type-hover);
+        }
     }
-
-    &:hover:not(.selected) {
-      color: var(--panel-color-sticker-type-hover);
-    }
-  }
 }
 
 .opinion {
-  margin-left: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--chat-color);
+    margin-left: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--chat-color);
 }
 
 .opinion:hover {
-  transform: scale(1.1);
-  opacity: 0.7;
+    transform: scale(1.1);
+    opacity: 0.7;
 }
 
 .grid {
-  display: grid;
-  width: 100%;
-  overflow: hidden;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+    display: grid;
+    width: 100%;
+    overflow: hidden;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
 .grid.face {
-  grid-template-columns: repeat(9, 1fr);
+    grid-template-columns: repeat(9, 1fr);
 
-  img {
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-    width: 70%;
-    height: unset;
-  }
+    img {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        margin: auto;
+        width: 70%;
+        height: unset;
+    }
 }
 
 .grid img {
-  object-fit: contain;
-  width: 96%;
-  height: 96%;
-  position: absolute;
-  border-color: var(--panel-background);
-  border-width: 1px;
-  border-style: solid;
-  background-color: var(--panel-background);
-  transition: border-color 0.5s;
+    object-fit: contain;
+    width: 96%;
+    height: 96%;
+    position: absolute;
+    border-color: var(--panel-background);
+    border-width: 1px;
+    border-style: solid;
+    background-color: var(--panel-background);
+    transition: border-color 0.5s;
 }
 
 .grid > div {
-  width: 100%;
-  height: 0;
-  padding-bottom: 100%;
-  position: relative;
-  background-color: var(--panel-background);
+    width: 100%;
+    height: 0;
+    padding-bottom: 100%;
+    position: relative;
+    background-color: var(--panel-background);
 }
 
 .grid > div img:hover {
-  border-color: #999;
+    border-color: #999;
 }
 
 .bg {
-  background-color: var(--panel-background);
-  height: -webkit-fill-available;
-  display: flex;
-  flex-direction: column;
+    background-color: var(--panel-background);
+    height: -webkit-fill-available;
+    display: flex;
+    flex-direction: column;
 }
 
 @media screen and (min-width: 1200px) {
-  .bg {
-    border-left: var(--chat-border-style);
-  }
+    .bg {
+        border-left: var(--chat-border-style);
+    }
 }
 
 
@@ -261,12 +265,12 @@ div.head {
 
 <style scoped>
 .emoji-picker {
-  --ep-color-bg: auto !important;
-  --ep-color-border: auto !important;
-  --ep-color-sbg: #fff !important;
-  --ep-color-active: #409eff !important;
-  width: 100% !important;
-  border: none !important;
+    --ep-color-bg: auto !important;
+    --ep-color-border: auto !important;
+    --ep-color-sbg: #fff !important;
+    --ep-color-active: #409eff !important;
+    width: 100% !important;
+    border: none !important;
 }
 
 </style>

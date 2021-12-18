@@ -28,35 +28,35 @@ export default {
 
 <style scoped>
 .card {
-  margin-bottom: 10px;
-  cursor: pointer;
+    margin-bottom: 10px;
+    cursor: pointer;
 }
 
 .left {
-  width: max-content;
-  float: left;
+    width: max-content;
+    float: left;
 }
 
 .right {
-  margin-left: 50px;
+    margin-left: 50px;
 }
 
 a {
-  text-decoration: none;
+    text-decoration: none;
 }
 
 .desc {
-  margin-top: 10px;
-  color: #606266;
+    margin-top: 10px;
+    color: #606266;
 }
 
 .name {
-  font-weight: bold;
-  color: #303133;
+    font-weight: bold;
+    color: #303133;
 }
 
 .withoutdesc {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 </style>
