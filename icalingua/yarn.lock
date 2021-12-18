@@ -6782,7 +6782,7 @@ fsevents@~2.3.1:
     html-webpack-plugin: ^3.2.0
     ioredis: ^4.27.5
     knex: ^0.95.8
-    linkifyjs: ^2.1.9
+    linkifyjs: 3.0.4
     lodash: ^4.17.21
     lottie-web: ^5.7.11
     lovefield: ^2.1.12
@@ -7985,14 +7985,10 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"linkifyjs@npm:^2.1.9":
-  version: 2.1.9
-  resolution: "linkifyjs@npm:2.1.9"
-  peerDependencies:
-    jquery: ">= 1.11.0"
-    react: ">= 0.14.0"
-    react-dom: ">= 0.14.0"
-  checksum: 0ddb6eca62464f01075a0c9f9faf916e29ea67b4dd58e79157d34925a1ce647a705ec5a047573fabfbc15df9fa56e0d1c755e641ee425015217e940420a55556
+"linkifyjs@npm:3.0.4":
+  version: 3.0.4
+  resolution: "linkifyjs@npm:3.0.4"
+  checksum: ec83eddd29795674975780e8c6f894543636ac11bf6d344e71fb795147b7851ff50520a22b7794167e10c4a97b662d74959512edcbaabaa8026df1d5db2eb423
   languageName: node
   linkType: hard
 
