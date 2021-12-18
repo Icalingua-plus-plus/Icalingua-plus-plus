@@ -61,7 +61,6 @@ const ipc = {
     },
     downloadFileByMessageData(data: { action: string, message: Message, room: Room }) {
         ipcRenderer.send('downloadFileByMessageData', data)
-
     },
     sendGroupPoke(gin: number, uin: number) {
         ipcRenderer.send('sendGroupPoke', gin, uin)

@@ -9,7 +9,7 @@
                     @click="$emit('toggle-rooms-list')"
                 >
                     <slot name="toggle-icon">
-                        <svg-icon name="toggle"/>
+                        <svg-icon name="toggle" />
                     </slot>
                 </div>
                 <div
@@ -46,7 +46,7 @@
                         @click="$emit('room-menu')"
                     >
                         <slot name="menu-icon">
-                            <svg-icon name="menu"/>
+                            <svg-icon name="menu" />
                         </slot>
                     </div>
                     <transition v-if="menuActions.length" name="vac-slide-left">
@@ -129,87 +129,87 @@ export default {
 
 <style lang="scss">
 .vac-room-header {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  height: 64px;
-  width: 100%;
-  z-index: 10;
-  background: var(--chat-header-bg-color);
-  border-top-right-radius: var(--chat-container-border-radius);
+    position: absolute;
+    display: flex;
+    align-items: center;
+    height: 64px;
+    width: 100%;
+    z-index: 10;
+    background: var(--chat-header-bg-color);
+    border-top-right-radius: var(--chat-container-border-radius);
 }
 
 .vac-room-wrapper {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  height: 100%;
-  width: 100%;
-  padding: 0 16px;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 100%;
+    width: 100%;
+    padding: 0 16px;
 }
 
 .vac-toggle-button {
-  margin-right: 15px;
+    margin-right: 15px;
 
-  svg {
-    height: 26px;
-    width: 26px;
-  }
+    svg {
+        height: 26px;
+        width: 26px;
+    }
 }
 
 .vac-rotate-icon {
-  transform: rotate(180deg) !important;
+    transform: rotate(180deg) !important;
 }
 
 .vac-info-wrapper {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  width: 100%;
-  height: 100%;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .vac-room-name {
-  font-size: 17px;
-  font-weight: 500;
-  line-height: 22px;
-  color: var(--chat-header-color-name);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 22px;
+    color: var(--chat-header-color-name);
 }
 
 .vac-room-info {
-  font-size: 13px;
-  line-height: 18px;
-  color: var(--chat-header-color-info);
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--chat-header-color-info);
 }
 
 .vac-room-options {
-  margin-left: auto;
+    margin-left: auto;
 }
 
 @media only screen and (max-width: 768px) {
-  .vac-room-header {
-    height: 50px;
+    .vac-room-header {
+        height: 50px;
 
-    .vac-room-wrapper {
-      padding: 0 10px;
-    }
+        .vac-room-wrapper {
+            padding: 0 10px;
+        }
 
-    .vac-room-name {
-      font-size: 16px;
-      line-height: 22px;
-    }
+        .vac-room-name {
+            font-size: 16px;
+            line-height: 22px;
+        }
 
-    .vac-room-info {
-      font-size: 12px;
-      line-height: 16px;
-    }
+        .vac-room-info {
+            font-size: 12px;
+            line-height: 16px;
+        }
 
-    .vac-room-avatar {
-      height: 37px;
-      width: 37px;
-      min-height: 37px;
-      min-width: 37px;
+        .vac-room-avatar {
+            height: 37px;
+            width: 37px;
+            min-height: 37px;
+            min-width: 37px;
+        }
     }
-  }
 }
 </style>
