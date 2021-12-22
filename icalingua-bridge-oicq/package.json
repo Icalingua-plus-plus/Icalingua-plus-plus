@@ -1,6 +1,6 @@
 {
   "name": "icalingua-bridge-oicq",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "protocolVersion": "2.1.5",
   "main": "index.ts",
   "repository": "git@git.lwqwq.com:Clansty/eqq-bridge.git",
