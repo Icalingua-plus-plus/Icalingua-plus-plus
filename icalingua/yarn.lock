@@ -6766,7 +6766,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq: ^1.21.2
+    oicq: 1.21.3
     pg: ^8.7.1
     pg-query-stream: ^4.2.1
     prettier: ^2.5.1
@@ -9515,9 +9515,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq@npm:^1.21.2":
-  version: 1.21.2
-  resolution: "oicq@npm:1.21.2"
+"oicq@npm:1.21.3":
+  version: 1.21.3
+  resolution: "oicq@npm:1.21.3"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9528,7 +9528,7 @@ fsevents@~2.3.1:
     ws: ^7.5.5
   bin:
     oicq: bin/oicq
-  checksum: ebd684585a90dbb1d57f5c16d5466402ae5be2a58725d1d9cbaac8e0d31c47ef7f08ddfb2308fb122f198842a0e30e87c9dd2672f550804237372ab200bc9353
+  checksum: eda3da9a10fd798da197890b095d7d7bc95a6134837da361c5437e5e535535edbcf3d89db22fe64ab6e5f5c98e74d6dc6cd2a478242053c940c42cc8c02de2fe
   languageName: node
   linkType: hard
 
