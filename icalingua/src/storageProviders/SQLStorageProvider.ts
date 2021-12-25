@@ -451,7 +451,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessage(roomId: number, message: Message): Promise<any> {
         try {
-            await this.db<Message>('messages').insert(this.msgConToDB(message, roomId))
+            await this.db<Message>('messages').insert(this.msgConToDB(message, roomId)).onConflict().ignore()
         } catch (e) {
             throw e
         }
