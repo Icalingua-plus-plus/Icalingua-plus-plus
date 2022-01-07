@@ -276,7 +276,7 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/x86_64/
 
       - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build/commit-repo-db
+        uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
@@ -334,7 +334,7 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/i686/
 
       - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build/commit-repo-db
+        uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
@@ -392,7 +392,7 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/aarch64/
 
       - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build/commit-repo-db
+        uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
