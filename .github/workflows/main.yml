@@ -276,8 +276,8 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/x86_64/
 
       - run: |
-        mkdir -p /github/workspace
-        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+          mkdir -p /github/workspace
+          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
@@ -338,8 +338,8 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/i686/
 
       - run: |
-        mkdir -p /github/workspace
-        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+          mkdir -p /github/workspace
+          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
@@ -400,8 +400,8 @@ jobs:
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/aarch64/
 
       - run: |
-        mkdir -p /github/workspace
-        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+          mkdir -p /github/workspace
+          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
