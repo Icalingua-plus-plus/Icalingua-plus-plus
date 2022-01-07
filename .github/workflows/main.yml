@@ -275,9 +275,11 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/x86_64/
 
-      - run: |
-          mkdir -p /github/workspace
-          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
@@ -337,9 +339,11 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/i686/
 
-      - run: |
-          mkdir -p /github/workspace
-          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
@@ -399,9 +403,11 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/aarch64/
 
-      - run: |
-          mkdir -p /github/workspace
-          cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
