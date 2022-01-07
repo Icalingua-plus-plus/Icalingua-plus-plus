@@ -275,13 +275,17 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/x86_64/
 
+      - run: |
+        mkdir -p /github/workspace
+        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: x86_64
-          package-files: ${{ steps.pkgname.outputs.pkgname }}
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-i686:
     runs-on: ubuntu-latest
@@ -333,13 +337,17 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/i686/
 
+      - run: |
+        mkdir -p /github/workspace
+        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: i686
-          package-files: ${{ steps.pkgname.outputs.pkgname }}
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
@@ -391,13 +399,17 @@ jobs:
           # 21cn:repo-ng
           args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/aarch64/
 
+      - run: |
+        mkdir -p /github/workspace
+        cp ${{ steps.pkgname.outputs.pkgname }} /github/workspace/
+
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
         with: 
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: aarch64
-          package-files: ${{ steps.pkgname.outputs.pkgname }}
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-snap-x86_64:
     runs-on: ubuntu-latest
