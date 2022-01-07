@@ -267,16 +267,21 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: deploy file
-        uses: wlixcc/SFTP-Deploy-Action@v1.0
+      - name: 把包上传到 OneDrive - x86_64
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
         with:
-          username: 'repobuilder'
-          server: ${{ secrets.REPO_BUILDER_HOST }}
-          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
-          local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repobuilder/repo-builder/tmp'
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/x86_64/
 
-      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build/commit-repo-db
+        with: 
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: x86_64
+          package-files: ${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-i686:
     runs-on: ubuntu-latest
@@ -320,16 +325,21 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: deploy file
-        uses: wlixcc/SFTP-Deploy-Action@v1.0
+      - name: 把包上传到 OneDrive - i686
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
         with:
-          username: 'repobuilder'
-          server: ${{ secrets.REPO_BUILDER_HOST }}
-          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
-          local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repobuilder/repo-builder/tmp'
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/i686/
 
-      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build/commit-repo-db
+        with: 
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: i686
+          package-files: ${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
@@ -373,16 +383,21 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: deploy file
-        uses: wlixcc/SFTP-Deploy-Action@v1.0
+      - name: 把包上传到 OneDrive - aarch64
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
         with:
-          username: 'repobuilder'
-          server: ${{ secrets.REPO_BUILDER_HOST }}
-          ssh_private_key: ${{ secrets.REPO_BUILDER_PRIVKEY }}
-          local_path: ${{ steps.pkgname.outputs.pkgname }}
-          remote_path: '/home/repobuilder/repo-builder/tmp'
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/aarch64/
 
-      - run: curl -u ${{ secrets.REPO_BUILDER_AUTH }} ${{ secrets.REPO_BUILDER_API }}/api/add-package/${{ steps.pkgname.outputs.pkgname }}
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build/commit-repo-db
+        with: 
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: aarch64
+          package-files: ${{ steps.pkgname.outputs.pkgname }}
 
   pack-snap-x86_64:
     runs-on: ubuntu-latest
