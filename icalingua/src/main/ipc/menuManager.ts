@@ -1,7 +1,7 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell } from 'electron'
-import { getConfig, saveConfigFile } from '../utils/configManager'
+import {app, BrowserWindow, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell} from 'electron'
+import {getConfig, saveConfigFile} from '../utils/configManager'
 import exit from '../utils/exit'
-import { getMainWindow, showRequestWindow } from '../utils/windowManager'
+import {getMainWindow, showRequestWindow} from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
@@ -26,7 +26,7 @@ import {
     requestGfsToken,
 } from './botAndStorage'
 import Room from '../../types/Room'
-import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
+import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
 import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
@@ -121,7 +121,7 @@ const buildRoomMenu = (room: Room): Menu => {
         },
         {
             label: '屏蔽消息',
-            click: () => ignoreChat({ id: room.roomId, name: room.roomName }),
+            click: () => ignoreChat({id: room.roomId, name: room.roomName}),
         },
         {
             label: '复制名称',
@@ -231,7 +231,8 @@ const buildRoomMenu = (room: Room): Menu => {
                     if (getConfig().adapter === 'socketIo') {
                         const token = await requestGfsToken(-room.roomId)
                         url = `${getConfig().server}/file-manager/?${token}`
-                    } else {
+                    }
+                    else {
                         const token = gfsTokenManager.create(-room.roomId)
                         url = `http://localhost:${socketIoProvider.getPort()}/file-manager/?${token}`
                     }
@@ -313,12 +314,12 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/groupNickEdit/' +
-                            -room.roomId +
-                            '/' +
-                            querystring.escape(room.roomName) +
-                            '/' +
-                            querystring.escape(memberInfo.card || memberInfo.nickname),
+                        '#/groupNickEdit/' +
+                        -room.roomId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(memberInfo.card || memberInfo.nickname),
                     )
                 },
             }),
@@ -367,7 +368,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     win.webContents.on('dom-ready', () =>
                         win.webContents.insertCSS(
                             '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
-                                '.body{padding-top:0 !important;margin:0 !important}',
+                            '.body{padding-top:0 !important;margin:0 !important}',
                         ),
                     )
                     await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
@@ -382,7 +383,8 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-    } else {
+    }
+    else {
         // menu.append(new MenuItem({
         //     label: 'ta 的线索',
         //     async click() {
@@ -555,39 +557,19 @@ export const updateAppMenu = async () => {
         priority: new MenuItem({
             label: '通知优先级',
             submenu: [
-                {
+                // @ts-ignore TS 出 bug 了
+                ...[1, 2, 3, 4, 5].map(e => ({
                     type: 'radio',
-                    label: '1',
-                    checked: getConfig().priority === 1,
-                    click: () => setPriority(1),
-                },
+                    label: `${e}`,
+                    checked: getConfig().priority === e,
+                    // @ts-ignore
+                    click: () => setPriority(e),
+                })),
                 {
-                    type: 'radio',
-                    label: '2',
-                    checked: getConfig().priority === 2,
-                    click: () => setPriority(2),
-                },
-                {
-                    type: 'radio',
-                    label: '3',
-                    checked: getConfig().priority === 3,
-                    click: () => setPriority(3),
-                },
-                {
-                    type: 'radio',
-                    label: '4',
-                    checked: getConfig().priority === 4,
-                    click: () => setPriority(4),
-                },
-                {
-                    type: 'radio',
-                    label: '5',
-                    checked: getConfig().priority === 5,
-                    click: () => setPriority(5),
-                },
-                {
+                    // @ts-ignore
                     type: 'separator',
                 },
+                // @ts-ignore
                 {
                     label: '帮助',
                     click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
@@ -951,7 +933,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     menu.append(
                         new MenuItem({
                             label: '下载',
-                            click: () => downloadFileByMessageData({ action: 'download', message, room }),
+                            click: () => downloadFileByMessageData({action: 'download', message, room}),
                         }),
                     )
                 menu.append(
@@ -960,7 +942,8 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     }),
                 )
             }
-        } else if (message.file) {
+        }
+        else if (message.file) {
             if (message.file.type.includes('image')) {
                 menu.append(
                     new MenuItem({
@@ -1009,7 +992,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             menu.append(
                 new MenuItem({
                     label: '下载',
-                    click: () => downloadFileByMessageData({ action: 'download', message, room }),
+                    click: () => downloadFileByMessageData({action: 'download', message, room}),
                 }),
             )
         }
@@ -1076,7 +1059,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             )
         }
     }
-    menu.popup({ window: getMainWindow() })
+    menu.popup({window: getMainWindow()})
 })
 ipcMain.on('popupTextAreaMenu', () => {
     Menu.buildFromTemplate([
@@ -1089,7 +1072,7 @@ ipcMain.on('popupTextAreaMenu', () => {
         {
             role: 'paste',
         },
-    ]).popup({ window: getMainWindow() })
+    ]).popup({window: getMainWindow()})
 })
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
@@ -1105,7 +1088,7 @@ ipcMain.on('popupStickerMenu', () => {
             type: 'normal',
             click: ui.closePanel,
         },
-    ]).popup({ window: getMainWindow() })
+    ]).popup({window: getMainWindow()})
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
@@ -1117,7 +1100,8 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
                 download(itemName, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
             },
         })
-    } else {
+    }
+    else {
         menu.push({
             label: '删除',
             type: 'normal',
@@ -1126,7 +1110,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
             },
         })
     }
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
+    Menu.buildFromTemplate(menu).popup({window: getMainWindow()})
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
@@ -1172,11 +1156,13 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             click: () => {
                 if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                } else if (message.mirai && message.mirai.eqq.avatarUrl) {
+                }
+                else if (message.mirai && message.mirai.eqq.avatarUrl) {
                     const QCLOUD_AVATAR_REGEX =
                         /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
                     if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl)) openImage(message.mirai.eqq.avatarUrl)
-                } else {
+                }
+                else {
                     openImage(getAvatarUrl(message.senderId))
                 }
             },
@@ -1217,19 +1203,19 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/kickAndExit/kick/' +
-                            -room.roomId +
-                            '/' +
-                            message.senderId +
-                            '/' +
-                            querystring.escape(room.roomName) +
-                            '/' +
-                            querystring.escape(message.username),
+                        '#/kickAndExit/kick/' +
+                        -room.roomId +
+                        '/' +
+                        message.senderId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(message.username),
                     )
                 },
             }),
         )
-    menu.popup({ window: getMainWindow() })
+    menu.popup({window: getMainWindow()})
 })
 ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()
@@ -1282,19 +1268,19 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/kickAndExit/' +
-                            (group.owner_id === getUin() ? 'dismiss' : 'exit') +
-                            '/' +
-                            displayId +
-                            '/0/' +
-                            querystring.escape(remark) +
-                            '/0',
+                        '#/kickAndExit/' +
+                        (group.owner_id === getUin() ? 'dismiss' : 'exit') +
+                        '/' +
+                        displayId +
+                        '/0/' +
+                        querystring.escape(remark) +
+                        '/0',
                     )
                 },
             }),
         )
     }
-    menu.popup({ window: getMainWindow() })
+    menu.popup({window: getMainWindow()})
 })
 
 const copyImage = async (url: string) => {
