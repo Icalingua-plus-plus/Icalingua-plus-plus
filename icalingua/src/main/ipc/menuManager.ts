@@ -742,6 +742,7 @@ export const updateAppMenu = async () => {
                         getMainWindow().webContents.setZoomFactor(factor / 100)
                         getConfig().zoomFactor = factor
                         saveConfigFile()
+                        updateAppMenu()
                     },
                 })),
             }),
