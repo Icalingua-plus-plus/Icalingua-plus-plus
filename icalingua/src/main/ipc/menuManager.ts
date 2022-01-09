@@ -1291,6 +1291,7 @@ const copyImage = async (url: string) => {
     }
     const res = await axios.get(url, {
         responseType: 'arraybuffer',
+        proxy: false,
     })
     const buf = Buffer.from(res.data, 'binary')
     clipboard.writeImage(nativeImage.createFromBuffer(buf))

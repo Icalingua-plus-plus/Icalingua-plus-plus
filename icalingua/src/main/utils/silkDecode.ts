@@ -7,6 +7,7 @@ import { streamToBuffer } from '../../utils/streamToBuffer'
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
         responseType: 'arraybuffer',
+        proxy: false,
     })
     const bufPcm = silk.decode(res.data)
     const bufMp3 = await conventPcmToMp3(bufPcm)

@@ -1,7 +1,7 @@
 import version from './version'
 import axios from 'axios'
 import errorHandler from './errorHandler'
-import { getConfig } from './configManager'
+import {getConfig} from './configManager'
 
 type CheckUpdateResult = {
     latestVersion: string
@@ -20,7 +20,9 @@ export const checkUpdate = async () => {
         }
     else if (version.isProduction) {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/releases/latest')
+            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/releases/latest', {
+                proxy: false,
+            })
             const latestVersion = res.data.tag_name
             cache = {
                 hasUpdate: latestVersion !== 'v' + version.version,
@@ -30,9 +32,12 @@ export const checkUpdate = async () => {
             console.log('检查更新失败')
             errorHandler(ex)
         }
-    } else {
+    }
+    else {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/git/ref/heads/dev')
+            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/git/ref/heads/dev', {
+                proxy: false,
+            })
             const latestVersion = res.data.object.sha.substr(0, 7)
             cache = {
                 hasUpdate: latestVersion !== version.commitId,
