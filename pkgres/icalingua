@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-electron13 /usr/share/icalingua/icalingua.asar "$@"
+electron13 /usr/lib/icalingua/icalingua.asar "$@"
