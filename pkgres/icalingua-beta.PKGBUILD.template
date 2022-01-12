@@ -18,7 +18,7 @@ source=(app.asar
 package() {
   install -Dm644 -t "${pkgdir}/usr/share/applications" "icalingua.desktop"
   install -Dm644 "512x512.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/icalingua.png"
-  install -Dm644 "app.asar" "${pkgdir}/usr/share/icalingua/icalingua.asar"
+  install -Dm644 "app.asar" "${pkgdir}/usr/lib/icalingua/icalingua.asar"
   install -Dm755 "icalingua" "${pkgdir}/usr/bin/$pkgname"
   ln -s "/usr/bin/$pkgname" "${pkgdir}/usr/bin/electron-qq"
   ln -s "/usr/bin/$pkgname" "${pkgdir}/usr/bin/icalingua"
