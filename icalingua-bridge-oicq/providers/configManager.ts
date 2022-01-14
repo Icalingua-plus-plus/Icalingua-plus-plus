@@ -9,6 +9,7 @@ type Config = {
     custom: boolean
     port: number
     host: string
+    unix?: string
 }
 
 type UserConfig = {
