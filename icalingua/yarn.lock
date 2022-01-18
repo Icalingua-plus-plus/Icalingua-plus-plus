@@ -2,7 +2,7 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
+  version: 5
   cacheKey: 8
 
 "7zip-bin@npm:~5.1.1":
@@ -771,7 +771,7 @@ __metadata:
     bindings: ^1.2.1
     nan: ^2.12.1
     node-gyp: latest
-  checksum: 543ae7f5475f57dfc1c8ce59bae9c7839fec8fca860f1512a5e974545450476e3098911187e6ca1237822240bd2ab0f54cbbabb9f4573c9a4dd48023a2097d6d
+  conditions: os=linux
   languageName: node
   linkType: hard
 
@@ -4607,7 +4607,7 @@ __metadata:
     verror: ^1.10.0
   bin:
     dmg-license: bin/dmg-license.js
-  checksum: 9b9d46792c1ea4515f040c7c5dc3b9a00b18ad350ccc5225f4bd1244e1a2b6176c29d9c59bb1bdc4b29fd233c4fb6c0a9990f69c14c980f97b0695325cba4c4f
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -5908,25 +5908,26 @@ fsevents@^1.2.7:
     bindings: ^1.5.0
     nan: ^2.12.1
   checksum: ae855aa737aaa2f9167e9f70417cf6e45a5cd11918e1fee9923709a0149be52416d765433b4aeff56c789b1152e718cd1b13ddec6043b78cdda68260d86383c1
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
 "fsevents@patch:fsevents@^1.2.7#~builtin<compat/fsevents>":
   version: 1.2.13
-  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#~builtin<compat/fsevents>::version=1.2.13&hash=1cc4b2"
+  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#~builtin<compat/fsevents>::version=1.2.13&hash=18f3a7"
   dependencies:
     bindings: ^1.5.0
     nan: ^2.12.1
-  checksum: b264407498db2cfdcc2a05287334a4160c985a88e4a989e2f2f8dcc6afc8b04a4fcd82c797266442452e11c1fb07d7747d138b078fe4bb1f8f4fd2a6f2484d7e
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
 "fsevents@patch:fsevents@~2.3.1#~builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
   dependencies:
     node-gyp: latest
-  checksum: 78db9daf1f6526a49cefee3917cc988f62dc7f25b5dd80ad6de4ffc4af7f0cab7491ac737626ff53e482a111bc53aac9e411fe3602458eca36f6a003ecf69c16
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -5936,6 +5937,7 @@ fsevents@~2.3.1:
   dependencies:
     node-gyp: latest
   checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -6814,7 +6816,7 @@ fsevents@~2.3.1:
   dependencies:
     cli-truncate: ^1.1.0
     node-addon-api: ^1.6.3
-  checksum: ed91ef66eee3a1c28947c80208b277b429449f5e67d6addd511fd53569a8e1ca9f51b21357f2ea33af7efe738f5e7e780ab2d45fb671b3f6694b8db7d43f1974
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -11274,11 +11276,11 @@ resolve@^1.9.0:
 
 "resolve@patch:resolve@^1.9.0#~builtin<compat/resolve>":
   version: 1.20.0
-  resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
+  resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=07638b"
   dependencies:
     is-core-module: ^2.2.0
     path-parse: ^1.0.6
-  checksum: bed00be983cd20a8af0e7840664f655c4b269786dbd9595c5f156cd9d8a0050e65cdbbbdafc30ee9b6245b230c78a2c8ab6447a52545b582f476c29adb188cc5
+  checksum: a0dd7d16a8e47af23afa9386df2dff10e3e0debb2c7299a42e581d9d9b04d7ad5d2c53f24f1e043f7b3c250cbdc71150063e53d0b6559683d37f790b7c8c3cd5
   languageName: node
   linkType: hard
 
@@ -13058,11 +13060,11 @@ typescript@^4.2.4:
 
 "typescript@patch:typescript@^4.2.4#~builtin<compat/typescript>":
   version: 4.3.2
-  resolution: "typescript@patch:typescript@npm%3A4.3.2#~builtin<compat/typescript>::version=4.3.2&hash=d8b4e7"
+  resolution: "typescript@patch:typescript@npm%3A4.3.2#~builtin<compat/typescript>::version=4.3.2&hash=493e53"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 3d3dec06ba6e5b05caa292355712ed9db813fa1c2377630b1f24b42e5ee8957f0bcdd5efd1500c970a11a6f684897f5728f5542ac822932227159a0611499a5e
+  checksum: 7ede84257208120b3e6bf5b7f512c1d173f49264e34388f1deb4b9a9cf67439aad7008cc1a3480ab048523ecd4f1974a95fbab638f44216478a625c768954c2a
   languageName: node
   linkType: hard
 
