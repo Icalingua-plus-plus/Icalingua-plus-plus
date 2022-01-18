@@ -267,5 +267,6 @@
     "winston": "^3.3.3",
     "winston-daily-rotate-file": "^4.5.5",
     "yaml": "^1.10.2"
-  }
+  },
+  "packageManager": "yarn@3.1.1"
 }
