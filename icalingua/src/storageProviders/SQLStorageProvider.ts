@@ -59,6 +59,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     client: 'sqlite3',
                     connection: {
                         filename: `${path.join(dbPath, this.qid)}.db`,
+                        charset: 'utf8mb4_unicode_ci',
                     },
                     useNullAsDefault: true,
                 })
@@ -66,14 +67,14 @@ export default class SQLStorageProvider implements StorageProvider {
             case 'mysql':
                 this.db = knex({
                     client: 'mysql',
-                    connection: connectOpt,
+                    connection: { ...connectOpt, charset: 'utf8mb4_unicode_ci' },
                     useNullAsDefault: true,
                 })
                 break
             case 'pg':
                 this.db = knex({
                     client: 'pg',
-                    connection: connectOpt,
+                    connection: { ...connectOpt, charset: 'utf8mb4_unicode_ci' },
                     useNullAsDefault: true,
                     searchPath: [this.qid, 'public'],
                 })
@@ -214,6 +215,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const hasVersionTable = await this.db.schema.hasTable(`dbVersion`)
             if (!hasVersionTable) {
                 await this.db.schema.createTable(`dbVersion`, (table) => {
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
                     table.integer('dbVersion')
                     table.primary(['dbVersion'])
                 })
@@ -224,6 +226,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const hasRoomTable = await this.db.schema.hasTable(`rooms`)
             if (!hasRoomTable) {
                 await this.db.schema.createTable(`rooms`, (table) => {
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
                     table.string('roomId').unique().primary()
                     table.string('roomName')
                     table.integer('index')
@@ -242,6 +245,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const hasMessagesTable = await this.db.schema.hasTable(`messages`)
             if (!hasMessagesTable) {
                 await this.db.schema.createTable(`messages`, (table) => {
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
                     table.string('_id').unique().primary()
                     table.string('senderId')
                     table.string('username')
@@ -269,6 +273,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const hasIgnoredTable = await this.db.schema.hasTable(`ignoredChats`)
             if (!hasIgnoredTable) {
                 await this.db.schema.createTable(`ignoredChats`, (table) => {
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
                     table
                         .bigInteger('id') // 在 pgSQL 里会被返回成 string，不知有无 bug
                         .unique()
