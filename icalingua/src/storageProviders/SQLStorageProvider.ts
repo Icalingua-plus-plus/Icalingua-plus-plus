@@ -59,7 +59,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     client: 'sqlite3',
                     connection: {
                         filename: `${path.join(dbPath, this.qid)}.db`,
-                        charset: 'utf8mb4_unicode_ci',
+                        charset: 'utf8mb4',
                     },
                     useNullAsDefault: true,
                 })
@@ -67,14 +67,14 @@ export default class SQLStorageProvider implements StorageProvider {
             case 'mysql':
                 this.db = knex({
                     client: 'mysql',
-                    connection: { ...connectOpt, charset: 'utf8mb4_unicode_ci' },
+                    connection: { ...connectOpt, charset: 'utf8mb4' },
                     useNullAsDefault: true,
                 })
                 break
             case 'pg':
                 this.db = knex({
                     client: 'pg',
-                    connection: { ...connectOpt, charset: 'utf8mb4_unicode_ci' },
+                    connection: { ...connectOpt, charset: 'utf8mb4' },
                     useNullAsDefault: true,
                     searchPath: [this.qid, 'public'],
                 })
