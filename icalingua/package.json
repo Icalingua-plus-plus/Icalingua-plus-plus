@@ -173,16 +173,16 @@
     "npmRebuild": false
   },
   "dependencies": {
+    "@vscode/sqlite3": "^5.0.7",
     "express": "^4.17.1",
-    "knex": "^0.95.8",
+    "knex": "^1.0.1",
     "mongodb": "^3.6.6",
     "mysql": "^2.18.1",
     "oicq": "1.21.3",
     "pg": "^8.7.1",
     "pg-query-stream": "^4.2.1",
     "silk-sdk": "^0.2.2",
-    "socket.io": "^4.3.2",
-    "sqlite3": "^5.0.2"
+    "socket.io": "^4.3.2"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.18",
@@ -243,7 +243,7 @@
     "ts-loader": "^8.3.0",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",
-    "typescript": "^4.2.4",
+    "typescript": "^4.5.4",
     "url-loader": "^1.0.1",
     "uuid": "^8.3.2",
     "v-click-outside": "^3.1.2",
