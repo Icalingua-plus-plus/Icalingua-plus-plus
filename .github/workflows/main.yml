@@ -105,6 +105,7 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
+        working-directory: /
 
       - name: build native modules
         run: yarn build:electron install-app-deps
@@ -156,6 +157,7 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
+        working-directory: /
 
       - name: build native modules
         run: yarn build:electron install-app-deps --arch ia32
@@ -201,6 +203,7 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
+        working-directory: /
 
       - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
