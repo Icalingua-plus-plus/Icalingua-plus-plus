@@ -84,9 +84,6 @@ jobs:
   build-x86_64:
     runs-on: ubuntu-latest
     needs: build-dist-bundle
-    defaults:
-      run:
-        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -105,13 +102,14 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
-        working-directory: /
 
       - name: build native modules
         run: yarn build:electron install-app-deps
+        working-directory: icalingua
 
       - name: build
         run: yarn build:electron --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
         name: upload app-x86_64.asar
@@ -130,9 +128,6 @@ jobs:
   build-ia32:
     runs-on: ubuntu-latest
     needs: build-dist-bundle
-    defaults:
-      run:
-        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -157,13 +152,14 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
-        working-directory: /
 
       - name: build native modules
         run: yarn build:electron install-app-deps --arch ia32
+        working-directory: icalingua
 
       - name: build
         run: yarn build:electron --ia32 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
         name: upload app.asar
@@ -182,9 +178,6 @@ jobs:
   build-arm64:
     runs-on: ubuntu-latest
     needs: build-dist-bundle
-    defaults:
-      run:
-        working-directory: icalingua
     steps:
       - uses: actions/checkout@v2
 
@@ -203,7 +196,6 @@ jobs:
 
       - name: apply patch
         run: git apply .github/sqlite-build.patch
-        working-directory: /
 
       - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
@@ -224,6 +216,7 @@ jobs:
 
       - name: build
         run: yarn build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
         name: upload app.asar
