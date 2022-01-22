@@ -826,7 +826,7 @@ const adapter = {
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
-        if (roomId > 0 && roomId !== bot.uin) data = await bot.sendPrivateMsg(roomId, chain, true)
+        if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true)
         else data = await bot.sendGroupMsg(-roomId, chain, true)
 
         clients.closeLoading()
@@ -837,7 +837,7 @@ const adapter = {
             })
             return
         }
-        if (roomId > 0) {
+        if (roomId > 0 && roomId !== bot.uin) {
             room.lastMessage = {
                 content,
                 timestamp: formatDate('hh:mm'),
