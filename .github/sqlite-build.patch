@@ -1,0 +1,13 @@
+diff --git a/icalingua/node_modules/@vscode/sqlite3/package.json b/icalingua/node_modules/@vscode/sqlite3/package.json
+--- a/icalingua/node_modules/@vscode/sqlite3/package.json
++++ b/icalingua/node_modules/@vscode/sqlite3/package.json
+@@ -51,7 +51,8 @@
+   "scripts": {
+     "pretest": "node test/support/createdb.js",
+     "test": "mocha -R spec --timeout 480000",
+-    "pack": "node-pre-gyp package"
++    "pack": "node-pre-gyp package",
++    "install": "node-gyp rebuild"
+   },
+   "license": "BSD-3-Clause",
+   "keywords": [

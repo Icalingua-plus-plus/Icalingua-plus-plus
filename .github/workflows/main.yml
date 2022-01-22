@@ -103,6 +103,9 @@ jobs:
           name: dist
           path: icalingua/dist
 
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
+
       - name: build native modules
         run: yarn build:electron install-app-deps
 
@@ -151,6 +154,9 @@ jobs:
           sudo apt update
           sudo apt install gcc-multilib g++-multilib -y
 
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
+
       - name: build native modules
         run: yarn build:electron install-app-deps --arch ia32
 
@@ -192,6 +198,9 @@ jobs:
         with:
           name: dist
           path: icalingua/dist
+
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
 
       - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
@@ -283,7 +292,7 @@ jobs:
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
-        with: 
+        with:
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: x86_64
@@ -347,7 +356,7 @@ jobs:
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
-        with: 
+        with:
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: i686
@@ -411,7 +420,7 @@ jobs:
 
       - name: 提交元信息到 Azure Blob 存储
         uses: Clansty/arch-build@next
-        with: 
+        with:
           azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
           azure-blob-storage-container: repo
           arch: aarch64
