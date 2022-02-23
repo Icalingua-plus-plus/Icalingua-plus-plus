@@ -612,6 +612,68 @@ jobs:
           path: icalingua-bridge-oicq/build/
           if-no-files-found: error
 
+  install-windows64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: icalingua
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+      - name: npm install
+        run: npm install
+
+  build-windows64:
+    runs-on: windows-latest
+    needs: install-windows64
+    outputs:
+      version: ${{ steps.git-ver.outputs.version }}
+      arch-version: ${{ steps.version.outputs.arch-version }}
+      pkg-name: ${{ steps.version.outputs.pkg-name }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - uses: Clansty/gha-yarn-node-cache@master
+      env:
+        WORKING_DIR: icalingua
+        
+    - id: git-ver
+      run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
+      
+    - name: check version and write version info
+      run: node .github/check-version.js
+      id: version
+      env:
+        SHA: ${{ github.sha }}
+        REF: ${{ github.REF }}
+        GIT_VER: ${{ steps.git-ver.outputs.version }}
+        
+    - name: build
+      run: npm run build
+      working-directory: icalingua
+      
+    - uses: actions/upload-artifact@v2
+      name: Upload x64.exe
+      with:
+        name: x64.exe
+        path: icalingua/build/Icalingua Setup *.exe
+        if-no-files-found: error
+
   release:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -624,6 +686,7 @@ jobs:
       - pack-otherpkg-ia32
       - pack-otherpkg-arm64
       - build-dist-bundle
+      - build-windows64
     steps:
       - name: Make dir
         run: mkdir release
@@ -751,6 +814,11 @@ jobs:
           name: x86_64.rpm
           path: release
 
+      - name: get x64.exe
+        uses: actions/download-artifact@v2
+        with:
+          name: x64.exe
+          path: release
 
       - name: Release
         uses: fnkr/github-action-ghr@ghr-options
