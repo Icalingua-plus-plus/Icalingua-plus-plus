@@ -20,7 +20,7 @@ export const checkUpdate = async () => {
         }
     else if (version.isProduction) {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/releases/latest', {
+            const res = await axios.get('https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest', {
                 proxy: false,
             })
             const latestVersion = res.data.tag_name
@@ -35,7 +35,7 @@ export const checkUpdate = async () => {
     }
     else {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua/Icalingua/git/ref/heads/dev', {
+            const res = await axios.get('https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/dev', {
                 proxy: false,
             })
             const latestVersion = res.data.object.sha.substr(0, 7)
