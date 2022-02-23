@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -54,7 +54,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -90,7 +90,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -134,7 +134,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -184,7 +184,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -206,7 +206,7 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/icalingua:/build"
           install: |
-            pacman -Sy --noconfirm yarn python2 python base-devel
+            pacman -Sy --noconfirm yarn python2 python base-devel glibc openssl
           run: |
             uname -a
             chmod -R 777 /build
@@ -256,7 +256,7 @@ jobs:
       - run: chmod -R 777 .
 
       - name: makepkg for x86_64
-        uses: Clansty/archlinux-package-action@main
+        uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           flags: '-cfd --noconfirm'
           namcap: false
@@ -272,27 +272,11 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: 把包上传到 OneDrive
-        uses: wei/rclone@v1.1.1
-        env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-        with:
-          # 21cn:repo-ng
-          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
-
       - name: 同步 docker 内外目录
         # $PWD 在 docker 中被映射到 /github/workspace
         run: |
           sudo mkdir /github
           sudo ln -s $PWD /github/workspace
-
-      - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build@next
-        with:
-          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
-          azure-blob-storage-container: repo
-          arch: x86_64
-          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-i686:
     runs-on: ubuntu-latest
@@ -319,7 +303,7 @@ jobs:
       - run: chmod -R 777 .
 
       - name: makepkg for i686
-        uses: Clansty/archlinux-package-action@main
+        uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           carch: i686
           flags: '-cfd --noconfirm'
@@ -336,27 +320,11 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: 把包上传到 OneDrive
-        uses: wei/rclone@v1.1.1
-        env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-        with:
-          # 21cn:repo-ng
-          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
-
       - name: 同步 docker 内外目录
         # $PWD 在 docker 中被映射到 /github/workspace
         run: |
           sudo mkdir /github
           sudo ln -s $PWD /github/workspace
-
-      - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build@next
-        with:
-          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
-          azure-blob-storage-container: repo
-          arch: i686
-          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-archpkg-aarch64:
     runs-on: ubuntu-latest
@@ -383,7 +351,7 @@ jobs:
       - run: chmod -R 777 .
 
       - name: makepkg for aarch64
-        uses: Clansty/archlinux-package-action@main
+        uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           carch: aarch64
           flags: '-cfd --noconfirm'
@@ -400,27 +368,11 @@ jobs:
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
-      - name: 把包上传到 OneDrive
-        uses: wei/rclone@v1.1.1
-        env:
-          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
-        with:
-          # 21cn:repo-ng
-          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
-
       - name: 同步 docker 内外目录
         # $PWD 在 docker 中被映射到 /github/workspace
         run: |
           sudo mkdir /github
           sudo ln -s $PWD /github/workspace
-
-      - name: 提交元信息到 Azure Blob 存储
-        uses: Clansty/arch-build@next
-        with:
-          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
-          azure-blob-storage-container: repo
-          arch: aarch64
-          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
 
   pack-snap-x86_64:
     runs-on: ubuntu-latest
@@ -436,7 +388,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -474,20 +426,6 @@ jobs:
           path: icalingua/build/*.snap
           if-no-files-found: error
 
-      - uses: snapcore/action-publish@v1
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-        with:
-          store_login: ${{ secrets.SNAP_TOKEN }}
-          snap: ${{ steps.pack.outputs.snap }}
-          release: edge
-
-      - uses: snapcore/action-publish@v1
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        with:
-          store_login: ${{ secrets.SNAP_TOKEN }}
-          snap: ${{ steps.pack.outputs.snap }}
-          release: stable
-
   pack-otherpkg-x86_64:
     runs-on: ubuntu-latest
     needs:
@@ -509,7 +447,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -553,7 +491,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
@@ -597,7 +535,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
 
