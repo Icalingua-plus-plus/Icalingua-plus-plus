@@ -228,7 +228,9 @@
                         v-if="showSendIcon"
                         class="vac-svg-button"
                         :class="{ 'vac-send-disabled': isMessageEmpty }"
-                        @click="sendMessage"
+                        @click.left="sendMessage"
+                        @click.middle="sendStructMessage('xml')"
+                        @click.right="sendStructMessage('json')"
                     >
                         <slot name="send-icon">
                             <svg-icon name="send" :param="isMessageEmpty ? 'disabled' : ''" />
@@ -585,6 +587,23 @@ export default {
                 replyMessage: this.messageReply,
                 usersTag: this.selectedUsersTag,
                 resend: this.editAndResend,
+                messageType: 'text',
+            })
+
+            this.resetMessage(true)
+        },
+        sendStructMessage(msgType) {
+            let message = this.message.trim()
+
+            if (!this.file && !message) return
+
+            this.$emit('send-message', {
+                content: message,
+                file: this.file,
+                replyMessage: this.messageReply,
+                usersTag: this.selectedUsersTag,
+                resend: this.editAndResend,
+                messageType: msgType,
             })
 
             this.resetMessage(true)

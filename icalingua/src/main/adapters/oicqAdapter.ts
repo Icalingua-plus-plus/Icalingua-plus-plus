@@ -803,7 +803,10 @@ const adapter: OicqAdapter = {
     async getCookies(domain: CookiesDomain) {
         return (await bot.getCookies(domain)).data.cookies
     },
-    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker }: SendMessageParams) {
+    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker, messageType }: SendMessageParams) {
+        if (!messageType) {
+            messageType = 'text'
+        }
         if (!room && !roomId) {
             roomId = ui.getSelectedRoomId()
             room = await storage.getRoom(roomId)
@@ -914,13 +917,28 @@ const adapter: OicqAdapter = {
                             id: Number.parseInt(temp, 10),
                         },
                     }
-                } else
+                } else if (messageType == 'text') {
                     element = {
                         type: 'text',
                         data: {
                             text: part,
                         },
                     }
+                } else if (messageType == 'json') {
+                    element = {
+                        type: 'json',
+                        data: {
+                            data: part,
+                        },
+                    }
+                } else if (messageType == 'xml') {
+                    element = {
+                        type: 'xml',
+                        data: {
+                            data: part,
+                        },
+                    }
+                }
                 chain.push(element)
             }
         }
