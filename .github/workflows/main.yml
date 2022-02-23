@@ -197,22 +197,22 @@ jobs:
       - name: apply patch
         run: git apply .github/sqlite-build.patch
 
-      - uses: uraimo/run-on-arch-action@v2.1.1
-        name: build native modules using another arch
-        with:
-          arch: aarch64
-          distro: archarm_latest
-          githubToken: ${{ github.token }}
-          dockerRunArgs: |
-            --volume "${PWD}/icalingua:/build"
-          install: |
-            pacman -Sy --noconfirm yarn python2 python base-devel glibc openssl
-          run: |
-            uname -a
-            chmod -R 777 /build
-            cd /build
-            useradd -m builduser
-            su builduser -c 'yarn build:electron install-app-deps'
+#      - uses: uraimo/run-on-arch-action@v2.1.1
+#        name: build native modules using another arch
+#        with:
+#          arch: aarch64
+#          distro: archarm_latest
+#          githubToken: ${{ github.token }}
+#          dockerRunArgs: |
+#            --volume "${PWD}/icalingua:/build"
+#          install: |
+#            pacman -Sy --noconfirm yarn python2 python base-devel glibc openssl
+#          run: |
+#            uname -a
+#            chmod -R 777 /build
+#            cd /build
+#            useradd -m builduser
+#            su builduser -c 'yarn build:electron install-app-deps'
 
       - name: build
         run: yarn build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
