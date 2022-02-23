@@ -613,7 +613,7 @@ jobs:
           if-no-files-found: error
 
   install-windows64:
-    runs-on: windows-latest
+    runs-on: windows-2019
     defaults:
       run:
         working-directory: icalingua
@@ -625,14 +625,14 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: Clansty/gha-yarn-node-cache@master
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
       - name: npm install
         run: npm install
 
   build-windows64:
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: install-windows64
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
@@ -648,7 +648,7 @@ jobs:
       with:
         node-version: '14'
 
-    - uses: Clansty/gha-yarn-node-cache@master
+    - uses: Icalinguaplusplus/gha-yarn-node-cache@master
       env:
         WORKING_DIR: icalingua
         
