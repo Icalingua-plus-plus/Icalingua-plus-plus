@@ -668,9 +668,9 @@ jobs:
       working-directory: icalingua
       
     - uses: actions/upload-artifact@v2
-      name: Upload x64.exe
+      name: Upload Icalingua_Windows64.exe
       with:
-        name: x64.exe
+        name: Icalingua_Windows64.exe
         path: icalingua/build/Icalingua Setup *.exe
         if-no-files-found: error
 
@@ -814,10 +814,10 @@ jobs:
           name: x86_64.rpm
           path: release
 
-      - name: get x64.exe
+      - name: get Icalingua_Windows64.exe
         uses: actions/download-artifact@v2
         with:
-          name: x64.exe
+          name: Icalingua_Windows64.exe
           path: release
 
       - name: Release
