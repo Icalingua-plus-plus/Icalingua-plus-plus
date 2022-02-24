@@ -1,4 +1,4 @@
-# Icalingua
+# Icalingua++
 
 Icalingua++ 是 Icalingua 的分支，為已經刪除的 Icalingua 提供有限的更新,同時歡迎社區提交PR。
 
