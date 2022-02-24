@@ -666,7 +666,10 @@ const adapter = {
         }
     },
     //roomId 和 room 必有一个
-    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker }: SendMessageParams) {
+    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker, messageType }: SendMessageParams) {
+        if (!messageType) {
+            messageType = 'text'
+        }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && file.type && !file.type.includes('image')) {
@@ -773,13 +776,28 @@ const adapter = {
                             id: Number.parseInt(temp, 10),
                         },
                     }
-                } else
+                } else if (messageType == 'text') {
                     element = {
                         type: 'text',
                         data: {
                             text: part,
                         },
                     }
+                } else if (messageType == 'json') {
+                    element = {
+                        type: 'json',
+                        data: {
+                            data: part,
+                        },
+                    }
+                } else if (messageType == 'xml') {
+                    element = {
+                        type: 'xml',
+                        data: {
+                            data: part,
+                        },
+                    }
+                }
                 chain.push(element)
             }
         }
