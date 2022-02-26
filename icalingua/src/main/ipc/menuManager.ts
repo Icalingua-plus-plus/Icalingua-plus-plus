@@ -498,7 +498,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: 'GitHub',
-                click: () => shell.openExternal('https://github.com/Clansty/electron-qq'),
+                click: () => shell.openExternal('https://github.com/Icalingua-plus-plus/Icalingus-plus-plus'),
             }),
             new MenuItem({
                 label: '好友申请列表',
