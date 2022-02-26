@@ -496,7 +496,7 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const now = new Date(data.time * 1000)
         const newAdmin = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = (set ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员` : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`)
+        let content = (data.set ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员` : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`)
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
