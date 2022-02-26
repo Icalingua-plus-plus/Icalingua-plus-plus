@@ -7,12 +7,16 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是日语�
 本项目希望为 Linux 打造一个会话前端框架，通过实现 Adapter 后端接口来适配各种聊天平台。目前已经拥有基于 [oicq](https://github.com/takayama-lily/oicq) 以及 Icalingua 自有协议的后端
 
 [![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)
+<!-- 
 [![License](https://img.shields.io/aur/license/icalingua)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/main/LICENSE)
+-->
 [![discord](https://img.shields.io/static/v1?label=chat&message=discord&color=7289da&logo=discord)](https://discord.gg/gKnU7BARzv)
 
-[![GitHub release (latest by date)](https://img.shields.io/github/downloads/Icalingua-plus-plus/Icalingua-plus-plus/latest/total)](https://github.com/Clansty/electron-qq/releases/latest)
+[![GitHub release (latest by date)](https://img.shields.io/github/downloads/Icalingua-plus-plus/Icalingua-plus-plus/latest/total)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest)
+<!-- 
 [![AUR votes](https://img.shields.io/aur/votes/icalingua)](https://aur.archlinux.org/packages/icalingua/)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_shield)
+-->
 
 #### 分支状态
 
@@ -29,7 +33,9 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是日语�
 
 ### License
 
+<!-- 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_large)
+-->
 [![](https://camo.githubusercontent.com/473b62766b498e4f2b008ada39f1d56fb3183649f24447866e25d958ac3fd79a/68747470733a2f2f7777772e676e752e6f72672f67726170686963732f6167706c76332d3135357835312e706e67)](https://www.gnu.org/licenses/agpl-3.0.txt)
 
 ### 鸣谢
