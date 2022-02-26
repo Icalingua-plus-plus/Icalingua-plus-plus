@@ -26,6 +26,8 @@ import {
     SyncMessageEventData,
     GroupMuteEventData,
     GroupSettingEventData,
+    GroupAdminEventData,
+    GroupTransferEventData,
     QrcodeEventData,
     GroupInfo,
     Gfs,
@@ -488,6 +490,87 @@ const eventHandlers = {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     },
+    async groupAdmin(data: GroupAdminEventData) {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        const newAdmin = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
+        let content = (set ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员` : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`)
+        const message: Message = {
+            _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
+            content,
+            username: '群系统信息',
+            senderId: 10000,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
+    async groupTransfer(data: GroupTransferEventData) {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
+        const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname}`
+        const message: Message = {
+            _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
+            content,
+            username: operator.card || operator.nickname,
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
     async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
         ui.sendAddRequest(data)
@@ -725,6 +808,8 @@ const attachEventHandler = () => {
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
     bot.on('notice.group.ban', eventHandlers.groupMute)
     bot.on('notice.group.setting', eventHandlers.groupSetting)
+    bot.on('notice.group.admin', eventHandlers.groupAdmin)
+    bot.on('notice.group.transfer', eventHandlers.groupTransfer)
     bot.on('notice.friend.increase', eventHandlers.friendIncrease)
     bot.on('notice.friend.decrease', eventHandlers.friendDecrease)
     bot.on('request.friend.add', eventHandlers.requestAdd)
