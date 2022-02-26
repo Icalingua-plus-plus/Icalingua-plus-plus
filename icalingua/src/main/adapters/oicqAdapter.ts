@@ -25,6 +25,7 @@ import {
     FriendDecreaseEventData,
     SyncMessageEventData,
     GroupMuteEventData,
+    GroupSettingEventData,
     QrcodeEventData,
     GroupInfo,
     Gfs,
@@ -442,6 +443,51 @@ const eventHandlers = {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     },
+    async groupSetting(data: GroupSettingEventData) {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        let content = '管理员修改了群设置： '
+        content += (data.enable_anonymous ? '允许' : '禁止') + '匿名 | '
+        content += (data.enable_upload_album ? '允许' : '禁止') + '群员上传相册 | '
+        content += (data.enable_upload_file ? '允许' : '禁止') + '群员上传文件 | '
+        content += (data.enable_temp_chat ? '允许' : '禁止') + '群内临时会话 | '
+        content += (data.enable_new_group ? '允许' : '禁止') + '群员发起新群 | '
+        content += (data.enable_confess ? '允许' : '禁止') + '群内坦白说 | '
+        const message: Message = {
+            _id: `setting-${now.getTime()}-${data.group_id}`,
+            content,
+            username: '群系统信息',
+            senderId: 10000,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = bot.gl.get(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        ui.addMessage(roomId, message)
+        ui.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    },
     async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
         ui.sendAddRequest(data)
@@ -678,6 +724,7 @@ const attachEventHandler = () => {
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
     bot.on('notice.group.ban', eventHandlers.groupMute)
+    bot.on('notice.group.setting', eventHandlers.groupSetting)
     bot.on('notice.friend.increase', eventHandlers.friendIncrease)
     bot.on('notice.friend.decrease', eventHandlers.friendDecrease)
     bot.on('request.friend.add', eventHandlers.requestAdd)
