@@ -1,6 +1,6 @@
 <template>
     <div class="settings">
-        <p>设定 <b>{{ $route.params.groupName }} ({{ gin }})</b> 中 <b>{{ $route.params.userName }} ({{ uin }})</b> 的禁言时常为：</p>
+        <p>设定 <b>{{ $route.params.groupName }} ({{ gin }})</b> 中 <b>{{ $route.params.userName }} ({{ uin }})</b> 的禁言时长为：</p>
         <el-input v-model="muteTime" @input="muteTime = muteTime.replace(/[^\d]/g,'')" />
         <p>分钟（为0分钟时取消禁言）</p>
         <div class="dialog-footer">
