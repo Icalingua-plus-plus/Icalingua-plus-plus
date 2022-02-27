@@ -123,5 +123,7 @@ export default interface Adapter {
 
     setGroupLeave(gin: number): any
 
+    setGroupBan(gin: number, uin: number, duration?: number): any
+
     requestGfsToken(gin: number): Promise<string>
 }

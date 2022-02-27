@@ -131,6 +131,9 @@ const ipc = {
     setGroupLeave(gin: number) {
         ipcRenderer.send('setGroupLeave', gin)
     },
+    setGroupBan(gin: number, uin: number, duration?: number) {
+        ipcRenderer.send('setGroupBan', gin, uin, duration)
+    },
     setCheckUpdate(enabled: boolean) {
         ipcRenderer.send('setCheckUpdate', enabled)
     },
