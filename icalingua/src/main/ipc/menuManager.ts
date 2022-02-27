@@ -1184,13 +1184,43 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         message.senderId !== getUin() &&
         ((await isAdmin()) === 'owner' ||
             ((await isAdmin()) === 'admin' && message.role !== 'owner' && message.role !== 'admin'))
-    )
+    ){
+        menu.append(
+            new MenuItem({
+                label: `禁言`,
+                click: async () => {
+                    const win = new BrowserWindow({
+                        height: 300,
+                        width: 600,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(
+                        getWinUrl() +
+                        '#/MuteUser/' +
+                        -room.roomId +
+                        '/' +
+                        message.senderId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(message.username),
+                    )
+                },
+            }),
+        )
         menu.append(
             new MenuItem({
                 label: `移出本群`,
                 click: async () => {
                     const win = new BrowserWindow({
-                        height: 130,
+                        height: 150,
                         width: 500,
                         autoHideMenuBar: true,
                         maximizable: false,
@@ -1215,6 +1245,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                 },
             }),
         )
+    }
     menu.popup({window: getMainWindow()})
 })
 ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {

@@ -863,6 +863,9 @@ const adapter: OicqAdapter = {
         bot.setGroupLeave(gin)
         if (ui.getSelectedRoomId() === gin) ui.setShutUp(true)
     },
+    setGroupBan(gin: number, uin: number, duration?: number): any {
+        bot.setGroupBan(gin, uin, duration)
+    },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
     },
