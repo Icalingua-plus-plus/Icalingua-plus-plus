@@ -256,6 +256,9 @@ const adapter: Adapter = {
     setGroupLeave(gin: number): any {
         socket.emit('setGroupLeave', gin)
     },
+    setGroupBan(gin: number, uin: number, duration?: number): any {
+        socket.emit('setGroupBan', gin, uin, duration)
+    },
     reportRead(messageId: string): any {
         socket.emit('reportRead', messageId)
     },

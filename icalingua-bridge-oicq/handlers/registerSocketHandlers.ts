@@ -45,6 +45,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('handleRequest', adapter.handleRequest)
     socket.on('setGroupLeave', adapter.setGroupLeave)
     socket.on('setGroupKick', adapter.setGroupKick)
+    socket.on('setGroupBan', adapter.setGroupBan)
     socket.on('login', adapter.createBot)
     socket.on('requestToken', (cb) => cb(sendImgTokenManager.create()))
     socket.on('requestGfsToken', (gin: number, cb) => cb(gfsTokenManager.create(gin)))
