@@ -9,6 +9,7 @@ import GroupNickEdit from '../views/GroupNickEdit.vue'
 import FriendRequest from '../views/FriendRequest.vue'
 import KickAndExit from '../views/KickAndExit.vue'
 import OpenForward from '../views/OpenForward.vue'
+import MuteUser from '../views/MuteUser.vue'
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
             path: '/kickAndExit/:action/:gin/:uin/:groupName/:userName',
             name: 'lick-and-exit-confirm-page',
             component: KickAndExit,
+        },
+        {
+            path: '/MuteUser/:gin/:uin/:groupName/:userName',
+            name: 'mute-user-confirm-page',
+            component: MuteUser,
         },
         {
             path: '/history',

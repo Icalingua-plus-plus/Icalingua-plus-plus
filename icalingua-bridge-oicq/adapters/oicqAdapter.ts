@@ -613,6 +613,9 @@ const adapter = {
     setGroupLeave(gin: number): any {
         bot.setGroupLeave(gin)
     },
+    setGroupBan(gin: number, uin: number, duration?: number): any {
+        bot.setGroupBan(gin, uin, duration)
+    },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
     },
