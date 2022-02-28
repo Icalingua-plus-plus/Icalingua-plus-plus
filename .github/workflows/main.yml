@@ -100,9 +100,6 @@ jobs:
           name: dist
           path: icalingua/dist
 
-      - name: apply patch
-        run: git apply .github/sqlite-build.patch
-
       - name: build native modules
         run: yarn build:electron install-app-deps
         working-directory: icalingua
@@ -150,9 +147,6 @@ jobs:
           sudo apt update
           sudo apt install gcc-multilib g++-multilib -y
 
-      - name: apply patch
-        run: git apply .github/sqlite-build.patch
-
       - name: build native modules
         run: yarn build:electron install-app-deps --arch ia32
         working-directory: icalingua
@@ -193,9 +187,6 @@ jobs:
         with:
           name: dist
           path: icalingua/dist
-
-      - name: apply patch
-        run: git apply .github/sqlite-build.patch
 
 #      - uses: uraimo/run-on-arch-action@v2.1.1
 #        name: build native modules using another arch
