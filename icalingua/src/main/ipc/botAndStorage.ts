@@ -129,6 +129,7 @@ ipcMain.on('openForward', async (_, resId: string) => {
         // theme
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
     })
+    win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
