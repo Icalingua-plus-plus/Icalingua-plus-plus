@@ -1,8 +1,8 @@
-# Icalingua Bridge OICQ
+# Icalingua++ Bridge OICQ
 
-[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Icalingua/Icalingua/oicq?filename=icalingua-bridge-oicq%2Fpackage.json)](https://github.com/takayama-lily/oicq)
+[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Icalingua-plus-plus/Icalingua-plus-plus/oicq?filename=icalingua-bridge-oicq%2Fpackage.json)](https://github.com/takayama-lily/oicq)
 
-这是基于 OICQ 的 Icalingua 中继，可以部署在自己的服务器上，服务器通过 OICQ 库与上级服务器通信，本地电脑与自己的服务器通信。这样可以实现一些原先无法实现的功能：
+这是基于 OICQ 的 Icalingua++ 中继，可以部署在自己的服务器上，服务器通过 OICQ 库与上级服务器通信，本地电脑与自己的服务器通信。这样可以实现一些原先无法实现的功能：
 
 -   在电脑关闭时保持在线和消息同步
 -   在多个地点同时使用一个帐号
@@ -48,10 +48,10 @@ Todo
 
 ## 客户端连接方法
 
-首先保持 Icalingua 未运行状态，编辑 `~/.config/icalingua/config.yaml` 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
+首先保持 Icalingua++ 未运行状态，编辑 `~/.config/icalingua/config.yaml` 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
 
 ```yaml
-adapter: socketIo # 将 Icalingua 切换到自有协议
+adapter: socketIo # 将 Icalingua++ 切换到自有协议
 server: http(s)://服务器的地址，若非 HTTP80 或 HTTPS443 需要:端口号
 privateKey: 安装的第三步生成的私钥
 ```
