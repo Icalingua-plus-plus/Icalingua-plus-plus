@@ -46,6 +46,9 @@
                     <el-radio-button label="11">Online</el-radio-button>
                     <el-radio-button label="31">Away From Keyboard</el-radio-button>
                     <el-radio-button label="41">Hide</el-radio-button>
+                    <el-radio-button label="50">Busy</el-radio-button>
+                    <el-radio-button label="60">Q Me</el-radio-button>
+                    <el-radio-button label="70">Don't Disturb</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item prop="connStr" v-show="form.storageType === 'mdb'">
