@@ -599,6 +599,24 @@ export const updateAppMenu = async () => {
                         checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
                         click: () => setOnlineStatus(OnlineStatusType.Hide),
                     },
+                    {
+                        type: 'radio',
+                        label: '忙碌',
+                        checked: getConfig().account.onlineStatus === OnlineStatusType.Busy,
+                        click: () => setOnlineStatus(OnlineStatusType.Busy),
+                    },
+                    {
+                        type: 'radio',
+                        label: 'Q我吧',
+                        checked: getConfig().account.onlineStatus === OnlineStatusType.Qme,
+                        click: () => setOnlineStatus(OnlineStatusType.Qme),
+                    },
+                    {
+                        type: 'radio',
+                        label: '请勿打扰',
+                        checked: getConfig().account.onlineStatus === OnlineStatusType.DontDisturb,
+                        click: () => setOnlineStatus(OnlineStatusType.DontDisturb),
+                    },
                 ],
             }),
             new MenuItem({
