@@ -348,7 +348,7 @@ const adapter: Adapter = {
                 if (version.protocolVersion !== EXCEPTED_PROTOCOL_VERSION && !getConfig().disableBridgeVersionCheck) {
                     const action = await dialog.showMessageBox(getMainWindow(), {
                         title: '提示',
-                        message: `当前版本的 Icalingua 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
+                        message: `当前版本的 Icalingua++ 要求 Bridge 的协议版本为 ${EXCEPTED_PROTOCOL_VERSION}，而服务器的协议版本为 ${version.protocolVersion}`,
                         buttons: ['继续', '退出'],
                         defaultId: 1,
                     })
