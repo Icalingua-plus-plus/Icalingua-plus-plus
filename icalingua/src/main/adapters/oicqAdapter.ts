@@ -157,7 +157,7 @@ const eventHandlers = {
 
             const notifParams = {
                 summary: room.roomName,
-                appName: 'Icalingua',
+                appName: 'Icalingua++',
                 category: 'im.received',
                 'desktop-entry': 'icalingua',
                 urgency: 1,
@@ -578,7 +578,7 @@ const eventHandlers = {
         //notification
         const notif = new Notification({
             summary: data.nickname,
-            appName: 'Icalingua',
+            appName: 'Icalingua++',
             category: 'im.received',
             'desktop-entry': 'icalingua',
             urgency: 1,
