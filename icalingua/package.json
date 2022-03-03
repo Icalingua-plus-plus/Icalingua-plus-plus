@@ -21,7 +21,7 @@
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.ts"
   },
   "build": {
-    "productName": "Icalingua",
+    "productName": "Icalingua++",
     "appId": "com.clansty.icalingua",
     "directories": {
       "output": "build",

@@ -141,7 +141,7 @@ const attachSocketEvents = () => {
                 const notifParams = {
                     ...data.data,
                     summary: data.data.title,
-                    appName: 'Icalingua',
+                    appName: 'Icalingua++',
                     category: 'im.received',
                     'desktop-entry': 'icalingua',
                     urgency: 1,
