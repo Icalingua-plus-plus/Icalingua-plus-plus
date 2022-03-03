@@ -21,7 +21,7 @@ let tray: Tray
 
 export const createTray = () => {
     tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
-    tray.setToolTip('Icalingua')
+    tray.setToolTip('Icalingua++')
     tray.on('click', () => {
         const window = getMainWindow()
         window.show()
@@ -141,7 +141,7 @@ export const updateTrayMenu = async () => {
 export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
-    const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua' : 'Icalingua'
+    const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
     if (unread) {
         p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')
         const newMsgRoom = await getFirstUnreadRoom()
