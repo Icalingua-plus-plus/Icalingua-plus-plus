@@ -4,7 +4,7 @@
   "protocolVersion": "2.1.6",
   "main": "index.ts",
   "repository": "git@git.lwqwq.com:Clansty/eqq-bridge.git",
-  "author": "Clansty <i@gao4.pw>",
+  "author": "The Icalingua++ Authors",
   "license": "AGPL-3.0",
   "scripts": {
     "start": "ts-node .",
