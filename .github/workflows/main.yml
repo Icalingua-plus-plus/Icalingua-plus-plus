@@ -664,7 +664,7 @@ jobs:
       name: Upload Icalingua_Windows64.exe
       with:
         name: Icalingua_Windows64.exe
-        path: icalingua/build/Icalingua Setup *.exe
+        path: icalingua/build/Icalingua++ Setup *.exe
         if-no-files-found: error
 
   release:
