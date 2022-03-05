@@ -197,7 +197,7 @@ jobs:
           dockerRunArgs: |
             --volume "${PWD}/icalingua:/build"
           install: |
-            pacman -Sy --noconfirm nodejs-lts-fermium yarn python2 python base-devel
+            pacman -Sy --noconfirm nodejs-lts-fermium yarn python2 python base-devel glibc
           run: |
             uname -a
             chmod -R 777 /build
@@ -396,6 +396,7 @@ jobs:
         run: |
           sudo snap install snapcraft --classic
           sudo snap install lxd
+          sudo lxd.migrate
           sudo usermod --append --groups lxd $USER
           sudo chown root:root /
           sudo /snap/bin/lxd waitready
