@@ -125,5 +125,7 @@ export default interface Adapter {
 
     setGroupBan(gin: number, uin: number, duration?: number): any
 
+    setGroupAnonymousBan(gin: number, flag: string, duration?: number): any
+
     requestGfsToken(gin: number): Promise<string>
 }

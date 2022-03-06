@@ -134,6 +134,9 @@ const ipc = {
     setGroupBan(gin: number, uin: number, duration?: number) {
         ipcRenderer.send('setGroupBan', gin, uin, duration)
     },
+    setGroupAnonymousBan(gin: number, flag: string, duration?: number) {
+        ipcRenderer.send('setGroupAnonymousBan', gin, flag, duration)
+    },
     setCheckUpdate(enabled: boolean) {
         ipcRenderer.send('setCheckUpdate', enabled)
     },

@@ -1228,7 +1228,9 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                         '/' +
                         querystring.escape(room.roomName) +
                         '/' +
-                        querystring.escape(message.username),
+                        querystring.escape(message.username) +
+                        '/' +
+                        querystring.escape(message.anonymousflag),
                     )
                 },
             }),
