@@ -100,7 +100,7 @@ const eventHandlers = {
             date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
-            title: (data.sender as MemberBaseInfo).title,
+            title: (groupId && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
             files: [],
         }
 
@@ -1184,6 +1184,8 @@ const adapter = {
                     date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                     _id: data.message_id,
                     time: data.time * 1000,
+                    role: (data.sender as MemberBaseInfo).role,
+                    title: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
                     files: [],
                 }
                 await processMessage(data.message, message, {}, roomId)
