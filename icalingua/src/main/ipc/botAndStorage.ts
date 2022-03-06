@@ -139,6 +139,7 @@ ipcMain.on('setGroupNick', (_, group, nick) => adapter.setGroupNick(group, nick)
 ipcMain.on('setGroupKick', (_, gin, uin) => adapter.setGroupKick(gin, uin))
 ipcMain.on('setGroupLeave', (_, gin) => adapter.setGroupLeave(gin))
 ipcMain.on('setGroupBan', (_, gin, uin, duration?) => adapter.setGroupBan(gin, uin, duration))
+ipcMain.on('setGroupAnonymousBan', (_, gin, flag, duration?) => adapter.setGroupAnonymousBan(gin, flag, duration))
 ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept),

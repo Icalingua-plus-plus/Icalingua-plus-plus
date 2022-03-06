@@ -31,7 +31,7 @@ export default new Router({
             component: KickAndExit,
         },
         {
-            path: '/MuteUser/:gin/:uin/:groupName/:userName',
+            path: '/MuteUser/:gin/:uin/:groupName/:userName/:anonymousflag',
             name: 'mute-user-confirm-page',
             component: MuteUser,
         },

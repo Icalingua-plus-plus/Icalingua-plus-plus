@@ -30,7 +30,11 @@ export default {
     methods: {
         confirm() {
             if(this.muteTime != ''){
-                ipc.setGroupBan(this.gin, this.uin, parseInt(this.muteTime) * 60)
+                if(this.uin != 80000000){
+                    ipc.setGroupBan(this.gin, this.uin, parseInt(this.muteTime) * 60)
+                }else{
+                    ipc.setGroupAnonymousBan(this.gin, this.$route.params.anonymousflag, parseInt(this.muteTime) * 60)
+                }
             }
             window.close()
         },
