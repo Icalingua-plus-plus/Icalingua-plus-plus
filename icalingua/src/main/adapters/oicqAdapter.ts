@@ -868,6 +868,9 @@ const adapter: OicqAdapter = {
     setGroupBan(gin: number, uin: number, duration?: number): any {
         bot.setGroupBan(gin, uin, duration)
     },
+    setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
+        bot.setGroupAnonymousBan(gin, flag, duration)
+    },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
     },
