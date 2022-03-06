@@ -28,4 +28,6 @@ export default interface Message {
     reveal?: boolean
     flash?: boolean
     title?: string
+    anonymousId?: number
+    anonymousflag?: string
 }

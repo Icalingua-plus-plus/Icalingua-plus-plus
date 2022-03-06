@@ -102,6 +102,8 @@ const eventHandlers = {
             role: (data.sender as MemberBaseInfo).role,
             title: (groupId && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
             files: [],
+            anonymousId: (groupId && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.id:null,
+            anonymousflag: (groupId && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.flag:null,
         }
 
         let room = await storage.getRoom(roomId)
@@ -1187,6 +1189,8 @@ const adapter = {
                     role: (data.sender as MemberBaseInfo).role,
                     title: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
                     files: [],
+                    anonymousId: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.id:null,
+                    anonymousflag: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.flag:null,
                 }
                 await processMessage(data.message, message, {}, roomId)
                 messages.push(message)
