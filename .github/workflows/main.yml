@@ -616,13 +616,11 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - name: Install Yarn
-        run: npm install --global yarn
       - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
-      - name: Yarn install
-        run: yarn install
+      - name: npm install
+        run: npm install
 
   build-windows64:
     runs-on: windows-2019
@@ -657,7 +655,7 @@ jobs:
         GIT_VER: ${{ steps.git-ver.outputs.version }}
         
     - name: build
-      run: yarn build
+      run: npm run build
       working-directory: icalingua
       
     - uses: actions/upload-artifact@v2
