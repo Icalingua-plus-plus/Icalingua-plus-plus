@@ -42,8 +42,6 @@ Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是日语�
 
 <a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
 
-<div><p><img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Transgender_Pride_flag.svg" alt="跨性别旗帜" width="100px" align="left" />本项目的维护者中有一些 <a href="https://zh.wikipedia.org/wiki/%E8%B7%A8%E6%80%A7%E5%88%A5%E5%A5%B3%E6%80%A7">MtF</a>，感谢像你这样的人对我们这个群体的关爱。同时也欢迎为 <a href="https://github.com/mtf-wiki/MtF-Wiki">MtF Wiki</a> 点一个星星</p></div>
+### 免責聲明
 
-<br />
-
-<div><p><img src="https://upload.wikimedia.org/wikipedia/commons/4/48/Gay_Pride_Flag.svg" alt="LGBT 旗" width="100px" align="left" />项目贡献者中也有其它的性少数。在理解与包容之上，你还可以进一步<a href="https://github.com/LGBT-CN/LGBTQIA-In-China">支持我们</a>。</p></div>
+本開源項目僅用於學習和交流會話前端框架實現、不會用於商業用途，**因使用本項目調用不同 Adapter 後端接口（如 oicq）產生的一切後果由使用者自行承擔**，項目開發者不對此承擔任何責任。
