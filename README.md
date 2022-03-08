@@ -2,7 +2,7 @@
 
 Icalingua++ 是 Icalingua 的分支，為已經刪除的 Icalingua 提供有限的更新，同時歡迎社區提交PR。
 
-Icalingua 这个名字是 [@91khr](https://github.com/91khr) 起的，是日语中「光」和拉丁语中「语言」的组合。
+Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合。
 
 本项目希望为 Linux 打造一个会话前端框架，通过实现 Adapter 后端接口来适配各种聊天平台。目前已经拥有基于 [oicq](https://github.com/takayama-lily/oicq) 以及 Icalingua 自有协议的后端
 
