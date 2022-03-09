@@ -536,6 +536,7 @@ export const updateAppMenu = async () => {
                 label: '重新加载',
                 click: () => {
                     getMainWindow().reload()
+                    ui.chroom(0)
                 },
             }),
             new MenuItem({
@@ -543,6 +544,7 @@ export const updateAppMenu = async () => {
                 click: () => {
                     getMainWindow().webContents.session.clearCache()
                     getMainWindow().reload()
+                    ui.chroom(0)
                 },
             }),
             new MenuItem({
