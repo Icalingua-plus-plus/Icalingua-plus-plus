@@ -46,7 +46,7 @@
 </head>
 <body style="overflow: hidden;">
 <img id='IMG' style="position: absolute; z-index: 1" src="">
-<div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%;"></div>
+<div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
 <div id='BAR'>
 	<table style="width: 100%; height: 100%;">
 		<tr>
@@ -174,7 +174,7 @@
 	}
 
 
-	 function mouseup(ev) {
+	function mouseup(ev) {
 		starT = null
 		window.removeEventListener('mousemove', mousemove)
 		window.removeEventListener('mouseup', mouseup)
