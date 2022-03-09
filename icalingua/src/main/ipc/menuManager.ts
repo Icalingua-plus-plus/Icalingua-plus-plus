@@ -535,16 +535,16 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: '重新加载',
                 click: () => {
-                    getMainWindow().reload()
                     ui.chroom(0)
+                    getMainWindow().reload()
                 },
             }),
             new MenuItem({
                 label: '清除缓存并重新加载',
                 click: () => {
+                    ui.chroom(0)
                     getMainWindow().webContents.session.clearCache()
                     getMainWindow().reload()
-                    ui.chroom(0)
                 },
             }),
             new MenuItem({
