@@ -153,8 +153,10 @@
 		var e = ev || window.event
 		starT = [e.clientX, e.clientY]
 		starTLT = [IMG.offsetLeft, IMG.offsetTop]
+		window.addEventListener('mousemove', mousemove)
+		window.addEventListener('mouseup', mouseup)
 	}
-	DRAG.onmousemove = function (ev) {
+	function mousemove(ev) {
 		var e = ev || window.event
 
 		if (starT == null) return
@@ -172,8 +174,10 @@
 	}
 
 
-	DRAG.onmouseup = function (ev) {
+	 function mouseup(ev) {
 		starT = null
+		window.removeEventListener('mousemove', mousemove)
+		window.removeEventListener('mouseup', mouseup)
 	}
 
 	// deploy buttons
