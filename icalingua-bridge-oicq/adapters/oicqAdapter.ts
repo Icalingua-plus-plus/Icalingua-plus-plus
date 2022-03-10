@@ -742,7 +742,7 @@ const adapter = {
         const history = await bot.getMsg(id)
          if (history.error) {
             console.log(history.error)
-            if (history.error.message !== 'msg not exists') ui.messageError('错误：' + history.error.message)
+            if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
             return 'error'
         }
         const data = history.data
@@ -758,7 +758,7 @@ const adapter = {
                 time: data.time * 1000,
                 files: [],
             }
-            await processMessage(data.message, message, {}, ui.getSelectedRoomId())
+            await processMessage(data.message, message, {})
             if(message.file){
                 return message.file.url || 'error' 
             }else{
