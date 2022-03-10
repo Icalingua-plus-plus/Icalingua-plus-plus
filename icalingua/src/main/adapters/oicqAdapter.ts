@@ -1344,7 +1344,7 @@ const adapter: OicqAdapter = {
     },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         ui.renewMessageURL(messageId, URL)
-        await storage.updateMessage(roomId, messageId, { file: { type: 'video/mp4', url: URL } })
+        //await storage.updateURL(roomId, messageId, {file: JSON.stringify({ type: 'video/mp4', url: URL })})
     },
     stopFetchingHistory() {
         stopFetching = true
