@@ -15,6 +15,7 @@ import {
     pinRoom,
     removeChat,
     revealMessage,
+    renewMessageURL,
     sendMessage,
     setRoomAutoDownload,
     setRoomAutoDownloadPath,
@@ -24,6 +25,7 @@ import {
     getCookies,
     getGroupMemberInfo,
     requestGfsToken,
+    getMsgNewURL,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
@@ -940,6 +942,18 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         new MenuItem({
                             label: '使用本地播放器打开',
                             click: () => openMedia(file.url),
+                        }),
+                    )
+                if (file.type.startsWith('video/'))
+                    menu.append(
+                        new MenuItem({
+                            label: '刷新视频地址',
+                            click: async () => {
+                                const newUrl = await getMsgNewURL(String(message._id));
+                                //console.log(newUrl);
+                                //clipboard.writeText(newUrl);
+                                renewMessageURL(room.roomId, message._id, newUrl);
+                            }
                         }),
                     )
                 if (file.type.startsWith('image/'))

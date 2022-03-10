@@ -25,6 +25,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('reLogin', adapter.reLogin)
     socket.on('removeChat', adapter.removeChat)
     socket.on('revealMessage', adapter.revealMessage)
+    socket.on('renewMessageURL', adapter.renewMessageURL)
     socket.on('sendGroupPoke', adapter.sendGroupPoke)
     socket.on('sendMessage', adapter.sendMessage)
     socket.on('setOnlineStatus', adapter.setOnlineStatus)
@@ -53,4 +54,5 @@ export default (io: Server, socket: Socket) => {
     socket.on('login-verify-reLogin', adapter.reLogin)
     socket.on('login-slider-ticket', adapter.sliderLogin)
     socket.on('getGroup', adapter.getGroup)
+    socket.on('getMsgNewURL', adapter.getMsgNewURL)
 }
