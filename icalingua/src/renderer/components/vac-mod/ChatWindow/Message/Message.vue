@@ -133,7 +133,7 @@
                         </message-image>
 
                         <div v-else-if="isVideo" class="vac-video-container">
-                            <video width="100%" height="100%" controls>
+                            <video width="100%" height="100%" controls :src="message.file.url">
                                 <source :src="message.file.url" />
                             </video>
                         </div>

@@ -842,6 +842,36 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    async getMsgNewURL(id: string): Promise<string> {
+        const history = await bot.getMsg(id)
+        if (history.error) {
+            errorHandler(history.error, true)
+            if (history.error.message !== 'msg not exists') ui.messageError('错误：' + history.error.message)
+            return 'error'
+        }
+        const data = history.data
+        console.log(data)
+        if(data){
+            const message: Message = {
+                senderId: data.sender.user_id,
+                username: data.sender.nickname,
+                content: '',
+                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
+                _id: id,
+                time: data.time * 1000,
+                files: [],
+            }
+            await processMessage(data.message, message, {}, ui.getSelectedRoomId())
+            if(message.file){
+                return message.file.url || 'error' 
+            }else{
+                return 'error'
+            }
+        }else{
+            return 'error'
+        }
+    },
     async getGroup(gin): Promise<GroupInfo> {
         return bot.gl.get(gin)
     },
@@ -1311,6 +1341,10 @@ const adapter: OicqAdapter = {
     async revealMessage(roomId: number, messageId: string | number) {
         ui.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, { reveal: true })
+    },
+    async renewMessageURL(roomId: number, messageId: string | number, URL) {
+        ui.renewMessageURL(messageId, URL)
+        await storage.updateMessage(roomId, messageId, { file: { type: 'video/mp4', url: URL } })
     },
     stopFetchingHistory() {
         stopFetching = true

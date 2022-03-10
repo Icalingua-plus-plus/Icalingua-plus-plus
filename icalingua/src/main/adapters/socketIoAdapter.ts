@@ -33,7 +33,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
-const EXCEPTED_PROTOCOL_VERSION = '2.1.7'
+const EXCEPTED_PROTOCOL_VERSION = '2.1.8'
 
 let socket: Socket
 let uin = 0
@@ -110,6 +110,9 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
+    socket.on('renewMessageURL',  ({ messageId, URL }: { messageId: string | number, URL: string }) => {
+        ui.renewMessageURL(messageId,URL)
+    })
     socket.on('syncRead', ui.clearRoomUnread)
     socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
@@ -239,6 +242,9 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    getMsgNewURL(id: string): Promise<string> {
+        return new Promise((resolve,reject) => socket.emit('getMsgNewURL', id, resolve))
+    },
     getGroup(gin: number): Promise<GroupInfo> {
         return new Promise((resolve) => {
             socket.emit('getGroup', gin, resolve)
@@ -440,6 +446,9 @@ const adapter: Adapter = {
     },
     revealMessage(roomId: number, messageId: string | number) {
         socket.emit('revealMessage', roomId, messageId)
+    },
+    renewMessageURL(roomId: number, messageId: string | number, URL: string) {
+        socket.emit('renewMessageURL', roomId, messageId, URL)
     },
     sendGroupPoke(gin: number, uin: number) {
         socket.emit('sendGroupPoke', gin, uin)

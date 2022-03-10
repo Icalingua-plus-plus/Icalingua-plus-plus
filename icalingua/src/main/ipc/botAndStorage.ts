@@ -22,6 +22,7 @@ else if (getConfig().adapter === 'socketIo') adapter = socketIoAdapter
 export const {
     sendMessage,
     createBot,
+    getMsgNewURL,
     getGroupMemberInfo,
     getGroupMembers,
     getUnreadRooms,
@@ -48,6 +49,7 @@ export const {
     removeChat,
     deleteMessage,
     revealMessage,
+    renewMessageURL,
     fetchHistory,
     stopFetchingHistory,
 } = adapter
