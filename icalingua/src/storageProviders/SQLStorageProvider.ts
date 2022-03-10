@@ -480,6 +480,19 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    /** 实现 {@link StorageProvider} 类的 `updateURL` 方法，
+     * 是对 `msg${roomId}` 的“改”操作。
+     *
+     * 在“刷新视频地址”等需要改动消息内容的事件中被调用。
+     */
+     async updateURL(roomId: number, messageId: string | number, message: Record<string, any>): Promise<any> {
+        try {
+            await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
+        } catch (e) {
+            throw e
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
      * 是对 `msg${roomId}` 的“查多个”操作。
      *
