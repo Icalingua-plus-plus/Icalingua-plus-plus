@@ -55,6 +55,9 @@ export default {
     revealMessage(messageId: string | number) {
         sendToMainWindow('revealMessage', messageId)
     },
+    renewMessageURL(messageId: string | number, URL: string) {
+        sendToMainWindow('renewMessageURL', { messageId, URL })
+    },
     setOnline() {
         sendToMainWindow('setOnline')
     },

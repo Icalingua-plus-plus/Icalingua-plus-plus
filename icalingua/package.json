@@ -1,6 +1,6 @@
 {
   "name": "icalingua",
-  "version": "2.5.3",
+  "version": "2.5.6",
   "author": "The Icalingua++ Authors <Icalinguaplusplus@protonmail.com>",
   "description": "A client for (maybe) any IM made with Electron",
   "license": "AGPL-3.0",

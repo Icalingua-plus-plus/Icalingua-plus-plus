@@ -738,6 +738,36 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
+    async getMsgNewURL(id: string): Promise<string> {
+        const history = await bot.getMsg(id)
+         if (history.error) {
+            console.log(history.error)
+            if (history.error.message !== 'msg not exists') ui.messageError('错误：' + history.error.message)
+            return 'error'
+        }
+        const data = history.data
+        console.log(data)
+        if(data){
+            const message: Message = {
+                senderId: data.sender.user_id,
+                username: data.sender.nickname,
+                content: '',
+                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
+                _id: id,
+                time: data.time * 1000,
+                files: [],
+            }
+            await processMessage(data.message, message, {}, ui.getSelectedRoomId())
+            if(message.file){
+                return message.file.url || 'error' 
+            }else{
+                return 'error'
+            }
+        }else{
+            return 'error'
+        }
+    },
     getGroup(gin: number, resolve) {
         resolve(bot.gl.get(gin))
     },
@@ -1160,6 +1190,10 @@ const adapter = {
                 message: res.error.message,
             })
         }
+    },
+    async renewMessageURL(roomId: number, messageId: string | number, URL) {
+        clients.renewMessageURL(messageId, URL)
+        await storage.updateMessage(roomId, messageId, { file: { type: 'video/mp4', url: URL } })
     },
     async revealMessage(roomId: number, messageId: string | number) {
         clients.revealMessage(messageId)

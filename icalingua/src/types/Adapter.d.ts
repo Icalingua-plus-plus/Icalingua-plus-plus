@@ -25,6 +25,8 @@ type CookiesDomain =
     | 'ti.qq.com'
 
 export default interface Adapter {
+    getMsgNewURL(id: string): Promise<string>
+
     getGroup(gin: number): Promise<GroupInfo>
 
     getAccount(): LoginForm
@@ -100,6 +102,8 @@ export default interface Adapter {
     deleteMessage(roomId: number, messageId: string): any
 
     revealMessage(roomId: number, messageId: string | number): any
+
+    renewMessageURL(roomId: number, messageId: string | number, URL: string): any
 
     fetchHistory(messageId: string, roomId?: number): any
 
