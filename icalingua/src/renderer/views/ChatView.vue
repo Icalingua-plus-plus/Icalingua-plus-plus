@@ -302,8 +302,12 @@ Chromium ${process.versions.chrome}` : ''
             if (!roomId) roomId = room.roomId
             if (file) {
                 if (file.type.includes('image')) {
-                    const b64 = Buffer.from(await file.blob.arrayBuffer()).toString('base64')
+                    const crypto = require('crypto');
+                    const buffer = Buffer.from(await file.blob.arrayBuffer())
+                    const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
+                    const b64 = buffer.toString('base64')
                     b64img = `data:${file.type};base64,${b64}`
+                    imgpath = imgpath || `send_https://gchat.qpic.cn/gchatpic_new/0/0-0-${imgHashStr}/0`
                     file = null
                 }
                 else
