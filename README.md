@@ -38,10 +38,6 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 -->
 [![](https://camo.githubusercontent.com/473b62766b498e4f2b008ada39f1d56fb3183649f24447866e25d958ac3fd79a/68747470733a2f2f7777772e676e752e6f72672f67726170686963732f6167706c76332d3135357835312e706e67)](https://www.gnu.org/licenses/agpl-3.0.txt)
 
-### 鸣谢
-
-<a href="https://jb.gg/OpenSource"><img src="https://cdn.lwqwq.com/pic/jetbrains-variant-2.svg" alt="JetBrains Logo" width="120px"/></a>感谢 [JetBrains](https://jb.gg/OpenSource) 为本项目提供了免费的开源许可
-
 ### 免責聲明
 
 本開源項目僅用於學習和交流會話前端框架實現、不會用於商業用途，**因使用本項目調用不同 Adapter 後端接口（如 oicq）產生的一切後果由使用者自行承擔**，項目開發者不對此承擔任何責任。
