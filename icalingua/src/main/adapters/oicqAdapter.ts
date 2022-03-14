@@ -1122,7 +1122,7 @@ const adapter: OicqAdapter = {
             })
             message.file = {
                 type: 'image/jpeg',
-                url: b64img,
+                url: (imgpath && imgpath.startsWith('send_')) ? imgpath.replace('send_', '') : b64img,
             }
             message.files.push(message.file)
         } else if (imgpath) {
