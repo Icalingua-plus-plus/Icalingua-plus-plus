@@ -3,7 +3,7 @@ pkgver=VERSION
 pkgrel=1
 pkgdesc='A Linux client for QQ and more, development edition'
 license=('GPL')
-depends=('electron13' 'ffmpeg' 'libappindicator-gtk3')
+depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
 optdepends=('mongodb-bin: Provides storage'
             'redis: Provides storage')
 arch=('ARCH')
