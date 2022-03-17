@@ -226,7 +226,7 @@
     "ioredis": "^4.27.5",
     "linkifyjs": "3.0.4",
     "lodash": "^4.17.21",
-    "lottie-web": "^5.7.11",
+    "lottie-web": "^5.9.1",
     "md5": "^2.3.0",
     "mini-css-extract-plugin": "0.4.0",
     "minimist": "^1.2.5",

@@ -6758,7 +6758,7 @@ fsevents@~2.3.1:
     knex: ^0.95.8
     linkifyjs: 3.0.4
     lodash: ^4.17.21
-    lottie-web: ^5.7.11
+    lottie-web: ^5.9.1
     md5: ^2.3.0
     mini-css-extract-plugin: 0.4.0
     minimist: ^1.2.5
@@ -8338,10 +8338,10 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"lottie-web@npm:^5.7.11":
-  version: 5.7.11
-  resolution: "lottie-web@npm:5.7.11"
-  checksum: 490d643609729b572c3444a3b34aec1313b4b7e0d594faaec885be3d8c836eda3de5858dbaf851c8029c2d3bee5b3d0cfcf80f8aaeea6678baf20c2e7af3a3b6
+"lottie-web@npm:^5.9.1":
+  version: 5.9.1
+  resolution: "lottie-web@npm:5.9.1"
+  checksum: f8895754bc22fea498ae6c1b99c24c5de08272ba730d7039525aa7026a043b24c2f9b534282a7654ebdf317dde0b13acd45246dd21db49fc1cb382d88d9dbe66
   languageName: node
   linkType: hard
 
