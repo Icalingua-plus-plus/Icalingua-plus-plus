@@ -854,8 +854,9 @@ export default {
 .vac-textarea {
     height: 20px;
     width: 100%;
+    max-height: 50vh;
     line-height: 20px;
-    overflow: hidden;
+    overflow: auto;
     outline: 0;
     resize: none;
     border-radius: 20px;
