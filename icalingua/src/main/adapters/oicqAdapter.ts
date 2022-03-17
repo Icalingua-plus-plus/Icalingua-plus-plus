@@ -1164,6 +1164,7 @@ const adapter: OicqAdapter = {
                 title: 'Failed to send',
                 message: data.error.message,
             })
+            ui.addMessageText(message.content)
             return
         }
         if (roomId > 0 && roomId !== bot.uin) {
