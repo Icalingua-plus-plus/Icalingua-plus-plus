@@ -192,12 +192,15 @@ jobs:
         name: build native modules using another arch
         with:
           arch: aarch64
-          distro: archarm_latest
+          distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}/icalingua:/build"
           install: |
-            pacman -Sy --noconfirm nodejs-lts-fermium yarn python2 python base-devel glibc
+            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+            echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+            sudo apt update
+            sudo apt install yarn python2 python
           run: |
             uname -a
             chmod -R 777 /build
