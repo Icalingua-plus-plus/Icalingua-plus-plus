@@ -20,7 +20,7 @@ import Room from '../../types/Room'
 let tray: Tray
 
 export const createTray = () => {
-    if(process.platform === 'darwin') {
+    if (process.platform === 'darwin') {
         tray = new Tray(nativeImage.createFromPath(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')).resize({ width: 22, height: 22 }))
     } else {
         tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
@@ -155,7 +155,7 @@ export const updateTrayIcon = async () => {
         p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
     }
-    if(process.platform === 'darwin') {
+    if (process.platform === 'darwin') {
         tray.setImage(nativeImage.createFromPath(p).resize({ width: 22, height: 22 }))
     } else {
         tray.setImage(p)
