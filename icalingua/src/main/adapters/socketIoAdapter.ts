@@ -110,8 +110,8 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
-    socket.on('renewMessageURL',  ({ messageId, URL }: { messageId: string | number, URL: string }) => {
-        ui.renewMessageURL(messageId,URL)
+    socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number, URL: string }) => {
+        ui.renewMessageURL(messageId, URL)
     })
     socket.on('syncRead', ui.clearRoomUnread)
     socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
@@ -243,7 +243,7 @@ const attachSocketEvents = () => {
 
 const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
-        return new Promise((resolve,reject) => socket.emit('getMsgNewURL', id, resolve))
+        return new Promise((resolve, reject) => socket.emit('getMsgNewURL', id, resolve))
     },
     getGroup(gin: number): Promise<GroupInfo> {
         return new Promise((resolve) => {

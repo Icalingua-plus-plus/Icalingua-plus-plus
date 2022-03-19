@@ -485,7 +485,7 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在“刷新视频地址”等需要改动消息内容的事件中被调用。
      */
-     async updateURL(roomId: number, messageId: string | number, message: Record<string, any>): Promise<any> {
+    async updateURL(roomId: number, messageId: string | number, message: Record<string, any>): Promise<any> {
         try {
             await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
         } catch (e) {

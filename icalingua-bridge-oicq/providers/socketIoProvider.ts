@@ -38,8 +38,7 @@ io.on('connection', (socket) => {
                     registerSocketHandlers(io, socket)
                     if (loggedIn) adapter.sendOnlineData()
                     else socket.emit('requestSetup', userConfig.account)
-                }
-                else {
+                } else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')
                     socket.disconnect()
@@ -51,8 +50,7 @@ io.on('connection', (socket) => {
                     registerFileMgrHandler(io, socket, gin)
                     console.log('客户端验证成功')
                     socket.emit('authSucceed', gin, getBot().gl.get(gin))
-                }
-                else {
+                } else {
                     console.log('客户端验证失败')
                     socket.emit('authFailed')
                     socket.disconnect()
@@ -70,8 +68,7 @@ export const init = () => {
         if (fs.existsSync(config.unix))
             fs.unlinkSync(config.unix)
         httpServer.listen(config.unix, () => console.log(`listening on Unix socket: ${config.unix}`))
-    }
-    else {
+    } else {
         httpServer.listen(port, host, () => console.log(`listening on http://${host}:${port}`))
     }
 }
