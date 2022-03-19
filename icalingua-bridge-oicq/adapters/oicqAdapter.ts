@@ -740,7 +740,7 @@ const attachLoginHandler = () => {
 const adapter = {
     async getMsgNewURL(id: string): Promise<string> {
         const history = await bot.getMsg(id)
-         if (history.error) {
+        if (history.error) {
             console.log(history.error)
             if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
             return 'error'
@@ -761,12 +761,9 @@ const adapter = {
             await processMessage(data.message, message, {})
             if(message.file){
                 return message.file.url || 'error' 
-            }else{
-                return 'error'
             }
-        }else{
-            return 'error'
         }
+    return 'error'
     },
     getGroup(gin: number, resolve) {
         resolve(bot.gl.get(gin))

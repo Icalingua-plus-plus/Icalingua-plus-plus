@@ -865,12 +865,9 @@ const adapter: OicqAdapter = {
             await processMessage(data.message, message, {}, ui.getSelectedRoomId())
             if(message.file){
                 return message.file.url || 'error' 
-            }else{
-                return 'error'
             }
-        }else{
-            return 'error'
         }
+    return 'error'
     },
     async getGroup(gin): Promise<GroupInfo> {
         return bot.gl.get(gin)
