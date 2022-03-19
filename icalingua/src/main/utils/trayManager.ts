@@ -1,4 +1,4 @@
-import { app, Menu, MenuItem, Tray } from 'electron'
+import { app, Menu, MenuItem, Tray, nativeImage } from 'electron'
 import path from 'path'
 import { getMainWindow } from './windowManager'
 import exit from './exit'
@@ -20,7 +20,11 @@ import Room from '../../types/Room'
 let tray: Tray
 
 export const createTray = () => {
-    tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
+    if(process.platform === 'darwin') {
+        tray = new Tray(nativeImage.createFromPath(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')).resize({ width: 22, height: 22 }))
+    } else {
+        tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
+    }
     tray.setToolTip('Icalingua++')
     tray.on('click', () => {
         const window = getMainWindow()
@@ -151,7 +155,11 @@ export const updateTrayIcon = async () => {
         p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
         getMainWindow().title = title
     }
-    tray.setImage(p)
+    if(process.platform === 'darwin') {
+        tray.setImage(nativeImage.createFromPath(p).resize({ width: 22, height: 22 }))
+    } else {
+        tray.setImage(p)
+    }
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
     updateTrayMenu()
