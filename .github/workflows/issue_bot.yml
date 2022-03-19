@@ -1,0 +1,53 @@
+name: Issue Bot
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  duplicate:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'duplicate'
+    steps:
+      - name: Create comment
+        uses: actions-cool/issues-helper@v2
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hello @${{ github.event.issue.user.login }}, your issue is a duplicate and will be closed.
+      - name: Close issue
+        uses: actions-cool/issues-helper@v2
+        with:
+          actions: 'close-issue'
+          token: ${{ secrets.GITHUB_TOKEN }}
+  wontfix:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'wontfix'
+    steps:
+      - name: Create comment
+        uses: actions-cool/issues-helper@v2
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hello @${{ github.event.issue.user.login }}, this issue will not be worked on and will be closed.
+      - name: Close issue
+        uses: actions-cool/issues-helper@v2
+        with:
+          actions: 'close-issue'
+          token: ${{ secrets.GITHUB_TOKEN }}
+  question:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'question'
+    steps:
+      - name: Create comment
+        uses: actions-cool/issues-helper@v2.0.0
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hello @${{ github.event.issue.user.login }}, please input issue by template and add detail such as logs, reproduction steps and implementation ideas, etc.
