@@ -521,7 +521,7 @@ export const updateAppMenu = async () => {
                 label: '查看合并转发消息',
                 async click() {
                     const win = new BrowserWindow({
-                        height: 170,
+                        height: 185,
                         width: 600,
                         autoHideMenuBar: true,
                         webPreferences: {
