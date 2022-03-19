@@ -1,6 +1,8 @@
 <template>
     <div class="settings">
-        <p>设定 <b>{{ $route.params.groupName }} ({{ gin }})</b> 中 <b>{{ $route.params.userName }} ({{ uin }})</b> 的禁言时长为：</p>
+        <p>
+            设定 <b>{{ $route.params.groupName }} ({{ gin }})</b> 中 <b>{{ $route.params.userName }} ({{ uin }})</b> 的禁言时长为：
+        </p>
         <el-input v-model="muteTime" @input="muteTime = muteTime.replace(/[^\d]/g,'')" />
         <p>分钟（为0分钟时取消禁言）</p>
         <div class="dialog-footer">
@@ -29,10 +31,10 @@ export default {
     },
     methods: {
         confirm() {
-            if(this.muteTime != ''){
-                if(this.uin != 80000000){
+            if (this.muteTime != '') {
+                if (this.uin != 80000000) {
                     ipc.setGroupBan(this.gin, this.uin, parseInt(this.muteTime) * 60)
-                }else{
+                } else {
                     ipc.setGroupAnonymousBan(this.gin, this.$route.params.anonymousflag, parseInt(this.muteTime) * 60)
                 }
             }

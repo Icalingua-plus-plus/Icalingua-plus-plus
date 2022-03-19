@@ -1,7 +1,7 @@
-import {app, BrowserWindow, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell} from 'electron'
-import {getConfig, saveConfigFile} from '../utils/configManager'
+import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell } from 'electron'
+import { getConfig, saveConfigFile } from '../utils/configManager'
 import exit from '../utils/exit'
-import {getMainWindow, showRequestWindow} from '../utils/windowManager'
+import { getMainWindow, showRequestWindow } from '../utils/windowManager'
 import openImage from './openImage'
 import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
@@ -28,7 +28,7 @@ import {
     getMsgNewURL,
 } from './botAndStorage'
 import Room from '../../types/Room'
-import {download, downloadFileByMessageData, downloadImage} from './downloadManager'
+import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import Message from '../../types/Message'
 import axios from 'axios'
 import ui from '../utils/ui'
@@ -123,7 +123,7 @@ const buildRoomMenu = (room: Room): Menu => {
         },
         {
             label: '屏蔽消息',
-            click: () => ignoreChat({id: room.roomId, name: room.roomName}),
+            click: () => ignoreChat({ id: room.roomId, name: room.roomName }),
         },
         {
             label: '复制名称',
@@ -233,8 +233,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     if (getConfig().adapter === 'socketIo') {
                         const token = await requestGfsToken(-room.roomId)
                         url = `${getConfig().server}/file-manager/?${token}`
-                    }
-                    else {
+                    } else {
                         const token = gfsTokenManager.create(-room.roomId)
                         url = `http://localhost:${socketIoProvider.getPort()}/file-manager/?${token}`
                     }
@@ -385,8 +384,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-    }
-    else {
+    } else {
         // menu.append(new MenuItem({
         //     label: 'ta 的线索',
         //     async click() {
@@ -562,7 +560,7 @@ export const updateAppMenu = async () => {
             label: '通知优先级',
             submenu: [
                 // @ts-ignore TS 出 bug 了
-                ...[1, 2, 3, 4, 5].map(e => ({
+                ...[1, 2, 3, 4, 5].map((e) => ({
                     type: 'radio',
                     label: `${e}`,
                     checked: getConfig().priority === e,
@@ -949,11 +947,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         new MenuItem({
                             label: '刷新视频地址',
                             click: async () => {
-                                const newUrl = await getMsgNewURL(String(message._id));
-                                //console.log(newUrl);
-                                //clipboard.writeText(newUrl);
-                                renewMessageURL(room.roomId, message._id, newUrl);
-                            }
+                                const newUrl = await getMsgNewURL(String(message._id))
+                                renewMessageURL(room.roomId, message._id, newUrl)
+                            },
                         }),
                     )
                 if (file.type.startsWith('image/'))
@@ -967,7 +963,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     menu.append(
                         new MenuItem({
                             label: '下载',
-                            click: () => downloadFileByMessageData({action: 'download', message, room}),
+                            click: () => downloadFileByMessageData({ action: 'download', message, room }),
                         }),
                     )
                 menu.append(
@@ -976,8 +972,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     }),
                 )
             }
-        }
-        else if (message.file) {
+        } else if (message.file) {
             if (message.file.type.includes('image')) {
                 menu.append(
                     new MenuItem({
@@ -1026,7 +1021,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             menu.append(
                 new MenuItem({
                     label: '下载',
-                    click: () => downloadFileByMessageData({action: 'download', message, room}),
+                    click: () => downloadFileByMessageData({ action: 'download', message, room }),
                 }),
             )
         }
@@ -1093,7 +1088,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             )
         }
     }
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 ipcMain.on('popupTextAreaMenu', () => {
     Menu.buildFromTemplate([
@@ -1106,7 +1101,7 @@ ipcMain.on('popupTextAreaMenu', () => {
         {
             role: 'paste',
         },
-    ]).popup({window: getMainWindow()})
+    ]).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
@@ -1122,7 +1117,7 @@ ipcMain.on('popupStickerMenu', () => {
             type: 'normal',
             click: ui.closePanel,
         },
-    ]).popup({window: getMainWindow()})
+    ]).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
@@ -1134,8 +1129,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
                 download(itemName, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
             },
         })
-    }
-    else {
+    } else {
         menu.push({
             label: '删除',
             type: 'normal',
@@ -1144,7 +1138,7 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
             },
         })
     }
-    Menu.buildFromTemplate(menu).popup({window: getMainWindow()})
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     const menu = Menu.buildFromTemplate([
@@ -1190,13 +1184,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             click: () => {
                 if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                }
-                else if (message.mirai && message.mirai.eqq.avatarUrl) {
+                } else if (message.mirai && message.mirai.eqq.avatarUrl) {
                     const QCLOUD_AVATAR_REGEX =
                         /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
                     if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl)) openImage(message.mirai.eqq.avatarUrl)
-                }
-                else {
+                } else {
                     openImage(getAvatarUrl(message.senderId))
                 }
             },
@@ -1218,7 +1210,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         message.senderId !== getUin() &&
         ((await isAdmin()) === 'owner' ||
             ((await isAdmin()) === 'admin' && message.role !== 'owner' && message.role !== 'admin'))
-    ){
+    ) {
         menu.append(
             new MenuItem({
                 label: `禁言`,
@@ -1282,7 +1274,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             }),
         )
     }
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()
@@ -1347,7 +1339,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
-    menu.popup({window: getMainWindow()})
+    menu.popup({ window: getMainWindow() })
 })
 
 const copyImage = async (url: string) => {
