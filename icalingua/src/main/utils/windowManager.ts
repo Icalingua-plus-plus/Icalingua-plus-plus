@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, globalShortcut, shell } from 'electron'
 import { clearCurrentRoomUnread, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -25,10 +25,37 @@ export const loadMainWindow = () => {
 
     if (loginWindow) loginWindow.destroy()
 
+    mainWindow.on('focus', () => {
+        // macOS Shortcut
+        if (process.platform === 'darwin') {
+            let contents = mainWindow.webContents
+            globalShortcut.register('CommandOrControl+C', () => {
+                contents.copy()
+            })
+            globalShortcut.register('CommandOrControl+V', () => {
+                contents.paste()
+            })
+            globalShortcut.register('CommandOrControl+X', () => {
+                contents.cut()
+            })
+            globalShortcut.register('CommandOrControl+A', () => {
+                contents.selectAll()
+            })
+        }
+      })
+      mainWindow.on('blur', () => {
+        if (process.platform === 'darwin'){
+            globalShortcut.unregisterAll()
+        }
+      })
+
     mainWindow.on('close', (e) => {
         e.preventDefault()
         ui.chroom(0)
         mainWindow.hide()
+        if (process.platform === 'darwin'){
+            globalShortcut.unregisterAll()
+        }
     })
 
     if (process.env.NODE_ENV === 'development') {
