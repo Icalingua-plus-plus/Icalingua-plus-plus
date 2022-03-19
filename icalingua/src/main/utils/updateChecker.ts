@@ -1,7 +1,7 @@
 import version from './version'
 import axios from 'axios'
 import errorHandler from './errorHandler'
-import {getConfig} from './configManager'
+import { getConfig } from './configManager'
 
 type CheckUpdateResult = {
     latestVersion: string
@@ -32,8 +32,7 @@ export const checkUpdate = async () => {
             console.log('检查更新失败')
             errorHandler(ex)
         }
-    }
-    else {
+    } else {
         try {
             const res = await axios.get('https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/dev', {
                 proxy: false,

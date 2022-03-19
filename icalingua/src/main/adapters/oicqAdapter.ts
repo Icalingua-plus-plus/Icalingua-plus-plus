@@ -99,10 +99,10 @@ const eventHandlers = {
             date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
-            title: (groupId && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
+            title: groupId && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
             files: [],
-            anonymousId: (groupId && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.id:null,
-            anonymousflag: (groupId && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.flag:null,
+            anonymousId: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
+            anonymousflag: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
         }
 
         let room = await storage.getRoom(roomId)
@@ -851,7 +851,7 @@ const adapter: OicqAdapter = {
         }
         const data = history.data
         console.log(data)
-        if(data){
+        if (data) {
             const message: Message = {
                 senderId: data.sender.user_id,
                 username: data.sender.nickname,
@@ -863,11 +863,11 @@ const adapter: OicqAdapter = {
                 files: [],
             }
             await processMessage(data.message, message, {}, ui.getSelectedRoomId())
-            if(message.file){
-                return message.file.url || 'error' 
+            if (message.file) {
+                return message.file.url || 'error'
             }
         }
-    return 'error'
+        return 'error'
     },
     async getGroup(gin): Promise<GroupInfo> {
         return bot.gl.get(gin)
@@ -1119,7 +1119,7 @@ const adapter: OicqAdapter = {
             })
             message.file = {
                 type: 'image/jpeg',
-                url: (imgpath && imgpath.startsWith('send_')) ? imgpath.replace('send_', '') : b64img,
+                url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
             }
             message.files.push(message.file)
         } else if (imgpath) {
@@ -1381,10 +1381,10 @@ const adapter: OicqAdapter = {
                         _id: data.message_id,
                         time: data.time * 1000,
                         role: (data.sender as MemberBaseInfo).role,
-                        title: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?'匿名':(data.sender as MemberBaseInfo).title,
+                        title: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
                         files: [],
-                        anonymousId: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.id:null,
-                        anonymousflag: ((<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous)?(<GroupMessageEventData>data).anonymous.flag:null,
+                        anonymousId: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
+                        anonymousflag: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
                     }
                     try {
                         const retData = await processMessage(data.message, message, {}, roomId)
