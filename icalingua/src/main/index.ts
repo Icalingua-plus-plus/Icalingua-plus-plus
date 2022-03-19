@@ -1,4 +1,4 @@
-import {app} from 'electron'
+import { app } from 'electron'
 import argv from './utils/argv'
 
 
@@ -19,7 +19,7 @@ import argv from './utils/argv'
 //防止连接自签名的 aria2 出错
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 // 可选的禁用硬件加速 #416
-if(argv.dha){
+if (argv.dha) {
     app.disableHardwareAcceleration()
 }
 //启用一些 flag
