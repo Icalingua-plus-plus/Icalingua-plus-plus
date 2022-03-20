@@ -642,7 +642,7 @@ export const updateAppMenu = async () => {
                 label: 'Aria2 下载管理器设置',
                 click: () => {
                     const win = newIcalinguaWindow({
-                        height: 460,
+                        height: 480,
                         width: 500,
                         maximizable: false,
                         webPreferences: {
