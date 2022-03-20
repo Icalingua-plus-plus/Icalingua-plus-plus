@@ -14,6 +14,7 @@ import errorHandler from '../utils/errorHandler'
 import SearchableFriend from '../../types/SearchableFriend'
 import * as themes from '../utils/themes'
 import SearchableGroup from '../../types/SearchableGroup'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -115,7 +116,7 @@ ipcMain.on('openForward', async (_, resId: string) => {
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
-    const win = new BrowserWindow({
+    const win = newIcalinguaWindow({
         height: size.height - 200,
         width,
         autoHideMenuBar: true,

@@ -30,6 +30,7 @@ import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import formatDate from '../../utils/formatDate'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -194,7 +195,7 @@ const attachSocketEvents = () => {
         app.quit()
     })
     socket.on('login-verify', async (url: string) => {
-        const veriWin = new BrowserWindow({
+        const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
             webPreferences: {
@@ -221,7 +222,7 @@ const attachSocketEvents = () => {
         sendToLoginWindow('error', message)
     })
     socket.on('login-slider', (url: string) => {
-        const veriWin = new BrowserWindow({
+        const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
             webPreferences: {
