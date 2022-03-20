@@ -306,7 +306,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 async click() {
                     const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
                     const win = newIcalinguaWindow({
-                        height: 170,
+                        height: 190,
                         width: 600,
                         autoHideMenuBar: true,
                         webPreferences: {
@@ -522,7 +522,7 @@ export const updateAppMenu = async () => {
                 label: '查看合并转发消息',
                 async click() {
                     const win = newIcalinguaWindow({
-                        height: 185,
+                        height: 190,
                         width: 600,
                         autoHideMenuBar: true,
                         webPreferences: {
