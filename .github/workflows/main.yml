@@ -734,12 +734,6 @@ jobs:
         name: Icalingua++.dmg
         path: icalingua/build/Icalingua++*.dmg
         if-no-files-found: error
-    - uses: actions/upload-artifact@v2
-      name: Upload Icalingua++.app
-      with:
-        name: Icalingua++.dmg
-        path: icalingua/build/mac-*/
-        if-no-files-found: error
 
   release:
     runs-on: ubuntu-latest
@@ -754,6 +748,7 @@ jobs:
       - pack-otherpkg-arm64
       - build-dist-bundle
       - build-windows64
+      - build-macos-x64
     steps:
       - name: Make dir
         run: mkdir release
@@ -885,6 +880,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Icalingua_Windows64.exe
+          path: release
+
+      - name: get Icalingua++.dmg
+        uses: actions/download-artifact@v2
+        with:
+          name: Icalingua++.dmg
           path: release
 
       - name: Release
