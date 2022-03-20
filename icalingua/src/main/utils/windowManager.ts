@@ -6,13 +6,14 @@ import { updateTrayIcon } from './trayManager'
 import path from 'path'
 import ui from './ui'
 import argv from './argv'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow, requestWindow: BrowserWindow
 
 export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
-    mainWindow = new BrowserWindow({
+    mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
         show: process.env.NODE_ENV !== 'development' && !argv.hide,
@@ -25,35 +26,11 @@ export const loadMainWindow = () => {
 
     if (loginWindow) loginWindow.destroy()
 
-    mainWindow.on('focus', () => {
-        // macOS Shortcut
-        if (process.platform === 'darwin') {
-            let contents = mainWindow.webContents
-            globalShortcut.register('CommandOrControl+C', () => {
-                contents.copy()
-            })
-            globalShortcut.register('CommandOrControl+V', () => {
-                contents.paste()
-            })
-            globalShortcut.register('CommandOrControl+X', () => {
-                contents.cut()
-            })
-            globalShortcut.register('CommandOrControl+A', () => {
-                contents.selectAll()
-            })
-        }
-      })
-      mainWindow.on('blur', () => {
-        if (process.platform === 'darwin'){
-            globalShortcut.unregisterAll()
-        }
-      })
-
     mainWindow.on('close', (e) => {
         e.preventDefault()
         ui.chroom(0)
         mainWindow.hide()
-        if (process.platform === 'darwin'){
+        if (process.platform === 'darwin') {
             globalShortcut.unregisterAll()
         }
     })
@@ -87,7 +64,7 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
         loginWindow.show()
         loginWindow.focus()
     } else {
-        loginWindow = new BrowserWindow({
+        loginWindow = newIcalinguaWindow({
             height: 720,
             width: 450,
             maximizable: false,
@@ -111,7 +88,7 @@ export const showRequestWindow = () => {
         requestWindow.show()
         requestWindow.focus()
     } else {
-        requestWindow = new BrowserWindow({
+        requestWindow = newIcalinguaWindow({
             width: 750,
             height: 600,
             webPreferences: {

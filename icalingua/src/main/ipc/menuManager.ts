@@ -49,6 +49,7 @@ import * as themes from '../utils/themes'
 import version from '../utils/version'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import socketIoProvider from '../providers/socketIoProvider'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -181,7 +182,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '查看精华消息',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -207,7 +208,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '群公告',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -238,7 +239,7 @@ const buildRoomMenu = (room: Room): Menu => {
                         url = `http://localhost:${socketIoProvider.getPort()}/file-manager/?${token}`
                     }
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         autoHideMenuBar: true,
                         height: size.height - 200,
                         width: 1500,
@@ -260,7 +261,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '群荣誉',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 800,
                         autoHideMenuBar: true,
@@ -282,7 +283,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '群幸运字符',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -304,7 +305,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '我的群昵称',
                 async click() {
                     const memberInfo = await getGroupMemberInfo(-room.roomId, getUin())
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 170,
                         width: 600,
                         autoHideMenuBar: true,
@@ -330,7 +331,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '成员活跃数据',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -351,7 +352,7 @@ const buildRoomMenu = (room: Room): Menu => {
             new MenuItem({
                 label: '群成员',
                 async click() {
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         autoHideMenuBar: true,
                         webPreferences: {
                             contextIsolation: false,
@@ -389,7 +390,7 @@ const buildRoomMenu = (room: Room): Menu => {
         //     label: 'ta 的线索',
         //     async click() {
         //         const size = screen.getPrimaryDisplay().size
-        //         const win = new BrowserWindow({
+        //         const win = newIcalinguaWindow({
         //             height: size.height - 200,
         //             width: 500,
         //             autoHideMenuBar: true,
@@ -410,7 +411,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '互动标识',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -432,7 +433,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '幸运字符',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -454,7 +455,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 label: '照片墙',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -520,7 +521,7 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: '查看合并转发消息',
                 async click() {
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 185,
                         width: 600,
                         autoHideMenuBar: true,
@@ -625,7 +626,7 @@ export const updateAppMenu = async () => {
                 label: '管理屏蔽的会话',
                 click: () => {
                     const size = screen.getPrimaryDisplay().size
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
                         autoHideMenuBar: true,
@@ -640,7 +641,7 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: 'Aria2 下载管理器设置',
                 click: () => {
-                    new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 460,
                         width: 500,
                         maximizable: false,
@@ -649,7 +650,8 @@ export const updateAppMenu = async () => {
                             contextIsolation: false,
                         },
                         autoHideMenuBar: true,
-                    }).loadURL(getWinUrl() + '#/aria2')
+                    })
+                    win.loadURL(getWinUrl() + '#/aria2')
                 },
             }),
             new MenuItem({
@@ -1215,7 +1217,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             new MenuItem({
                 label: `禁言`,
                 click: async () => {
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 300,
                         width: 600,
                         autoHideMenuBar: true,
@@ -1247,7 +1249,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             new MenuItem({
                 label: `移出本群`,
                 click: async () => {
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 150,
                         width: 500,
                         autoHideMenuBar: true,
@@ -1313,7 +1315,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             new MenuItem({
                 label: group.owner_id === getUin() ? '解散本群' : '退出本群',
                 click: async () => {
-                    const win = new BrowserWindow({
+                    const win = newIcalinguaWindow({
                         height: 130,
                         width: 500,
                         autoHideMenuBar: true,
