@@ -733,9 +733,9 @@ jobs:
       working-directory: icalingua/build
 
     - uses: actions/upload-artifact@v2
-      name: Upload Icalingua++.dmg
+      name: Upload Icalingua++_x64.dmg
       with:
-        name: Icalingua++.dmg
+        name: Icalingua++_x64.dmg
         path: icalingua/build/Icalingua++*.dmg
         if-no-files-found: error
 
@@ -886,10 +886,10 @@ jobs:
           name: Icalingua_Windows64.exe
           path: release
 
-      - name: get Icalingua++.dmg
+      - name: get Icalingua++_x64.dmg
         uses: actions/download-artifact@v2
         with:
-          name: Icalingua++.dmg
+          name: Icalingua++_x64.dmg
           path: release
 
       - name: Release
