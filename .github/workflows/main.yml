@@ -738,7 +738,7 @@ jobs:
       name: Upload Icalingua++.app
       with:
         name: Icalingua++.dmg
-        path: icalingua/build/mac-*/Icalingua++.app
+        path: icalingua/build/mac-*/
         if-no-files-found: error
 
   release:
