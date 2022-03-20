@@ -6,6 +6,7 @@ import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
 import ui from '../utils/ui'
 import md5 from 'md5'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
@@ -42,7 +43,7 @@ const openImage = (url: string, external: boolean = false) => {
             const viewerWindow = builtinViewers.get(urlMd5)
             viewerWindow.focus()
         } else {
-            const viewerWindow = new BrowserWindow({
+            const viewerWindow = newIcalinguaWindow({
                 autoHideMenuBar: true,
             })
             viewerWindow.loadURL(

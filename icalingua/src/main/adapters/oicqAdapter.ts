@@ -65,6 +65,7 @@ import isInlineReplySupported from '../utils/isInlineReplySupported'
 import getBuildInfo from '../utils/getBuildInfo'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import socketIoProvider from '../providers/socketIoProvider'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 let bot: Client
 let storage: StorageProvider
@@ -671,7 +672,7 @@ const eventHandlers = {
 const loginHandlers = {
     slider(data) {
         console.log(data)
-        const veriWin = new BrowserWindow({
+        const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
             webPreferences: {
@@ -714,7 +715,7 @@ const loginHandlers = {
         await updateTrayIcon()
     },
     verify(data) {
-        const veriWin = new BrowserWindow({
+        const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
             webPreferences: {
