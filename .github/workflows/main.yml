@@ -728,6 +728,10 @@ jobs:
       run: yarn build
       working-directory: icalingua
       
+    - name: rename
+      run: for i in *.dmg;do mv "$i" "${i%.jpg}_x64.dmg" ;done
+      working-directory: icalingua/build
+
     - uses: actions/upload-artifact@v2
       name: Upload Icalingua++.dmg
       with:
