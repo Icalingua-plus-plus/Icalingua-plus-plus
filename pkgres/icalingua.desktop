@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=chat;Network;
-Exec=icalingua %u
+Exec="/opt/Icalingua++/icalingua --no-zygote --no-sandbox" %U
 Icon=icalingua.png
 Name=Icalingua
 Comment=A Linux client for QQ and more
