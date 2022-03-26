@@ -229,7 +229,7 @@
     "lottie-web": "^5.9.1",
     "md5": "^2.3.0",
     "mini-css-extract-plugin": "0.4.0",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "multispinner": "^0.2.1",
     "noble-ed25519": "^1.2.5",
     "node-loader": "^0.6.0",
