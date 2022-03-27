@@ -10,6 +10,7 @@ import FriendRequest from '../views/FriendRequest.vue'
 import KickAndExit from '../views/KickAndExit.vue'
 import OpenForward from '../views/OpenForward.vue'
 import MuteUser from '../views/MuteUser.vue'
+import MakeForward from '../views/MakeForward.vue'
 
 Vue.use(Router)
 
@@ -64,6 +65,11 @@ export default new Router({
             path: '/openForward',
             name: 'open-forward-page',
             component: OpenForward,
+        },
+        {
+            path: '/makeForward',
+            name: 'make-forward-page',
+            component: MakeForward,
         },
     ],
 })
