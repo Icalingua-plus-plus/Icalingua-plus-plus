@@ -1017,6 +1017,15 @@ const adapter: OicqAdapter = {
 
         const chain: MessageElem[] = []
 
+        if (getConfig().anonymous === true && getConfig().debugmode === true && roomId < 0) {
+            chain.push({
+                type: 'anonymous',
+                data: {
+                    ignore: false, //匿名失败时不继续发送
+                }
+            })
+        }
+
         if (replyMessage) {
             message.replyMessage = {
                 _id: replyMessage._id,
