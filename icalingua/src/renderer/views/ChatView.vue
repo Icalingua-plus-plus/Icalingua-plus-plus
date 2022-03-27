@@ -249,11 +249,9 @@ export default {
         })
         ipcRenderer.on('renewMessageURL', (_, {messageId, URL}) => {
             const message = this.messages.find((e) => e._id === messageId)
-            if (message && URL!=='error') {
+            if (message && URL !== 'error') {
                 message.file.url = URL
                 this.messages = [...this.messages]
-            }else{
-                alert('获取视频地址失败')
             }
         })
         ipcRenderer.on('setOnline', () => this.reconnecting = this.offline = false)
