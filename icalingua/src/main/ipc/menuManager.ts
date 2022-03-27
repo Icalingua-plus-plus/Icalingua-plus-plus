@@ -726,8 +726,21 @@ export const updateAppMenu = async () => {
                 checked: getConfig().debugmode === true,
                 click: (menuItem) => {
                     getConfig().debugmode = menuItem.checked
+                    if (!menuItem.checked) {
+                        getConfig().anonymous = false
+                    }
                     saveConfigFile()
                     updateAppMenu()
+                },
+            }),
+            new MenuItem({
+                label: '以匿名方式发送群消息（未完善，慎用）',
+                type: 'checkbox',
+                checked: getConfig().anonymous === true,
+                visible: getConfig().debugmode === true,
+                click: (menuItem) => {
+                    getConfig().anonymous = menuItem.checked
+                    saveConfigFile()
                 },
             }),
             new MenuItem({

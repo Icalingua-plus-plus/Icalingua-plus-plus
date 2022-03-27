@@ -31,6 +31,7 @@ type AllConfig = {
     shortcuts: { [key: string]: number }
     zoomFactor: number
     debugmode: boolean
+    anonymous: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -93,6 +94,7 @@ const defaultConfig: AllConfig = {
     shortcuts: {},
     zoomFactor: 100,
     debugmode: false,
+    anonymous: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
