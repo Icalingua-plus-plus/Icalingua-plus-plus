@@ -31,6 +31,7 @@ import {
     QrcodeEventData,
     GroupInfo,
     Gfs,
+    FakeMessage,
 } from 'oicq'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
@@ -898,6 +899,16 @@ const adapter: OicqAdapter = {
     },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
+    },
+    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>): Promise<any> {
+        const xmlret = await bot.makeForwardMsg(fakes)
+        if(xmlret.error) {
+            errorHandler(xmlret.error, true)
+            ui.messageError('错误：' + xmlret.error.message)
+            return
+        }
+        ui.addMessageText(xmlret.data.data.data)
+        ui.notify({title:'生成转发成功', message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。'})
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)

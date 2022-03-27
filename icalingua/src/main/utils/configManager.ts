@@ -30,6 +30,7 @@ type AllConfig = {
     disableBridgeVersionCheck: boolean
     shortcuts: { [key: string]: number }
     zoomFactor: number
+    debugmode: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -91,6 +92,7 @@ const defaultConfig: AllConfig = {
     disableBridgeVersionCheck: false,
     shortcuts: {},
     zoomFactor: 100,
+    debugmode: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

@@ -32,6 +32,7 @@ import {
     SliderEventData,
     SyncMessageEventData,
     SyncReadedEventData,
+    FakeMessage,
 } from 'oicq'
 import LoginForm from '../types/LoginForm'
 import Message from '../types/Message'
@@ -779,6 +780,10 @@ const adapter = {
     },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
+    },
+    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>): Promise<any> {
+            console.log('警告：使用了未实现的功能，bridge 暂不支持合并转发消息', fakes)
+            clients.messageError('错误：使用 bridge 时暂不支持合并转发消息')
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
