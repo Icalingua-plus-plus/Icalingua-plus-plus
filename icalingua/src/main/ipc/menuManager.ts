@@ -976,7 +976,11 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             label: '刷新视频地址',
                             click: async () => {
                                 const newUrl = await getMsgNewURL(String(message._id))
-                                renewMessageURL(room.roomId, message._id, newUrl)
+                                if (newUrl !== 'error') {
+                                    renewMessageURL(room.roomId, message._id, newUrl)
+                                } else {
+                                    ui.messageError('获取视频地址失败')
+                                }
                             },
                         }),
                     )
