@@ -5,6 +5,7 @@ import Aria2Config from '../../types/Aria2Config'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import RoamingStamp from '../../types/RoamingStamp'
 import SearchableGroup from '../../types/SearchableGroup'
+import { FakeMessage } from 'oicq'
 
 const ipc = {
     sendMessage(data) {
@@ -97,6 +98,9 @@ const ipc = {
     },
     openForward(resId: string) {
         ipcRenderer.send('openForward', resId)
+    },
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>) {
+        ipcRenderer.send('makeForward', fakes)
     },
     setAria2Config(config: Aria2Config) {
         ipcRenderer.send('setAria2Config', config)

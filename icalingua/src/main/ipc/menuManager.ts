@@ -534,6 +534,22 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '合并转发DEBUG',
+                visible: getConfig().debugmode === true,
+                async click() {
+                    const win = newIcalinguaWindow({
+                        height: 600,
+                        width: 600,
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(getWinUrl() + '#/makeForward')
+                },
+            }),
+            new MenuItem({
                 label: '重新加载',
                 click: () => {
                     ui.chroom(0)
@@ -702,6 +718,16 @@ export const updateAppMenu = async () => {
                 click: (menuItem) => {
                     getConfig().updateCheck = menuItem.checked
                     saveConfigFile()
+                },
+            }),
+            new MenuItem({
+                label: 'DEBUG Mode',
+                type: 'checkbox',
+                checked: getConfig().debugmode === true,
+                click: (menuItem) => {
+                    getConfig().debugmode = menuItem.checked
+                    saveConfigFile()
+                    updateAppMenu()
                 },
             }),
             new MenuItem({
