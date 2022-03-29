@@ -863,7 +863,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             )
             menu.append(
                 new MenuItem({
-                    label: '复制原始消息JSON',
+                    label: '复制原始消息 JSON',
                     type: 'normal',
                     click: () => {
                         clipboard.writeText(JSON.stringify(message))
@@ -1123,14 +1123,15 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         }
         menu.append(
             new MenuItem({
-                label: '复制消息 ID',
+                label: history ? (message._id !== -1 ? `复制转发来源 ID ${message._id}` : '转发来源未知（可能来自私聊消息）') : '复制消息 ID',
                 type: 'normal',
+                enabled: !(history && message._id === -1),
                 click: () => {
                     clipboard.writeText(String(message._id))
                 },
             }),
         )
-        if (message.senderId === getUin() || (await isAdmin()))
+        if ((message.senderId === getUin() || (await isAdmin())) && !history)
             menu.append(
                 new MenuItem({
                     label: '撤回',
@@ -1139,7 +1140,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
-        if (message.senderId === getUin())
+        if (message.senderId === getUin() && !history)
             menu.append(
                 new MenuItem({
                     label: '一分钟后撤回',
