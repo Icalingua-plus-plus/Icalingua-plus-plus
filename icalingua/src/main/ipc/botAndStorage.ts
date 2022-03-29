@@ -53,6 +53,7 @@ export const {
     renewMessageURL,
     fetchHistory,
     stopFetchingHistory,
+    makeForward,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
