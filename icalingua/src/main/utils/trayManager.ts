@@ -25,7 +25,7 @@ export const createTray = () => {
     } else {
         tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
     }
-    tray.setToolTip('Icalingua++')
+    tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     tray.on('click', () => {
         const window = getMainWindow()
         window.show()
@@ -34,6 +34,7 @@ export const createTray = () => {
     return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
+    tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     const unreadRooms: Room[] = await getUnreadRooms()
     const menu = Menu.buildFromTemplate([
         {
