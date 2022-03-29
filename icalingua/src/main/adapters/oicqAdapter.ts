@@ -1286,7 +1286,7 @@ const adapter: OicqAdapter = {
                 content: '',
                 timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
-                _id: i,
+                _id: data.group_id || -1,
                 time: data.time * 1000,
                 files: [],
             }
