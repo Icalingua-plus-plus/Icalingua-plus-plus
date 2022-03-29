@@ -26,6 +26,7 @@ import {
     getGroupMemberInfo,
     requestGfsToken,
     getMsgNewURL,
+    makeForward,
 } from './botAndStorage'
 import Room from '../../types/Room'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
@@ -721,9 +722,10 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: 'DEBUG Mode',
+                label: 'DEBUG MODE',
                 type: 'checkbox',
                 checked: getConfig().debugmode === true,
+                visible: !version.isProduction,
                 click: (menuItem) => {
                     getConfig().debugmode = menuItem.checked
                     if (!menuItem.checked) {
@@ -849,6 +851,55 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             }),
         )
     else {
+        if (getConfig().debugmode) {
+            menu.append(
+                new MenuItem({
+                    label: '复制时间戳',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(message.time.toString())
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '复制原始消息JSON',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(JSON.stringify(message))
+                    }
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '合并转发本条消息（单条，仅支持文本）',
+                    type: 'normal',
+                    click: () => {
+                        const msgtoforward = {
+                            user_id: message.senderId,
+                            message: message.content,
+                            nickname: message.username,
+                            time: message.time / 1000,
+                        }
+                        makeForward(msgtoforward)
+                    }
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '尝试撤回本条消息',
+                    type: 'normal',
+                    click: () => {
+                        deleteMessage(room.roomId, message._id as string)
+                    }
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    type: 'separator',
+                }),
+            )
+        }
         if (sect) {
             menu.append(
                 new MenuItem({
