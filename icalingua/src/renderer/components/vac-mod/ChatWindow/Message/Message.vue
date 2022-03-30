@@ -19,6 +19,7 @@
             :class="{ 'vac-offset-current': message.senderId === currentUserId }"
         >
             <slot name="message" v-bind="{ message }">
+                <input type="checkbox" id="message._id" value="message._id" v-model="checkbox" v-if="showForwardPanel" v-on:change="checkboxChange"/>
                 <div
                     class="vac-message-sender-avatar"
                     @click.right="$emit('avatar-ctx')"
@@ -203,6 +204,12 @@ export default {
         LottieAnimation,
     },
 
+    data() {
+        return {
+            checkbox: false,
+        }
+    },
+
     props: {
         currentUserId: { type: [String, Number], required: true },
         textMessages: { type: Object, required: true },
@@ -218,6 +225,7 @@ export default {
         textFormatting: { type: Boolean, required: true },
         emojisList: { type: Object, required: true },
         hideOptions: { type: Boolean, required: true },
+        showForwardPanel: { type: Boolean, required: true },
     },
 
     data() {
@@ -275,6 +283,14 @@ export default {
             if (!val.length || !this.showNewMessagesDivider) return
             this.newMessage = val.reduce((res, obj) => (obj.index < res.index ? obj : res))
         },
+        showForwardPanel: {
+            handler(newValue) {
+                if (!newValue) {
+                    this.checkbox = false
+                }
+            },
+            immediate: true,
+        },
     },
 
     mounted() {
@@ -287,6 +303,10 @@ export default {
     },
 
     methods: {
+        checkboxChange() {
+            console.log('checkboxChange', this.checkbox)
+            this.$emit(this.checkbox ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
+        },
         onHoverMessage() {
             this.imageHover = true
             this.messageHover = true

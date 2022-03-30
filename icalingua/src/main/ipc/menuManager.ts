@@ -874,6 +874,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 new MenuItem({
                     label: '合并转发本条消息（单条，仅支持文本）',
                     type: 'normal',
+                    visible: false, //MultiForward panel instead
                     click: () => {
                         const msgtoforward = {
                             user_id: message.senderId,
@@ -1149,6 +1150,17 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
+        if (!history) {
+            menu.append(
+                new MenuItem({
+                    label: '多选',
+                    type: 'normal',
+                    click: () => {
+                        ui.startForward()
+                    },
+                }),
+            )
+        }
 
         if (!history && !message.flash) {
             menu.append(
