@@ -226,6 +226,15 @@ export default {
         ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
         ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
         ipcRenderer.on('chroom', (_, p) => this.chroom(p))
+        ipcRenderer.on('confirmDeleteMessage', (_, {roomId, messageId}) => {
+            this.$confirm('确定撤回群成员消息?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(() => {
+                ipc.deleteMessage(roomId, messageId)
+            })
+        })
         ipcRenderer.on('updateRoom', (_, room) => {
             this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
         })

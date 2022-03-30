@@ -19,6 +19,9 @@ export default {
     startForward() {
         sendToMainWindow('startForward')
     },
+    confirmDeleteMessage(roomId: number,messageId: string) {
+        sendToMainWindow('confirmDeleteMessage', { roomId, messageId })
+    },
     closeLoading() {
         sendToMainWindow('closeLoading')
     },

@@ -1137,7 +1137,11 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 new MenuItem({
                     label: '撤回',
                     click: () => {
-                        deleteMessage(room.roomId, message._id as string)
+                        if (message.senderId === getUin()) {
+                            deleteMessage(room.roomId, message._id as string)
+                        } else {
+                            ui.confirmDeleteMessage(room.roomId, message._id as string)
+                        }
                     },
                 }),
             )
