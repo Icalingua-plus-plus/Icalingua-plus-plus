@@ -57,7 +57,7 @@ export default {
             linkify: true,
         }
     },
-    created() {
+    async created() {
         document.title = '查看转发的消息记录'
         this.linkify = await ipc.getlinkifySetting()
         ipcRenderer.on('loadMessages', (event, args) => {
