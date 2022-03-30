@@ -108,6 +108,7 @@ const attachSocketEvents = () => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
     })
+    socket.on('startForward', ui.startForward)
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)

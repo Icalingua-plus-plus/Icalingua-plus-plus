@@ -76,6 +76,7 @@
                                 :text-formatting="textFormatting"
                                 :emojis-list="emojisList"
                                 :hide-options="hideOptions"
+                                :showForwardPanel="showForwardPanel"
                                 @open-file="openFile"
                                 @open-user-tag="openUserTag"
                                 @add-new-message="addNewMessage"
@@ -86,6 +87,8 @@
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
+                                @add-msg-to-forward="addMsgtoForward"
+                                @del-msg-to-forward="delMsgtoForward"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -116,7 +119,7 @@
                     <slot :name="name" v-bind="data" />
                 </template>
             </room-message-reply>
-
+            <RoomForwardMessage :messages="messages" :showForwardPanel="showForwardPanel" :msgstoForward="msgstoForward" @close-forward-panel="closeForwardPanel"></RoomForwardMessage>
             <!-- <room-users-tag
                     :filtered-users-tag="filteredUsersTag"
                     @select-user-tag="selectUserTag($event)"
@@ -252,6 +255,7 @@ import SvgIcon from '../../components/SvgIcon'
 
 import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
+import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
 
 import filteredUsers from '../../utils/filterItems'
@@ -274,6 +278,7 @@ export default {
         SvgIcon,
         RoomHeader,
         RoomMessageReply,
+        RoomForwardMessage,
         Message,
     },
     directives: {
@@ -331,6 +336,8 @@ export default {
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
             editAndResend: false,
+            msgstoForward: [],
+            showForwardPanel: false,
         }
     },
     computed: {
@@ -367,6 +374,7 @@ export default {
                     setTimeout(() => this.onChangeInput(), 0)
                 }
                 this.editAndResend = false
+                this.msgstoForward = []
             }
         },
         roomMessage: {
@@ -513,6 +521,7 @@ export default {
     },
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
+        ipcRenderer.on('startForward', () => this.showForwardPanel = true)
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
@@ -521,6 +530,19 @@ export default {
         })
     },
     methods: {
+        closeForwardPanel() {
+            this.showForwardPanel = false
+            this.msgstoForward = []
+            console.log('closeForwardPanel')
+        },
+        addMsgtoForward(messageId) {
+            this.msgstoForward.push(messageId)
+            console.log('addMsgtoForward')
+        },
+        delMsgtoForward(messageId) {
+            this.msgstoForward = this.msgstoForward.filter((e) => e !== messageId)
+            console.log('delMsgtoForward')
+        },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
             if (height < 30) height = 30

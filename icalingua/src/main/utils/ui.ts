@@ -16,6 +16,9 @@ ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
 })
 
 export default {
+    startForward() {
+        sendToMainWindow('startForward')
+    },
     closeLoading() {
         sendToMainWindow('closeLoading')
     },
