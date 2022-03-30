@@ -704,6 +704,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '启用高亮 URL 功能',
+                type: 'checkbox',
+                checked: getConfig().linkify,
+                click: (menuItem) => {
+                    getConfig().linkify = menuItem.checked
+                    saveConfigFile()
+                    ui.message("高亮 URL 功能已" + (menuItem.checked ? '开启' : '关闭') + "，重新加载后生效")
+                },
+            }),
+            new MenuItem({
                 label: '切换会话窗口时自动获取历史消息',
                 type: 'checkbox',
                 checked: getConfig().fetchHistoryOnChatOpen,
