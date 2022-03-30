@@ -32,6 +32,7 @@ type AllConfig = {
     zoomFactor: number
     debugmode: boolean
     anonymous: boolean
+    linkify: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -95,6 +96,7 @@ const defaultConfig: AllConfig = {
     zoomFactor: 100,
     debugmode: false,
     anonymous: false,
+    linkify: true,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
