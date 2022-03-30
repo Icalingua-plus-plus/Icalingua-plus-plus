@@ -19,7 +19,7 @@
             :class="{ 'vac-offset-current': message.senderId === currentUserId }"
         >
             <slot name="message" v-bind="{ message }">
-                <input type="checkbox" id="message._id" value="message._id" v-model="checkbox" v-if="showForwardPanel" v-on:change="checkboxChange"/>
+                <el-checkbox id="message._id" value="message._id" v-model="checkbox" v-if="showForwardPanel" v-on:change="checkboxChange"/>
                 <div
                     class="vac-message-sender-avatar"
                     @click.right="$emit('avatar-ctx')"
