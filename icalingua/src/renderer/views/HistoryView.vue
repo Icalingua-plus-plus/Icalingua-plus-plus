@@ -27,6 +27,7 @@
         :loading-rooms="false"
         :text-formatting="true"
         :style="[cssVars]"
+        :linkify="linkify"
         @download-image="downloadImage"
         @open-file="openImage"
         @open-forward="openForward"
@@ -53,10 +54,12 @@ export default {
                 ],
             },
             messages: [],
+            linkify: true,
         }
     },
     created() {
         document.title = '查看转发的消息记录'
+        this.linkify = await ipc.getlinkifySetting()
         ipcRenderer.on('loadMessages', (event, args) => {
             console.log(args)
             this.messages = [...args]

@@ -42,6 +42,7 @@
                     :loading-rooms="false"
                     :text-formatting="true"
                     :members-count="membersCount"
+                    :linkify="linkify"
                     @send-message="sendMessage"
                     @open-file="openImage"
                     @pokefriend="pokeFriend"
@@ -156,12 +157,14 @@ export default {
             dialogAskCheckUpdateVisible: false,
             membersCount: 0,
             contactsShown: false,
+            linkify: true,
         }
     },
     async created() {
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
+        this.linkify = await ipc.getlinkifySetting()
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {

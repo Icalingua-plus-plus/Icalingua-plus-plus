@@ -160,6 +160,7 @@
                             :content="message.content"
                             :users="roomUsers"
                             :text-formatting="textFormatting"
+                            :linkify="linkify"
                             @open-user-tag="openUserTag"
                             @open-forward="$emit('open-forward', $event)"
                         >
@@ -226,6 +227,7 @@ export default {
         emojisList: { type: Object, required: true },
         hideOptions: { type: Boolean, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        linkify: { type: Boolean, default: true },
     },
 
     data() {

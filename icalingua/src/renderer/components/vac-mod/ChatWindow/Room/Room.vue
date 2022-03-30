@@ -77,6 +77,7 @@
                                 :emojis-list="emojisList"
                                 :hide-options="hideOptions"
                                 :showForwardPanel="showForwardPanel"
+                                :linkify="linkify"
                                 @open-file="openFile"
                                 @open-user-tag="openUserTag"
                                 @add-new-message="addNewMessage"
@@ -311,6 +312,7 @@ export default {
         roomInfo: { type: Function, default: null },
         textareaAction: { type: Function, default: null },
         membersCount: { type: Number, default: 0 },
+        linkify: { type: Boolean, default: true },
     },
     data() {
         return {
