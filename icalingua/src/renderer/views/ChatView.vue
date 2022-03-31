@@ -43,6 +43,8 @@
                     :text-formatting="true"
                     :members-count="membersCount"
                     :linkify="linkify"
+                    :account="account"
+                    :username="username"
                     @send-message="sendMessage"
                     @open-file="openImage"
                     @pokefriend="pokeFriend"

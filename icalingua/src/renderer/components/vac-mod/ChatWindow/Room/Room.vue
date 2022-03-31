@@ -120,7 +120,14 @@
                     <slot :name="name" v-bind="data" />
                 </template>
             </room-message-reply>
-            <RoomForwardMessage :messages="messages" :showForwardPanel="showForwardPanel" :msgstoForward="msgstoForward" @close-forward-panel="closeForwardPanel"></RoomForwardMessage>
+            <RoomForwardMessage
+                :messages="messages"
+                :showForwardPanel="showForwardPanel"
+                :msgstoForward="msgstoForward"
+                @close-forward-panel="closeForwardPanel"
+                :account="account"
+                :username="username"
+            />
             <!-- <room-users-tag
                     :filtered-users-tag="filteredUsersTag"
                     @select-user-tag="selectUserTag($event)"
@@ -313,6 +320,8 @@ export default {
         textareaAction: { type: Function, default: null },
         membersCount: { type: Number, default: 0 },
         linkify: { type: Boolean, default: true },
+        account: { type: Number, required: true },
+        username: { type: String, required: true },
     },
     data() {
         return {
