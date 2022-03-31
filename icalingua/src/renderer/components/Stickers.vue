@@ -30,6 +30,9 @@
                 </div>
             </div>
         </div>
+        <div class="stickers_dir">
+            <a v-for="i in subdirs.filter((i) => i[0] !== '.')" :key="i" :name="i" @click="changeCurrentDir(i)" @click.right="dirMenu(i)" :class="{ selected: current_dir === i || (i==='Default' && dir === default_dir) }">{{ i }}</a>
+        </div>
         <div v-if="panel === 'stickers'" style="overflow: auto">
             <center v-show="!pics.length">
                 <p>No stickers found</p>
@@ -39,7 +42,7 @@
             </center>
             <div class="grid" v-show="pics.length">
                 <div v-for="i in pics.filter((i) => i[0] !== '.')" :key="i">
-                    <img :src="'file://' + dir + i" @click="picClick(dir + i)" @click.right="itemMenu(i)" />
+                    <img :src="'file://' + dir + i" @click="picClick(dir + i)" @click.right="itemMenu(dir + i)" />
                 </div>
             </div>
         </div>
@@ -68,6 +71,9 @@ export default {
             dir: '',
             dir_face: '',
             panel: '',
+            subdirs: [],
+            default_dir: '',
+            current_dir: 'Default',
         }
     },
     async created() {
@@ -88,19 +94,49 @@ export default {
 
         // Stickers
         this.dir = path.join(await ipc.getStorePath(), 'stickers/')
+        this.default_dir = this.dir
         if (!fs.existsSync(this.dir)) {
             fs.mkdirSync(this.dir)
         }
         fs.watch(this.dir, () => {
             fs.readdir(this.dir, (_err, files) => {
-                this.pics = files
+                this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
             })
         })
+        fs.watch(this.default_dir, () => {
+            //如果是文件夹则加入到subdirs数组中
+            fs.readdir(this.default_dir, (_err, files) => {
+                this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
+                this.subdirs = ['Default',...this.subdirs]
+            })
+        })
+            fs.readdir(this.default_dir, (_err, files) => {
+                this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
+                this.subdirs = ['Default',...this.subdirs]
+            })
         fs.readdir(this.dir, (_err, files) => {
-            this.pics = files
+            this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
         })
     },
     methods: {
+        changeCurrentDir(dir) {
+            console.log(dir)
+            this.current_dir = dir
+            //解除对this.dir的watch
+            fs.unwatchFile(this.dir)
+            this.dir = this.default_dir + this.current_dir + '/'
+            if (dir == 'Default') {
+                this.dir = this.default_dir
+            }
+            fs.watch(this.dir, () => {
+                fs.readdir(this.dir, (_err, files) => {
+                    this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
+                })
+            })
+            fs.readdir(this.dir, (_err, files) => {
+                this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
+            })
+        },
         picClick(pic) {
             this.$emit('send', pic)
         },
@@ -112,6 +148,7 @@ export default {
         },
         menu: ipc.popupStickerMenu,
         itemMenu: ipc.popupStickerItemMenu,
+        dirMenu: ipc.popupStickerDirMenu,
         setPanel(type) {
             this.panel = type
             ipc.setLastUsedStickerType(type)
@@ -121,6 +158,26 @@ export default {
 </script>
 
 <style scoped lang="scss">
+div.stickers_dir {
+    width: 100%;
+    white-space: nowrap;
+    overflow-x: auto;
+    border-bottom: var(--chat-border-style);
+    background-color: var(--panel-header-bg);
+
+    a {
+        margin-right: 8px;
+        color: var(--panel-color-sticker-type);
+
+        &.selected {
+            color: var(--panel-color-sticker-type-selected);
+        }
+
+        &:hover:not(.selected) {
+            color: var(--panel-color-sticker-type-hover);
+        }
+    }
+}
 div.head {
     height: 64px;
     min-height: 64px;

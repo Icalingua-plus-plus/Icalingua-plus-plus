@@ -22,6 +22,15 @@ export default {
     confirmDeleteMessage(roomId: number,messageId: string) {
         sendToMainWindow('confirmDeleteMessage', { roomId, messageId })
     },
+    confirmDeleteSticker(filename: string) {
+        sendToMainWindow('confirmDeleteSticker', filename)
+    },
+    moveSticker(filename: string) {
+        sendToMainWindow('moveSticker', filename)
+    },
+    confirmDeleteStickerDir(dirname: string) {
+        sendToMainWindow('confirmDeleteStickerDir', dirname)
+    },
     closeLoading() {
         sendToMainWindow('closeLoading')
     },
