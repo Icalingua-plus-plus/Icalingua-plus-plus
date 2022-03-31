@@ -1337,6 +1337,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         menu.append(
             new MenuItem({
                 label: `禁言`,
+                visible: room.roomId !== 0,
                 click: async () => {
                     const win = newIcalinguaWindow({
                         height: 300,
@@ -1369,6 +1370,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         menu.append(
             new MenuItem({
                 label: `移出本群`,
+                visible: room.roomId !== 0,
                 click: async () => {
                     const win = newIcalinguaWindow({
                         height: 150,
