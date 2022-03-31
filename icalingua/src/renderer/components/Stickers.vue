@@ -165,7 +165,7 @@ div.stickers_dir {
     border-bottom: var(--chat-border-style);
     background-color: var(--panel-header-bg);
     display: flex;
-    align-items: center;
+    line-height: 30px;
     height: 30px;
     min-height: 30px;
 
