@@ -956,19 +956,23 @@ const adapter = {
                         },
                     }
                 } else if (messageType == 'json') {
-                    element = {
+                    chain.length = 0
+                    chain.push({
                         type: 'json',
                         data: {
-                            data: part,
+                            data: content,
                         },
-                    }
+                    })
+                    break;
                 } else if (messageType == 'xml') {
-                    element = {
+                    chain.length = 0
+                    chain.push({
                         type: 'xml',
                         data: {
-                            data: part,
+                            data: content,
                         },
-                    }
+                    })
+                    break;
                 }
                 chain.push(element)
             }
