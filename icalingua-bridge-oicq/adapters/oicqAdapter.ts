@@ -53,10 +53,10 @@ import { config, saveUserConfig, userConfig } from '../providers/configManager'
 import StorageProvider from '../types/StorageProvider'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
-import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
+import getImageUrlByMd5 from '../utils/getImageUrlByMd5'
 import { base64decode } from 'nodejs-base64'
-import BilibiliMiniApp from '../../types/BilibiliMiniApp'
-import StructMessageCard from '../../types/StructMessageCard'
+import BilibiliMiniApp from '../types/BilibiliMiniApp'
+import StructMessageCard from '../types/StructMessageCard'
 
 let bot: Client
 let storage: StorageProvider
