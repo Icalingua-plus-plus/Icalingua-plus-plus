@@ -30,6 +30,8 @@ export default {
         messages: { type: Array, required: true },
         msgstoForward: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        account: { type: Number, required: true },
+        username: { type: String, required: true },
     },
     methods: {
         stopForward(isCreate) {
@@ -76,7 +78,7 @@ export default {
                                     })
                             })
                         }
-                        singleMessage.nickname = msg.username
+                        singleMessage.nickname = (msg.senderId !== this.account) ? msg.username : this.username
                         singleMessage.time = msg.time / 1000
                         TextMessages.push(singleMessage)
                     }
