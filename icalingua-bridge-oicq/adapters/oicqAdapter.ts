@@ -53,6 +53,10 @@ import { config, saveUserConfig, userConfig } from '../providers/configManager'
 import StorageProvider from '../types/StorageProvider'
 import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
 import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
+import { base64decode } from 'nodejs-base64'
+import BilibiliMiniApp from '../../types/BilibiliMiniApp'
+import StructMessageCard from '../../types/StructMessageCard'
 
 let bot: Client
 let storage: StorageProvider
@@ -1037,6 +1041,91 @@ const adapter = {
                 timestamp: formatDate('hh:mm'),
             }
             if (file || b64img || imgpath) room.lastMessage.content += '[Image]'
+            let appurl
+            let url
+            if (messageType == 'xml') {
+                message.code = message.content
+                const urlRegex = /url="([^"]+)"/
+                const resIdRegex = /m_resid="([\w+=/]+)"/
+                const md5ImageRegex = /image [^<>]*md5="([A-F\d]{32})"/
+                if (urlRegex.test(message.code)) appurl = message.code.match(urlRegex)[1].replace(/\\\//g, '/')
+                if (message.code.includes('action="viewMultiMsg"') && resIdRegex.test(message.code)) {
+                    const resId = message.code.match(resIdRegex)[1]
+                    console.log(resId)
+                    room.lastMessage.content = '[Forward multiple messages]'
+                    message.content = `[Forward: ${resId}]`
+                } else if (appurl) {
+                    appurl = appurl.replace(/&amp;/g, '&')
+                    room.lastMessage.content = appurl
+                    message.content = appurl
+                } else if (md5ImageRegex.test(message.code)) {
+                    const imgMd5 = (appurl = message.code.match(md5ImageRegex)[1])
+                    room.lastMessage.content = '[Image]'
+                    url = getImageUrlByMd5(imgMd5)
+                    message.file = {
+                        type: 'image/jpeg',
+                        url,
+                    }
+                    message.files.push(message.file)
+                } else {
+                    room.lastMessage.content = '[XML]'
+                    message.content = '[XML]'
+                }
+            } else if (messageType == 'json') {
+                const json: string = message.content
+                message.code = json
+                const jsonObj = JSON.parse(json)
+                if (jsonObj.app === 'com.tencent.mannounce') {
+                    try {
+                        const title = base64decode(jsonObj.meta.mannounce.title)
+                        const content = base64decode(jsonObj.meta.mannounce.text)
+                        room.lastMessage.content = `[${title}]`
+                        message.content = title + '\n\n' + content
+                    } catch (err) {}
+                }
+                const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
+                const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
+                const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/
+                const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/
+                const jsonAppLinkRegex = /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
+                if (biliRegex.test(json)) appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
+                else if (biliRegex2.test(json)) appurl = json.match(biliRegex2)[1].replace(/\\\//g, '/')
+                else if (zhihuRegex.test(json)) appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
+                else if (jsonLinkRegex.test(json)) appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
+                else if (jsonAppLinkRegex.test(json)) appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
+                else {
+                    //作为一般通过小程序解析内部 URL，像腾讯文档就可以
+                    try {
+                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
+                        appurl = meta.qqdocurl
+                    } catch (e) {}
+                }
+                if (appurl) {
+                    room.lastMessage.content = ''
+                    message.content = ''
+                    try {
+                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
+                        room.lastMessage.content = meta.desc + ' '
+                        message.content = meta.desc + '\n\n'
+
+                        let previewUrl = meta.preview
+                        if (!previewUrl.toLowerCase().startsWith('http')) {
+                            previewUrl = 'https://' + previewUrl
+                        }
+                        message.file = {
+                            type: 'image/jpeg',
+                            url: previewUrl,
+                        }
+                        message.files.push(message.file)
+                    } catch (e) {}
+
+                    room.lastMessage.content += appurl
+                    message.content += appurl
+                } else {
+                    room.lastMessage.content = '[JSON]'
+                    message.content = '[JSON]'
+                }
+            }
             message._id = data.data.message_id
             room.utime = new Date().getTime()
             message.time = new Date().getTime()
