@@ -164,6 +164,10 @@ div.stickers_dir {
     overflow-x: auto;
     border-bottom: var(--chat-border-style);
     background-color: var(--panel-header-bg);
+    display: flex;
+    align-items: center;
+    height: 30px;
+    min-height: 30px;
 
     a {
         margin-right: 8px;
