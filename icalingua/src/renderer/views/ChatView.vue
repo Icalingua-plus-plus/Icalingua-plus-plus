@@ -240,6 +240,44 @@ export default {
                 ipc.deleteMessage(roomId, messageId)
             })
         })
+        ipcRenderer.on('confirmDeleteSticker', (_, filename) => {
+            this.$confirm('确定删除本 Sticker?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(() => {
+                fs.unlink(path.join(filename), () => this.$message('删除成功'))
+            })
+        })
+        ipcRenderer.on('confirmDeleteStickerDir', (_, dirname) => {
+            this.$confirm('确定删除 Sticker 分类 ' + dirname + '?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(() => {
+                fs.rmdir(path.join(STORE_PATH, 'stickers', dirname), { recursive: true }, () => this.$message('删除成功'))
+            })
+        })
+        ipcRenderer.on('moveSticker', (_, filename) => {
+            this.$prompt('请输入 Sticker 分类目录名称，若目录不存在则会自动创建', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+            }).then(({ value }) => {
+                if (!value) {
+                    this.$message.error('请输入目录名称')
+                    return
+                }
+                if (value !== 'Default'){
+                    const newPath = path.join(STORE_PATH, 'stickers', value)
+                    if (!fs.existsSync(newPath)) {
+                        fs.mkdirSync(newPath)
+                    }
+                    fs.rename(filename, path.join(newPath, path.basename(filename)), () => this.$message('移动成功'))
+                } else {
+                    fs.rename(filename, path.join(STORE_PATH, 'stickers', path.basename(filename)), () => this.$message('移动成功'))
+                }
+            });
+        })
         ipcRenderer.on('updateRoom', (_, room) => {
             this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
         })
