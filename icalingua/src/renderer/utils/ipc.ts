@@ -90,6 +90,9 @@ const ipc = {
     popupStickerItemMenu(itemName: string) {
         ipcRenderer.send('popupStickerItemMenu', itemName)
     },
+    popupStickerDirMenu(dirName: string) {
+        ipcRenderer.send('popupStickerDirMenu', dirName)
+    },
     popupContactMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
         ipcRenderer.send('popupContactMenu', remark, name, displayId, group)
     },

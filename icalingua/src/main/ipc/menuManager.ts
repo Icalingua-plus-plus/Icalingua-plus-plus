@@ -1254,13 +1254,32 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         })
     } else {
         menu.push({
+            label: '移动到分类',
+            type: 'normal',
+            click() {
+                ui.moveSticker(itemName)
+            },
+        })
+        menu.push({
             label: '删除',
             type: 'normal',
             click() {
-                fs.unlink(path.join(app.getPath('userData'), 'stickers', itemName), () => ui.message('删除成功'))
+                ui.confirmDeleteSticker(itemName)
             },
         })
     }
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
+})
+ipcMain.on('popupStickerDirMenu', (_, dirName: string) => {
+    const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
+    menu.push({
+        label: `删除分类 ${dirName}`,
+        type: 'normal',
+        click() {
+            ui.confirmDeleteStickerDir(dirName)
+        },
+    })
+
     Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
