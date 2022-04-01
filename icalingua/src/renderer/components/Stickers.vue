@@ -30,7 +30,7 @@
                 </div>
             </div>
         </div>
-        <div class="stickers_dir">
+        <div class="stickers_dir" v-if="panel === 'stickers'">
             <a v-for="i in subdirs.filter((i) => i[0] !== '.')" :key="i" :name="i" @click="changeCurrentDir(i)" @click.right="dirMenu(i)" :class="{ selected: current_dir === i || (i==='Default' && dir === default_dir) }">{{ i }}</a>
         </div>
         <div v-if="panel === 'stickers'" style="overflow: auto">
