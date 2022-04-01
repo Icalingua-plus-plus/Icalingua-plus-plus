@@ -1275,6 +1275,7 @@ ipcMain.on('popupStickerDirMenu', (_, dirName: string) => {
     menu.push({
         label: `删除分类 ${dirName}`,
         type: 'normal',
+        enabled: dirName !== 'Default',
         click() {
             ui.confirmDeleteStickerDir(dirName)
         },
