@@ -42,14 +42,13 @@ export default {
                 }   
                 const ForwardMessages = []
 
-                this.msgstoForward.forEach(msgId => {
-                    const msg = this.messages.find(msg => msg._id === msgId)
-                    if (msg) {
-                        ForwardMessages.push(msg)
-                    }
+                this.messages.forEach(message => {
+                    this.msgstoForward.forEach(msgId => {
+                        if (message._id === msgId) {
+                            ForwardMessages.push(message)
+                        }
+                    })
                 })
-
-                ForwardMessages.sort((a, b) => a.time - b.time)
                 const TextMessages = []
                 ForwardMessages.forEach(msg => {
                     const singleMessage = {
