@@ -79,7 +79,7 @@ export default {
                             })
                         }
                         singleMessage.nickname = (msg.senderId !== this.account) ? msg.username : this.username
-                        singleMessage.time = msg.time / 1000
+                        singleMessage.time = Math.floor(msg.time / 1000)
                         TextMessages.push(singleMessage)
                     }
                 })
