@@ -96,6 +96,9 @@ const ipc = {
     popupContactMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
         ipcRenderer.send('popupContactMenu', remark, name, displayId, group)
     },
+    popupGroupMemberMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
+        ipcRenderer.send('popupGroupMemberMenu', remark, name, displayId, group)
+    },
     popupMessageMenu(room: Room, message: Message, sect?: string, history?: boolean) {
         ipcRenderer.send('popupMessageMenu', room, message, sect, history)
     },

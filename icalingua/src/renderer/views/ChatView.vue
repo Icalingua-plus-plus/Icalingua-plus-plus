@@ -107,6 +107,9 @@
         <el-dialog title="联系人" :visible.sync="contactsShown" top="5vh" class="dialog">
             <TheContactsPanel @dblclick="startChat" />
         </el-dialog>
+        <el-dialog title="群成员" :visible.sync="groupmemberShown" top="5vh" class="dialog">
+            <TheGroupMemberPanel @dblclick="startChat" :groupmemberShown="groupmemberShown" :gin="-selectedRoom.roomId" v-if="groupmemberShown" />
+        </el-dialog>
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
     </div>
 </template>
@@ -120,6 +123,7 @@ import {ipcRenderer} from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
+import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
@@ -135,6 +139,7 @@ export default {
         SideBarIcon,
         TheRoomsPanel,
         TheContactsPanel,
+        TheGroupMemberPanel,
         Multipane,
         MultipaneResizer,
     },
@@ -159,6 +164,7 @@ export default {
             dialogAskCheckUpdateVisible: false,
             membersCount: 0,
             contactsShown: false,
+            groupmemberShown: false,
             linkify: true,
         }
     },
@@ -220,6 +226,7 @@ export default {
 
         themes.$$DON_CALL$$fetchThemes(STORE_PATH)
 
+        ipcRenderer.on('openGroupMemberPanel', (_, p) => this.groupmemberShown = p)
         ipcRenderer.on('closeLoading', () => this.loading = false)
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
         ipcRenderer.on('addHistoryCount', (_, p) => this.historyCount += p)
@@ -417,6 +424,7 @@ Chromium ${process.versions.chrome}` : ''
             }
             this.chroom(room)
             this.contactsShown = false
+            this.groupmemberShown = false
         },
         async chroom(room) {
             if (room === 0) {

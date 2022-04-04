@@ -353,6 +353,14 @@ const buildRoomMenu = (room: Room): Menu => {
             new MenuItem({
                 label: '群成员',
                 async click() {
+                    ui.openGroupMemberPanel(true)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '群成员管理',
+                async click() {
                     const win = newIcalinguaWindow({
                         autoHideMenuBar: true,
                         webPreferences: {
@@ -1433,7 +1441,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
-    if (name) {
+    if (name && name!==remark) {
         menu.append(
             new MenuItem({
                 label: `复制 "${name}"`,
@@ -1500,3 +1508,119 @@ const copyImage = async (url: string) => {
     const buf = Buffer.from(res.data, 'binary')
     clipboard.writeImage(nativeImage.createFromBuffer(buf))
 }
+
+ipcMain.on('popupGroupMemberMenu', async (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    const menu = new Menu()
+    if (remark) {
+        menu.append(
+            new MenuItem({
+                label: `复制 "${remark}"`,
+                click: () => {
+                    clipboard.writeText(remark)
+                },
+            }),
+        )
+    }
+    if (name && name !== remark) {
+        menu.append(
+            new MenuItem({
+                label: `复制 "${name}"`,
+                click: () => {
+                    clipboard.writeText(name)
+                },
+            }),
+        )
+    }
+    if (displayId) {
+        menu.append(
+            new MenuItem({
+                label: `复制 "${displayId}"`,
+                click: () => {
+                    clipboard.writeText(displayId.toString())
+                },
+            }),
+        )
+    }
+    if (group) {
+        menu.append(
+            new MenuItem({
+                label: 'at',
+                click: async () => {
+                    atCache.push({
+                        text: '@' + remark,
+                        id: displayId,
+                    })
+                    ui.addMessageText('@' + remark + ' ')
+                    ui.openGroupMemberPanel(false)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '禁言',
+                visible: (await isAdmin()) !== false,
+                click: async () => {
+                    const selectedRoom = await getSelectedRoom()
+                    const win = newIcalinguaWindow({
+                        height: 300,
+                        width: 600,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(
+                        getWinUrl() +
+                        '#/MuteUser/' +
+                        group +
+                        '/' +
+                        displayId +
+                        '/' +
+                        querystring.escape(selectedRoom.roomName) +
+                        '/' +
+                        querystring.escape(remark) +
+                        '/' +
+                        'null',
+                    )
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '移出本群',
+                visible: (await isAdmin()) !== false,
+                click: async () => {
+                    const selectedRoom = await getSelectedRoom()
+                    const win = newIcalinguaWindow({
+                        height: 150,
+                        width: 500,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    await win.loadURL(
+                        getWinUrl() +
+                        '#/kickAndExit/kick/' +
+                        group +
+                        '/' +
+                        displayId +
+                        '/' +
+                        querystring.escape(selectedRoom.roomName) +
+                        '/' +
+                        querystring.escape(remark),
+                    )
+                },
+            }),
+        )
+    }
+    menu.popup({ window: getMainWindow() })
+})
