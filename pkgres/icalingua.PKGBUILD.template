@@ -1,24 +1,25 @@
-pkgname=icalingua
+pkgname=icalingua++
+_pkgname=icalingua
 pkgver=VERSION
-pkgrel=1
-pkgdesc='A Linux client for QQ and more'
-license=('GPL')
-depends=('electron' 'ffmpeg' 'libappindicator-gtk3')
+pkgrel=2
+pkgdesc='A branch of deleted Icalingua, with limited support'
+license=('AGPL3')
+depends=('ffmpeg' 'electron17' 'libappindicator-gtk3')
 optdepends=('mongodb-bin: Provides storage'
             'redis: Provides storage')
 arch=('ARCH')
-url="https://github.com/Icalingua/Icalingua"
+url="https://github.com/Icalingua-plus-plus/Icalingua-plus-plus"
 provides=('electron-qq' 'icalingua')
 conflicts=('icalingua')
-replaces=('electron-qq')
+replaces=('electron-qq' 'icalingua-plus-plus')
 source=(app.asar
         512x512.png
-        ${pkgname}.desktop
-        ${pkgname})
+        ${_pkgname}.desktop
+        ${_pkgname})
 package() {
-  install -Dm644 -t "${pkgdir}/usr/share/applications" "${pkgname}.desktop"
-  install -Dm644 "512x512.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/$pkgname.png"
-  install -Dm644 "app.asar" "${pkgdir}/usr/lib/${pkgname}/${pkgname}.asar"
-  install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
-  ln -s "/usr/bin/${pkgname}" "${pkgdir}/usr/bin/electron-qq"
+  install -Dm644 -t "${pkgdir}/usr/share/applications" "${_pkgname}.desktop"
+  install -Dm644 "512x512.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/$_pkgname.png"
+  install -Dm644 "app-${CARCH}-${pkgver}.asar" "${pkgdir}/usr/lib/${_pkgname}/${_pkgname}.asar"
+  install -Dm755 "${_pkgname}" "${pkgdir}/usr/bin/${_pkgname}"
+  ln -s "/usr/bin/${_pkgname}" "${pkgdir}/usr/bin/electron-qq"
 }
