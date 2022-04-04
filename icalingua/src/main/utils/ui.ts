@@ -16,6 +16,9 @@ ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
 })
 
 export default {
+    openGroupMemberPanel(shown: boolean) {
+        sendToMainWindow('openGroupMemberPanel', shown)
+    },
     startForward() {
         sendToMainWindow('startForward')
     },

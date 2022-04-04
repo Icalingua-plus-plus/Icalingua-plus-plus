@@ -151,3 +151,4 @@ ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: 
 )
 ipcMain.handle('getAccount', adapter.getAccount)
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
+ipcMain.handle('getGroupMember', (_, gin: number) => adapter.getGroupMembers(gin))

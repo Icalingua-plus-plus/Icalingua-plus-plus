@@ -29,7 +29,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 
 export default {
     name: 'ContactEntry',
-    props: ['id', 'name', 'remark', 'group'],
+    props: ['id', 'name', 'remark', 'group', 'type'],
     computed: {
         displayId() {
             return Math.abs(this.id)
@@ -37,7 +37,11 @@ export default {
     },
     methods: {
         ctx() {
-            ipc.popupContactMenu(this.remark, this.name, this.displayId, this.group)
+            if (this.type === 'groupmember') {
+                ipc.popupGroupMemberMenu(this.remark, this.name, this.displayId, this.group)
+            } else {
+                ipc.popupContactMenu(this.remark, this.name, this.displayId, this.group)
+            }
         },
         getAvatarUrl,
     },
