@@ -12,7 +12,7 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 
 [![GitHub release (latest by date)](https://img.shields.io/github/downloads/Icalingua-plus-plus/Icalingua-plus-plus/latest/total)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest)
 [![AUR votes](https://img.shields.io/aur/votes/icalingua++)](https://aur.archlinux.org/packages/icalingua++/)
-（AUR Package 由社區提供，不受項目開發組管理）
+（項目開發組沒有 AUR 賬號，感謝社區提供的 AUR Package）
 <!--
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FClansty%2FIcalingua.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FClansty%2FIcalingua?ref=badge_shield)
 -->
