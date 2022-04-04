@@ -59,7 +59,7 @@ export default {
                     group_id: element.group_id,
                     name: element.nickname,
                     card: element.card || element.nickname,
-                    sc: (element.card + element.nickname).toUpperCase(),
+                    sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
                 }
                 this.groupmembers.push(member)
             });
@@ -76,7 +76,7 @@ export default {
                         group_id: element.group_id,
                         name: element.nickname,
                         card: element.card || element.nickname,
-                        sc: (element.card + element.nickname).toUpperCase(),
+                        sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
                     }
                     this.groupmembers.push(member)
                 });
