@@ -1330,7 +1330,8 @@ const adapter: OicqAdapter = {
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
-                if (group) ui.setShutUp(!!group.shutup_time_me)
+                const currentTimeStamp = Math.floor(Date.now() / 1000)
+                if (group) ui.setShutUp(group.shutup_time_me !== 0 && group.shutup_time_me > currentTimeStamp)
                 else {
                     ui.setShutUp(true)
                     ui.message('你已经不是群成员了')
