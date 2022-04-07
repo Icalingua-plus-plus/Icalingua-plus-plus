@@ -8,7 +8,7 @@ import SendMessageParams from '../../types/SendMessageParams'
 import { io, Socket } from 'socket.io-client'
 import { getConfig } from '../utils/configManager'
 import { sign } from 'noble-ed25519'
-import { app, dialog, BrowserWindow } from 'electron'
+import { app, dialog, BrowserWindow, Notification as ElectronNotification } from 'electron'
 import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow } from '../utils/windowManager'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
@@ -137,47 +137,85 @@ const attachSocketEvents = () => {
                 !data.isSelfMsg
             ) {
                 //notification
-                const actions = {
-                    default: '',
-                    read: '标为已读',
-                }
-                if (await isInlineReplySupported()) actions['inline-reply'] = '回复...'
-
-                const notifParams = {
-                    ...data.data,
-                    summary: data.data.title,
-                    appName: 'Icalingua++',
-                    category: 'im.received',
-                    'desktop-entry': 'icalingua',
-                    urgency: 1,
-                    timeout: 5000,
-                    icon: await avatarCache(getAvatarUrl(data.roomId, true)),
-                    'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
-                    'x-kde-reply-submit-button-text': '发送',
-                    actions,
-                }
-                if (data.image) notifParams['x-kde-urls'] = await avatarCache(data.image)
-                const notif = new Notification(notifParams)
-                notif.on('action', (action: string) => {
-                    switch (action) {
-                        case 'default':
-                            showWindow()
-                            ui.chroom(data.roomId)
-                            break
-                        case 'read':
-                            adapter.clearRoomUnread(data.roomId)
-                            break
+                if ((process.platform === 'darwin' || process.platform === 'win32')) {
+                    if (!ElectronNotification.isSupported()) return
+                    if (process.platform === 'win32') {
+                        app.setAppUserModelId(process.execPath)
                     }
-                })
-                notif.on('reply', (r: string) => {
-                    adapter.clearRoomUnread(data.roomId)
-                    adapter.sendMessage({
-                        content: r,
-                        roomId: data.roomId,
-                        at: [],
+                    const notif = new ElectronNotification({
+                        title: data.data.title,
+                        body: data.data.body,
+                        hasReply: data.data.hasReply,
+                        replyPlaceholder: data.data.replyPlaceholder,
+                        icon: await avatarCache(getAvatarUrl(data.roomId, true)),
+                        actions: [{
+                            text: '标为已读',
+                            type: 'button',
+                        }],
                     })
-                })
-                notif.push()
+                    notif.on('click', () => {
+                        notif.close()
+                        showWindow()
+                        ui.chroom(data.roomId)
+                    })
+                    notif.on('action', () => adapter.clearRoomUnread(data.roomId))
+                    notif.on('reply', (e, r) => {
+                        adapter.clearRoomUnread(data.roomId)
+                        adapter.sendMessage({
+                            content: r,
+                            roomId: data.roomId,
+                            at: [],
+                        })
+                    })
+                    if (process.platform === 'win32') {
+                        notif.on('close', () => {
+                            notif.close()
+                        })  
+                    }
+                    notif.show()
+                } else {
+                    const actions = {
+                        default: '',
+                        read: '标为已读',
+                    }
+                    if (await isInlineReplySupported()) actions['inline-reply'] = '回复...'
+
+                    const notifParams = {
+                        ...data.data,
+                        summary: data.data.title,
+                        appName: 'Icalingua++',
+                        category: 'im.received',
+                        'desktop-entry': 'icalingua',
+                        urgency: 1,
+                        timeout: 5000,
+                        icon: await avatarCache(getAvatarUrl(data.roomId, true)),
+                        'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                        'x-kde-reply-submit-button-text': '发送',
+                        actions,
+                    }
+                    if (data.image) notifParams['x-kde-urls'] = await avatarCache(data.image)
+                    const notif = new Notification(notifParams)
+                    notif.on('action', (action: string) => {
+                        switch (action) {
+                            case 'default':
+                                showWindow()
+                                ui.chroom(data.roomId)
+                                break
+                            case 'read':
+                                adapter.clearRoomUnread(data.roomId)
+                                break
+                        }
+                    })
+                    notif.on('reply', (r: string) => {
+                        adapter.clearRoomUnread(data.roomId)
+                        adapter.sendMessage({
+                            content: r,
+                            roomId: data.roomId,
+                            at: [],
+                        })
+                    })
+                    notif.push()
+                }
             }
         },
     )
