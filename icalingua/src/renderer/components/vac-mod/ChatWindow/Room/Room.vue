@@ -439,6 +439,7 @@ export default {
     async mounted() {
         this.newMessages = []
         this.$refs.roomTextarea.addEventListener('keydown', (e) => {
+            if (e.isComposing) return
             if (e.key === 'Enter') {
                 switch (keyToSendMessage) {
                     case 'Enter':
