@@ -54,10 +54,10 @@ export const downloadImage = (url: string) => {
     console.log(url)
     const out = 'QQ_Image_' + new Date().getTime() + '.jpg'
     const dir = app.getPath('downloads')
-    download(url, out, dir)
+    download(url, out, aria ? null : dir)
     ui.notifySuccess({
         title: 'Image Saved',
-        message: path.join(dir, out),
+        message: aria ? out : path.join(dir, out),
     })
 }
 
