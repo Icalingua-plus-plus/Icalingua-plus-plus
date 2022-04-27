@@ -179,6 +179,13 @@ export default {
             e.preventDefault()
             e.stopPropagation()
         })
+        document.addEventListener('click', (e) => {
+            const stickers_panel = document.getElementsByClassName('panel panel-right')
+            const vac_room_footer = document.getElementsByClassName('vac-room-footer')
+            if (stickers_panel.length > 0 && !stickers_panel[0].contains(e.target) && !vac_room_footer[0].contains(e.target) && getComputedStyle(stickers_panel[0]).right === '15px') {
+                this.panel = ''
+            }
+        })
         //keyboard
         document.addEventListener('keydown', (e) => {
             if (e.repeat) {
