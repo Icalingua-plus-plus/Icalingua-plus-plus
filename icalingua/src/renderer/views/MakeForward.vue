@@ -34,7 +34,7 @@ export default {
         addMessage() {
             const singleMessage = {
                 user_id: 0,
-                message: '',
+                message: [],
                 nickname: '',
                 time: 0,
             }
@@ -46,7 +46,30 @@ export default {
                     this.nickname = this.uid
                 }
                 singleMessage.user_id = parseInt(this.uid)
-                singleMessage.message = this.content
+                if (this.content.startsWith('image:')) {
+                    const imageUrl = this.content.substring(6, this.content.indexOf('|'))
+                    const text = this.content.substring(this.content.indexOf('|') + 1)
+                    singleMessage.message.push({
+                        type: 'image',
+                        data: {
+                            file: imageUrl,
+                            type: 'image',
+                        },
+                    })
+                    singleMessage.message.push({
+                        type: 'text',
+                        data: {
+                            text: text,
+                        },
+                    })
+                } else {
+                    singleMessage.message.push({
+                        type: 'text',
+                        data: {
+                            text: this.content,
+                        }
+                    })
+                }
                 singleMessage.nickname = this.nickname
                 singleMessage.time = parseInt(this.timestamp)
                 this.Messages.push(singleMessage)
