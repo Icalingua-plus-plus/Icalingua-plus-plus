@@ -2,11 +2,14 @@
     <transition name="vac-slide-up">
         <div v-if="showForwardPanel" class="vac-forward-container">
             <div class="vac-forward-box">
-                <el-button type="primary" @click="stopForward(true)" :disabled="msgstoForward.length === 0">合并转发 {{ msgstoForward.length }} 条消息</el-button>
+                <el-button-group title="发送到群聊请选择群聊模式，发送到私聊请选择私聊模式，否则部分客户端无法加载图片。">
+                    <el-button type="primary" @click="stopForward(true, false)" :disabled="msgstoForward.length === 0">合并转发 {{ msgstoForward.length }} 条消息(群聊模式)</el-button>
+                    <el-button type="primary" @click="stopForward(true, true)" :disabled="msgstoForward.length === 0">(私聊模式)</el-button>
+                </el-button-group>
             </div>
 
             <div class="vac-icon-forward">
-                <div class="vac-svg-button" @click="stopForward(false)">
+                <div class="vac-svg-button" @click="stopForward(false, false)">
                     <slot name="forward-close-icon">
                         <svg-icon name="close-outline" />
                     </slot>
@@ -34,7 +37,7 @@ export default {
         username: { type: String, required: true },
     },
     methods: {
-        stopForward(isCreate) {
+        stopForward(isCreate, dm) {
             if (isCreate) {
                 if (this.msgstoForward.length <= 0) {
                     console.log('No Message Selected.')
@@ -82,7 +85,7 @@ export default {
                         TextMessages.push(singleMessage)
                     }
                 })
-                ipc.makeForward(TextMessages)
+                ipc.makeForward(TextMessages, dm)
            }
            this.$emit('close-forward-panel')
         },
