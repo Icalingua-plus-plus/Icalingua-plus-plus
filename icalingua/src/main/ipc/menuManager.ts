@@ -511,7 +511,7 @@ export const updateAppMenu = async () => {
                 click: () => shell.openExternal('https://github.com/Icalingua-plus-plus/Icalingua-plus-plus'),
             }),
             new MenuItem({
-                label: '好友申请列表',
+                label: '验证消息',
                 click: () => showRequestWindow(),
             }),
             new MenuItem({
@@ -543,7 +543,7 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '合并转发DEBUG',
+                label: '合并转发 DEBUG',
                 visible: getConfig().debugmode === true,
                 async click() {
                     const win = newIcalinguaWindow({
@@ -680,7 +680,7 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '用于发送消息的按键',
+                label: '发送消息快捷键',
                 submenu: [
                     {
                         type: 'radio',
