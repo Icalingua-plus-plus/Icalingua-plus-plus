@@ -6,6 +6,7 @@
         <el-input v-model="nickname" placeholder="nickname"/>
         <el-input v-model="content" type="textarea" placeholder="content" :rows="6"/>
         <el-input v-model="timestamp" placeholder="timestamp" @input="timestamp = timestamp.replace(/[^\d]/g,'')" />
+        <el-switch v-model="dm" inactive-text="群聊模式" active-text="私聊模式"></el-switch>
         <div class="dialog-footer">
             <el-button type="primary" @click="addMessage">加入</el-button>
             <el-button type="primary" @click="createForward">生成</el-button>
@@ -25,6 +26,7 @@ export default {
             content: '',
             timestamp: '',
             Messages: [],
+            dm: false,
         }
     },
     created() {
@@ -82,7 +84,7 @@ export default {
         },
         createForward() {
             if (this.Messages.length > 0) {
-                ipc.makeForward(this.Messages)
+                ipc.makeForward(this.Messages, this.dm)
             }
             window.close()
         },

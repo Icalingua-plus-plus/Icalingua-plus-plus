@@ -108,8 +108,8 @@ const ipc = {
     openForward(resId: string) {
         ipcRenderer.send('openForward', resId)
     },
-    makeForward(fakes: FakeMessage | Iterable<FakeMessage>) {
-        ipcRenderer.send('makeForward', fakes)
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean) {
+        ipcRenderer.send('makeForward', fakes, dm)
     },
     setAria2Config(config: Aria2Config) {
         ipcRenderer.send('setAria2Config', config)
