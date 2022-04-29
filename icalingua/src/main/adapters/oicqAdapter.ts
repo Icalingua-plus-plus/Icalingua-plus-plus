@@ -943,7 +943,7 @@ const adapter: OicqAdapter = {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
     async makeForward(fakes: FakeMessage | Iterable<FakeMessage>): Promise<any> {
-        const xmlret = await bot.makeForwardMsg(fakes)
+        const xmlret = await bot.makeForwardMsg(fakes, true)
         if(xmlret.error) {
             errorHandler(xmlret.error, true)
             ui.messageError('错误：' + xmlret.error.message)
