@@ -1,6 +1,6 @@
 <template>
     <div style="overflow-x: hidden" ondragstart="return false">
-        <h1 style="text-align: center">申请列表</h1>
+        <h1 style="text-align: center">验证消息</h1>
         <h3 v-if="!Object.keys(request).length" style="text-align: center">暂无未处理的请求</h3>
         <div class="item" v-for="item in request" :key="item.flag">
             <div style="position: sticky">
@@ -48,7 +48,7 @@ export default {
     },
 
     async created() {
-        document.title = '申请列表'
+        document.title = '验证消息'
         this.request = { ...this.request, ...(await ipc.getSystemMsg()) }
         ipcRenderer.on('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
     },
