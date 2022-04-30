@@ -12,6 +12,20 @@
     opacity: 0;
 }
 
+// Stickers panel animation
+.vac-fade-stickers-enter {
+    opacity: 0;
+}
+
+.vac-fade-stickers-enter-active {
+    transition: opacity 0.2s;
+}
+
+.vac-fade-stickers-leave-active {
+    transition: opacity 0.2s;
+    opacity: 0;
+}
+
 // Image hover animation
 .vac-fade-image-enter {
     opacity: 0;
