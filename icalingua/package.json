@@ -182,7 +182,7 @@
     "pg-query-stream": "^4.2.1",
     "silk-sdk": "^0.2.2",
     "socket.io": "^4.3.2",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.6"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.18",
