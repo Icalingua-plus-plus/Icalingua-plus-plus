@@ -71,25 +71,29 @@
                 </div>
             </div>
             <MultipaneResizer class="resize-next" v-show="panel" />
-            <div
-                :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                v-show="panel"
-                class="panel panel-right"
-            >
-                <Stickers
-                    v-show="panel === 'stickers'"
-                    @send="sendSticker"
-                    @close="panel = ''"
-                    @selectEmoji="
-                        $refs.room.message += $event.data
-                        $refs.room.focusTextarea()
-                    "
-                    @selectFace="
-                        $refs.room.message += `[Face: ${$event}]`
-                        $refs.room.focusTextarea()
-                    "
-                />
-            </div>
+            <transition name="vac-fade-stickers">
+                <div
+                    :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                    v-show="panel"
+                    class="panel panel-right"
+                >
+                    <transition name="vac-fade-stickers">
+                        <Stickers
+                            v-show="panel === 'stickers'"
+                            @send="sendSticker"
+                            @close="panel = ''"
+                            @selectEmoji="
+                                $refs.room.message += $event.data
+                                $refs.room.focusTextarea()
+                            "
+                            @selectFace="
+                                $refs.room.message += `[Face: ${$event}]`
+                                $refs.room.focusTextarea()
+                            "
+                        />
+                    </transition>
+                </div>
+            </transition>
         </Multipane>
         <el-dialog
             title="You are offline"
