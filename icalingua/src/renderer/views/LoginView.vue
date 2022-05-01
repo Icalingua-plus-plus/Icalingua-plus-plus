@@ -53,7 +53,7 @@
             </el-form-item>
             <el-form-item prop="connStr" v-show="form.storageType === 'mdb'">
                 <el-input
-                    :show-password="form.mdbConnStr.split(':').length > 2"
+                    :show-password="form.mdbConnStr && form.mdbConnStr.split(':').length > 2"
                     placeholder="MongoDB connect string"
                     v-model="form.mdbConnStr"
                 />
