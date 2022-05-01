@@ -4995,16 +4995,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^17.3.0":
-  version: 17.3.1
-  resolution: "electron@npm:17.3.1"
+"electron@npm:^17.4.2":
+  version: 17.4.2
+  resolution: "electron@npm:17.4.2"
   dependencies:
     "@electron/get": ^1.13.0
     "@types/node": ^14.6.2
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: 29a2edb59402b2752934872bec6f5f5fa914ad2ffb7ed09a6c7f44f08dfd314db72cda99b53a8db28ab6a3761f8305e4753afa72f8cca9fa858eb2d4dda30581
+  checksum: e0585072c89f6d55ef910d809af49028c3f38653b91dfcfd1dcb1fe6cb073acd464bde0c561ce443146abeffec49f8e6bf83c0931dc4e8e7998209169235f788
   languageName: node
   linkType: hard
 
@@ -6814,7 +6814,7 @@ fsevents@~2.3.1:
     csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
-    electron: ^17.3.0
+    electron: ^17.4.2
     electron-builder: ^22.14.13
     electron-debug: ^3.2.0
     electron-devtools-installer: ^3.2.0
