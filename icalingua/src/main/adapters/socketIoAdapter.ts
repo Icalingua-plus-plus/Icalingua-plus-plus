@@ -238,7 +238,6 @@ const attachSocketEvents = () => {
             height: 500,
             width: 500,
             webPreferences: {
-                nativeWindowOpen: true,
             },
         })
         veriWin.on('close', () => {
@@ -265,7 +264,6 @@ const attachSocketEvents = () => {
             height: 500,
             width: 500,
             webPreferences: {
-                nativeWindowOpen: true,
                 nodeIntegration: true,
                 contextIsolation: false,
             },
