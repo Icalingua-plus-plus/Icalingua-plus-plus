@@ -1,4 +1,4 @@
-import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq'
+import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq-icalingua-plus-plus'
 import Message from '../types/Message'
 import { base64decode } from 'nodejs-base64'
 import mime from './mime'

@@ -1,5 +1,5 @@
 import logger from './winstonLogger'
-import { RetError } from 'oicq'
+import { RetError } from 'oicq-icalingua-plus-plus'
 
 const errorHandler = (e: Error | RetError, noThrow = false) => {
     if ('name' in e) {

@@ -547,7 +547,7 @@ export const updateAppMenu = async () => {
                 visible: getConfig().debugmode === true,
                 async click() {
                     const win = newIcalinguaWindow({
-                        height: 475,
+                        height: 520,
                         width: 600,
                         autoHideMenuBar: true,
                         webPreferences: {

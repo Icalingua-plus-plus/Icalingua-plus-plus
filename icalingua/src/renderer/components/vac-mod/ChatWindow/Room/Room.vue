@@ -127,6 +127,7 @@
                 @close-forward-panel="closeForwardPanel"
                 :account="account"
                 :username="username"
+                :roomId="roomId"
             />
             <!-- <room-users-tag
                     :filtered-users-tag="filteredUsersTag"
