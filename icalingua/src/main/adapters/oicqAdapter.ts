@@ -32,7 +32,7 @@ import {
     GroupInfo,
     Gfs,
     FakeMessage,
-} from 'oicq'
+} from 'oicq-icalingua-plus-plus'
 import StorageProvider from '../../types/StorageProvider'
 import LoginForm from '../../types/LoginForm'
 import getAvatarUrl from '../../utils/getAvatarUrl'
@@ -940,8 +940,8 @@ const adapter: OicqAdapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
-    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean): Promise<any> {
-        const xmlret = await bot.makeForwardMsg(fakes, dm)
+    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): Promise<any> {
+        const xmlret = await bot.makeForwardMsg(fakes, dm, target)
         if(xmlret.error) {
             errorHandler(xmlret.error, true)
             ui.messageError('错误：' + xmlret.error.message)

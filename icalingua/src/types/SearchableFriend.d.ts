@@ -1,4 +1,4 @@
-import { FriendInfo } from 'oicq'
+import { FriendInfo } from 'oicq-icalingua-plus-plus'
 
 export default interface SearchableFriend extends FriendInfo {
     sc: string

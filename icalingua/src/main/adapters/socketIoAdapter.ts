@@ -2,7 +2,7 @@ import Adapter, { CookiesDomain } from '../../types/Adapter'
 import LoginForm from '../../types/LoginForm'
 import Room from '../../types/Room'
 import Message from '../../types/Message'
-import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq'
+import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import SendMessageParams from '../../types/SendMessageParams'
 import { io, Socket } from 'socket.io-client'
@@ -306,8 +306,8 @@ const adapter: Adapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         socket.emit('setGroupAnonymousBan', gin, flag, duration)
     },
-    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean): any {
-        socket.emit('makeForward', fakes, dm)
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): any {
+        socket.emit('makeForward', fakes, dm, target)
     },
     reportRead(messageId: string): any {
         socket.emit('reportRead', messageId)
