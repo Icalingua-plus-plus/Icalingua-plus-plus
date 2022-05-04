@@ -1,7 +1,7 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq'
+import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
@@ -67,7 +67,7 @@ export default interface Adapter {
 
     getForwardMsg(resId: string): Promise<Message[]>
 
-    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean): any
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): any
 
     getUin(): number
 
