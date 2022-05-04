@@ -35,6 +35,7 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         account: { type: Number, required: true },
         username: { type: String, required: true },
+        roomId: { type: [String, Number], required: true },
     },
     methods: {
         stopForward(isCreate, dm) {
@@ -85,7 +86,14 @@ export default {
                         TextMessages.push(singleMessage)
                     }
                 })
-                ipc.makeForward(TextMessages, dm)
+                if (typeof this.roomId !== 'string' && this.roomId < 0) {
+                    ipc.makeForward(TextMessages, dm, -this.roomId)
+                } else if (typeof this.roomId === 'string') {
+                    ipc.makeForward(TextMessages, dm, Math.abs(parseInt(this.roomId)))
+                } else {
+                    ipc.makeForward(TextMessages, dm)
+                }
+                
            }
            this.$emit('close-forward-panel')
         },

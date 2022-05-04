@@ -1,4 +1,4 @@
-import { GroupRole } from 'oicq'
+import { GroupRole } from 'oicq-icalingua-plus-plus'
 import ui from './ui'
 import { getGroupMemberInfo, getUin } from '../ipc/botAndStorage'
 
