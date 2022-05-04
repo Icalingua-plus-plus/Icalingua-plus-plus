@@ -4,7 +4,6 @@ export function newIcalinguaWindow (options?: Electron.BrowserWindowConstructorO
     const win = new BrowserWindow(options)
     win.on('focus', () => {
         // macOS Shortcut
-        console.log('Window focus')
         if (process.platform === 'darwin') {
             let contents = win.webContents
             globalShortcut.register('CommandOrControl+C', () => {
@@ -22,13 +21,11 @@ export function newIcalinguaWindow (options?: Electron.BrowserWindowConstructorO
         }
     })
     win.on('blur', () => {
-        console.log('Window blur')
         if (process.platform === 'darwin') {
             globalShortcut.unregisterAll()
         }
     })
     win.on('close', () => {
-        console.log('Window close')
         if (process.platform === 'darwin') {
             globalShortcut.unregisterAll()
         }
