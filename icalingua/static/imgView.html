@@ -1,94 +1,96 @@
 <html>
+
 <head>
 	<style>
-	body {
-		background: black;
-	}
+		body {
+			background: black;
+		}
 
-	.btn {
-		width: 100%;
-		height: 100%;
-		border: none;
-		text-align: center;
-		background-size: 60% 60%;
-		background-color: transparent;
-		outline: none;
-		background-repeat: no-repeat;
-		background-position: center center;
-	}
-
-	.btn:hover {
-		background-color: rgba(0, 0, 0, 0.3);
-	}
-
-	td {
+		.btn {
+			width: 100%;
+			height: 100%;
+			border: none;
 			text-align: center;
-	}
+			background-size: 60% 60%;
+			background-color: transparent;
+			outline: none;
+			background-repeat: no-repeat;
+			background-position: center center;
+		}
 
-	* {
-		-webkit-user-select: none;
-		-webkit-user-drag: none;
-	}
+		.btn:hover {
+			background-color: rgba(0, 0, 0, 0.3);
+		}
 
-	#BAR {
-		background: rgba(255, 255, 255, 0.7);
-		position: absolute;
-		z-index: 3;
-		left: 50%;
-		bottom: 0;
-		text-align: center;
-		height: 8vh;
-		width: 50vh;
-		min-height: 60px;
-		min-width: 380px;
-		border-radius: 10px;
-		backdrop-filter: blur(2px);
-		transform: translateX(-50%);
-	}
+		td {
+			text-align: center;
+		}
+
+		* {
+			-webkit-user-select: none;
+			-webkit-user-drag: none;
+		}
+
+		#BAR {
+			background: rgba(255, 255, 255, 0.7);
+			position: absolute;
+			z-index: 3;
+			left: 50%;
+			bottom: 0;
+			text-align: center;
+			height: 8vh;
+			width: 50vh;
+			min-height: 60px;
+			min-width: 380px;
+			border-radius: 10px;
+			backdrop-filter: blur(2px);
+			transform: translateX(-50%);
+		}
 	</style>
 	<title>图片查看</title>
 </head>
+
 <body style="overflow: hidden;">
-<img id='IMG' style="position: absolute; z-index: 1" src="">
-<div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
-<div id='BAR'>
-	<table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
-		<tr>
-			<!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
-			<!-- toggle -->
-			<td>
-				<button class='btn'
+	<img id='IMG' style="position: absolute; z-index: 1" src="">
+	<div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
+	<div id='BAR'>
+		<table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
+			<tr>
+				<!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
+				<!-- toggle -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik00MiA3SDZDNC44OTU0MyA3IDQgNy44OTU0MyA0IDlWMzlDNCA0MC4xMDQ2IDQuODk1NDMgNDEgNiA0MUg0MkM0My4xMDQ2IDQxIDQ0IDQwLjEwNDYgNDQgMzlWOUM0NCA3Ljg5NTQzIDQzLjEwNDYgNyA0MiA3WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTIgMjAuNTc5OUwxNiAxOFYzMCIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMSAyMC41Nzk5TDM1IDE4VjMwIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI0IDIwVjIxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTI0IDI3VjI4IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+);'></button>
-			</td>
-			<!-- Rotate Left -->
-			<td>
-				<button class='btn'
+				</td>
+				<!-- Rotate Left -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0xMS4yNzIxIDM2LjcyNzlDMTQuNTI5NCAzOS45ODUzIDE5LjAyOTQgNDIgMjQgNDJDMzMuOTQxMSA0MiA0MiAzMy45NDExIDQyIDI0QzQyIDE0LjA1ODkgMzMuOTQxMSA2IDI0IDZDMTkuMDI5NCA2IDE0LjUyOTQgOC4wMTQ3MiAxMS4yNzIxIDExLjI3MjFDOS42MTQwNyAxMi45MzAxIDYgMTcgNiAxNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02IDlWMTdIMTQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
-			</td>
-			<!-- Rotate Right -->
-			<td>
-				<button class='btn'
+				</td>
+				<!-- Rotate Right -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0zNi43Mjc5IDM2LjcyNzlDMzMuNDcwNiAzOS45ODUzIDI4Ljk3MDYgNDIgMjQgNDJDMTQuMDU4OSA0MiA2IDMzLjk0MTEgNiAyNEM2IDE0LjA1ODkgMTQuMDU4OSA2IDI0IDZDMjguOTcwNiA2IDMzLjQ3MDYgOC4wMTQ3MiAzNi43Mjc5IDExLjI3MjFDMzguMzg1OSAxMi45MzAxIDQyIDE3IDQyIDE3IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQyIDhWMTdIMzMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
-			</td>
-			<!-- Zoom In -->
-			<td>
-				<button class='btn'
+				</td>
+				<!-- Zoom In -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxNUwyMSAyNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
-			</td>
-			<!-- Zoom Out -->
-			<td>
-				<button class='btn'
+				</td>
+				<!-- Zoom Out -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
-			</td>
-			<!-- Download -->
-			<td>
-				<button class='btn'
+				</td>
+				<!-- Download -->
+				<td>
+					<button class='btn'
 						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik02IDI0LjAwODNWNDJINDJWMjQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMzMgMjNMMjQgMzJMMTUgMjMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMjMuOTkxNyA2VjMyIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49ImJldmVsIi8+PC9zdmc+);'></button>
-			</td>
-		</tr>
-	</table>
-</div>
-<a style="display: none" id='download' download href=""></a>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<a style="display: none" id='download' download href=""></a>
 </body>
 <script>
 	const body = document.body
@@ -99,11 +101,13 @@
 	const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
 	IMG.src = url
 	DOWNLOAD.href = url
+	IMG.style.transformOrigin = 'top left'
 
 	var centerX = -1	// to center, with % instead
 	var centerY = -1
 	var rotate = 0	// degree
 	var zoom = 1
+	var scale = 1 // store the zoom before scaling
 
 	var toggle = false
 
@@ -205,18 +209,22 @@
 			rotate += 90
 			if (!rotate % 360) rotate = 0
 			IMG.style.transform = mkTransform(rotate, zoom)
-		}, function () {
+		}, function (e) {
 			// zoom in
+			scale = zoom
 			zoom += 0.2
 			IMG.style.transform = mkTransform(rotate, zoom)
-		}, function () {
+			updatePosition(e)
+		}, function (e) {
 			if (zoom < 0.3) return
+			scale = zoom
 			zoom -= 0.2
 			IMG.style.transform = mkTransform(rotate, zoom)
+			updatePosition(e)
 		}, function () {
 			// Download!
 			DOWNLOAD.dispatchEvent(new MouseEvent('click'))
-		},
+		}
 	]
 
 	var btns = document.getElementsByTagName('button')
@@ -226,12 +234,30 @@
 
 	IMG.onload = btnactions[0]
 
+	// ajust focus 
+	function updatePosition(e) {
+		var focus
+		if (e.type === "click") {
+			focus = { x: body.clientWidth / 2, y: body.clientHeight / 2 }
+		}
+		else {
+			focus = { x: e.clientX, y: e.clientY }
+		}
+
+		var dx = (focus.x - IMG.offsetLeft) * (1 - zoom / scale);
+		var dy = (focus.y - IMG.offsetTop) * (1 - zoom / scale);
+
+		IMG.style.left = IMG.offsetLeft + dx + 'px'
+		IMG.style.top = IMG.offsetTop + dy + 'px'
+
+	}
+
 	DRAG.onwheel = e => {
 		if (e.wheelDeltaY > 0) {
-			btnactions[3]()
+			btnactions[3](e)
 		}
 		else if (e.wheelDeltaY < 0) {
-			btnactions[4]()
+			btnactions[4](e)
 		}
 	}
 
@@ -242,4 +268,5 @@
 		}
 	})
 </script>
+
 </html>
