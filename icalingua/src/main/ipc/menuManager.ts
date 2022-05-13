@@ -498,13 +498,23 @@ const buildRoomMenu = (room: Room): Menu => {
     return menu
 }
 
+let versionClickTimes = 0
+
 export const updateAppMenu = async () => {
     let globalMenu = {
         //应用菜单
         app: [
             new MenuItem({
                 label: version.version,
-                enabled: false,
+                enabled: !version.isProduction && getConfig().debugmode === false && versionClickTimes < 3,
+                click: () => {
+                    versionClickTimes++
+                    setTimeout(() => {
+                        versionClickTimes--
+                        updateAppMenu()
+                    }, 10000)
+                    updateAppMenu()
+                }
             }),
             new MenuItem({
                 label: 'GitHub',
@@ -743,7 +753,7 @@ export const updateAppMenu = async () => {
                 label: 'DEBUG MODE',
                 type: 'checkbox',
                 checked: getConfig().debugmode === true,
-                visible: !version.isProduction,
+                visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
                 click: (menuItem) => {
                     getConfig().debugmode = menuItem.checked
                     if (!menuItem.checked) {
