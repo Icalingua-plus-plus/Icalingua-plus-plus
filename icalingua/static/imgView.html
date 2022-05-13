@@ -45,6 +45,7 @@
 			border-radius: 10px;
 			backdrop-filter: blur(2px);
 			transform: translateX(-50%);
+			transition: all 0.3s linear;
 		}
 	</style>
 	<title>图片查看</title>
@@ -267,6 +268,15 @@
 			window.close()
 		}
 	})
+	// Hide bar when window is onblur, and show when onfocus
+	window.onblur = function () {
+		BAR.style.opacity = 0
+		BAR.style.visibility = 'hidden'
+	}
+	window.onfocus = function () {
+		BAR.style.opacity = 1
+		BAR.style.visibility = 'visible'
+	}
 </script>
 
 </html>
