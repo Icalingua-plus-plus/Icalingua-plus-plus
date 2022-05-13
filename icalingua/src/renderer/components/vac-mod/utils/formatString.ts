@@ -1,6 +1,6 @@
 import * as linkify from 'linkifyjs'
 export default (text, doLinkify) => {
-    const json = compileToJSON(text)
+    const json = compileToJSON(text, doLinkify)
 
     const html = compileToHTML(json)
 
@@ -43,12 +43,12 @@ const pseudoMarkdown = {
     },
 }
 
-function compileToJSON(str) {
+function compileToJSON(str, doLinkify) {
     let result = []
     let minIndexOf = -1
     let minIndexOfKey = null
 
-    let links = linkify.find(str)
+    let links = doLinkify ? linkify.find(str) : []
     let minIndexFromLink = false
 
     if (links.length > 0) {
@@ -71,7 +71,7 @@ function compileToJSON(str) {
         let strRight = str.substr(minIndexOf + links[0].value.length)
         result.push(strLeft)
         result.push(strLink)
-        result = result.concat(compileToJSON(strRight))
+        result = result.concat(compileToJSON(strRight, doLinkify))
         return result
     }
 
@@ -104,14 +104,14 @@ function compileToJSON(str) {
             }
             const object = {
                 start: char,
-                content: compileToJSON(match[1]),
+                content: compileToJSON(match[1], doLinkify),
                 end: match[2],
                 type: pseudoMarkdown[char].type,
             }
             result.push(object)
             strRight = strRight.substr(match[0].length)
         }
-        result = result.concat(compileToJSON(strRight))
+        result = result.concat(compileToJSON(strRight, doLinkify))
         return result
     } else {
         if (str) {
