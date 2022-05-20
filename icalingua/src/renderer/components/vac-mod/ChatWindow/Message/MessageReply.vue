@@ -1,5 +1,5 @@
 <template>
-    <div class="vac-reply-message">
+    <div class="vac-reply-message" :id="message.replyMessage._id" @click="scrollToOrigin">
         <div class="vac-reply-username" v-if="message.replyMessage.username">
             {{ message.replyMessage.username }}
         </div>
@@ -51,6 +51,9 @@ export default {
     },
 
     methods: {
+        scrollToOrigin() {
+            document.getElementById(this.message.replyMessage._id).scrollIntoView(true)
+        },
         openImage() {
             ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
         },
