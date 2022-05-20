@@ -1506,9 +1506,21 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
 })
 
 const copyImage = async (url: string) => {
+    // console.log(clipboard.availableFormats(),clipboard.read('text/uri-list'))
     if (url.startsWith('data:')) {
         // base64 图片
         clipboard.writeImage(nativeImage.createFromDataURL(url))
+        return
+    }
+    // 如果url是本地地址，则直接读取
+    if (!url.startsWith('http')) {
+        const image = nativeImage.createFromPath(url)
+        if (!image.isEmpty()) {
+            clipboard.writeImage(image)
+        } else {
+            clipboard.writeHTML(`<img src="${url}" >`)
+            //clipboard.write({text: url, type: 'text/uri-list'})
+        }
         return
     }
     const res = await axios.get(url, {
@@ -1516,7 +1528,12 @@ const copyImage = async (url: string) => {
         proxy: false,
     })
     const buf = Buffer.from(res.data, 'binary')
-    clipboard.writeImage(nativeImage.createFromBuffer(buf))
+    const image = nativeImage.createFromBuffer(buf)
+    if (!image.isEmpty()) {
+        clipboard.writeImage(image)
+    } else {
+        clipboard.writeHTML(`<img src="${url}" >`)
+    }
 }
 
 ipcMain.on('popupGroupMemberMenu', async (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
