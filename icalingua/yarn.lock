@@ -368,10 +368,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^14.6.2":
-  version: 14.17.3
-  resolution: "@types/node@npm:14.17.3"
-  checksum: c24c1f222b83a4cba584ae1bce2ab262d48d9d502346d82dd261236d29ce11ad63c5a5b1bfc74e50eaae032384893d443297d4da758e1eb540d9bf2495d7814e
+"@types/node@npm:^16.11.26":
+  version: 16.11.36
+  resolution: "@types/node@npm:16.11.36"
+  checksum: 878e8e2032869785dd4f73dd862042c7eb588fb9a27199f1b493a7029438ccb58f96e203c35c2e66e08307ca3f9767133cae888958c15e031982f7e9719e5e47
   languageName: node
   linkType: hard
 
@@ -4995,16 +4995,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^17.4.2":
-  version: 17.4.2
-  resolution: "electron@npm:17.4.2"
+"electron@npm:^18.2.4":
+  version: 18.2.4
+  resolution: "electron@npm:18.2.4"
   dependencies:
     "@electron/get": ^1.13.0
-    "@types/node": ^14.6.2
+    "@types/node": ^16.11.26
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: e0585072c89f6d55ef910d809af49028c3f38653b91dfcfd1dcb1fe6cb073acd464bde0c561ce443146abeffec49f8e6bf83c0931dc4e8e7998209169235f788
+  checksum: 07c5696988b61aaa465fd44981a7956a4e7c2d71828471f105d6f5700f96e8e47d6c0800d0b710b29edcc3f9a1aae89bdc44ce3c909229e1cbae9fc424a2a772
   languageName: node
   linkType: hard
 
@@ -6814,7 +6814,7 @@ fsevents@~2.3.1:
     csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
-    electron: ^17.4.2
+    electron: ^18.2.4
     electron-builder: ^22.14.13
     electron-debug: ^3.2.0
     electron-devtools-installer: ^3.2.0
@@ -6840,7 +6840,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq-icalingua-plus-plus: 1.22.3
+    oicq-icalingua-plus-plus: 1.22.4
     pg: ^8.7.1
     pg-query-stream: ^4.2.1
     prettier: ^2.5.1
@@ -9532,9 +9532,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq-icalingua-plus-plus@npm:1.22.3":
-  version: 1.22.3
-  resolution: "oicq-icalingua-plus-plus@npm:1.22.3"
+"oicq-icalingua-plus-plus@npm:1.22.4":
+  version: 1.22.4
+  resolution: "oicq-icalingua-plus-plus@npm:1.22.4"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9545,7 +9545,7 @@ fsevents@~2.3.1:
     ws: ^7.5.5
   bin:
     oicq-icalingua-plus-plus: bin/oicq
-  checksum: 0b93482c7eded0fa0fcbf8aa4022d6a26979b1b7c317f789726b97de5f399da740f3dfef6dc9f4d349e56ce5341c4ce3f74d77183e017d703ebdd62e9a9e469a
+  checksum: 67b2c86395ecbb142276ec5a42aeb41fae2306f2a5840431743f3b2572afeaaa870f116a7c06ec261f125d72137f37607c978b9bea81ac63d8cf3caf6d06d633
   languageName: node
   linkType: hard
 
