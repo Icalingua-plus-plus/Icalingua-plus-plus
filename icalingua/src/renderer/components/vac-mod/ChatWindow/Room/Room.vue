@@ -826,7 +826,6 @@ export default {
     overflow-y: auto;
     margin-top: 60px;
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
 }
 
 .vac-messages-container {
