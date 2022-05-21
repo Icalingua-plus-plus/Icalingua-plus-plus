@@ -9,6 +9,7 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 [![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)
 [![License](https://img.shields.io/aur/license/icalingua++)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/dev/LICENSE)
 [![discord](https://img.shields.io/static/v1?label=chat&message=discord&color=7289da&logo=discord)](https://discord.gg/gKnU7BARzv)
+[![Telegram](https://img.shields.io/static/v1?label=Discussion&message=Telegram&color=blue&logo=telegram)](https://t.me/Icalinguapp)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/downloads/Icalingua-plus-plus/Icalingua-plus-plus/latest/total)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest)
 [![AUR votes](https://img.shields.io/aur/votes/icalingua++)](https://aur.archlinux.org/packages/icalingua++/)
@@ -33,4 +34,5 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 
 ### 免責聲明
 
-本開源項目僅用於學習和交流會話前端框架實現、不會用於商業用途，**因使用本項目調用不同 Adapter 後端接口（如 oicq）產生的一切後果由使用者自行承擔**，項目開發者不對此承擔任何責任。
+本開源項目僅用於學習和交流會話前端框架實現，一切開發旨在學習，請勿用於非法用途。本項目使用 AGPL-3.0 許可，完全免費開源，不收取任何費用。請勿將本項目用於商業用途。**因使用本項目調用不同 Adapter 後端接口（如 oicq）產生的一切問題與後果由使用者自行承擔，項目開發者不承擔任何責任。** 
+本項目基於 AGPL 發行。修改、再發行和運行服務需要遵守 AGPL 許可證，源碼需要和服務一起提供。 
