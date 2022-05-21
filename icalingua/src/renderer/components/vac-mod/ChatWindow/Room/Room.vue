@@ -502,7 +502,7 @@ export default {
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
-            if (event.clipboardData.files) {
+            if (event.clipboardData.files && event.clipboardData.files.length) {
                 // Using the path attribute to get absolute file path
                 const f = event.clipboardData.files[0]
                 const index = f.name.lastIndexOf('.')
