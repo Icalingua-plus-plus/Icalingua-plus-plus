@@ -187,6 +187,13 @@
                     </div>
                 </div>
 
+                <QuickFace
+                    v-show="isQuickFaceOn"
+                    ref="quickface"
+                    @cancel="closeQuickFace"
+                    @confirm="useQuickFace"
+                />
+
                 <textarea
                     v-show="!file || imageFile || videoFile"
                     ref="roomTextarea"
@@ -266,6 +273,7 @@ import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
+import QuickFace from '../../../QuickFace'
 
 import filteredUsers from '../../utils/filterItems'
 import { ipcRenderer } from 'electron'
@@ -289,6 +297,7 @@ export default {
         RoomMessageReply,
         RoomForwardMessage,
         Message,
+        QuickFace,
     },
     directives: {
         clickOutside: vClickOutside.directive,
@@ -350,6 +359,7 @@ export default {
             editAndResend: false,
             msgstoForward: [],
             showForwardPanel: false,
+            isQuickFaceOn: false,
         }
     },
     computed: {
@@ -497,6 +507,11 @@ export default {
                             this.message.length),
                 )
                 this.editAndResend = lastMessage._id
+            } else if (e.key === 'e' && e.ctrlKey) {
+                // 快捷表情选择
+                console.log('QuickFace on')
+                this.isQuickFaceOn = true
+                this.$nextTick(() => this.$refs.quickface.focus())
             }
         })
 
@@ -534,7 +549,7 @@ export default {
     },
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
-        ipcRenderer.on('startForward', () => this.showForwardPanel = true)
+        ipcRenderer.on('startForward', () => (this.showForwardPanel = true))
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
@@ -610,6 +625,21 @@ export default {
         },
         preventKeyboardFromClosing() {
             if (this.keepKeyboardOpen) this.$refs['roomTextarea'].focus()
+        },
+        closeQuickFace() {
+            this.isQuickFaceOn = false
+            this.$refs.roomTextarea.focus()
+        },
+        useQuickFace(id) {
+            this.closeQuickFace()
+            console.log(id)
+            if (typeof id === 'string') {
+                const textarea = this.$refs.roomTextarea
+                this.message =
+                    this.message.slice(0, textarea.selectionStart) +
+                    `[Face: ${id}]` +
+                    this.message.slice(textarea.selectionEnd)
+            }
         },
         sendMessage() {
             let message = this.message.trim()
