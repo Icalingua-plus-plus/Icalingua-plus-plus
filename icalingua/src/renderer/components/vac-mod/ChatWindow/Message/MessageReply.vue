@@ -1,5 +1,5 @@
 <template>
-    <div class="vac-reply-message" :id="message.replyMessage._id" @click="scrollToOrigin">
+    <div class="vac-reply-message" @click="scrollToOrigin">
         <div class="vac-reply-username" v-if="message.replyMessage.username">
             {{ message.replyMessage.username }}
         </div>
@@ -52,10 +52,18 @@ export default {
 
     methods: {
         scrollToOrigin() {
-            document.getElementById(this.message.replyMessage._id).scrollIntoView({behavior: "smooth"})
+            const originMessage = document.getElementById(this.message.replyMessage._id)
+            if (originMessage) {
+                originMessage.scrollIntoView({
+                    behavior: 'smooth'
+                })
+            } else {
+                this.$message.error('被回复的消息太远啦')
+            }
         },
-        openImage() {
+        openImage(e) {
             ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
+            e.stopPropagation()
         },
     },
 }
