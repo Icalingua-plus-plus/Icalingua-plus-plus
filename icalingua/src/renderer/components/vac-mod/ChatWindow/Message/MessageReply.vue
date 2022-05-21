@@ -52,7 +52,7 @@ export default {
 
     methods: {
         scrollToOrigin() {
-            document.getElementById(this.message.replyMessage._id).scrollIntoView(true)
+            document.getElementById(this.message.replyMessage._id).scrollIntoView({behavior: "smooth"})
         },
         openImage() {
             ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
