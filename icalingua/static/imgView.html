@@ -102,7 +102,6 @@
 	const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
 	IMG.src = url
 	DOWNLOAD.href = url
-	IMG.style.transformOrigin = 'top left'
 
 	var centerX = -1	// to center, with % instead
 	var centerY = -1
@@ -245,8 +244,8 @@
 			focus = { x: e.clientX, y: e.clientY }
 		}
 
-		var dx = (focus.x - IMG.offsetLeft) * (1 - zoom / scale);
-		var dy = (focus.y - IMG.offsetTop) * (1 - zoom / scale);
+		var dx = (focus.x - IMG.offsetLeft - IMG.width / 2) * (1 - zoom / scale);
+		var dy = (focus.y - IMG.offsetTop - IMG.height / 2) * (1 - zoom / scale);
 
 		IMG.style.left = IMG.offsetLeft + dx + 'px'
 		IMG.style.top = IMG.offsetTop + dy + 'px'
