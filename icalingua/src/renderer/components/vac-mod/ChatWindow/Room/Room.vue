@@ -509,7 +509,6 @@ export default {
                 this.editAndResend = lastMessage._id
             } else if (e.key === 'e' && e.ctrlKey) {
                 // 快捷表情选择
-                console.log('QuickFace on')
                 this.isQuickFaceOn = true
                 this.$nextTick(() => this.$refs.quickface.focus())
             }
@@ -620,10 +619,13 @@ export default {
         },
         useMessageContent(content) {
             const textarea = this.$refs.roomTextarea
+            const { selectionStart, selectionEnd } = textarea
             this.message =
-                this.message.slice(0, textarea.selectionStart) +
+                this.message.slice(0, selectionStart) +
                 content +
-                this.message.slice(textarea.selectionEnd)
+                this.message.slice(selectionEnd)
+            const newStart = selectionStart + content.length
+            this.$nextTick(() => textarea.setSelectionRange(newStart, newStart))
         },
         focusTextarea(disableMobileFocus) {
             if (detectMobile() && disableMobileFocus) return
@@ -635,14 +637,13 @@ export default {
         },
         closeQuickFace() {
             this.isQuickFaceOn = false
-            this.$refs.roomTextarea.focus()
+            this.focusTextarea()
         },
         useQuickFace(id) {
-            this.closeQuickFace()
-            console.log(id)
             if (typeof id === 'string') {
                 this.useMessageContent(`[Face: ${id}]`)
             }
+            setTimeout(() => this.closeQuickFace(), 0)
         },
         sendMessage() {
             let message = this.message.trim()
