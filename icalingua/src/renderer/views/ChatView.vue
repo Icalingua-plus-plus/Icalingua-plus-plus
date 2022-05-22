@@ -83,11 +83,11 @@
                             @send="sendSticker"
                             @close="panel = ''"
                             @selectEmoji="
-                                $refs.room.message += $event.data
+                                $refs.room.useMessageContent($event.data)
                                 $refs.room.focusTextarea()
                             "
                             @selectFace="
-                                $refs.room.message += `[Face: ${$event}]`
+                                $refs.room.useMessageContent(`[Face: ${$event}]`)
                                 $refs.room.focusTextarea()
                             "
                         />

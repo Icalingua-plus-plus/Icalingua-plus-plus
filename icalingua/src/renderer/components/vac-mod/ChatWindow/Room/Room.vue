@@ -187,6 +187,13 @@
                     </div>
                 </div>
 
+                <QuickFace
+                    v-show="isQuickFaceOn"
+                    ref="quickface"
+                    @cancel="closeQuickFace"
+                    @confirm="useQuickFace"
+                />
+
                 <textarea
                     v-show="!file || imageFile || videoFile"
                     ref="roomTextarea"
@@ -266,6 +273,7 @@ import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
+import QuickFace from '../../../QuickFace'
 
 import filteredUsers from '../../utils/filterItems'
 import { ipcRenderer } from 'electron'
@@ -289,6 +297,7 @@ export default {
         RoomMessageReply,
         RoomForwardMessage,
         Message,
+        QuickFace,
     },
     directives: {
         clickOutside: vClickOutside.directive,
@@ -350,6 +359,7 @@ export default {
             editAndResend: false,
             msgstoForward: [],
             showForwardPanel: false,
+            isQuickFaceOn: false,
         }
     },
     computed: {
@@ -497,6 +507,10 @@ export default {
                             this.message.length),
                 )
                 this.editAndResend = lastMessage._id
+            } else if (e.key === 'e' && e.ctrlKey) {
+                // 快捷表情选择
+                this.isQuickFaceOn = true
+                this.$nextTick(() => this.$refs.quickface.focus())
             }
         })
 
@@ -534,7 +548,7 @@ export default {
     },
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
-        ipcRenderer.on('startForward', () => this.showForwardPanel = true)
+        ipcRenderer.on('startForward', () => (this.showForwardPanel = true))
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
@@ -603,6 +617,16 @@ export default {
             if (!this.$refs['roomTextarea']) return
             this.$refs['roomTextarea'].style.height = '20px'
         },
+        useMessageContent(content) {
+            const textarea = this.$refs.roomTextarea
+            const { selectionStart, selectionEnd } = textarea
+            this.message =
+                this.message.slice(0, selectionStart) +
+                content +
+                this.message.slice(selectionEnd)
+            const newStart = selectionStart + content.length
+            this.$nextTick(() => textarea.setSelectionRange(newStart, newStart))
+        },
         focusTextarea(disableMobileFocus) {
             if (detectMobile() && disableMobileFocus) return
             if (!this.$refs['roomTextarea']) return
@@ -610,6 +634,16 @@ export default {
         },
         preventKeyboardFromClosing() {
             if (this.keepKeyboardOpen) this.$refs['roomTextarea'].focus()
+        },
+        closeQuickFace() {
+            this.isQuickFaceOn = false
+            this.focusTextarea()
+        },
+        useQuickFace(id) {
+            if (typeof id === 'string') {
+                this.useMessageContent(`[Face: ${id}]`)
+            }
+            setTimeout(() => this.closeQuickFace(), 0)
         },
         sendMessage() {
             let message = this.message.trim()
@@ -715,10 +749,6 @@ export default {
 
             el.style.height = 0
             el.style.height = el.scrollHeight - padding * 2 + 'px'
-        },
-        addEmoji(emoji) {
-            this.message += emoji.icon
-            this.focusTextarea(true)
         },
         launchFilePicker() {
             this.$refs.file.value = ''
