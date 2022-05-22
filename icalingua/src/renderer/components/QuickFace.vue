@@ -2,6 +2,7 @@
     <div class="root">
         <input
             ref="input"
+            spellcheck="false"
             v-model="search"
             @keydown.esc.stop="cancel"
             @keydown.arrow-down="selectNext"
@@ -73,7 +74,8 @@ export default {
         },
         scrollToSelected() {
             const list = this.$refs.faceList
-            list.scrollTo(0, list.children[this.selectedIndex].offsetTop - 32)
+            // FIXME: 使用更科学的方法计算滚动，这个 40px 不知道怎么来的……
+            list.scrollTo(0, list.children[this.selectedIndex].offsetTop - 40)
         }
     },
     computed: {
@@ -93,6 +95,7 @@ export default {
     position: absolute;
     width: 200px;
     bottom: 50px;
+    padding: 5px;
     border-radius: 8px;
     background: var(--chat-message-bg-color-me);
 }
@@ -102,7 +105,7 @@ input {
     border-radius: 8px;
     border: none;
     font-size: 18px;
-    background: var(--chat-color);
+    background: var();
 }
 small {
     float: right;
@@ -110,9 +113,9 @@ small {
 }
 ul {
     padding-left: 0;
-    margin: 8px 2px;
+    margin: 8px 0 2px 0;
     list-style-type: none;
-    max-height: 400px;
+    max-height: 390px;
     overflow-y: scroll;
 }
 li {
