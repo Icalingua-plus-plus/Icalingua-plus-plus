@@ -17,10 +17,7 @@
                 v-for="([ name, id ], index) in matched"
                 :key="index"
                 :class="{ selected: index === selectedIndex }"
-                @mousedown="
-                    confirmedByClick = true
-                    confirm(index)
-                "
+                @mousedown="confirm(index)"
             >
                 <p>{{ name }}</p>
                 <img :src="`file://${faceDir}/${id}`" />
@@ -40,8 +37,8 @@ export default {
             faceNames,
             selectedIndex: 0,
             search: '',
-            confirmedByClick: false,
-            faceDir: path.join(getStaticPath(), 'face')
+            faceDir: path.join(getStaticPath(), 'face'),
+            confirmed: false
         }
     },
     methods: {
@@ -49,8 +46,8 @@ export default {
             this.$refs.input.focus()
         },
         cancel() {
-            if (this.confirmedByClick) {
-                this.confirmedByClick = false
+            if (this.confirmed) {
+                this.confirmed = false
                 return
             }
             this.search = ''
@@ -58,11 +55,11 @@ export default {
             this.$emit('cancel')
         },
         confirm(index) {
-            const selected = this.matched[index]
-            if (selected) this.$emit('confirm', selected[1])
-            else this.$emit('cancel')
+            const selected = this.matched[index] || []
+            this.$emit('confirm', selected[1])
             this.search = ''
             this.selectedIndex = 0
+            this.confirmed = true
         },
         selectNext() {
             if (++this.selectedIndex >= this.matched.length) this.selectedIndex = 0
@@ -82,11 +79,7 @@ export default {
         matched() {
             return this.faceNames.filter(([name]) => name.startsWith(this.search))
         },
-    },
-    emits: {
-        cancel: null,
-        confirm: null,
-    },
+    }
 }
 </script>
 
