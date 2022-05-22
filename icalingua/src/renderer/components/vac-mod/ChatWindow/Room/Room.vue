@@ -618,6 +618,13 @@ export default {
             if (!this.$refs['roomTextarea']) return
             this.$refs['roomTextarea'].style.height = '20px'
         },
+        useMessageContent(content) {
+            const textarea = this.$refs.roomTextarea
+            this.message =
+                this.message.slice(0, textarea.selectionStart) +
+                content +
+                this.message.slice(textarea.selectionEnd)
+        },
         focusTextarea(disableMobileFocus) {
             if (detectMobile() && disableMobileFocus) return
             if (!this.$refs['roomTextarea']) return
@@ -634,11 +641,7 @@ export default {
             this.closeQuickFace()
             console.log(id)
             if (typeof id === 'string') {
-                const textarea = this.$refs.roomTextarea
-                this.message =
-                    this.message.slice(0, textarea.selectionStart) +
-                    `[Face: ${id}]` +
-                    this.message.slice(textarea.selectionEnd)
+                this.useMessageContent(`[Face: ${id}]`)
             }
         },
         sendMessage() {
@@ -745,10 +748,6 @@ export default {
 
             el.style.height = 0
             el.style.height = el.scrollHeight - padding * 2 + 'px'
-        },
-        addEmoji(emoji) {
-            this.message += emoji.icon
-            this.focusTextarea(true)
         },
         launchFilePicker() {
             this.$refs.file.value = ''
