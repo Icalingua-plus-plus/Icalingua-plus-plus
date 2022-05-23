@@ -640,10 +640,11 @@ export default {
             this.focusTextarea()
         },
         useQuickFace(id) {
+            this.isQuickFaceOn = false
             if (typeof id === 'string') {
                 this.useMessageContent(`[Face: ${id}]`)
             }
-            setTimeout(() => this.closeQuickFace(), 0)
+            setTimeout(() => this.focusTextarea(), 0)
         },
         sendMessage() {
             let message = this.message.trim()
