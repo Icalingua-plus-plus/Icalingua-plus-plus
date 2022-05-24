@@ -1382,7 +1382,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                 visible: room.roomId !== 0,
                 click: async () => {
                     const win = newIcalinguaWindow({
-                        height: 300,
+                        height: 210,
                         width: 600,
                         autoHideMenuBar: true,
                         maximizable: false,
