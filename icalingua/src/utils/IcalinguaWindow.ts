@@ -1,6 +1,6 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 
-export function newIcalinguaWindow (options?: Electron.BrowserWindowConstructorOptions) : BrowserWindow {
+export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
     win.on('focus', () => {
         // macOS Shortcut

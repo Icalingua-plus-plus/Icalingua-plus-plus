@@ -20,9 +20,12 @@ export const checkUpdate = async () => {
         }
     else if (version.isProduction) {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest', {
-                proxy: false,
-            })
+            const res = await axios.get(
+                'https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest',
+                {
+                    proxy: false,
+                },
+            )
             const latestVersion = res.data.tag_name
             cache = {
                 hasUpdate: latestVersion !== 'v' + version.version,
@@ -34,9 +37,12 @@ export const checkUpdate = async () => {
         }
     } else {
         try {
-            const res = await axios.get('https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/dev', {
-                proxy: false,
-            })
+            const res = await axios.get(
+                'https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/dev',
+                {
+                    proxy: false,
+                },
+            )
             const latestVersion = res.data.object.sha.substr(0, 7)
             cache = {
                 hasUpdate: latestVersion !== version.commitId,

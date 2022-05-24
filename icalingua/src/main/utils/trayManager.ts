@@ -21,7 +21,11 @@ let tray: Tray
 
 export const createTray = () => {
     if (process.platform === 'darwin') {
-        tray = new Tray(nativeImage.createFromPath(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')).resize({ width: 22, height: 22 }))
+        tray = new Tray(
+            nativeImage
+                .createFromPath(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
+                .resize({ width: 22, height: 22 }),
+        )
     } else {
         tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
     }

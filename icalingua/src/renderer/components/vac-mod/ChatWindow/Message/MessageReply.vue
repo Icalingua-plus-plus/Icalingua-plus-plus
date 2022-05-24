@@ -55,7 +55,7 @@ export default {
             const originMessage = document.getElementById(this.message.replyMessage._id)
             if (originMessage) {
                 originMessage.scrollIntoView({
-                    behavior: 'smooth'
+                    behavior: 'smooth',
                 })
             } else {
                 this.$message.error('被回复的消息太远啦')
