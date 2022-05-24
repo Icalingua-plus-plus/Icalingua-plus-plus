@@ -666,10 +666,7 @@ export default {
         useMessageContent(content) {
             const textarea = this.$refs.roomTextarea
             const { selectionStart, selectionEnd } = textarea
-            this.message =
-                this.message.slice(0, selectionStart) +
-                content +
-                this.message.slice(selectionEnd)
+            this.message = this.message.slice(0, selectionStart) + content + this.message.slice(selectionEnd)
             const newStart = selectionStart + content.length
             this.$nextTick(() => textarea.setSelectionRange(newStart, newStart))
         },

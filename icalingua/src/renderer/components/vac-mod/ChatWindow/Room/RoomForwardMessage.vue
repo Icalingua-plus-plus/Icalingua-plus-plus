@@ -2,9 +2,15 @@
     <transition name="vac-slide-up">
         <div v-if="showForwardPanel" class="vac-forward-container">
             <div class="vac-forward-box">
-                <el-button-group title="发送到群聊请选择群聊模式，发送到私聊请选择私聊模式，否则部分客户端无法加载图片。">
-                    <el-button type="primary" @click="stopForward(true, false)" :disabled="msgstoForward.length === 0">合并转发 {{ msgstoForward.length }} 条消息(群聊模式)</el-button>
-                    <el-button type="primary" @click="stopForward(true, true)" :disabled="msgstoForward.length === 0">(私聊模式)</el-button>
+                <el-button-group
+                    title="发送到群聊请选择群聊模式，发送到私聊请选择私聊模式，否则部分客户端无法加载图片。"
+                >
+                    <el-button type="primary" @click="stopForward(true, false)" :disabled="msgstoForward.length === 0"
+                        >合并转发 {{ msgstoForward.length }} 条消息(群聊模式)</el-button
+                    >
+                    <el-button type="primary" @click="stopForward(true, true)" :disabled="msgstoForward.length === 0"
+                        >(私聊模式)</el-button
+                    >
                 </el-button-group>
             </div>
 
@@ -28,7 +34,6 @@ export default {
         SvgIcon,
     },
 
-
     props: {
         messages: { type: Array, required: true },
         msgstoForward: { type: Array, required: true },
@@ -43,18 +48,18 @@ export default {
                 if (this.msgstoForward.length <= 0) {
                     console.log('No Message Selected.')
                     return
-                }   
+                }
                 const ForwardMessages = []
 
-                this.messages.forEach(message => {
-                    this.msgstoForward.forEach(msgId => {
+                this.messages.forEach((message) => {
+                    this.msgstoForward.forEach((msgId) => {
                         if (message._id === msgId) {
                             ForwardMessages.push(message)
                         }
                     })
                 })
                 const TextMessages = []
-                ForwardMessages.forEach(msg => {
+                ForwardMessages.forEach((msg) => {
                     const singleMessage = {
                         user_id: 0,
                         message: [],
@@ -64,24 +69,24 @@ export default {
                     if (msg) {
                         singleMessage.user_id = msg.senderId
                         singleMessage.message.push({
-                                type: "text",
-                                data: {
-                                    text: msg.content
-                                }
-                            })
+                            type: 'text',
+                            data: {
+                                text: msg.content,
+                            },
+                        })
                         if (msg.files) {
-                            msg.files.forEach(file => {
+                            msg.files.forEach((file) => {
                                 if (file.type.startsWith('image/'))
                                     singleMessage.message.push({
-                                        type: "image",
+                                        type: 'image',
                                         data: {
                                             file: file.url,
-                                            type: "image",
-                                        }
+                                            type: 'image',
+                                        },
                                     })
                             })
                         }
-                        singleMessage.nickname = (msg.senderId !== this.account) ? msg.username : this.username
+                        singleMessage.nickname = msg.senderId !== this.account ? msg.username : this.username
                         singleMessage.time = Math.floor(msg.time / 1000)
                         TextMessages.push(singleMessage)
                     }
@@ -93,9 +98,8 @@ export default {
                 } else {
                     ipc.makeForward(TextMessages, dm)
                 }
-                
-           }
-           this.$emit('close-forward-panel')
+            }
+            this.$emit('close-forward-panel')
         },
     },
 }
