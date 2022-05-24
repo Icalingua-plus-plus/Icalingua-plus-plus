@@ -112,3 +112,18 @@
         transform: scale(1);
     }
 }
+
+// Quick-face animation
+
+.vac-fade-quickface-enter {
+    opacity: 0;
+}
+
+.vac-fade-quickface-enter-active {
+    transition: opacity 0.2s;
+}
+
+.vac-fade-quickface-leave-active {
+    transition: opacity 0.3s;
+    opacity: 0;
+}
