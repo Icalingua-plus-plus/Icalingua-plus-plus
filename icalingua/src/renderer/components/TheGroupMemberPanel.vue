@@ -53,7 +53,7 @@ export default {
         const memberinfo = await ipcRenderer.invoke('getGroupMember', this.gin)
         console.log(memberinfo)
         if (memberinfo) {
-            memberinfo.forEach(element => {
+            memberinfo.forEach((element) => {
                 const member = {
                     user_id: element.user_id,
                     group_id: element.group_id,
@@ -62,7 +62,7 @@ export default {
                     sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
                 }
                 this.groupmembers.push(member)
-            });
+            })
         }
     },
     methods: {
@@ -70,7 +70,7 @@ export default {
             this.groupmembers = []
             const memberinfo = await ipcRenderer.invoke('getGroupMember', this.gin)
             if (memberinfo) {
-                memberinfo.forEach(element => {
+                memberinfo.forEach((element) => {
                     const member = {
                         user_id: element.user_id,
                         group_id: element.group_id,
@@ -79,7 +79,7 @@ export default {
                         sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
                     }
                     this.groupmembers.push(member)
-                });
+                })
             }
             this.$message.success('已刷新')
         },

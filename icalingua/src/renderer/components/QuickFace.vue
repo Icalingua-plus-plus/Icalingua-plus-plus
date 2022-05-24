@@ -14,7 +14,7 @@
         <small>{{ matched.length }} face(s)</small>
         <ul ref="faceList">
             <li
-                v-for="([ name, id ], index) in matched"
+                v-for="([name, id], index) in matched"
                 :key="index"
                 :class="{ selected: index === selectedIndex }"
                 @mousedown="confirm(index)"
@@ -38,7 +38,7 @@ export default {
             selectedIndex: 0,
             search: '',
             faceDir: path.join(getStaticPath(), 'face'),
-            confirmed: false
+            confirmed: false,
         }
     },
     methods: {
@@ -73,13 +73,13 @@ export default {
             const list = this.$refs.faceList
             // FIXME: 使用更科学的方法计算滚动，这个 40px 不知道怎么来的……
             list.scrollTo(0, list.children[this.selectedIndex].offsetTop - 40)
-        }
+        },
     },
     computed: {
         matched() {
             return this.faceNames.filter(([name]) => name.startsWith(this.search))
         },
-    }
+    },
 }
 </script>
 

@@ -1,8 +1,7 @@
 import { app } from 'electron'
 import argv from './utils/argv'
 
-
-(() => [
+;(() => [
     '我所遗失的心啊',
 
     '我曾做过的梦啊',
@@ -27,11 +26,7 @@ app.commandLine.appendSwitch('enable-features', 'CSSContainerQueries')
 app.commandLine.appendSwitch('proxy-server', '')
 
 app.on('ready', async () => {
-    (() => ['#5bcffa',
-        '#f5abb9',
-        '#ffffff',
-        '#f5abb9',
-        '#5bcffa'])()
+    ;(() => ['#5bcffa', '#f5abb9', '#ffffff', '#f5abb9', '#5bcffa'])()
 
     if (argv.version) {
         console.log(require('./utils/version').version)

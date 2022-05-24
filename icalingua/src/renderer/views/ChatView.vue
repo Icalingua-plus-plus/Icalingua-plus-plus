@@ -112,7 +112,12 @@
             <TheContactsPanel @dblclick="startChat" />
         </el-dialog>
         <el-dialog title="群成员" :visible.sync="groupmemberShown" top="5vh" class="dialog">
-            <TheGroupMemberPanel @dblclick="startChat" :groupmemberShown="groupmemberShown" :gin="-selectedRoom.roomId" v-if="groupmemberShown" />
+            <TheGroupMemberPanel
+                @dblclick="startChat"
+                :groupmemberShown="groupmemberShown"
+                :gin="-selectedRoom.roomId"
+                v-if="groupmemberShown"
+            />
         </el-dialog>
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
     </div>
