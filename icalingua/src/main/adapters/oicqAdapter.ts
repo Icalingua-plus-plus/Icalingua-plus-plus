@@ -107,8 +107,12 @@ const eventHandlers = {
             role: (data.sender as MemberBaseInfo).role,
             title: groupId && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
             files: [],
-            anonymousId: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
-            anonymousflag: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
+            anonymousId:
+                groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
+            anonymousflag:
+                groupId && (<GroupMessageEventData>data).anonymous
+                    ? (<GroupMessageEventData>data).anonymous.flag
+                    : null,
         }
 
         let room = await storage.getRoom(roomId)
@@ -157,7 +161,7 @@ const eventHandlers = {
             !isSelfMsg
         ) {
             //notification
-            if ((process.platform === 'darwin' || process.platform === 'win32')) {
+            if (process.platform === 'darwin' || process.platform === 'win32') {
                 if (!ElectronNotification.isSupported()) return
                 if (process.platform === 'win32') {
                     app.setAppUserModelId(process.execPath)
@@ -168,10 +172,12 @@ const eventHandlers = {
                     hasReply: true,
                     replyPlaceholder: 'Reply to ' + room.roomName,
                     icon: await avatarCache(getAvatarUrl(roomId, true)),
-                    actions: [{
-                        text: '标为已读',
-                        type: 'button',
-                    }],
+                    actions: [
+                        {
+                            text: '标为已读',
+                            type: 'button',
+                        },
+                    ],
                 })
                 notif.on('click', () => {
                     notif.close()
@@ -190,7 +196,7 @@ const eventHandlers = {
                 if (process.platform === 'win32') {
                     notif.on('close', () => {
                         notif.close()
-                    })  
+                    })
                 }
                 notif.show()
             } else {
@@ -542,7 +548,9 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const now = new Date(data.time * 1000)
         const newAdmin = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = (data.set ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员` : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`)
+        let content = data.set
+            ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
+            : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
@@ -583,7 +591,9 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname}`
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${
+            transferredUser.card || transferredUser.nickname
+        }`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -760,8 +770,7 @@ const loginHandlers = {
         const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
-            webPreferences: {
-            },
+            webPreferences: {},
         })
         veriWin.on('close', () => {
             bot.login(loginForm.password)
@@ -942,13 +951,16 @@ const adapter: OicqAdapter = {
     },
     async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): Promise<any> {
         const xmlret = await bot.makeForwardMsg(fakes, dm, target)
-        if(xmlret.error) {
+        if (xmlret.error) {
             errorHandler(xmlret.error, true)
             ui.messageError('错误：' + xmlret.error.message)
             return
         }
         ui.addMessageText(xmlret.data.data.data)
-        ui.notify({title:'生成转发成功', message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。'})
+        ui.notify({
+            title: '生成转发成功',
+            message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。',
+        })
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
@@ -1022,7 +1034,18 @@ const adapter: OicqAdapter = {
     async getCookies(domain: CookiesDomain) {
         return (await bot.getCookies(domain)).data.cookies
     },
-    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker, messageType }: SendMessageParams) {
+    async sendMessage({
+        content,
+        roomId,
+        file,
+        replyMessage,
+        room,
+        b64img,
+        imgpath,
+        at,
+        sticker,
+        messageType,
+    }: SendMessageParams) {
         if (!messageType) {
             messageType = 'text'
         }
@@ -1062,7 +1085,7 @@ const adapter: OicqAdapter = {
                 type: 'anonymous',
                 data: {
                     ignore: false, //匿名失败时不继续发送
-                }
+                },
             })
         }
 
@@ -1160,7 +1183,7 @@ const adapter: OicqAdapter = {
                             data: content,
                         },
                     })
-                    break;
+                    break
                 } else if (messageType == 'xml') {
                     chain.length = 0
                     chain.push({
@@ -1169,7 +1192,7 @@ const adapter: OicqAdapter = {
                             data: content,
                         },
                     })
-                    break;
+                    break
                 }
                 chain.push(element)
             }
@@ -1532,10 +1555,19 @@ const adapter: OicqAdapter = {
                         _id: data.message_id,
                         time: data.time * 1000,
                         role: (data.sender as MemberBaseInfo).role,
-                        title: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
+                        title:
+                            (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                                ? '匿名'
+                                : (data.sender as MemberBaseInfo).title,
                         files: [],
-                        anonymousId: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
-                        anonymousflag: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
+                        anonymousId:
+                            (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                                ? (<GroupMessageEventData>data).anonymous.id
+                                : null,
+                        anonymousflag:
+                            (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                                ? (<GroupMessageEventData>data).anonymous.flag
+                                : null,
                     }
                     try {
                         const retData = await processMessage(data.message, message, {}, roomId)

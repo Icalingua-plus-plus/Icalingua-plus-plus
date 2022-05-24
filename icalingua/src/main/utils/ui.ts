@@ -22,7 +22,7 @@ export default {
     startForward() {
         sendToMainWindow('startForward')
     },
-    confirmDeleteMessage(roomId: number,messageId: string) {
+    confirmDeleteMessage(roomId: number, messageId: string) {
         sendToMainWindow('confirmDeleteMessage', { roomId, messageId })
     },
     confirmDeleteSticker(filename: string) {

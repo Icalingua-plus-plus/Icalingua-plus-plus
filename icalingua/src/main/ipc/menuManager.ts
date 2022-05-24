@@ -317,12 +317,12 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                        '#/groupNickEdit/' +
-                        -room.roomId +
-                        '/' +
-                        querystring.escape(room.roomName) +
-                        '/' +
-                        querystring.escape(memberInfo.card || memberInfo.nickname),
+                            '#/groupNickEdit/' +
+                            -room.roomId +
+                            '/' +
+                            querystring.escape(room.roomName) +
+                            '/' +
+                            querystring.escape(memberInfo.card || memberInfo.nickname),
                     )
                 },
             }),
@@ -379,7 +379,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     win.webContents.on('dom-ready', () =>
                         win.webContents.insertCSS(
                             '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
-                            '.body{padding-top:0 !important;margin:0 !important}',
+                                '.body{padding-top:0 !important;margin:0 !important}',
                         ),
                     )
                     await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
@@ -514,7 +514,7 @@ export const updateAppMenu = async () => {
                         updateAppMenu()
                     }, 10000)
                     updateAppMenu()
-                }
+                },
             }),
             new MenuItem({
                 label: 'GitHub',
@@ -728,7 +728,7 @@ export const updateAppMenu = async () => {
                 click: (menuItem) => {
                     getConfig().linkify = menuItem.checked
                     saveConfigFile()
-                    ui.message("高亮 URL 功能已" + (menuItem.checked ? '开启' : '关闭') + "，重新加载后生效")
+                    ui.message('高亮 URL 功能已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效')
                 },
             }),
             new MenuItem({
@@ -895,7 +895,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     type: 'normal',
                     click: () => {
                         clipboard.writeText(JSON.stringify(message))
-                    }
+                    },
                 }),
             )
             menu.append(
@@ -911,7 +911,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             time: message.time / 1000,
                         }
                         makeForward(msgtoforward)
-                    }
+                    },
                 }),
             )
             menu.append(
@@ -920,7 +920,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     type: 'normal',
                     click: () => {
                         deleteMessage(room.roomId, message._id as string)
-                    }
+                    },
                 }),
             )
             menu.append(
@@ -1152,7 +1152,11 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         }
         menu.append(
             new MenuItem({
-                label: history ? (message._id !== -1 ? `复制转发来源 ID ${message._id}` : '转发来源未知（可能来自私聊消息）') : '复制消息 ID',
+                label: history
+                    ? message._id !== -1
+                        ? `复制转发来源 ID ${message._id}`
+                        : '转发来源未知（可能来自私聊消息）'
+                    : '复制消息 ID',
                 type: 'normal',
                 enabled: !(history && message._id === -1),
                 click: () => {
@@ -1391,16 +1395,16 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                        '#/MuteUser/' +
-                        -room.roomId +
-                        '/' +
-                        message.senderId +
-                        '/' +
-                        querystring.escape(room.roomName) +
-                        '/' +
-                        querystring.escape(message.username) +
-                        '/' +
-                        querystring.escape(message.anonymousflag),
+                            '#/MuteUser/' +
+                            -room.roomId +
+                            '/' +
+                            message.senderId +
+                            '/' +
+                            querystring.escape(room.roomName) +
+                            '/' +
+                            querystring.escape(message.username) +
+                            '/' +
+                            querystring.escape(message.anonymousflag),
                     )
                 },
             }),
@@ -1424,14 +1428,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                        '#/kickAndExit/kick/' +
-                        -room.roomId +
-                        '/' +
-                        message.senderId +
-                        '/' +
-                        querystring.escape(room.roomName) +
-                        '/' +
-                        querystring.escape(message.username),
+                            '#/kickAndExit/kick/' +
+                            -room.roomId +
+                            '/' +
+                            message.senderId +
+                            '/' +
+                            querystring.escape(room.roomName) +
+                            '/' +
+                            querystring.escape(message.username),
                     )
                 },
             }),
@@ -1451,7 +1455,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
-    if (name && name!==remark) {
+    if (name && name !== remark) {
         menu.append(
             new MenuItem({
                 label: `复制 "${name}"`,
@@ -1490,13 +1494,13 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                     })
                     await win.loadURL(
                         getWinUrl() +
-                        '#/kickAndExit/' +
-                        (group.owner_id === getUin() ? 'dismiss' : 'exit') +
-                        '/' +
-                        displayId +
-                        '/0/' +
-                        querystring.escape(remark) +
-                        '/0',
+                            '#/kickAndExit/' +
+                            (group.owner_id === getUin() ? 'dismiss' : 'exit') +
+                            '/' +
+                            displayId +
+                            '/0/' +
+                            querystring.escape(remark) +
+                            '/0',
                     )
                 },
             }),

@@ -112,7 +112,7 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
-    socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number, URL: string }) => {
+    socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number; URL: string }) => {
         ui.renewMessageURL(messageId, URL)
     })
     socket.on('syncRead', ui.clearRoomUnread)
@@ -137,7 +137,7 @@ const attachSocketEvents = () => {
                 !data.isSelfMsg
             ) {
                 //notification
-                if ((process.platform === 'darwin' || process.platform === 'win32')) {
+                if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
                     if (process.platform === 'win32') {
                         app.setAppUserModelId(process.execPath)
@@ -148,10 +148,12 @@ const attachSocketEvents = () => {
                         hasReply: data.data.hasReply,
                         replyPlaceholder: data.data.replyPlaceholder,
                         icon: await avatarCache(getAvatarUrl(data.roomId, true)),
-                        actions: [{
-                            text: '标为已读',
-                            type: 'button',
-                        }],
+                        actions: [
+                            {
+                                text: '标为已读',
+                                type: 'button',
+                            },
+                        ],
                     })
                     notif.on('click', () => {
                         notif.close()
@@ -170,7 +172,7 @@ const attachSocketEvents = () => {
                     if (process.platform === 'win32') {
                         notif.on('close', () => {
                             notif.close()
-                        })  
+                        })
                     }
                     notif.show()
                 } else {
@@ -237,8 +239,7 @@ const attachSocketEvents = () => {
         const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
-            webPreferences: {
-            },
+            webPreferences: {},
         })
         veriWin.on('close', () => {
             socket.emit('login-verify-reLogin')
