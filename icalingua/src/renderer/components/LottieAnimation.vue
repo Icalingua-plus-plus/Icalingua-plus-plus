@@ -60,6 +60,12 @@ export default {
     }),
     mounted() {
         this.init()
+        window.addEventListener("scroll", this.scrollHandle, true);
+    },
+    destroyed() {
+        this.anim.destroy() // Releases resources. The DOM element will be emptied.
+        window.removeEventListener("scroll", this.scrollHandle, true);
+        console.log('lottie animation destroyed.')
     },
     methods: {
         async loadJsonData(path) {
@@ -109,6 +115,18 @@ export default {
                 this.anim.stop()
                 this.executeLoop()
             }, this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax))
+        },
+        scrollHandle() {
+            const offset = this.$el.getBoundingClientRect();
+            const offsetTop = offset.top;
+            const offsetBottom = offset.bottom;
+            if (offsetTop <= window.innerHeight && offsetBottom >= 0) {
+                // console.log('进入可视区域');
+                this.anim.play() // Play the animation if it is in the viewport
+            } else {
+                // console.log('移出可视区域');
+                this.anim.stop() // Stop the animation if it is not in the viewport
+            }
         },
     },
     watch: {
