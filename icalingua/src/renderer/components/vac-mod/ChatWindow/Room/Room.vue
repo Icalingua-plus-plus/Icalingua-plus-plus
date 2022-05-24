@@ -187,12 +187,14 @@
                     </div>
                 </div>
 
-                <QuickFace
-                    v-show="isQuickFaceOn"
-                    ref="quickface"
-                    @cancel="closeQuickFace"
-                    @confirm="useQuickFace"
-                />
+                <transition name="vac-fade-quickface">
+                    <QuickFace
+                        v-show="isQuickFaceOn"
+                        ref="quickface"
+                        @cancel="closeQuickFace"
+                        @confirm="useQuickFace"
+                    />
+                </transition>
 
                 <textarea
                     v-show="!file || imageFile || videoFile"
