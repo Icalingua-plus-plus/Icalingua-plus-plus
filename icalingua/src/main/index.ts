@@ -1,6 +1,5 @@
 import { app } from 'electron'
 import argv from './utils/argv'
-
 ;(() => [
     '我所遗失的心啊',
 
