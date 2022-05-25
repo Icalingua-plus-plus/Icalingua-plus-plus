@@ -40,7 +40,7 @@ export default {
         list: Array,
         description: String,
         searchMethod: String,
-        inputSize: Number
+        inputSize: String
     },
     methods: {
         focus() {

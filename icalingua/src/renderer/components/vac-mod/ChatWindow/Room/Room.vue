@@ -193,9 +193,9 @@
                         v-show="isQuickFaceOn"
                         v-slot="{ id, name }"
                         :list="faceNames"
-                        :description="'face(s)'"
-                        :searchMethod="'startsWith'"
-                        :inputSize="80"
+                        description="face(s)"
+                        searchMethod="startsWith"
+                        inputSize="80"
                         @cancel="closeQuickFace"
                         @confirm="useQuickFace"
                     >
@@ -213,9 +213,9 @@
                             ? groupMembers.map(({ card, nickname, user_id }) => [ card || nickname, user_id ])
                             : []
                         "
-                        :description="'member(s)'"
-                        :searchMethod="'includes'"
-                        :inputSize="200"
+                        description="member(s)"
+                        searchMethod="includes"
+                        inputSize="200"
                         @cancel="closeQuickAt"
                         @confirm="useQuickAt"
                     >
