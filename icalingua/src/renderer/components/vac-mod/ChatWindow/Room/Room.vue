@@ -554,7 +554,6 @@ export default {
                 this.$nextTick(() => this.$refs.quickface.focus())
             } else if (e.key === 'm' && e.ctrlKey && this.room.roomId < 0) {
                 // 快捷 at 选择
-                console.log(this.room.roomId)
                 this.isQuickAtOn = true
                 this.$nextTick(() => this.$refs.quickat.focus())
             }
@@ -699,9 +698,9 @@ export default {
                 const atText = `@${name}`
                 ipc.pushAtCache({
                     text: atText,
-                    id
+                    id: id,
                 })
-                this.useMessageContent(atText)
+                this.useMessageContent(atText + ' ')
             }
             setTimeout(() => this.focusTextarea(), 0)
         },
