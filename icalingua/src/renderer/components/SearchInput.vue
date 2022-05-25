@@ -4,6 +4,7 @@
             ref="input"
             spellcheck="false"
             v-model="search"
+            :style="{ width: inputSize + 'px' }"
             @keydown.esc.stop="cancel"
             @keydown.arrow-down="selectNext"
             @keydown.arrow-up="selectLast"
@@ -11,35 +12,34 @@
             @input="selectedIndex = 0"
             @blur="$nextTick(cancel)"
         />
-        <small>{{ matched.length }} face(s)</small>
-        <ul ref="faceList">
+        <small>{{ matched.length }} {{ description }}</small>
+        <ul ref="list">
             <li
                 v-for="([ name, id ], index) in matched"
                 :key="index"
                 :class="{ selected: index === selectedIndex }"
                 @mousedown="confirm(index)"
             >
-                <p>{{ name }}</p>
-                <img :src="`file://${faceDir}/${id}`" />
+                <slot v-bind="{ name, id }"></slot>
             </li>
         </ul>
     </div>
 </template>
 
 <script>
-import faceNames from '../../../static/faceNames.js'
-import getStaticPath from '../../utils/getStaticPath'
-import path from 'path'
-
 export default {
     data() {
         return {
-            faceNames,
             selectedIndex: 0,
             search: '',
-            faceDir: path.join(getStaticPath(), 'face'),
             confirmed: false
         }
+    },
+    props: {
+        list: Array,
+        description: String,
+        searchMethod: String,
+        inputSize: Number
     },
     methods: {
         focus() {
@@ -56,7 +56,7 @@ export default {
         },
         confirm(index) {
             const selected = this.matched[index] || []
-            this.$emit('confirm', selected[1])
+            this.$emit('confirm', selected[1], selected[0])
             this.search = ''
             this.selectedIndex = 0
             this.confirmed = true
@@ -70,14 +70,14 @@ export default {
             this.scrollToSelected()
         },
         scrollToSelected() {
-            const list = this.$refs.faceList
+            const list = this.$refs.list
             // FIXME: 使用更科学的方法计算滚动，这个 40px 不知道怎么来的……
             list.scrollTo(0, list.children[this.selectedIndex].offsetTop - 40)
         }
     },
     computed: {
         matched() {
-            return this.faceNames.filter(([name]) => name.startsWith(this.search))
+            return this.list.filter(([name]) => name[this.searchMethod](this.search))
         },
     }
 }
@@ -86,7 +86,7 @@ export default {
 <style scoped>
 .root {
     position: absolute;
-    width: 200px;
+    min-width: 200px;
     bottom: 50px;
     padding: 5px;
     border-radius: 8px;
@@ -94,11 +94,9 @@ export default {
 }
 input {
     padding: 3px 10px;
-    width: 80px;
     border-radius: 8px;
     border: none;
     font-size: 18px;
-    background: var();
 }
 small {
     float: right;
@@ -114,7 +112,7 @@ ul {
 li {
     display: flex;
     justify-content: space-between;
-    height: 26px;
+    min-height: 26px;
     padding: 2px 8px;
     border-radius: 3px;
 }
