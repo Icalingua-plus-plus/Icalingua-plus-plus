@@ -1572,7 +1572,7 @@ ipcMain.on('popupGroupMemberMenu', async (_, remark?: string, name?: string, dis
         menu.append(
             new MenuItem({
                 label: 'at',
-                click: async () => {
+                click: () => {
                     atCache.push({
                         text: '@' + remark,
                         id: displayId,
