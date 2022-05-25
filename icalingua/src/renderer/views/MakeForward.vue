@@ -1,12 +1,12 @@
 <template>
     <div class="settings">
         <p>合并转发 DEBUG</p>
-        <p style="font-weight:bold; color:red;">警告：本页面功能只用于 DEBUG，使用本页面功能造成的后果自行承担</p>
-        <el-input v-model="uid" placeholder="uid" @input="uid = uid.replace(/[^\d]/g,'')"/>
-        <el-input v-model="nickname" placeholder="nickname"/>
-        <el-input v-model="content" type="textarea" placeholder="content" :rows="6"/>
-        <el-input v-model="timestamp" placeholder="timestamp" @input="timestamp = timestamp.replace(/[^\d]/g,'')" />
-        <el-input v-model="target" placeholder="target" @input="target = target.replace(/[^\d]/g,'')" />
+        <p style="font-weight: bold; color: red">警告：本页面功能只用于 DEBUG，使用本页面功能造成的后果自行承担</p>
+        <el-input v-model="uid" placeholder="uid" @input="uid = uid.replace(/[^\d]/g, '')" />
+        <el-input v-model="nickname" placeholder="nickname" />
+        <el-input v-model="content" type="textarea" placeholder="content" :rows="6" />
+        <el-input v-model="timestamp" placeholder="timestamp" @input="timestamp = timestamp.replace(/[^\d]/g, '')" />
+        <el-input v-model="target" placeholder="target" @input="target = target.replace(/[^\d]/g, '')" />
         <el-switch v-model="dm" inactive-text="群聊模式" active-text="私聊模式"></el-switch>
         <div class="dialog-footer">
             <el-button type="primary" @click="addMessage">加入</el-button>
@@ -43,10 +43,10 @@ export default {
                 time: 0,
             }
             if (this.uid != '') {
-                if(this.timestamp == '') {
+                if (this.timestamp == '') {
                     this.timestamp = Math.floor(new Date().getTime() / 1000).toString()
                 }
-                if(this.nickname == '') {
+                if (this.nickname == '') {
                     this.nickname = this.uid
                 }
                 singleMessage.user_id = parseInt(this.uid)
@@ -71,7 +71,7 @@ export default {
                         type: 'text',
                         data: {
                             text: this.content,
-                        }
+                        },
                     })
                 }
                 singleMessage.nickname = this.nickname

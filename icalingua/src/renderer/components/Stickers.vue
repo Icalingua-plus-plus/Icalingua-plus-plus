@@ -31,7 +31,15 @@
             </div>
         </div>
         <div class="stickers_dir" v-if="panel === 'stickers'">
-            <a v-for="i in subdirs.filter((i) => i[0] !== '.')" :key="i" :name="i" @click="changeCurrentDir(i)" @click.right="dirMenu(i)" :class="{ selected: current_dir === i || (i==='Default' && dir === default_dir) }">{{ i }}</a>
+            <a
+                v-for="i in subdirs.filter((i) => i[0] !== '.')"
+                :key="i"
+                :name="i"
+                @click="changeCurrentDir(i)"
+                @click.right="dirMenu(i)"
+                :class="{ selected: current_dir === i || (i === 'Default' && dir === default_dir) }"
+                >{{ i }}</a
+            >
         </div>
         <div v-if="panel === 'stickers'" style="overflow: auto">
             <center v-show="!pics.length">
@@ -107,13 +115,13 @@ export default {
             //如果是文件夹则加入到subdirs数组中
             fs.readdir(this.default_dir, (_err, files) => {
                 this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
-                this.subdirs = ['Default',...this.subdirs]
+                this.subdirs = ['Default', ...this.subdirs]
             })
         })
-            fs.readdir(this.default_dir, (_err, files) => {
-                this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
-                this.subdirs = ['Default',...this.subdirs]
-            })
+        fs.readdir(this.default_dir, (_err, files) => {
+            this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
+            this.subdirs = ['Default', ...this.subdirs]
+        })
         fs.readdir(this.dir, (_err, files) => {
             this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
         })
