@@ -19,16 +19,20 @@ import Room from '../../types/Room'
 
 let tray: Tray
 
+let darknewmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'darknewmsg.png'))
+let newmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'newmsg.png'))
+let darkIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'dark.png'))
+let lightIcon = nativeImage.createFromPath(path.join(getStaticPath(), '256x256.png'))
+
+if (process.platform === 'darwin') {
+    darknewmsgIcon = darknewmsgIcon.resize({ width: 22, height: 22 })
+    newmsgIcon = newmsgIcon.resize({ width: 22, height: 22 })
+    darkIcon = darkIcon.resize({ width: 22, height: 22 })
+    lightIcon = lightIcon.resize({ width: 22, height: 22 })
+}
+
 export const createTray = () => {
-    if (process.platform === 'darwin') {
-        tray = new Tray(
-            nativeImage
-                .createFromPath(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
-                .resize({ width: 22, height: 22 }),
-        )
-    } else {
-        tray = new Tray(path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png'))
-    }
+    tray = new Tray(getConfig().darkTaskIcon ? darknewmsgIcon : newmsgIcon)
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     tray.on('click', () => {
         const window = getMainWindow()
@@ -152,19 +156,15 @@ export const updateTrayIcon = async () => {
     const unread = await getUnreadCount()
     const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
     if (unread) {
-        p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'darknewmsg.png' : 'newmsg.png')
+        p = getConfig().darkTaskIcon ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
-        p = path.join(getStaticPath(), getConfig().darkTaskIcon ? 'dark.png' : '256x256.png')
+        p = getConfig().darkTaskIcon ? darkIcon : lightIcon
         getMainWindow().title = title
     }
-    if (process.platform === 'darwin') {
-        tray.setImage(nativeImage.createFromPath(p).resize({ width: 22, height: 22 }))
-    } else {
-        tray.setImage(p)
-    }
+    tray.setImage(p)
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
     updateTrayMenu()
