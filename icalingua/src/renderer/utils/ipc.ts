@@ -5,7 +5,8 @@ import Aria2Config from '../../types/Aria2Config'
 import IgnoreChatInfo from '../../types/IgnoreChatInfo'
 import RoamingStamp from '../../types/RoamingStamp'
 import SearchableGroup from '../../types/SearchableGroup'
-import { FakeMessage } from 'oicq-icalingua-plus-plus'
+import { FakeMessage, GroupInfo } from 'oicq-icalingua-plus-plus'
+import AtCacheItem from '../../types/AtCacheElem'
 
 const ipc = {
     sendMessage(data) {
@@ -159,5 +160,11 @@ const ipc = {
     async getGroup(gin: number): Promise<SearchableGroup> {
         return await ipcRenderer.invoke('getGroup', gin)
     },
+    async getGroupMembers(gin: number): Promise<GroupInfo> {
+        return await ipcRenderer.invoke('getGroupMembers', gin)
+    },
+    async pushAtCache(at: AtCacheItem): Promise<number> {
+        return await ipcRenderer.invoke('pushAtCache', at)
+    }
 }
 export default ipc
