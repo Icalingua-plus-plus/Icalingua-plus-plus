@@ -187,13 +187,41 @@
                     </div>
                 </div>
 
-                <transition name="vac-fade-quickface">
-                    <QuickFace
-                        v-show="isQuickFaceOn"
+                <transition name="vac-fade-search-input">
+                    <SearchInput
                         ref="quickface"
+                        v-show="isQuickFaceOn"
+                        v-slot="{ id, name }"
+                        :list="faceNames"
+                        description="face(s)"
+                        searchMethod="startsWith"
+                        inputSize="80"
                         @cancel="closeQuickFace"
                         @confirm="useQuickFace"
-                    />
+                    >
+                        <p>{{ name }}</p>
+                        <img :src="`file://${faceDir}/${id}`" />
+                    </SearchInput>
+                </transition>
+
+                <transition name="vac-fade-search-input">
+                    <SearchInput
+                        ref="quickat"
+                        v-show="isQuickAtOn && room.roomId < 0"
+                        v-slot="{ id, name }"
+                        :list="groupMembers
+                            ? groupMembers.map(({ card, nickname, user_id }) => [ card || nickname, user_id ])
+                            : []
+                        "
+                        description="member(s)"
+                        searchMethod="includes"
+                        inputSize="200"
+                        @cancel="closeQuickAt"
+                        @confirm="useQuickAt"
+                    >
+                        <p :style="{ wordWrap: 'break-word' }">{{ name }}</p>
+                        <p :style="{ fontFamily: 'monospace' }">{{ id }}</p>
+                    </SearchInput>
                 </transition>
 
                 <textarea
@@ -275,9 +303,13 @@ import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
-import QuickFace from '../../../QuickFace'
+import SearchInput from '../../../SearchInput'
 
-import filteredUsers from '../../utils/filterItems'
+import faceNames from '../../../../../../static/faceNames'
+import getStaticPath from '../../../../../utils/getStaticPath'
+import path from 'path'
+const faceDir = path.join(getStaticPath(), 'face')
+
 import { ipcRenderer } from 'electron'
 
 const { messagesValid } = require('../../utils/roomValidation')
@@ -299,7 +331,9 @@ export default {
         RoomMessageReply,
         RoomForwardMessage,
         Message,
-        QuickFace,
+        SearchInput,
+        SearchInput,
+        SearchInput,
     },
     directives: {
         clickOutside: vClickOutside.directive,
@@ -362,6 +396,10 @@ export default {
             msgstoForward: [],
             showForwardPanel: false,
             isQuickFaceOn: false,
+            isQuickAtOn: false,
+            faceNames,
+            faceDir,
+            groupMembers: null
         }
     },
     computed: {
@@ -387,7 +425,7 @@ export default {
             if (val) this.infiniteState = null
             else this.focusTextarea(true)
         },
-        room(newVal, oldVal) {
+        async room(newVal, oldVal) {
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
                 this.loadingMessages = true
                 this.scrollIcon = false
@@ -399,6 +437,7 @@ export default {
                 }
                 this.editAndResend = false
                 this.msgstoForward = []
+                await this.updateGroupMembers()
             }
         },
         roomMessage: {
@@ -513,6 +552,11 @@ export default {
                 // 快捷表情选择
                 this.isQuickFaceOn = true
                 this.$nextTick(() => this.$refs.quickface.focus())
+            } else if (e.key === 'm' && e.ctrlKey && this.room.roomId < 0) {
+                // 快捷 at 选择
+                console.log(this.room.roomId)
+                this.isQuickAtOn = true
+                this.$nextTick(() => this.$refs.quickat.focus())
             }
         })
 
@@ -642,6 +686,22 @@ export default {
             this.isQuickFaceOn = false
             if (typeof id === 'string') {
                 this.useMessageContent(`[Face: ${id}]`)
+            }
+            setTimeout(() => this.focusTextarea(), 0)
+        },
+        closeQuickAt() {
+            this.isQuickAtOn = false
+            this.focusTextarea()
+        },
+        useQuickAt(id, name) {
+            this.isQuickAtOn = false
+            if (typeof id === 'number') {
+                const atText = `@${name}`
+                ipc.pushAtCache({
+                    text: atText,
+                    id
+                })
+                this.useMessageContent(atText)
             }
             setTimeout(() => this.focusTextarea(), 0)
         },
@@ -813,6 +873,10 @@ export default {
         textctx: ipc.popupTextAreaMenu,
         roomMenu() {
             ipc.popupRoomMenu(this.room.roomId)
+        },
+        async updateGroupMembers() {
+            const { roomId } = this.room 
+            if (roomId < 0) this.groupMembers = await ipc.getGroupMembers(-roomId)
         },
     },
 }

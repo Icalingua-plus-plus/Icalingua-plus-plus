@@ -373,6 +373,7 @@ Chromium ${process.versions.chrome}` : ''
             }
             if (!room) room = this.rooms.find((e) => e.roomId === roomId)
             if (!roomId) roomId = room.roomId
+            console.log("roomid %d", roomId)
             if (file) {
                 if (file.type.includes('image')) {
                     const crypto = require('crypto');

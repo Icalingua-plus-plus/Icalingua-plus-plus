@@ -50,7 +50,7 @@ export default {
         },
     },
     async created() {
-        const memberinfo = await ipcRenderer.invoke('getGroupMember', this.gin)
+        const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
         console.log(memberinfo)
         if (memberinfo) {
             memberinfo.forEach((element) => {
@@ -68,7 +68,7 @@ export default {
     methods: {
         async refresh() {
             this.groupmembers = []
-            const memberinfo = await ipcRenderer.invoke('getGroupMember', this.gin)
+            const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
             if (memberinfo) {
                 memberinfo.forEach((element) => {
                     const member = {

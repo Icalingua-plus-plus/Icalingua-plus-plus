@@ -15,6 +15,7 @@ import SearchableFriend from '../../types/SearchableFriend'
 import * as themes from '../utils/themes'
 import SearchableGroup from '../../types/SearchableGroup'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import AtCacheItem from '../../types/AtCacheElem'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -151,4 +152,5 @@ ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: 
 )
 ipcMain.handle('getAccount', adapter.getAccount)
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
-ipcMain.handle('getGroupMember', (_, gin: number) => adapter.getGroupMembers(gin))
+ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
+ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))

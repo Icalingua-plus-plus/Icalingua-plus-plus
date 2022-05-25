@@ -113,17 +113,17 @@
     }
 }
 
-// Quick-face animation
+// Search input animation
 
-.vac-fade-quickface-enter {
+.vac-fade-search-input-enter {
     opacity: 0;
 }
 
-.vac-fade-quickface-enter-active {
+.vac-fade-search-input-enter-active {
     transition: opacity 0.2s;
 }
 
-.vac-fade-quickface-leave-active {
+.vac-fade-search-input-leave-active {
     transition: opacity 0.3s;
     opacity: 0;
 }
