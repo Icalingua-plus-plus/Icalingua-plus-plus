@@ -12,7 +12,7 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 [![Telegram](https://img.shields.io/static/v1?label=Discussion&message=Telegram&color=blue&logo=telegram)](https://t.me/Icalinguapp)
 
 [![GitHub release (latest by date)](https://img.shields.io/github/downloads/Icalingua-plus-plus/Icalingua-plus-plus/latest/total)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/releases/latest)
-[![AUR votes](https://img.shields.io/aur/votes/icalingua++)](https://aur.archlinux.org/packages/icalingua++/)
+[![AUR votes](https://img.shields.io/aur/votes/icalingua%2b%2b)](https://aur.archlinux.org/packages/icalingua++/)
 （項目開發組沒有 AUR 賬號，感謝社區提供的 AUR Package）
 
 #### 分支状态
