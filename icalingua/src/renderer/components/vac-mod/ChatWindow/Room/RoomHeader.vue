@@ -31,7 +31,7 @@
                             <div class="vac-room-name vac-text-ellipsis">
                                 {{ room.roomName }}
                             </div>
-                            <div v-if="membersCount" class="vac-room-info vac-text-ellipsis">
+                            <div v-if="membersCount" class="vac-room-info vac-text-ellipsis" @dblclick="$emit('open-group-member-panel')">
                                 {{ membersCount }} 名成员
                             </div>
                         </div>
