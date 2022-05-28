@@ -53,6 +53,7 @@
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
                     @fetch-messages="fetchMessage"
+                    @open-group-member-panel="groupmemberShown = true"
                 >
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
