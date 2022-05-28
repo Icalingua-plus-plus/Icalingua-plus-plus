@@ -21,6 +21,7 @@
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
             @room-menu="roomMenu"
+            @open-group-member-panel="$emit('open-group-member-panel')"
         >
             <template v-for="(index, name) in $scopedSlots" #[name]="data">
                 <slot :name="name" v-bind="data" />
