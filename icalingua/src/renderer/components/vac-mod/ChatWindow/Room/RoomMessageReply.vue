@@ -13,6 +13,7 @@
                             :users="room.users"
                             :text-formatting="true"
                             :reply="true"
+                            :linkify="linkify"
                         />
                     </div>
                 </div>
@@ -45,6 +46,7 @@ export default {
     props: {
         room: { type: Object, required: true },
         messageReply: { type: Object, default: null },
+        linkify: { type: Boolean, default: true }
     },
 
     computed: {
