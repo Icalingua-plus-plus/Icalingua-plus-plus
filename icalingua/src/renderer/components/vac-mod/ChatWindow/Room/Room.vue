@@ -116,7 +116,12 @@
             </transition>
         </div>
         <div v-show="Object.keys(room).length && showFooter" ref="roomFooter" class="vac-room-footer">
-            <room-message-reply :room="room" :message-reply="messageReply" @reset-message="resetMessage">
+            <room-message-reply
+                :room="room"
+                :message-reply="messageReply"
+                :linkify="linkify"
+                @reset-message="resetMessage"
+            >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                     <slot :name="name" v-bind="data" />
                 </template>
