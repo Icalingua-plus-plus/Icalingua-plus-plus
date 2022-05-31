@@ -93,6 +93,7 @@
                             v-if="(!message.deleted || message.reveal) && message.replyMessage"
                             :message="message"
                             :room-users="roomUsers"
+                            :linkify="linkify"
                             @open-forward="$emit('open-forward', $event)"
                         />
 
