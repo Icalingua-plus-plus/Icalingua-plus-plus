@@ -23,6 +23,7 @@
                 :users="roomUsers"
                 :text-formatting="true"
                 :reply="true"
+                :linkify="linkify"
                 @open-forward="$emit('open-forward', $event)"
             />
         </div>
@@ -40,6 +41,7 @@ export default {
     components: { FormatMessage },
 
     props: {
+        linkify: { type: Boolean, default: true },
         message: { type: Object, required: true },
         roomUsers: { type: Array, required: true },
     },
