@@ -567,6 +567,8 @@ export default {
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
+            const imageHTML = event.clipboardData.getData('text/html') || '.'
+            console.log(imageHTML)
             if (event.clipboardData.files && event.clipboardData.files.length) {
                 // Using the path attribute to get absolute file path
                 const f = event.clipboardData.files[0]
@@ -574,6 +576,12 @@ export default {
                 const ext = f.name.substr(index + 1).toLowerCase()
                 if (this.roomId < 0 || ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext)) {
                     this.onFileChange(event.clipboardData.files)
+                }
+            } else if (imageHTML.indexOf('<img src="') !== -1) {
+                const imageURL = imageHTML.match(/img src="(.*?)"/)
+                console.log(imageURL)
+                if (imageURL) {
+                    this.onPasteGif(imageURL[1])
                 }
             }
         })
@@ -847,6 +855,27 @@ export default {
                 this.message = file.name
             }
 
+            setTimeout(() => (this.fileDialog = false), 500)
+        },
+        async onPasteGif(GifURL) {
+            this.fileDialog = true
+            this.resetMediaFile()
+            
+            const blobFile = await fetch(GifURL).then((res) => res.blob())
+            const fileURL = URL.createObjectURL(blobFile)
+            const typeIndex = GifURL.lastIndexOf('.')
+
+            this.file = {
+                blob: blobFile,
+                name: GifURL.substring(0, typeIndex),
+                size: blobFile.size,
+                type: blobFile.type,
+                extension: GifURL.substring(typeIndex + 1),
+                localUrl: fileURL,
+                path: GifURL,
+            }
+
+            this.imageFile = fileURL
             setTimeout(() => (this.fileDialog = false), 500)
         },
         openFile({ message, action }) {
