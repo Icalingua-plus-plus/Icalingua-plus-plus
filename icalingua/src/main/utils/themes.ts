@@ -33,6 +33,10 @@ ipcMain.on('theme:theme-data', (_, data) => {
     themeData = data
 })
 
+ipcMain.on('theme:set-complete', (_) => {
+    windowMgr.refreshMainWindowColor()
+})
+
 export const autoSetTheme = () => {
     useTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
 }
