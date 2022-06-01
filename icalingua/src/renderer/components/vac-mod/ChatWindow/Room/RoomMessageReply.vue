@@ -46,7 +46,7 @@ export default {
     props: {
         room: { type: Object, required: true },
         messageReply: { type: Object, default: null },
-        linkify: { type: Boolean, default: true }
+        linkify: { type: Boolean, default: true },
     },
 
     computed: {
