@@ -165,6 +165,6 @@ const ipc = {
     },
     async pushAtCache(at: AtCacheItem): Promise<number> {
         return await ipcRenderer.invoke('pushAtCache', at)
-    }
+    },
 }
 export default ipc

@@ -14,7 +14,14 @@ export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
     const theme = getConfig().theme
-    const themeColor = theme === 'auto' ? nativeTheme.shouldUseDarkColors ? '#131415' : '#fff' : theme === 'dark' ? '#131415' : '#fff'
+    const themeColor =
+        theme === 'auto'
+            ? nativeTheme.shouldUseDarkColors
+                ? '#131415'
+                : '#fff'
+            : theme === 'dark'
+            ? '#131415'
+            : '#fff'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
@@ -69,7 +76,15 @@ export const showMainWindow = () => {
     }
 }
 export const refreshMainWindowColor = () => {
-    mainWindow.setBackgroundColor(getConfig().theme === 'auto' ? nativeTheme.shouldUseDarkColors ? '#131415' : '#fff' : getConfig().theme === 'dark' ? '#131415' : '#fff')
+    mainWindow.setBackgroundColor(
+        getConfig().theme === 'auto'
+            ? nativeTheme.shouldUseDarkColors
+                ? '#131415'
+                : '#fff'
+            : getConfig().theme === 'dark'
+            ? '#131415'
+            : '#fff',
+    )
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
     if (loginWindow) {
