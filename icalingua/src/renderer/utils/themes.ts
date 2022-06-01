@@ -48,6 +48,7 @@ function setupThemeStyles(style: any) {
             }
         }
     })
+    ipcRenderer.send('theme:set-complete')
 }
 
 export function updateThemes() {

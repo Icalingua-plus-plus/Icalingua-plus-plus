@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, shell } from 'electron'
+import { BrowserWindow, globalShortcut, nativeTheme, shell } from 'electron'
 import { clearCurrentRoomUnread, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -13,10 +13,13 @@ let loginWindow: BrowserWindow, mainWindow: BrowserWindow, requestWindow: Browse
 export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
+    const theme = getConfig().theme
+    const themeColor = theme === 'auto' ? nativeTheme.shouldUseDarkColors ? '#131415' : '#fff' : theme === 'dark' ? '#131415' : '#fff'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
         show: process.env.NODE_ENV !== 'development' && !argv.hide,
+        backgroundColor: themeColor,
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,
@@ -58,6 +61,15 @@ export const loadMainWindow = () => {
     mainWindow.webContents.on('did-finish-load', sendOnlineData)
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
+}
+export const showMainWindow = () => {
+    if (mainWindow && process.env.NODE_ENV !== 'development' && !argv.hide) {
+        mainWindow.show()
+        mainWindow.focus()
+    }
+}
+export const refreshMainWindowColor = () => {
+    mainWindow.setBackgroundColor(getConfig().theme === 'auto' ? nativeTheme.shouldUseDarkColors ? '#131415' : '#fff' : getConfig().theme === 'dark' ? '#131415' : '#fff')
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
     if (loginWindow) {
