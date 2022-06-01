@@ -39,7 +39,7 @@ export default {
         list: Array,
         description: String,
         searchMethod: String,
-        inputSize: String
+        inputSize: String,
     },
     methods: {
         focus() {

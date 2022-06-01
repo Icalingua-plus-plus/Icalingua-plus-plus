@@ -215,9 +215,10 @@
                         ref="quickat"
                         v-show="isQuickAtOn && room.roomId < 0"
                         v-slot="{ id, name }"
-                        :list="groupMembers
-                            ? groupMembers.map(({ card, nickname, user_id }) => [ card || nickname, user_id ])
-                            : []
+                        :list="
+                            groupMembers
+                                ? groupMembers.map(({ card, nickname, user_id }) => [card || nickname, user_id])
+                                : []
                         "
                         description="member(s)"
                         searchMethod="includes"
@@ -405,7 +406,7 @@ export default {
             isQuickAtOn: false,
             faceNames,
             faceDir,
-            groupMembers: null
+            groupMembers: null,
         }
     },
     computed: {
@@ -860,7 +861,7 @@ export default {
         async onPasteGif(GifURL) {
             this.fileDialog = true
             this.resetMediaFile()
-            
+
             const blobFile = await fetch(GifURL).then((res) => res.blob())
             const fileURL = URL.createObjectURL(blobFile)
             const typeIndex = GifURL.lastIndexOf('.')
@@ -909,7 +910,7 @@ export default {
             ipc.popupRoomMenu(this.room.roomId)
         },
         async updateGroupMembers() {
-            const { roomId } = this.room 
+            const { roomId } = this.room
             if (roomId < 0) this.groupMembers = await ipc.getGroupMembers(-roomId)
         },
     },
