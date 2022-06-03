@@ -1170,7 +1170,8 @@ const adapter = {
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
-                if (group) client.emit('setShutUp', !!group.shutup_time_me)
+                const currentTimeStamp = Math.floor(Date.now() / 1000)
+                if (group) client.emit('setShutUp', group.shutup_time_me !== 0 && group.shutup_time_me > currentTimeStamp)
                 else {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
