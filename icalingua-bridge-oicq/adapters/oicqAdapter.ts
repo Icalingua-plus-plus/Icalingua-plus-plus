@@ -952,14 +952,14 @@ const adapter = {
                             id: Number.parseInt(temp, 10),
                         },
                     }
-                } else if (messageType == 'text') {
+                } else if (messageType === 'text') {
                     element = {
                         type: 'text',
                         data: {
                             text: part,
                         },
                     }
-                } else if (messageType == 'json') {
+                } else if (messageType === 'json') {
                     chain.length = 0
                     chain.push({
                         type: 'json',
@@ -968,7 +968,7 @@ const adapter = {
                         },
                     })
                     break;
-                } else if (messageType == 'xml') {
+                } else if (messageType === 'xml') {
                     chain.length = 0
                     chain.push({
                         type: 'xml',
@@ -977,6 +977,24 @@ const adapter = {
                         },
                     })
                     break;
+                } else if (messageType === 'rps') {
+                    chain.length = 0
+                    chain.push({
+                        type: 'rps',
+                        data: {
+                            id: parseInt(content),
+                        },
+                    })
+                    break
+                } else if (messageType === 'dice') {
+                    chain.length = 0
+                    chain.push({
+                        type: 'dice',
+                        data: {
+                            id: parseInt(content),
+                        },
+                    })
+                    break
                 }
                 chain.push(element)
             }
@@ -1043,7 +1061,7 @@ const adapter = {
             if (file || b64img || imgpath) room.lastMessage.content += '[Image]'
             let appurl
             let url
-            if (messageType == 'xml') {
+            if (messageType === 'xml') {
                 message.code = message.content
                 const urlRegex = /url="([^"]+)"/
                 const resIdRegex = /m_resid="([\w+=/]+)"/
@@ -1071,7 +1089,7 @@ const adapter = {
                     room.lastMessage.content = '[XML]'
                     message.content = '[XML]'
                 }
-            } else if (messageType == 'json') {
+            } else if (messageType === 'json') {
                 const json: string = message.content
                 message.code = json
                 const jsonObj = JSON.parse(json)
@@ -1125,6 +1143,13 @@ const adapter = {
                     room.lastMessage.content = '[JSON]'
                     message.content = '[JSON]'
                 }
+            } else if (messageType === 'rps') {
+                const rps = ['石头', '剪刀', '布']
+                room.lastMessage.content = '[猜拳]'
+                message.content = '[猜拳]' + rps[parseInt(content) - 1]
+            } else if (messageType === 'dice') {
+                room.lastMessage.content = '[随机骰子]'
+                message.content = '[随机骰子]点数' + content
             }
             message._id = data.data.message_id
             room.utime = new Date().getTime()

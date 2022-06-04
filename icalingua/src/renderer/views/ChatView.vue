@@ -302,6 +302,40 @@ export default {
                 }
             });
         })
+        ipcRenderer.on('sendDice', (_) => {
+            this.$prompt('请输入骰子点数，留空随机', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                inputType: 'number',
+                inputPattern: /^[1-6]$|^$/,
+            }).then(({ value }) => {
+                if (!value) {
+                    value = (Math.floor(Math.random() * 6) + 1).toString()
+                }
+                this.sendMessage({
+                    content: value,
+                    room: this.selectedRoom,
+                    messageType: 'dice',
+                })
+            });
+        })
+        ipcRenderer.on('sendRps', (_) => {
+            this.$prompt('请输入对应数字，1石头、2剪刀、3布、留空随机', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                inputType: 'number',
+                inputPattern: /^[1-3]$|^$/,
+            }).then(({ value }) => {
+                if (!value) {
+                    value = (Math.floor(Math.random() * 3) + 1).toString()
+                }
+                this.sendMessage({
+                    content: value,
+                    room: this.selectedRoom,
+                    messageType: 'rps',
+                })
+            });
+        })
         ipcRenderer.on('updateRoom', (_, room) => {
             this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
         })
