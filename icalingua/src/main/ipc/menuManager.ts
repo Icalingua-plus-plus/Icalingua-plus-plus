@@ -1258,6 +1258,22 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
+            label: 'Send rps',
+            type: 'normal',
+            click() {
+                ui.sendRps()
+                ui.closePanel()
+            },
+        },
+        {
+            label: 'Send dice',
+            type: 'normal',
+            click() {
+                ui.sendDice()
+                ui.closePanel()
+            },
+        },
+        {
             label: 'Close panel',
             type: 'normal',
             click: ui.closePanel,
