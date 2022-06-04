@@ -258,6 +258,15 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     }
                 } catch (e) {}
                 break
+            case 'rps':
+                const rps = ['石头', '剪刀', '布']
+                lastMessage.content += '[猜拳]'
+                message.content += '[猜拳]' + rps[m.data.id - 1]
+                break
+            case 'dice':
+                lastMessage.content += '[随机骰子]'
+                message.content += '[随机骰子]点数' + m.data.id
+                break
         }
         lastType = m.type
     }

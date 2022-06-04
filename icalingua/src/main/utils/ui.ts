@@ -34,6 +34,12 @@ export default {
     confirmDeleteStickerDir(dirname: string) {
         sendToMainWindow('confirmDeleteStickerDir', dirname)
     },
+    sendRps() {
+        sendToMainWindow('sendRps')
+    },
+    sendDice() {
+        sendToMainWindow('sendDice')
+    },
     closeLoading() {
         sendToMainWindow('closeLoading')
     },
