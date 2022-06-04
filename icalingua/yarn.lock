@@ -4995,16 +4995,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^17.4.6":
-  version: 17.4.6
-  resolution: "electron@npm:17.4.6"
+"electron@npm:^17.4.7":
+  version: 17.4.7
+  resolution: "electron@npm:17.4.7"
   dependencies:
     "@electron/get": ^1.13.0
     "@types/node": ^14.6.2
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: 84337f5d5250472214a084265267ba93e240008bc3a3d19064dba2683dca79579067825796b5ae6dd5b2647a2e3be96cbc5e691d695b93db0d19f3133ad01797
+  checksum: 1c951299386bbcd7ed73f6cdd60d6cfc6c19f8c6d4128b2b775004c01649249891d2259d39037f0f72168e3a007f66089e1f360f3d6a45f46ed2627877e036cf
   languageName: node
   linkType: hard
 
@@ -6814,7 +6814,7 @@ fsevents@~2.3.1:
     csv-writer: ^1.6.0
     del: ^3.0.0
     devtron: ^1.4.0
-    electron: ^17.4.6
+    electron: ^17.4.7
     electron-builder: ^22.14.13
     electron-debug: ^3.2.0
     electron-devtools-installer: ^3.2.0
@@ -6840,7 +6840,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq-icalingua-plus-plus: 1.22.4
+    oicq-icalingua-plus-plus: 1.22.5
     pg: ^8.7.1
     pg-query-stream: ^4.2.1
     prettier: ^2.5.1
@@ -9532,9 +9532,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq-icalingua-plus-plus@npm:1.22.4":
-  version: 1.22.4
-  resolution: "oicq-icalingua-plus-plus@npm:1.22.4"
+"oicq-icalingua-plus-plus@npm:1.22.5":
+  version: 1.22.5
+  resolution: "oicq-icalingua-plus-plus@npm:1.22.5"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9545,7 +9545,7 @@ fsevents@~2.3.1:
     ws: ^7.5.5
   bin:
     oicq-icalingua-plus-plus: bin/oicq
-  checksum: 67b2c86395ecbb142276ec5a42aeb41fae2306f2a5840431743f3b2572afeaaa870f116a7c06ec261f125d72137f37607c978b9bea81ac63d8cf3caf6d06d633
+  checksum: 7beb722d16839ededaa39c7cb1c80abdc3256de641d488c958be6dc112c866302c994943e398370ad7423d62224cb84005efb8b88cb8bb1cb1f5e73d09e87437
   languageName: node
   linkType: hard
 
