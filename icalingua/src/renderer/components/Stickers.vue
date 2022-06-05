@@ -30,7 +30,7 @@
                 </div>
             </div>
         </div>
-        <div class="stickers_dir" v-if="panel === 'stickers'">
+        <div class="stickers_dir" v-if="panel === 'stickers'" @wheel="wheelHandler" ref="stickers_dir">
             <a
                 v-for="i in subdirs.filter((i) => i[0] !== '.')"
                 :key="i"
@@ -160,6 +160,13 @@ export default {
         setPanel(type) {
             this.panel = type
             ipc.setLastUsedStickerType(type)
+        },
+        wheelHandler(e) {
+            e.preventDefault()
+            this.$refs.stickers_dir.scrollTo({
+                left: this.$refs.stickers_dir.scrollLeft + e.deltaY,
+                behavior: 'smooth'
+            })
         },
     },
 }
