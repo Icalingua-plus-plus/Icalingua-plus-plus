@@ -282,7 +282,7 @@ const attachSocketEvents = () => {
 
 const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
-        return new Promise((resolve, reject) => socket.emit('getMsgNewURL', id, resolve))
+        return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },
     getGroup(gin: number): Promise<GroupInfo> {
         return new Promise((resolve) => {
