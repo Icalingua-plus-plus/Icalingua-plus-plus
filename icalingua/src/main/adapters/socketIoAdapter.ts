@@ -104,6 +104,8 @@ const attachSocketEvents = () => {
     socket.on('message', ui.message)
     socket.on('messageError', ui.messageError)
     socket.on('messageSuccess', ui.messageSuccess)
+    socket.on('addMessageText', ui.addMessageText)
+    socket.on('notifyMessage', ui.notify)
     socket.on('setAllRooms', (serverRooms: Room[]) => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
