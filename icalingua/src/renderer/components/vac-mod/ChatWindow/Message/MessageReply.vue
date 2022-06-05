@@ -1,7 +1,26 @@
 <template>
-    <div class="vac-reply-message" @click="scrollToOrigin">
+    <div class="vac-reply-message">
         <div class="vac-reply-username" v-if="message.replyMessage.username">
             {{ message.replyMessage.username }}
+            <div style="float: right; width: 15px; height: 15px" @click="scrollToOrigin">
+                <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style="stroke: var(--chat-message-color)"
+                >
+                    <path
+                        d="M24.0083 14.1005V42"
+                        stroke-width="5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    ></path>
+                    <path d="M12 26L24 14L36 26" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M12 6H36" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+            </div>
         </div>
 
         <div v-if="isImage" class="vac-image-reply-container" @click="openImage">
