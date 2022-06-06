@@ -8,6 +8,18 @@ ipcMain.handle('getAria2Settings', () => getConfig().aria2)
 ipcMain.handle('getKeyToSendMessage', () => getConfig().keyToSendMessage)
 ipcMain.handle('getStorePath', () => app.getPath('userData'))
 ipcMain.handle('getlinkifySetting', () => getConfig().linkify)
+ipcMain.handle('getRoomPanelSetting', () => {
+    const config = getConfig()
+    return {
+        roomPanelAvatarOnly: config.roomPanelAvatarOnly,
+        roomPanelWidth: config.roomPanelWidth
+    }
+})
+ipcMain.on('setRoomPanelSetting', (_, roomPanelAvatarOnly: boolean, roomPanelWidth: number) => {
+    getConfig().roomPanelAvatarOnly = roomPanelAvatarOnly
+    getConfig().roomPanelWidth = roomPanelWidth
+    saveConfigFile()
+})
 
 ipcMain.on('setCheckUpdate', (_, enabled: boolean) => {
     getConfig().updateCheck = enabled
