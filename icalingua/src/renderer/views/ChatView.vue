@@ -1,9 +1,17 @@
 <template>
     <div ondragstart="return false;" class="icalingua-theme-holder">
-        <Multipane class="el-main">
+        <Multipane
+            class="el-main"
+            @paneResize="roomPanelResize"
+        >
             <!-- main chat view -->
-            <div class="panel rooms-panel">
+            <div
+                class="panel rooms-panel"
+                :class="{ 'avatar-only': roomPanelAvatarOnly }"
+                :style="{ width: roomPanelWidth }"
+            >
                 <TheRoomsPanel
+                    ref="roomsPanel"
                     :rooms="rooms"
                     :selected="selectedRoom"
                     :priority="priority"
@@ -176,6 +184,8 @@ export default {
             contactsShown: false,
             groupmemberShown: false,
             linkify: true,
+            roomPanelAvatarOnly: false,
+            roomPanelWidth: undefined
         }
     },
     async created() {
@@ -520,6 +530,19 @@ Chromium ${process.versions.chrome}` : ''
             ipc.setSelectedRoom(0, '')
             document.title = 'Icalingua++'
         },
+        roomPanelResize(pane, resizer, size) {
+            size = + size.slice(0, -2)
+            // 140px: Min width with avatars
+            // 80px: With without avatars
+            if (! this.roomPanelAvatarOnly && size <= 140) {
+                this.roomPanelAvatarOnly = true
+                this.roomPanelWidth = 80
+            }
+            if (this.roomPanelAvatarOnly && size > 80) {
+                this.roomPanelAvatarOnly = false
+                this.roomPanelWidth = 140
+            }
+        }
     },
     computed: {
         cssVars() {
@@ -625,6 +648,10 @@ main div {
     min-width: 140px;
     width: 300px;
     max-width: 500px;
+
+    &.avatar-only {
+        min-width: 80px;
+    }
 
     @media (max-width: 900px) {
         width: 200px;

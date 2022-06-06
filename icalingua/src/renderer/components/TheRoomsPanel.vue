@@ -6,8 +6,17 @@
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
             </el-popover>
-            <el-input v-model="input" placeholder="Search" prefix-icon="el-icon-search" class="input" clearable />
-            <span class="el-icon-user contacts-refresh" @click="$emit('show-contacts')" />
+            <el-input
+                class="more input"
+                v-model="input"
+                placeholder="Search"
+                prefix-icon="el-icon-search"
+                clearable
+            />
+            <span
+                class="more el-icon-user contacts-refresh"
+                @click="$emit('show-contacts')"
+            />
         </div>
         <div class="content">
             <RoomEntry
@@ -76,13 +85,21 @@ export default {
     flex-direction: column;
 }
 
-div.head {
+.head {
     background-color: var(--panel-header-bg);
     height: 64px;
     min-height: 64px;
     display: flex;
     align-items: center;
     padding: 0 10px;
+}
+
+.rooms-panel.avatar-only .head {
+    padding: 0 17px;
+}
+
+.rooms-panel.avatar-only .more {
+    display: none;
 }
 
 .content {
