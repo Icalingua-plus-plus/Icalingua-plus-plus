@@ -743,12 +743,13 @@ const attachLoginHandler = () => {
 //endregion
 
 const adapter = {
-    async getMsgNewURL(id: string): Promise<string> {
+    async getMsgNewURL(id: string, resolve): Promise<string> {
         const history = await bot.getMsg(id)
         if (history.error) {
             console.log(history.error)
             if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
-            return 'error'
+            resolve('error')
+            return
         }
         const data = history.data
         console.log(data)
@@ -765,10 +766,12 @@ const adapter = {
             }
             await processMessage(data.message, message, {})
             if (message.file) {
-                return message.file.url || 'error'
+                resolve(message.file.url || 'error')
+                return
             }
         }
-        return 'error'
+        resolve('error')
+        return
     },
     getGroup(gin: number, resolve) {
         resolve(bot.gl.get(gin))
@@ -786,8 +789,17 @@ const adapter = {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
     async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): Promise<any> {
-            console.log('警告：使用了未实现的功能，bridge 暂不支持合并转发消息', fakes)
-            clients.messageError('错误：使用 bridge 时暂不支持合并转发消息')
+        const xmlret = await bot.makeForwardMsg(fakes, dm, target)
+        if (xmlret.error) {
+            console.log(xmlret.error)
+            clients.messageError('错误：' + xmlret.error.message)
+            return
+        }
+        clients.addMessageText(xmlret.data.data.data)
+        clients.notify({
+            title: '生成转发成功',
+            message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。',
+        })
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)
@@ -1051,6 +1063,7 @@ const adapter = {
                 title: 'Failed to send',
                 message: data.error.message,
             })
+            clients.addMessageText(message.content)
             return
         }
         if (roomId > 0 && roomId !== bot.uin) {
@@ -1321,6 +1334,8 @@ const adapter = {
         await storage.updateMessage(roomId, messageId, { reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
+        console.log(`${roomId} 开始拉取消息`)
+        clients.messageSuccess('开始拉取消息')
         const messages = []
         while (true) {
             const history = await bot.getChatHistory(messageId)
@@ -1350,9 +1365,13 @@ const adapter = {
                     anonymousId: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
                     anonymousflag: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
                 }
-                await processMessage(data.message, message, {}, roomId)
-                messages.push(message)
-                newMsgs.push(message)
+                try {
+                    await processMessage(data.message, message, {}, roomId)
+                    messages.push(message)
+                    newMsgs.push(message)
+                } catch (e) {
+                    console.log(e)
+                }
             }
             if (history.data.length < 2) break
             messageId = newMsgs[0]._id as string

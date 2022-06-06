@@ -104,6 +104,8 @@ const attachSocketEvents = () => {
     socket.on('message', ui.message)
     socket.on('messageError', ui.messageError)
     socket.on('messageSuccess', ui.messageSuccess)
+    socket.on('addMessageText', ui.addMessageText)
+    socket.on('notifyMessage', ui.notify)
     socket.on('setAllRooms', (serverRooms: Room[]) => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
@@ -282,7 +284,7 @@ const attachSocketEvents = () => {
 
 const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
-        return new Promise((resolve, reject) => socket.emit('getMsgNewURL', id, resolve))
+        return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },
     getGroup(gin: number): Promise<GroupInfo> {
         return new Promise((resolve) => {

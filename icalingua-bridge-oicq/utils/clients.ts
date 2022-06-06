@@ -58,4 +58,10 @@ export default {
     syncRead(roomId: number) {
         broadcast('syncRead', roomId)
     },
+    addMessageText(text: string) {
+        broadcast('addMessageText', text)
+    },
+    notify(data: { title: string; message: string }) {
+        broadcast('notifyMessage', data)
+    },
 }
