@@ -33,6 +33,8 @@ type AllConfig = {
     debugmode: boolean
     anonymous: boolean
     linkify: boolean
+    roomPanelAvatarOnly: boolean
+    roomPanelWidth: number
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -97,6 +99,8 @@ const defaultConfig: AllConfig = {
     debugmode: false,
     anonymous: false,
     linkify: true,
+    roomPanelAvatarOnly: false,
+    roomPanelWidth: null,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
