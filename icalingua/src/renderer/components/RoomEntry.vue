@@ -112,6 +112,10 @@ div.entry {
     width: 100%;
 }
 
+.rooms-panel.avatar-only .right {
+    display: none;
+}
+
 a {
     text-decoration: none;
 }
