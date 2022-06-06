@@ -1334,6 +1334,8 @@ const adapter = {
         await storage.updateMessage(roomId, messageId, { reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
+        console.log(`${roomId} 开始拉取消息`)
+        clients.messageSuccess('开始拉取消息')
         const messages = []
         while (true) {
             const history = await bot.getChatHistory(messageId)
