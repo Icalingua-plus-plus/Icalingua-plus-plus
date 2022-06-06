@@ -1363,9 +1363,13 @@ const adapter = {
                     anonymousId: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
                     anonymousflag: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
                 }
-                await processMessage(data.message, message, {}, roomId)
-                messages.push(message)
-                newMsgs.push(message)
+                try {
+                    await processMessage(data.message, message, {}, roomId)
+                    messages.push(message)
+                    newMsgs.push(message)
+                } catch (e) {
+                    console.log(e)
+                }
             }
             if (history.data.length < 2) break
             messageId = newMsgs[0]._id as string
