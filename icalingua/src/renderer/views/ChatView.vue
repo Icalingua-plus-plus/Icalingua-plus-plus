@@ -3,12 +3,13 @@
         <Multipane
             class="el-main"
             @paneResize="roomPanelResize"
+            @paneResizeStop="roomPanelResizeStop"
         >
             <!-- main chat view -->
             <div
                 class="panel rooms-panel"
                 :class="{ 'avatar-only': roomPanelAvatarOnly }"
-                :style="{ width: roomPanelWidth }"
+                :style="{ width: roomPanelWidth + 'px' }"
             >
                 <TheRoomsPanel
                     ref="roomsPanel"
@@ -185,7 +186,7 @@ export default {
             groupmemberShown: false,
             linkify: true,
             roomPanelAvatarOnly: false,
-            roomPanelWidth: undefined
+            roomPanelWidth: undefined,
         }
     },
     async created() {
@@ -193,6 +194,9 @@ export default {
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
         this.linkify = await ipc.getlinkifySetting()
+        const roomPanelLastSetting = await ipc.getRoomPanelSetting()
+        this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
+        this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {
@@ -533,8 +537,8 @@ Chromium ${process.versions.chrome}` : ''
         roomPanelResize(pane, resizer, size) {
             size = + size.slice(0, -2)
             // 140px: Min width with avatars
-            // 80px: With without avatars
-            if (! this.roomPanelAvatarOnly && size <= 140) {
+            // 80px: Width without avatars
+            if (!this.roomPanelAvatarOnly && size <= 140) {
                 this.roomPanelAvatarOnly = true
                 this.roomPanelWidth = 80
             }
@@ -542,7 +546,11 @@ Chromium ${process.versions.chrome}` : ''
                 this.roomPanelAvatarOnly = false
                 this.roomPanelWidth = 140
             }
-        }
+        },
+        roomPanelResizeStop(pane, resizer, size) {
+            const width = document.getElementsByClassName('panel rooms-panel')[0].offsetWidth
+            ipc.setRoomPanelSetting(this.roomPanelAvatarOnly, width)
+        },
     },
     computed: {
         cssVars() {

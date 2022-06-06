@@ -24,6 +24,12 @@ const ipc = {
     async getlinkifySetting(): Promise<boolean> {
         return await ipcRenderer.invoke('getlinkifySetting')
     },
+    async getRoomPanelSetting(): Promise<boolean> {
+        return await ipcRenderer.invoke('getRoomPanelSetting')
+    },
+    setRoomPanelSetting(roomPanelAvatarOnly: boolean, roomPanelWidth: number) {
+        ipcRenderer.send('setRoomPanelSetting', roomPanelAvatarOnly, roomPanelWidth)
+    },
     async getKeyToSendMessage(): Promise<'Enter' | 'CtrlEnter' | 'ShiftEnter'> {
         return await ipcRenderer.invoke('getKeyToSendMessage')
     },
