@@ -229,6 +229,66 @@ jobs:
           path: icalingua/build/linux-arm64-unpacked
           if-no-files-found: error
 
+  build-armv7l:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: icalingua/dist
+
+      - uses: uraimo/run-on-arch-action@v2.1.1
+        name: build native modules using another arch
+        with:
+          arch: armv7
+          distro: ubuntu20.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}/icalingua:/build"
+          install: |
+            apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
+            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+            apt-get install -y nodejs gcc g++ make
+            apt update && apt install python2 python -y
+            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+            echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+            apt update && apt install --no-install-recommends yarn -y
+          run: |
+            uname -a
+            chmod -R 777 /build
+            cd /build
+            useradd -m builduser
+            su builduser -c 'yarn build:electron install-app-deps'
+
+      - name: build
+        run: yarn build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
+
+      - uses: actions/upload-artifact@v2
+        name: upload app.asar
+        with:
+          name: app-armv7l.asar
+          path: icalingua/build/linux-armv7l-unpacked/resources/app.asar
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
+        name: upload unpacked
+        with:
+          name: armv7l-unpacked
+          path: icalingua/build/linux-armv7l-unpacked
+          if-no-files-found: error
+
   pack-archpkg-x86_64:
     runs-on: ubuntu-latest
     needs:
@@ -362,6 +422,54 @@ jobs:
         name: upload aarch64
         with:
           name: aarch64.pkg.tar.zst
+          path: ${{ steps.pkgname.outputs.pkgname }}
+          if-no-files-found: error
+
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
+
+  pack-archpkg-armv7l:
+    runs-on: ubuntu-latest
+    needs:
+      - build-dist-bundle
+      - arch-artifacts
+      - build-armv7l
+    steps:
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+
+      - name: print the PKGBUILD for armv7l
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/armv7l/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
+
+      - name: get binary for armv7l
+        uses: actions/download-artifact@v2
+        with:
+          name: app-armv7l.asar
+
+
+      - run: chmod -R 777 .
+
+      - name: makepkg for armv7l
+        uses: Icalinguaplusplus/archlinux-package-action@main
+        with:
+          carch: armv7l
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-armv7l.pkg.*)
+
+      - uses: actions/upload-artifact@v2
+        name: upload armv7l
+        with:
+          name: armv7l.pkg.tar.zst
           path: ${{ steps.pkgname.outputs.pkgname }}
           if-no-files-found: error
 
@@ -555,18 +663,65 @@ jobs:
           path: icalingua/build/*.${{ matrix.package }}
           if-no-files-found: error
 
+  pack-otherpkg-armv7l:
+    runs-on: ubuntu-latest
+    needs:
+      - build-armv7l
+      - build-dist-bundle
+    strategy:
+      matrix:
+        package:
+          - deb
+          - rpm
+          - AppImage
+          - tar.xz
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: armv7l-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: pack
+        run: yarn build:electron --pd unpacked --armv7l -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: armv7l.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
   cleanup:
     runs-on: ubuntu-latest
     needs:
       - pack-otherpkg-arm64
       - pack-otherpkg-ia32
       - pack-otherpkg-x86_64
+      - pack-otherpkg-armv7l
       - build-x86_64
       - build-ia32
       - build-arm64
+      - build-armv7l
       - pack-archpkg-x86_64
       - pack-archpkg-i686
       - pack-archpkg-aarch64
+      - pack-archpkg-armv7l
     steps:
       - uses: geekyeggo/delete-artifact@v1
         with:
@@ -580,6 +735,9 @@ jobs:
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: arm64-unpacked
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: armv7l-unpacked
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: pkgres
@@ -750,10 +908,12 @@ jobs:
       - pack-archpkg-x86_64
       - pack-archpkg-i686
       - pack-archpkg-aarch64
+      - pack-archpkg-armv7l
       - pack-snap-x86_64
       - pack-otherpkg-x86_64
       - pack-otherpkg-ia32
       - pack-otherpkg-arm64
+      - pack-otherpkg-armv7l
       - build-dist-bundle
       - build-windows64
       - build-macos-x64
@@ -788,6 +948,15 @@ jobs:
         run: mv app.asar release/app-arm64.asar
 
 
+      - name: get app-armv7l.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-armv7l.asar
+
+      - name: rename app-armv7l.asar
+        run: mv app.asar release/app-armv7l.asar
+
+
       - name: get aarch64.pkg.tar.zst
         uses: actions/download-artifact@v2
         with:
@@ -816,6 +985,30 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: arm64.tar.xz
+          path: release
+
+      - name: get armv7l.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: armv7l.AppImage
+          path: release
+
+      - name: get armv7l.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: armv7l.deb
+          path: release
+
+      - name: get armv7l.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: armv7l.rpm
+          path: release
+
+      - name: get armv7l.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: armv7l.tar.xz
           path: release
 
       - name: get i686.pkg.tar.zst
