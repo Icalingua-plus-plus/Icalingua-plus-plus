@@ -115,7 +115,12 @@
                 </div>
             </transition>
         </div>
-        <div v-show="Object.keys(room).length && showFooter" ref="roomFooter" class="vac-room-footer">
+        <div
+            v-show="Object.keys(room).length && showFooter"
+            ref="roomFooter"
+            class="vac-room-footer"
+            :class="{ 'vac-app-box-shadow': messageReply || showForwardPanel || editAndResend }"
+        >
             <room-message-reply
                 :room="room"
                 :message-reply="messageReply"
