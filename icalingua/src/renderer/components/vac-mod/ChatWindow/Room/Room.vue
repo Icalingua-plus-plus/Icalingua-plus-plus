@@ -551,7 +551,11 @@ export default {
                 const ownMessages = this.messages.filter((e) => e.senderId === this.currentUserId)
                 if (!ownMessages.length) return
                 const lastMessage = ownMessages[ownMessages.length - 1]
-                this.file = lastMessage.file
+                if (lastMessage.file && lastMessage.file.type.startsWith('image')) {
+                    this.onPasteGif(lastMessage.file.url)
+                } else {
+                    this.file = lastMessage.file
+                }
                 this.messageReply = lastMessage.replyMessage
                 this.message = lastMessage.content
                 this.$nextTick(
