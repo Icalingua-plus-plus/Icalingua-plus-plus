@@ -835,6 +835,88 @@ jobs:
         path: icalingua/build/Icalingua++*.exe
         if-no-files-found: error
 
+  install-windows-arm64:
+    runs-on: windows-2019
+    defaults:
+      run:
+        working-directory: icalingua
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.13.0'
+      - name: Install Yarn
+        run: npm install --global yarn
+      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+      - name: Fetch node.lib and Yarn install
+        shell: cmd
+        run: |
+          set npm_config_arch=arm64
+          set node_version=16.13.0
+          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
+          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+
+          yarn install
+
+  build-windows-arm64:
+    runs-on: windows-2019
+    needs: install-windows-arm64
+    outputs:
+      version: ${{ steps.git-ver.outputs.version }}
+      arch-version: ${{ steps.version.outputs.arch-version }}
+      pkg-name: ${{ steps.version.outputs.pkg-name }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16.13.0'
+
+    - uses: Icalinguaplusplus/gha-yarn-node-cache@master
+      env:
+        WORKING_DIR: icalingua
+
+    - id: git-ver
+      run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
+      
+    - name: check version and write version info
+      run: node .github/check-version.js
+      id: version
+      env:
+        SHA: ${{ github.sha }}
+        REF: ${{ github.REF }}
+        GIT_VER: ${{ steps.git-ver.outputs.version }}
+        
+    - name: build
+      shell: cmd
+      run: |
+        set npm_config_arch=arm64
+        set node_version=16.13.0
+        mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
+        curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+
+        cmd.exe /c "yarn deps:woa & yarn build:ci & yarn build:woa"
+      working-directory: icalingua
+
+    - name: rename
+      run: ../../.github/winrename.bat
+      working-directory: icalingua/build
+      
+    - uses: actions/upload-artifact@v2
+      name: Upload Icalingua_Windows_arm64.exe
+      with:
+        name: Icalingua_Windows_arm64.exe
+        path: icalingua/build/Icalingua++*.exe
+        if-no-files-found: error
+
   install-macos-x64:
     runs-on: macos-11
     defaults:
