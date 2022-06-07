@@ -643,6 +643,7 @@ main div {
         bottom: 70px;
         right: 15px;
         border-radius: 10px;
+        padding: 2px;
         border: var(--chat-border-style);
     }
 }
