@@ -1,9 +1,14 @@
 <html>
 
 <head>
+	<meta name="viewport" content="width=device-width; initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
 	<style>
 		body {
 			background: black;
+		}
+
+		#DRAG {
+			touch-action:none;
 		}
 
 		.btn {
@@ -155,37 +160,74 @@
 		deployLT()
 	}
 
-	// Drag support
+	// Drag and pinch support
 	var starT, starTLT
-	DRAG.onmousedown = function (ev) {
+	var evCache = new Array()
+	var touchInitialZoom, firstPinchDistanceX, firstPinchDistanceY
+
+	DRAG.onpointerdown = function (ev) {
 		var e = ev || window.event
+
 		starT = [e.clientX, e.clientY]
 		starTLT = [IMG.offsetLeft, IMG.offsetTop]
-		window.addEventListener('mousemove', mousemove)
-		window.addEventListener('mouseup', mouseup)
+		evCache.push(e)
+		touchInitialZoom = zoom
+		window.addEventListener('pointermove', pointermove)
 	}
-	function mousemove(ev) {
+
+	function pointermove(ev) {
 		var e = ev || window.event
-
-		if (starT == null) return
-
-		if (centerX < 0 || centerY < 0) {
-			centerX = 50
-			centerY = 50
+		for (var i = 0; i < evCache.length; i++) {
+			if (ev.pointerId == evCache[i].pointerId) {
+				evCache[i] = ev
+				break;
+			}
 		}
+		if (evCache.length == 1) {
+			if (starT == null) return
 
-		IMG.style.left = e.clientX - starT[0] + starTLT[0]
-		IMG.style.top = e.clientY - starT[1] + starTLT[1]
+			if (centerX < 0 || centerY < 0) {
+				centerX = 50
+				centerY = 50
+			}
+			
+			IMG.style.left = e.clientX - starT[0] + starTLT[0]
+			IMG.style.top = e.clientY - starT[1] + starTLT[1]
 
-		centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
-		centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
+			centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
+			centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
+		}
+		else if (evCache.length == 2) {
+			const ev0 = evCache[0], ev1 = evCache[1]
+			const distanceX = Math.abs(ev0.clientX - ev1.clientX), distanceY = Math.abs(ev0.clientY - ev1.clientY)
+			if (!firstPinchDistanceX) firstPinchDistanceX = distanceX
+			if (!firstPinchDistanceY) firstPinchDistanceY = distanceY
+
+			const ratio = Math.sqrt(
+				Math.pow(distanceX / firstPinchDistanceX, 2) + 
+				Math.pow(distanceY / firstPinchDistanceY, 2)
+			) / Math.SQRT2 
+			
+			if (touchInitialZoom * ratio >= 0.3)
+				setZoom(e, touchInitialZoom * ratio)
+		}
 	}
 
-
-	function mouseup(ev) {
-		starT = null
-		window.removeEventListener('mousemove', mousemove)
-		window.removeEventListener('mouseup', mouseup)
+	DRAG.onpointerup = function(ev) {
+		for (var i = 0; i < evCache.length; i++) {
+			if (evCache[i].pointerId == ev.pointerId) {
+				evCache.splice(i, 1)
+				break
+			}
+		}
+		if (evCache.length == 1) starT = null
+		if (evCache.length < 2) {
+			touchInitialZoom = undefined
+			firstPinchDistanceX = undefined
+			firstPinchDistanceY = undefined
+		}
+		
+		window.removeEventListener('pointermove', pointermove)
 	}
 
 	// deploy buttons
@@ -194,37 +236,53 @@
 		return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
 	}
 
+	function resetZoom() {
+		// toggle
+		toggle = !toggle
+		zoom = 1
+		IMG.style.transform = mkTransform(rotate, zoom)
+		adapt(toggle)
+	}
+
+	function rotateAntiClockwise() {
+		rotate -= 90
+		if (!rotate % 360) rotate = 0
+		IMG.style.transform = mkTransform(rotate, zoom)
+	}
+
+	function rotateClockwise() {
+		rotate += 90
+		if (!rotate % 360) rotate = 0
+		IMG.style.transform = mkTransform(rotate, zoom)
+	}
+
+	function zoomIn(e, ratio=0.2) {
+		scale = zoom
+		zoom += ratio
+		IMG.style.transform = mkTransform(rotate, zoom)
+		updatePosition(e)
+	}
+
+	function zoomOut(e, ratio=0.2) {
+		if (zoom < 0.3) return
+		scale = zoom
+		zoom -= ratio
+		IMG.style.transform = mkTransform(rotate, zoom)
+		updatePosition(e)
+	}
+
+	function setZoom(e, target) {
+		scale = zoom
+		zoom = target
+		IMG.style.transform = mkTransform(rotate, zoom)
+		updatePosition(e)
+	}
+
+	function download() {
+		DOWNLOAD.dispatchEvent(new MouseEvent('click'))
+	}
 	var btnactions = [
-		function () {
-			// toggle
-			toggle = !toggle
-			zoom = 1
-			IMG.style.transform = mkTransform(rotate, zoom)
-			adapt(toggle)
-		}, function () {
-			rotate -= 90
-			if (!rotate % 360) rotate = 0
-			IMG.style.transform = mkTransform(rotate, zoom)
-		}, function () {
-			rotate += 90
-			if (!rotate % 360) rotate = 0
-			IMG.style.transform = mkTransform(rotate, zoom)
-		}, function (e) {
-			// zoom in
-			scale = zoom
-			zoom += 0.2
-			IMG.style.transform = mkTransform(rotate, zoom)
-			updatePosition(e)
-		}, function (e) {
-			if (zoom < 0.3) return
-			scale = zoom
-			zoom -= 0.2
-			IMG.style.transform = mkTransform(rotate, zoom)
-			updatePosition(e)
-		}, function () {
-			// Download!
-			DOWNLOAD.dispatchEvent(new MouseEvent('click'))
-		}
+		resetZoom, rotateAntiClockwise, rotateClockwise, zoomIn, zoomOut, download
 	]
 
 	var btns = document.getElementsByTagName('button')
@@ -232,7 +290,7 @@
 		btns[i].onclick = btnactions[i]
 	}
 
-	IMG.onload = btnactions[0]
+	IMG.onload = resetZoom
 
 	// ajust focus 
 	function updatePosition(e) {
@@ -254,10 +312,10 @@
 
 	DRAG.onwheel = e => {
 		if (e.wheelDeltaY > 0) {
-			btnactions[3](e)
+			zoomIn(e, e.wheelDeltaY / body.clientHeight)
 		}
 		else if (e.wheelDeltaY < 0) {
-			btnactions[4](e)
+			zoomOut(e, -e.wheelDeltaY / body.clientHeight)
 		}
 	}
 
