@@ -1382,12 +1382,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^0.21.1":
-  version: 0.21.1
-  resolution: "axios@npm:0.21.1"
+"axios@npm:^0.21.4":
+  version: 0.21.4
+  resolution: "axios@npm:0.21.4"
   dependencies:
-    follow-redirects: ^1.10.0
-  checksum: c87915fa0b18c15c63350112b6b3563a3e2ae524d7707de0a73d2e065e0d30c5d3da8563037bc29d4cc1b7424b5a350cb7274fa52525c6c04a615fe561c6ab11
+    follow-redirects: ^1.14.0
+  checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
   languageName: node
   linkType: hard
 
@@ -5796,13 +5796,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.0.0, follow-redirects@npm:^1.10.0":
+"follow-redirects@npm:^1.0.0":
   version: 1.14.1
   resolution: "follow-redirects@npm:1.14.1"
   peerDependenciesMeta:
     debug:
       optional: true
   checksum: 7381a55bdc6951c5c1ab73a8da99d9fa4c0496ce72dba92cd2ac2babe0e3ebde9b81c5bca889498ad95984bc773d713284ca2bb17f1b1e1416e5f6531e39a488
+  languageName: node
+  linkType: hard
+
+"follow-redirects@npm:^1.14.0":
+  version: 1.15.1
+  resolution: "follow-redirects@npm:1.15.1"
+  peerDependenciesMeta:
+    debug:
+      optional: true
+  checksum: 6aa4e3e3cdfa3b9314801a1cd192ba756a53479d9d8cca65bf4db3a3e8834e62139245cd2f9566147c8dfe2efff1700d3e6aefd103de4004a7b99985e71dd533
   languageName: node
   linkType: hard
 
@@ -6740,7 +6750,7 @@ fsevents@~2.3.1:
     "@types/winston": ^2.4.4
     ajv: ^6.5.0
     aria2: ^4.1.2
-    axios: ^0.21.1
+    axios: ^0.21.4
     babel-core: ^6.26.3
     babel-loader: ^7.1.4
     babel-minify-webpack-plugin: ^0.3.1
@@ -6791,7 +6801,7 @@ fsevents@~2.3.1:
     silk-sdk: ^0.2.2
     socket.io: ^4.3.2
     socket.io-client: ^4.1.2
-    sqlite3: ^5.0.6
+    sqlite3: ^5.0.8
     style-loader: ^0.21.0
     thread-loader: ^3.0.4
     ts-loader: ^8.3.0
@@ -11972,9 +11982,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"sqlite3@npm:^5.0.6":
-  version: 5.0.6
-  resolution: "sqlite3@npm:5.0.6"
+"sqlite3@npm:^5.0.8":
+  version: 5.0.8
+  resolution: "sqlite3@npm:5.0.8"
   dependencies:
     "@mapbox/node-pre-gyp": ^1.0.0
     node-addon-api: ^4.2.0
@@ -11988,7 +11998,7 @@ fsevents@~2.3.1:
   peerDependenciesMeta:
     node-gyp:
       optional: true
-  checksum: 6867094a034bac101c9e9301cf7b35cfd46c429045fd4b531bb2673fea5027d075133c005e9c6e148d71c10e08100cc1155a921a24f7993143cd99bb7fec1c89
+  checksum: 6b19d4cad0f53e3df9745aa4b743b0f9388b9ca857e69e851a24336b8fe174381b84d7867bdbf4bc0b572c7e84ef1bb962d8bdc10b0aa18810bf9078536f3d49
   languageName: node
   linkType: hard
 
