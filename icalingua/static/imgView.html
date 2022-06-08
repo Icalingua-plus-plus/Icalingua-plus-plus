@@ -173,6 +173,7 @@
 		evCache.push(e)
 		touchInitialZoom = zoom
 		window.addEventListener('pointermove', pointermove)
+		window.addEventListener('pointerup', pointerup)
 	}
 
 	function pointermove(ev) {
@@ -227,10 +228,11 @@
 			firstPinchDistanceY = undefined
 		}
 		
-		window.removeEventListener('pointermove', pointermove)
+		if (evCache.length == 0) {
+			window.removeEventListener('pointermove', pointermove)
+			window.removeEventListener('pointerup', pointerup)
+		}
 	}
-	DRAG.onpointerup = pointerup
-	DRAG.onpointerleave = pointerup
 
 	// deploy buttons
 
