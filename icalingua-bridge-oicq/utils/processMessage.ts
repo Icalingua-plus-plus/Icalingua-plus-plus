@@ -291,8 +291,8 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     2009: "让你皮",
                     2011: "宝贝球",
                 }
-                lastMessage.content += '[' + pokemap[m.data.type] + ']'
-                message.content += '[' + pokemap[m.data.type] + ']'
+                lastMessage.content += '[' + (pokemap[m.data.type] || pokemap[m.data.id]) + ']'
+                message.content += '[' + (pokemap[m.data.type] || pokemap[m.data.id]) + ']'
                 break
             default:
                 console.log('[无法解析的消息]', m)
