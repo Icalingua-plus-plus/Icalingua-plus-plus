@@ -767,10 +767,21 @@ export const updateAppMenu = async () => {
                 label: '以匿名方式发送群消息（未完善，慎用）',
                 type: 'checkbox',
                 checked: getConfig().anonymous === true,
-                visible: getConfig().debugmode === true,
+                visible: getConfig().debugmode === true && getConfig().sendRawMessage === false,
                 click: (menuItem) => {
                     getConfig().anonymous = menuItem.checked
                     saveConfigFile()
+                },
+            }),
+            new MenuItem({
+                label: 'Send raw message',
+                type: 'checkbox',
+                checked: getConfig().sendRawMessage === true,
+                visible: getConfig().debugmode === true,
+                click: (menuItem) => {
+                    getConfig().sendRawMessage = menuItem.checked
+                    saveConfigFile()
+                    updateAppMenu()
                 },
             }),
             new MenuItem({
@@ -1271,6 +1282,17 @@ ipcMain.on('popupStickerMenu', () => {
             click() {
                 ui.sendDice()
                 ui.closePanel()
+            },
+        },
+        {
+            label: 'Send shake',
+            type: 'normal',
+            click() {
+                sendMessage({
+                    content: '[窗口抖动]',
+                    at: [],
+                    messageType: 'shake',
+                })
             },
         },
         {

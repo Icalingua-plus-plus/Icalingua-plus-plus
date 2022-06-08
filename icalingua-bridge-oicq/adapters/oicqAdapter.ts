@@ -885,6 +885,16 @@ const adapter = {
 
         const chain: MessageElem[] = []
 
+        if (messageType === 'anonymous' && roomId < 0) {
+            chain.push({
+                type: 'anonymous',
+                data: {
+                    ignore: false, //匿名失败时不继续发送
+                },
+            })
+            messageType = 'text'
+        }
+
         if (replyMessage) {
             message.replyMessage = {
                 _id: replyMessage._id,
@@ -1006,6 +1016,18 @@ const adapter = {
                             id: parseInt(content),
                         },
                     })
+                    break
+                } else if (messageType === 'shake') {
+                    chain.length = 0
+                    chain.push({
+                        type: 'shake',
+                    })
+                    break
+                } else if (messageType === 'raw') {
+                    // Only for debug
+                    chain.length = 0
+                    const rawMessage = JSON.parse(content)
+                    chain.push(...rawMessage)
                     break
                 }
                 chain.push(element)
@@ -1163,6 +1185,10 @@ const adapter = {
             } else if (messageType === 'dice') {
                 room.lastMessage.content = '[随机骰子]'
                 message.content = '[随机骰子]点数' + content
+            } else if (messageType === 'raw') {
+                message.content = ''
+                await processMessage(chain, message, {}, roomId)
+                room.lastMessage.content = '[DEBUG]' + message.content
             }
             message._id = data.data.message_id
             room.utime = new Date().getTime()

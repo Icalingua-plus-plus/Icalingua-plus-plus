@@ -10,6 +10,7 @@ import StructMessageCard from '../../types/StructMessageCard'
 import silkDecode from './silkDecode'
 import errorHandler from './errorHandler'
 import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
+import { getConfig } from './configManager'
 
 const processMessage = async (
     oicqMessage: MessageElem[],
@@ -277,6 +278,39 @@ const processMessage = async (
                 lastMessage.content += '[随机骰子]'
                 message.content += '[随机骰子]点数' + m.data.id
                 break
+            case 'shake':
+                lastMessage.content += '[窗口抖动]'
+                message.content += '[窗口抖动]'
+                break
+            case 'poke':
+                const pokemap = {
+                    0: "回戳",
+                    1: "戳一戳",
+                    2: "比心",
+                    3: "点赞",
+                    4: "心碎",
+                    5: "666",
+                    6: "放大招",
+                    2000: "敲门",
+                    2001: "抓一下",
+                    2002: "碎屏",
+                    2003: "勾引",
+                    2004: "手雷",
+                    2005: "结印",
+                    2006: "召唤术",
+                    2007: "玫瑰花",
+                    2009: "让你皮",
+                    2011: "宝贝球",
+                }
+                lastMessage.content += '[' + pokemap[m.data.type] + ']'
+                message.content += '[' + pokemap[m.data.type] + ']'
+                break
+            default:
+                console.log('[无法解析的消息]', m)
+                if (!getConfig().debugmode) return
+                lastMessage.content += '[无法解析的消息]'
+                message.content += '[无法解析的消息]'
+                message.code += JSON.stringify(m)
         }
         lastType = m.type
     }
