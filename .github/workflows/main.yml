@@ -825,7 +825,7 @@ jobs:
       working-directory: icalingua
 
     - name: rename
-      run: ../../.github/winrename.bat
+      run: ../../.github/winrename.bat x64
       working-directory: icalingua/build
       
     - uses: actions/upload-artifact@v2
@@ -907,7 +907,7 @@ jobs:
       working-directory: icalingua
 
     - name: rename
-      run: ../../.github/winrename.bat
+      run: ../../.github/winrename.bat arm64
       working-directory: icalingua/build
       
     - uses: actions/upload-artifact@v2
@@ -999,6 +999,7 @@ jobs:
       - build-dist-bundle
       - build-windows64
       - build-macos-x64
+      - build-windows-arm64
     steps:
       - name: Make dir
         run: mkdir release
@@ -1163,6 +1164,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: Icalingua_Windows64.exe
+          path: release
+
+      - name: get Icalingua_Windows_arm64.exe
+        uses: actions/download-artifact@v2
+        with:
+          name: Icalingua_Windows_arm64.exe
           path: release
 
       - name: get Icalingua++_x64.dmg
