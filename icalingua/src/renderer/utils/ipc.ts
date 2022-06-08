@@ -27,6 +27,9 @@ const ipc = {
     async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean, roomPanelWidth: number }> {
         return await ipcRenderer.invoke('getRoomPanelSetting')
     },
+    async getMessgeTypeSetting(): Promise<string> {
+        return (await ipcRenderer.invoke('getMessgeTypeSetting')) || 'text'
+    },
     setRoomPanelSetting(roomPanelAvatarOnly: boolean, roomPanelWidth: number) {
         ipcRenderer.send('setRoomPanelSetting', roomPanelAvatarOnly, roomPanelWidth)
     },

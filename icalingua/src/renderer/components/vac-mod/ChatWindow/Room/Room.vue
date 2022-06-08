@@ -728,10 +728,12 @@ export default {
             }
             setTimeout(() => this.focusTextarea(), 0)
         },
-        sendMessage() {
+        async sendMessage() {
             let message = this.message.trim()
 
             if (!this.file && !message) return
+
+            const messageType = await ipc.getMessgeTypeSetting()
 
             this.$emit('send-message', {
                 content: message,
@@ -739,7 +741,7 @@ export default {
                 replyMessage: this.messageReply,
                 usersTag: this.selectedUsersTag,
                 resend: this.editAndResend,
-                messageType: 'text',
+                messageType: messageType,
             })
 
             this.resetMessage(true)
