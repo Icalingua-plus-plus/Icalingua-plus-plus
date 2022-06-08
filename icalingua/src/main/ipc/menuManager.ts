@@ -1293,6 +1293,7 @@ ipcMain.on('popupStickerMenu', () => {
                     at: [],
                     messageType: 'shake',
                 })
+                ui.closePanel()
             },
         },
         {
