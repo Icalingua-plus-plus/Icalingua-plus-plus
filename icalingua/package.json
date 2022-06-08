@@ -185,7 +185,7 @@
     "pg-query-stream": "^4.2.1",
     "silk-sdk": "^0.2.2",
     "socket.io": "^4.3.2",
-    "sqlite3": "^5.0.6"
+    "sqlite3": "^5.0.8"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.18",
@@ -199,7 +199,7 @@
     "@types/winston": "^2.4.4",
     "ajv": "^6.5.0",
     "aria2": "^4.1.2",
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
     "babel-minify-webpack-plugin": "^0.3.1",
