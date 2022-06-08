@@ -20,6 +20,13 @@ ipcMain.on('setRoomPanelSetting', (_, roomPanelAvatarOnly: boolean, roomPanelWid
     getConfig().roomPanelWidth = roomPanelWidth
     saveConfigFile()
 })
+ipcMain.handle('getMessgeTypeSetting', () => {
+    let messageType = 'text'
+    if (getConfig().anonymous) messageType = 'anonymous'
+    if (getConfig().sendRawMessage) messageType = 'raw'
+    if (!getConfig().debugmode) messageType = 'text'
+    return messageType
+})
 
 ipcMain.on('setCheckUpdate', (_, enabled: boolean) => {
     getConfig().updateCheck = enabled
