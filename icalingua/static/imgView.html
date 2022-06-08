@@ -213,7 +213,7 @@
 		}
 	}
 
-	DRAG.onpointerup = function(ev) {
+	function pointerup(ev) {
 		for (var i = 0; i < evCache.length; i++) {
 			if (evCache[i].pointerId == ev.pointerId) {
 				evCache.splice(i, 1)
@@ -229,6 +229,8 @@
 		
 		window.removeEventListener('pointermove', pointermove)
 	}
+	DRAG.onpointerup = pointerup
+	DRAG.onpointerleave = pointerup
 
 	// deploy buttons
 
