@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { fork } from 'child_process'
 import { app } from 'electron'
+import ffmpeg from 'fluent-ffmpeg/lib/fluent-ffmpeg'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
