@@ -1,34 +1,32 @@
 import axios from 'axios'
-import ffmpeg from 'fluent-ffmpeg/lib/fluent-ffmpeg'
-import { PassThrough } from 'stream'
-import silk from 'silk-sdk'
-import { streamToBuffer } from '../../utils/streamToBuffer'
+import { fork } from 'child_process'
+import { app } from 'electron'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
         responseType: 'arraybuffer',
         proxy: false,
     })
-    const bufPcm = silk.decode(res.data)
-    const bufMp3 = await conventPcmToMp3(bufPcm)
-    return 'data:audio/mp3;base64,' + bufMp3.toString('base64')
+    const bufOgg = await conventSilk(res.data)  
+    return 'data:audio/ogg;base64,' + bufOgg.toString('base64')
 }
 
-const conventPcmToMp3 = (pcm: Buffer): Promise<Buffer> => {
+const conventSilk = (silkBuf: Buffer): Promise<Buffer> => {
     return new Promise((resolve, reject) => {
-        const inStream = new PassThrough()
-        const outStream = new PassThrough()
-        inStream.end(pcm)
-        ffmpeg(inStream)
-            .inputOption(['-f', 's16le', '-ar', '24000', '-ac', '1'])
-            .outputFormat('mp3')
-            .on('error', (err) => {
-                reject(err)
-            })
-            .on('end', async () => {
-                const buf = await streamToBuffer(outStream)
-                resolve(buf)
-            })
-            .pipe(outStream, { end: true })
+        const child = fork(require('path').join(app.getAppPath(), 'dist', 'electron', 'static/silkchild.js'))
+        child.on('message', (bufOggStr: String) => {
+            const bufOgg = Buffer.from(bufOggStr, 'binary')
+            console.log('bufOgg received from child length:', bufOgg.length)
+            resolve(bufOgg)
+        })
+        child.on('error', (err) => {
+            console.error(err)
+            reject(err)
+        })
+        child.on('exit', (code, signal) => {
+            console.log(`child process exited with code ${code} and signal ${signal}`)
+            if (code !== 0) reject(new Error('child process exited'))
+        })
+        child.send(silkBuf.toString('binary'))
     })
 }

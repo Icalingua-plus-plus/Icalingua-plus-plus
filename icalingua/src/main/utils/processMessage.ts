@@ -235,14 +235,14 @@ const processMessage = async (
             case 'record':
                 try {
                     message.file = {
-                        type: 'audio/mp3',
+                        type: 'audio/ogg',
                         url: await silkDecode(m.data.url),
                     }
                     message.files.push(message.file)
                 } catch (e) {
                     errorHandler(e, true)
                     message.code = JSON.stringify(e)
-                    message.content = '[语音下载失败]'
+                    message.content = '[语音下载失败]' + m.data.url
                 }
                 lastMessage.content = '[Audio]'
                 break
