@@ -305,6 +305,10 @@ const processMessage = async (
                 lastMessage.content += '[' + (pokemap[m.data.type] || pokemap[m.data.id]) + ']'
                 message.content += '[' + (pokemap[m.data.type] || pokemap[m.data.id]) + ']'
                 break
+            case 'sface':
+                lastMessage.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
+                message.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
+                break
             default:
                 console.log('[无法解析的消息]', m)
                 if (!getConfig().debugmode) return
