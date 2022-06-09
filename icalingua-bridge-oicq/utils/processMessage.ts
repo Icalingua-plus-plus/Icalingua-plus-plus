@@ -297,6 +297,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'sface':
                 lastMessage.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
                 message.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
+                break
             default:
                 console.log('[无法解析的消息]', m)
         }
