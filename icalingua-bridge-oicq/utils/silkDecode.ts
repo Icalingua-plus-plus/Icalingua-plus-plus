@@ -11,7 +11,7 @@ export default async (url: string) => {
 
 const conventSilk = (silkBuf: Buffer): Promise<Buffer> => {
     return new Promise((resolve, reject) => {
-        const child = fork(require('path').join(__dirname, '../static/silkchild.js'))
+        const child = fork(require('path').join(__dirname, 'silkchild'))
         child.on('message', (bufOggStr: String) => {
             const bufOgg = Buffer.from(bufOggStr, 'binary')
             console.log('bufOgg received from child length:', bufOgg.length)
