@@ -4,29 +4,37 @@ const PassThrough = require('stream').PassThrough
 
 process.on('message', async (silkBufStr) => {
     const silkBuf = Buffer.from(silkBufStr, 'binary');
-    const bufPcm = silk.decode(silkBuf)
-    const bufOgg = await conventPcmToOgg(bufPcm)
-    process.send(bufOgg.toString('binary'))
-    process.exit(0)
+    let bufPcm, bufOgg, silkDecodeFailed = false
+    try {
+        bufPcm = silk.decode(silkBuf)
+    } catch (err) {
+        // 可能是 amr 語音，嘗試直接轉換
+        console.error(err)
+        silkDecodeFailed = true
+    } finally {
+        bufOgg = await convertToOgg(silkDecodeFailed ? silkBuf : bufPcm, !silkDecodeFailed)
+        process.send(bufOgg.toString('binary'))
+        process.exit(0)
+    }
 })
 
-console.log('Child process start! Start to convert silk to ogg!');
+console.log('[Child process] Child process start! Start to convert record to ogg!');
 
-const conventPcmToOgg = (pcm) => {
+const convertToOgg = (pcm, isPcm = true) => {
     return new Promise((resolve, reject) => {
         const inStream = new PassThrough()
         const outStream = new PassThrough()
         inStream.end(pcm)
         ffmpeg(inStream, { timeout: 10 })
-            .inputOption(['-f', 's16le', '-ar', '24000', '-ac', '1'])
+            .inputOption(isPcm ? ['-f', 's16le', '-ar', '24000', '-ac', '1'] : [])
             .outputFormat('ogg')
             .on('error', (err) => {
                 // Stream 超时，写出 pcm 文件以转换
-                const filename = require('path').join(require('os').tmpdir(), Date.now() + '.pcm')
+                const filename = require('path').join(require('os').tmpdir(), Date.now() + '')
                 require('fs').writeFileSync(filename, pcm)
                 console.error(err)
                 ffmpeg(filename, { timeout: 15 })
-                .inputOption(['-f', 's16le', '-ar', '24000', '-ac', '1'])
+                .inputOption(isPcm ? ['-f', 's16le', '-ar', '24000', '-ac', '1'] : [])
                 .outputFormat('ogg')
                 .on('error', (err) => {
                     console.error(err)
