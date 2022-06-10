@@ -1,1 +1,0 @@
-../../icalingua/static/silkchild.js
