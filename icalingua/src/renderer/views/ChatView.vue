@@ -501,8 +501,8 @@ Chromium ${process.versions.chrome}` : ''
             if ((typeof room) === 'number')
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
-            if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoom.at = false
+            if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
