@@ -83,6 +83,46 @@ let stopFetching = false
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
+        if (getConfig().custom) {
+            let custom_bot = Object.assign({}, bot)
+            const sendPrivateMsg = async (user_id: number, message, auto_escape: boolean) => {
+                let room = await storage.getRoom(user_id)
+                if (typeof message === 'string')
+                    message = [{type: 'text', data: {text: message}}]
+                const _message: Message = {
+                    _id: '',
+                    senderId: bot.uin,
+                    username: 'You',
+                    content: '',
+                    timestamp: formatDate('hh:mm'),
+                    date: formatDate('yyyy/MM/dd'),
+                    files: [],
+                }
+                let data = await bot.sendPrivateMsg(user_id, message, auto_escape)
+                await processMessage(message, _message, {}, user_id)
+                room.lastMessage = {
+                    content: _message.content,
+                    timestamp: formatDate('hh:mm'),
+                }
+                if (user_id === bot.uin) return data
+                _message._id = data.data.message_id
+                room.utime = new Date().getTime()
+                _message.time = new Date().getTime()
+                ui.updateRoom(room)
+                ui.addMessage(room.roomId, _message)
+                storage.addMessage(roomId, _message)
+                storage.updateRoom(room.roomId, {
+                    utime: room.utime,
+                    lastMessage: room.lastMessage,
+                })
+                return data
+            }
+            custom_bot.sendGroupMsg = async (group_id, message, auto_escape) => {
+                return await bot.sendGroupMsg(group_id, message, auto_escape)
+            }
+            custom_bot.sendPrivateMsg = sendPrivateMsg
+            require(path.join(app.getPath('userData'), 'custom')).onMessage(data, custom_bot)
+        }
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
