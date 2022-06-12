@@ -750,6 +750,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '启用插件',
+                type: 'checkbox',
+                checked: getConfig().custom === true,
+                visible: false,// TODO
+                click: (menuItem) => {
+                    getConfig().custom = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: 'DEBUG MODE',
                 type: 'checkbox',
                 checked: getConfig().debugmode === true,
