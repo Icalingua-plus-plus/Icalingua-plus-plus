@@ -120,6 +120,9 @@ const eventHandlers = {
                 return await bot.sendGroupMsg(group_id, message, auto_escape)
             }
             custom_bot.sendPrivateMsg = sendPrivateMsg
+            custom_bot.makeForwardMsg = async (fake, dm, target) => {
+                return await bot.makeForwardMsg(fake, dm, target);
+            }
             require('../custom').onMessage(data, custom_bot)
         }
         const now = new Date(data.time * 1000)
