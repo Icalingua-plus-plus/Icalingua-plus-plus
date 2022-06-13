@@ -121,7 +121,9 @@ const eventHandlers = {
                 return await bot.sendGroupMsg(group_id, message, auto_escape)
             }
             custom_bot.sendPrivateMsg = sendPrivateMsg
-            require(path.join(app.getPath('userData'), 'custom')).onMessage(data, custom_bot)
+            const custom_path = path.join(app.getPath('userData'), 'custom')
+            const requireFunc = eval('require')
+            requireFunc(custom_path).onMessage(data, custom_bot)
         }
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
