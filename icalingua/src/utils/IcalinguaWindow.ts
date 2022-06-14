@@ -7,16 +7,16 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
         if (process.platform === 'darwin') {
             let contents = win.webContents
             globalShortcut.register('CommandOrControl+C', () => {
-                contents.copy()
+                if (contents) contents.copy()
             })
             globalShortcut.register('CommandOrControl+V', () => {
-                contents.paste()
+                if (contents) contents.paste()
             })
             globalShortcut.register('CommandOrControl+X', () => {
-                contents.cut()
+                if (contents) contents.cut()
             })
             globalShortcut.register('CommandOrControl+A', () => {
-                contents.selectAll()
+                if (contents) contents.selectAll()
             })
         }
     })
