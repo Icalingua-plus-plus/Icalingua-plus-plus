@@ -87,8 +87,7 @@ const eventHandlers = {
             let custom_bot = Object.assign({}, bot)
             const sendPrivateMsg = async (user_id: number, message, auto_escape?: boolean) => {
                 let room = await storage.getRoom(user_id)
-                if (typeof message === 'string')
-                    message = [{type: 'text', data: {text: message}}]
+                if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
                 const _message: Message = {
                     _id: '',
                     senderId: bot.uin,
@@ -122,22 +121,22 @@ const eventHandlers = {
             }
             custom_bot.sendPrivateMsg = sendPrivateMsg
             custom_bot.makeForwardMsg = async (fake, dm?, target?) => {
-                return await bot.makeForwardMsg(fake, dm, target);
+                return await bot.makeForwardMsg(fake, dm, target)
             }
             custom_bot.deleteMsg = async (message_id) => {
-                return await bot.deleteMsg(message_id);
+                return await bot.deleteMsg(message_id)
             }
             custom_bot.setGroupBan = async (group_id, user_id, duration?) => {
-                return await bot.setGroupBan(group_id, user_id, duration);
+                return await bot.setGroupBan(group_id, user_id, duration)
             }
             custom_bot.setGroupAnonymousBan = async (group_id, flag, duration?) => {
-                return await bot.setGroupAnonymousBan(group_id, flag, duration);
+                return await bot.setGroupAnonymousBan(group_id, flag, duration)
             }
             custom_bot.setGroupWholeBan = async (group_id, enable?) => {
-                return await bot.setGroupWholeBan(group_id, enable);
+                return await bot.setGroupWholeBan(group_id, enable)
             }
             custom_bot.setGroupKick = async (group_id, user_id, reject_add_request?) => {
-                return await bot.setGroupKick(group_id, user_id, reject_add_request);
+                return await bot.setGroupKick(group_id, user_id, reject_add_request)
             }
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')

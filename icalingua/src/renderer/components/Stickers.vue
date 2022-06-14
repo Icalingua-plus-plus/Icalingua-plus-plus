@@ -165,7 +165,7 @@ export default {
             e.preventDefault()
             this.$refs.stickers_dir.scrollTo({
                 left: this.$refs.stickers_dir.scrollLeft + e.deltaY,
-                behavior: 'smooth'
+                behavior: 'smooth',
             })
         },
     },

@@ -77,7 +77,17 @@ export default {
     },
     computed: {
         matched() {
-            return this.list.filter(([name]) => name[this.searchMethod](this.search))
+            const matched =
+                this.searchMethod === 'includes'
+                    ? this.list.filter(
+                          ([name, id]) =>
+                              name[this.searchMethod](this.search) || id.toString()[this.searchMethod](this.search),
+                      )
+                    : this.list.filter(([name]) => name[this.searchMethod](this.search))
+            if (matched.length === 0) {
+                this.$emit('nomatch', this.search)
+            }
+            return matched
         },
     },
 }

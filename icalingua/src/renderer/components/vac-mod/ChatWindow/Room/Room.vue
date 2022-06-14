@@ -230,6 +230,7 @@
                         inputSize="200"
                         @cancel="closeQuickAt"
                         @confirm="useQuickAt"
+                        @nomatch="nomatchQuickAt"
                     >
                         <p :style="{ wordWrap: 'break-word' }">{{ name }}</p>
                         <p :style="{ fontFamily: 'monospace' }">{{ id }}</p>
@@ -412,6 +413,7 @@ export default {
             faceNames,
             faceDir,
             groupMembers: null,
+            useAtKey: false,
         }
     },
     computed: {
@@ -714,6 +716,7 @@ export default {
         },
         closeQuickAt() {
             this.isQuickAtOn = false
+            this.useAtKey = false
             this.focusTextarea()
         },
         useQuickAt(id, name) {
@@ -724,8 +727,16 @@ export default {
                     text: atText,
                     id: id,
                 })
-                this.useMessageContent(atText + ' ')
+                this.useMessageContent((this.useAtKey ? name : atText) + ' ')
             }
+            this.useAtKey = false
+            setTimeout(() => this.focusTextarea(), 0)
+        },
+        nomatchQuickAt(search) {
+            if (!this.useAtKey) return
+            this.isQuickAtOn = false
+            this.useAtKey = false
+            this.useMessageContent(search)
             setTimeout(() => this.focusTextarea(), 0)
         },
         async sendMessage() {
@@ -824,6 +835,12 @@ export default {
             this.keepKeyboardOpen = true
             this.resizeTextarea()
             this.$emit('typing-message', this.message)
+            const selectionStart = this.$refs.roomTextarea.selectionStart
+            if (this.message.slice(selectionStart - 1, selectionStart) === '@') {
+                this.useAtKey = true
+                this.isQuickAtOn = true
+                this.$nextTick(() => this.$refs.quickat.focus())
+            }
         },
         resizeTextarea() {
             const el = this.$refs['roomTextarea']

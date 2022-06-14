@@ -80,7 +80,9 @@ export default {
                                     singleMessage.message.push({
                                         type: 'image',
                                         data: {
-                                            file: file.url.startsWith('data:image') ? 'base64://' + file.url.replace(/^data:.+;base64,/, '') :file.url,
+                                            file: file.url.startsWith('data:image')
+                                                ? 'base64://' + file.url.replace(/^data:.+;base64,/, '')
+                                                : file.url,
                                             type: 'image',
                                         },
                                     })

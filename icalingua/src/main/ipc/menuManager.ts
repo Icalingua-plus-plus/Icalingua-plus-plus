@@ -753,7 +753,7 @@ export const updateAppMenu = async () => {
                 label: '启用插件',
                 type: 'checkbox',
                 checked: getConfig().custom === true,
-                visible: getConfig().adapter === 'oicq',// TODO: 修改 Bridge 的配置
+                visible: getConfig().adapter === 'oicq', // TODO: 修改 Bridge 的配置
                 click: (menuItem) => {
                     getConfig().custom = menuItem.checked
                     saveConfigFile()
