@@ -5,7 +5,7 @@ export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
         responseType: 'arraybuffer',
     })
-    const bufOgg = await conventSilk(res.data)  
+    const bufOgg = await conventSilk(res.data)
     return 'data:audio/ogg;base64,' + bufOgg.toString('base64')
 }
 

@@ -12,7 +12,7 @@ ipcMain.handle('getRoomPanelSetting', () => {
     const config = getConfig()
     return {
         roomPanelAvatarOnly: config.roomPanelAvatarOnly,
-        roomPanelWidth: config.roomPanelWidth
+        roomPanelWidth: config.roomPanelWidth,
     }
 })
 ipcMain.on('setRoomPanelSetting', (_, roomPanelAvatarOnly: boolean, roomPanelWidth: number) => {
