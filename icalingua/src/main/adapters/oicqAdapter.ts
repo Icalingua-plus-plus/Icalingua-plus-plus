@@ -80,9 +80,18 @@ let currentLoadedMessagesCount = 0
 let loggedIn = false
 let stopFetching = false
 
+let lastReceivedMessageInfo = {
+    timestamp: 0,
+    id: 0,
+}
+
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
+        if (data.time !== lastReceivedMessageInfo.timestamp) {
+            lastReceivedMessageInfo.timestamp = data.time
+            lastReceivedMessageInfo.id = 0
+        }
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
@@ -253,14 +262,14 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
-        // 加上现在时间戳的毫秒位，防止消息乱序
-        const milliSeconds = new Date().getMilliseconds()
-        room.utime = data.time * 1000 + milliSeconds
+        // 加上同一秒收到消息的id，防止消息乱序
+        room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
         if (message.file && message.file.name && room.autoDownload) {
             download(message.file.url, message.file.name, room.downloadPath)
         }
-        message.time = data.time * 1000 + milliSeconds
+        message.time = data.time * 1000 + lastReceivedMessageInfo.id
+        lastReceivedMessageInfo.id++
         ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
         storage.addMessage(roomId, message)
