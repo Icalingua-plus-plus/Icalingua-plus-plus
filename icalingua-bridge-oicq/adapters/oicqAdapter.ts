@@ -171,9 +171,11 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
-        room.utime = data.time * 1000
+        // 加上现在时间戳的毫秒位，防止消息乱序
+        const milliSeconds = new Date().getMilliseconds()
+        room.utime = data.time * 1000 + milliSeconds
         room.lastMessage = lastMessage
-        message.time = data.time * 1000
+        message.time = data.time * 1000 + milliSeconds
         clients.addMessage(room.roomId, message)
         await storage.updateRoom(roomId, room)
         clients.updateRoom(room)
