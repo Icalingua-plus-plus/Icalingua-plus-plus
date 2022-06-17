@@ -6792,7 +6792,7 @@ fsevents@~2.3.1:
     noble-ed25519: ^1.2.5
     node-loader: ^0.6.0
     nodejs-base64: ^2.0.0
-    oicq-icalingua-plus-plus: 1.22.5
+    oicq-icalingua-plus-plus: 1.22.6
     pg: ^8.7.1
     pg-query-stream: ^4.2.1
     prettier: ^2.5.1
@@ -9413,9 +9413,9 @@ fsevents@~2.3.1:
   languageName: node
   linkType: hard
 
-"oicq-icalingua-plus-plus@npm:1.22.5":
-  version: 1.22.5
-  resolution: "oicq-icalingua-plus-plus@npm:1.22.5"
+"oicq-icalingua-plus-plus@npm:1.22.6":
+  version: 1.22.6
+  resolution: "oicq-icalingua-plus-plus@npm:1.22.6"
   dependencies:
     jsqr: ^1.4.0
     log4js: ^6.3.0
@@ -9426,7 +9426,7 @@ fsevents@~2.3.1:
     ws: ^7.5.5
   bin:
     oicq-icalingua-plus-plus: bin/oicq
-  checksum: 7beb722d16839ededaa39c7cb1c80abdc3256de641d488c958be6dc112c866302c994943e398370ad7423d62224cb84005efb8b88cb8bb1cb1f5e73d09e87437
+  checksum: 0006287d6263d3a5bbdc8c3ac41a3ac0ba942b03dbbec8aca03577c8628ff7d8f18296064a950c1e859a4b55d4934b0a3cff032de81ff8ee18bdd7b369c5d7a8
   languageName: node
   linkType: hard
 
