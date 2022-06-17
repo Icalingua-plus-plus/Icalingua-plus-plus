@@ -1049,8 +1049,22 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     )
                     menu.append(
                         new MenuItem({
-                            label: '添加为表情',
+                            label: '添加为默认表情',
                             type: 'normal',
+                            click: () => {
+                                download(
+                                    file.url,
+                                    String(new Date().getTime()),
+                                    path.join(app.getPath('userData'), 'stickers'),
+                                )
+                            },
+                        }),
+                    )
+                    menu.append(
+                        new MenuItem({
+                            label: '添加为分类表情',
+                            type: 'normal',
+                            visible: false, // TODO
                             click: () => {
                                 download(
                                     file.url,
@@ -1233,11 +1247,15 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     new MenuItem({
                         label: '+1',
                         click: () => {
+                            let messageType
+                            if (getConfig().anonymous) messageType = 'anonymous'
+                            if (getConfig().sendRawMessage || !getConfig().debugmode) messageType = undefined
                             const msgToSend = {
                                 content: message.content,
                                 replyMessage: message.replyMessage,
                                 imgpath: undefined,
                                 at: [],
+                                messageType,
                             }
                             if (message.file) {
                                 msgToSend.imgpath = message.file.url
