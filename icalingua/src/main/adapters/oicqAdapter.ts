@@ -253,12 +253,14 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
-        room.utime = data.time * 1000
+        // 加上现在时间戳的毫秒位，防止消息乱序
+        const milliSeconds = new Date().getMilliseconds()
+        room.utime = data.time * 1000 + milliSeconds
         room.lastMessage = lastMessage
         if (message.file && message.file.name && room.autoDownload) {
             download(message.file.url, message.file.name, room.downloadPath)
         }
-        message.time = data.time * 1000
+        message.time = data.time * 1000 + milliSeconds
         ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
         storage.addMessage(roomId, message)
