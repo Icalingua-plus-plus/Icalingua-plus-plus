@@ -460,13 +460,15 @@ Chromium ${process.versions.chrome}` : ''
             return msgs2add[msgs2add.length - 1]
         },
         openImage: ipc.downloadFileByMessageData,
-        sendSticker(url) {
+        async sendSticker(url) {
+            const messageType = await ipc.getMessgeTypeSetting()
             if (this.selectedRoom)
                 this.sendMessage({
                     content: '',
                     room: this.selectedRoom,
                     imgpath: url,
                     sticker: true,
+                    messageType: messageType === 'anonymous' ? 'anonymous' : undefined,
                 })
             this.$refs.room.focusTextarea()
             if (window.innerWidth < 1200) {
