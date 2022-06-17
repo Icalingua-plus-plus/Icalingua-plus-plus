@@ -836,7 +836,7 @@ export default {
             this.resizeTextarea()
             this.$emit('typing-message', this.message)
             const selectionStart = this.$refs.roomTextarea.selectionStart
-            if (this.message.slice(selectionStart - 1, selectionStart) === '@') {
+            if (this.message.slice(selectionStart - 1, selectionStart) === '@' && this.room.roomId < 0) {
                 this.useAtKey = true
                 this.isQuickAtOn = true
                 this.$nextTick(() => this.$refs.quickat.focus())
