@@ -625,6 +625,7 @@ export default {
         ipcRenderer.on('addMessageText', (_, message) => {
             this.message += message
             this.focusTextarea()
+            this.$nextTick(() => this.resizeTextarea())
         })
     },
     methods: {
@@ -836,7 +837,7 @@ export default {
             this.resizeTextarea()
             this.$emit('typing-message', this.message)
             const selectionStart = this.$refs.roomTextarea.selectionStart
-            if (this.message.slice(selectionStart - 1, selectionStart) === '@' && this.room.roomId < 0) {
+            if (this.room.roomId < 0 && this.message.slice(selectionStart - 1, selectionStart) === '@') {
                 this.useAtKey = true
                 this.isQuickAtOn = true
                 this.$nextTick(() => this.$refs.quickat.focus())

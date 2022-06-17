@@ -9,6 +9,7 @@
             @keydown.arrow-down="selectNext"
             @keydown.arrow-up="selectLast"
             @keydown.enter.prevent="confirm(selectedIndex)"
+            @keydown.backspace="breakspace"
             @input="selectedIndex = 0"
             @blur="$nextTick(cancel)"
         />
@@ -53,6 +54,11 @@ export default {
             this.search = ''
             this.selectedIndex = 0
             this.$emit('cancel')
+        },
+        breakspace() {
+            if (this.search.length === 0) {
+                this.cancel()
+            }
         },
         confirm(index) {
             const selected = this.matched[index] || []
