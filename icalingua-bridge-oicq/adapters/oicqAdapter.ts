@@ -63,6 +63,11 @@ let storage: StorageProvider
 let loginForm: LoginForm
 export let loggedIn = false
 
+let lastReceivedMessageInfo = {
+    timestamp: 0,
+    id: 0,
+}
+
 type CookiesDomain =
     | 'tenpay.com'
     | 'docs.qq.com'
@@ -82,6 +87,10 @@ type CookiesDomain =
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
+        if (data.time !== lastReceivedMessageInfo.timestamp) {
+            lastReceivedMessageInfo.timestamp = data.time
+            lastReceivedMessageInfo.id = 0
+        }
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessageEventData).group_id
         const senderId = data.sender.user_id
@@ -171,11 +180,11 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
-        // 加上现在时间戳的毫秒位，防止消息乱序
-        const milliSeconds = new Date().getMilliseconds()
-        room.utime = data.time * 1000 + milliSeconds
+        // 加上同一秒收到消息的id，防止消息乱序
+        room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
-        message.time = data.time * 1000 + milliSeconds
+        message.time = data.time * 1000 + lastReceivedMessageInfo.id
+        lastReceivedMessageInfo.id++
         clients.addMessage(room.roomId, message)
         await storage.updateRoom(roomId, room)
         clients.updateRoom(room)
