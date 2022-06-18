@@ -741,6 +741,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '启动时自动获取历史消息',
+                type: 'checkbox',
+                checked: getConfig().fetchHistoryOnStart,
+                visible: getConfig().adapter === 'oicq', // Bridge is enabled by default
+                click: (menuItem) => {
+                    getConfig().fetchHistoryOnStart = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '启动时检查更新',
                 type: 'checkbox',
                 checked: getConfig().updateCheck === true,
