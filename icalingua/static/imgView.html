@@ -315,6 +315,10 @@
 	}
 
 	DRAG.onwheel = e => {
+		if (e.ctrlKey) {
+			IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
+			return
+		}
 		if (e.wheelDeltaY > 0) {
 			zoomIn(e, e.wheelDeltaY / body.clientHeight)
 		}
