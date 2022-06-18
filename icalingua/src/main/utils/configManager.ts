@@ -37,6 +37,7 @@ type AllConfig = {
     roomPanelWidth: number
     sendRawMessage: boolean
     custom: boolean
+    fetchHistoryOnStart: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -105,6 +106,7 @@ const defaultConfig: AllConfig = {
     roomPanelWidth: null,
     sendRawMessage: false,
     custom: false,
+    fetchHistoryOnStart: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
