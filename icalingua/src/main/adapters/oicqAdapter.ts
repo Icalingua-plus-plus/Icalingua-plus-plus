@@ -71,6 +71,7 @@ import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import { base64decode } from 'nodejs-base64'
 import BilibiliMiniApp from '../../types/BilibiliMiniApp'
 import StructMessageCard from '../../types/StructMessageCard'
+import sleep from '../../utils/sleep'
 
 let bot: Client
 let storage: StorageProvider
@@ -836,6 +837,27 @@ const loginHandlers = {
         }
         await updateAppMenu()
         await updateTrayIcon()
+        if (!getConfig().fetchHistoryOnStart) return
+        await sleep(3000)
+        console.log('正在获取历史消息')
+        ui.message('正在获取历史消息')
+        {
+            const rooms = await storage.getAllRooms()
+            for (const i of rooms) {
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                const roomId = i.roomId
+                let buffer: Buffer
+                let uid = roomId
+                if (roomId < 0) {
+                    buffer = Buffer.alloc(21)
+                    uid = -uid
+                } else buffer = Buffer.alloc(17)
+                buffer.writeUInt32BE(uid, 0)
+                adapter.fetchHistory(buffer.toString('base64'), roomId)
+                await sleep(500)
+            }
+        }
+        ui.messageSuccess('历史消息获取完成')
     },
     verify(data) {
         const veriWin = newIcalinguaWindow({
@@ -1637,9 +1659,11 @@ const adapter: OicqAdapter = {
     },
     async fetchHistory(messageId: string, roomId: number = ui.getSelectedRoomId()) {
         let lastMessage = {}
+        let lastMessageTime = 0
         const fetchLoop = async (limit?: number) => {
             const messages = []
             let done = false
+            let first_loop = true
             while (true) {
                 if (stopFetching) {
                     stopFetching = false
@@ -1689,13 +1713,17 @@ const adapter: OicqAdapter = {
                         messages.push(message)
                         newMsgs.push(message)
                         console.log(retData)
-                        lastMessage = Object.assign(retData.message, retData.lastMessage, {
-                            username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
-                        })
+                        if (first_loop) {
+                            lastMessage = Object.assign(retData.message, retData.lastMessage, {
+                                username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
+                            })
+                            lastMessageTime = retData.message.time
+                        }
                     } catch (e) {
                         errorHandler(e, true)
                     }
                 }
+                first_loop = false
                 ui.addHistoryCount(newMsgs.length)
                 if (history.data.length < 2) {
                     done = true
@@ -1734,7 +1762,8 @@ const adapter: OicqAdapter = {
         // 更新最近消息
         if (!messages.length) return
         let room = await storage.getRoom(roomId)
-        room.lastMessage = lastMessage
+        if (room.utime < lastMessageTime * 1000)
+            room.lastMessage = lastMessage
         ui.updateRoom(room)
     },
 
