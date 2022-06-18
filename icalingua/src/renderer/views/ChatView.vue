@@ -504,6 +504,7 @@ Chromium ${process.versions.chrome}` : ''
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
             this.selectedRoom.at = false
+            ipc.updateRoom(this.selectedRoom.roomId, { at: false })
             if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
