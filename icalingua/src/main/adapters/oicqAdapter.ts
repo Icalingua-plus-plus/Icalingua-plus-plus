@@ -1150,13 +1150,14 @@ const adapter: OicqAdapter = {
 
         const chain: MessageElem[] = []
 
-        if (messageType === 'anonymous' && roomId < 0) {
-            chain.push({
-                type: 'anonymous',
-                data: {
-                    ignore: false, //匿名失败时不继续发送
-                },
-            })
+        if (messageType === 'anonymous') {
+            if (roomId < 0)
+                chain.push({
+                    type: 'anonymous',
+                    data: {
+                        ignore: false, //匿名失败时不继续发送
+                    },
+                })
             messageType = 'text'
         }
 
