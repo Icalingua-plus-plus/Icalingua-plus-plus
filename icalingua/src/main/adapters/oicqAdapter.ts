@@ -258,6 +258,7 @@ const eventHandlers = {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused()) {
             //当前处于此会话界面
             adapter.reportRead(data.message_id)
+            room.at = room.at && !isSelfMsg
         } else if (isSelfMsg) {
             room.unreadCount = 0
             room.at = false
