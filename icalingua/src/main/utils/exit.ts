@@ -1,5 +1,6 @@
 import { getMainWindow } from './windowManager'
 import { getConfig, saveConfigFile } from './configManager'
+import { allWindows } from '../../utils/IcalinguaWindow'
 
 const exit = () => {
     const win = getMainWindow()
@@ -12,5 +13,10 @@ const exit = () => {
     }
     saveConfigFile()
     win.destroy()
+    allWindows.forEach(w => {
+        if (!w.isDestroyed()) {
+            w.destroy()
+        }
+    })
 }
 export default exit
