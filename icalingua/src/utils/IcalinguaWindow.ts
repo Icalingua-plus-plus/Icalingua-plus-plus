@@ -1,13 +1,11 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 
-export let allWindows: BrowserWindow[] = []
-
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
     win.on('focus', () => {
         // macOS Shortcut
         if (process.platform === 'darwin') {
-            let contents = win.webContents
+            let contents = BrowserWindow.getFocusedWindow().webContents || win.webContents
             globalShortcut.register('CommandOrControl+C', () => {
                 if (contents) contents.copy()
             })
@@ -32,7 +30,5 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
             globalShortcut.unregisterAll()
         }
     })
-    allWindows.push(win)
-    allWindows = allWindows.filter(w => !w.isDestroyed())
     return win
 }
