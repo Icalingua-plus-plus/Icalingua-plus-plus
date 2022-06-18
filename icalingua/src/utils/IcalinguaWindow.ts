@@ -1,5 +1,7 @@
 import { BrowserWindow, globalShortcut } from 'electron'
 
+export let allWindows: BrowserWindow[] = []
+
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
     win.on('focus', () => {
@@ -30,5 +32,7 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
             globalShortcut.unregisterAll()
         }
     })
+    allWindows.push(win)
+    allWindows = allWindows.filter(w => !w.isDestroyed())
     return win
 }
