@@ -81,6 +81,7 @@ let currentLoadedMessagesCount = 0
 let loggedIn = false
 let stopFetching = false
 
+let auto_fetching = false
 let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
@@ -280,7 +281,7 @@ const eventHandlers = {
         if (getConfig().custom) {
             let custom_bot = Object.assign({}, bot)
             const sendPrivateMsg = async (user_id: number, message, auto_escape?: boolean) => {
-                let room = await storage.getRoom(user_id)
+                let custom_room = await storage.getRoom(user_id)
                 if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
                 const _message: Message = {
                     _id: '',
@@ -293,20 +294,20 @@ const eventHandlers = {
                 }
                 let data = await bot.sendPrivateMsg(user_id, message, auto_escape)
                 await processMessage(message, _message, {}, user_id)
-                room.lastMessage = {
+                custom_room.lastMessage = {
                     content: _message.content,
                     timestamp: formatDate('hh:mm'),
                 }
                 if (user_id === bot.uin) return data
                 _message._id = data.data.message_id
-                room.utime = new Date().getTime()
+                custom_room.utime = new Date().getTime()
                 _message.time = new Date().getTime()
-                ui.updateRoom(room)
-                ui.addMessage(room.roomId, _message)
-                storage.addMessage(roomId, _message)
-                storage.updateRoom(room.roomId, {
-                    utime: room.utime,
-                    lastMessage: room.lastMessage,
+                ui.updateRoom(custom_room)
+                ui.addMessage(custom_room.roomId, _message)
+                storage.addMessage(user_id, _message)
+                storage.updateRoom(custom_room.roomId, {
+                    utime: custom_room.utime,
+                    lastMessage: custom_room.lastMessage,
                 })
                 return data
             }
@@ -839,6 +840,7 @@ const loginHandlers = {
         await updateTrayIcon()
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
+        auto_fetching = true
         ui.message('正在获取历史消息')
         {
             const rooms = await storage.getAllRooms()
@@ -856,6 +858,7 @@ const loginHandlers = {
                 await sleep(500)
             }
         }
+        auto_fetching = false
         ui.messageSuccess('历史消息获取完成')
     },
     verify(data) {
@@ -1760,12 +1763,10 @@ const adapter: OicqAdapter = {
 
         // 更新最近消息
         if (!messages.length) return
-        //let room = await storage.getRoom(roomId)
-        //if (room.utime < lastMessageTime * 1000){
-        //    room.lastMessage = lastMessage
-        //    room.utime = lastMessageTime * 1000
-        //    ui.updateRoom(room)
-        //}
+        if (auto_fetching) return // 如果是启动时自动拉取，则不更新最近消息
+        let room = await storage.getRoom(roomId)
+        room.lastMessage = lastMessage
+        ui.updateRoom(room)
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
