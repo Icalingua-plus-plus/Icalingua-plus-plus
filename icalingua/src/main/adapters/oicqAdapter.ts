@@ -1760,12 +1760,12 @@ const adapter: OicqAdapter = {
 
         // 更新最近消息
         if (!messages.length) return
-        let room = await storage.getRoom(roomId)
-        if (room.utime < lastMessageTime * 1000){
-            room.lastMessage = lastMessage
-            room.utime = lastMessageTime * 1000
-            ui.updateRoom(room)
-        }
+        //let room = await storage.getRoom(roomId)
+        //if (room.utime < lastMessageTime * 1000){
+        //    room.lastMessage = lastMessage
+        //    room.utime = lastMessageTime * 1000
+        //    ui.updateRoom(room)
+        //}
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
