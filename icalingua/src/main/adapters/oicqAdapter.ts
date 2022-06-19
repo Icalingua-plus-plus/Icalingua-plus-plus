@@ -839,7 +839,6 @@ const loginHandlers = {
         await updateTrayIcon()
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
-        console.log('正在获取历史消息')
         ui.message('正在获取历史消息')
         {
             const rooms = await storage.getAllRooms()
@@ -1762,9 +1761,11 @@ const adapter: OicqAdapter = {
         // 更新最近消息
         if (!messages.length) return
         let room = await storage.getRoom(roomId)
-        if (room.utime < lastMessageTime * 1000)
+        if (room.utime < lastMessageTime * 1000){
             room.lastMessage = lastMessage
-        ui.updateRoom(room)
+            room.utime = lastMessageTime * 1000
+            ui.updateRoom(room)
+        }
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
