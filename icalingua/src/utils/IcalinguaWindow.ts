@@ -6,28 +6,28 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
         // macOS Shortcut
         if (process.platform === 'darwin') {
             let contents = BrowserWindow.getFocusedWindow().webContents || win.webContents
-            globalShortcut.register('CommandOrControl+C', () => {
+            globalShortcut?.register('CommandOrControl+C', () => {
                 if (contents) contents.copy()
             })
-            globalShortcut.register('CommandOrControl+V', () => {
+            globalShortcut?.register('CommandOrControl+V', () => {
                 if (contents) contents.paste()
             })
-            globalShortcut.register('CommandOrControl+X', () => {
+            globalShortcut?.register('CommandOrControl+X', () => {
                 if (contents) contents.cut()
             })
-            globalShortcut.register('CommandOrControl+A', () => {
+            globalShortcut?.register('CommandOrControl+A', () => {
                 if (contents) contents.selectAll()
             })
         }
     })
     win.on('blur', () => {
         if (process.platform === 'darwin') {
-            globalShortcut.unregisterAll()
+            globalShortcut?.unregisterAll()
         }
     })
     win.on('close', () => {
         if (process.platform === 'darwin') {
-            globalShortcut.unregisterAll()
+            globalShortcut?.unregisterAll()
         }
     })
     return win
