@@ -862,7 +862,7 @@ export const updateAppMenu = async () => {
                 }),
         ),
     }
-    const menu = Menu.buildFromTemplate([
+    let template = [
         {
             label: 'Icalingua++',
             submenu: Menu.buildFromTemplate(globalMenu.app),
@@ -872,7 +872,20 @@ export const updateAppMenu = async () => {
             label: '选项',
             submenu: Menu.buildFromTemplate(globalMenu.options),
         },
-    ])
+        {
+            label: 'Edit',
+            submenu: [
+                { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
+                { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
+                { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
+                { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+                { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+                { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
+            ]
+        },
+    ]
+    if (process.platform !== 'darwin') template.pop()
+    const menu = Menu.buildFromTemplate(template)
     if (globalMenu.shortcuts.length) {
         menu.append(
             new MenuItem({
