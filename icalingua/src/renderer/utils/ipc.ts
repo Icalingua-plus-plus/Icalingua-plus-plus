@@ -58,8 +58,8 @@ const ipc = {
         return await ipcRenderer.invoke('getPriority')
     },
     //todo 这俩玩意要封装的更细的说
-    async updateRoom(roomId: number, room: object) {
-        return await ipcRenderer.invoke('updateRoom', roomId, room)
+    updateRoom(roomId: number, room: object) {
+        ipcRenderer.send('updateRoom', roomId, room)
     },
     async updateMessage(roomId: number, messageId: string, message: object) {
         return await ipcRenderer.invoke('updateMessage', roomId, messageId, message)
