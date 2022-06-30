@@ -19,8 +19,8 @@ export default {
     openGroupMemberPanel(shown: boolean) {
         sendToMainWindow('openGroupMemberPanel', shown)
     },
-    startForward() {
-        sendToMainWindow('startForward')
+    startForward(_id: string) {
+        sendToMainWindow('startForward', _id)
     },
     confirmDeleteMessage(roomId: number, messageId: string) {
         sendToMainWindow('confirmDeleteMessage', { roomId, messageId })
