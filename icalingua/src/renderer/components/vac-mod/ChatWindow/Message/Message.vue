@@ -17,15 +17,9 @@
             :id="message._id"
             class="vac-message-box"
             :class="{ 'vac-offset-current': message.senderId === currentUserId }"
+            @click="selectMessage"
         >
             <slot name="message" v-bind="{ message }">
-                <el-checkbox
-                    id="message._id"
-                    value="message._id"
-                    v-model="checkbox"
-                    v-if="showForwardPanel"
-                    v-on:change="checkboxChange"
-                />
                 <div
                     class="vac-message-sender-avatar"
                     @click.right="$emit('avatar-ctx')"
@@ -58,6 +52,8 @@
                             'vac-message-highlight': isMessageHover,
                             'vac-message-current': message.senderId === currentUserId,
                             'vac-message-deleted': message.deleted,
+                            'vac-message-clickable': showForwardPanel,
+                            'vac-message-selected': selected,
                         }"
                         @mouseover="onHoverMessage"
                         @mouseleave="onLeaveMessage"
@@ -94,6 +90,7 @@
                             :message="message"
                             :room-users="roomUsers"
                             :linkify="linkify"
+                            :showForwardPanel="showForwardPanel"
                             @open-forward="$emit('open-forward', $event)"
                         />
 
@@ -117,6 +114,7 @@
                             :room-users="roomUsers"
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
+                            :showForwardPanel="showForwardPanel"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -133,6 +131,7 @@
                             :room-users="roomUsers"
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
+                            :showForwardPanel="showForwardPanel"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -169,6 +168,7 @@
                             :text-formatting="textFormatting"
                             :linkify="linkify"
                             @open-user-tag="openUserTag"
+                            :showForwardPanel="showForwardPanel"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">
@@ -215,7 +215,7 @@ export default {
 
     data() {
         return {
-            checkbox: false,
+            selected: false,
         }
     },
 
@@ -235,6 +235,7 @@ export default {
         emojisList: { type: Object, required: true },
         hideOptions: { type: Boolean, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
     },
 
@@ -296,7 +297,9 @@ export default {
         showForwardPanel: {
             handler(newValue) {
                 if (!newValue) {
-                    this.checkbox = false
+                    this.selected = false
+                } else if (this.message._id === this.selectedMessage) {
+                    this.selected = true
                 }
             },
             immediate: true,
@@ -318,9 +321,12 @@ export default {
     },
 
     methods: {
-        checkboxChange() {
-            console.log('checkboxChange', this.checkbox)
-            this.$emit(this.checkbox ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
+        selectMessage(event) {
+            if (!this.showForwardPanel) return
+            this.selected = !this.selected
+            console.log('selectMessage', this.selected)
+            this.$emit(this.selected ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
+            event.preventDefault()
         },
         onHoverMessage() {
             this.imageHover = true
@@ -336,6 +342,7 @@ export default {
             this.hoverMessageId = null
         },
         openFile(action) {
+            if (this.showForwardPanel) return
             this.$emit('open-file', { message: this.message, action })
         },
         openUserTag(user) {
@@ -487,6 +494,15 @@ export default {
     font-size: 13px !important;
     font-style: italic !important;
     background: var(--chat-message-bg-color-deleted) !important;
+}
+
+.vac-message-clickable {
+	cursor: pointer;
+}
+
+.vac-message-selected {
+	background-color: var(--chat-message-bg-color-selected) !important;
+	transition: background-color 0.2s;
 }
 
 .vac-icon-deleted {

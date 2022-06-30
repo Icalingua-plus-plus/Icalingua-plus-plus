@@ -1250,7 +1250,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     label: '多选',
                     type: 'normal',
                     click: () => {
-                        ui.startForward()
+                        ui.startForward(message._id as string)
                     },
                 }),
             )
