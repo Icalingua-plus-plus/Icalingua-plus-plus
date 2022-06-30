@@ -2,7 +2,7 @@
     <div class="vac-reply-message">
         <div class="vac-reply-username" v-if="message.replyMessage.username">
             {{ message.replyMessage.username }}
-            <div style="float: right; width: 15px; height: 15px" @click="scrollToOrigin">
+            <div style="float: right; width: 15px; height: 15px; cursor: pointer" @click="scrollToOrigin">
                 <svg
                     width="15"
                     height="15"
@@ -43,6 +43,7 @@
                 :text-formatting="true"
                 :reply="true"
                 :linkify="linkify"
+                :showForwardPanel="showForwardPanel"
                 @open-forward="$emit('open-forward', $event)"
             />
         </div>
@@ -63,6 +64,7 @@ export default {
         linkify: { type: Boolean, default: true },
         message: { type: Object, required: true },
         roomUsers: { type: Array, required: true },
+        showForwardPanel: { type: Boolean, required: true },
     },
 
     computed: {
@@ -73,6 +75,7 @@ export default {
 
     methods: {
         scrollToOrigin() {
+            if (this.showForwardPanel) return
             const originMessage = document.getElementById(this.message.replyMessage._id)
             if (originMessage) {
                 originMessage.scrollIntoView({
@@ -83,6 +86,7 @@ export default {
             }
         },
         openImage(e) {
+            if (this.showForwardPanel) return
             ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
             e.stopPropagation()
         },

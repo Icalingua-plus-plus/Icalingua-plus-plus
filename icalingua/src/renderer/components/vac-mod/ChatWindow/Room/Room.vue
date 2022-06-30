@@ -78,6 +78,7 @@
                                 :emojis-list="emojisList"
                                 :hide-options="hideOptions"
                                 :showForwardPanel="showForwardPanel"
+                                :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 @open-file="openFile"
                                 @open-user-tag="openUserTag"
@@ -413,6 +414,7 @@ export default {
             faceDir,
             groupMembers: null,
             useAtKey: false,
+            selectedMessage: '',
         }
     },
     computed: {
@@ -610,7 +612,11 @@ export default {
     },
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
-        ipcRenderer.on('startForward', () => (this.showForwardPanel = true))
+        ipcRenderer.on('startForward', (_, _id) => {
+            this.showForwardPanel = true
+            this.selectedMessage = _id
+            this.msgstoForward.push(_id)
+            })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
@@ -623,6 +629,7 @@ export default {
         closeForwardPanel() {
             this.showForwardPanel = false
             this.msgstoForward = []
+            this.selectedMessage = ''
             console.log('closeForwardPanel')
         },
         addMsgtoForward(messageId) {
@@ -795,6 +802,7 @@ export default {
             }
         },
         replyMessage(message, e) {
+            if (this.showForwardPanel && e) return
             if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
             if (message.system || message.flash) return
             this.messageReply = message

@@ -84,6 +84,7 @@ export default {
         imageHover: { type: Boolean, required: true },
         flash: { type: Boolean, default: false },
         content: { type: String, default: '' },
+        showForwardPanel: { type: Boolean, required: true },
     },
 
     data() {
@@ -113,6 +114,7 @@ export default {
 
     methods: {
         openImage() {
+            if (this.showForwardPanel) return
             ipcRenderer.send('openImage', this.file.url, false)
         },
     },
