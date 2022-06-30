@@ -82,6 +82,7 @@ export default {
         singleLine: { type: Boolean, default: false },
         reply: { type: Boolean, default: false },
         textFormatting: { type: Boolean, required: true },
+        showForwardPanel: { type: Boolean, required: true },
     },
 
     data() {
@@ -157,6 +158,7 @@ export default {
             return content
         },
         openForward(message) {
+            if (this.showForwardPanel) return
             if (!message.forward) return
             this.$emit('open-forward', message.value)
         },
