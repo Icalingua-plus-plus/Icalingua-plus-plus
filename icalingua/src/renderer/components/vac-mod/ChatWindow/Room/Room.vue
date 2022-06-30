@@ -325,7 +325,6 @@ const faceDir = path.join(getStaticPath(), 'face')
 
 import { ipcRenderer } from 'electron'
 
-const { messagesValid } = require('../../utils/roomValidation')
 const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
 const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
 
@@ -461,14 +460,6 @@ export default {
             },
         },
         messages(newVal, oldVal) {
-            newVal.forEach((message) => {
-                if (!messagesValid(message)) {
-                    throw new Error(
-                        'Messages object is not valid! Must contain _id[String, Number], content[String, Number] and senderId[String, Number]',
-                    )
-                }
-            })
-
             const element = this.$refs.scrollContainer
             if (!element) return
 
