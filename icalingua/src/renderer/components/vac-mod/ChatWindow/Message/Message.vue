@@ -196,6 +196,7 @@ import MessageImage from './MessageImage'
 import getLottieFace from '../../../../utils/getLottieFace'
 
 const { isImageFile } = require('../../utils/mediaFile')
+const { messagesValid } = require('../../utils/roomValidation')
 
 import LottieAnimation from '../../../LottieAnimation'
 import ipc from '../../../../utils/ipc'
@@ -303,6 +304,11 @@ export default {
     },
 
     mounted() {
+        if (!messagesValid(this.message)) {
+            throw new Error(
+                'Messages object is not valid! Must contain _id[String, Number], content[String, Number] and senderId[String, Number]',
+            )
+        }
         if (!this.message.seen && this.message.senderId !== this.currentUserId) {
             this.$emit('add-new-message', {
                 _id: this.message._id,
