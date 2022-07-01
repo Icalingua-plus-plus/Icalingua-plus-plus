@@ -1051,7 +1051,7 @@ const adapter: OicqAdapter = {
             ui.messageError('错误：' + xmlret.error.message)
             return
         }
-        if (!target || target === 0) {
+        if (!target) {
             ui.addMessageText(xmlret.data.data.data)
             ui.notify({
                 title: '生成转发成功',
