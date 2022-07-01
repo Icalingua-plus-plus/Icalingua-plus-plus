@@ -67,7 +67,7 @@ export default interface Adapter {
 
     getForwardMsg(resId: string): Promise<Message[]>
 
-    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): any
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): any
 
     getUin(): number
 

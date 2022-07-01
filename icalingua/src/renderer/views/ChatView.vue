@@ -63,6 +63,8 @@
                     @open-forward="openForward"
                     @fetch-messages="fetchMessage"
                     @open-group-member-panel="groupmemberShown = true"
+                    @choose-forward-target="chooseForwardTarget"
+                    @start-chat="startChat"
                 >
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
@@ -120,6 +122,9 @@
         </el-dialog>
         <el-dialog title="联系人" :visible.sync="contactsShown" top="5vh" class="dialog">
             <TheContactsPanel @dblclick="startChat" />
+        </el-dialog>
+        <el-dialog title="转发到..." :visible.sync="forwardShown" top="5vh" class="dialog">
+            <TheContactsPanel @click="sendForward" />
         </el-dialog>
         <el-dialog title="群成员" :visible.sync="groupmemberShown" top="5vh" class="dialog">
             <TheGroupMemberPanel
@@ -187,6 +192,7 @@ export default {
             linkify: true,
             roomPanelAvatarOnly: false,
             roomPanelWidth: undefined,
+            forwardShown: false,
         }
     },
     async created() {
@@ -553,6 +559,13 @@ Chromium ${process.versions.chrome}` : ''
         roomPanelResizeStop(pane, resizer, size) {
             const width = document.getElementsByClassName('panel rooms-panel')[0].offsetWidth
             ipc.setRoomPanelSetting(this.roomPanelAvatarOnly, width)
+        },
+        sendForward(id, name) {
+            this.$refs.room.sendForward(id, name)
+            this.forwardShown = false
+        },
+        chooseForwardTarget() {
+            this.forwardShown = true
         },
     },
     computed: {

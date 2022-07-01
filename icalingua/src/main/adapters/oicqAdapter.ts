@@ -1044,18 +1044,27 @@ const adapter: OicqAdapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
-    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): Promise<any> {
-        const xmlret = await bot.makeForwardMsg(fakes, dm, target)
+    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): Promise<any> {
+        const xmlret = await bot.makeForwardMsg(fakes, dm, origin)
         if (xmlret.error) {
             errorHandler(xmlret.error, true)
             ui.messageError('错误：' + xmlret.error.message)
             return
         }
-        ui.addMessageText(xmlret.data.data.data)
-        ui.notify({
-            title: '生成转发成功',
-            message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。',
-        })
+        if (!target || target === 0) {
+            ui.addMessageText(xmlret.data.data.data)
+            ui.notify({
+                title: '生成转发成功',
+                message: '已在消息输入框中生成转发消息的 XML 对象，请使用鼠标中键单击发送按钮以发送此条转发消息。',
+            })
+        } else {
+            adapter.sendMessage({
+                content: xmlret.data.data.data,
+                at: [],
+                roomId: target,
+                messageType: 'xml',
+            })
+        }
     },
     reportRead(messageId: string): any {
         bot.reportReaded(messageId)

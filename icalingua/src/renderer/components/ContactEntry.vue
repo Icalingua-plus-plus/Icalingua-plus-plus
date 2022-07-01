@@ -1,5 +1,5 @@
 <template>
-    <div @dblclick="$emit('dblclick')" @click.right="ctx">
+    <div @dblclick="$emit('dblclick')" @click.right="ctx" @click.left="$emit('click')">
         <div class="contact-entry-root">
             <div class="contact-entry-entry">
                 <div class="contact-entry-left">

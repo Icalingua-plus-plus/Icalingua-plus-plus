@@ -309,8 +309,8 @@ const adapter: Adapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         socket.emit('setGroupAnonymousBan', gin, flag, duration)
     },
-    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, target?: number): any {
-        socket.emit('makeForward', fakes, dm, target)
+    makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): any {
+        socket.emit('makeForward', fakes, dm, origin, target)
     },
     reportRead(messageId: string): any {
         socket.emit('reportRead', messageId)
