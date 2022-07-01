@@ -817,7 +817,9 @@ export default {
 
             this.resetMessage(true)
         },
-        sendStructMessage(msgType) {
+        async sendStructMessage(msgType) {
+            const debugmode = await ipc.getDebugSetting()
+            if (!debugmode) return
             let message = this.message.trim()
 
             if (!this.file && !message) return

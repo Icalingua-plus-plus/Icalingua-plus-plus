@@ -24,6 +24,9 @@ const ipc = {
     async getlinkifySetting(): Promise<boolean> {
         return await ipcRenderer.invoke('getlinkifySetting')
     },
+    async getDebugSetting(): Promise<boolean> {
+        return await ipcRenderer.invoke('getDebugSetting')
+    },
     async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean, roomPanelWidth: number }> {
         return await ipcRenderer.invoke('getRoomPanelSetting')
     },
