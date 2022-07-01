@@ -54,12 +54,9 @@ import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
-        .then(() => {
-            getConfig().account.onlineStatus = status
-            updateAppMenu()
-            saveConfigFile()
-        })
-        .catch((res) => console.log(res))
+    getConfig().account.onlineStatus = status
+    updateAppMenu()
+    saveConfigFile()
 }
 const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     getConfig().keyToSendMessage = key

@@ -862,7 +862,7 @@ const adapter = {
             clients.messageError('错误：' + xmlret.error.message)
             return
         }
-        if (!target || target === 0) {
+        if (!target) {
             clients.addMessageText(xmlret.data.data.data)
             clients.notify({
                 title: '生成转发成功',
