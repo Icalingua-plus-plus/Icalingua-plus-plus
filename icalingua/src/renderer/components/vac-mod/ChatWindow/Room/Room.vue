@@ -136,6 +136,7 @@
                 :messages="messages"
                 :showForwardPanel="showForwardPanel"
                 :msgstoForward="msgstoForward"
+                @choose-forward-target="$emit('choose-forward-target')"
                 @close-forward-panel="closeForwardPanel"
                 :account="account"
                 :username="username"
@@ -626,6 +627,66 @@ export default {
         })
     },
     methods: {
+        sendForward(target, name) {
+            if (this.msgstoForward.length <= 0) {
+                console.log('No Message Selected.')
+                return
+            }
+            const ForwardMessages = []
+            const dm = target > 0
+
+            this.messages.forEach((message) => {
+                this.msgstoForward.forEach((msgId) => {
+                    if (message._id === msgId) {
+                        ForwardMessages.push(message)
+                    }
+                })
+            })
+            const messagesToSend = []
+            ForwardMessages.forEach((msg) => {
+                const singleMessage = {
+                    user_id: 0,
+                    message: [],
+                    nickname: '',
+                    time: 0,
+                }
+                if (msg) {
+                    singleMessage.user_id = msg.senderId
+                    singleMessage.message.push({
+                        type: 'text',
+                        data: {
+                            text: msg.content,
+                        },
+                    })
+                    if (msg.files) {
+                        msg.files.forEach((file) => {
+                            if (file.type.startsWith('image/'))
+                                singleMessage.message.push({
+                                    type: 'image',
+                                    data: {
+                                        file: file.url.startsWith('data:image')
+                                            ? 'base64://' + file.url.replace(/^data:.+;base64,/, '')
+                                            : file.url,
+                                        type: 'image',
+                                    },
+                                })
+                        })
+                    }
+                    singleMessage.nickname = msg.senderId !== this.account ? msg.username : this.username
+                    singleMessage.time = Math.floor(msg.time / 1000)
+                    messagesToSend.push(singleMessage)
+                }
+            })
+            const origin = parseInt(String(this.roomId))
+            this.$emit('start-chat', target, name)
+
+            if (origin < 0) {
+                ipc.makeForward(messagesToSend, dm, -origin, target)
+            } else {
+                ipc.makeForward(messagesToSend, dm, undefined, target)
+            }
+            this.closeForwardPanel()
+        },
         closeForwardPanel() {
             this.showForwardPanel = false
             this.msgstoForward = []
