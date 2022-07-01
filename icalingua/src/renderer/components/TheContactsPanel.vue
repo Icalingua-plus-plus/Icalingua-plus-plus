@@ -24,6 +24,7 @@
                                 :remark="i.remark"
                                 :name="i.nick"
                                 v-show="i.sc.includes(searchContext)"
+                                @click="$emit('click', i.uin, i.remark)"
                                 @dblclick="$emit('dblclick', i.uin, i.remark)"
                             />
                         </el-collapse-item>
@@ -34,6 +35,7 @@
                             :remark="i.remark"
                             :name="i.nick"
                             v-show="i.sc.includes(searchContext)"
+                            @click="$emit('click', i.uin, i.remark)"
                             @dblclick="$emit('dblclick', i.uin, i.remark)"
                         />
                     </el-collapse>
@@ -46,6 +48,7 @@
                         :remark="i.group_name"
                         :group="i"
                         v-show="i.sc.includes(searchContext)"
+                        @click="$emit('click', -i.group_id, i.group_name)"
                         @dblclick="$emit('dblclick', -i.group_id, i.group_name)"
                     />
                 </el-tab-pane>
