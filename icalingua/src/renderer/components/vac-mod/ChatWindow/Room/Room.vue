@@ -1227,7 +1227,7 @@ export default {
 }
 
 .vac-file-message-room {
-    max-width: calc(100% - 75px);
+    max-width: 300px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
