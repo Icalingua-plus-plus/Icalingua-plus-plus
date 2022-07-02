@@ -452,7 +452,7 @@ export default {
                     setTimeout(() => this.onChangeInput(), 0)
                 }
                 this.editAndResend = false
-                this.msgstoForward = []
+                this.closeForwardPanel()
                 await this.updateGroupMembers()
             }
         },
@@ -699,6 +699,9 @@ export default {
         },
         delMsgtoForward(messageId) {
             this.msgstoForward = this.msgstoForward.filter((e) => e !== messageId)
+            if (this.msgstoForward.length === 0) {
+                this.closeForwardPanel()
+            }
             console.log('delMsgtoForward')
         },
         onMediaLoad() {
