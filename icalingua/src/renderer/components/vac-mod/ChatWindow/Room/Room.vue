@@ -786,10 +786,12 @@ export default {
             this.isQuickAtOn = false
             if (typeof id === 'number') {
                 const atText = `@${name}`
-                ipc.pushAtCache({
-                    text: atText,
-                    id: id,
-                })
+                if (id !== 0 && name !== '全体成员'){
+                    ipc.pushAtCache({
+                        text: atText,
+                        id: id,
+                    })
+                }
                 this.useMessageContent((this.useAtKey ? name : atText) + ' ')
             }
             this.useAtKey = false
@@ -1005,7 +1007,15 @@ export default {
         },
         async updateGroupMembers() {
             const { roomId } = this.room
-            if (roomId < 0) this.groupMembers = await ipc.getGroupMembers(-roomId)
+            if (roomId < 0){
+                const groupMembers = await ipc.getGroupMembers(-roomId)
+                groupMembers.unshift({
+                    card: '全体成员',
+                    nickname: '全体成员',
+                    user_id: 0,
+                })
+                this.groupMembers = groupMembers
+            }
         },
     },
 }
