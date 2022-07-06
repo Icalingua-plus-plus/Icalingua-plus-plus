@@ -136,4 +136,7 @@ export default {
     setKeyToSendMessage(key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') {
         sendToMainWindow('setKeyToSendMessage', key)
     },
+    pasteGif(url: string) {
+        sendToMainWindow('pasteGif', url)
+    },
 }
