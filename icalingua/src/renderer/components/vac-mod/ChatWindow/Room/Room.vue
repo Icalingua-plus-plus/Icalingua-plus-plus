@@ -544,6 +544,7 @@ export default {
             } else if (e.key === 'ArrowUp') {
                 if (this.message) return
                 //编辑重发上一条消息
+                e.preventDefault()
                 const ownMessages = this.messages.filter((e) => e.senderId === this.currentUserId)
                 if (!ownMessages.length) return
                 const lastMessage = ownMessages[ownMessages.length - 1]
