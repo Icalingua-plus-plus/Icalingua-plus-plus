@@ -1010,11 +1010,14 @@ export default {
             const { roomId } = this.room
             if (roomId < 0){
                 const groupMembers = await ipc.getGroupMembers(-roomId)
-                groupMembers.unshift({
-                    card: '全体成员',
-                    nickname: '全体成员',
-                    user_id: 0,
-                })
+                const self = groupMembers.find(member => member.user_id === this.currentUserId)
+                if (self && (self.role === 'owner' || self.role === 'admin')) {
+                    groupMembers.unshift({
+                        card: '全体成员',
+                        nickname: '全体成员',
+                        user_id: 0,
+                    })
+                }
                 this.groupMembers = groupMembers
             }
         },

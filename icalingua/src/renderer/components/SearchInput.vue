@@ -21,7 +21,8 @@
                 :class="{ selected: index === selectedIndex }"
                 @mousedown="confirm(index)"
             >
-                <slot v-bind="{ name, id }"></slot>
+                <slot v-if="id === 0" v-bind="{ name }"></slot>
+                <slot v-if="id !== 0" v-bind="{ name, id }"></slot>
             </li>
         </ul>
     </div>
