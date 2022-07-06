@@ -1,5 +1,5 @@
 <template>
-    <div :class="{ 'vac-text-ellipsis': singleLine }">
+    <div :class="{ 'vac-text-ellipsis': singleLine }" @dblclick.stop>
         <div v-if="textFormatting" :class="{ 'vac-text-ellipsis': singleLine }">
             <template v-for="(message, i) in linkifiedMessage">
                 <component
