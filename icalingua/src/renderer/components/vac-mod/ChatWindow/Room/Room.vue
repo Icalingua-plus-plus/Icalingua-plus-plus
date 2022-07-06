@@ -234,8 +234,9 @@
                         @confirm="useQuickAt"
                         @nomatch="nomatchQuickAt"
                     >
-                        <p :style="{ wordWrap: 'break-word' }">{{ name }}</p>
-                        <p v-if="id !== 0" :style="{ fontFamily: 'monospace' }">{{ id }}</p>
+                        <el-avatar size="small" v-if="id !== 0" :src="`https://q1.qlogo.cn/g?b=qq&nk=${id}&s=140`" />
+                        <p style="wordWrap: 'break-word'; margin-right: auto; margin-left: 5px">{{ name }}</p>
+                        <p v-if="id !== 0" style="fontFamily: 'monospace'">{{ id }}</p>
                     </SearchInput>
                 </transition>
 
@@ -345,8 +346,6 @@ export default {
         RoomMessageReply,
         RoomForwardMessage,
         Message,
-        SearchInput,
-        SearchInput,
         SearchInput,
     },
     directives: {
