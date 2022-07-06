@@ -1363,6 +1363,13 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
         })
     } else {
         menu.push({
+            label: '以图片方式发送',
+            type: 'normal',
+            click() {
+                ui.pasteGif(itemName)
+            },
+        })
+        menu.push({
             label: '移动到分类',
             type: 'normal',
             click() {
