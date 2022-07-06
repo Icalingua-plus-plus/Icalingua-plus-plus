@@ -615,9 +615,10 @@ export default {
     async created() {
         keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('startForward', (_, _id) => {
-            this.showForwardPanel = true
+            if (this.showForwardPanel) return
             this.selectedMessage = _id
             this.msgstoForward.push(_id)
+            this.showForwardPanel = true
             })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
