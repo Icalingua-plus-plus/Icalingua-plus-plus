@@ -104,7 +104,7 @@ export default {
 .root {
     position: absolute;
     min-width: 200px;
-    bottom: 50px;
+    bottom: 55px;
     padding: 5px;
     border-radius: 8px;
     background: var(--chat-message-bg-color-me);
@@ -123,7 +123,7 @@ ul {
     padding-left: 0;
     margin: 8px 0 2px 0;
     list-style-type: none;
-    max-height: 390px;
+    max-height: calc(100vh - 250px);
     overflow-y: scroll;
 }
 li {
@@ -132,6 +132,8 @@ li {
     min-height: 26px;
     padding: 2px 8px;
     border-radius: 3px;
+    align-items: center;
+    line-height: 100%;
 }
 li.selected,
 li:hover {
