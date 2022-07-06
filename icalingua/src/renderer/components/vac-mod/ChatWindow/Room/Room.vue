@@ -235,8 +235,8 @@
                         @nomatch="nomatchQuickAt"
                     >
                         <el-avatar size="small" v-if="id !== 0" :src="`https://q1.qlogo.cn/g?b=qq&nk=${id}&s=140`" />
-                        <p style="wordWrap: 'break-word'; margin-right: auto; margin-left: 5px">{{ name }}</p>
-                        <p v-if="id !== 0" style="fontFamily: 'monospace'">{{ id }}</p>
+                        <p style="wordwrap: 'break-word'; margin-right: auto; margin-left: 5px">{{ name }}</p>
+                        <p v-if="id !== 0" style="fontfamily: 'monospace'">{{ id }}</p>
                     </SearchInput>
                 </transition>
 
@@ -602,10 +602,7 @@ export default {
                 const f = event.dataTransfer.files[0]
                 const index = f.name.lastIndexOf('.')
                 const ext = f.name.substr(index + 1).toLowerCase()
-                if (
-                    ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext) ||
-                    process.platform === 'linux'
-                ) {
+                if (this.roomId < 0 || ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext)) {
                     this.onFileChange(event.dataTransfer.files)
                 }
             }
@@ -618,7 +615,7 @@ export default {
             this.selectedMessage = _id
             this.msgstoForward.push(_id)
             this.showForwardPanel = true
-            })
+        })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
         ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
         ipcRenderer.on('addMessageText', (_, message) => {
@@ -787,7 +784,7 @@ export default {
             this.isQuickAtOn = false
             if (typeof id === 'number') {
                 const atText = `@${name}`
-                if (id !== 0 && name !== '全体成员'){
+                if (id !== 0 && name !== '全体成员') {
                     ipc.pushAtCache({
                         text: atText,
                         id: id,
@@ -1008,9 +1005,9 @@ export default {
         },
         async updateGroupMembers() {
             const { roomId } = this.room
-            if (roomId < 0){
+            if (roomId < 0) {
                 const groupMembers = await ipc.getGroupMembers(-roomId)
-                const self = groupMembers.find(member => member.user_id === this.currentUserId)
+                const self = groupMembers.find((member) => member.user_id === this.currentUserId)
                 if (self && (self.role === 'owner' || self.role === 'admin')) {
                     groupMembers.unshift({
                         card: '全体成员',
