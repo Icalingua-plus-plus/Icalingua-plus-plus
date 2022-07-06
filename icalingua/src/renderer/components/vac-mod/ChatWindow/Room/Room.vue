@@ -623,6 +623,10 @@ export default {
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
+        ipcRenderer.on('pasteGif', (_, GifURL) => {
+            this.onPasteGif(GifURL)
+            this.$emit('stickers-panel')
+        })
     },
     methods: {
         sendForward(target, name) {
