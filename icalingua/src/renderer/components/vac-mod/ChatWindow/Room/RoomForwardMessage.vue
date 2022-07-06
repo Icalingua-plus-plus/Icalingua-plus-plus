@@ -5,6 +5,9 @@
                 <el-button type="primary" @click="stopForward(true)" :disabled="msgstoForward.length === 0"
                     >合并转发 {{ msgstoForward.length }} 条消息</el-button
                 >
+                <el-button type="primary" @click="recallMsgs" :disabled="msgstoForward.length === 0"
+                    >撤回 {{ msgstoForward.length }} 条消息</el-button
+                >
             </div>
 
             <div class="vac-icon-forward">
@@ -39,6 +42,12 @@ export default {
         stopForward(isCreate) {
             if (isCreate) this.$emit('choose-forward-target')
             else this.$emit('close-forward-panel')
+        },
+        recallMsgs() {
+            this.msgstoForward.forEach((msg) => {
+                ipc.deleteMessage(this.roomId, msg)
+            })
+            this.stopForward(false)
         },
     },
 }
