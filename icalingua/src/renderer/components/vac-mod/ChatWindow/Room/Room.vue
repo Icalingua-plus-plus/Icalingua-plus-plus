@@ -235,7 +235,7 @@
                         @nomatch="nomatchQuickAt"
                     >
                         <p :style="{ wordWrap: 'break-word' }">{{ name }}</p>
-                        <p :style="{ fontFamily: 'monospace' }">{{ id }}</p>
+                        <p v-if="id !== 0" :style="{ fontFamily: 'monospace' }">{{ id }}</p>
                     </SearchInput>
                 </transition>
 
