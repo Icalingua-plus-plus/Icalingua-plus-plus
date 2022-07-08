@@ -1649,13 +1649,26 @@ const adapter: OicqAdapter = {
         console.log(res)
         if (!res.error) {
             ui.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, { deleted: true })
+            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false})
         } else {
             ui.notifyError({
                 title: 'Failed to delete message',
                 message: res.error.message,
             })
         }
+    },
+    async forceDeleteMessage(roomId: number, messageId: string) {
+        // const res = await bot.deleteMsg(messageId)
+        // console.log(res)
+        // if (!res.error) {
+            ui.deleteMessage(messageId)
+            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
+        // } else {
+        //     ui.notifyError({
+        //         title: 'Failed to delete message',
+        //         message: res.error.message,
+        //     })
+        // }
     },
     async revealMessage(roomId: number, messageId: string | number) {
         ui.revealMessage(messageId)

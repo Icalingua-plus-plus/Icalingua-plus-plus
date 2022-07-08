@@ -367,6 +367,7 @@ export default {
             const message = this.messages.find((e) => e._id === messageId)
             if (message) {
                 message.deleted = new Date()
+                message.reveal = false
                 this.messages = [...this.messages]
             }
         })

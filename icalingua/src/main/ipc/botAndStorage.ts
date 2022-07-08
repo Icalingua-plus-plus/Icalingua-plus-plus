@@ -50,6 +50,7 @@ export const {
     ignoreChat,
     removeChat,
     deleteMessage,
+    forceDeleteMessage,
     revealMessage,
     renewMessageURL,
     fetchHistory,
@@ -101,6 +102,7 @@ ipcMain.on('sendMessage', (_, data) => {
     atCache.clear()
 })
 ipcMain.on('deleteMessage', (_, roomId: number, messageId: string) => deleteMessage(roomId, messageId))
+ipcMain.on('forceDeleteMessage', (_, roomId: number, messageId: string) => forceDeleteMessage(roomId, messageId))
 ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset: number }) => {
     offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
