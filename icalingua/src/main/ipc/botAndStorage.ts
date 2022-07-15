@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, screen } from 'electron'
+import { BrowserWindow, ipcMain, screen, shell } from 'electron'
 import LoginForm from '../../types/LoginForm'
 import { getConfig } from '../utils/configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -134,6 +134,12 @@ ipcMain.on('openForward', async (_, resId: string) => {
         // theme
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
         win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        win.webContents.setWindowOpenHandler((details) => {
+            shell.openExternal(details.url)
+            return {
+                action: 'deny',
+            }
+        })
     })
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
