@@ -1649,7 +1649,7 @@ const adapter: OicqAdapter = {
         console.log(res)
         if (!res.error) {
             ui.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false})
+            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
         } else {
             ui.notifyError({
                 title: 'Failed to delete message',
@@ -1658,17 +1658,8 @@ const adapter: OicqAdapter = {
         }
     },
     async forceDeleteMessage(roomId: number, messageId: string) {
-        // const res = await bot.deleteMsg(messageId)
-        // console.log(res)
-        // if (!res.error) {
-            ui.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
-        // } else {
-        //     ui.notifyError({
-        //         title: 'Failed to delete message',
-        //         message: res.error.message,
-        //     })
-        // }
+        ui.deleteMessage(messageId)
+        await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
     },
     async revealMessage(roomId: number, messageId: string | number) {
         ui.revealMessage(messageId)
@@ -1676,7 +1667,6 @@ const adapter: OicqAdapter = {
     },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         ui.renewMessageURL(messageId, URL)
-        //await storage.updateURL(roomId, messageId, {file: JSON.stringify({ type: 'video/mp4', url: URL })})
     },
     stopFetchingHistory() {
         stopFetching = true
