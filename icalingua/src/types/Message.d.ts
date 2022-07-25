@@ -30,4 +30,5 @@ export default interface Message {
     title?: string
     anonymousId?: number
     anonymousflag?: string
+    hide?: boolean
 }

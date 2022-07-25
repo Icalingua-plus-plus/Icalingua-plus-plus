@@ -10,4 +10,5 @@ export default {
     IS_ONLINE: 'is online',
     LAST_SEEN: 'last seen ',
     IS_TYPING: 'is writing...',
+    MESSAGE_HIDE: 'This message was hidden',
 }

@@ -76,8 +76,8 @@ export default {
     deleteMessage(messageId: string | number) {
         sendToMainWindow('deleteMessage', messageId)
     },
-    forceDeleteMessage(messageId: string | number) {
-        sendToMainWindow('forceDeleteMessage', messageId)
+    hideMessage(messageId: string | number) {
+        sendToMainWindow('hideMessage', messageId)
     },
     revealMessage(messageId: string | number) {
         sendToMainWindow('revealMessage', messageId)

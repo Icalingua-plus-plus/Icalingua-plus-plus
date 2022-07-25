@@ -340,11 +340,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, { deleted: true })
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false })
     },
     groupRecall(data: GroupRecallEventData) {
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, { deleted: true })
+        storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
     },
     online() {
         ui.setOnline()
@@ -1657,13 +1657,13 @@ const adapter: OicqAdapter = {
             })
         }
     },
-    async forceDeleteMessage(roomId: number, messageId: string) {
-        ui.deleteMessage(messageId)
-        await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
+    async hideMessage(roomId: number, messageId: string) {
+        ui.hideMessage(messageId)
+        await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async revealMessage(roomId: number, messageId: string | number) {
         ui.revealMessage(messageId)
-        await storage.updateMessage(roomId, messageId, { reveal: true })
+        await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         ui.renewMessageURL(messageId, URL)
