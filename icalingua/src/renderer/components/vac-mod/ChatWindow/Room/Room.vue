@@ -748,6 +748,7 @@ export default {
             this.editedMessage.file = null
             this.file = null
             this.focusTextarea()
+            this.$nextTick(() => this.resizeTextarea())
         },
         resetTextareaSize() {
             if (!this.$refs['roomTextarea']) return
