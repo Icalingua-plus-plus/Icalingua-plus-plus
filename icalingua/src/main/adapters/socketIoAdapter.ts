@@ -427,8 +427,9 @@ const adapter: Adapter = {
     deleteMessage(roomId: number, messageId: string) {
         socket.emit('deleteMessage', roomId, messageId)
     },
-    forceDeleteMessage(roomId: number, messageId: string) {
-        ui.deleteMessage(messageId)
+    hideMessage(roomId: number, messageId: string) {
+        ui.hideMessage(messageId)
+        socket.emit('hideMessage', roomId, messageId)
     },
     fetchHistory(messageId: string, roomId?: number) {
         if (!roomId) roomId = ui.getSelectedRoomId()
