@@ -826,10 +826,11 @@ export default {
         },
         async sendStructMessage(msgType) {
             const debugmode = await ipc.getDebugSetting()
-            if (!debugmode) return
             let message = this.message.trim()
 
             if (!this.file && !message) return
+
+            if (!debugmode && message.match(/serviceID[\s]*?=[\s]*?('|")(13|60|76|83)('|")/g)) return
 
             this.$emit('send-message', {
                 content: message,
