@@ -455,7 +455,9 @@ Chromium ${process.versions.chrome}` : ''
                 this.messagesLoaded = false
                 this.messages = []
             }
-            const msgs2add = await ipc.fetchMessage(this.selectedRoom.roomId, this.messages.length)
+            const _roomId = this.selectedRoom.roomId
+            const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            if (_roomId !== this.selectedRoom.roomId) return
             setTimeout(() => {
                 if (msgs2add.length) {
                     this.messages = [...msgs2add, ...this.messages]
