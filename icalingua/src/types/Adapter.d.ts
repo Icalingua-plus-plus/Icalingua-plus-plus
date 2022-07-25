@@ -103,6 +103,8 @@ export default interface Adapter {
 
     deleteMessage(roomId: number, messageId: string): any
 
+    forceDeleteMessage(roomId: number, messageId: string): any
+
     revealMessage(roomId: number, messageId: string | number): any
 
     renewMessageURL(roomId: number, messageId: string | number, URL: string): any
