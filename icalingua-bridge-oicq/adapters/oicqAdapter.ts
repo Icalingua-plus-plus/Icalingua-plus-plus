@@ -249,11 +249,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, { deleted: true })
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false  })
     },
     groupRecall(data: GroupRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, { deleted: true })
+        storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
     },
     online() {
         clients.setOnline()
@@ -1420,7 +1420,7 @@ const adapter = {
         const res = await bot.deleteMsg(messageId)
         if (!res.error) {
             clients.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, { deleted: true })
+            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
         } else {
             clients.notifyError({
                 title: 'Failed to delete message',
@@ -1428,13 +1428,16 @@ const adapter = {
             })
         }
     },
+    async hideMessage(roomId: number, messageId: string) {
+        await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
+    },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         clients.renewMessageURL(messageId, URL)
         //await storage.updateURL(roomId, messageId, {file: JSON.stringify({ type: 'video/mp4', url: URL })})
     },
     async revealMessage(roomId: number, messageId: string | number) {
         clients.revealMessage(messageId)
-        await storage.updateMessage(roomId, messageId, { reveal: true })
+        await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)

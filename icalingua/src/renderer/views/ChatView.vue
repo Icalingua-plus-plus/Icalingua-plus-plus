@@ -371,9 +371,18 @@ export default {
                 this.messages = [...this.messages]
             }
         })
+        ipcRenderer.on('hideMessage', (_, messageId) => {
+            const message = this.messages.find((e) => e._id === messageId)
+            if (message) {
+                message.hide = true
+                message.reveal = false
+                this.messages = [...this.messages]
+            }
+        })
         ipcRenderer.on('revealMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
             if (message) {
+                message.hide = false
                 message.reveal = true
                 this.messages = [...this.messages]
             }

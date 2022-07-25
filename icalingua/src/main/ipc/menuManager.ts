@@ -7,7 +7,7 @@ import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import {
     deleteMessage,
-    forceDeleteMessage,
+    hideMessage,
     fetchHistory,
     fetchLatestHistory,
     getRoom,
@@ -910,7 +910,7 @@ ipcMain.on('popupRoomMenu', async (_, roomId: number) => {
 })
 ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: string, history?: boolean) => {
     const menu = new Menu()
-    if (message.deleted && !message.reveal)
+    if ((message.deleted || message.hide) && !message.reveal)
         menu.append(
             new MenuItem({
                 label: '显示',
@@ -1256,9 +1256,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         if (!history){
             menu.append(
                 new MenuItem({
-                    label: '删除',
+                    label: '隐藏',
                     click: () => {
-                        forceDeleteMessage(room.roomId, message._id as string)
+                        hideMessage(room.roomId, message._id as string)
                     },
                 }),
             )

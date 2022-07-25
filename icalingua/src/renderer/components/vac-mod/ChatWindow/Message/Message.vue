@@ -51,7 +51,7 @@
                         :class="{
                             'vac-message-highlight': isMessageHover,
                             'vac-message-current': message.senderId === currentUserId,
-                            'vac-message-deleted': message.deleted,
+                            'vac-message-deleted': message.deleted || message.hide,
                             'vac-message-clickable': showForwardPanel,
                             'vac-message-selected': selected,
                         }"
@@ -62,7 +62,7 @@
                             v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
                             class="vac-text-username"
                             :class="{
-                                'vac-username-reply': (!message.deleted || message.reveal) && message.replyMessage,
+                                'vac-username-reply': ((!message.deleted && !message.hide) || message.reveal) && message.replyMessage,
                             }"
                             style="display: flex"
                         >
@@ -86,7 +86,7 @@
                         </div>
 
                         <message-reply
-                            v-if="(!message.deleted || message.reveal) && message.replyMessage"
+                            v-if="((!message.deleted && !message.hide) || message.reveal) && message.replyMessage"
                             :message="message"
                             :room-users="roomUsers"
                             :linkify="linkify"
@@ -99,6 +99,13 @@
                                 <svg-icon name="deleted" class="vac-icon-deleted" />
                             </slot>
                             <span>{{ textMessages.MESSAGE_DELETED }}</span>
+                        </div>
+
+                        <div v-if="message.hide && !message.reveal && !message.deleted">
+                            <slot name="deleted-icon">
+                                <svg-icon name="hide" class="vac-icon-hide" />
+                            </slot>
+                            <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
 
                         <LottieAnimation v-else-if="lottie" :path="lottie" :height="250" :width="250" />
@@ -162,7 +169,7 @@
                         </div>
 
                         <format-message
-                            v-if="!message.deleted || message.reveal"
+                            v-if="(!message.deleted && !message.hide) || message.reveal"
                             :content="message.content"
                             :users="roomUsers"
                             :text-formatting="textFormatting"
@@ -506,6 +513,14 @@ export default {
 }
 
 .vac-icon-deleted {
+    height: 14px;
+    width: 14px;
+    vertical-align: middle;
+    margin: -2px 2px 0 0;
+    fill: var(--chat-message-color-deleted);
+}
+
+.vac-icon-hide {
     height: 14px;
     width: 14px;
     vertical-align: middle;
