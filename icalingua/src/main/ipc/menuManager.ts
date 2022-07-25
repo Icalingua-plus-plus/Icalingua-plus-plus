@@ -7,6 +7,7 @@ import path from 'path'
 import OnlineStatusType from '../../types/OnlineStatusType'
 import {
     deleteMessage,
+    forceDeleteMessage,
     fetchHistory,
     fetchLatestHistory,
     getRoom,
@@ -1252,7 +1253,16 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }),
             )
         }
-
+        if (!history){
+            menu.append(
+                new MenuItem({
+                    label: '删除',
+                    click: () => {
+                        forceDeleteMessage(room.roomId, message._id as string)
+                    },
+                }),
+            )
+        }
         if (!history && !message.flash) {
             menu.append(
                 new MenuItem({
