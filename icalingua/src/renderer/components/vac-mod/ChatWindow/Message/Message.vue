@@ -101,7 +101,7 @@
                             <span>{{ textMessages.MESSAGE_DELETED }}</span>
                         </div>
 
-                        <div v-if="message.hide && !message.reveal && !message.deleted">
+                        <div v-else-if="message.hide && !message.reveal && !message.deleted">
                             <slot name="deleted-icon">
                                 <svg-icon name="hide" class="vac-icon-hide" />
                             </slot>
