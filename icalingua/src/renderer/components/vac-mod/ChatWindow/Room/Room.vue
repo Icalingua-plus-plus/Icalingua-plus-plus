@@ -255,6 +255,7 @@
                     }"
                     @input="onChangeInput"
                     @click.right="textctx"
+                    spellcheck="false"
                 />
 
                 <div class="vac-icon-textarea">
