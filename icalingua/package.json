@@ -26,7 +26,7 @@
   },
   "build": {
     "productName": "Icalingua++",
-    "appId": "com.clansty.icalingua",
+    "appId": "Icalingua++",
     "directories": {
       "output": "build",
       "buildResources": "static"
