@@ -869,24 +869,15 @@ export const updateAppMenu = async () => {
             label: 'Icalingua++',
             submenu: Menu.buildFromTemplate(globalMenu.app),
         },
-        globalMenu.priority,
-        {
-            label: '选项',
-            submenu: Menu.buildFromTemplate(globalMenu.options),
-        },
-        {
-            label: 'Edit',
-            submenu: [
-                { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
-                { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
-                { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
-                { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
-                { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
-                { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
-            ]
-        },
-    ]
-    if (process.platform !== 'darwin') template.pop()
+    ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[]
+    process.platform === 'darwin' && template.push({
+        role: 'editMenu',
+    })
+    template.push(globalMenu.priority)
+    template.push({
+        label: '选项',
+        submenu: Menu.buildFromTemplate(globalMenu.options),
+    })
     const menu = Menu.buildFromTemplate(template)
     if (globalMenu.shortcuts.length) {
         menu.append(
