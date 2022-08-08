@@ -19,6 +19,9 @@ if (getConfig().account.autologin || getConfig().adapter === 'socketIo') {
 } else {
     showLoginWindow()
 }
+
+app.on('activate', showWindow)
+
 app.on('window-all-closed', () => {
     logOut()
     setTimeout(() => {
