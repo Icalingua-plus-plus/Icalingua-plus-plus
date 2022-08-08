@@ -141,9 +141,6 @@ const attachSocketEvents = () => {
                 //notification
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
-                    if (process.platform === 'win32') {
-                        app.setAppUserModelId(process.execPath)
-                    }
                     const notif = new ElectronNotification({
                         title: data.data.title,
                         body: data.data.body,
