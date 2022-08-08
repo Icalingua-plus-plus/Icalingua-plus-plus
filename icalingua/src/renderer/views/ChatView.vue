@@ -221,9 +221,6 @@ export default {
             if (e.repeat) {
                 return
             }
-            else if (e.key === 'w' && e.ctrlKey === true) {
-                window.close()
-            }
             else if (e.key === 'F1') {
                 if (this.selectedRoomId)
                     this.panel = this.panel === 'stickers' ? '' : 'stickers'

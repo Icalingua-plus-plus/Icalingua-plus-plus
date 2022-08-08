@@ -64,12 +64,6 @@ export default {
             console.log(args)
             this.messages = [...args]
         })
-        document.addEventListener('keydown', (e) => {
-            if (e.repeat) return
-            if (e.key === 'w' && e.ctrlKey === true) {
-                window.close()
-            }
-        })
     },
     components: {
         Room,
