@@ -586,10 +586,14 @@ export const updateAppMenu = async () => {
                 role: 'toggleDevTools',
             }),
             new MenuItem({
+                label: '关闭窗口',
+                role: 'close',
+            }),
+            new MenuItem({
                 label: '退出',
                 click: exit,
             }),
-        ],
+        ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[],
         priority: new MenuItem({
             label: '通知优先级',
             submenu: [
