@@ -127,7 +127,7 @@ function startElectron () {
     args = args.concat(process.argv.slice(2))
   }
 
-  electronProcess = spawn('electron', args)
+  electronProcess = spawn(electron, args)
 
   electronProcess.stdout.on('data', data => {
     electronLog(data, 'blue')
