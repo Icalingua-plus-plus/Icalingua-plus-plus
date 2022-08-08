@@ -24,15 +24,8 @@ let newmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'newmsg.p
 let darkIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'dark.png'))
 let lightIcon = nativeImage.createFromPath(path.join(getStaticPath(), '256x256.png'))
 
-if (process.platform === 'darwin') {
-    darknewmsgIcon = darknewmsgIcon.resize({ width: 22, height: 22 })
-    newmsgIcon = newmsgIcon.resize({ width: 22, height: 22 })
-    darkIcon = darkIcon.resize({ width: 22, height: 22 })
-    lightIcon = lightIcon.resize({ width: 22, height: 22 })
-}
-
 export const createTray = () => {
-    tray = new Tray(getConfig().darkTaskIcon ? darknewmsgIcon : newmsgIcon)
+    tray = new Tray(path.join(getStaticPath(), 'trayTemplate.png'))
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     tray.on('click', () => {
         const window = getMainWindow()
@@ -130,7 +123,7 @@ export const updateTrayMenu = async () => {
             ],
         }),
     )
-    menu.append(
+    process.platform !== 'darwin' && menu.append(
         new MenuItem({
             label: '深色图标',
             type: 'checkbox',
@@ -164,7 +157,8 @@ export const updateTrayIcon = async () => {
         p = getConfig().darkTaskIcon ? darkIcon : lightIcon
         getMainWindow().title = title
     }
-    tray.setImage(p)
+    tray.setTitle(unread === 0 ? '' : `${unread}`)
+    process.platform !== 'darwin' && tray.setImage(p)
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
     updateTrayMenu()
