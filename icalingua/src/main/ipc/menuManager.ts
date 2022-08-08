@@ -66,13 +66,18 @@ const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     updateAppMenu()
 }
 
-Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
+{
+    const initMenu = Menu.buildFromTemplate([
         {
-            role: 'toggleDevTools',
+            label: 'Icalingua++',
+            submenu: [{ role: 'toggleDevTools' }]
         },
-    ]),
-)
+    ])
+    process.platform === 'darwin' && initMenu.append(new MenuItem({
+        role: 'editMenu',
+    }))
+    Menu.setApplicationMenu(initMenu)
+}
 
 const buildRoomMenu = (room: Room): Menu => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
