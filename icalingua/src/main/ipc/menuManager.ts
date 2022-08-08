@@ -66,13 +66,18 @@ const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     updateAppMenu()
 }
 
-Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
+{
+    const initMenu = Menu.buildFromTemplate([
         {
-            role: 'toggleDevTools',
+            label: 'Icalingua++',
+            submenu: [{ role: 'toggleDevTools' }]
         },
-    ]),
-)
+    ])
+    process.platform === 'darwin' && initMenu.append(new MenuItem({
+        role: 'editMenu',
+    }))
+    Menu.setApplicationMenu(initMenu)
+}
 
 const buildRoomMenu = (room: Room): Menu => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
@@ -586,10 +591,14 @@ export const updateAppMenu = async () => {
                 role: 'toggleDevTools',
             }),
             new MenuItem({
+                label: '关闭窗口',
+                role: 'close',
+            }),
+            new MenuItem({
                 label: '退出',
                 click: exit,
             }),
-        ],
+        ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[],
         priority: new MenuItem({
             label: '通知优先级',
             submenu: [
@@ -865,24 +874,15 @@ export const updateAppMenu = async () => {
             label: 'Icalingua++',
             submenu: Menu.buildFromTemplate(globalMenu.app),
         },
-        globalMenu.priority,
-        {
-            label: '选项',
-            submenu: Menu.buildFromTemplate(globalMenu.options),
-        },
-        {
-            label: 'Edit',
-            submenu: [
-                { label: 'Undo', accelerator: 'CmdOrCtrl+Z', selector: 'undo:' },
-                { label: 'Redo', accelerator: 'Shift+CmdOrCtrl+Z', selector: 'redo:' },
-                { label: 'Cut', accelerator: 'CmdOrCtrl+X', selector: 'cut:' },
-                { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
-                { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
-                { label: 'Select All', accelerator: 'CmdOrCtrl+A', selector: 'selectAll:' },
-            ]
-        },
-    ]
-    if (process.platform !== 'darwin') template.pop()
+    ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[]
+    process.platform === 'darwin' && template.push({
+        role: 'editMenu',
+    })
+    template.push(globalMenu.priority)
+    template.push({
+        label: '选项',
+        submenu: Menu.buildFromTemplate(globalMenu.options),
+    })
     const menu = Menu.buildFromTemplate(template)
     if (globalMenu.shortcuts.length) {
         menu.append(
