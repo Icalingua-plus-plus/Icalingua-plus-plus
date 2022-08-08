@@ -837,6 +837,7 @@ jobs:
 
   install-windows-arm64:
     runs-on: windows-2019
+    needs: build-windows64
     defaults:
       run:
         working-directory: icalingua
@@ -844,15 +845,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.13.0'
-      - name: Install Yarn
-        run: npm install --global yarn
       - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
+
       - name: Fetch node.lib and Yarn install
         shell: cmd
         run: |
