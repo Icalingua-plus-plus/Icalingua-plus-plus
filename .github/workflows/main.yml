@@ -780,11 +780,15 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
+
       - name: Install Yarn
         run: npm install --global yarn
+
       - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
+          prefix: x64
+
       - name: Yarn install
         run: yarn install
 
@@ -808,6 +812,7 @@ jobs:
     - uses: Icalinguaplusplus/gha-yarn-node-cache@master
       env:
         WORKING_DIR: icalingua
+        prefix: x64
         
     - id: git-ver
       run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
@@ -848,6 +853,7 @@ jobs:
       - uses: Icalinguaplusplus/gha-yarn-node-cache@master
         env:
           WORKING_DIR: icalingua
+          prefix: arm64
 
       - name: Fetch node.lib and Yarn install
         shell: cmd
@@ -879,6 +885,7 @@ jobs:
     - uses: Icalinguaplusplus/gha-yarn-node-cache@master
       env:
         WORKING_DIR: icalingua
+        prefix: arm64
 
     - id: git-ver
       run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
