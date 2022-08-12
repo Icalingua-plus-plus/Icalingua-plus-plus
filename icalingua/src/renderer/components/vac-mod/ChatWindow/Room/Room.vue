@@ -76,14 +76,11 @@
                                 :show-new-messages-divider="showNewMessagesDivider"
                                 :text-formatting="textFormatting"
                                 :emojis-list="emojisList"
-                                :hide-options="hideOptions"
                                 :showForwardPanel="showForwardPanel"
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 @open-file="openFile"
-                                @open-user-tag="openUserTag"
                                 @add-new-message="addNewMessage"
-                                @hide-options="hideOptions = $event"
                                 @ctx="msgctx(m)"
                                 @avatar-ctx="avatarCtx(m)"
                                 @download-image="$emit('download-image', $event)"
@@ -142,15 +139,11 @@
                 :username="username"
                 :roomId="roomId"
             />
-            <!-- <room-users-tag
-                    :filtered-users-tag="filteredUsersTag"
-                    @select-user-tag="selectUserTag($event)"
-                  /> -->
             <div style="padding-top: 10px; padding-left: 10px; color: var(--panel-color-desc)" v-if="editAndResend">
                 编辑重发
             </div>
 
-            <div class="vac-box-footer" :class="{ 'vac-app-box-shadow': filteredUsersTag.length }">
+            <div class="vac-box-footer">
                 <div v-if="imageFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
@@ -361,7 +354,6 @@ export default {
         roomId: { type: [String, Number], required: true },
         loadFirstRoom: { type: Boolean, required: true },
         messages: { type: Array, required: true },
-        roomMessage: { type: String, default: null },
         messagesLoaded: { type: Boolean, required: true },
         menuActions: { type: Array, required: true },
         messageActions: { type: Array, required: true },
@@ -397,13 +389,10 @@ export default {
             mediaDimensions: null,
             fileDialog: false,
             emojiOpened: false,
-            hideOptions: true,
             scrollIcon: false,
             scrollMessagesCount: 0,
             newMessages: [],
             keepKeyboardOpen: false,
-            filteredUsersTag: [],
-            selectedUsersTag: [],
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
             editAndResend: false,
@@ -447,20 +436,11 @@ export default {
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
                 //this.resetMessage(true)
-                if (this.roomMessage) {
-                    this.message = this.roomMessage
-                    setTimeout(() => this.onChangeInput(), 0)
-                }
+
                 this.editAndResend = false
                 this.closeForwardPanel()
                 await this.updateGroupMembers()
             }
-        },
-        roomMessage: {
-            immediate: true,
-            handler(val) {
-                if (val) this.message = this.roomMessage
-            },
         },
         messages(newVal, oldVal) {
             const element = this.$refs.scrollContainer
@@ -728,7 +708,6 @@ export default {
                 return
             }
 
-            this.selectedUsersTag = []
             this.resetTextareaSize()
             this.message = ''
             this.editedMessage = {}
@@ -819,7 +798,6 @@ export default {
                 content: message,
                 file: this.file,
                 replyMessage: this.messageReply,
-                usersTag: this.selectedUsersTag,
                 resend: this.editAndResend,
                 messageType: messageType,
             })
@@ -838,7 +816,6 @@ export default {
                 content: message,
                 file: this.file,
                 replyMessage: this.messageReply,
-                usersTag: this.selectedUsersTag,
                 resend: this.editAndResend,
                 messageType: msgType,
             })
@@ -983,9 +960,6 @@ export default {
         openFile({ message, action }) {
             this.$emit('open-file', { message, action, room: this.room })
         },
-        openUserTag(user) {
-            this.$emit('open-user-tag', user)
-        },
         textareaActionHandler() {
             this.$emit('textarea-action-handler', this.message)
         },
@@ -997,7 +971,6 @@ export default {
             ipc.popupAvatarMenu(message, this.room)
         },
         containerScroll(e) {
-            this.hideOptions = true
             setTimeout(() => {
                 if (!e.target) return
 
