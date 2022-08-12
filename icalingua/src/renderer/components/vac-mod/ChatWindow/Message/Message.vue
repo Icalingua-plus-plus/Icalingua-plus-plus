@@ -174,7 +174,6 @@
                             :users="roomUsers"
                             :text-formatting="textFormatting"
                             :linkify="linkify"
-                            @open-user-tag="openUserTag"
                             :showForwardPanel="showForwardPanel"
                             @open-forward="$emit('open-forward', $event)"
                         >
@@ -240,7 +239,6 @@ export default {
         showNewMessagesDivider: { type: Boolean, required: true },
         textFormatting: { type: Boolean, required: true },
         emojisList: { type: Object, required: true },
-        hideOptions: { type: Boolean, required: true },
         showForwardPanel: { type: Boolean, required: true },
         selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
@@ -351,9 +349,6 @@ export default {
         openFile(action) {
             if (this.showForwardPanel) return
             this.$emit('open-file', { message: this.message, action })
-        },
-        openUserTag(user) {
-            this.$emit('open-user-tag', { user })
         },
         messageActionHandler(action) {
             this.messageHover = false
