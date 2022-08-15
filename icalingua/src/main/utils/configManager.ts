@@ -1,16 +1,16 @@
 /**
  * 所有的全局配置文件里面的东西还有初始设置啥的都在这里面
  */
-import LoginForm from '../../types/LoginForm'
-import Aria2Config from '../../types/Aria2Config'
+import Aria2Config from '@icalingua/types/Aria2Config'
+import LoginForm from '@icalingua/types/LoginForm'
+import OnlineStatusType from '@icalingua/types/OnlineStatusType'
+import WinSize from '@icalingua/types/WinSize'
+import { app, screen } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import YAML from 'yaml'
-import { app, screen } from 'electron'
-import OnlineStatusType from '../../types/OnlineStatusType'
 import argv from './argv'
 import migrateData from './migrateData'
-import WinSize from '../../types/WinSize'
 
 type AllConfig = {
     account: LoginForm

@@ -1,8 +1,9 @@
-import SendMessageParams from '../types/SendMessageParams'
+import { base64decode } from 'nodejs-base64'
 import {
     Client,
     createClient,
     DeviceEventData,
+    FakeMessage,
     FriendAddEventData,
     FriendDecreaseEventData,
     FriendIncreaseEventData,
@@ -10,14 +11,14 @@ import {
     FriendPokeEventData,
     FriendRecallEventData,
     GroupAddEventData,
+    GroupAdminEventData,
     GroupInviteEventData,
     GroupMessageEventData,
     GroupMuteEventData,
-    GroupSettingEventData,
-    GroupAdminEventData,
-    GroupTransferEventData,
     GroupPokeEventData,
     GroupRecallEventData,
+    GroupSettingEventData,
+    GroupTransferEventData,
     LoginErrorEventData,
     MemberBaseInfo,
     MemberDecreaseEventData,
@@ -32,31 +33,30 @@ import {
     SliderEventData,
     SyncMessageEventData,
     SyncReadedEventData,
-    FakeMessage,
 } from 'oicq-icalingua-plus-plus'
+import { Socket } from 'socket.io'
+import { config, saveUserConfig, userConfig } from '../providers/configManager'
+import { broadcast } from '../providers/socketIoProvider'
+import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
+import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
+import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
+import BilibiliMiniApp from '../types/BilibiliMiniApp'
+import IgnoreChatInfo from '../types/IgnoreChatInfo'
 import LoginForm from '../types/LoginForm'
 import Message from '../types/Message'
-import formatDate from '../utils/formatDate'
-import createRoom from '../utils/createRoom'
-import processMessage from '../utils/processMessage'
-import MongoStorageProvider from '../storageProviders/MongoStorageProvider'
-import Room from '../types/Room'
-import IgnoreChatInfo from '../types/IgnoreChatInfo'
-import clients from '../utils/clients'
-import { Socket } from 'socket.io'
-import { broadcast } from '../providers/socketIoProvider'
-import sleep from '../utils/sleep'
-import getSysInfo from '../utils/getSysInfo'
 import RoamingStamp from '../types/RoamingStamp'
+import Room from '../types/Room'
 import SearchableFriend from '../types/SearchableFriend'
-import { config, saveUserConfig, userConfig } from '../providers/configManager'
+import SendMessageParams from '../types/SendMessageParams'
 import StorageProvider from '../types/StorageProvider'
-import RedisStorageProvider from '../storageProviders/RedisStorageProvider'
-import SQLStorageProvider from '../storageProviders/SQLStorageProvider'
-import getImageUrlByMd5 from '../utils/getImageUrlByMd5'
-import { base64decode } from 'nodejs-base64'
-import BilibiliMiniApp from '../types/BilibiliMiniApp'
 import StructMessageCard from '../types/StructMessageCard'
+import clients from '../utils/clients'
+import createRoom from '../utils/createRoom'
+import formatDate from '../utils/formatDate'
+import getImageUrlByMd5 from '../utils/getImageUrlByMd5'
+import getSysInfo from '../utils/getSysInfo'
+import processMessage from '../utils/processMessage'
+import sleep from '../utils/sleep'
 
 let bot: Client
 let storage: StorageProvider
@@ -115,8 +115,12 @@ const eventHandlers = {
             role: (data.sender as MemberBaseInfo).role,
             title: groupId && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
             files: [],
-            anonymousId: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
-            anonymousflag: groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
+            anonymousId:
+                groupId && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
+            anonymousflag:
+                groupId && (<GroupMessageEventData>data).anonymous
+                    ? (<GroupMessageEventData>data).anonymous.flag
+                    : null,
         }
 
         let room = await storage.getRoom(roomId)
@@ -239,7 +243,7 @@ const eventHandlers = {
                 return await bot.setGroupAnonymousBan(group_id, flag, duration)
             }
             custom_bot.setGroupWholeBan = async (group_id, enable?) => {
-                return await bot.setGroupWholeBan(group_id, enable);
+                return await bot.setGroupWholeBan(group_id, enable)
             }
             custom_bot.setGroupKick = async (group_id, user_id, reject_add_request?) => {
                 return await bot.setGroupKick(group_id, user_id, reject_add_request)
@@ -249,7 +253,7 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false  })
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false })
     },
     groupRecall(data: GroupRecallEventData) {
         clients.deleteMessage(data.message_id)
@@ -525,7 +529,9 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const now = new Date(data.time * 1000)
         const newAdmin = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = (data.set ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员` : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`)
+        let content = data.set
+            ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
+            : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
@@ -566,7 +572,9 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname}`
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${
+            transferredUser.card || transferredUser.nickname
+        }`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -855,7 +863,12 @@ const adapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
-    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): Promise<any> {
+    async makeForward(
+        fakes: FakeMessage | Iterable<FakeMessage>,
+        dm?: boolean,
+        origin?: number,
+        target?: number,
+    ): Promise<any> {
         const xmlret = await bot.makeForwardMsg(fakes, dm, origin)
         if (xmlret.error) {
             console.log(xmlret.error)
@@ -930,7 +943,18 @@ const adapter = {
         }
     },
     //roomId 和 room 必有一个
-    async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, at, sticker, messageType }: SendMessageParams) {
+    async sendMessage({
+        content,
+        roomId,
+        file,
+        replyMessage,
+        room,
+        b64img,
+        imgpath,
+        at,
+        sticker,
+        messageType,
+    }: SendMessageParams) {
         if (!messageType) {
             messageType = 'text'
         }
@@ -1066,7 +1090,7 @@ const adapter = {
                             data: content,
                         },
                     })
-                    break;
+                    break
                 } else if (messageType === 'xml') {
                     chain.length = 0
                     chain.push({
@@ -1075,7 +1099,7 @@ const adapter = {
                             data: content,
                         },
                     })
-                    break;
+                    break
                 } else if (messageType === 'rps') {
                     chain.length = 0
                     chain.push({
@@ -1312,7 +1336,8 @@ const adapter = {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
                 const currentTimeStamp = Math.floor(Date.now() / 1000)
-                if (group) client.emit('setShutUp', group.shutup_time_me !== 0 && group.shutup_time_me > currentTimeStamp)
+                if (group)
+                    client.emit('setShutUp', group.shutup_time_me !== 0 && group.shutup_time_me > currentTimeStamp)
                 else {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
@@ -1466,10 +1491,19 @@ const adapter = {
                     _id: data.message_id,
                     time: data.time * 1000,
                     role: (data.sender as MemberBaseInfo).role,
-                    title: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
+                    title:
+                        (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                            ? '匿名'
+                            : (data.sender as MemberBaseInfo).title,
                     files: [],
-                    anonymousId: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.id : null,
-                    anonymousflag: (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous ? (<GroupMessageEventData>data).anonymous.flag : null,
+                    anonymousId:
+                        (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                            ? (<GroupMessageEventData>data).anonymous.id
+                            : null,
+                    anonymousflag:
+                        (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
+                            ? (<GroupMessageEventData>data).anonymous.flag
+                            : null,
                 }
                 try {
                     await processMessage(data.message, message, {}, roomId)

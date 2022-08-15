@@ -1,0 +1,14 @@
+{
+    "name": "icalingua-plus-plus",
+    "packageManager": "yarn@3.2.2",
+    "workspaces": [
+        "icalingua",
+        "icalingua-bridge-oicq",
+        "packages/*"
+    ],
+    "dependencies": {
+        "@icalingua/storage-providers": "workspace:*",
+        "@icalingua/types": "workspace:*",
+        "icalingua": "workspace:*"
+    }
+}
