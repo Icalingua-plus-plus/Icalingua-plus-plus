@@ -23,6 +23,7 @@ const map = new Map<string, number>([
     ['[我想开了]请使用最新版手机QQ体验新功能', 20],
     ['[舔屏]请使用最新版手机QQ体验新功能', 21],
     ['[花朵脸]请使用最新版手机QQ体验新功能', 22],
+    ['[热化了]请使用最新版手机QQ体验新功能', 23],
 ])
 
 export default (msgText: string): string => {
