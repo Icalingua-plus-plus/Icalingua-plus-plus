@@ -22,13 +22,7 @@ jobs:
           WORKING_DIR: icalingua
 
       - name: Yarn install
-        run: |
-          cd ..
-          yarn install
-          cd icalingua
-          yarn install
-          cd ../icalingua-bridge-oicq
-          yarn install
+        run: yarn install
 
   arch-artifacts:
     runs-on: ubuntu-latest
@@ -761,7 +755,11 @@ jobs:
         uses: actions/setup-node@v2.3.0
 
       - name: Yarn install
-        run: yarn install
+        run: |
+          cd ..
+          yarn install
+          cd icalingua-bridge-oicq
+          yarn install
 
       - name: Compile
         run: yarn compile
