@@ -17,9 +17,8 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
 
       - name: pnpm install
         run: pnpm install
@@ -54,10 +53,6 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-
       - id: git-ver
         run: echo ::set-output name=version::$(git describe --tags | sed "s/v//")
 
@@ -89,10 +84,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -130,10 +121,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -177,10 +164,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -235,10 +218,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -486,10 +465,6 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -545,10 +520,6 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -588,10 +559,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -633,10 +600,6 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -676,10 +639,6 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -776,11 +735,6 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: x64
 
       - name: pnpm install
         run: pnpm install
@@ -882,11 +836,6 @@ jobs:
         with:
           node-version: "16.13.0"
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: arm64
-
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
@@ -933,9 +882,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "16"
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
       - name: pnpm install
         run: pnpm install
 
@@ -955,10 +901,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "16"
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
 
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
