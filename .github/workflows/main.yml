@@ -209,6 +209,7 @@ jobs:
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
+            pnpm install
           run: |
             uname -a
             chmod -R 777 /build
@@ -269,6 +270,7 @@ jobs:
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
+            pnpm install
           run: |
             uname -a
             chmod -R 777 /build
@@ -498,6 +500,9 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
+      - name: pnpm install
+        run: pnpm install
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -556,6 +561,9 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
+      - name: pnpm install
+        run: pnpm install
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -598,6 +606,9 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -642,6 +653,9 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
+      - name: pnpm install
+        run: pnpm install
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -684,6 +698,9 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
