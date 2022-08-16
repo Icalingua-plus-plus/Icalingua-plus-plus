@@ -64,6 +64,9 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: Install pnpm
+        run: corepack enable
+
       - name: build
         run: pnpm build:ci
         working-directory: icalingua
@@ -90,6 +93,9 @@ jobs:
         with:
           name: dist
           path: icalingua/dist
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: build native modules
         run: pnpm build:electron install-app-deps
@@ -121,6 +127,9 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -164,6 +173,9 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -218,6 +230,9 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -465,6 +480,9 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
+      - name: Install pnpm
+        run: corepack enable
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -520,6 +538,9 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
+      - name: Install pnpm
+        run: corepack enable
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -559,6 +580,9 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -600,6 +624,9 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
+      - name: Install pnpm
+        run: corepack enable
+
       - name: get built files
         uses: actions/download-artifact@v2
         with:
@@ -639,6 +666,9 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -706,6 +736,9 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
+      - name: Install pnpm
+        run: corepack enable
+
       - name: pnpm install
         run: pnpm install
 
@@ -755,6 +788,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "16"
+
+      - name: Install pnpm
+        run: corepack enable
 
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
@@ -826,6 +862,9 @@ jobs:
         with:
           node-version: "16.13.0"
 
+      - name: Install pnpm
+        run: corepack enable
+
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
@@ -872,6 +911,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "16"
+      - name: Install pnpm
+        run: corepack enable
       - name: pnpm install
         run: pnpm install
 
@@ -891,6 +932,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "16"
+      - name: Install pnpm
+        run: corepack enable
 
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
