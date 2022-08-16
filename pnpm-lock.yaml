@@ -66,7 +66,7 @@ importers:
       mongodb: ^3.6.6
       multispinner: ^0.2.1
       mysql: ^2.18.1
-      noble-ed25519: ^1.2.5
+      noble-ed25519: 1.2.5
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
       oicq-icalingua-plus-plus: 1.22.6
@@ -166,7 +166,7 @@ importers:
       mini-css-extract-plugin: 0.4.0_webpack@4.46.0
       minimist: 1.2.6
       multispinner: 0.2.1
-      noble-ed25519: 1.2.6
+      noble-ed25519: 1.2.5
       node-loader: 0.6.0
       nodejs-base64: 2.0.0
       prettier: 2.7.1
@@ -219,7 +219,7 @@ importers:
       minimist: ^1.2.6
       mongodb: ^4.0.0
       mysql: ^2.18.1
-      noble-ed25519: ^1.2.5
+      noble-ed25519: 1.2.5
       nodejs-base64: ^2.0.0
       oicq-icalingua-plus-plus: 1.22.6
       pg: ^8.7.1
@@ -243,7 +243,7 @@ importers:
       minimist: 1.2.6
       mongodb: 4.8.1
       mysql: 2.18.1
-      noble-ed25519: 1.2.6
+      noble-ed25519: 1.2.5
       nodejs-base64: 2.0.0
       oicq-icalingua-plus-plus: 1.22.6
       pg: 8.7.3
@@ -7522,6 +7522,7 @@ packages:
 
   /nan/2.16.0:
     resolution: {integrity: sha512-UdAqHyFngu7TfQKsCBgAA6pWDkT8MAO7d0jyOecVhN5354xbLqdn8mV9Tat9gepAupm0bt2DbeaSC8vS52MuFA==}
+    requiresBuild: true
     dev: true
     optional: true
 
@@ -7606,8 +7607,8 @@ packages:
       lower-case: 1.1.4
     dev: true
 
-  /noble-ed25519/1.2.6:
-    resolution: {integrity: sha512-zfnWqg9FVMp8CnzUpAjbt1nDXpDjCvxYiCXdnW1mY8zQHw/6twUlkFm14VPdojVzc0kcd+i9zT79+26GcNbsuQ==}
+  /noble-ed25519/1.2.5:
+    resolution: {integrity: sha512-7vst+4UhM5QU3jJ3pUqPMKBCOePrxBojmoQa59qcSnYvjFF/T4jqb4WISlfslcWyBw7G5H9V/acpcAxMd8DzUQ==}
     deprecated: Switch to namespaced @noble/ed25519 for security and feature updates
 
   /node-addon-api/1.7.2:
@@ -11419,6 +11420,7 @@ packages:
   /xmlbuilder/15.1.1:
     resolution: {integrity: sha512-yMqGBqtXyeN1e3TGYvgNgDVZ3j84W4cwkOXQswghol6APgZWaff9lnbvN7MHYJOiXsvGPXtjTYJEiC9J2wv9Eg==}
     engines: {node: '>=8.0'}
+    requiresBuild: true
     dev: true
 
   /xmlhttprequest-ssl/2.0.0:
