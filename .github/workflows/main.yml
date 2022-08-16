@@ -756,11 +756,6 @@ jobs:
         with:
           node-version: "16"
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: x64
-
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
@@ -803,11 +798,6 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: arm64
 
       - name: Fetch node.lib and pnpm install
         shell: cmd
