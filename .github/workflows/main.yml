@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-node@v2.3.0
 
       - name: Install pnpm
-        run: corepack enable
+        run: corepack enable && pnpm -v
 
       - name: pnpm install
         run: pnpm install
