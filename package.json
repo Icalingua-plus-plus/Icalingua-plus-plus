@@ -10,5 +10,6 @@
     "@icalingua/types": "workspace:*",
     "icalingua": "workspace:*",
     "icalingua-bridge-oicq": "workspace:*"
-  }
+  },
+  "packageManager": "pnpm@7.8.0"
 }
