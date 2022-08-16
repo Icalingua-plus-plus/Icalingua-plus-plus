@@ -27,6 +27,8 @@ jobs:
           yarn install
           cd icalingua
           yarn install
+          cd ../icalingua-bridge-oicq
+          yarn install
 
   arch-artifacts:
     runs-on: ubuntu-latest
