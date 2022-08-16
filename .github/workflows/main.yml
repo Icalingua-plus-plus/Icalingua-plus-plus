@@ -22,7 +22,11 @@ jobs:
           WORKING_DIR: icalingua
 
       - name: Yarn install
-        run: yarn install
+        run: |
+          cd ..
+          yarn install
+          cd icalingua
+          yarn install
 
   arch-artifacts:
     runs-on: ubuntu-latest

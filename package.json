@@ -9,6 +9,7 @@
     "dependencies": {
         "@icalingua/storage-providers": "workspace:*",
         "@icalingua/types": "workspace:*",
-        "icalingua": "workspace:*"
+        "icalingua": "workspace:*",
+        "icalingua-bridge-oicq": "workspace:*"
     }
 }

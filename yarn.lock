@@ -7062,7 +7062,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"icalingua-bridge-oicq@workspace:icalingua-bridge-oicq":
+"icalingua-bridge-oicq@workspace:*, icalingua-bridge-oicq@workspace:icalingua-bridge-oicq":
   version: 0.0.0-use.local
   resolution: "icalingua-bridge-oicq@workspace:icalingua-bridge-oicq"
   dependencies:
@@ -7104,6 +7104,7 @@ __metadata:
     "@icalingua/storage-providers": "workspace:*"
     "@icalingua/types": "workspace:*"
     icalingua: "workspace:*"
+    icalingua-bridge-oicq: "workspace:*"
   languageName: unknown
   linkType: soft
 

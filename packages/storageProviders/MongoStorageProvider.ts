@@ -21,7 +21,7 @@ export default class MongoStorageProvider implements StorageProvider {
     async getAllRooms(): Promise<Room[]> {
         try {
             return await this.mdb
-                .collection("rooms")
+                .collection<Room>("rooms")
                 .find({}, { sort: [["utime", -1]] })
                 .toArray();
         } catch (e) {
@@ -166,7 +166,10 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
-        return this.mdb.collection("ignoredChats").find().toArray();
+        return this.mdb
+            .collection<IgnoreChatInfo>("ignoredChats")
+            .find()
+            .toArray();
     }
 
     async isChatIgnored(id: number): Promise<boolean> {
