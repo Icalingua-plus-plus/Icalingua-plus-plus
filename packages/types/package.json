@@ -1,4 +1,3 @@
 {
-    "name": "@icalingua/types",
-    "packageManager": "yarn@3.2.2"
+  "name": "@icalingua/types"
 }
