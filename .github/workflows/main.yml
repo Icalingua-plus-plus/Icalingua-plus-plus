@@ -863,7 +863,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16.13.0"
+          node-version: "16.17.0"
 
       - name: Install pnpm
         run: corepack enable
@@ -872,10 +872,9 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=16.13.0
+          set node_version=16.17.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
-
           pnpm install
 
   build-windows-arm64:
@@ -893,7 +892,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16.13.0"
+          node-version: "16.17.0"
 
       - name: Install pnpm
         run: corepack enable
@@ -913,7 +912,7 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=16.13.0
+          set node_version=16.17.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
 
