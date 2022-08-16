@@ -53,6 +53,9 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
 
+      - name: Install pnpm
+        run: corepack enable
+
       - id: git-ver
         run: echo ::set-output name=version::$(git describe --tags | sed "s/v//")
 
@@ -64,8 +67,8 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
-      - name: Install pnpm
-        run: corepack enable
+      - name: pnpm install
+        run: pnpm install
 
       - name: build
         run: pnpm build:ci
@@ -803,6 +806,9 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: pnpm install
+        run: pnpm install
+
       - name: build
         run: pnpm build
         working-directory: icalingua
@@ -884,7 +890,7 @@ jobs:
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
 
-          cmd.exe /c "pnpm deps:woa & pnpm build:ci & pnpm build:woa"
+          cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
 
       - name: rename
@@ -945,6 +951,9 @@ jobs:
           SHA: ${{ github.sha }}
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: build
         run: pnpm build
