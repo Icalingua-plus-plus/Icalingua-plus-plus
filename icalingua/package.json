@@ -8,7 +8,7 @@
     "desktopName": "icalingua.desktop",
     "homepage": "https://github.com/Icalingua-plus-plus/Icalingua-plus-plus",
     "scripts": {
-        "deps:woa:sqlite3": "cd node_modules/sqlite3 && move node_modules node_modules1 && cross-env npm_config_arch=arm64 npx node-pre-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-pre-gyp build --target_arch=arm64 && move node_modules1 node_modules",
+        "deps:woa:sqlite3": "cd ..\\node_modules\\.pnpm\\sqlite*\\node_modules\\sqlite3 && cross-env npm_config_arch=arm64 npx node-pre-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-pre-gyp build --target_arch=arm64",
         "deps:woa:silk-sdk": "cd node_modules/silk-sdk && cross-env npm_config_arch=arm64 npx node-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-gyp rebuild --target_arch=arm64",
         "deps:woa": "npm run deps:woa:sqlite3 && npm run deps:woa:silk-sdk",
         "build": "ts-node .electron-vue/build.ts && electron-builder",
