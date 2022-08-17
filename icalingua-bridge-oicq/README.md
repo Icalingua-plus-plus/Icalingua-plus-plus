@@ -13,13 +13,11 @@
 
 首先有一台服务器。
 
-1. 服务器需要安装 `ffmpeg` 命令，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
+1. 服务器需要安装 pnpm 和 `ffmpeg` 命令，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
 
-2. 运行 `yarn` 安装必要依赖。
+2. 在项目根目录运行 `pnpm install` 安装必要依赖。
 
-3. （可选）运行 `yarn compile` 将 ts 转换为 js，不转换也可运行，但是转换后效率可能高点。
-
-4. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
+3. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
 
     ![ECC 密钥生成页面](https://user-images.githubusercontent.com/18461360/130779855-1cdc26ad-0037-4bbf-930c-07e8cbc2f6c9.png)
 
@@ -27,7 +25,7 @@
 
     该密钥仅适用于本地环境及测试环境，暴露在公网中是非常危险的。
 
-5. 若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
+4. 在 `index.ts` 所在目录 icalingua-bridge-oicq 中创建 `config.yaml` 内容如下：
 
     ```yaml
     host: 0.0.0.0 # 监听地址。如果有反代工具，可以改成 localhost 或者 127.0.0.1
@@ -36,12 +34,12 @@
     port: 6789 # 如果需要运行多个实例，可以设置不同端口
     ```
 
-6. 若没有执行第二步，执行 `yarn start`，否则在 `build` 文件夹中执行 `node index`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）。
-
+5. 执行 `pnpm start`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）。
+<!--
 #### 已知问题
 
 如果使用 pm2 通过 `yarn start` 运行，pm2 将无法停止进程。建议使用 screen 或者编译成 js 之后再使用 pm2。
-
+-->
 ### 使用 Docker
 
 Todo
