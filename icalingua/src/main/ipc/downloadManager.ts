@@ -1,14 +1,14 @@
+import Aria2Config from '@icalingua/types/Aria2Config'
+import Message from '@icalingua/types/Message'
+import Room from '@icalingua/types/Room'
 import Aria2 from 'aria2'
-import Aria2Config from '../../types/Aria2Config'
-import ui from '../utils/ui'
-import edl from 'electron-dl'
-import { getMainWindow } from '../utils/windowManager'
 import { app, ipcMain } from 'electron'
+import edl from 'electron-dl'
 import path from 'path'
-import { getGroupFileMeta } from './botAndStorage'
 import { getConfig, saveConfigFile } from '../utils/configManager'
-import Message from '../../types/Message'
-import Room from '../../types/Room'
+import ui from '../utils/ui'
+import { getMainWindow } from '../utils/windowManager'
+import { getGroupFileMeta } from './botAndStorage'
 
 let aria: Aria2
 

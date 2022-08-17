@@ -8,5 +8,8 @@ indent_style = space
 trim_trailing_whitespace = true
 tab_width = 4
 
+[*.{yml,yaml,json}]
+tab_width = 2
+
 [*.{ts, js, ejs, vue}]
 indent_size = 4

@@ -1,21 +1,21 @@
-import { app, Menu, MenuItem, Tray, nativeImage } from 'electron'
+import Room from '@icalingua/types/Room'
+import { app, Menu, MenuItem, nativeImage, Tray } from 'electron'
 import path from 'path'
-import { getMainWindow } from './windowManager'
-import exit from './exit'
+import getStaticPath from '../../utils/getStaticPath'
 import {
-    getUin,
-    getNickname,
+    clearRoomUnread,
     getFirstUnreadRoom,
+    getNickname,
+    getUin,
     getUnreadCount,
     getUnreadRooms,
-    clearRoomUnread,
 } from '../ipc/botAndStorage'
 import { getConfig, saveConfigFile } from './configManager'
-import getStaticPath from '../../utils/getStaticPath'
-import { pushUnreadCount } from './socketIoSlave'
+import exit from './exit'
 import setPriority from './setPriority'
+import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
-import Room from '../../types/Room'
+import { getMainWindow } from './windowManager'
 
 let tray: Tray
 
@@ -123,18 +123,19 @@ export const updateTrayMenu = async () => {
             ],
         }),
     )
-    process.platform !== 'darwin' && menu.append(
-        new MenuItem({
-            label: '深色图标',
-            type: 'checkbox',
-            checked: getConfig().darkTaskIcon,
-            click(item) {
-                getConfig().darkTaskIcon = item.checked
-                updateTrayIcon()
-                saveConfigFile()
-            },
-        }),
-    )
+    process.platform !== 'darwin' &&
+        menu.append(
+            new MenuItem({
+                label: '深色图标',
+                type: 'checkbox',
+                checked: getConfig().darkTaskIcon,
+                click(item) {
+                    getConfig().darkTaskIcon = item.checked
+                    updateTrayIcon()
+                    saveConfigFile()
+                },
+            }),
+        )
     menu.append(
         new MenuItem({
             label: '退出',

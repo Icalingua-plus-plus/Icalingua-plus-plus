@@ -1,7 +1,7 @@
-import Room from '../types/Room'
+import Message from '@icalingua/types/Message'
+import OnlineData from '@icalingua/types/OnlineData'
+import Room from '@icalingua/types/Room'
 import { broadcast } from '../providers/socketIoProvider'
-import Message from '../types/Message'
-import OnlineData from '../types/OnlineData'
 
 export default {
     updateRoom(room: Room) {

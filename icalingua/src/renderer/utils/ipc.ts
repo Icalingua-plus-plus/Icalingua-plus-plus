@@ -1,12 +1,12 @@
+import Aria2Config from '@icalingua/types/Aria2Config'
+import AtCacheItem from '@icalingua/types/AtCacheElem'
+import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
+import Message from '@icalingua/types/Message'
+import RoamingStamp from '@icalingua/types/RoamingStamp'
+import Room from '@icalingua/types/Room'
+import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
-import Room from '../../types/Room'
-import Message from '../../types/Message'
-import Aria2Config from '../../types/Aria2Config'
-import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import RoamingStamp from '../../types/RoamingStamp'
-import SearchableGroup from '../../types/SearchableGroup'
-import { FakeMessage, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
-import AtCacheItem from '../../types/AtCacheElem'
+import { FakeMessage, MemberInfo } from 'oicq-icalingua-plus-plus'
 
 const ipc = {
     sendMessage(data) {
@@ -27,7 +27,7 @@ const ipc = {
     async getDebugSetting(): Promise<boolean> {
         return await ipcRenderer.invoke('getDebugSetting')
     },
-    async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean, roomPanelWidth: number }> {
+    async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean; roomPanelWidth: number }> {
         return await ipcRenderer.invoke('getRoomPanelSetting')
     },
     async getMessgeTypeSetting(): Promise<string> {
