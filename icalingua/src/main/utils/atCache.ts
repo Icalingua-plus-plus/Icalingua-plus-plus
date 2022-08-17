@@ -1,4 +1,4 @@
-import AtCacheItem from '../../types/AtCacheElem'
+import AtCacheItem from '@icalingua/types/AtCacheElem'
 
 let cache: AtCacheItem[] = [
     {

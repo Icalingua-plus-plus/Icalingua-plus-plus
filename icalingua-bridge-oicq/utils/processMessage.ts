@@ -1,13 +1,13 @@
-import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq-icalingua-plus-plus'
-import Message from '../types/Message'
+import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
+import Message from '@icalingua/types/Message'
+import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { base64decode } from 'nodejs-base64'
-import mime from './mime'
+import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import adapter from '../adapters/oicqAdapter'
-import BilibiliMiniApp from '../types/BilibiliMiniApp'
-import StructMessageCard from '../types/StructMessageCard'
-import silkDecode from './silkDecode'
 import getImageUrlByMd5 from './getImageUrlByMd5'
+import mime from './mime'
+import silkDecode from './silkDecode'
 
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]

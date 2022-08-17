@@ -1,4 +1,4 @@
-import Room from '../types/Room'
+import Room from '@icalingua/types/Room'
 
 export default (roomId: number, roomName: string): Room => {
     const room = {
