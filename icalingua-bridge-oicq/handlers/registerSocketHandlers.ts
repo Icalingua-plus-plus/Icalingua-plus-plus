@@ -1,8 +1,8 @@
+import Message from '@icalingua/types/Message'
 import { Server, Socket } from 'socket.io'
 import adapter from '../adapters/oicqAdapter'
-import Message from '../types/Message'
-import sendImgTokenManager from '../utils/sendImgTokenManager'
 import gfsTokenManager from '../utils/gfsTokenManager'
+import sendImgTokenManager from '../utils/sendImgTokenManager'
 
 export default (io: Server, socket: Socket) => {
     socket.on('addRoom', adapter.addRoom)

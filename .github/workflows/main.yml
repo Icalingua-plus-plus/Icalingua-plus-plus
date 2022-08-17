@@ -15,14 +15,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
 
-      - name: Yarn install
-        run: yarn install
+      - name: pnpm install
+        run: pnpm install
 
   arch-artifacts:
     runs-on: ubuntu-latest
@@ -52,11 +51,10 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
 
       - id: git-ver
         run: echo ::set-output name=version::$(git describe --tags | sed "s/v//")
@@ -69,8 +67,11 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: pnpm install
+        run: pnpm install
+
       - name: build
-        run: yarn build:ci
+        run: pnpm build:ci
         working-directory: icalingua
 
       - name: upload dist
@@ -88,11 +89,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
-
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+        uses: actions/setup-node@v3
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -100,12 +97,18 @@ jobs:
           name: dist
           path: icalingua/dist
 
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
+
       - name: build native modules
-        run: yarn build:electron install-app-deps
+        run: pnpm build:electron install-app-deps
         working-directory: icalingua
 
       - name: build
-        run: yarn build:electron --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
         working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
@@ -129,11 +132,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -148,11 +153,11 @@ jobs:
           sudo apt install gcc-multilib g++-multilib -y
 
       - name: build native modules
-        run: yarn build:electron install-app-deps --arch ia32
+        run: pnpm build:electron install-app-deps --arch ia32
         working-directory: icalingua
 
       - name: build
-        run: yarn build:electron --ia32 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --ia32 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
         working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
@@ -176,11 +181,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -201,18 +208,16 @@ jobs:
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
-            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-            echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-            apt update && apt install --no-install-recommends yarn -y
+            corepack enable
           run: |
             uname -a
             chmod -R 777 /build
             cd /build
             useradd -m builduser
-            su builduser -c 'yarn build:electron install-app-deps'
+            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
 
       - name: build
-        run: yarn build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
         working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
@@ -236,11 +241,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get dist
         uses: actions/download-artifact@v2
@@ -261,18 +268,16 @@ jobs:
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
-            curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
-            echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-            apt update && apt install --no-install-recommends yarn -y
+            corepack enable
           run: |
             uname -a
             chmod -R 777 /build
             cd /build
             useradd -m builduser
-            su builduser -c 'yarn build:electron install-app-deps'
+            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
 
       - name: build
-        run: yarn build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
         working-directory: icalingua
 
       - uses: actions/upload-artifact@v2
@@ -315,7 +320,7 @@ jobs:
       - name: makepkg for x86_64
         uses: Icalinguaplusplus/archlinux-package-action@main
         with:
-          flags: '-cfd --noconfirm'
+          flags: "-cfd --noconfirm"
           namcap: false
           updpkgsums: true
 
@@ -342,7 +347,6 @@ jobs:
       - arch-artifacts
       - build-ia32
     steps:
-
       - name: get the assets
         uses: actions/download-artifact@v2
         with:
@@ -363,7 +367,7 @@ jobs:
         uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           carch: i686
-          flags: '-cfd --noconfirm'
+          flags: "-cfd --noconfirm"
           namcap: false
           updpkgsums: true
 
@@ -404,14 +408,13 @@ jobs:
         with:
           name: app-arm64.asar
 
-
       - run: chmod -R 777 .
 
       - name: makepkg for aarch64
         uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           carch: aarch64
-          flags: '-cfd --noconfirm'
+          flags: "-cfd --noconfirm"
           namcap: false
           updpkgsums: true
 
@@ -452,14 +455,13 @@ jobs:
         with:
           name: app-armv7l.asar
 
-
       - run: chmod -R 777 .
 
       - name: makepkg for armv7l
         uses: Icalinguaplusplus/archlinux-package-action@main
         with:
           carch: armv7l
-          flags: '-cfd --noconfirm'
+          flags: "-cfd --noconfirm"
           namcap: false
           updpkgsums: true
 
@@ -491,11 +493,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -519,7 +523,7 @@ jobs:
       - name: pack
         id: pack
         run: |
-          sg lxd -c 'yarn build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
+          sg lxd -c 'pnpm build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
           echo "::set-output name=snap::$(readlink -f $(ls build/*.snap))"
         env:
           SNAPCRAFT_BUILD_ENVIRONMENT: lxd
@@ -550,11 +554,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -566,7 +572,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --pd unpacked -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -594,11 +600,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -610,7 +618,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --pd unpacked --ia32 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -638,11 +646,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -654,7 +664,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --pd unpacked --arm64 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -682,11 +692,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: get built files
         uses: actions/download-artifact@v2
@@ -698,7 +710,7 @@ jobs:
         run: chmod +x unpacked/icalingua
 
       - name: pack
-        run: yarn build:electron --pd unpacked --armv7l -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        run: pnpm build:electron --pd unpacked --armv7l -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
 
       - uses: actions/upload-artifact@v2
         name: upload ${{ matrix.package }}
@@ -752,13 +764,16 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2.3.0
+        uses: actions/setup-node@v3
 
-      - name: Yarn install
-        run: yarn install
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - name: Compile
-        run: yarn compile
+        run: pnpm compile
 
       - name: upload artifacts
         uses: actions/upload-artifact@v2
@@ -777,20 +792,15 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
 
-      - name: Install Yarn
-        run: npm install --global yarn
+      - name: Install pnpm
+        run: corepack enable
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: x64
-
-      - name: Yarn install
-        run: yarn install
+      - name: pnpm install
+        run: pnpm install
 
   build-windows64:
     runs-on: windows-2019
@@ -800,45 +810,46 @@ jobs:
       arch-version: ${{ steps.version.outputs.arch-version }}
       pkg-name: ${{ steps.version.outputs.pkg-name }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
 
-    - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-      env:
-        WORKING_DIR: icalingua
-        prefix: x64
-        
-    - id: git-ver
-      run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
-      
-    - name: check version and write version info
-      run: node .github/check-version.js
-      id: version
-      env:
-        SHA: ${{ github.sha }}
-        REF: ${{ github.REF }}
-        GIT_VER: ${{ steps.git-ver.outputs.version }}
-        
-    - name: build
-      run: yarn build
-      working-directory: icalingua
+      - name: Install pnpm
+        run: corepack enable
 
-    - name: rename
-      run: ../../.github/winrename.bat x64
-      working-directory: icalingua/build
-      
-    - uses: actions/upload-artifact@v2
-      name: Upload Icalingua_Windows64.exe
-      with:
-        name: Icalingua_Windows64.exe
-        path: icalingua/build/Icalingua++*.exe
-        if-no-files-found: error
+      - id: git-ver
+        run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
+
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
+          GIT_VER: ${{ steps.git-ver.outputs.version }}
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: build
+        run: pnpm build
+        working-directory: icalingua
+
+      - name: rename
+        run: ../../.github/winrename.bat x64
+        working-directory: icalingua/build
+
+      - uses: actions/upload-artifact@v2
+        name: Upload Icalingua_Windows64.exe
+        with:
+          name: Icalingua_Windows64.exe
+          path: icalingua/build/Icalingua++*.exe
+          if-no-files-found: error
 
   install-windows-arm64:
     runs-on: windows-2019
@@ -850,27 +861,21 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '16.13.0'
+          node-version: "16.13.0"
 
-      - name: Install Yarn
-        run: npm install --global yarn
+      - name: Install pnpm
+        run: corepack enable
 
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-          prefix: arm64
-
-      - name: Fetch node.lib and Yarn install
+      - name: Fetch node.lib and pnpm install
         shell: cmd
         run: |
           set npm_config_arch=arm64
           set node_version=16.13.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
-
-          yarn install
+          pnpm install
 
   build-windows-arm64:
     runs-on: windows-2019
@@ -880,52 +885,50 @@ jobs:
       arch-version: ${{ steps.version.outputs.arch-version }}
       pkg-name: ${{ steps.version.outputs.pkg-name }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16.13.0'
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.13.0"
 
-    - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-      env:
-        WORKING_DIR: icalingua
-        prefix: arm64
+      - name: Install pnpm
+        run: corepack enable
 
-    - id: git-ver
-      run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
-      
-    - name: check version and write version info
-      run: node .github/check-version.js
-      id: version
-      env:
-        SHA: ${{ github.sha }}
-        REF: ${{ github.REF }}
-        GIT_VER: ${{ steps.git-ver.outputs.version }}
-        
-    - name: build
-      shell: cmd
-      run: |
-        set npm_config_arch=arm64
-        set node_version=16.13.0
-        mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
-        curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+      - id: git-ver
+        run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
-        cmd.exe /c "yarn deps:woa & yarn build:ci & yarn build:woa"
-      working-directory: icalingua
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
+          GIT_VER: ${{ steps.git-ver.outputs.version }}
 
-    - name: rename
-      run: ../../.github/winrename.bat arm64
-      working-directory: icalingua/build
-      
-    - uses: actions/upload-artifact@v2
-      name: Upload Icalingua_Windows_arm64.exe
-      with:
-        name: Icalingua_Windows_arm64.exe
-        path: icalingua/build/Icalingua++*.exe
-        if-no-files-found: error
+      - name: build
+        shell: cmd
+        run: |
+          set npm_config_arch=arm64
+          set node_version=16.13.0
+          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
+          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+
+          cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
+        working-directory: icalingua
+
+      - name: rename
+        run: ../../.github/winrename.bat arm64
+        working-directory: icalingua/build
+
+      - uses: actions/upload-artifact@v2
+        name: Upload Icalingua_Windows_arm64.exe
+        with:
+          name: Icalingua_Windows_arm64.exe
+          path: icalingua/build/Icalingua++*.exe
+          if-no-files-found: error
 
   install-macos-x64:
     runs-on: macos-11
@@ -937,14 +940,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Node.js environment
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: '16'
-      - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-        env:
-          WORKING_DIR: icalingua
-      - name: Yarn install
-        run: yarn install
+          node-version: "16"
+      - name: Install pnpm
+        run: corepack enable
+      - name: pnpm install
+        run: pnpm install
 
   build-macos-x64:
     runs-on: macos-11
@@ -954,44 +956,45 @@ jobs:
       arch-version: ${{ steps.version.outputs.arch-version }}
       pkg-name: ${{ steps.version.outputs.pkg-name }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - name: Install pnpm
+        run: corepack enable
 
-    - uses: Icalinguaplusplus/gha-yarn-node-cache@master
-      env:
-        WORKING_DIR: icalingua
-        
-    - id: git-ver
-      run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
-      
-    - name: check version and write version info
-      run: node .github/check-version.js
-      id: version
-      env:
-        SHA: ${{ github.sha }}
-        REF: ${{ github.REF }}
-        GIT_VER: ${{ steps.git-ver.outputs.version }}
-        
-    - name: build
-      run: yarn build
-      working-directory: icalingua
-      
-    - name: rename
-      run: for i in *.dmg;do mv "$i" "${i%.dmg}_x64.dmg" ;done
-      working-directory: icalingua/build
+      - id: git-ver
+        run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
-    - uses: actions/upload-artifact@v2
-      name: Upload Icalingua++_x64.dmg
-      with:
-        name: Icalingua++_x64.dmg
-        path: icalingua/build/Icalingua++*.dmg
-        if-no-files-found: error
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
+          GIT_VER: ${{ steps.git-ver.outputs.version }}
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: build
+        run: pnpm build
+        working-directory: icalingua
+
+      - name: rename
+        run: for i in *.dmg;do mv "$i" "${i%.dmg}_x64.dmg" ;done
+        working-directory: icalingua/build
+
+      - uses: actions/upload-artifact@v2
+        name: Upload Icalingua++_x64.dmg
+        with:
+          name: Icalingua++_x64.dmg
+          path: icalingua/build/Icalingua++*.dmg
+          if-no-files-found: error
 
   release:
     runs-on: ubuntu-latest
@@ -1022,7 +1025,6 @@ jobs:
       - name: rename app-x86_64.asar
         run: mv app.asar release/app-x86_64.asar
 
-
       - name: get app-ia32.asar
         uses: actions/download-artifact@v2
         with:
@@ -1030,7 +1032,6 @@ jobs:
 
       - name: rename app-ia32.asar
         run: mv app.asar release/app-ia32.asar
-
 
       - name: get app-arm64.asar
         uses: actions/download-artifact@v2
@@ -1040,7 +1041,6 @@ jobs:
       - name: rename app-arm64.asar
         run: mv app.asar release/app-arm64.asar
 
-
       - name: get app-armv7l.asar
         uses: actions/download-artifact@v2
         with:
@@ -1048,7 +1048,6 @@ jobs:
 
       - name: rename app-armv7l.asar
         run: mv app.asar release/app-armv7l.asar
-
 
       - name: get aarch64.pkg.tar.zst
         uses: actions/download-artifact@v2

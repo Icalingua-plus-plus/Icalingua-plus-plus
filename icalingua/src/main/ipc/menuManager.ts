@@ -1,57 +1,57 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell } from 'electron'
+import Message from '@icalingua/types/Message'
+import OnlineStatusType from '@icalingua/types/OnlineStatusType'
+import Room from '@icalingua/types/Room'
+import SearchableGroup from '@icalingua/types/SearchableGroup'
+import axios from 'axios'
+import { app, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell } from 'electron'
+import fs from 'fs'
+import path from 'path'
+import querystring from 'querystring'
+import getAvatarUrl from '../../utils/getAvatarUrl'
+import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
+import getStaticPath from '../../utils/getStaticPath'
+import getWinUrl from '../../utils/getWinUrl'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import socketIoProvider from '../providers/socketIoProvider'
+import atCache from '../utils/atCache'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import exit from '../utils/exit'
+import exportContacts from '../utils/exportContacts'
+import exportGroupMembers from '../utils/exportGroupMembers'
+import gfsTokenManager from '../utils/gfsTokenManager'
+import isAdmin from '../utils/isAdmin'
+import openMedia from '../utils/openMedia'
+import setPriority from '../utils/setPriority'
+import * as themes from '../utils/themes'
+import ui from '../utils/ui'
+import version from '../utils/version'
 import { getMainWindow, showRequestWindow } from '../utils/windowManager'
-import openImage from './openImage'
-import path from 'path'
-import OnlineStatusType from '../../types/OnlineStatusType'
 import {
     deleteMessage,
-    hideMessage,
     fetchHistory,
     fetchLatestHistory,
+    getCookies,
+    getGroupMemberInfo,
+    getMsgNewURL,
     getRoom,
     getSelectedRoom,
+    getUin,
+    hideMessage,
     ignoreChat,
+    makeForward,
     pinRoom,
     removeChat,
-    revealMessage,
     renewMessageURL,
+    requestGfsToken,
+    revealMessage,
     sendMessage,
+    setOnlineStatus as setStatus,
     setRoomAutoDownload,
     setRoomAutoDownloadPath,
     setRoomPriority,
-    setOnlineStatus as setStatus,
-    getUin,
-    getCookies,
-    getGroupMemberInfo,
-    requestGfsToken,
-    getMsgNewURL,
-    makeForward,
 } from './botAndStorage'
-import Room from '../../types/Room'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
-import Message from '../../types/Message'
-import axios from 'axios'
-import ui from '../utils/ui'
-import getStaticPath from '../../utils/getStaticPath'
-import setPriority from '../utils/setPriority'
-import getWinUrl from '../../utils/getWinUrl'
-import openMedia from '../utils/openMedia'
-import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
-import getAvatarUrl from '../../utils/getAvatarUrl'
-import fs from 'fs'
-import atCache from '../utils/atCache'
-import exportContacts from '../utils/exportContacts'
-import querystring from 'querystring'
-import exportGroupMembers from '../utils/exportGroupMembers'
-import isAdmin from '../utils/isAdmin'
-import SearchableGroup from '../../types/SearchableGroup'
-import * as themes from '../utils/themes'
-import version from '../utils/version'
-import gfsTokenManager from '../utils/gfsTokenManager'
-import socketIoProvider from '../providers/socketIoProvider'
-import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import openImage from './openImage'
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -70,12 +70,15 @@ const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     const initMenu = Menu.buildFromTemplate([
         {
             label: 'Icalingua++',
-            submenu: [{ role: 'toggleDevTools' }]
+            submenu: [{ role: 'toggleDevTools' }],
         },
     ])
-    process.platform === 'darwin' && initMenu.append(new MenuItem({
-        role: 'editMenu',
-    }))
+    process.platform === 'darwin' &&
+        initMenu.append(
+            new MenuItem({
+                role: 'editMenu',
+            }),
+        )
     Menu.setApplicationMenu(initMenu)
 }
 
@@ -875,9 +878,10 @@ export const updateAppMenu = async () => {
             submenu: Menu.buildFromTemplate(globalMenu.app),
         },
     ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[]
-    process.platform === 'darwin' && template.push({
-        role: 'editMenu',
-    })
+    process.platform === 'darwin' &&
+        template.push({
+            role: 'editMenu',
+        })
     template.push(globalMenu.priority)
     template.push({
         label: '选项',
@@ -1253,7 +1257,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }),
             )
         }
-        if (!history){
+        if (!history) {
             menu.append(
                 new MenuItem({
                     label: '隐藏',
