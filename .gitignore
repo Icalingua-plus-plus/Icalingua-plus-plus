@@ -112,3 +112,11 @@ loongarch-launcher/electron
 loongarch-launcher/app
 loongarch-launcher/data
 loongarch-launcher/icalinguarc
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions

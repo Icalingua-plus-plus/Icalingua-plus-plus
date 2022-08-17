@@ -1,13 +1,42 @@
-import SendMessageParams from '../../types/SendMessageParams'
+import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
+import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
+import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
+import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
+import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
+import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
+import LoginForm from '@icalingua/types/LoginForm'
+import Message from '@icalingua/types/Message'
+import RoamingStamp from '@icalingua/types/RoamingStamp'
+import Room from '@icalingua/types/Room'
+import SearchableFriend from '@icalingua/types/SearchableFriend'
+import SendMessageParams from '@icalingua/types/SendMessageParams'
+import StorageProvider from '@icalingua/types/StorageProvider'
+import StructMessageCard from '@icalingua/types/StructMessageCard'
+import { app, dialog, Notification as ElectronNotification } from 'electron'
+import { Notification } from 'freedesktop-notifications'
+import fs from 'fs'
+import { base64decode } from 'nodejs-base64'
 import {
     Client,
     createClient,
+    FakeMessage,
+    FriendAddEventData,
+    FriendDecreaseEventData,
+    FriendIncreaseEventData,
     FriendInfo,
     FriendPokeEventData,
     FriendRecallEventData,
+    Gfs,
+    GroupAddEventData,
+    GroupAdminEventData,
+    GroupInfo,
+    GroupInviteEventData,
     GroupMessageEventData,
+    GroupMuteEventData,
     GroupPokeEventData,
     GroupRecallEventData,
+    GroupSettingEventData,
+    GroupTransferEventData,
     MemberBaseInfo,
     MemberDecreaseEventData,
     MemberIncreaseEventData,
@@ -16,62 +45,33 @@ import {
     MessageEventData,
     OfflineEventData,
     PrivateMessageEventData,
-    FriendAddEventData,
-    Ret,
-    GroupAddEventData,
-    GroupInviteEventData,
-    SyncReadedEventData,
-    FriendIncreaseEventData,
-    FriendDecreaseEventData,
-    SyncMessageEventData,
-    GroupMuteEventData,
-    GroupSettingEventData,
-    GroupAdminEventData,
-    GroupTransferEventData,
     QrcodeEventData,
-    GroupInfo,
-    Gfs,
-    FakeMessage,
+    Ret,
+    SyncMessageEventData,
+    SyncReadedEventData,
 } from 'oicq-icalingua-plus-plus'
-import StorageProvider from '../../types/StorageProvider'
-import LoginForm from '../../types/LoginForm'
-import getAvatarUrl from '../../utils/getAvatarUrl'
-import Message from '../../types/Message'
-import formatDate from '../../utils/formatDate'
-import createRoom from '../../utils/createRoom'
-import processMessage from '../utils/processMessage'
-import { getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow } from '../utils/windowManager'
-import ui from '../utils/ui'
-import { getConfig, saveConfigFile } from '../utils/configManager'
-import { app, BrowserWindow, dialog, ipcMain, NativeImage, Notification as ElectronNotification } from 'electron'
-import avatarCache from '../utils/avatarCache'
-import { download } from '../ipc/downloadManager'
-import fs from 'fs'
 import path from 'path'
-import getStaticPath from '../../utils/getStaticPath'
-import { createTray, updateTrayIcon } from '../utils/trayManager'
-import { updateAppMenu } from '../ipc/menuManager'
-import MongoStorageProvider from '../../storageProviders/MongoStorageProvider'
-import Room from '../../types/Room'
-import IgnoreChatInfo from '../../types/IgnoreChatInfo'
-import Adapter, { CookiesDomain } from '../../types/Adapter'
-import RedisStorageProvider from '../../storageProviders/RedisStorageProvider'
-import SQLStorageProvider from '../../storageProviders/SQLStorageProvider'
-import RoamingStamp from '../../types/RoamingStamp'
-import SearchableFriend from '../../types/SearchableFriend'
-import errorHandler from '../utils/errorHandler'
-import { getUin } from '../ipc/botAndStorage'
-import { Notification } from 'freedesktop-notifications'
-import isInlineReplySupported from '../utils/isInlineReplySupported'
-import getBuildInfo from '../utils/getBuildInfo'
-import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
-import socketIoProvider from '../providers/socketIoProvider'
-import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import createRoom from '../../utils/createRoom'
+import formatDate from '../../utils/formatDate'
+import getAvatarUrl from '../../utils/getAvatarUrl'
 import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
-import { base64decode } from 'nodejs-base64'
-import BilibiliMiniApp from '../../types/BilibiliMiniApp'
-import StructMessageCard from '../../types/StructMessageCard'
+import getStaticPath from '../../utils/getStaticPath'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import sleep from '../../utils/sleep'
+import { getUin } from '../ipc/botAndStorage'
+import { download } from '../ipc/downloadManager'
+import { updateAppMenu } from '../ipc/menuManager'
+import socketIoProvider from '../providers/socketIoProvider'
+import avatarCache from '../utils/avatarCache'
+import { getConfig, saveConfigFile } from '../utils/configManager'
+import errorHandler from '../utils/errorHandler'
+import getBuildInfo from '../utils/getBuildInfo'
+import isInlineReplySupported from '../utils/isInlineReplySupported'
+import processMessage from '../utils/processMessage'
+import { createTray, updateTrayIcon } from '../utils/trayManager'
+import ui from '../utils/ui'
+import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
+import { getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow } from '../utils/windowManager'
 
 let bot: Client
 let storage: StorageProvider
@@ -1041,7 +1041,12 @@ const adapter: OicqAdapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
-    async makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): Promise<any> {
+    async makeForward(
+        fakes: FakeMessage | Iterable<FakeMessage>,
+        dm?: boolean,
+        origin?: number,
+        target?: number,
+    ): Promise<any> {
         const xmlret = await bot.makeForwardMsg(fakes, dm, origin)
         if (xmlret.error) {
             errorHandler(xmlret.error, true)

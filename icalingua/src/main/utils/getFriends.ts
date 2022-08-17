@@ -1,8 +1,8 @@
-import { getCookies, getUin } from '../ipc/botAndStorage'
-import getGTk from '../../utils/getGTk'
-import GetFriendsRet from '../../types/GetFriendsRet'
+import GetFriendsRet from '@icalingua/types/GetFriendsRet'
+import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import axios from 'axios'
-import GroupOfFriend from '../../types/GroupOfFriend'
+import getGTk from '../../utils/getGTk'
+import { getCookies, getUin } from '../ipc/botAndStorage'
 
 export default async (): Promise<GroupOfFriend[]> => {
     const cookies = await getCookies('qzone.qq.com')
