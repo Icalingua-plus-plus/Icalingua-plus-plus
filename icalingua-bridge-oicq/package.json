@@ -9,7 +9,7 @@
     "scripts": {
         "start": "ts-node .",
         "compile": "tsc && cp -a --reflink=auto --remove-destination ./static ./build/",
-        "detach-start": "screen -U yarn start",
+        "detach-start": "screen -U pnpm start",
         "dev": "NODE_ENV=development ts-node ."
     },
     "devDependencies": {
