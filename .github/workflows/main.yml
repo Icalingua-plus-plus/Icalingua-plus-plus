@@ -851,36 +851,8 @@ jobs:
           path: icalingua-bridge-oicq/build/
           if-no-files-found: error
 
-  install-windows64:
-    runs-on: windows-2019
-    defaults:
-      run:
-        working-directory: icalingua
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: "16"
-
-      - name: Install pnpm
-        run: corepack enable
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-          flag: win64
-
-      - name: pnpm install
-        run: pnpm install
-
   build-windows64:
     runs-on: windows-2019
-    needs: install-windows64
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
@@ -909,13 +881,6 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-          flag: win64
-
       - name: pnpm install
         run: pnpm install
 
@@ -934,42 +899,8 @@ jobs:
           path: icalingua/build/Icalingua++*.exe
           if-no-files-found: error
 
-  install-windows-arm64:
-    runs-on: windows-2019
-    defaults:
-      run:
-        working-directory: icalingua
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: "16.13.0"
-
-      - name: Install pnpm
-        run: corepack enable
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-          flag: woa64
-
-      - name: Fetch node.lib and pnpm install
-        shell: cmd
-        run: |
-          set npm_config_arch=arm64
-          set node_version=16.13.0
-          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
-          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
-          pnpm install
-
   build-windows-arm64:
     runs-on: windows-2019
-    needs: install-windows-arm64
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
@@ -986,13 +917,6 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-          flag: woa64
 
       - id: git-ver
         run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
