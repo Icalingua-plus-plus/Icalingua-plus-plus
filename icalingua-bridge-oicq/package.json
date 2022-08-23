@@ -8,7 +8,8 @@
     "license": "AGPL-3.0",
     "scripts": {
         "start": "ts-node .",
-        "compile": "tsc && cp -a --reflink=auto --remove-destination ./static ./build/",
+        "compile": "tsc && cp -a --reflink=auto --remove-destination ./static ./build/ && pnpm copy-packages",
+        "copy-packages": "mkdir ./build/node_modules/ && mkdir ./build/node_modules/storage-providers && mkdir ./build/node_modules/types && cp -a ../packages/storageProviders/build/ ./build/node_modules/storage-providers && cp -a ../packages/types/build/ ./build/node_modules/types",
         "detach-start": "screen -U pnpm start",
         "dev": "NODE_ENV=development ts-node ."
     },
