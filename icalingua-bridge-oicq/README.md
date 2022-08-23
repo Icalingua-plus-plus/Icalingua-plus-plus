@@ -17,7 +17,9 @@
 
 2. 在项目根目录运行 `pnpm install` 安装必要依赖。
 
-3. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
+3. （可选）运行 `pnpm compile` 将 ts 转换为 js，不转换也可运行，但是转换后效率可能高点。
+
+4. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
 
     ![ECC 密钥生成页面](https://user-images.githubusercontent.com/18461360/130779855-1cdc26ad-0037-4bbf-930c-07e8cbc2f6c9.png)
 
@@ -25,21 +27,31 @@
 
     该密钥仅适用于本地环境及测试环境，暴露在公网中是非常危险的。
 
-4. 在 `index.ts` 所在目录 icalingua-bridge-oicq 中创建 `config.yaml` 内容如下：
+5. 进入目录 icalingua-bridge-oicq 中，若没有执行第二步，在 `index.ts` 所在目录创建 `config.yaml`，否则在 `build` 文件夹内创建 `config.yaml`，内容如下：
 
     ```yaml
     host: 0.0.0.0 # 监听地址。如果有反代工具，可以改成 localhost 或者 127.0.0.1
-    pubKey: 第三步生成的公钥
+    pubKey: # 第三步生成的公钥
     custom: false # 自定义插件功能，默认禁用
     port: 6789 # 如果需要运行多个实例，可以设置不同端口
     ```
 
-5. 执行 `pnpm start`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）。
-<!--
+6. 若没有执行第二步，执行 `pnpm start`，否则在 `build` 文件夹中执行 `node .`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 caddy）将端口绑定到域名（虚拟主机）上，或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）。
+
+### 安装预打包的 bridge
+
+1. 服务器需要安装 pnpm 和 `ffmpeg` 命令，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
+
+2. 从 [GitHub Actions](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions) 中下载所需版本的 `bridge-oicq` 并解压。
+
+3. 运行 `pnpm install` 安装必要依赖，同时自行补充缺失的依赖。
+
+4. 转到常规步骤第四步（操作与在 `build` 目录中相同）
+
 #### 已知问题
 
-如果使用 pm2 通过 `yarn start` 运行，pm2 将无法停止进程。建议使用 screen 或者编译成 js 之后再使用 pm2。
--->
+如果使用 pm2 通过 `yarn start` 运行，pm2 将无法停止进程。建议使用 screen （`pnpm detach-start`）或者编译成 js 之后再使用 pm2。
+
 ### 使用 Docker
 
 Todo
