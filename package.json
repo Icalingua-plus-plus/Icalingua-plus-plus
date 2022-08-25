@@ -8,8 +8,8 @@
   "dependencies": {
     "@icalingua/storage-providers": "workspace:*",
     "@icalingua/types": "workspace:*",
-    "icalingua": "workspace:*",
-    "icalingua-bridge-oicq": "workspace:*"
+    "icalingua": "workspace:2.6.7",
+    "icalingua-bridge-oicq": "workspace:2.3.1"
   },
   "packageManager": "pnpm@7.8.0"
 }
