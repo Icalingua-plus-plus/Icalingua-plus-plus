@@ -6,7 +6,7 @@ importers:
     specifiers:
       '@icalingua/storage-providers': workspace:*
       '@icalingua/types': workspace:*
-      icalingua: workspace:2.6.7
+      icalingua: workspace:2.6.8
       icalingua-bridge-oicq: workspace:2.3.1
     dependencies:
       '@icalingua/storage-providers': link:packages/storageProviders
@@ -96,7 +96,7 @@ importers:
       vue-html-loader: ^1.2.4
       vue-infinite-loading: ^2.4.5
       vue-loader: ^15.10.0
-      vue-router: ^3.6.3
+      vue-router: ^3.6.4
       vue-style-loader: ^4.1.3
       vue-template-compiler: ^2.7.10
       webpack: ^4.46.0
@@ -190,7 +190,7 @@ importers:
       vue-html-loader: 1.2.4
       vue-infinite-loading: 2.4.5_vue@2.7.10
       vue-loader: 15.10.0_no4mxcdpmjb33lsiby7myzseja
-      vue-router: 3.6.3
+      vue-router: 3.6.4
       vue-style-loader: 4.1.3
       vue-template-compiler: 2.7.10
       webpack: 4.46.0_webpack-cli@3.3.12
@@ -1521,7 +1521,7 @@ packages:
     resolution: {integrity: sha512-WKExI/eSGgGAkWAO+wMVdFObZV7hQen54UpD1kCCTN3tvlL3W1jL4+lPP/M7MwoP7Q4RHzKtO3JQ4HxYEcd+xQ==}
     dependencies:
       browserslist: 1.7.7
-      caniuse-db: 1.0.30001382
+      caniuse-db: 1.0.30001383
       normalize-range: 0.1.2
       num2fraction: 1.2.2
       postcss: 5.2.18
@@ -2697,7 +2697,7 @@ packages:
     deprecated: Browserslist 2 could fail on reading Browserslist >3.0 config used in other tools.
     hasBin: true
     dependencies:
-      caniuse-db: 1.0.30001382
+      caniuse-db: 1.0.30001383
       electron-to-chromium: 1.4.230
     dev: true
 
@@ -2705,7 +2705,7 @@ packages:
     resolution: {integrity: sha512-WHVocJYavUwVgVViC0ORikPHQquXwVh939TaelZ4WDqpWgTX/FsGhl/+P4qBUAGcRvtOgDgC+xftNWWp2RUTAQ==}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001382
+      caniuse-lite: 1.0.30001383
       electron-to-chromium: 1.4.230
     dev: true
 
@@ -2714,7 +2714,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001382
+      caniuse-lite: 1.0.30001383
       electron-to-chromium: 1.4.230
       node-releases: 2.0.6
       update-browserslist-db: 1.0.5_browserslist@4.21.3
@@ -2970,17 +2970,17 @@ packages:
     resolution: {integrity: sha512-SBTl70K0PkDUIebbkXrxWqZlHNs0wRgRD6QZ8guctShjbh63gEPfF+Wj0Yw+75f5Y8tSzqAI/NcisYv/cCah2Q==}
     dependencies:
       browserslist: 1.7.7
-      caniuse-db: 1.0.30001382
+      caniuse-db: 1.0.30001383
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
     dev: true
 
-  /caniuse-db/1.0.30001382:
-    resolution: {integrity: sha512-VhX4bbUVWrak/xe8Y6BWWD3TltpFUCmDSQWVi+CQgWqKXy3CIx+6Ev6oyjTPrR1HrGd5vuWsxzoopIYditgwsg==}
+  /caniuse-db/1.0.30001383:
+    resolution: {integrity: sha512-ETUWg6QHXdG7U41W3NEBZkYYh0XIrsw2sQJj/rjH0NrqOrnwFscWA8lQZP4G9lgbcinUb/kHZIlL4+YLPy2BLw==}
     dev: true
 
-  /caniuse-lite/1.0.30001382:
-    resolution: {integrity: sha512-2rtJwDmSZ716Pxm1wCtbPvHtbDWAreTPxXbkc5RkKglow3Ig/4GNGazDI9/BVnXbG/wnv6r3B5FEbkfg9OcTGg==}
+  /caniuse-lite/1.0.30001383:
+    resolution: {integrity: sha512-swMpEoTp5vDoGBZsYZX7L7nXHe6dsHxi9o6/LKf/f0LukVtnrxly5GVb/fWdCDTqi/yw6Km6tiJ0pmBacm0gbg==}
     dev: true
 
   /center-align/0.1.3:
@@ -8356,6 +8356,7 @@ packages:
   /plist/3.0.6:
     resolution: {integrity: sha512-WiIVYyrp8TD4w8yCvyeIr+lkmrGRd5u0VbRnU+tP/aRLxP/YadJUYOMZJ/6hIa3oUyVCsycXvtNRgd5XBJIbiA==}
     engines: {node: '>=6'}
+    requiresBuild: true
     dependencies:
       base64-js: 1.5.1
       xmlbuilder: 15.1.1
@@ -11014,8 +11015,8 @@ packages:
       vue-class-component: 7.2.6_vue@2.7.10
     dev: true
 
-  /vue-router/3.6.3:
-    resolution: {integrity: sha512-G21CKd8o/Mr3h8Xgi6zwg2ixJ5OxBG9G5w/b5McEFfLBqyQJc/7HDGsibf2FAl2enpZla+OJ3IlYipRusGN/4w==}
+  /vue-router/3.6.4:
+    resolution: {integrity: sha512-QSJs5aKKPiwBH++gelVbnq0ZFbUZXjlsjAklUM+F8dtd49YY72QsD1uGpBk/cqLK1bkZ8HiqPjS8NkhaGtpqHw==}
     dev: true
 
   /vue-style-loader/4.1.3:
