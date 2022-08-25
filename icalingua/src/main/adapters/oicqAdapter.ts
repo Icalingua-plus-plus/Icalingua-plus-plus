@@ -76,6 +76,7 @@ import { getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, sh
 let bot: Client
 let storage: StorageProvider
 let loginForm: LoginForm
+let loginError: boolean = false
 
 let currentLoadedMessagesCount = 0
 let loggedIn = false
@@ -815,6 +816,7 @@ const loginHandlers = {
     onErr(data) {
         console.log(data)
         sendToLoginWindow('error', data.message)
+        loginError = true
     },
     async onSucceed() {
         if (!loggedIn) {
@@ -1506,7 +1508,8 @@ const adapter: OicqAdapter = {
         }
     },
     createBot(form: LoginForm) {
-        if (!bot || form.username != bot.uin) {
+        if (!bot || form.username != bot.uin || loginError) {
+            loginError = false
             bot = createClient(Number(form.username), {
                 platform: Number(form.protocol),
                 data_dir: path.join(app.getPath('userData'), '/data'),
