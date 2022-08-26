@@ -1224,7 +1224,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 },
             }),
         )
-        if ((message.senderId === getUin() || (await isAdmin())) && !history)
+        if ((message.senderId === getUin() || (await isAdmin() && message.role !== 'owner')) && !history)
             menu.append(
                 new MenuItem({
                     label: '撤回',
