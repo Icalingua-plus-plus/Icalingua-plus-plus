@@ -7,7 +7,7 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 本项目希望为 Linux 打造一个会话前端框架，通过实现 Adapter 后端接口来适配各种聊天平台。目前已经拥有基于 [oicq](https://github.com/takayama-lily/oicq) 以及 Icalingua 自有协议的后端
 
 [![State-of-the-art Shitcode](https://img.shields.io/static/v1?label=State-of-the-art&message=Shitcode&color=7B5804)](https://github.com/trekhleb/state-of-the-art-shitcode)
-[![License](https://img.shields.io/aur/license/icalingua++)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/dev/LICENSE)
+[![License](https://img.shields.io/aur/license/icalingua++)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/development/LICENSE)
 [![discord](https://img.shields.io/static/v1?label=chat&message=discord&color=7289da&logo=discord)](https://discord.gg/gKnU7BARzv)
 [![Telegram](https://img.shields.io/static/v1?label=Discussion&message=Telegram&color=blue&logo=telegram)](https://t.me/Icalinguapp)
 
@@ -17,12 +17,12 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 
 #### 分支状态
 
-##### dev
+##### development
 
-[![Build/release](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions/workflows/main.yml/badge.svg?branch=dev)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions/workflows/main.yml)
+[![Build/release](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions/workflows/main.yml/badge.svg?branch=development)](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions/workflows/main.yml)
 
-[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Icalingua-plus-plus/Icalingua-plus-plus/oicq-icalingua-plus-plus/dev?filename=icalingua%2Fpackage.json)](https://github.com/takayama-lily/oicq)
-[![GitHub package.json dependency version (dev dep on branch)](https://img.shields.io/github/package-json/dependency-version/Icalingua-plus-plus/Icalingua-plus-plus/dev/electron/dev?logo=electron&filename=icalingua%2Fpackage.json)](https://electronjs.org)
+[![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/Icalingua-plus-plus/Icalingua-plus-plus/oicq-icalingua-plus-plus/development?filename=icalingua%2Fpackage.json)](https://github.com/takayama-lily/oicq)
+[![GitHub package.json dependency version (dev dep on branch)](https://img.shields.io/github/package-json/dependency-version/Icalingua-plus-plus/Icalingua-plus-plus/dev/electron/development?logo=electron&filename=icalingua%2Fpackage.json)](https://electronjs.org)
 
 ### 统计
 
