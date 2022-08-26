@@ -33,7 +33,6 @@ export default {
         return {
             selectedIndex: 0,
             search: '',
-            faceDir: path.join(getStaticPath(), 'face'),
             confirmed: false,
         }
     },
