@@ -1,0 +1,824 @@
+name: CI
+
+on:
+  - push
+  - workflow_dispatch
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: icalingua
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: Yarn install
+        run: yarn install
+
+  arch-artifacts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: pkgres
+          path: pkgres/*
+          if-no-files-found: error
+
+  build-dist-bundle:
+    runs-on: ubuntu-latest
+    needs: install
+    outputs:
+      version: ${{ steps.git-ver.outputs.version }}
+      arch-version: ${{ steps.version.outputs.arch-version }}
+      pkg-name: ${{ steps.version.outputs.pkg-name }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - id: git-ver
+        run: echo ::set-output name=version::$(git describe --tags | sed "s/v//")
+
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
+          GIT_VER: ${{ steps.git-ver.outputs.version }}
+
+      - name: build
+        run: yarn build:ci
+        working-directory: icalingua
+
+      - name: upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: icalingua/dist
+          if-no-files-found: error
+
+  # deb rpm appimage 之类的文件可以待会儿再构建，现在拿到 app.asar 之后就能构建 arch 包了
+  build-x86_64:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: icalingua/dist
+
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
+
+      - name: build native modules
+        run: yarn build:electron install-app-deps
+        working-directory: icalingua
+
+      - name: build
+        run: yarn build:electron --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
+
+      - uses: actions/upload-artifact@v2
+        name: upload app-x86_64.asar
+        with:
+          name: app-x86_64.asar
+          path: icalingua/build/linux-unpacked/resources/app.asar
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
+        name: upload x86_64
+        with:
+          name: x86_64-unpacked
+          path: icalingua/build/linux-unpacked
+          if-no-files-found: error
+
+  build-ia32:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: icalingua/dist
+
+      - name: Install gcc-multilib
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install gcc-multilib g++-multilib -y
+
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
+
+      - name: build native modules
+        run: yarn build:electron install-app-deps --arch ia32
+        working-directory: icalingua
+
+      - name: build
+        run: yarn build:electron --ia32 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
+
+      - uses: actions/upload-artifact@v2
+        name: upload app.asar
+        with:
+          name: app-ia32.asar
+          path: icalingua/build/linux-ia32-unpacked/resources/app.asar
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
+        name: upload unpacked
+        with:
+          name: ia32-unpacked
+          path: icalingua/build/linux-ia32-unpacked
+          if-no-files-found: error
+
+  build-arm64:
+    runs-on: ubuntu-latest
+    needs: build-dist-bundle
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: icalingua/dist
+
+      - name: apply patch
+        run: git apply .github/sqlite-build.patch
+
+      - uses: uraimo/run-on-arch-action@v2.1.1
+        name: build native modules using another arch
+        with:
+          arch: aarch64
+          distro: archarm_latest
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}/icalingua:/build"
+          install: |
+            pacman -Sy --noconfirm yarn python2 python base-devel
+          run: |
+            uname -a
+            chmod -R 777 /build
+            cd /build
+            useradd -m builduser
+            su builduser -c 'yarn build:electron install-app-deps'
+
+      - name: build
+        run: yarn build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+        working-directory: icalingua
+
+      - uses: actions/upload-artifact@v2
+        name: upload app.asar
+        with:
+          name: app-arm64.asar
+          path: icalingua/build/linux-arm64-unpacked/resources/app.asar
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v2
+        name: upload unpacked
+        with:
+          name: arm64-unpacked
+          path: icalingua/build/linux-arm64-unpacked
+          if-no-files-found: error
+
+  pack-archpkg-x86_64:
+    runs-on: ubuntu-latest
+    needs:
+      - arch-artifacts
+      - build-x86_64
+      - build-dist-bundle
+    steps:
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+
+      - name: print the PKGBUILD for x86_64
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/x86_64/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
+
+      - name: get binary for x86_64
+        uses: actions/download-artifact@v2
+        with:
+          name: app-x86_64.asar
+
+      - run: chmod -R 777 .
+
+      - name: makepkg for x86_64
+        uses: Clansty/archlinux-package-action@main
+        with:
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-x86_64.pkg.*)
+
+      - uses: actions/upload-artifact@v2
+        name: upload x86_64
+        with:
+          name: x86_64.pkg.tar.zst
+          path: ${{ steps.pkgname.outputs.pkgname }}
+          if-no-files-found: error
+
+      - name: 把包上传到 OneDrive
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        with:
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
+
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
+
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build@next
+        with:
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: x86_64
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
+
+  pack-archpkg-i686:
+    runs-on: ubuntu-latest
+    needs:
+      - build-dist-bundle
+      - arch-artifacts
+      - build-ia32
+    steps:
+
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+
+      - name: print the PKGBUILD for i686
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/i686/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
+
+      - name: get binary for i686
+        uses: actions/download-artifact@v2
+        with:
+          name: app-ia32.asar
+
+      - run: chmod -R 777 .
+
+      - name: makepkg for i686
+        uses: Clansty/archlinux-package-action@main
+        with:
+          carch: i686
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-i686.pkg.*)
+
+      - uses: actions/upload-artifact@v2
+        name: upload i686
+        with:
+          name: i686.pkg.tar.zst
+          path: ${{ steps.pkgname.outputs.pkgname }}
+          if-no-files-found: error
+
+      - name: 把包上传到 OneDrive
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        with:
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
+
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
+
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build@next
+        with:
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: i686
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
+
+  pack-archpkg-aarch64:
+    runs-on: ubuntu-latest
+    needs:
+      - build-dist-bundle
+      - arch-artifacts
+      - build-arm64
+    steps:
+      - name: get the assets
+        uses: actions/download-artifact@v2
+        with:
+          name: pkgres
+
+      - name: print the PKGBUILD for aarch64
+        shell: bash
+        run: sed 's/VERSION/${{ needs.build-dist-bundle.outputs.arch-version }}/;s/ARCH/aarch64/' ${{ needs.build-dist-bundle.outputs.pkg-name }}.PKGBUILD.template > PKGBUILD
+
+      - name: get binary for aarch64
+        uses: actions/download-artifact@v2
+        with:
+          name: app-arm64.asar
+
+
+      - run: chmod -R 777 .
+
+      - name: makepkg for aarch64
+        uses: Clansty/archlinux-package-action@main
+        with:
+          carch: aarch64
+          flags: '-cfd --noconfirm'
+          namcap: false
+          updpkgsums: true
+
+      - id: pkgname
+        run: echo ::set-output name=pkgname::$(ls *-aarch64.pkg.*)
+
+      - uses: actions/upload-artifact@v2
+        name: upload aarch64
+        with:
+          name: aarch64.pkg.tar.zst
+          path: ${{ steps.pkgname.outputs.pkgname }}
+          if-no-files-found: error
+
+      - name: 把包上传到 OneDrive
+        uses: wei/rclone@v1.1.1
+        env:
+          RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
+        with:
+          # 21cn:repo-ng
+          args: copy ${{ steps.pkgname.outputs.pkgname }} 21cn:repo-ng/
+
+      - name: 同步 docker 内外目录
+        # $PWD 在 docker 中被映射到 /github/workspace
+        run: |
+          sudo mkdir /github
+          sudo ln -s $PWD /github/workspace
+
+      - name: 提交元信息到 Azure Blob 存储
+        uses: Clansty/arch-build@next
+        with:
+          azure-blob-storage-connection-string: ${{ secrets.AZURE_BLOB_STORAGE_CONNECTION_STRING }}
+          azure-blob-storage-container: repo
+          arch: aarch64
+          package-files: /github/workspace/${{ steps.pkgname.outputs.pkgname }}
+
+  pack-snap-x86_64:
+    runs-on: ubuntu-latest
+    needs:
+      - build-x86_64
+      - build-dist-bundle
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+          sudo snap install lxd
+          sudo usermod --append --groups lxd $USER
+          sudo chown root:root /
+          sudo /snap/bin/lxd waitready
+          sudo /snap/bin/lxd init --auto
+          newgrp
+
+      - name: pack
+        id: pack
+        run: |
+          sg lxd -c 'yarn build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
+          echo "::set-output name=snap::$(readlink -f $(ls build/*.snap))"
+        env:
+          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+
+      - uses: actions/upload-artifact@v2
+        name: upload snap
+        with:
+          name: x86_64.snap
+          path: icalingua/build/*.snap
+          if-no-files-found: error
+
+      - uses: snapcore/action-publish@v1
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          store_login: ${{ secrets.SNAP_TOKEN }}
+          snap: ${{ steps.pack.outputs.snap }}
+          release: edge
+
+      - uses: snapcore/action-publish@v1
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          store_login: ${{ secrets.SNAP_TOKEN }}
+          snap: ${{ steps.pack.outputs.snap }}
+          release: stable
+
+  pack-otherpkg-x86_64:
+    runs-on: ubuntu-latest
+    needs:
+      - build-x86_64
+      - build-dist-bundle
+    strategy:
+      matrix:
+        package:
+          - deb
+          - rpm
+          - AppImage
+          - tar.xz
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: pack
+        run: yarn build:electron --pd unpacked -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: x86_64.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  pack-otherpkg-ia32:
+    runs-on: ubuntu-latest
+    needs:
+      - build-ia32
+      - build-dist-bundle
+    strategy:
+      matrix:
+        package:
+          - deb
+          - rpm
+          - AppImage
+          - tar.xz
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: pack
+        run: yarn build:electron --pd unpacked --ia32 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: ia32.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  pack-otherpkg-arm64:
+    runs-on: ubuntu-latest
+    needs:
+      - build-arm64
+      - build-dist-bundle
+    strategy:
+      matrix:
+        package:
+          - deb
+          - rpm
+          - AppImage
+          - tar.xz
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - uses: Clansty/gha-yarn-node-cache@master
+        env:
+          WORKING_DIR: icalingua
+
+      - name: get built files
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: pack
+        run: yarn build:electron --pd unpacked --arm64 -l ${{ matrix.package }} -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
+
+      - uses: actions/upload-artifact@v2
+        name: upload ${{ matrix.package }}
+        with:
+          name: arm64.${{ matrix.package }}
+          path: icalingua/build/*.${{ matrix.package }}
+          if-no-files-found: error
+
+  cleanup:
+    runs-on: ubuntu-latest
+    needs:
+      - pack-otherpkg-arm64
+      - pack-otherpkg-ia32
+      - pack-otherpkg-x86_64
+      - build-x86_64
+      - build-ia32
+      - build-arm64
+      - pack-archpkg-x86_64
+      - pack-archpkg-i686
+      - pack-archpkg-aarch64
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: dist
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: x86_64-unpacked
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: ia32-unpacked
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: arm64-unpacked
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: pkgres
+
+  pack-bridge-js:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: icalingua-bridge-oicq
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.3.0
+
+      - name: Yarn install
+        run: yarn install
+
+      - name: Compile
+        run: yarn compile
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: bridge-oicq
+          path: icalingua-bridge-oicq/build/
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs:
+      - pack-archpkg-x86_64
+      - pack-archpkg-i686
+      - pack-archpkg-aarch64
+      - pack-snap-x86_64
+      - pack-otherpkg-x86_64
+      - pack-otherpkg-ia32
+      - pack-otherpkg-arm64
+      - build-dist-bundle
+    steps:
+      - name: Make dir
+        run: mkdir release
+
+      - name: get app-x86_64.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-x86_64.asar
+
+      - name: rename app-x86_64.asar
+        run: mv app.asar release/app-x86_64.asar
+
+
+      - name: get app-ia32.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-ia32.asar
+
+      - name: rename app-ia32.asar
+        run: mv app.asar release/app-ia32.asar
+
+
+      - name: get app-arm64.asar
+        uses: actions/download-artifact@v2
+        with:
+          name: app-arm64.asar
+
+      - name: rename app-arm64.asar
+        run: mv app.asar release/app-arm64.asar
+
+
+      - name: get aarch64.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: aarch64.pkg.tar.zst
+          path: release
+
+      - name: get arm64.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.AppImage
+          path: release
+
+      - name: get arm64.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.deb
+          path: release
+
+      - name: get arm64.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.rpm
+          path: release
+
+      - name: get arm64.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: arm64.tar.xz
+          path: release
+
+      - name: get i686.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: i686.pkg.tar.zst
+          path: release
+
+      - name: get ia32.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.AppImage
+          path: release
+
+      - name: get ia32.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.tar.xz
+          path: release
+
+      - name: get ia32.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.deb
+          path: release
+
+      - name: get ia32.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: ia32.rpm
+          path: release
+
+      - name: get x86_64.AppImage
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.AppImage
+          path: release
+
+      - name: get x86_64.snap
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.snap
+          path: release
+
+      - name: get x86_64.tar.xz
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.tar.xz
+          path: release
+
+      - name: get x86_64.deb
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.deb
+          path: release
+
+      - name: get x86_64.pkg.tar.zst
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.pkg.tar.zst
+          path: release
+
+      - name: get x86_64.rpm
+        uses: actions/download-artifact@v2
+        with:
+          name: x86_64.rpm
+          path: release
+
+
+      - name: Release
+        uses: fnkr/github-action-ghr@ghr-options
+        env:
+          GHR_PATH: release/
+          GITHUB_TOKEN: ${{ github.token }}
+          GHR_REPLACE: true
+          GHR_TITLE: ${{ needs.build-dist-bundle.outputs.version }}
+          GHR_DRAFT: true

@@ -1,0 +1,1 @@
+../../icalingua/src/main/handlers/registerFileMgrHandler.ts
