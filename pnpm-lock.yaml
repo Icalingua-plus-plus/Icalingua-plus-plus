@@ -6,8 +6,8 @@ importers:
     specifiers:
       '@icalingua/storage-providers': workspace:*
       '@icalingua/types': workspace:*
-      icalingua: workspace:2.6.8
-      icalingua-bridge-oicq: workspace:2.3.1
+      icalingua: workspace:*
+      icalingua-bridge-oicq: workspace:*
     dependencies:
       '@icalingua/storage-providers': link:packages/storageProviders
       '@icalingua/types': link:packages/types
