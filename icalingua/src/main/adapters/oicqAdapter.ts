@@ -148,7 +148,7 @@ const eventHandlers = {
         //begin process msg
         const lastMessage = {
             content: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
             username: senderName,
         }
         ////process message////
@@ -294,7 +294,7 @@ const eventHandlers = {
                 await processMessage(message, _message, {}, user_id)
                 custom_room.lastMessage = {
                     content: _message.content,
-                    timestamp: formatDate('hh:mm:ss'),
+                    timestamp: formatDate('hh:mm'),
                 }
                 if (user_id === bot.uin) return data
                 _message._id = data.data.message_id
@@ -368,7 +368,7 @@ const eventHandlers = {
             room.lastMessage = {
                 content: msg,
                 username: null,
-                timestamp: formatDate('hh:mm:ss'),
+                timestamp: formatDate('hh:mm'),
             }
             const message: Message = {
                 username: '',
@@ -407,7 +407,7 @@ const eventHandlers = {
             room.lastMessage = {
                 content: msg,
                 username: null,
-                timestamp: formatDate('hh:mm:ss'),
+                timestamp: formatDate('hh:mm'),
             }
             const message: Message = {
                 username: '',
@@ -459,7 +459,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -509,7 +509,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -561,7 +561,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -606,7 +606,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -648,7 +648,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -691,7 +691,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -752,7 +752,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -785,7 +785,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm:ss', now),
+            timestamp: formatDate('hh:mm', now),
         }
         ui.addMessage(roomId, message)
         ui.updateRoom(room)
@@ -1396,7 +1396,7 @@ const adapter: OicqAdapter = {
             console.log(data)
             room.lastMessage = {
                 content,
-                timestamp: formatDate('hh:mm:ss'),
+                timestamp: formatDate('hh:mm'),
             }
             if (file || b64img || imgpath) room.lastMessage.content += '[Image]'
             let appurl
@@ -1580,7 +1580,19 @@ const adapter: OicqAdapter = {
         const history = await bot.getForwardMsg(resId)
         if (history.error) {
             console.log(history.error)
-            return
+            const res: [Message] = [
+                {
+                    senderId: 0,
+                    username: '错误',
+                    content: history.error.message,
+                    timestamp: formatDate('hh:mm:ss'),
+                    date: formatDate('yyyy/MM/dd'),
+                    _id: 0,
+                    time: 0,
+                    files: [],
+                },
+            ]
+            return res
         }
         const messages = []
         for (let i = 0; i < history.data.length; i++) {
