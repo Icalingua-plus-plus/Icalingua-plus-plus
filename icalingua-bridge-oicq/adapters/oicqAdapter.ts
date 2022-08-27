@@ -109,7 +109,7 @@ const eventHandlers = {
             senderId: senderId,
             username: senderName,
             content: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
             role: (data.sender as MemberBaseInfo).role,
@@ -144,7 +144,7 @@ const eventHandlers = {
         //begin process msg
         const lastMessage = {
             content: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             username: senderName,
         }
         ////process message////
@@ -203,7 +203,7 @@ const eventHandlers = {
                     senderId: bot.uin,
                     username: 'You',
                     content: '',
-                    timestamp: formatDate('hh:mm'),
+                    timestamp: formatDate('hh:mm:ss'),
                     date: formatDate('yyyy/MM/dd'),
                     files: [],
                 }
@@ -211,7 +211,7 @@ const eventHandlers = {
                 await processMessage(message, _message, {}, user_id)
                 custom_room.lastMessage = {
                     content: _message.content,
-                    timestamp: formatDate('hh:mm'),
+                    timestamp: formatDate('hh:mm:ss'),
                 }
                 if (user_id === bot.uin) return data
                 _message._id = data.data.message_id
@@ -281,13 +281,13 @@ const eventHandlers = {
             room.lastMessage = {
                 content: msg,
                 username: null,
-                timestamp: formatDate('hh:mm'),
+                timestamp: formatDate('hh:mm:ss'),
             }
             const message: Message = {
                 username: '',
                 content: msg,
                 senderId: data.operator_id,
-                timestamp: formatDate('hh:mm'),
+                timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
                 system: true,
@@ -319,13 +319,13 @@ const eventHandlers = {
             room.lastMessage = {
                 content: msg,
                 username: null,
-                timestamp: formatDate('hh:mm'),
+                timestamp: formatDate('hh:mm:ss'),
             }
             const message: Message = {
                 username: '',
                 content: msg,
                 senderId: data.operator_id,
-                timestamp: formatDate('hh:mm'),
+                timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
                 system: true,
@@ -350,7 +350,7 @@ const eventHandlers = {
             username: data.nickname,
             senderId,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -370,7 +370,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -399,7 +399,7 @@ const eventHandlers = {
                 : data.user_id.toString(),
             senderId: data.operator_id,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -419,7 +419,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -451,7 +451,7 @@ const eventHandlers = {
             username: operator.card || operator.nickname,
             senderId: data.operator_id,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -471,7 +471,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm:ss', new Date(data.time)),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -496,7 +496,7 @@ const eventHandlers = {
             username: '群系统信息',
             senderId: 10000,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -516,7 +516,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm:ss', new Date(data.time)),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -538,7 +538,7 @@ const eventHandlers = {
             username: '群系统信息',
             senderId: 10000,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -558,7 +558,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm:ss', new Date(data.time)),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -581,7 +581,7 @@ const eventHandlers = {
             username: operator.card || operator.nickname,
             senderId: data.operator_id,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -601,7 +601,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', new Date(data.time)),
+            timestamp: formatDate('hh:mm:ss', new Date(data.time)),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -629,7 +629,7 @@ const eventHandlers = {
             username: data.nickname,
             senderId,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -644,7 +644,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -662,7 +662,7 @@ const eventHandlers = {
             username: data.nickname,
             senderId,
             time: data.time * 1000,
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             system: true,
             files: [],
@@ -677,7 +677,7 @@ const eventHandlers = {
         room.lastMessage = {
             content: message.content,
             username: '',
-            timestamp: formatDate('hh:mm', now),
+            timestamp: formatDate('hh:mm:ss', now),
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -833,7 +833,7 @@ const adapter = {
                 senderId: data.sender.user_id,
                 username: data.sender.nickname,
                 content: '',
-                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: id,
                 time: data.time * 1000,
@@ -978,7 +978,7 @@ const adapter = {
             senderId: bot.uin,
             username: 'You',
             content,
-            timestamp: formatDate('hh:mm'),
+            timestamp: formatDate('hh:mm:ss'),
             date: formatDate('yyyy/MM/dd'),
             files: [],
         }
@@ -1192,7 +1192,7 @@ const adapter = {
         if (roomId > 0 && roomId !== bot.uin) {
             room.lastMessage = {
                 content,
-                timestamp: formatDate('hh:mm'),
+                timestamp: formatDate('hh:mm:ss'),
             }
             if (file || b64img || imgpath) room.lastMessage.content += '[Image]'
             let appurl
@@ -1376,7 +1376,7 @@ const adapter = {
                     senderId: 0,
                     username: '错误',
                     content: history.error.message,
-                    timestamp: formatDate('hh:mm'),
+                    timestamp: formatDate('hh:mm:ss'),
                     date: formatDate('yyyy/MM/dd'),
                     _id: 0,
                     time: 0,
@@ -1393,7 +1393,7 @@ const adapter = {
                 senderId: data.user_id,
                 username: data.nickname,
                 content: '',
-                timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                 _id: data.group_id || -1,
                 time: data.time * 1000,
@@ -1486,7 +1486,7 @@ const adapter = {
                             : (<GroupMessageEventData>data).sender.card || data.sender.nickname
                         : (<PrivateMessageEventData>data).sender.remark || data.sender.nickname,
                     content: '',
-                    timestamp: formatDate('hh:mm', new Date(data.time * 1000)),
+                    timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                     date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                     _id: data.message_id,
                     time: data.time * 1000,
