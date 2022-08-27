@@ -186,7 +186,7 @@
         "knex": "^0.95.15",
         "mongodb": "^3.7.3",
         "mysql": "^2.18.1",
-        "oicq-icalingua-plus-plus": "1.22.6",
+        "oicq-icalingua-plus-plus": "^1.22.8",
         "pg": "^8.8.0",
         "pg-query-stream": "^4.2.4",
         "silk-sdk": "^0.2.2",

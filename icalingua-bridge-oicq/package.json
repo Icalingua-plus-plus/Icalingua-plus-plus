@@ -21,7 +21,7 @@
         "@types/node": "^16.11.56",
         "prettier": "^2.7.1",
         "ts-node": "^10.9.1",
-        "typescript": "^4.7.4"
+        "typescript": "^4.8.2"
     },
     "dependencies": {
         "axios": "^0.21.4",
@@ -35,7 +35,7 @@
         "mysql": "^2.18.1",
         "noble-ed25519": "1.2.5",
         "nodejs-base64": "^2.0.0",
-        "oicq-icalingua-plus-plus": "1.22.6",
+        "oicq-icalingua-plus-plus": "^1.22.8",
         "pg": "^8.8.0",
         "pg-query-stream": "^4.2.4",
         "silk-sdk": "^0.2.2",
