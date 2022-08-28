@@ -17,8 +17,9 @@ import upg6to7 from "./SQLUpgradeScript/6to7";
 import upg7to8 from "./SQLUpgradeScript/7to8";
 import upg8to9 from "./SQLUpgradeScript/8to9";
 import upg9to10 from "./SQLUpgradeScript/9to10";
+import upg10to11 from "./SQLUpgradeScript/10to11";
 
-const dbVersionLatest = 10;
+const dbVersionLatest = 11;
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -195,6 +196,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     await upg8to9(this.db);
                 case 9:
                     await upg9to10(this.db);
+                case 10:
+                    await upg10to11(this.db);
                 default:
                     break;
             }
@@ -284,6 +287,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string("anonymousId").nullable();
                     table.string("anonymousflag").nullable();
                     table.boolean("hide").nullable();
+                    table.index(["roomId", "time"]);
                 });
             }
 
