@@ -1745,8 +1745,9 @@ const adapter: OicqAdapter = {
                         newMsgs.push(message)
                         console.log(retData)
                         if (first_loop) {
-                            lastMessage = Object.assign(retData.message, retData.lastMessage, {
+                            lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
                                 username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
+                                timestamp: formatDate('hh:mm', new Date(retData.message.time)),
                             })
                             lastMessageTime = retData.message.time
                         }
