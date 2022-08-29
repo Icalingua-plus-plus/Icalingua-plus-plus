@@ -91,6 +91,7 @@
                             :room-users="roomUsers"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
+                            :forward-res-id="forwardResId"
                             @open-forward="$emit('open-forward', $event)"
                         />
 
@@ -175,6 +176,7 @@
                             :text-formatting="textFormatting"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
+                            :forward-res-id="forwardResId"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">
@@ -242,6 +244,7 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
+        forwardResId: { type: String, required: false },
     },
 
     data() {

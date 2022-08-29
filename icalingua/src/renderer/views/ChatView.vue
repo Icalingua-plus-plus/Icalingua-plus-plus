@@ -541,7 +541,9 @@ Chromium ${process.versions.chrome}` : ''
                 ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
             this.$refs.room.focusTextarea()
         },
-        openForward: ipc.openForward,
+        openForward(e) {
+            ipc.openForward(e.resId, e.fileName)
+        },
         stopFetchingHistory() {
             ipc.stopFetchMessage()
         },

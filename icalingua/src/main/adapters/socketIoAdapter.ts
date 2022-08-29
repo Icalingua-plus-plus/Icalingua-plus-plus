@@ -448,9 +448,9 @@ const adapter: Adapter = {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)
         })
     },
-    getForwardMsg(resId: string) {
+    getForwardMsg(resId: string, fileName?: string) {
         return new Promise((resolve, reject) => {
-            socket.emit('getForwardMsg', resId, resolve)
+            socket.emit('getForwardMsg', resId, resolve, fileName)
         })
     },
     getGroups() {

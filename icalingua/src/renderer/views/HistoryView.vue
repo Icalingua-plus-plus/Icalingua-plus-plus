@@ -28,6 +28,7 @@
         :text-formatting="true"
         :style="[cssVars]"
         :linkify="linkify"
+        :forward-res-id="resId"
         @download-image="downloadImage"
         @open-file="openImage"
         @open-forward="openForward"
@@ -55,6 +56,7 @@ export default {
             },
             messages: [],
             linkify: true,
+            resId: '',
         }
     },
     async created() {
@@ -63,6 +65,10 @@ export default {
         ipcRenderer.on('loadMessages', (event, args) => {
             console.log(args)
             this.messages = [...args]
+        })
+        ipcRenderer.on('setResId', (event, args) => {
+            console.log(args)
+            this.resId = args
         })
     },
     components: {
@@ -74,7 +80,9 @@ export default {
         },
     },
     methods: {
-        openForward: ipc.openForward,
+        openForward(e) {
+            ipc.openForward(e.resId, e.fileName)
+        },
         openImage: ipc.downloadFileByMessageData,
         downloadImage: ipc.downloadImage,
     },

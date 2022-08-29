@@ -1,7 +1,8 @@
 <template>
     <div class="settings">
-        <p>输入 Res ID</p>
-        <el-input v-model="res" />
+        <p>输入 Res ID 和 m_fileName</p>
+        <el-input placeholder="Res ID" v-model="res" />
+        <el-input placeholder="m_fileName" v-model="m_fileName" />
         <div class="dialog-footer">
             <el-button type="primary" @click="view">打开</el-button>
         </div>
@@ -16,6 +17,7 @@ export default {
     data() {
         return {
             res: '',
+            m_fileName: '',
         }
     },
     created() {
@@ -23,7 +25,7 @@ export default {
     },
     methods: {
         view() {
-            ipc.openForward(this.res)
+            ipc.openForward(this.res, this.m_fileName)
             window.close()
         },
     },
