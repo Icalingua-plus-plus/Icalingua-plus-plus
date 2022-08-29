@@ -4,7 +4,7 @@
             <template v-for="(message, i) in linkifiedMessage">
                 <component
                     :is="message.url ? 'a' : 'span'"
-                    v-if="!message.face && !message.forward"
+                    v-if="!message.face && !message.forward && !message.nestedforward"
                     :key="i"
                     :class="{
                         'vac-text-ellipsis': singleLine,
@@ -55,6 +55,9 @@
                 <a v-if="message.forward" style="cursor: pointer" @click="openForward(message)">
                     View Forwarded Messages
                 </a>
+                <a v-if="message.nestedforward" style="cursor: pointer" @click="openNested(message)">
+                    View Forwarded Messages
+                </a>
             </template>
         </div>
         <div v-else class="vac-message-content">
@@ -83,6 +86,7 @@ export default {
         reply: { type: Boolean, default: false },
         textFormatting: { type: Boolean, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        forwardResId: { type: String, required: false },
     },
 
     data() {
@@ -107,6 +111,7 @@ export default {
                 m.tag = this.checkType(m, 'tag')
                 m.face = this.checkType(m, 'face')
                 m.forward = this.checkType(m, 'forward')
+                m.nestedforward = this.checkType(m, 'nestedforward')
                 m.breakLine = this.checkType(m, 'breakLine')
                 m.spoiler = this.checkType(m, 'spoiler')
                 m.image = this.checkImageType(m)
@@ -160,7 +165,12 @@ export default {
         openForward(message) {
             if (this.showForwardPanel) return
             if (!message.forward) return
-            this.$emit('open-forward', message.value)
+            this.$emit('open-forward', { resId: message.value })
+        },
+        openNested(message) {
+            if (this.showForwardPanel) return
+            if (!message.nestedforward) return
+            this.$emit('open-forward', { resId: this.forwardResId, fileName: message.value })
         },
         preZeroFill(num, size) {
             if (num >= Math.pow(10, size)) {

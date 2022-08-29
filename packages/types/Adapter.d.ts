@@ -65,7 +65,7 @@ export default interface Adapter {
 
     addRoom(room: Room): any
 
-    getForwardMsg(resId: string): Promise<Message[]>
+    getForwardMsg(resId: string, fileName?: string): Promise<Message[]>
 
     makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): any
 

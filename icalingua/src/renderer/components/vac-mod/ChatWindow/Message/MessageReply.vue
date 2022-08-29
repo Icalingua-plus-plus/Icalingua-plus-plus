@@ -44,6 +44,7 @@
                 :reply="true"
                 :linkify="linkify"
                 :showForwardPanel="showForwardPanel"
+                :forward-res-id="forwardResId"
                 @open-forward="$emit('open-forward', $event)"
             />
         </div>
@@ -65,6 +66,7 @@ export default {
         message: { type: Object, required: true },
         roomUsers: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        forwardResId: { type: String, required: false },
     },
 
     computed: {

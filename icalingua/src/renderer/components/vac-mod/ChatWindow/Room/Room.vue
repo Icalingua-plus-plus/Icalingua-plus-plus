@@ -79,6 +79,7 @@
                                 :showForwardPanel="showForwardPanel"
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
+                                :forward-res-id="forwardResId"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
@@ -374,6 +375,7 @@ export default {
         linkify: { type: Boolean, default: true },
         account: { type: Number, required: true },
         username: { type: String, required: true },
+        forwardResId: { type: String, required: false },
     },
     data() {
         return {

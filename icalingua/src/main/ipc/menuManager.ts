@@ -547,7 +547,7 @@ export const updateAppMenu = async () => {
                 label: '查看合并转发消息',
                 async click() {
                     const win = newIcalinguaWindow({
-                        height: 190,
+                        height: 230,
                         width: 600,
                         autoHideMenuBar: true,
                         webPreferences: {

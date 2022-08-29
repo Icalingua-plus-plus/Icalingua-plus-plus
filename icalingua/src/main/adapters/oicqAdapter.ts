@@ -1576,8 +1576,8 @@ const adapter: OicqAdapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    async getForwardMsg(resId: string): Promise<Message[]> {
-        const history = await bot.getForwardMsg(resId)
+    async getForwardMsg(resId: string, fileName?: string): Promise<Message[]> {
+        const history = await bot.getForwardMsg(resId, fileName)
         if (history.error) {
             console.log(history.error)
             const res: [Message] = [
