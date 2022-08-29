@@ -163,3 +163,4 @@ export const destroyWindow = () => {
     if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
 }
+export const getLoginWindow = () => loginWindow
