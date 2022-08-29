@@ -196,10 +196,15 @@ const processMessage = async (
                     lastMessage.content += '[Forward multiple messages]'
                     message.content += '[Forward multiple messages]'
                     const resIdRegex = /m_resid="([\w+=/]+)"/
+                    const fileNameRegex = /m_fileName="([\w+-=/]+)"/
                     if (resIdRegex.test(m.data.data)) {
                         const resId = m.data.data.match(resIdRegex)[1]
                         console.log(resId)
                         message.content = `[Forward: ${resId}]`
+                    } else if (fileNameRegex.test(m.data.data)){
+                        const fileName = m.data.data.match(fileNameRegex)[1]
+                        console.log(fileName)
+                        message.content = `[NestedForward: ${fileName}]`
                     }
                 } else if (appurl) {
                     appurl = appurl.replace(/&amp;/g, '&')

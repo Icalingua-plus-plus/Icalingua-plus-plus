@@ -33,6 +33,11 @@ const pseudoMarkdown = {
         allowed_chars: '.',
         type: 'forward',
     },
+    '[NestedForward: ': {
+        end: ']',
+        allowed_chars: '.',
+        type: 'nestedforward',
+    },
     '||': {
         end: '\\|\\|',
         allowed_chars: '.',

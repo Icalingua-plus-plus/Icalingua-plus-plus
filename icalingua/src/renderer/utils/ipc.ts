@@ -118,8 +118,8 @@ const ipc = {
     addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)
     },
-    openForward(resId: string) {
-        ipcRenderer.send('openForward', resId)
+    openForward(resId: string, fileName?: string) {
+        ipcRenderer.send('openForward', resId, fileName)
     },
     makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number) {
         ipcRenderer.send('makeForward', fakes, dm, origin, target)
