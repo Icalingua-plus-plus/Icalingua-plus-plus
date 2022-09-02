@@ -1454,23 +1454,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     menu.append(
         new MenuItem({
             label: `查看头像`,
-            click: () => {
-                if (message.mirai && message.mirai.eqq.avatarMd5) {
-                    openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
-                } else if (message.mirai && message.mirai.eqq.avatarUrl) {
-                    const QCLOUD_AVATAR_REGEX =
-                        /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
-                    if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl)) openImage(message.mirai.eqq.avatarUrl)
-                } else {
-                    openImage(getAvatarUrl(message.senderId))
-                }
-            },
+            click: () => openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`)
+            ,
         }),
     )
     menu.append(
         new MenuItem({
             label: `下载头像`,
-            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=640`),
+            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`),
         }),
     )
     menu.append(
