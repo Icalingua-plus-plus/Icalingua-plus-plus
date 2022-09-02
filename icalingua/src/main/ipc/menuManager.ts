@@ -1454,8 +1454,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
     menu.append(
         new MenuItem({
             label: `查看头像`,
-            click: () => openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`)
-            ,
+            click: () => openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`),
         }),
     )
     menu.append(
