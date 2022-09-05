@@ -16,6 +16,7 @@ type AllConfig = {
     account: LoginForm
     priority: 1 | 2 | 3 | 4 | 5
     aria2: Aria2Config
+    showAppMenu: boolean
     darkTaskIcon: boolean
     winSize: WinSize
     socketIo: string
@@ -86,6 +87,7 @@ const defaultConfig: AllConfig = {
     account: emptyLoginForm,
     priority: 3,
     aria2: defaultAria2Config,
+    showAppMenu: true,
     darkTaskIcon: false,
     winSize: defaultWinSize,
     socketIo: '',
