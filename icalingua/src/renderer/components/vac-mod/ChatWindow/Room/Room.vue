@@ -289,8 +289,8 @@
                         class="vac-svg-button"
                         :class="{ 'vac-send-disabled': isMessageEmpty }"
                         @click.left="sendMessage"
-                        @click.middle="sendStructMessage('xml')"
-                        @click.right="sendStructMessage('json')"
+                        @click.middle="sendStructMessage"
+                        @click.right="sendStructMessage"
                     >
                         <slot name="send-icon">
                             <svg-icon name="send" :param="isMessageEmpty ? 'disabled' : ''" />
@@ -806,13 +806,21 @@ export default {
 
             this.resetMessage(true)
         },
-        async sendStructMessage(msgType) {
+        async sendStructMessage(e) {
+            const isJSON = (str) => {
+                try {
+                    if (typeof JSON.parse(str) == "object") return true
+                } catch (e) { }
+                return false
+            }
             const debugmode = await ipc.getDebugSetting()
             let message = this.message.trim()
 
             if (!this.file && !message) return
 
             if (!debugmode && message.match(/serviceID[\s]*?=[\s]*?('|")(13|60|76|83)('|")/g)) return
+
+            const msgType = isJSON(message) ? 'json' : 'xml'
 
             this.$emit('send-message', {
                 content: message,
