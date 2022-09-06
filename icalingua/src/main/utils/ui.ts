@@ -1,3 +1,4 @@
+import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
 import OnlineData from '@icalingua/types/OnlineData'
 import Room from '@icalingua/types/Room'
@@ -24,6 +25,9 @@ export default {
     },
     confirmDeleteMessage(roomId: number, messageId: string) {
         sendToMainWindow('confirmDeleteMessage', { roomId, messageId })
+    },
+    confirmIgnoreChat(data: IgnoreChatInfo) {
+        sendToMainWindow('confirmIgnoreChat', data)
     },
     confirmDeleteSticker(filename: string) {
         sendToMainWindow('confirmDeleteSticker', filename)
