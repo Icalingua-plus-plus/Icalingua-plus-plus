@@ -277,63 +277,47 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         updateTrayIcon()
         if (getConfig().custom) {
-            let custom_bot = Object.assign({}, bot)
-            const sendPrivateMsg = async (user_id: number, message, auto_escape?: boolean) => {
-                let custom_room = await storage.getRoom(user_id)
-                if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
-                const _message: Message = {
-                    _id: '',
-                    senderId: bot.uin,
-                    username: 'You',
-                    content: '',
-                    timestamp: formatDate('hh:mm:ss'),
-                    date: formatDate('yyyy/MM/dd'),
-                    files: [],
+            if (!bot['sendPrivateMsg']) {
+                bot['sendPrivateMsg'] = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
+                    let custom_room = await storage.getRoom(user_id)
+                    if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
+                    const _message: Message = {
+                        _id: '',
+                        senderId: bot.uin,
+                        username: 'You',
+                        content: '',
+                        timestamp: formatDate('hh:mm:ss'),
+                        date: formatDate('yyyy/MM/dd'),
+                        files: [],
+                    }
+                    let data = await bot._sendPrivateMsg(user_id, message, auto_escape)
+                    await processMessage(message, _message, {}, user_id)
+                    custom_room.lastMessage = {
+                        content: _message.content,
+                        timestamp: formatDate('hh:mm'),
+                    }
+                    if (user_id === bot.uin) return data
+                    _message._id = data.data.message_id
+                    custom_room.utime = new Date().getTime()
+                    _message.time = new Date().getTime()
+                    ui.updateRoom(custom_room)
+                    ui.addMessage(custom_room.roomId, _message)
+                    storage.addMessage(user_id, _message)
+                    storage.updateRoom(custom_room.roomId, {
+                        utime: custom_room.utime,
+                        lastMessage: custom_room.lastMessage,
+                    })
+                    return data
                 }
-                let data = await bot.sendPrivateMsg(user_id, message, auto_escape)
-                await processMessage(message, _message, {}, user_id)
-                custom_room.lastMessage = {
-                    content: _message.content,
-                    timestamp: formatDate('hh:mm'),
-                }
-                if (user_id === bot.uin) return data
-                _message._id = data.data.message_id
-                custom_room.utime = new Date().getTime()
-                _message.time = new Date().getTime()
-                ui.updateRoom(custom_room)
-                ui.addMessage(custom_room.roomId, _message)
-                storage.addMessage(user_id, _message)
-                storage.updateRoom(custom_room.roomId, {
-                    utime: custom_room.utime,
-                    lastMessage: custom_room.lastMessage,
-                })
-                return data
-            }
-            custom_bot.sendGroupMsg = async (group_id, message, auto_escape?) => {
-                return await bot.sendGroupMsg(group_id, message, auto_escape)
-            }
-            custom_bot.sendPrivateMsg = sendPrivateMsg
-            custom_bot.makeForwardMsg = async (fake, dm?, target?) => {
-                return await bot.makeForwardMsg(fake, dm, target)
-            }
-            custom_bot.deleteMsg = async (message_id) => {
-                return await bot.deleteMsg(message_id)
-            }
-            custom_bot.setGroupBan = async (group_id, user_id, duration?) => {
-                return await bot.setGroupBan(group_id, user_id, duration)
-            }
-            custom_bot.setGroupAnonymousBan = async (group_id, flag, duration?) => {
-                return await bot.setGroupAnonymousBan(group_id, flag, duration)
-            }
-            custom_bot.setGroupWholeBan = async (group_id, enable?) => {
-                return await bot.setGroupWholeBan(group_id, enable)
-            }
-            custom_bot.setGroupKick = async (group_id, user_id, reject_add_request?) => {
-                return await bot.setGroupKick(group_id, user_id, reject_add_request)
             }
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
-            requireFunc(custom_path).onMessage(data, custom_bot)
+            try {
+                requireFunc(custom_path).onMessage(data, bot)
+            } catch (e) {
+                ui.messageError('自定义插件出错')
+                console.error(e)
+            }
         }
     },
     friendRecall(data: FriendRecallEventData) {
@@ -479,9 +463,9 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                  (data.operator_id === data.user_id
-                      ? ' 离开了本群'
-                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+                (data.operator_id === data.user_id
+                    ? ' 离开了本群'
+                    : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member
                 ? data.member.card
                     ? data.member.card
@@ -662,9 +646,8 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${
-            transferredUser.card || transferredUser.nickname
-        }`
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname
+            }`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -872,9 +855,9 @@ const loginHandlers = {
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
                 'console.log=(a)=>{' +
-                    'if(typeof a === "string"&&' +
-                    'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                    'window.close()}',
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
             )
         })
         veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
@@ -1380,7 +1363,7 @@ const adapter: OicqAdapter = {
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
-        if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true)
+        if (roomId > 0) data = await bot._sendPrivateMsg(roomId, chain, true)
         else data = await bot.sendGroupMsg(-roomId, chain, true)
 
         ui.closeLoading()
@@ -1439,7 +1422,7 @@ const adapter: OicqAdapter = {
                         const content = base64decode(jsonObj.meta.mannounce.text)
                         room.lastMessage.content = `[${title}]`
                         message.content = title + '\n\n' + content
-                    } catch (err) {}
+                    } catch (err) { }
                 }
                 const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                 const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
@@ -1456,7 +1439,7 @@ const adapter: OicqAdapter = {
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
                         appurl = meta.qqdocurl
-                    } catch (e) {}
+                    } catch (e) { }
                 }
                 if (appurl) {
                     room.lastMessage.content = ''
@@ -1475,7 +1458,7 @@ const adapter: OicqAdapter = {
                             url: previewUrl,
                         }
                         message.files.push(message.file)
-                    } catch (e) {}
+                    } catch (e) { }
 
                     room.lastMessage.content += appurl
                     message.content += appurl

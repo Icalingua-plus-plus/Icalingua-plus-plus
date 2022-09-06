@@ -69,7 +69,7 @@ importers:
       noble-ed25519: 1.2.5
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.22.8
+      oicq-icalingua-plus-plus: ^1.22.9
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       prettier: ^2.7.1
@@ -114,7 +114,7 @@ importers:
       knex: 0.95.15_ua3fbz43oedjf3f5l7ihv7fgby
       mongodb: 3.7.3
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.22.8
+      oicq-icalingua-plus-plus: 1.22.9
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -221,7 +221,7 @@ importers:
       mysql: ^2.18.1
       noble-ed25519: 1.2.5
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.22.8
+      oicq-icalingua-plus-plus: ^1.22.9
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       prettier: ^2.7.1
@@ -245,7 +245,7 @@ importers:
       mysql: 2.18.1
       noble-ed25519: 1.2.5
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.22.8
+      oicq-icalingua-plus-plus: 1.22.9
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -670,11 +670,16 @@ packages:
     resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
     dev: true
 
+  /@types/node/18.7.15:
+    resolution: {integrity: sha512-XnjpaI8Bgc3eBag2Aw4t2Uj/49lLBSStHWfqKvIuXD7FIrZyMLWp8KuAFHAqxMZYTF9l08N1ctUn9YNybZJVmQ==}
+    dev: true
+    optional: true
+
   /@types/plist/3.0.2:
     resolution: {integrity: sha512-ULqvZNGMv0zRFvqn8/4LSPtnmN4MfhlPNtJCTpKuIIxGVGZ2rYWzFXrvEBoh9CVyqSE7D6YFRJ1hydLHI6kbWw==}
     requiresBuild: true
     dependencies:
-      '@types/node': 18.7.13
+      '@types/node': 18.7.15
       xmlbuilder: 15.1.1
     dev: true
     optional: true
@@ -7918,8 +7923,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.22.8:
-    resolution: {integrity: sha512-zbgYU+momG3tIKwbd6sng4vRZQSUe9bfKdMKTkgc5rsxNtKKFN49GRM/P2l20fetgnIbIIrim68DoVrWGaaUXQ==}
+  /oicq-icalingua-plus-plus/1.22.9:
+    resolution: {integrity: sha512-qyXPcdpt1B+XT2M26atOB0aIkGf6Bf9MKN6d6ixqnYWQ9KyP6C/EGP0PAxvUfQCavwIbmwfGsRnu6eTstvrelw==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
