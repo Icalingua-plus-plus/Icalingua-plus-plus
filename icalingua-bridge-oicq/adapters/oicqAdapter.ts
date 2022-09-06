@@ -189,6 +189,7 @@ const eventHandlers = {
         room.lastMessage = lastMessage
         message.time = data.time * 1000 + lastReceivedMessageInfo.id
         lastReceivedMessageInfo.id++
+        if (await storage.isChatIgnored(senderId)) message.hide = true
         clients.addMessage(room.roomId, message)
         await storage.updateRoom(roomId, room)
         clients.updateRoom(room)

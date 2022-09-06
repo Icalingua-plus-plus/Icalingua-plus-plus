@@ -1,10 +1,17 @@
 <template>
     <div class="root">
         <div class="title">
-            <p v-if="ignoredChats.length">点击可删除</p>
-            <p v-else>暂无屏蔽会话</p>
+            <p v-if="ignoredChats.length" style="text-align: center">点击可删除</p>
+            <p v-else style="text-align: center">暂无屏蔽会话</p>
         </div>
-        <GroupEntry v-for="chat in ignoredChats" :key="chat.id" :chat="chat" @click="rm(chat)" />
+        <div class="groups">
+            <b v-if="ignoredGroups.length">群组</b>
+            <GroupEntry v-for="chat in ignoredGroups" :key="chat.id" :chat="chat" @click="rm(chat)" />
+        </div>
+        <div class="friends">
+            <b v-if="ignoredFriends.length">好友</b>
+            <GroupEntry v-for="chat in ignoredFriends" :key="chat.id" :chat="chat" @click="rm(chat)" />
+        </div>
     </div>
 </template>
 
@@ -20,6 +27,14 @@ export default {
         return {
             ignoredChats: [],
         }
+    },
+    computed: {
+        ignoredFriends() {
+            return this.ignoredChats.filter((chat) => chat.id > 0)
+        },
+        ignoredGroups() {
+            return this.ignoredChats.filter((chat) => chat.id < 0)
+        },
     },
     name: 'IgnoreManageView',
     methods: {
