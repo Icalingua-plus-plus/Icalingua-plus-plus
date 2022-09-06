@@ -2,6 +2,7 @@ import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
 import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
+import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { ipcMain, screen, shell } from 'electron'
@@ -162,3 +163,4 @@ ipcMain.handle('getAccount', adapter.getAccount)
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
+ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))

@@ -178,5 +178,8 @@ const ipc = {
     async pushAtCache(at: AtCacheItem): Promise<number> {
         return await ipcRenderer.invoke('pushAtCache', at)
     },
+    ignoreChat(data: IgnoreChatInfo) {
+        ipcRenderer.send('ignoreChat', data)
+    }
 }
 export default ipc

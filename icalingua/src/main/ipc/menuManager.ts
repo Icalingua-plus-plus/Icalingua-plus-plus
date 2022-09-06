@@ -131,7 +131,7 @@ const buildRoomMenu = (room: Room): Menu => {
         },
         {
             label: '屏蔽消息',
-            click: () => ignoreChat({ id: room.roomId, name: room.roomName }),
+            click: () => ui.confirmIgnoreChat({ id: room.roomId, name: room.roomName }),
         },
         {
             label: '复制名称',
@@ -1477,6 +1477,12 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
         new MenuItem({
             label: `发起私聊`,
             click: () => ui.startChat(message.senderId, message.username),
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: `屏蔽此人`,
+            click: () => ui.confirmIgnoreChat({ id: message.senderId, name: message.username }),
         }),
     )
     if (
