@@ -103,6 +103,7 @@ export default {
 
     .vac-image-reply {
         max-height: 100px;
+        max-width: 100%;
         margin-right: 10px;
         border-radius: 4px;
     }
