@@ -272,6 +272,16 @@ export default {
         ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
         ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
         ipcRenderer.on('chroom', (_, p) => this.chroom(p))
+        ipcRenderer.on('confirmIgnoreChat', (_, data) => {
+            const message = ['屏蔽群聊将不再接受该群的消息。', '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。']
+            this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${ data.name }(${ Math.abs(data.id) }) 的消息?`, {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(() => {
+                ipc.ignoreChat(data)
+            })
+        })
         ipcRenderer.on('confirmDeleteMessage', (_, {roomId, messageId}) => {
             this.$confirm('确定撤回群成员消息?', '提示', {
                 confirmButtonText: '确定',
