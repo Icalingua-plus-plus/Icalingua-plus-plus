@@ -296,7 +296,7 @@ const eventHandlers = {
                         content: _message.content,
                         timestamp: formatDate('hh:mm'),
                     }
-                    if (user_id === bot.uin) return data
+                    if (user_id === bot.uin || user_id === 3636666661) return data
                     _message._id = data.data.message_id
                     custom_room.utime = new Date().getTime()
                     _message.time = new Date().getTime()
@@ -1375,7 +1375,7 @@ const adapter: OicqAdapter = {
             ui.addMessageText(message.content)
             return
         }
-        if (roomId > 0 && roomId !== bot.uin) {
+        if (roomId > 0 && roomId !== bot.uin && roomId !== 3636666661) {
             console.log(data)
             room.lastMessage = {
                 content,
