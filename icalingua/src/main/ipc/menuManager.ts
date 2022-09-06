@@ -1224,7 +1224,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 },
             }),
         )
-        if ((message.senderId === getUin() || (await isAdmin() && message.role !== 'owner')) && !history)
+        if ((message.senderId === getUin() || (await isAdmin() && message.role !== 'owner')) && !history && !message.deleted) {
             menu.append(
                 new MenuItem({
                     label: '撤回',
@@ -1237,7 +1237,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
-        if (message.senderId === getUin() && !history)
+        if (message.senderId === getUin() && !history && !message.deleted) {
             menu.append(
                 new MenuItem({
                     label: '一分钟后撤回',
