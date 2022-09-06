@@ -5,7 +5,7 @@
                 <el-avatar size="large" :src="getAvatarUrl(chat.id)" />
             </div>
             <div class="right">
-                <p class="name withoutdesc">{{ chat.name }}</p>
+                <p class="name withoutdesc">{{ chat.name }} ({{ Math.abs(chat.id) }})</p>
             </div>
         </el-card>
     </a>
