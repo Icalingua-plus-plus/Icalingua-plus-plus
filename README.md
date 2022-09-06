@@ -15,6 +15,12 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 [![AUR votes](https://img.shields.io/aur/votes/icalingua++)](https://aur.archlinux.org/packages/icalingua++/)
 （項目開發組沒有 AUR 賬號，感謝社區提供的 AUR Package）
 
+### 常用启动参数
+
+- 禁用硬件加速: `--dha`
+- 启动时隐藏主界面: `--hide`
+- 指定配置: `--config xxx.yaml`
+
 #### 分支状态
 
 ##### development
