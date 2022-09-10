@@ -193,9 +193,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 7:
                     await upg7to8(this.db);
                 case 8:
-                    await upg8to9(this.db);
+                    if (dbVersion >= 7) await upg8to9(this.db);
                 case 9:
-                    await upg9to10(this.db);
+                    if (dbVersion >= 7) await upg9to10(this.db);
                 case 10:
                     await upg10to11(this.db);
                 default:
