@@ -82,7 +82,6 @@ let currentLoadedMessagesCount = 0
 let loggedIn = false
 let stopFetching = false
 
-let auto_fetching = false
 let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
@@ -823,7 +822,6 @@ const loginHandlers = {
         await updateTrayIcon()
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
-        auto_fetching = true
         ui.message('正在获取历史消息')
         {
             const rooms = await storage.getAllRooms()
@@ -841,7 +839,6 @@ const loginHandlers = {
                 await sleep(500)
             }
         }
-        auto_fetching = false
         ui.messageSuccess('历史消息获取完成')
     },
     verify(data) {
@@ -1777,7 +1774,6 @@ const adapter: OicqAdapter = {
 
         // 更新最近消息
         if (!messages.length) return
-        if (auto_fetching) return // 如果是启动时自动拉取，则不更新最近消息
         let room = await storage.getRoom(roomId)
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
