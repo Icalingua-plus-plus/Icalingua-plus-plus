@@ -27,6 +27,7 @@ export const loadMainWindow = () => {
         width: winSize.width,
         show: process.env.NODE_ENV !== 'development' && !argv.hide,
         backgroundColor: themeColor,
+        autoHideMenuBar: !getConfig().showAppMenu,
         webPreferences: {
             nodeIntegration: true,
             webSecurity: false,

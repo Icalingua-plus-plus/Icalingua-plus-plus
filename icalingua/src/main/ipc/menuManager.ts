@@ -507,10 +507,6 @@ const buildRoomMenu = (room: Room): Menu => {
 let versionClickTimes = 0
 
 export const updateAppMenu = async () => {
-    if (getConfig().showAppMenu === false) {
-        Menu.setApplicationMenu(null)
-        return
-    }
     let globalMenu = {
         //应用菜单
         app: [
