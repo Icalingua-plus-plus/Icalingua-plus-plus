@@ -1351,7 +1351,7 @@ const adapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    async getForwardMsg(resId: string, resolve, fileName?: string) {
+    async getForwardMsg(resId: string, fileName: string, resolve) {
         const history = await bot.getForwardMsg(resId, fileName)
         if (history.error) {
             console.log(history.error)
