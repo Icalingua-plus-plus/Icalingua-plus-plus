@@ -16,6 +16,7 @@ import setPriority from './setPriority'
 import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import { getMainWindow } from './windowManager'
+import { updateAppMenu } from '../ipc/menuManager'
 
 let tray: Tray
 
@@ -121,6 +122,18 @@ export const updateTrayMenu = async () => {
                     click: () => setPriority(5),
                 },
             ],
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: '显示菜单栏',
+            type: 'checkbox',
+            checked: getConfig().showAppMenu,
+            click(item) {
+                getConfig().showAppMenu = item.checked
+                updateAppMenu()
+                saveConfigFile()
+            },
         }),
     )
     process.platform !== 'darwin' &&
