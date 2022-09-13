@@ -364,7 +364,17 @@ export default {
             });
         })
         ipcRenderer.on('updateRoom', (_, room) => {
-            this.rooms = [room, ...this.rooms.filter(item => item.roomId !== room.roomId)]
+            const oldRooms = this.rooms.filter(item => item.roomId !== room.roomId)
+            let left = 0, right = oldRooms.length - 1, mid = 0
+            while (left <= right) {
+                mid = Math.floor((left + right) / 2)
+                if (room.utime > oldRooms[mid].utime) {
+                    right = mid - 1
+                } else {
+                    left = mid + 1
+                }
+            }
+            this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
         })
         ipcRenderer.on('addMessage', (_, {roomId, message}) => {
             if (roomId !== this.selectedRoomId) return
