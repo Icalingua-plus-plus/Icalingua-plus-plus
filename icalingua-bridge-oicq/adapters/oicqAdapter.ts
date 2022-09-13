@@ -1352,7 +1352,7 @@ const adapter = {
         return storage.addRoom(room)
     },
     async getForwardMsg(resId: string, fileName: string, resolve) {
-        const history = await bot.getForwardMsg(resId, fileName)
+        const history = await bot.getForwardMsg(resId, fileName || 'MultiMsg')
         if (history.error) {
             console.log(history.error)
             const res: [Message] = [
