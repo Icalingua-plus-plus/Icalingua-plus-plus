@@ -16,7 +16,6 @@ import setPriority from './setPriority'
 import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import { getMainWindow } from './windowManager'
-import { updateAppMenu } from '../ipc/menuManager'
 
 let tray: Tray
 
@@ -131,7 +130,8 @@ export const updateTrayMenu = async () => {
             checked: getConfig().showAppMenu,
             click(item) {
                 getConfig().showAppMenu = item.checked
-                updateAppMenu()
+                getMainWindow().setMenuBarVisibility(item.checked)
+                getMainWindow().setAutoHideMenuBar(!item.checked)
                 saveConfigFile()
             },
         }),
