@@ -16,7 +16,6 @@ type AllConfig = {
     account: LoginForm
     priority: 1 | 2 | 3 | 4 | 5
     aria2: Aria2Config
-    showAppMenu: boolean
     darkTaskIcon: boolean
     winSize: WinSize
     socketIo: string
@@ -39,6 +38,7 @@ type AllConfig = {
     sendRawMessage: boolean
     custom: boolean
     fetchHistoryOnStart: boolean
+    showAppMenu: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -87,7 +87,6 @@ const defaultConfig: AllConfig = {
     account: emptyLoginForm,
     priority: 3,
     aria2: defaultAria2Config,
-    showAppMenu: true,
     darkTaskIcon: false,
     winSize: defaultWinSize,
     socketIo: '',
@@ -109,6 +108,7 @@ const defaultConfig: AllConfig = {
     sendRawMessage: false,
     custom: false,
     fetchHistoryOnStart: false,
+    showAppMenu: true,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
