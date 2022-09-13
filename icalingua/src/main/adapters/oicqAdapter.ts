@@ -1780,6 +1780,7 @@ const adapter: OicqAdapter = {
         if (auto_fetching) return // 如果是启动时自动拉取，则不更新最近消息
         let room = await storage.getRoom(roomId)
         room.lastMessage = lastMessage
+        room.utime = lastMessageTime * 1000
         ui.updateRoom(room)
     },
 
