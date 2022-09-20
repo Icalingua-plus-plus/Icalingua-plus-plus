@@ -173,40 +173,41 @@ const eventHandlers = {
         ) {
             //notification
             if (process.platform === 'darwin' || process.platform === 'win32') {
-                if (!ElectronNotification.isSupported()) return
-                const notif = new ElectronNotification({
-                    title: room.roomName,
-                    body: (groupId ? senderName + ': ' : '') + lastMessage.content,
-                    hasReply: true,
-                    replyPlaceholder: 'Reply to ' + room.roomName,
-                    icon: await avatarCache(getAvatarUrl(roomId, true)),
-                    actions: [
-                        {
-                            text: '标为已读',
-                            type: 'button',
-                        },
-                    ],
-                })
-                notif.on('click', () => {
-                    notif.close()
-                    showWindow()
-                    ui.chroom(room.roomId)
-                })
-                notif.on('action', () => adapter.clearRoomUnread(room.roomId))
-                notif.on('reply', (e, r) => {
-                    adapter.clearRoomUnread(room.roomId)
-                    adapter.sendMessage({
-                        content: r,
-                        roomId: room.roomId,
-                        at: [],
+                if (ElectronNotification.isSupported()) {
+                    const notif = new ElectronNotification({
+                        title: room.roomName,
+                        body: (groupId ? senderName + ': ' : '') + lastMessage.content,
+                        hasReply: true,
+                        replyPlaceholder: 'Reply to ' + room.roomName,
+                        icon: await avatarCache(getAvatarUrl(roomId, true)),
+                        actions: [
+                            {
+                                text: '标为已读',
+                                type: 'button',
+                            },
+                        ],
                     })
-                })
-                if (process.platform === 'win32') {
-                    notif.on('close', () => {
+                    notif.on('click', () => {
                         notif.close()
+                        showWindow()
+                        ui.chroom(room.roomId)
                     })
+                    notif.on('action', () => adapter.clearRoomUnread(room.roomId))
+                    notif.on('reply', (e, r) => {
+                        adapter.clearRoomUnread(room.roomId)
+                        adapter.sendMessage({
+                            content: r,
+                            roomId: room.roomId,
+                            at: [],
+                        })
+                    })
+                    if (process.platform === 'win32') {
+                        notif.on('close', () => {
+                            notif.close()
+                        })
+                    }
+                    notif.show()
                 }
-                notif.show()
             } else {
                 const actions = {
                     default: '',
