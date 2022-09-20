@@ -1056,7 +1056,12 @@ const adapter: OicqAdapter = {
         bot.reportReaded(messageId)
     },
     async getGroupMembers(group: number): Promise<MemberInfo[]> {
-        const values = (await bot.getGroupMemberList(group, true)).data.values()
+        const data = (await bot.getGroupMemberList(group, true)).data
+        if (!data) {
+            ui.messageError('获取群成员列表失败')
+            return []
+        }
+        const values = data.values()
         let iter: IteratorResult<MemberInfo, MemberInfo> = values.next()
         const all: MemberInfo[] = []
         while (!iter.done) {
