@@ -84,6 +84,24 @@
             </el-form-item>
         </el-form>
         <QrcodeDrawer @login="onSubmit('loginForm')" />
+        <el-drawer
+            title="短信验证"
+            :visible="shouldSubmitSmsCode"
+            direction="btt"
+            :close-on-press-escape="false"
+            :show-close="false"
+            :wrapper-closable="false"
+            size="100%"
+        >
+            <el-input
+                placeholder="短信验证码"
+                v-model="smsCode"
+                @input="smsCode = smsCode.slice(0, 6)"
+            />
+            <center>
+                <el-button @click="submitSmsCode" type="primary"> 提交 </el-button>
+            </center>
+        </el-drawer>
     </div>
 </template>
 
@@ -108,6 +126,8 @@ export default {
             },
             disabled: false,
             errmsg: '',
+            shouldSubmitSmsCode: false,
+            smsCode: '',
         }
     },
     async created() {
@@ -116,6 +136,10 @@ export default {
         ipcRenderer.on('error', (_, msg) => {
             this.errmsg = msg
             this.disabled = false
+        })
+        ipcRenderer.on('smsCodeVerify', (_, uin) => {
+            console.log(uin)
+            this.shouldSubmitSmsCode = true
         })
     },
     methods: {
@@ -134,6 +158,9 @@ export default {
                     return false
                 }
             })
+        },
+        submitSmsCode() {
+            ipcRenderer.send('submitSmsCode', this.smsCode)
         },
     },
 }

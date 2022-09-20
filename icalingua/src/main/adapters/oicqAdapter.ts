@@ -843,6 +843,11 @@ const loginHandlers = {
         ui.messageSuccess('历史消息获取完成')
     },
     verify(data) {
+        console.log(data)
+        bot.sendSMSCode()
+        sendToLoginWindow('smsCodeVerify', getUin())
+        return
+        // deprecated
         const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
@@ -1821,6 +1826,9 @@ const adapter: OicqAdapter = {
             case 'group':
                 return await bot.setGroupAddRequest(flag, accept)
         }
+    },
+    submitSmsCode(smsCode: string) {
+        bot.submitSMSCode(smsCode)
     },
 }
 

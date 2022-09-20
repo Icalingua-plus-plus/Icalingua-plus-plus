@@ -256,6 +256,10 @@ const attachSocketEvents = () => {
     socket.on('login-qrcodeLogin', (uin: number) => {
         sendToLoginWindow('qrcodeLogin', uin)
     })
+    socket.on('login-smsCodeVerify', (uin: number) => {
+        showLoginWindow(true)
+        sendToLoginWindow('smsCodeVerify', uin)
+    })
     socket.on('login-error', (message: string) => {
         sendToLoginWindow('error', message)
     })
@@ -420,6 +424,9 @@ const adapter: Adapter = {
                 app.quit()
             })
         }
+    },
+    submitSmsCode(smsCode: string) {
+        socket.emit('submitSmsCode', smsCode)
     },
     deleteMessage(roomId: number, messageId: string) {
         socket.emit('deleteMessage', roomId, messageId)
