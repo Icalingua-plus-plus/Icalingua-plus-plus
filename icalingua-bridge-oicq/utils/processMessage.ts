@@ -236,7 +236,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 } catch (e) {
                     message.file = null
                     message.content = '[无法处理的语音]' + m.data.url
-                    message.code = JSON.stringify(e)
+                    message.code = JSON.stringify({ error: e })
                 }
                 lastMessage.content = '[Audio]'
                 break
