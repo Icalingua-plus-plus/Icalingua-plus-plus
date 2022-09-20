@@ -705,6 +705,9 @@ const loginHandlers = {
         }
     },
     verify(data: DeviceEventData) {
+        console.log(data)
+        broadcast('login-smsCodeVerify', bot.uin)
+        return
         broadcast('login-verify', data.url)
     },
     qrcode(data: QrcodeEventData) {
@@ -1570,6 +1573,9 @@ const adapter = {
 
     acquireGfs(gin: number) {
         return bot.acquireGfs(gin)
+    },
+    submitSmsCode(smsCode: string) {
+        bot.submitSMSCode(smsCode)
     },
 }
 

@@ -56,6 +56,7 @@ export const {
     fetchHistory,
     stopFetchingHistory,
     makeForward,
+    submitSmsCode,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
@@ -83,6 +84,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 }
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
+ipcMain.on('submitSmsCode', (event, smsCode: string) => submitSmsCode(smsCode))
 ipcMain.handle('getFriendsAndGroups', async () => {
     const groups = await getGroups()
     let friends: GroupOfFriend[]

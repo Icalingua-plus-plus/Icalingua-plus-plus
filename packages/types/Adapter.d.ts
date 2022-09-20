@@ -47,6 +47,8 @@ export default interface Adapter {
 
     createBot(form: LoginForm): any
 
+    submitSmsCode(smsCode: string): any
+
     getGroups(): Promise<SearchableGroup[]>
 
     getFriendsFallback(): Promise<SearchableFriend[]>
