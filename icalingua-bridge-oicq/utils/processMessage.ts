@@ -21,8 +21,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 if (lastType === 'reply') break
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
-                lastMessage.content += m.data.text
-                message.content += m.data.text
+                // PCQQ 发送的消息的换行符是 \r，统一转成 \n
+                const text = m.data.text.split('\r\n').join('\n').split('\r').join('\n')
+                lastMessage.content += text
+                message.content += text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
                 } else if ((m as AtElem).data.qq == adapter.getUin()) {
