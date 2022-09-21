@@ -29,6 +29,7 @@
         "fluent-ffmpeg": "^2.1.2",
         "ioredis": "^4.28.5",
         "knex": "^0.95.15",
+        "lodash": "^4.17.21",
         "md5": "^2.3.0",
         "minimist": "^1.2.6",
         "mongodb": "^4.9.0",
@@ -41,6 +42,7 @@
         "silk-sdk": "^0.2.2",
         "socket.io": "^4.5.1",
         "sqlite3": "^5.0.11",
+        "uuid": "^8.3.2",
         "winston": "^3.8.1",
         "winston-daily-rotate-file": "^4.7.1",
         "yaml": "^1.10.2"
