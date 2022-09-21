@@ -216,8 +216,15 @@ const eventHandlers = {
                     }
                     if (user_id === bot.uin || user_id === 3636666661) return data
                     _message._id = data.data.message_id
-                    custom_room.utime = new Date().getTime()
-                    _message.time = new Date().getTime()
+                    const parsed = Buffer.from(data.data.message_id, "base64");
+                    const _time = parsed.readUInt32BE(12);
+                    if (_time !== lastReceivedMessageInfo.timestamp) {
+                        lastReceivedMessageInfo.timestamp = _time
+                        lastReceivedMessageInfo.id = 0
+                    }
+                    custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
+                    _message.time = _time * 1000 + lastReceivedMessageInfo.id
+                    lastReceivedMessageInfo.id++
                     clients.updateRoom(custom_room)
                     clients.addMessage(custom_room.roomId, _message)
                     storage.addMessage(user_id, _message)
@@ -1285,8 +1292,15 @@ const adapter = {
                 room.lastMessage.content = '[DEBUG]' + message.content
             }
             message._id = data.data.message_id
-            room.utime = new Date().getTime()
-            message.time = new Date().getTime()
+            const parsed = Buffer.from(data.data.message_id, "base64");
+            const _time = parsed.readUInt32BE(12);
+            if (_time !== lastReceivedMessageInfo.timestamp) {
+                lastReceivedMessageInfo.timestamp = _time
+                lastReceivedMessageInfo.id = 0
+            }
+            room.utime = _time * 1000 + lastReceivedMessageInfo.id
+            message.time = _time * 1000 + lastReceivedMessageInfo.id
+            lastReceivedMessageInfo.id++
             clients.updateRoom(room)
             clients.addMessage(room.roomId, message)
             storage.addMessage(roomId, message)
