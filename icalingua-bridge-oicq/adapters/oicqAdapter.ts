@@ -707,9 +707,7 @@ const loginHandlers = {
     verify(data: DeviceEventData) {
         console.log(data)
         bot.sendSMSCode()
-        broadcast('login-smsCodeVerify', bot.uin)
-        return
-        broadcast('login-verify', data.url)
+        broadcast('login-smsCodeVerify', data.url)
     },
     qrcode(data: QrcodeEventData) {
         broadcast('login-qrcodeLogin', bot.uin)

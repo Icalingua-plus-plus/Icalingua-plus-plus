@@ -256,9 +256,9 @@ const attachSocketEvents = () => {
     socket.on('login-qrcodeLogin', (uin: number) => {
         sendToLoginWindow('qrcodeLogin', uin)
     })
-    socket.on('login-smsCodeVerify', (uin: number) => {
+    socket.on('login-smsCodeVerify', (url: string) => {
         showLoginWindow(true)
-        sendToLoginWindow('smsCodeVerify', uin)
+        sendToLoginWindow('smsCodeVerify', url)
     })
     socket.on('login-error', (message: string) => {
         sendToLoginWindow('error', message)

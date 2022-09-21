@@ -100,6 +100,7 @@
             />
             <center>
                 <el-button @click="submitSmsCode" type="primary"> 提交 </el-button>
+                <el-button @click="QRCodeVerify"> 扫码验证 </el-button>
             </center>
         </el-drawer>
     </div>
@@ -128,6 +129,7 @@ export default {
             errmsg: '',
             shouldSubmitSmsCode: false,
             smsCode: '',
+            verifyUrl: '',
         }
     },
     async created() {
@@ -137,9 +139,10 @@ export default {
             this.errmsg = msg
             this.disabled = false
         })
-        ipcRenderer.on('smsCodeVerify', (_, uin) => {
-            console.log(uin)
+        ipcRenderer.on('smsCodeVerify', (_, url) => {
+            console.log(url)
             this.shouldSubmitSmsCode = true
+            this.verifyUrl = url
         })
     },
     methods: {
@@ -161,6 +164,9 @@ export default {
         },
         submitSmsCode() {
             ipcRenderer.send('submitSmsCode', this.smsCode)
+        },
+        QRCodeVerify() {
+            ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
     },
 }
