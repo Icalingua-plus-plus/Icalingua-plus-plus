@@ -1782,6 +1782,7 @@ const adapter: OicqAdapter = {
         // 更新最近消息
         if (!messages.length) return
         let room = await storage.getRoom(roomId)
+        if (room.utime > lastMessageTime) return
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
         ui.updateRoom(room)
