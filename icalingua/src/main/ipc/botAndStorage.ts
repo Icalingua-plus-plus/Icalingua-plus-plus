@@ -57,6 +57,7 @@ export const {
     stopFetchingHistory,
     makeForward,
     submitSmsCode,
+    reLogin,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
@@ -85,6 +86,25 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.on('submitSmsCode', (event, smsCode: string) => submitSmsCode(smsCode))
+ipcMain.on('QRCodeVerify', (event, url: string) => {
+    const veriWin = newIcalinguaWindow({
+        height: 500,
+        width: 500,
+        webPreferences: {},
+    })
+    veriWin.on('close', () => {
+        reLogin()
+    })
+    veriWin.webContents.on('did-finish-load', function () {
+        veriWin.webContents.executeJavaScript(
+            'console.log=(a)=>{' +
+            'if(typeof a === "string"&&' +
+            'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+            'window.close()}',
+        )
+    })
+    veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
+})
 ipcMain.handle('getFriendsAndGroups', async () => {
     const groups = await getGroups()
     let friends: GroupOfFriend[]
