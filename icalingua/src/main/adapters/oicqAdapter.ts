@@ -845,26 +845,7 @@ const loginHandlers = {
     verify(data) {
         console.log(data)
         bot.sendSMSCode()
-        sendToLoginWindow('smsCodeVerify', getUin())
-        return
-        // deprecated
-        const veriWin = newIcalinguaWindow({
-            height: 500,
-            width: 500,
-            webPreferences: {},
-        })
-        veriWin.on('close', () => {
-            bot.login(loginForm.password)
-        })
-        veriWin.webContents.on('did-finish-load', function () {
-            veriWin.webContents.executeJavaScript(
-                'console.log=(a)=>{' +
-                'if(typeof a === "string"&&' +
-                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                'window.close()}',
-            )
-        })
-        veriWin.loadURL(data.url.replace('safe/verify', 'safe/qrcode'))
+        sendToLoginWindow('smsCodeVerify', data.url)
     },
     qrcode(data: QrcodeEventData) {
         console.log(data)
