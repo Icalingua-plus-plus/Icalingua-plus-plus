@@ -710,7 +710,8 @@ const loginHandlers = {
         broadcast('login-smsCodeVerify', data.url)
     },
     qrcode(data: QrcodeEventData) {
-        broadcast('login-qrcodeLogin', bot.uin)
+        const url = "data:image/png;base64," + data.image.toString('base64');
+        broadcast('login-qrcodeLogin', url)
     },
     slider(data: SliderEventData) {
         broadcast('login-slider', data.url)

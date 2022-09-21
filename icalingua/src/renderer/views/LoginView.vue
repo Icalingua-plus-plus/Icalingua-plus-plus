@@ -150,10 +150,6 @@ export default {
         onSubmit(formName) {
             this.$refs[formName].validate(async (valid) => {
                 if (valid) {
-                    if (!this.form.password && this.$route.query.bridge === 'true') {
-                        this.$message('Bridge 模式下暂不支持扫码登录')
-                        return
-                    }
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)

@@ -849,7 +849,8 @@ const loginHandlers = {
     },
     qrcode(data: QrcodeEventData) {
         console.log(data)
-        sendToLoginWindow('qrcodeLogin', getUin())
+        const url = "data:image/png;base64," + data.image.toString('base64');
+        sendToLoginWindow('qrcodeLogin', url)
     },
 }
 //endregion

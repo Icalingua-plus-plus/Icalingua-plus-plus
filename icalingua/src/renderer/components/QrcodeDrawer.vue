@@ -1,6 +1,6 @@
 <template>
     <el-drawer
-        title="二维码登录"
+        title="二维码登录 扫码设备需与登录设备同一个网络"
         :visible="drawerVisible"
         direction="btt"
         :close-on-press-escape="false"
@@ -28,10 +28,9 @@ export default {
         }
     },
     created() {
-        ipcRenderer.on('qrcodeLogin', async (_, uin) => {
-            console.log(uin)
-            const STORE_PATH = await ipc.getStorePath()
-            this.image = `file://${STORE_PATH}/data/${uin}/qrcode.png?${Math.random()}`
+        ipcRenderer.on('qrcodeLogin', async (_, url) => {
+            console.log(url)
+            this.image = url
             this.drawerVisible = true
         })
     },
