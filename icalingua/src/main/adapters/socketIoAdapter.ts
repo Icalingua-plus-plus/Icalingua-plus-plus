@@ -253,8 +253,8 @@ const attachSocketEvents = () => {
         })
         veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
     })
-    socket.on('login-qrcodeLogin', (uin: number) => {
-        sendToLoginWindow('qrcodeLogin', uin)
+    socket.on('login-qrcodeLogin', (url: string) => {
+        sendToLoginWindow('qrcodeLogin', url)
     })
     socket.on('login-smsCodeVerify', (url: string) => {
         showLoginWindow(true)
