@@ -138,6 +138,7 @@ export default {
         ipcRenderer.on('error', (_, msg) => {
             this.errmsg = msg
             this.disabled = false
+            this.shouldSubmitSmsCode = false
         })
         ipcRenderer.on('smsCodeVerify', (_, url) => {
             console.log(url)
