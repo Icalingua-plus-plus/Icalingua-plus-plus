@@ -315,7 +315,7 @@
 	}
 
 	DRAG.onwheel = e => {
-		if (e.ctrlKey) {
+		if (e.shiftKey) {
 			IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
 			return
 		}
