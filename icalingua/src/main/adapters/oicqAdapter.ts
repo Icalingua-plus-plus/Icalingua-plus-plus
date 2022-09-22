@@ -307,6 +307,7 @@ const eventHandlers = {
                     }
                     custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
                     _message.time = _time * 1000 + lastReceivedMessageInfo.id
+                    _message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
                     lastReceivedMessageInfo.id++
                     ui.updateRoom(custom_room)
                     ui.addMessage(custom_room.roomId, _message)
@@ -1485,6 +1486,7 @@ const adapter: OicqAdapter = {
             }
             room.utime = _time * 1000 + lastReceivedMessageInfo.id
             message.time = _time * 1000 + lastReceivedMessageInfo.id
+            message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
             lastReceivedMessageInfo.id++
             ui.updateRoom(room)
             ui.addMessage(room.roomId, message)
