@@ -18,6 +18,14 @@ function dynamicLoadCss(url) {
     head.appendChild(link)
 }
 
+function dynamicLoadJs(url){
+    const head = document.getElementsByTagName('head')[0]
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.src = url
+    head.appendChild(script)
+}
+
 export default {
     name: 'app',
     async created() {
@@ -25,6 +33,10 @@ export default {
         if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
             console.log('custom CSS applied')
             dynamicLoadCss('file://' + path.join(STORE_PATH, 'style.css'))
+        }
+        if (fs.existsSync(path.join(STORE_PATH, 'addon.js'))) {
+            console.log('custom js applied')
+            dynamicLoadJs('file://' + path.join(STORE_PATH, 'addon.js'))
         }
     },
 }
