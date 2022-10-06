@@ -93,6 +93,7 @@
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
                             @open-forward="$emit('open-forward', $event)"
+                            @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
 
                         <div v-if="message.deleted && !message.reveal">
@@ -245,6 +246,7 @@ export default {
         selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
         forwardResId: { type: String, required: false },
+        msgstoForward: { type: Array, required: false },
     },
 
     data() {
@@ -306,7 +308,7 @@ export default {
             handler(newValue) {
                 if (!newValue) {
                     this.selected = false
-                } else if (this.message._id === this.selectedMessage) {
+                } else if (this.message._id === this.selectedMessage || this.msgstoForward.includes(this.message._id)) {
                     this.selected = true
                 }
             },

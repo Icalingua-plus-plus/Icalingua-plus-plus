@@ -43,28 +43,12 @@
                             {{ messages[0].date }}
                         </div>
                     </transition>
-                    <transition name="vac-fade-message">
-                        <infinite-loading
-                            v-if="messages.length"
-                            :class="{ 'vac-infinite-loading': !messagesLoaded }"
-                            spinner="spiral"
-                            direction="top"
-                            :distance="40"
-                            @infinite="loadMoreMessages"
-                        >
-                            <div slot="spinner">
-                                <loader :show="true" :infinite="true" />
-                            </div>
-                            <div slot="no-results" />
-                            <div slot="no-more" />
-                        </infinite-loading>
-                    </transition>
                     <transition-group :key="roomId" name="vac-fade-message">
-                        <div v-for="(m, i) in messages" :key="m._id" @dblclick="replyMessage(m, $event)">
+                        <div v-for="(m, i) in messages.slice(visiableViewport.head, visiableViewport.tail)" :key="m._id" @dblclick="replyMessage(m, $event)">
                             <message
                                 :current-user-id="currentUserId"
                                 :message="m"
-                                :index="i"
+                                :index="i + visiableViewport.head"
                                 :messages="messages"
                                 :edited-message="editedMessage"
                                 :message-actions="messageActions"
@@ -80,6 +64,7 @@
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
+                                :msgstoForward="msgstoForward"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
@@ -90,6 +75,7 @@
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
                                 @add-msg-to-forward="addMsgtoForward"
                                 @del-msg-to-forward="delMsgtoForward"
+                                @scroll-to-message="scrollToMessage"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -331,6 +317,9 @@ import ipc from '../../../../utils/ipc'
 /** @type 'Enter'|'CtrlEnter'|'ShiftEnter' */
 let keyToSendMessage
 
+// scroll
+const scrollOffset = 300
+
 export default {
     name: 'Room',
     components: {
@@ -382,7 +371,6 @@ export default {
             message: '',
             editedMessage: {},
             messageReply: null,
-            infiniteState: null,
             loadingMessages: false,
             loadingMoreMessages: false,
             file: null,
@@ -407,6 +395,15 @@ export default {
             groupMembers: null,
             useAtKey: false,
             selectedMessage: '',
+            visiableViewport: {
+                head: 0,
+                tail: 0,
+            },
+            onScrolling: null,
+            lastScrollPosition: {
+                top: 0,
+                bottom: 0,
+            },
         }
     },
     computed: {
@@ -426,11 +423,15 @@ export default {
         isMessageEmpty() {
             return !this.file && !this.message.trim()
         },
+        maxViewportLength() {
+            const w = window.visualViewport ? window.visualViewport : window
+            const height = w.height || w.innerHeight
+            return Math.ceil(height / 60) * 5
+        },
     },
     watch: {
         loadingMessages(val) {
-            if (val) this.infiniteState = null
-            else this.focusTextarea(true)
+            if (!val) this.focusTextarea(true)
         },
         async room(newVal, oldVal) {
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
@@ -448,10 +449,32 @@ export default {
             const element = this.$refs.scrollContainer
             if (!element) return
 
+            const offset = (newVal ? newVal.length : 0) - (oldVal ? oldVal.length : 0)
+            if (oldVal && oldVal.length && newVal && newVal.length && oldVal[oldVal.length-1]._id === newVal[newVal.length-1]._id) {
+                const scrollTop = this.getTopScroll(element)
+                const scrollBottom = this.getBottomScroll(element)
+                if (scrollTop < scrollBottom) {
+                    this.visiableViewport.tail = Math.min(newVal.length, this.visiableViewport.head + this.maxViewportLength)
+                }
+                if (scrollTop > scrollBottom) {
+                    this.visiableViewport.tail = Math.min(newVal.length, this.visiableViewport.tail + offset)
+                    this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
+                }
+            } else {
+                this.visiableViewport.tail += offset
+                this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
+            }
+            if (!oldVal || !oldVal.length) {
+                this.visiableViewport.head = 0
+                this.visiableViewport.tail = newVal.length
+            }
+
             if (oldVal && newVal && oldVal.length === newVal.length - 1) {
                 this.loadingMessages = false
 
-                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60) {
+                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && this.visiableViewport.tail === newVal.length) {
+                    this.visiableViewport.tail = newVal.length
+                    this.visiableViewport.head = newVal.length - this.maxViewportLength
                     return setTimeout(() => {
                         const options = { top: element.scrollHeight, behavior: 'smooth' }
                         element.scrollTo(options)
@@ -462,9 +485,7 @@ export default {
                 }
             }
 
-            if (this.infiniteState) {
-                this.infiniteState.loaded()
-            } else if (newVal.length && !this.scrollIcon) {
+            if (newVal.length && !this.scrollIcon) {
                 setTimeout(() => {
                     element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
@@ -475,7 +496,6 @@ export default {
         },
         messagesLoaded(val) {
             if (val) this.loadingMessages = false
-            if (this.infiniteState) this.infiniteState.complete()
         },
     },
     async mounted() {
@@ -689,6 +709,37 @@ export default {
             }
             console.log('delMsgtoForward')
         },
+        scrollToMessage(messageId) {
+            const message = document.getElementById(messageId)
+            if (message) {
+                message.scrollIntoView({ behavior: 'smooth' })
+                return
+            } else {
+                const index = this.messages.findIndex((e) => e._id === messageId)
+                if (index !== -1) {
+                    let head = index - Math.floor(this.maxViewportLength / 2)
+                    let tail = this.visiableViewport.head + this.maxViewportLength
+                    if (head < 0) {
+                        head = 0
+                        tail = Math.min(this.maxViewportLength, this.messages.length)
+                    }
+                    if (tail > this.messages.length) {
+                        tail = this.messages.length
+                        head = Math.max(tail - this.maxViewportLength, 0)
+                    }
+                    this.visiableViewport.head = head
+                    this.visiableViewport.tail = tail
+                    this.$nextTick(() => {
+                        const message = document.getElementById(messageId)
+                        if (message) {
+                            message.scrollIntoView({ behavior: 'smooth' })
+                        }
+                    })
+                    return
+                } 
+            }
+            this.$message.error('被回复的消息太远啦')
+        },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
             if (height < 30) height = 30
@@ -832,16 +883,11 @@ export default {
 
             this.resetMessage(true)
         },
-        loadMoreMessages(infiniteState) {
+        loadMoreMessages() {
             setTimeout(
                 () => {
                     if (this.loadingMoreMessages) return
-
-                    if (this.messagesLoaded || !this.room.roomId) {
-                        return infiniteState.complete()
-                    }
-
-                    this.infiniteState = infiniteState
+                    if (!this.messages || this.messages.length === 0) return
                     this.$emit('fetch-messages')
                     this.loadingMoreMessages = true
                 },
@@ -883,13 +929,22 @@ export default {
 
             this.message = message.content
         },
+        getTopScroll(element) {
+            const { scrollTop } = element
+            return scrollTop
+        },
         getBottomScroll(element) {
             const { scrollHeight, clientHeight, scrollTop } = element
             return scrollHeight - clientHeight - scrollTop
         },
         scrollToBottom() {
             const element = this.$refs.scrollContainer
-            element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
+            this.visiableViewport.tail = this.messages.length
+            this.visiableViewport.head = this.messages.length - this.maxViewportLength
+            this.$nextTick(() => {
+                element.scrollTop = 400
+                element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
+            })
         },
         onChangeInput() {
             this.keepKeyboardOpen = true
@@ -981,13 +1036,34 @@ export default {
             ipc.popupAvatarMenu(message, this.room)
         },
         containerScroll(e) {
-            setTimeout(() => {
+            if (this.onScrolling) {
+                clearTimeout(this.onScrolling)
+                this.onScrolling = null
+            }
+            this.onScrolling = setTimeout(() => {
+                this.onScrolling = null
                 if (!e.target) return
 
                 const bottomScroll = this.getBottomScroll(e.target)
                 if (bottomScroll < 60) this.scrollMessagesCount = 0
                 this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
-            }, 200)
+
+                const topScroll = this.getTopScroll(e.target)
+
+                const scrollDirection = this.lastScrollPosition.top ? topScroll - this.lastScrollPosition.top : 0
+                this.lastScrollPosition.top = topScroll
+
+                if (topScroll < scrollOffset && scrollDirection <= 0) {
+                    if (this.visiableViewport.head === 0) this.$nextTick(() => this.loadMoreMessages())
+                    else this.visiableViewport.head = Math.max(0, this.visiableViewport.head - 10)
+                }
+                if (bottomScroll < scrollOffset && scrollDirection >= 0) {
+                    this.visiableViewport.tail = Math.min(this.visiableViewport.tail + 10, this.messages.length)
+                    this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
+                }
+                if (topScroll === 0) e.target.scrollTo({ top: 1 })
+                if (bottomScroll === 0 && this.visiableViewport.tail !== this.messages.length) e.target.scrollTo({ top: e.target.scrollHeight - 1})
+            }, 24)
         },
         textctx: ipc.popupTextAreaMenu,
         roomMenu() {
