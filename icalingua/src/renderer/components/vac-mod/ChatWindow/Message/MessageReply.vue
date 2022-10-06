@@ -78,14 +78,7 @@ export default {
     methods: {
         scrollToOrigin() {
             if (this.showForwardPanel) return
-            const originMessage = document.getElementById(this.message.replyMessage._id)
-            if (originMessage) {
-                originMessage.scrollIntoView({
-                    behavior: 'smooth',
-                })
-            } else {
-                this.$message.error('被回复的消息太远啦')
-            }
+            this.$emit('scroll-to-message', this.message.replyMessage._id)
         },
         openImage(e) {
             if (this.showForwardPanel) return
