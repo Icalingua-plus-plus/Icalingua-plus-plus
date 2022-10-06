@@ -936,10 +936,11 @@ export default {
         },
         scrollToBottom() {
             const element = this.$refs.scrollContainer
+            const scrollBack = this.visiableViewport.tail === this.messages.length
             this.visiableViewport.tail = this.messages.length
             this.visiableViewport.head = this.messages.length - this.maxViewportLength
             this.$nextTick(() => {
-                element.scrollTop = 400
+                if (scrollBack) element.scrollTop = 400
                 element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
             })
         },
@@ -1059,7 +1060,7 @@ export default {
                     this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
                 }
                 if (topScroll === 0) e.target.scrollTo({ top: 1 })
-                if (bottomScroll === 0 && this.visiableViewport.tail !== this.messages.length) e.target.scrollTo({ top: e.target.scrollHeight - 1})
+                if (bottomScroll === 0 && this.visiableViewport.tail !== this.messages.length) e.target.scrollTo({ top: e.target.scrollHeight - 1 - e.target.clientHeight })
             }, 24)
         },
         textctx: ipc.popupTextAreaMenu,
