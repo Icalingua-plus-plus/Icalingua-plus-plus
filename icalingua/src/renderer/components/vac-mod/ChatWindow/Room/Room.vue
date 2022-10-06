@@ -460,9 +460,6 @@ export default {
                     this.visiableViewport.tail = Math.min(newVal.length, this.visiableViewport.tail + offset)
                     this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
                 }
-            } else {
-                this.visiableViewport.tail += offset
-                this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
             }
             if (!oldVal || !oldVal.length) {
                 this.visiableViewport.head = 0
@@ -472,7 +469,7 @@ export default {
             if (oldVal && newVal && oldVal.length === newVal.length - 1) {
                 this.loadingMessages = false
 
-                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && this.visiableViewport.tail === newVal.length) {
+                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && this.visiableViewport.tail === oldVal.length) {
                     this.visiableViewport.tail = newVal.length
                     this.visiableViewport.head = newVal.length - this.maxViewportLength
                     return setTimeout(() => {
