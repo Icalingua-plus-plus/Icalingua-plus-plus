@@ -136,7 +136,7 @@
         </div>
         <div v-if="!loadingMessages">
             <transition name="vac-bounce">
-                <div v-if="scrollIcon" class="vac-icon-scroll" @click="scrollToBottom">
+                <div v-if="scrollIcon || visiableViewport.tail !== messages.length" class="vac-icon-scroll" @click="scrollToBottom">
                     <transition name="vac-bounce">
                         <div v-if="scrollMessagesCount" class="vac-badge-counter vac-messages-count">
                             {{ scrollMessagesCount }}
@@ -1109,7 +1109,7 @@ export default {
                 if (!e.target) return
 
                 const bottomScroll = this.getBottomScroll(e.target)
-                if (bottomScroll < 60) this.scrollMessagesCount = 0
+                if (bottomScroll < 60 && this.visiableViewport.tail === this.messages.length) this.scrollMessagesCount = 0
                 this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 
                 const topScroll = this.getTopScroll(e.target)
