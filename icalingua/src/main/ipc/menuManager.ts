@@ -851,25 +851,25 @@ export const updateAppMenu = async () => {
                 submenu: (() => {
                     let rsp: Electron.MenuItemConstructorOptions[] = [
                         {
-                            label: 'infinite-loading (默认)',
-                            sublabel: '加载速度相对较慢',
-                            type: 'radio',
-                            checked: getConfig().optimizeMethod == 'infinite-loading',
-                            click() {
-                                getConfig().optimizeMethod = 'infinite-loading'
-                                ui.setOptimizeMethodSetting('infinite-loading')
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                        {
-                            label: '滚动 (实验性)',
-                            sublabel: '无痕，但有 BUG',
+                            label: '滚动 (默认)',
+                            sublabel: '预加载，有小 BUG',
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'scroll',
                             click() {
                                 getConfig().optimizeMethod = 'scroll'
                                 ui.setOptimizeMethodSetting('scroll')
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        },
+                        {
+                            label: 'infinite-loading (实验性)',
+                            sublabel: '较慢，但 BUG 可能更少',
+                            type: 'radio',
+                            checked: getConfig().optimizeMethod == 'infinite-loading',
+                            click() {
+                                getConfig().optimizeMethod = 'infinite-loading'
+                                ui.setOptimizeMethodSetting('infinite-loading')
                                 saveConfigFile()
                                 updateAppMenu()
                             },
