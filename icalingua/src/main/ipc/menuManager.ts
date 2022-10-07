@@ -852,6 +852,7 @@ export const updateAppMenu = async () => {
                     let rsp: Electron.MenuItemConstructorOptions[] = [
                         {
                             label: 'infinite-loading (默认)',
+                            sublabel: '加载速度相对较慢',
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'infinite-loading',
                             click() {
@@ -863,11 +864,24 @@ export const updateAppMenu = async () => {
                         },
                         {
                             label: '滚动 (实验性)',
+                            sublabel: '无痕，但有 BUG',
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'scroll',
                             click() {
                                 getConfig().optimizeMethod = 'scroll'
                                 ui.setOptimizeMethodSetting('scroll')
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        },
+                        {
+                            label: '关闭',
+                            sublabel: '不需要优化',
+                            type: 'radio',
+                            checked: getConfig().optimizeMethod == 'none',
+                            click() {
+                                getConfig().optimizeMethod = 'none'
+                                ui.setOptimizeMethodSetting('none')
                                 saveConfigFile()
                                 updateAppMenu()
                             },

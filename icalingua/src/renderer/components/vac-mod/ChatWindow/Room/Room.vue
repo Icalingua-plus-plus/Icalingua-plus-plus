@@ -45,8 +45,24 @@
                     </transition>
                     <transition name="vac-fade-message">
                         <infinite-loading
-                            v-if="messages.length && optimizeMethod === 'infinite-loading'"
+                            v-if="messages.length && optimizeMethod === 'none'"
                             :class="{ 'vac-infinite-loading': !messagesLoaded }"
+                            spinner="spiral"
+                            direction="top"
+                            :distance="40"
+                            @infinite="_loadMoreMessages"
+                        >
+                            <div slot="spinner">
+                                <loader :show="true" :infinite="true" />
+                            </div>
+                            <div slot="no-results" />
+                            <div slot="no-more" />
+                        </infinite-loading>
+                    </transition>
+                    <transition name="vac-fade-message">
+                        <infinite-loading
+                            v-if="messages.length && optimizeMethod === 'infinite-loading' && !(messagesLoaded && visiableViewport.head === 0)"
+                            :class="{ 'vac-infinite-loading': !(messagesLoaded && visiableViewport.head === 0) }"
                             spinner="spiral"
                             direction="top"
                             :distance="40"
@@ -440,7 +456,7 @@ export default {
                 head: null,
                 tail: null,
             },
-            optimizeMethod: 'infinite-loading',
+            optimizeMethod: 'scroll',
         }
     },
     computed: {
@@ -455,7 +471,7 @@ export default {
             return this.room.roomId && !this.messages.length && !this.loadingMessages && !this.loadingRooms
         },
         showMessagesStarted() {
-            return this.messages.length && this.messagesLoaded
+            return this.messages.length && this.messagesLoaded && this.visiableViewport.head === 0
         },
         isMessageEmpty() {
             return !this.file && !this.message.trim()
@@ -499,7 +515,7 @@ export default {
                     this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
                 }
             }
-            if (!oldVal || !oldVal.length) {
+            if (!oldVal || !oldVal.length || this.optimizeMethod === 'none') {
                 this.visiableViewport.head = 0
                 this.visiableViewport.tail = newVal.length
             }
@@ -508,8 +524,10 @@ export default {
                 this.loadingMessages = false
 
                 if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && this.visiableViewport.tail === oldVal.length) {
-                    this.visiableViewport.tail = newVal.length
-                    this.visiableViewport.head = newVal.length - this.maxViewportLength
+                    if (this.optimizeMethod !== 'none') {
+                        this.visiableViewport.tail = newVal.length
+                        this.visiableViewport.head = newVal.length - this.maxViewportLength
+                    }
                     return setTimeout(() => {
                         const options = { top: element.scrollHeight, behavior: 'smooth' }
                         element.scrollTo(options)
@@ -533,6 +551,10 @@ export default {
         },
         messagesLoaded(val) {
             if (val) this.loadingMessages = false
+            if (this.infiniteState.head) {
+                if (this.optimizeMethod !== 'none') this.infiniteState.head.loaded()
+                else this.infiniteState.head.complete()
+            }
         },
     },
     async mounted() {
@@ -766,8 +788,10 @@ export default {
                         tail = this.messages.length
                         head = Math.max(tail - this.maxViewportLength, 0)
                     }
-                    this.visiableViewport.head = head
-                    this.visiableViewport.tail = tail
+                    if (this.optimizeMethod !== 'none') {
+                        this.visiableViewport.head = head
+                        this.visiableViewport.tail = tail
+                    }
                     this.$nextTick(() => {
                         const message = document.getElementById(messageId)
                         if (message) {
@@ -978,8 +1002,10 @@ export default {
         },
         scrollToBottom() {
             const element = this.$refs.scrollContainer
-            this.visiableViewport.tail = this.messages.length
-            this.visiableViewport.head = this.messages.length - this.maxViewportLength
+            if (this.optimizeMethod !== 'none'){
+                this.visiableViewport.tail = this.messages.length
+                this.visiableViewport.head = this.messages.length - this.maxViewportLength
+            }
             this.$nextTick(() => {
                 element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
             })
@@ -1109,31 +1135,25 @@ export default {
         },
         loadHeadMessages(infiniteState) {
             if (this.optimizeMethod !== 'infinite-loading') return
-            if (this.visiableViewport.head === 0) {
-                setTimeout(
-                () => {
-                    this.infiniteState.head = infiniteState
-                    if (this.loadingHeadMessages) return
+            setTimeout(
+            () => {
+                this.infiniteState.head = infiniteState
+                if (this.loadingHeadMessages && this.visiableViewport.head === 0) return
 
-                    if (this.messagesLoaded || !this.room.roomId) {
-                        return infiniteState.complete()
-                    }
+                if ((this.messagesLoaded && this.visiableViewport.head === 0) || !this.room.roomId) {
+                    return infiniteState.loaded()
+                }
+                if (this.visiableViewport.head === 0){
                     this.$emit('fetch-messages')
                     this.loadingHeadMessages = true
-                },
-                iOSDevice() ? 500 : 0,
-                )
-            }
-            else {
-                setTimeout(
-                () => {
+                } else {
                     this.visiableViewport.head = Math.max(0, this.visiableViewport.head - 10)
                     this.visiableViewport.tail = Math.max(this.visiableViewport.head + this.maxViewportLength, this.visiableViewport.tail - 10)
                     infiniteState.loaded()
-                },
-                iOSDevice() ? 500 : 0,
-                )
-            }
+                }
+            },
+            iOSDevice() ? 500 : 0,
+            )
         },
         loadTailMessages(infiniteState) {
             if (this.optimizeMethod !== 'infinite-loading') return
@@ -1141,7 +1161,21 @@ export default {
             this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
             this.infiniteState.tail = infiniteState
             infiniteState.loaded()
-            if (this.visiableViewport.tail === this.messages.length) return infiniteState.complete()
+        },
+        _loadMoreMessages(infiniteState) {
+            setTimeout(
+                () => {
+                    if (this.loadingHeadMessages) return
+                    if (this.messagesLoaded || !this.room.roomId) {
+                        return infiniteState.complete()
+                    }
+                    this.infiniteState.head = infiniteState
+                    this.$emit('fetch-messages')
+                    this.loadingHeadMessages = true
+                },
+                // prevent scroll bouncing issue on iOS devices
+                iOSDevice() ? 500 : 0,
+            )
         },
         textctx: ipc.popupTextAreaMenu,
         roomMenu() {
