@@ -847,6 +847,36 @@ export const updateAppMenu = async () => {
                 })(),
             }),
             new MenuItem({
+                label: '性能优化方式',
+                submenu: (() => {
+                    let rsp: Electron.MenuItemConstructorOptions[] = [
+                        {
+                            label: 'infinite-loading (默认)',
+                            type: 'radio',
+                            checked: getConfig().optimizeMethod == 'infinite-loading',
+                            click() {
+                                getConfig().optimizeMethod = 'infinite-loading'
+                                ui.setOptimizeMethodSetting('infinite-loading')
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        },
+                        {
+                            label: '滚动 (实验性)',
+                            type: 'radio',
+                            checked: getConfig().optimizeMethod == 'scroll',
+                            click() {
+                                getConfig().optimizeMethod = 'scroll'
+                                ui.setOptimizeMethodSetting('scroll')
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        },
+                    ]
+                    return rsp
+                })(),
+            }),
+            new MenuItem({
                 label: '缩放比例',
                 submenu: [100, 110, 125, 150, 175, 200].map((factor) => ({
                     type: 'radio',

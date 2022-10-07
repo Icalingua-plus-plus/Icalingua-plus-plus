@@ -9,6 +9,7 @@ ipcMain.handle('getKeyToSendMessage', () => getConfig().keyToSendMessage)
 ipcMain.handle('getStorePath', () => app.getPath('userData'))
 ipcMain.handle('getlinkifySetting', () => getConfig().linkify)
 ipcMain.handle('getDebugSetting', () => getConfig().debugmode)
+ipcMain.handle('getOptimizeMethodSetting', () => getConfig().optimizeMethod)
 ipcMain.handle('getRoomPanelSetting', () => {
     const config = getConfig()
     return {

@@ -43,6 +43,22 @@
                             {{ messages[0].date }}
                         </div>
                     </transition>
+                    <transition name="vac-fade-message">
+                        <infinite-loading
+                            v-if="messages.length && optimizeMethod === 'infinite-loading'"
+                            :class="{ 'vac-infinite-loading': !messagesLoaded }"
+                            spinner="spiral"
+                            direction="top"
+                            :distance="40"
+                            @infinite="loadHeadMessages"
+                        >
+                            <div slot="spinner">
+                                <loader :show="true" :infinite="true" />
+                            </div>
+                            <div slot="no-results" />
+                            <div slot="no-more" />
+                        </infinite-loading>
+                    </transition>
                     <transition-group :key="roomId" name="vac-fade-message">
                         <div v-for="(m, i) in messages.slice(visiableViewport.head, visiableViewport.tail)" :key="m._id" @dblclick="replyMessage(m, $event)">
                             <message
@@ -83,6 +99,22 @@
                             </message>
                         </div>
                     </transition-group>
+                    <transition name="vac-fade-message">
+                        <infinite-loading
+                            v-if="visiableViewport.tail !== messages.length && optimizeMethod === 'infinite-loading'"
+                            :class="{ 'vac-infinite-loading': visiableViewport.tail !== messages.length }"
+                            spinner="spiral"
+                            direction="bottom"
+                            :distance="0"
+                            @infinite="loadTailMessages"
+                        >
+                            <div slot="spinner">
+                                <loader :show="true" :infinite="true" />
+                            </div>
+                            <div slot="no-results" />
+                            <div slot="no-more" />
+                        </infinite-loading>
+                    </transition>
                 </div>
             </div>
         </div>
@@ -372,7 +404,7 @@ export default {
             editedMessage: {},
             messageReply: null,
             loadingMessages: false,
-            loadingMoreMessages: false,
+            loadingHeadMessages: false,
             file: null,
             imageFile: null,
             videoFile: null,
@@ -404,6 +436,11 @@ export default {
                 top: 0,
                 bottom: 0,
             },
+            infiniteState: {
+                head: null,
+                tail: null,
+            },
+            optimizeMethod: 'infinite-loading',
         }
     },
     computed: {
@@ -431,7 +468,8 @@ export default {
     },
     watch: {
         loadingMessages(val) {
-            if (!val) this.focusTextarea(true)
+            if (val) this.infiniteState.head = null
+            else if (!val) this.focusTextarea(true)
         },
         async room(newVal, oldVal) {
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
@@ -482,14 +520,16 @@ export default {
                 }
             }
 
-            if (newVal.length && !this.scrollIcon) {
+            if (this.infiniteState.head) {
+                this.infiniteState.head.loaded()
+            } else if (newVal.length && !this.scrollIcon) {
                 setTimeout(() => {
                     element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
                 }, 0)
             }
 
-            setTimeout(() => (this.loadingMoreMessages = false), 0)
+            setTimeout(() => (this.loadingHeadMessages = false), 0)
         },
         messagesLoaded(val) {
             if (val) this.loadingMessages = false
@@ -609,7 +649,9 @@ export default {
         })
     },
     async created() {
+        this.optimizeMethod = await ipc.getOptimizeMethodSetting()
         keyToSendMessage = await ipc.getKeyToSendMessage()
+        ipcRenderer.on('setOptimizeMethodSetting', (_, method) => this.optimizeMethod = method)
         ipcRenderer.on('startForward', (_, _id) => {
             if (this.showForwardPanel) return
             this.selectedMessage = _id
@@ -883,10 +925,10 @@ export default {
         loadMoreMessages() {
             setTimeout(
                 () => {
-                    if (this.loadingMoreMessages) return
+                    if (this.loadingHeadMessages) return
                     if (!this.messages || this.messages.length === 0) return
                     this.$emit('fetch-messages')
-                    this.loadingMoreMessages = true
+                    this.loadingHeadMessages = true
                 },
                 // prevent scroll bouncing issue on iOS devices
                 iOSDevice() ? 500 : 0,
@@ -1049,6 +1091,7 @@ export default {
                 const scrollDirection = this.lastScrollPosition.top ? topScroll - this.lastScrollPosition.top : 0
                 this.lastScrollPosition.top = topScroll
 
+                if (this.optimizeMethod !== 'scroll') return
                 if (topScroll < scrollOffset && scrollDirection <= 0) {
                     if (this.visiableViewport.head === 0) this.$nextTick(() => this.loadMoreMessages())
                     else {
@@ -1063,6 +1106,42 @@ export default {
                 if (this.getTopScroll(e.target) <= 0) e.target.scrollTo({ top: 1 })
                 if (this.getBottomScroll(e.target) <= 0 && this.visiableViewport.tail !== this.messages.length) e.target.scrollTo({ top: e.target.scrollHeight - 1 - e.target.clientHeight })
             }, 24)
+        },
+        loadHeadMessages(infiniteState) {
+            if (this.optimizeMethod !== 'infinite-loading') return
+            if (this.visiableViewport.head === 0) {
+                setTimeout(
+                () => {
+                    this.infiniteState.head = infiniteState
+                    if (this.loadingHeadMessages) return
+
+                    if (this.messagesLoaded || !this.room.roomId) {
+                        return infiniteState.complete()
+                    }
+                    this.$emit('fetch-messages')
+                    this.loadingHeadMessages = true
+                },
+                iOSDevice() ? 500 : 0,
+                )
+            }
+            else {
+                setTimeout(
+                () => {
+                    this.visiableViewport.head = Math.max(0, this.visiableViewport.head - 10)
+                    this.visiableViewport.tail = Math.max(this.visiableViewport.head + this.maxViewportLength, this.visiableViewport.tail - 10)
+                    infiniteState.loaded()
+                },
+                iOSDevice() ? 500 : 0,
+                )
+            }
+        },
+        loadTailMessages(infiniteState) {
+            if (this.optimizeMethod !== 'infinite-loading') return
+            this.visiableViewport.tail = Math.min(this.visiableViewport.tail + 10, this.messages.length)
+            this.visiableViewport.head = Math.max(0, this.visiableViewport.tail - this.maxViewportLength)
+            this.infiniteState.tail = infiniteState
+            infiniteState.loaded()
+            if (this.visiableViewport.tail === this.messages.length) return infiniteState.complete()
         },
         textctx: ipc.popupTextAreaMenu,
         roomMenu() {
