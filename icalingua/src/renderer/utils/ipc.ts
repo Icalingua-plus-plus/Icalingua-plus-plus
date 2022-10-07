@@ -28,7 +28,7 @@ const ipc = {
         return await ipcRenderer.invoke('getDebugSetting')
     },
     async getOptimizeMethodSetting(): Promise<string> {
-        return await ipcRenderer.invoke('getOptimizeMethodSetting') || 'infinite-loading'
+        return await ipcRenderer.invoke('getOptimizeMethodSetting') || 'scroll'
     },
     async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean; roomPanelWidth: number }> {
         return await ipcRenderer.invoke('getRoomPanelSetting')
