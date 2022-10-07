@@ -146,4 +146,7 @@ export default {
     pasteGif(url: string) {
         sendToMainWindow('pasteGif', url)
     },
+    setOptimizeMethodSetting(method: string) {
+        sendToMainWindow('setOptimizeMethodSetting', method)
+    },
 }
