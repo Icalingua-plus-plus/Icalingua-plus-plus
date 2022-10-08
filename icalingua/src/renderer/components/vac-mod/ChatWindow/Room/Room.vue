@@ -121,7 +121,7 @@
                             :class="{ 'vac-infinite-loading': visiableViewport.tail !== messages.length }"
                             spinner="spiral"
                             direction="bottom"
-                            :distance="0"
+                            :distance="100"
                             @infinite="loadTailMessages"
                         >
                             <div slot="spinner">
@@ -136,7 +136,7 @@
         </div>
         <div v-if="!loadingMessages">
             <transition name="vac-bounce">
-                <div v-if="scrollIcon || visiableViewport.tail !== messages.length" class="vac-icon-scroll" @click="scrollToBottom">
+                <div v-if="scrollIcon || (visiableViewport.tail !== messages.length && messages.length !== 0)" class="vac-icon-scroll" @click="scrollToBottom">
                     <transition name="vac-bounce">
                         <div v-if="scrollMessagesCount" class="vac-badge-counter vac-messages-count">
                             {{ scrollMessagesCount }}
@@ -456,7 +456,7 @@ export default {
                 head: null,
                 tail: null,
             },
-            optimizeMethod: 'scroll',
+            optimizeMethod: 'infinite-loading',
         }
     },
     computed: {
