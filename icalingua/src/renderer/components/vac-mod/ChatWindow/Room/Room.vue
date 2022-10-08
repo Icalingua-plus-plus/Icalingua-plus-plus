@@ -672,6 +672,7 @@ export default {
     },
     async created() {
         this.optimizeMethod = await ipc.getOptimizeMethodSetting()
+        if (this.$route.name === 'history-page') this.optimizeMethod = 'none'
         keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('setOptimizeMethodSetting', (_, method) => this.optimizeMethod = method)
         ipcRenderer.on('startForward', (_, _id) => {
