@@ -110,7 +110,7 @@ const defaultConfig: AllConfig = {
     custom: false,
     fetchHistoryOnStart: false,
     showAppMenu: true,
-    optimizeMethod: 'scroll',
+    optimizeMethod: 'infinite-loading',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

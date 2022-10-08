@@ -851,20 +851,8 @@ export const updateAppMenu = async () => {
                 submenu: (() => {
                     let rsp: Electron.MenuItemConstructorOptions[] = [
                         {
-                            label: '滚动 (默认)',
-                            sublabel: '预加载，有小 BUG',
-                            type: 'radio',
-                            checked: getConfig().optimizeMethod == 'scroll',
-                            click() {
-                                getConfig().optimizeMethod = 'scroll'
-                                ui.setOptimizeMethodSetting('scroll')
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                        {
-                            label: 'infinite-loading (实验性)',
-                            sublabel: '较慢，但 BUG 可能更少',
+                            label: 'infinite-loading (默认)',
+                            sublabel: '较慢，但更稳定',
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'infinite-loading',
                             click() {
@@ -875,8 +863,20 @@ export const updateAppMenu = async () => {
                             },
                         },
                         {
-                            label: '关闭',
-                            sublabel: '不需要优化',
+                            label: '滚动 (实验性)',
+                            sublabel: '预加载，有 BUG',
+                            type: 'radio',
+                            checked: getConfig().optimizeMethod == 'scroll',
+                            click() {
+                                getConfig().optimizeMethod = 'scroll'
+                                ui.setOptimizeMethodSetting('scroll')
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        },
+                        {
+                            label: '关闭 (不推荐)',
+                            sublabel: '不优化，快进到卡死 (',
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'none',
                             click() {
