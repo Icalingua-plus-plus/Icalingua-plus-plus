@@ -880,6 +880,9 @@ export const updateAppMenu = async () => {
                             type: 'radio',
                             checked: getConfig().optimizeMethod == 'none',
                             click() {
+                                ui.chroom(0)
+                                ui.message('不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。' 
+                                    + '关闭后若前端卡死，可尝试杀死渲染进程并重新加载，亦可直接重启。')
                                 getConfig().optimizeMethod = 'none'
                                 ui.setOptimizeMethodSetting('none')
                                 saveConfigFile()
