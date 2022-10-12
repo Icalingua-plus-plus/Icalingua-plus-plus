@@ -523,7 +523,7 @@ export default {
             if (oldVal && newVal && oldVal.length === newVal.length - 1) {
                 this.loadingMessages = false
 
-                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && this.visiableViewport.tail === oldVal.length) {
+                if (newVal[newVal.length - 1].senderId === this.currentUserId || this.getBottomScroll(element) < 60 && (this.visiableViewport.tail === oldVal.length || this.optimizeMethod === 'none')) {
                     if (this.optimizeMethod !== 'none') {
                         this.visiableViewport.tail = newVal.length
                         this.visiableViewport.head = newVal.length - this.maxViewportLength
