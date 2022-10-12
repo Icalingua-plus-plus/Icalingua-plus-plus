@@ -1005,7 +1005,7 @@ export default {
             const element = this.$refs.scrollContainer
             if (this.optimizeMethod !== 'none'){
                 this.visiableViewport.tail = this.messages.length
-                this.visiableViewport.head = this.messages.length - this.maxViewportLength
+                this.visiableViewport.head = Math.max(this.messages.length - this.maxViewportLength, 0)
             }
             this.$nextTick(() => {
                 element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
