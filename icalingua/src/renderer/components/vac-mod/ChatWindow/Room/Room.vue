@@ -805,7 +805,7 @@ export default {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
                     let head = index - Math.floor(this.maxViewportLength / 2)
-                    let tail = this.visiableViewport.head + this.maxViewportLength
+                    let tail = head + this.maxViewportLength
                     if (head < 0) {
                         head = 0
                         tail = Math.min(this.maxViewportLength, this.messages.length)
@@ -821,7 +821,7 @@ export default {
                     this.$nextTick(() => {
                         const message = document.getElementById(messageId)
                         if (message) {
-                            message.scrollIntoView({ behavior: 'smooth' })
+                            message.scrollIntoView()
                         }
                     })
                     return
