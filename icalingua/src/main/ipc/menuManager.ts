@@ -148,13 +148,13 @@ const buildRoomMenu = (room: Room): Menu => {
         {
             label: '查看头像',
             click: () => {
-                openImage(getAvatarUrl(room.roomId), false)
+                openImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false)
             },
         },
         {
             label: '下载头像',
             click: () => {
-                downloadImage(getAvatarUrl(room.roomId))
+                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))
             },
         },
         {
