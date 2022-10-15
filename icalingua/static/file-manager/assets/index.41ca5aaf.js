@@ -445,6 +445,10 @@ var Q = ({ socket: t }) => {
     function fileContextMenu(u, name, e) {
         var items = []
         items.push({ title: '下载', fn: () => k(u) })
+        items.push({ title: '复制链接', fn: async () => {
+            const a = await t.download(u);
+            copy(a.url);
+        } })
         if (window.isAdmin !== "false") {
             items.push(
                 {
