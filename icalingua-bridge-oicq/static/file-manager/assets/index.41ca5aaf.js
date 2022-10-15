@@ -446,7 +446,7 @@ var Q = ({ socket: t }) => {
         const a = await t.download(u);
         var items = []
         items.push({ title: '下载', fn: () => k(u) })
-        if (window.isAdmin() !== "false") {
+        if (window.isAdmin !== "false") {
             items.push(
                 {
                     title: '重命名', fn: () => {
@@ -499,7 +499,7 @@ var Q = ({ socket: t }) => {
     async function dirContextMenu(u, a, e) {
         var items = []
         items.push({ title: '打开', fn: () => _(u, a) })
-        if (window.isAdmin() !== "false") {
+        if (window.isAdmin !== "false") {
             items.push(
                 {
                     title: '重命名', fn: () => {
