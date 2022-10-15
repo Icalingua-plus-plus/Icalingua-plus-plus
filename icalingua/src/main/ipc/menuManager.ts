@@ -253,6 +253,8 @@ const buildRoomMenu = (room: Room): Menu => {
                         webPreferences: {
                             // 修复循环触发下载的问题
                             partition: 'file-manager',
+                            preload: path.join(getStaticPath(), 'fileManagerPreload.js'),
+                            contextIsolation: false,
                         },
                     })
                     win.webContents.session.on('will-download', (e, item) => {
