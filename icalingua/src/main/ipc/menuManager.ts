@@ -263,7 +263,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                     win.loadURL(url)
                     win.webContents.executeJavaScript(
-                        'window.isAdmin = "' + isAdmin() + '"',
+                        'window.isAdmin = "' + await isAdmin() + '"',
                     )
                 },
             }),
