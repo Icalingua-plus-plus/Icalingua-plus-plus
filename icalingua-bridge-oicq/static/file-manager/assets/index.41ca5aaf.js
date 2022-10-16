@@ -377,7 +377,7 @@ var Q = ({ socket: t }) => {
                                 l("a", { onClick: () => _(a.fid, u), onContextMenu: (e) => dirContextMenu(a.fid, u, e), children: [u, "/"] })
                             ]
                         })
-                        : i("a", { onClick: () => k(a.fid), onContextMenu: (e) => fileContextMenu(a.fid, e), children: u });
+                        : i("a", { onClick: () => k(a.fid), onContextMenu: (e) => fileContextMenu(a.fid, u, e), children: u });
                 }
             },
             {
@@ -442,17 +442,20 @@ var Q = ({ socket: t }) => {
             }
         })
     }
-    async function fileContextMenu(u, e) {
-        const a = await t.download(u);
+    function fileContextMenu(u, name, e) {
         var items = []
         items.push({ title: '下载', fn: () => k(u) })
+        items.push({ title: '复制链接', fn: async () => {
+            const a = await t.download(u);
+            window.copyText(a.url);
+        } })
         if (window.isAdmin !== "false") {
             items.push(
                 {
                     title: '重命名', fn: () => {
                         msgbox.show("设置新名称", "input", {
                             button: ['取消', '确定'],
-                            default: a.name,
+                            default: name,
                             click: function (e) {
                                 if (e == 1) {
                                     t.rename(u, msgbox.result)
@@ -464,7 +467,7 @@ var Q = ({ socket: t }) => {
                 },
                 {
                     title: '删除', fn: () => {
-                        msgbox.show("确认删除文件 " + a.name + "?", "confirm", {
+                        msgbox.show("确认删除文件 " + name + "?", "confirm", {
                             button: ['取消', '确定'],
                             click: function (e) {
                                 if (e == 1) {

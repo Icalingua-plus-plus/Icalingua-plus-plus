@@ -447,7 +447,7 @@ var Q = ({ socket: t }) => {
         items.push({ title: '下载', fn: () => k(u) })
         items.push({ title: '复制链接', fn: async () => {
             const a = await t.download(u);
-            copy(a.url);
+            window.copyText(a.url);
         } })
         if (window.isAdmin !== "false") {
             items.push(
