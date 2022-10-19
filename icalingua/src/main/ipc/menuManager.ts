@@ -275,7 +275,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     const size = screen.getPrimaryDisplay().size
                     const win = newIcalinguaWindow({
                         height: size.height - 200,
-                        width: 800,
+                        width: 500,
                         autoHideMenuBar: true,
                     })
                     const cookies = await getCookies('qun.qq.com')
@@ -287,6 +287,28 @@ const buildRoomMenu = (room: Room): Menu => {
                         })
                     }
                     await win.loadURL('https://qun.qq.com/interactive/qunhonor?gc=' + -room.roomId)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '群相册',
+                async click() {
+                    const size = screen.getPrimaryDisplay().size
+                    const win = newIcalinguaWindow({
+                        height: size.height - 200,
+                        width: 800,
+                        autoHideMenuBar: true,
+                    })
+                    const cookies = await getCookies('qzone.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://h5.qzone.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
                 },
             }),
         )
