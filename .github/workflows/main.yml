@@ -871,7 +871,7 @@ jobs:
         run: corepack enable
 
       - id: git-ver
-        run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
       - name: check version and write version info
         run: node .github/check-version.js
@@ -919,7 +919,7 @@ jobs:
         run: corepack enable
 
       - id: git-ver
-        run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
+        run: echo "::set-output name=version::$(git describe --tags | sed 's/v//')"
 
       - name: check version and write version info
         run: node .github/check-version.js
