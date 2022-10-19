@@ -44,8 +44,10 @@ export default {
             else this.$emit('close-forward-panel')
         },
         recallMsgs() {
-            this.msgstoForward.forEach((msg) => {
-                ipc.deleteMessage(this.roomId, msg)
+            this.msgstoForward.forEach((msg, index) => {
+                setTimeout(() => {
+                    ipc.deleteMessage(this.roomId, msg)
+                }, index * 50)
             })
             this.stopForward(false)
         },
