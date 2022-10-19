@@ -19,6 +19,7 @@ import { base64decode } from 'nodejs-base64'
 import {
     Client,
     createClient,
+    DeviceEventData,
     FakeMessage,
     FriendAddEventData,
     FriendDecreaseEventData,
@@ -850,10 +851,10 @@ const loginHandlers = {
         }
         ui.messageSuccess('历史消息获取完成')
     },
-    verify(data) {
+    verify(data: DeviceEventData) {
         console.log(data)
         bot.sendSMSCode()
-        sendToLoginWindow('smsCodeVerify', data.url)
+        sendToLoginWindow('smsCodeVerify', data)
     },
     qrcode(data: QrcodeEventData) {
         console.log(data)
