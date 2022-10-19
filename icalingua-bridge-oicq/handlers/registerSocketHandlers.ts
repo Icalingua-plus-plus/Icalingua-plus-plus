@@ -52,6 +52,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('makeForward', adapter.makeForward)
     socket.on('login', adapter.createBot)
     socket.on('submitSmsCode', adapter.submitSmsCode)
+    socket.on('randomDevice', adapter.randomDevice)
     socket.on('requestToken', (cb) => cb(sendImgTokenManager.create()))
     socket.on('requestGfsToken', (gin: number, cb) => cb(gfsTokenManager.create(gin)))
     socket.on('login-verify-reLogin', adapter.reLogin)

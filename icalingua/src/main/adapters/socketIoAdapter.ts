@@ -425,6 +425,9 @@ const adapter: Adapter = {
             })
         }
     },
+    randomDevice(username: number) {
+        socket.emit('randomDevice', username)
+    },
     submitSmsCode(smsCode: string) {
         socket.emit('submitSmsCode', smsCode)
     },
