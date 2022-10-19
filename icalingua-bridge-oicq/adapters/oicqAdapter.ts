@@ -11,6 +11,7 @@ import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
+import fs from 'fs'
 import { base64decode } from 'nodejs-base64'
 import {
     Client,
@@ -47,6 +48,7 @@ import {
     SyncMessageEventData,
     SyncReadedEventData,
 } from 'oicq-icalingua-plus-plus'
+import path from 'path'
 import { Socket } from 'socket.io'
 import { config, saveUserConfig, userConfig } from '../providers/configManager'
 import { broadcast } from '../providers/socketIoProvider'
@@ -1592,6 +1594,39 @@ const adapter = {
     },
     submitSmsCode(smsCode: string) {
         bot.submitSMSCode(smsCode)
+    },
+    randomDevice(username: number) {
+        const filepath = path.join(require.main ? require.main.path : process.cwd(), "data", String(username))
+        const devicepath = path.join(filepath, `device-${String(username)}.json`)
+        const randomString = (length: number, num: boolean = false) => {
+            let result = ''
+            const map = num ? '0123456789' : '0123456789abcdef'
+            for (let i = length; i > 0; --i) result += map[Math.floor(Math.random() * map.length)]
+            return result
+        }
+        const device = `{
+        "--begin--":    "该设备文件为尝试解决${username}的风控时随机生成。",
+        "product":      "ILPP-${randomString(5).toUpperCase()}",
+        "device":       "${randomString(5).toUpperCase()}",
+        "board":        "${randomString(5).toUpperCase()}",
+        "brand":        "${randomString(4).toUpperCase()}",
+        "model":        "ILPP ${randomString(4).toUpperCase()}",
+        "wifi_ssid":    "HUAWEI-${randomString(7)}",
+        "bootloader":   "U-boot",
+        "android_id":   "IL.${randomString(7, true)}.${randomString(4, true)}",
+        "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(12)}",
+        "proc_version": "Linux version 5.10.101-android12-${randomString(8)}",
+        "mac_address":  "2D:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
+        "ip_address":   "192.168.${randomString(2, true)}.${randomString(2,true)}",
+        "imei":         "86${randomString(13, true)}",
+        "incremental":  "${randomString(10).toUpperCase()}",
+        "--end--":      "修改后可能需要重新验证设备。"
+    }`
+        if (fs.existsSync(filepath)) {
+            fs.rmSync(filepath, { recursive: true, force: true })
+        }
+        fs.mkdirSync(filepath, { recursive: true, mode: 0o755 })
+        fs.writeFileSync(devicepath, device, { mode: 0o600 })
     },
 }
 

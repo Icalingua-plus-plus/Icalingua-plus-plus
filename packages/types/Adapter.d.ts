@@ -31,6 +31,8 @@ export default interface Adapter {
 
     getAccount(): LoginForm
 
+    randomDevice(username: number): void
+
     clearRoomUnread(roomId: number): any
 
     getUnreadRooms(): Promise<Room[]>
