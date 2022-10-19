@@ -94,7 +94,7 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
     } else {
         loginWindow = newIcalinguaWindow({
             height: 720,
-            width: 450,
+            width: 550,
             maximizable: false,
             webPreferences: {
                 webSecurity: false,
