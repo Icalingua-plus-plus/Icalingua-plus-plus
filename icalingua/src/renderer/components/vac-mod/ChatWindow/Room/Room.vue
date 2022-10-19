@@ -1135,7 +1135,7 @@ export default {
                 if (!e.target) return
 
                 const bottomScroll = this.getBottomScroll(e.target)
-                if (bottomScroll < 60 && this.visibleViewport.tail === this.messages.length)
+                if (bottomScroll < 60 && this.visibleViewport.tail >= this.messages.length)
                     this.scrollMessagesCount = 0
                 this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 
