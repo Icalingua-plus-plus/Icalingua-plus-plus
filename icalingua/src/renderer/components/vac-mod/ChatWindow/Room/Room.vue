@@ -509,6 +509,9 @@ export default {
                 this.editAndResend = false
                 this.closeForwardPanel()
                 await this.updateGroupMembers()
+            } else if (newVal.roomId === 0) {
+                this.scrollIcon = false
+                this.scrollMessagesCount = 0
             }
         },
         messages(newVal, oldVal) {
