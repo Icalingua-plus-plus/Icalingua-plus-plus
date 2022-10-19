@@ -715,7 +715,7 @@ const loginHandlers = {
     verify(data: DeviceEventData) {
         console.log(data)
         bot.sendSMSCode()
-        broadcast('login-smsCodeVerify', data.url)
+        broadcast('login-smsCodeVerify', data)
     },
     qrcode(data: QrcodeEventData) {
         const url = "data:image/png;base64," + data.image.toString('base64');

@@ -93,6 +93,7 @@
             :wrapper-closable="false"
             size="100%"
         >
+            <a v-if="phone">已向 {{ phone }} 发送验证码</a>
             <el-input
                 placeholder="短信验证码"
                 v-model="smsCode"
@@ -130,6 +131,7 @@ export default {
             shouldSubmitSmsCode: false,
             smsCode: '',
             verifyUrl: '',
+            phone: '',
         }
     },
     async created() {
@@ -140,10 +142,11 @@ export default {
             this.disabled = false
             this.shouldSubmitSmsCode = false
         })
-        ipcRenderer.on('smsCodeVerify', (_, url) => {
-            console.log(url)
+        ipcRenderer.on('smsCodeVerify', (_, data) => {
+            console.log(data.url)
             this.shouldSubmitSmsCode = true
-            this.verifyUrl = url
+            this.verifyUrl = data.url
+            this.phone = data.phone
         })
     },
     methods: {

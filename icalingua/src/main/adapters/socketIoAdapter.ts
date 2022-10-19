@@ -14,7 +14,7 @@ import fileType from 'file-type'
 import { Notification } from 'freedesktop-notifications'
 import fs from 'fs'
 import { sign } from 'noble-ed25519'
-import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
+import { DeviceEventData, FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import { io, Socket } from 'socket.io-client'
 import formatDate from '../../utils/formatDate'
@@ -256,9 +256,9 @@ const attachSocketEvents = () => {
     socket.on('login-qrcodeLogin', (url: string) => {
         sendToLoginWindow('qrcodeLogin', url)
     })
-    socket.on('login-smsCodeVerify', (url: string) => {
+    socket.on('login-smsCodeVerify', (data: DeviceEventData) => {
         showLoginWindow(true)
-        sendToLoginWindow('smsCodeVerify', url)
+        sendToLoginWindow('smsCodeVerify', data)
     })
     socket.on('login-error', (message: string) => {
         sendToLoginWindow('error', message)
