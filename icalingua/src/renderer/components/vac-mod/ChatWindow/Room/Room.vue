@@ -1288,7 +1288,7 @@ export default {
 }
 
 .vac-infinite-loading {
-    height: 68px;
+    height: 38px;
 }
 
 .vac-icon-scroll {
@@ -1477,7 +1477,7 @@ export default {
     }
 
     .vac-infinite-loading {
-        height: 58px;
+        height: 30px;
     }
 
     .vac-box-footer {
