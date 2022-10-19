@@ -222,7 +222,7 @@ jobs:
           name: dist
           path: icalingua/dist
 
-      - uses: uraimo/run-on-arch-action@v3.1.1
+      - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
         with:
           arch: aarch64
@@ -288,7 +288,7 @@ jobs:
           name: dist
           path: icalingua/dist
 
-      - uses: uraimo/run-on-arch-action@v3.1.1
+      - uses: uraimo/run-on-arch-action@v2.1.1
         name: build native modules using another arch
         with:
           arch: armv7
@@ -871,7 +871,7 @@ jobs:
         run: corepack enable
 
       - id: git-ver
-        run: echo "version=$(git describe --tags | sed 's/v//')" >> $GITHUB_OUTPUT
+        run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
 
       - name: check version and write version info
         run: node .github/check-version.js
@@ -919,7 +919,7 @@ jobs:
         run: corepack enable
 
       - id: git-ver
-        run: echo "version=$(git describe --tags | sed 's/v//')" >> $GITHUB_OUTPUT
+        run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
 
       - name: check version and write version info
         run: node .github/check-version.js
@@ -1004,7 +1004,7 @@ jobs:
           package-manager: pnpm
 
       - id: git-ver
-        run: echo "version=$(git describe --tags | sed 's/v//')" >> $GITHUB_OUTPUT
+        run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
 
       - name: check version and write version info
         run: node .github/check-version.js
