@@ -222,7 +222,7 @@ jobs:
           name: dist
           path: icalingua/dist
 
-      - uses: uraimo/run-on-arch-action@v2.1.1
+      - uses: uraimo/run-on-arch-action@v2.3.0
         name: build native modules using another arch
         with:
           arch: aarch64
@@ -288,7 +288,7 @@ jobs:
           name: dist
           path: icalingua/dist
 
-      - uses: uraimo/run-on-arch-action@v2.1.1
+      - uses: uraimo/run-on-arch-action@v2.3.0
         name: build native modules using another arch
         with:
           arch: armv7
@@ -798,22 +798,22 @@ jobs:
       - pack-archpkg-aarch64
       - pack-archpkg-armv7l
     steps:
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: dist
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: x86_64-unpacked
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: ia32-unpacked
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: arm64-unpacked
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: armv7l-unpacked
-      - uses: geekyeggo/delete-artifact@v1
+      - uses: geekyeggo/delete-artifact@v2
         with:
           name: pkgres
 
