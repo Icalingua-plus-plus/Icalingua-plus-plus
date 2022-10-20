@@ -5,9 +5,12 @@ import fs from 'fs'
 import md5 from 'md5'
 
 const cache = new Map<string, string>()
-const dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'ica'))
+let dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'ica'))
 
 export default async (url: string): Promise<string> => {
+    if (!fs.existsSync(dir)) {
+        dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'ica'))
+    }
     let file = cache.get(url)
     if (!file) {
         const res = await axios.get(url, {
