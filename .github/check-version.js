@@ -1,5 +1,6 @@
 const packageJson = require('../icalingua/package.json')
 const fs = require('fs')
+const core = require('@actions/core')
 
 Date.prototype.format = function (fmt) {
     var o = {
@@ -43,8 +44,8 @@ isProduction: ${isProduction}
 buildTime: ${buildTime}
 version: ${version}`)
 
-console.log(`::set-output name=arch-version::${version.replace(/-/g, '_')}`)
-console.log(`::set-output name=pkg-name::icalingua${isProduction ? '' : '-beta'}`)
+core.setOutput('arch-version', version.replace(/-/g, '_'))
+core.setOutput('pkg-name', `icalingua${isProduction ? '' : '-beta'}`)
 
 fs.writeFileSync('icalingua/static/version.json',
     JSON.stringify({commitId, ref, isProduction, buildTime, version}), 'utf-8')

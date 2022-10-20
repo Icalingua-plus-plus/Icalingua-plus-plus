@@ -9,7 +9,8 @@
     "@icalingua/storage-providers": "workspace:*",
     "@icalingua/types": "workspace:*",
     "icalingua": "workspace:*",
-    "icalingua-bridge-oicq": "workspace:*"
+    "icalingua-bridge-oicq": "workspace:*",
+    "@actions/core": "1.10.0"
   },
   "packageManager": "pnpm@7.8.0"
 }
