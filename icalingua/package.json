@@ -1,6 +1,6 @@
 {
     "name": "icalingua",
-    "version": "2.7.3",
+    "version": "2.7.4",
     "author": "The Icalingua++ Authors <Icalinguaplusplus@protonmail.com>",
     "description": "A client for (maybe) any IM made with Electron",
     "license": "AGPL-3.0",
@@ -60,7 +60,7 @@
             "category": "Network",
             "desktop": {
                 "StartupWMClass": "icalingua"
-              }
+            }
         },
         "snap": {
             "summary": "A Linux IM client for QQ and more",
