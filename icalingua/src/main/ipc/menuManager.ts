@@ -313,7 +313,7 @@ const buildRoomMenu = (room: Room): Menu => {
                         if (details.url.replace('http://', 'https://').startsWith('https://qungz.photo.store.qq.com'))
                             openImage(details.url)
                         else if (details.url.replace('http://', 'https://').startsWith('https://download.photo.qq.com/'))
-                            download(details.url, `${ room.roomName }(${ room.roomId })的群相册${ new Date().getTime() }.zip`)
+                            download(details.url, `${ room.roomName }(${ -room.roomId })的群相册${ new Date().getTime() }.zip`)
                         return { action: 'deny' }
                     })
                     await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
