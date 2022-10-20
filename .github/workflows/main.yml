@@ -59,6 +59,15 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
+      - name: Cache pnpm and node-modules
+        uses: Icalinguaplusplus/node-pm-action@master
+        with:
+          node-modules: ./node_modules
+          package-manager: pnpm
+
+      - name: pnpm install
+        run: pnpm install
+
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
 
@@ -69,15 +78,6 @@ jobs:
           SHA: ${{ github.sha }}
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-
-      - name: pnpm install
-        run: pnpm install
 
       - name: build
         run: pnpm build:ci
@@ -870,6 +870,9 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
+      - name: pnpm install
+        run: pnpm install
+
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
 
@@ -880,9 +883,6 @@ jobs:
           SHA: ${{ github.sha }}
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
-
-      - name: pnpm install
-        run: pnpm install
 
       - name: build
         run: pnpm build
@@ -917,6 +917,9 @@ jobs:
 
       - name: Install pnpm
         run: corepack enable
+
+      - name: pnpm install
+        run: pnpm install
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
@@ -1003,6 +1006,9 @@ jobs:
           node-modules: ./node_modules
           package-manager: pnpm
 
+      - name: pnpm install
+        run: pnpm install
+
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
 
@@ -1013,9 +1019,6 @@ jobs:
           SHA: ${{ github.sha }}
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
-
-      - name: pnpm install
-        run: pnpm install
 
       - name: build
         run: pnpm build
