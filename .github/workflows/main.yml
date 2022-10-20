@@ -918,8 +918,14 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: pnpm install
-        run: pnpm install
+      - name: Fetch node.lib and pnpm install
+        shell: cmd
+        run: |
+          set npm_config_arch=arm64
+          set node_version=16.13.0
+          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
+          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+          pnpm install
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
