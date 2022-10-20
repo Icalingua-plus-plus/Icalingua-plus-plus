@@ -275,7 +275,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     const size = screen.getPrimaryDisplay().size
                     const win = newIcalinguaWindow({
                         height: size.height - 200,
-                        width: 500,
+                        width: 550,
                         autoHideMenuBar: true,
                     })
                     const cookies = await getCookies('qun.qq.com')
@@ -308,6 +308,14 @@ const buildRoomMenu = (room: Room): Menu => {
                             value: cookies[i],
                         })
                     }
+                    win.webContents.setWindowOpenHandler((details) => {
+                        console.log(details.url)
+                        if (details.url.replace('http://', 'https://').startsWith('https://qungz.photo.store.qq.com'))
+                            openImage(details.url)
+                        else if (details.url.replace('http://', 'https://').startsWith('https://download.photo.qq.com/'))
+                            download(details.url, `${ room.roomName }(${ room.roomId })的群相册${ new Date().getTime() }.zip`)
+                        return { action: 'deny' }
+                    })
                     await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
                 },
             }),
