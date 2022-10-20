@@ -4,13 +4,11 @@ importers:
 
   .:
     specifiers:
-      '@actions/core': 1.10.0
       '@icalingua/storage-providers': workspace:*
       '@icalingua/types': workspace:*
       icalingua: workspace:*
       icalingua-bridge-oicq: workspace:*
     dependencies:
-      '@actions/core': 1.10.0
       '@icalingua/storage-providers': link:packages/storageProviders
       '@icalingua/types': link:packages/types
       icalingua: link:icalingua
@@ -18,6 +16,7 @@ importers:
 
   icalingua:
     specifiers:
+      '@actions/core': 1.10.0
       '@types/fluent-ffmpeg': ^2.1.20
       '@types/ioredis': ^4.28.10
       '@types/lowdb': ^1.0.11
@@ -123,6 +122,7 @@ importers:
       socket.io: 4.5.2
       sqlite3: 5.0.11
     devDependencies:
+      '@actions/core': 1.10.0
       '@types/fluent-ffmpeg': 2.1.20
       '@types/ioredis': 4.28.10
       '@types/lowdb': 1.0.11
@@ -287,13 +287,13 @@ packages:
     dependencies:
       '@actions/http-client': 2.0.1
       uuid: 8.3.2
-    dev: false
+    dev: true
 
   /@actions/http-client/2.0.1:
     resolution: {integrity: sha512-PIXiMVtz6VvyaRsGY268qvj57hXQEpsYogYOu2nrQhlf+XCGmZstmuZBbAybUl1nQGnvS1k1eEsQ69ZoD7xlSw==}
     dependencies:
       tunnel: 0.0.6
-    dev: false
+    dev: true
 
   /@babel/helper-string-parser/7.18.10:
     resolution: {integrity: sha512-XtIfWmeNY3i4t7t4D2t02q50HvqHybPqW2ki1kosnvWCwuCMeo81Jf0gwr85jy/neUdg5XDdeFE/80DXiO+njw==}
@@ -10565,6 +10565,7 @@ packages:
   /tunnel/0.0.6:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
     engines: {node: '>=0.6.11 <=0.7.0 || >=0.7.3'}
+    dev: true
 
   /type-fest/0.13.1:
     resolution: {integrity: sha512-34R7HTnG0XIJcBSn5XhDd7nNFPRcXYRZrBB2O2jdKqYODldSzBAqzsWoZYYvduky73toYS/ESqxPvkDf/F0XMg==}
