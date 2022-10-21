@@ -4,6 +4,7 @@ import OnlineData from '@icalingua/types/OnlineData'
 import Room from '@icalingua/types/Room'
 import { ipcMain } from 'electron'
 import { updateAppMenu } from '../ipc/menuManager'
+import { getConfig } from './configManager'
 import { updateTrayIcon } from './trayManager'
 import { sendToMainWindow, sendToRequestWindow } from './windowManager'
 
@@ -57,12 +58,14 @@ export default {
         sendToMainWindow('notifySuccess', data)
     },
     message(string: string) {
+        if (getConfig().silentFetchHistory && string.startsWith('已拉取')) return
         sendToMainWindow('message', string)
     },
     messageError(string: string) {
         sendToMainWindow('messageError', string)
     },
     messageSuccess(string: string) {
+        if (getConfig().silentFetchHistory && (string.startsWith('已拉取') || string === '开始拉取消息')) return
         sendToMainWindow('messageSuccess', string)
     },
     updateRoom(room: Room) {

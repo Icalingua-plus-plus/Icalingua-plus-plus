@@ -841,7 +841,7 @@ const loginHandlers = {
         {
             const rooms = await storage.getAllRooms()
             for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
                 const roomId = i.roomId
                 let buffer: Buffer
                 let uid = roomId
