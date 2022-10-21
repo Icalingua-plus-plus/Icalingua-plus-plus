@@ -275,7 +275,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     const size = screen.getPrimaryDisplay().size
                     const win = newIcalinguaWindow({
                         height: size.height - 200,
-                        width: 550,
+                        width: 800,
                         autoHideMenuBar: true,
                     })
                     const cookies = await getCookies('qun.qq.com')
