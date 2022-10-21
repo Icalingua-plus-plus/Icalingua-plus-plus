@@ -40,6 +40,7 @@ type AllConfig = {
     fetchHistoryOnStart: boolean
     showAppMenu: boolean
     optimizeMethod: string
+    silentFetchHistory: boolean
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -111,6 +112,7 @@ const defaultConfig: AllConfig = {
     fetchHistoryOnStart: false,
     showAppMenu: true,
     optimizeMethod: 'infinite-loading',
+    silentFetchHistory: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
