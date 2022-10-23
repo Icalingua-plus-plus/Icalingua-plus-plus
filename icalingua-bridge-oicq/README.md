@@ -10,11 +10,14 @@
 
 ## 安装方法
 
+ **注意：**
+ 建议不要使用淘宝源，容易造成依赖丢失
+
 ### 常规安装
 
 首先有一台服务器。
 
-1. 服务器需要安装 pnpm 和 `ffmpeg` 命令，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
+1. 服务器需要安装 pnpm 和 `ffmpeg` ，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代。
 
 2. 在项目根目录运行 `pnpm install` 安装必要依赖。
 
@@ -22,9 +25,10 @@
 
 4. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用。
 
-    ![ECC 密钥生成页面](https://user-images.githubusercontent.com/18461360/130779855-1cdc26ad-0037-4bbf-930c-07e8cbc2f6c9.png)
+    ![ECC 密钥生成页面](https://user-images.githubusercontent.com/72498396/197397311-e07fe4fe-e1f2-4649-87c6-83917a21f88b.png)
 
-    **注意：**请不要使用自带的公钥 `207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6`，它对应的私钥为 `0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`。
+    **注意：**
+    请不要使用自带的公钥 `207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6`，它对应的私钥为 `0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef`。
 
     该密钥仅适用于本地环境及测试环境，暴露在公网中是非常危险的。
 
@@ -55,7 +59,7 @@ Todo
 
 ## 客户端连接方法
 
-首先保持 Icalingua++ 未运行状态，编辑 `~/.config/icalingua/config.yaml` 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
+首先保持 Icalingua++ 未运行状态，编辑 `config.yaml`（Linux：~/.config/icalingua/config.yaml，Windows：%AppData%\icalingua\config.yaml） 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
 
 ```yaml
 adapter: socketIo # 将 Icalingua++ 切换到自有协议
@@ -63,7 +67,7 @@ server: http(s)://服务器的地址，若非 HTTP80 或 HTTPS443 需要:端口�
 privateKey: 安装的步骤中生成的私钥
 ```
 
-首次运行的时候会弹出登录界面，给 Bridge 配置账号和数据库。需要注意的是数据库是相对于服务器的地址
+首次运行的时候会弹出登录界面，需要注意的是数据库是相对应服务器的地址
 
 ## 登录握手细节
 
