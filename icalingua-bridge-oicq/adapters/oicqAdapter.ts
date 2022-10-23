@@ -262,6 +262,7 @@ const eventHandlers = {
     },
     async friendPoke(data: FriendPokeEventData) {
         const roomId = data.operator_id == bot.uin ? data.user_id : data.operator_id
+        if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
         if (room) {
             room.utime = data.time * 1000
@@ -296,6 +297,7 @@ const eventHandlers = {
         }
     },
     async groupPoke(data: GroupPokeEventData) {
+        if (await storage.isChatIgnored(-data.group_id)) return
         const room = await storage.getRoom(-data.group_id)
         if (room) {
             room.utime = data.time * 1000
