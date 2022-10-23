@@ -487,9 +487,9 @@ Chromium ${process.versions.chrome}` : ''
             setTimeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
-                if (msgs2add.some(e => this.messages.find(e2 => e2._id === e._id))) return
-                if (msgs2add.length) {
-                    this.messages = [...msgs2add, ...this.messages]
+                const msgs2add2 = msgs2add.filter(e => !this.messages.find(e2 => e2._id === e._id))
+                if (msgs2add2.length) {
+                    this.messages = [...msgs2add2, ...this.messages]
                 }
                 else this.messagesLoaded = true
             }, 0)
