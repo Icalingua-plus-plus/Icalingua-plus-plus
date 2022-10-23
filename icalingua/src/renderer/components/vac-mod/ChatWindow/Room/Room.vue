@@ -554,7 +554,7 @@ export default {
                 ) {
                     if (this.optimizeMethod !== 'none') {
                         this.visibleViewport.tail = newVal.length
-                        this.visibleViewport.head = newVal.length - this.maxViewportLength
+                        this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
                     }
                     return setTimeout(() => {
                         const options = { top: element.scrollHeight, behavior: 'smooth' }
