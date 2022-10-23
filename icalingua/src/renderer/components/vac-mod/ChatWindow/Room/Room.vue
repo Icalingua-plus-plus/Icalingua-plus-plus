@@ -800,12 +800,31 @@ export default {
             console.log('delMsgtoForward')
         },
         scrollToMessage(messageId) {
+            const judgeSameMessage = (a, b) =>{
+                if (a === b) return true
+                const parsedA =  Buffer.from(a, "base64")
+                const parsedB =  Buffer.from(b, "base64")
+                if (this.roomId < 0) {
+                    for (let i = 0; i <= 16; i+=4) {
+                        if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i))
+                            return false
+                    }
+                    if (parsedA.readUInt8(20) !== parsedB.readUInt8(20)) return false
+                } else {
+                    for (let i = 0; i <= 12; i+=4) {
+                        if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i))
+                            return false
+                    }
+                    if (parsedA.readUInt8(16) !== parsedB.readUInt8(16)) return false
+                }
+                return true
+            }
             const message = document.getElementById(messageId)
             if (message) {
                 message.scrollIntoView({ behavior: 'smooth' })
                 return
             } else {
-                const index = this.messages.findIndex((e) => e._id === messageId)
+                const index = this.messages.findIndex((e) => judgeSameMessage(e._id, messageId))
                 if (index !== -1) {
                     let head = index - Math.floor(this.maxViewportLength / 2)
                     let tail = head + this.maxViewportLength
