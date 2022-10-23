@@ -1109,6 +1109,17 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }),
             )
         }
+        if (message.replyMessage && !history) {
+            menu.append(
+                new MenuItem({
+                    label: '复制回复消息 ID',
+                    type: 'normal',
+                    click: () => {
+                        clipboard.writeText(String(message.replyMessage._id))
+                    },
+                }),
+            )
+        }
         if (message.replyMessage && message.replyMessage.file) {
             if (message.replyMessage.file.type.startsWith('image/'))
                 menu.append(
