@@ -126,7 +126,7 @@
                     <transition name="vac-fade-message">
                         <infinite-loading
                             v-if="visibleViewport.tail !== messages.length && optimizeMethod === 'infinite-loading'"
-                            :class="{ 'vac-infinite-loading': visibleViewport.tail !== messages.length }"
+                            :class="{ 'vac-infinite-loading-bottom': visibleViewport.tail !== messages.length }"
                             spinner="spiral"
                             direction="bottom"
                             :distance="100"
@@ -1291,6 +1291,10 @@ export default {
 }
 
 .vac-infinite-loading {
+    height: 68px;
+}
+
+.vac-infinite-loading-bottom {
     height: 0px;
 }
 
@@ -1480,7 +1484,7 @@ export default {
     }
 
     .vac-infinite-loading {
-        height: 0px;
+        height: 58px;
     }
 
     .vac-box-footer {
