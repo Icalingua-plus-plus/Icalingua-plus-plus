@@ -125,6 +125,7 @@
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
                             @open-file="openFile"
+                            :hide-chat-image-by-default="hideChatImageByDefault"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
                                 <slot :name="name" v-bind="data" />
@@ -141,6 +142,7 @@
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
+                            :hide-chat-image-by-default="hideChatImageByDefault"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -247,6 +249,7 @@ export default {
         linkify: { type: Boolean, default: true },
         forwardResId: { type: String, required: false },
         msgstoForward: { type: Array, required: false },
+        hideChatImageByDefault: { type: Boolean, required: true},
     },
 
     data() {
