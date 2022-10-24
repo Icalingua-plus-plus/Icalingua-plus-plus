@@ -1486,6 +1486,13 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
             },
         })
         menu.push({
+            label: '查看大图',
+            type: 'normal',
+            click() {
+                openImage(itemName)
+            },
+        })
+        menu.push({
             label: '移动到分类',
             type: 'normal',
             click() {
