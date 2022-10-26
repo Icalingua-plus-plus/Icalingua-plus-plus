@@ -1,7 +1,7 @@
 window.external = {
     openWebWindow(d) {
         console.log(d);
-        location.href = JSON.parse(d).url;
+        //location.href = JSON.parse(d).url;
     },
     addDownloadTask(path, name, size, _) {
         const uuid = path.split('/')[2];

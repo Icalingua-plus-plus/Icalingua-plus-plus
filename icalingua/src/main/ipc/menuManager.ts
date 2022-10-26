@@ -328,7 +328,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     const win = newIcalinguaWindow({
                         height: size.height - 200,
                         width: 500,
-                        // autoHideMenuBar: true,
+                        autoHideMenuBar: true,
                         title: '群作业',
                         webPreferences: {
                             contextIsolation: false,
@@ -345,8 +345,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     }
 
                     await win.loadURL(
-                        'https://qun.qq.com/homework/p/features#?gid=' + -room.roomId,
-                        { userAgent: "QQ/114514" })
+                        'https://qun.qq.com/homework/p/features#?gid=' + -room.roomId)
                 },
             }),
         )
@@ -585,18 +584,6 @@ export const updateAppMenu = async () => {
                         updateAppMenu()
                     }, 10000)
                     updateAppMenu()
-                },
-            }),
-            new MenuItem({
-                label: "后退",
-                click(menuItem, browserWindow, event) {
-                    browserWindow.webContents.goBack();
-                },
-            }),
-            new MenuItem({
-                label: "前进",
-                click(menuItem, browserWindow, event) {
-                    browserWindow.webContents.goForward();
                 },
             }),
             new MenuItem({
