@@ -41,3 +41,5 @@ ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 
     getConfig().lastUsedStickerType = type
     saveConfigFile()
 })
+
+ipcMain.handle('getHideChatImageByDefault', () => getConfig().hideChatImageByDefault)

@@ -116,6 +116,7 @@
                                 @add-msg-to-forward="addMsgtoForward"
                                 @del-msg-to-forward="delMsgtoForward"
                                 @scroll-to-message="scrollToMessage"
+                                :hide-chat-image-by-default="hideChatImageByDefault"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -425,6 +426,7 @@ export default {
         account: { type: Number, required: true },
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
+        hideChatImageByDefault: { type: Boolean, required: false, default: false },
     },
     data() {
         return {
@@ -719,6 +721,10 @@ export default {
         ipcRenderer.on('pasteGif', (_, GifURL) => {
             this.onPasteGif(GifURL)
             this.$emit('stickers-panel')
+        })
+        this.hideChatImageByDefault = await ipc.getHideChatImageByDefault()
+        ipcRenderer.on('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
+            this.hideChatImageByDefault = hideChatImageByDefault
         })
     },
     methods: {
