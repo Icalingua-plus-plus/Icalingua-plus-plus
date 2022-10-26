@@ -351,7 +351,6 @@ const buildRoomMenu = (room: Room): Menu => {
                                     height: size.height - 300,
                                     width: 500,
                                     autoHideMenuBar: true,
-                                    title: '',
                                     webPreferences: {
                                         contextIsolation: false,
                                         preload: path.join(getStaticPath(), 'homeworkPreload.js')
