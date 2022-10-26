@@ -68,7 +68,6 @@ export const loadMainWindow = () => {
                     height: size.height - 200,
                     width: 500,
                     autoHideMenuBar: true,
-                    title: '',
                     webPreferences: {
                         contextIsolation: false,
                         preload: path.join(getStaticPath(), 'homeworkPreload.js')
@@ -90,7 +89,6 @@ export const loadMainWindow = () => {
                                 height: size.height - 300,
                                 width: 500,
                                 autoHideMenuBar: true,
-                                title: '',
                                 webPreferences: {
                                     contextIsolation: false,
                                     preload: path.join(getStaticPath(), 'homeworkPreload.js')
