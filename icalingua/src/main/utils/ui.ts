@@ -152,4 +152,7 @@ export default {
     setOptimizeMethodSetting(method: string) {
         sendToMainWindow('setOptimizeMethodSetting', method)
     },
+    setHideChatImageByDefault(enabled: boolean) {
+        sendToMainWindow('setHideChatImageByDefault', enabled)
+    },
 }

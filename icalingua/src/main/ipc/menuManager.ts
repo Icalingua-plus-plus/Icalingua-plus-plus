@@ -951,6 +951,17 @@ export const updateAppMenu = async () => {
                     },
                 })),
             }),
+            new MenuItem({
+                label: '隐藏聊天图片',
+                type: 'checkbox',
+                checked: getConfig().hideChatImageByDefault,
+                click: (menuItem) => {
+                    getConfig().hideChatImageByDefault = menuItem.checked
+                    saveConfigFile()
+                    ui.message('隐藏聊天图片已' + (menuItem.checked ? '开启' : '关闭') + '')
+                    ui.setHideChatImageByDefault(menuItem.checked)
+                },
+            }),
         ],
         //捷径
         shortcuts: Object.entries(getConfig().shortcuts).map(

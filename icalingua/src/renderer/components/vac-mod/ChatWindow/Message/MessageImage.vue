@@ -85,6 +85,7 @@ export default {
         flash: { type: Boolean, default: false },
         content: { type: String, default: '' },
         showForwardPanel: { type: Boolean, required: true },
+        hideChatImageByDefault: { type: Boolean, required: false, default: false },
     },
 
     data() {
@@ -101,7 +102,7 @@ export default {
             return this.file.url.indexOf('blob:http') !== -1 || this.imageLoading
         },
         isHidden() {
-            return /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.content)
+            return this.hideChatImageByDefault || /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.content)
         },
     },
 
