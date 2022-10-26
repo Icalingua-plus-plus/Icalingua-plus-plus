@@ -63,7 +63,9 @@ export const downloadImage = (url: string) => {
 
 export const downloadGroupFile = async (gin: number, fid: string) => {
     try {
+        console.log('download', gin, fid);
         const meta = await getGroupFileMeta(gin, fid)
+        console.log('download', meta.url, meta.name);
         download(meta.url, meta.name)
     } catch (e) {
         ui.notifyError(e)
