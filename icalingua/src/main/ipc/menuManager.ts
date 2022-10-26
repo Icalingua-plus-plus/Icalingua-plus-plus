@@ -343,36 +343,6 @@ const buildRoomMenu = (room: Room): Menu => {
                             value: cookies[i],
                         })
                     }
-                    win.webContents.setWindowOpenHandler((details) => {
-                        if (new URL(details.url).hostname == "qun.qq.com") {
-                            (async () => {
-                                const size = screen.getPrimaryDisplay().size
-                                const win = newIcalinguaWindow({
-                                    height: size.height - 300,
-                                    width: 500,
-                                    autoHideMenuBar: true,
-                                    webPreferences: {
-                                        contextIsolation: false,
-                                        preload: path.join(getStaticPath(), 'homeworkPreload.js')
-                                    }
-                                })
-                                const cookies = await getCookies('qun.qq.com')
-                                for (const i in cookies) {
-                                    await win.webContents.session.cookies.set({
-                                        url: 'https://qun.qq.com',
-                                        name: i,
-                                        value: cookies[i],
-                                    })
-                                }
-                
-                                await win.loadURL(details.url,
-                                    { userAgent: 'QQ/8.9.13.9280'})
-                            })()
-                        }
-                        return {
-                            action: 'deny',
-                        }
-                    })
 
                     await win.loadURL(
                         'https://qun.qq.com/homework/p/features#?gid=' + -room.roomId,
