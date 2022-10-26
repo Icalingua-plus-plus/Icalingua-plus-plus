@@ -1,7 +1,9 @@
 window.external = {
     openWebWindow(d) {
         console.log(d);
-        window.open(JSON.parse(d).url, '_blank');
+        const parsed = JSON.parse(d)
+        if (parsed.title === '选择题目') return
+        window.open(parsed.url, '_blank');
     },
     addDownloadTask(path, name, size, _) {
         const uuid = path.split('/')[2];
