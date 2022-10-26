@@ -322,6 +322,36 @@ const buildRoomMenu = (room: Room): Menu => {
         )
         menu.append(
             new MenuItem({
+                label: '群作业',
+                async click() {
+                    const size = screen.getPrimaryDisplay().size
+                    const win = newIcalinguaWindow({
+                        height: size.height - 200,
+                        width: 500,
+                        // autoHideMenuBar: true,
+                        title: '群作业',
+                        webPreferences: {
+                            contextIsolation: false,
+                            preload: path.join(getStaticPath(), 'homeworkPreload.js')
+                        }
+                    })
+                    const cookies = await getCookies('qun.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://qun.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+
+                    await win.loadURL(
+                        'https://qun.qq.com/homework/p/features#?gid=' + -room.roomId,
+                        { userAgent: "QQ/114514" })
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
                 label: '群幸运字符',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
@@ -358,12 +388,12 @@ const buildRoomMenu = (room: Room): Menu => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/groupNickEdit/' +
-                            -room.roomId +
-                            '/' +
-                            querystring.escape(room.roomName) +
-                            '/' +
-                            querystring.escape(memberInfo.card || memberInfo.nickname),
+                        '#/groupNickEdit/' +
+                        -room.roomId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(memberInfo.card || memberInfo.nickname),
                     )
                 },
             }),
@@ -420,7 +450,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     win.webContents.on('dom-ready', () =>
                         win.webContents.insertCSS(
                             '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
-                                '.body{padding-top:0 !important;margin:0 !important}',
+                            '.body{padding-top:0 !important;margin:0 !important}',
                         ),
                     )
                     await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
@@ -555,6 +585,18 @@ export const updateAppMenu = async () => {
                         updateAppMenu()
                     }, 10000)
                     updateAppMenu()
+                },
+            }),
+            new MenuItem({
+                label: "后退",
+                click(menuItem, browserWindow, event) {
+                    browserWindow.webContents.goBack();
+                },
+            }),
+            new MenuItem({
+                label: "前进",
+                click(menuItem, browserWindow, event) {
+                    browserWindow.webContents.goForward();
                 },
             }),
             new MenuItem({
@@ -925,7 +967,7 @@ export const updateAppMenu = async () => {
                             checked: getConfig().optimizeMethod == 'none',
                             click() {
                                 ui.chroom(0)
-                                ui.message('不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。' 
+                                ui.message('不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。'
                                     + '关闭后若前端卡死，可尝试杀死渲染进程并重新加载，亦可直接重启。')
                                 getConfig().optimizeMethod = 'none'
                                 ui.setOptimizeMethodSetting('none')
@@ -991,7 +1033,7 @@ export const updateAppMenu = async () => {
     if (selectedRoom) {
         menu.append(
             new MenuItem({
-                label: selectedRoom.roomName,
+                label: `${selectedRoom.roomName}(${-selectedRoom.roomId})`,
                 submenu: buildRoomMenu(selectedRoom),
             }),
         )
@@ -1618,16 +1660,16 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/MuteUser/' +
-                            -room.roomId +
-                            '/' +
-                            message.senderId +
-                            '/' +
-                            querystring.escape(room.roomName) +
-                            '/' +
-                            querystring.escape(message.username) +
-                            '/' +
-                            querystring.escape(message.anonymousflag),
+                        '#/MuteUser/' +
+                        -room.roomId +
+                        '/' +
+                        message.senderId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(message.username) +
+                        '/' +
+                        querystring.escape(message.anonymousflag),
                     )
                 },
             }),
@@ -1651,14 +1693,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/kickAndExit/kick/' +
-                            -room.roomId +
-                            '/' +
-                            message.senderId +
-                            '/' +
-                            querystring.escape(room.roomName) +
-                            '/' +
-                            querystring.escape(message.username),
+                        '#/kickAndExit/kick/' +
+                        -room.roomId +
+                        '/' +
+                        message.senderId +
+                        '/' +
+                        querystring.escape(room.roomName) +
+                        '/' +
+                        querystring.escape(message.username),
                     )
                 },
             }),
@@ -1717,13 +1759,13 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/kickAndExit/' +
-                            (group.owner_id === getUin() ? 'dismiss' : 'exit') +
-                            '/' +
-                            displayId +
-                            '/0/' +
-                            querystring.escape(remark) +
-                            '/0',
+                        '#/kickAndExit/' +
+                        (group.owner_id === getUin() ? 'dismiss' : 'exit') +
+                        '/' +
+                        displayId +
+                        '/0/' +
+                        querystring.escape(remark) +
+                        '/0',
                     )
                 },
             }),
@@ -1831,16 +1873,16 @@ ipcMain.on(
                         })
                         await win.loadURL(
                             getWinUrl() +
-                                '#/MuteUser/' +
-                                group +
-                                '/' +
-                                displayId +
-                                '/' +
-                                querystring.escape(selectedRoom.roomName) +
-                                '/' +
-                                querystring.escape(remark) +
-                                '/' +
-                                'null',
+                            '#/MuteUser/' +
+                            group +
+                            '/' +
+                            displayId +
+                            '/' +
+                            querystring.escape(selectedRoom.roomName) +
+                            '/' +
+                            querystring.escape(remark) +
+                            '/' +
+                            'null',
                         )
                     },
                 }),
@@ -1865,14 +1907,14 @@ ipcMain.on(
                         })
                         await win.loadURL(
                             getWinUrl() +
-                                '#/kickAndExit/kick/' +
-                                group +
-                                '/' +
-                                displayId +
-                                '/' +
-                                querystring.escape(selectedRoom.roomName) +
-                                '/' +
-                                querystring.escape(remark),
+                            '#/kickAndExit/kick/' +
+                            group +
+                            '/' +
+                            displayId +
+                            '/' +
+                            querystring.escape(selectedRoom.roomName) +
+                            '/' +
+                            querystring.escape(remark),
                         )
                     },
                 }),
