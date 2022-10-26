@@ -1,5 +1,5 @@
-import { BrowserWindow, globalShortcut, nativeTheme, shell } from 'electron'
-import { clearCurrentRoomUnread, sendOnlineData } from '../ipc/botAndStorage'
+import { BrowserWindow, globalShortcut, nativeTheme, shell, screen } from 'electron'
+import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import { updateTrayIcon } from './trayManager'
@@ -7,6 +7,7 @@ import path from 'path'
 import ui from './ui'
 import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import getStaticPath from '../../utils/getStaticPath'
 
 let loginWindow: BrowserWindow, mainWindow: BrowserWindow, requestWindow: BrowserWindow
 
@@ -20,8 +21,8 @@ export const loadMainWindow = () => {
                 ? '#131415'
                 : '#fff'
             : theme === 'dark'
-            ? '#131415'
-            : '#fff'
+                ? '#131415'
+                : '#fff'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
@@ -60,7 +61,33 @@ export const loadMainWindow = () => {
     )
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
-        shell.openExternal(details.url)
+        if (new URL(details.url).hostname == "qun.qq.com") {
+            (async () => {
+                const size = screen.getPrimaryDisplay().size
+                const win = newIcalinguaWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    // autoHideMenuBar: true,
+                    title: '',
+                    webPreferences: {
+                        contextIsolation: false,
+                        preload: path.join(getStaticPath(), 'homeworkPreload.js')
+                    }
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+
+                await win.loadURL(details.url, { userAgent: "QQ/114514" });
+            })()
+        } else {
+            shell.openExternal(details.url)
+        }
         return {
             action: 'deny',
         }
@@ -83,8 +110,8 @@ export const refreshMainWindowColor = () => {
                 ? '#131415'
                 : '#fff'
             : getConfig().theme === 'dark'
-            ? '#131415'
-            : '#fff',
+                ? '#131415'
+                : '#fff',
     )
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
