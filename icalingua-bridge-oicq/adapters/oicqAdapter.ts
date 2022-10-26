@@ -152,6 +152,15 @@ const eventHandlers = {
         ////process message////
         await processMessage(data.message, message, lastMessage, roomId)
 
+        // 鬼知道服务器改了什么，收到的语言消息有时候没有 url，尝试重新获取
+        if (message.content === '[无法处理的语音]undefined') {
+            const regetMsg = await adapter.getMsg(data.message_id)
+            if (!regetMsg.error && regetMsg.data) {
+                message.content = ''
+                await processMessage(regetMsg.data.message, message, lastMessage, roomId)
+            }
+        }
+
         // 自动回复消息作为小通知短暂显示
         if ('auto_reply' in data && data.auto_reply) {
             clients.message(message.content)
