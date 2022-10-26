@@ -82,8 +82,38 @@ export const loadMainWindow = () => {
                         value: cookies[i],
                     })
                 }
-
-                await win.loadURL(details.url)
+                win.webContents.setWindowOpenHandler((details) => {
+                    if (new URL(details.url).hostname == "qun.qq.com") {
+                        (async () => {
+                            const size = screen.getPrimaryDisplay().size
+                            const win = newIcalinguaWindow({
+                                height: size.height - 300,
+                                width: 500,
+                                autoHideMenuBar: true,
+                                title: '',
+                                webPreferences: {
+                                    contextIsolation: false,
+                                    preload: path.join(getStaticPath(), 'homeworkPreload.js')
+                                }
+                            })
+                            const cookies = await getCookies('qun.qq.com')
+                            for (const i in cookies) {
+                                await win.webContents.session.cookies.set({
+                                    url: 'https://qun.qq.com',
+                                    name: i,
+                                    value: cookies[i],
+                                })
+                            }
+            
+                            await win.loadURL(details.url,
+                                { userAgent: 'QQ/8.9.13.9280'})
+                        })()
+                    }
+                    return {
+                        action: 'deny',
+                    }
+                })
+                await win.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280'})
             })()
         } else {
             shell.openExternal(details.url)
