@@ -67,7 +67,7 @@ export const loadMainWindow = () => {
                 const win = newIcalinguaWindow({
                     height: size.height - 200,
                     width: 500,
-                    // autoHideMenuBar: true,
+                    autoHideMenuBar: true,
                     title: '',
                     webPreferences: {
                         contextIsolation: false,
@@ -83,7 +83,7 @@ export const loadMainWindow = () => {
                     })
                 }
 
-                await win.loadURL(details.url, { userAgent: "QQ/114514" });
+                await win.loadURL(details.url)
             })()
         } else {
             shell.openExternal(details.url)
