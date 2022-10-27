@@ -15,9 +15,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -59,9 +57,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -111,9 +107,7 @@ jobs:
           path: icalingua/dist
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -156,9 +150,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -213,9 +205,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -240,13 +230,14 @@ jobs:
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/build"
+            --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
-            pnpm config set store-dir /build/.pnpm-store
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
           run: |
             uname -a
             chmod -R 777 /build
@@ -282,9 +273,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -309,13 +298,14 @@ jobs:
           githubToken: ${{ github.token }}
           dockerRunArgs: |
             --volume "${PWD}:/build"
+            --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
-            pnpm config set store-dir /build/.pnpm-store
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
           run: |
             uname -a
             chmod -R 777 /build
@@ -543,9 +533,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -612,9 +600,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -666,9 +652,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -720,9 +704,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -774,9 +756,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -854,9 +834,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -894,9 +872,7 @@ jobs:
           node-version: "16"
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: pnpm install
         run: pnpm install
@@ -944,9 +920,7 @@ jobs:
           node-version: "16.13.0"
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Fetch node.lib and pnpm install
         shell: cmd
@@ -1005,9 +979,7 @@ jobs:
           node-version: "16"
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
@@ -1036,9 +1008,7 @@ jobs:
           node-version: "16"
 
       - name: Install pnpm
-        run: |
-          corepack enable
-          pnpm config set store-dir ./.pnpm-store
+        run: corepack enable
 
       - name: Cache pnpm and node-modules
         uses: Icalinguaplusplus/node-pm-action@master
