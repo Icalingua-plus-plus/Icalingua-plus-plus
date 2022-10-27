@@ -5,13 +5,14 @@ import { getCookies } from '../main/ipc/botAndStorage'
 
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
-    if (options &&
+    if (
+        options &&
         options.webPreferences &&
         options.webPreferences.preload === path.join(getStaticPath(), 'homeworkPreload.js')
     ) {
         win.webContents.setWindowOpenHandler((details) => {
-            if (new URL(details.url).hostname == "qun.qq.com") {
-                (async () => {
+            if (new URL(details.url).hostname == 'qun.qq.com') {
+                ;(async () => {
                     const size = screen.getPrimaryDisplay().size
                     const win1 = newIcalinguaWindow({
                         height: size.height - 300,
@@ -19,8 +20,8 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                         autoHideMenuBar: true,
                         webPreferences: {
                             contextIsolation: false,
-                            preload: path.join(getStaticPath(), 'homeworkPreload.js')
-                        }
+                            preload: path.join(getStaticPath(), 'homeworkPreload.js'),
+                        },
                     })
                     const cookies = await getCookies('qun.qq.com')
                     for (const i in cookies) {
@@ -33,9 +34,8 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                     win1.on('closed', () => {
                         win.reload()
                     })
-    
-                    await win1.loadURL(details.url,
-                        { userAgent: 'QQ/8.9.13.9280'})
+
+                    await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
                 })()
             }
             return {

@@ -81,9 +81,7 @@
                     <span v-show="!form.password && $route.query.bridge !== 'true'">QR Code</span>
                     Login
                 </el-button>
-                <el-button type="warning" v-if="errmsg !== ''" v-on:click="cannotLogin">
-                    无法登录?
-                </el-button>
+                <el-button type="warning" v-if="errmsg !== ''" v-on:click="cannotLogin"> 无法登录? </el-button>
             </el-form-item>
         </el-form>
         <QrcodeDrawer @login="onSubmit('loginForm')" />
@@ -97,11 +95,7 @@
             size="100%"
         >
             <p v-if="phone">已向 {{ phone }} 发送验证码</p>
-            <el-input
-                placeholder="短信验证码"
-                v-model="smsCode"
-                @input="smsCode = smsCode.slice(0, 6)"
-            />
+            <el-input placeholder="短信验证码" v-model="smsCode" @input="smsCode = smsCode.slice(0, 6)" />
             <center>
                 <el-button @click="submitSmsCode" type="primary"> 提交 </el-button>
                 <el-button @click="QRCodeVerify"> 扫码验证 </el-button>
@@ -172,11 +166,13 @@ export default {
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
         cannotLogin() {
-            this.$confirm('无法登录有可能由风控造成，随机生成不同的设备消息或许可以解决，但也有可能造成更严重的风控，是否尝试随机生成?', '提示',
+            this.$confirm(
+                '无法登录有可能由风控造成，随机生成不同的设备消息或许可以解决，但也有可能造成更严重的风控，是否尝试随机生成?',
+                '提示',
                 {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
-                }
+                },
             ).then(() => {
                 ipcRenderer.send('randomDevice', this.form.username)
                 this.$message({
