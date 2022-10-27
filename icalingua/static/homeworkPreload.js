@@ -11,6 +11,9 @@ window.external = {
             parseInt(new URLSearchParams(new URL("https://." + location.hash.substring(1)).search).get('gid')),
             uuid
         );
+    },
+    viewImage(url) {
+        require('electron').ipcRenderer.send('openImage', url);
     }
 }
 console.log('injected');
