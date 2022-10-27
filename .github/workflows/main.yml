@@ -239,7 +239,9 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build/icalingua
+            cd /build
+            pnpm i
+            cd /icalingua
             useradd -m builduser
             su builduser -c 'pnpm build:electron install-app-deps'
 
@@ -305,7 +307,9 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build/icalingua
+            cd /build
+            pnpm i
+            cd /icalingua
             useradd -m builduser
             su builduser -c 'pnpm build:electron install-app-deps'
 
