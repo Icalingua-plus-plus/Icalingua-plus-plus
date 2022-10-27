@@ -50,6 +50,8 @@
                     :linkify="linkify"
                     :account="account"
                     :username="username"
+                    :last-unread-count="lastUnreadCount"
+                    @clear-last-unread-count="clearLastUnreadCount"
                     @send-message="sendMessage"
                     @open-file="openImage"
                     @pokefriend="pokeFriend"
@@ -189,6 +191,8 @@ export default {
             roomPanelAvatarOnly: false,
             roomPanelWidth: undefined,
             forwardShown: false,
+            lastUnreadCount: 0,
+            lastUnreadCheck: 0,
         }
     },
     async created() {
@@ -473,13 +477,22 @@ Chromium ${process.versions.chrome}` : ''
                 ipc.deleteMessage(roomId, resend)
             ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType})
         },
-        async fetchMessage(reset) {
+        clearLastUnreadCount() {
+            this.lastUnreadCount = 0
+        },
+        async fetchMessage(reset, times) {
             if (reset) {
                 this.messagesLoaded = false
                 this.messages = []
             }
             const _roomId = this.selectedRoom.roomId
             const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            if (times) {
+                for (let i = 1; i < times; i++) {
+                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + 20 * i)
+                    msgs2add.push(...msgs)
+                }
+            }
             setTimeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
@@ -536,6 +549,7 @@ Chromium ${process.versions.chrome}` : ''
             if ((typeof room) === 'number')
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
+            this.lastUnreadCount = room.unreadCount
             this.selectedRoom.at = false
             ipc.updateRoom(this.selectedRoom.roomId, { at: false })
             if (this.selectedRoom.roomId === room.roomId) return
@@ -605,6 +619,20 @@ Chromium ${process.versions.chrome}` : ''
             return this.rooms.find(e => e.roomId === this.selectedRoomId) || {roomId: 0}
         },
     },
+    watch: {
+        lastUnreadCount(n, o) {
+            console.log('lastUnreadCount', n)
+            if (n !== 0) {
+                if (this.lastUnreadCheck) {
+                    clearTimeout(this.lastUnreadCheck)
+                }
+                this.lastUnreadCheck = setTimeout(() => {
+                    console.log('Timeout')
+                    this.lastUnreadCount = 0
+                }, 30000)
+            }
+        }
+    }
 }
 </script>
 

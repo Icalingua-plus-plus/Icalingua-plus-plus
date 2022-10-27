@@ -146,6 +146,22 @@
         <div v-if="!loadingMessages">
             <transition name="vac-bounce">
                 <div
+                    v-if="lastUnreadCount >= 10"
+                    class="vac-icon-last-message"
+                    @click="scrollToLastMessage"
+                >
+                    <transition name="vac-bounce">
+                        <div v-if="lastUnreadCount" class="vac-badge-counter vac-messages-count">
+                            {{ lastUnreadCount }} 
+                        </div>
+                    </transition>
+                    <slot name="scroll-icon">
+                        <svg-icon name="dropdown" style="transform: rotate(180deg)" />
+                    </slot>
+                </div>
+            </transition>
+            <transition name="vac-bounce">
+                <div
                     v-if="scrollIcon || (visibleViewport.tail !== messages.length && messages.length !== 0)"
                     class="vac-icon-scroll"
                     @click="scrollToBottom"
@@ -427,6 +443,7 @@ export default {
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
+        lastUnreadCount: { type: Number, required: false, default: 0 },
     },
     data() {
         return {
@@ -471,6 +488,7 @@ export default {
                 tail: null,
             },
             optimizeMethod: 'infinite-loading',
+            scrollingTolastMessage: 0,
         }
     },
     computed: {
@@ -576,7 +594,14 @@ export default {
                     this.loadingMessages = false
                 }, 0)
             }
-
+            if (this.scrollingTolastMessage && newVal.length >= this.scrollingTolastMessage) {
+                const msgCount = this.scrollingTolastMessage
+                this.scrollingTolastMessage = 0
+                setTimeout(() => {
+                    console.log(newVal[newVal.length - msgCount]._id)
+                    this.scrollToMessage(newVal[newVal.length - msgCount]._id)
+                }, 0)
+            }
             setTimeout(() => (this.loadingHeadMessages = false), 0)
         },
         messagesLoaded(val) {
@@ -1062,6 +1087,15 @@ export default {
                 element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
             })
         },
+        async scrollToLastMessage() {
+            const lastUnreadCount = this.lastUnreadCount
+            if (lastUnreadCount === 0) return
+            const fetchTimes = Math.ceil(Math.max((lastUnreadCount - this.messages.length), 0) / 20)
+            console.log('fetchTimes', fetchTimes)
+            this.$emit('fetch-messages', false, fetchTimes)
+            this.$emit('clear-last-unread-count')
+            this.scrollingTolastMessage = lastUnreadCount
+        },
         onChangeInput() {
             this.keepKeyboardOpen = true
             this.resizeTextarea()
@@ -1318,6 +1352,24 @@ export default {
 
 .vac-infinite-loading-bottom {
     height: 0px;
+}
+
+.vac-icon-last-message {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    padding: 8px;
+    background: var(--chat-bg-scroll-icon);
+    border-radius: 50%;
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    display: flex;
+    cursor: pointer;
+    z-index: 10;
+
+    svg {
+        height: 25px;
+        width: 25px;
+    }
 }
 
 .vac-icon-scroll {
