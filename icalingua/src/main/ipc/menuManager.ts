@@ -1032,7 +1032,7 @@ export const updateAppMenu = async () => {
     if (selectedRoom) {
         menu.append(
             new MenuItem({
-                label: `${selectedRoom.roomName}(${-selectedRoom.roomId})`,
+                label: `${ selectedRoom.roomName }(${ Math.abs(selectedRoom.roomId) })`,
                 submenu: buildRoomMenu(selectedRoom),
             }),
         )
