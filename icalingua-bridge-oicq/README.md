@@ -19,7 +19,7 @@
 
 2. 在项目根目录运行 `pnpm install` 安装必要依赖
 
-3. 进入目录 icalingua-bridge-oicq 中，运行 `pnpm compile` 将 ts 转换为 js
+3. 进入目录 icalingua-bridge-oicq 中，运行 `pnpm compile` (Windows 用户则运行 `pnpm compile:win`) 将 ts 转换为 js
 
 4. 前往[此页面](https://paulmillr.com/ecc/)**点击按钮**生成一组 ECC 密钥对，记录私钥和 **ed** 公钥备用
 
