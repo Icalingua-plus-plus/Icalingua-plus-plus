@@ -847,7 +847,7 @@ export default {
                         this.visibleViewport.tail = tail
                     }
                     this.$nextTick(() => {
-                        const message = document.getElementById(messageId)
+                        const message = document.getElementById(this.messages[index]._id)
                         if (message) {
                             message.scrollIntoView()
                         }
