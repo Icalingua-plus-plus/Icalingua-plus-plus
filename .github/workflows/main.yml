@@ -229,7 +229,8 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}/icalingua:/build"
+            --volume "${PWD}:/build"
+            --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
@@ -239,9 +240,9 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build
-            useradd -m builduser
-            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
+            cd /build/icalingua
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm build:electron install-app-deps
 
       - name: build
         run: pnpm build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
@@ -295,7 +296,8 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}/icalingua:/build"
+            --volume "${PWD}:/build"
+            --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
@@ -305,9 +307,9 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build
-            useradd -m builduser
-            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
+            cd /build/icalingua
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm build:electron install-app-deps
 
       - name: build
         run: pnpm build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
