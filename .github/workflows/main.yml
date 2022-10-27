@@ -241,7 +241,7 @@ jobs:
             chmod -R 777 /build
             cd /build
             useradd -m builduser
-            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
+            su builduser -c 'pnpm build:electron install-app-deps'
 
       - name: build
         run: pnpm build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
@@ -307,7 +307,7 @@ jobs:
             chmod -R 777 /build
             cd /build
             useradd -m builduser
-            su builduser -c 'pnpm install && pnpm build:electron install-app-deps'
+            su builduser -c 'pnpm build:electron install-app-deps'
 
       - name: build
         run: pnpm build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
