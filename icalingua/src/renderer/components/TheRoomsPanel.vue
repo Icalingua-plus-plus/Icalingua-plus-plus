@@ -6,17 +6,8 @@
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
             </el-popover>
-            <el-input
-                class="more input"
-                v-model="input"
-                placeholder="Search"
-                prefix-icon="el-icon-search"
-                clearable
-            />
-            <span
-                class="more el-icon-user contacts-refresh"
-                @click="$emit('show-contacts')"
-            />
+            <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
+            <span class="more el-icon-user contacts-refresh" @click="$emit('show-contacts')" />
         </div>
         <div class="content">
             <RoomEntry

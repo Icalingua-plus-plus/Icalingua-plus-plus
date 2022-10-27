@@ -806,20 +806,18 @@ export default {
             console.log('delMsgtoForward')
         },
         scrollToMessage(messageId) {
-            const judgeSameMessage = (a, b) =>{
+            const judgeSameMessage = (a, b) => {
                 if (a === b) return true
-                const parsedA =  Buffer.from(a, "base64")
-                const parsedB =  Buffer.from(b, "base64")
+                const parsedA = Buffer.from(a, 'base64')
+                const parsedB = Buffer.from(b, 'base64')
                 if (this.roomId < 0) {
-                    for (let i = 0; i <= 16; i+=4) {
-                        if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i))
-                            return false
+                    for (let i = 0; i <= 16; i += 4) {
+                        if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
                     }
                     if (parsedA.readUInt8(20) !== parsedB.readUInt8(20)) return false
                 } else {
-                    for (let i = 0; i <= 12; i+=4) {
-                        if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i))
-                            return false
+                    for (let i = 0; i <= 12; i += 4) {
+                        if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
                     }
                     if (parsedA.readUInt8(16) !== parsedB.readUInt8(16)) return false
                 }
@@ -1163,8 +1161,7 @@ export default {
                 if (!e.target) return
 
                 const bottomScroll = this.getBottomScroll(e.target)
-                if (bottomScroll < 60 && this.visibleViewport.tail >= this.messages.length)
-                    this.scrollMessagesCount = 0
+                if (bottomScroll < 60 && this.visibleViewport.tail >= this.messages.length) this.scrollMessagesCount = 0
                 this.scrollIcon = bottomScroll > 500 || this.scrollMessagesCount
 
                 const topScroll = this.getTopScroll(e.target)

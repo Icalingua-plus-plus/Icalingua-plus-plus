@@ -221,7 +221,7 @@ const processMessage = async (
                         const resId = m.data.data.match(resIdRegex)[1]
                         console.log(resId)
                         message.content = `[Forward: ${resId}]`
-                    } else if (fileNameRegex.test(m.data.data)){
+                    } else if (fileNameRegex.test(m.data.data)) {
                         const fileName = m.data.data.match(fileNameRegex)[1]
                         console.log(fileName)
                         message.content = `[NestedForward: ${fileName}]`

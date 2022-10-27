@@ -114,7 +114,7 @@ const defaultConfig: AllConfig = {
     showAppMenu: true,
     optimizeMethod: 'infinite-loading',
     silentFetchHistory: false,
-    hideChatImageByDefault: false
+    hideChatImageByDefault: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

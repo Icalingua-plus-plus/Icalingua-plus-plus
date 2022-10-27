@@ -1,10 +1,6 @@
 <template>
     <div ondragstart="return false;" class="icalingua-theme-holder">
-        <Multipane
-            class="el-main"
-            @paneResize="roomPanelResize"
-            @paneResizeStop="roomPanelResizeStop"
-        >
+        <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
             <div
                 class="panel rooms-panel"
