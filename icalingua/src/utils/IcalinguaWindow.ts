@@ -18,6 +18,7 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                         height: size.height - 300,
                         width: 500,
                         autoHideMenuBar: true,
+                        parent: win,
                         webPreferences: {
                             contextIsolation: false,
                             preload: path.join(getStaticPath(), 'homeworkPreload.js'),
@@ -32,7 +33,9 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                         })
                     }
                     win1.on('closed', () => {
-                        win.reload()
+                        setTimeout(() => {
+                            if (!win.isDestroyed()) win.reload()
+                        }, 0)
                     })
 
                     await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
