@@ -83,6 +83,14 @@ export default class MongoStorageProvider implements StorageProvider {
         } catch (e) {}
     }
 
+    async replaceMessage(
+        roomId: number,
+        messageId: string | number,
+        message: Message
+    ): Promise<any> {
+        return await this.updateMessage(roomId, messageId, message);
+    }
+
     async fetchMessages(
         roomId: number,
         skip: number,

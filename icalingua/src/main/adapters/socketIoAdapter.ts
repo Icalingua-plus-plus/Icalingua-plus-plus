@@ -114,6 +114,9 @@ const attachSocketEvents = () => {
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
     socket.on('revealMessage', ui.revealMessage)
+    socket.on('renewMessage', ({ roomId, messageId, message }: { roomId: number; messageId: string, message: Message }) => {
+        ui.renewMessage(roomId, messageId, message)
+    })
     socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number; URL: string }) => {
         ui.renewMessageURL(messageId, URL)
     })
@@ -501,6 +504,9 @@ const adapter: Adapter = {
     },
     revealMessage(roomId: number, messageId: string | number) {
         socket.emit('revealMessage', roomId, messageId)
+    },
+    renewMessage(roomId: number, messageId: string) {
+        socket.emit('renewMessage', roomId, messageId)
     },
     renewMessageURL(roomId: number, messageId: string | number, URL: string) {
         socket.emit('renewMessageURL', roomId, messageId, URL)
