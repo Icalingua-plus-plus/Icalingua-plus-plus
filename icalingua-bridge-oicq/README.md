@@ -10,11 +10,10 @@
 
 ## 安装方法
 
- **注意：**
- 建议不要使用淘宝源，容易造成依赖丢失
+**注意：**
+建议不要使用淘宝源，容易造成依赖丢失
 
 ### 常规安装
-
 
 1. 服务器需要安装 pnpm 和 `ffmpeg` ，选装 MongoDB / MySQL / MariaDB / PostgreSQL / Redis 作为默认数据库 SQLite 的替代
 
@@ -48,7 +47,7 @@
 
 2. 从 [GitHub Actions](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/actions) 中下载所需版本的 `bridge-oicq` 并解压
 
-3. 运行 `pnpm install` 安装必要依赖，同时自行补充缺失的依赖。
+3. 运行 `pnpm install` 安装必要依赖，同时自行补充缺失的依赖
 
 4. 转到常规步骤第四步
 

@@ -8,9 +8,7 @@
         "resolveJsonModule": true,
         "outDir": "build"
     },
-    "exclude": [
-        "node_modules"
-    ],
+    "exclude": ["node_modules"],
     "references": [
         {
             "path": "../packages/storageProviders"
