@@ -9,9 +9,9 @@
     "scripts": {
         "start": "node build",
         "compile": "tsc --build --verbose && cp -a --reflink=auto --remove-destination ./static ./build/ && pnpm copy-packages",
-        "compile:win": "tsc --build --verbose && xcopy /e .\\static\\ .\\build\\static\\ && pnpm copy-packages-win",
+        "compile:win": "tsc --build --verbose && xcopy /e .\\static\\ .\\build\\static\\ && pnpm copy-packages:win",
         "copy-packages": "mkdir ./build/node_modules && mkdir ./build/node_modules/@icalingua && mkdir ./build/node_modules/@icalingua/storage-providers && mkdir ./build/node_modules/@icalingua/types && cp -a ../packages/storageProviders/build/* ./build/node_modules/@icalingua/storage-providers && cp -a ../packages/types/build/* ./build/node_modules/@icalingua/types",
-        "copy-packages-win": "mkdir .\\build\\node_modules && mkdir .\\build\\node_modules\\@icalingua && xcopy /e ..\\packages\\storageProviders\\build\\ .\\build\\node_modules\\@icalingua\\storage-providers\\ && xcopy /e ..\\packages\\types\\build\\ .\\build\\node_modules\\@icalingua\\types\\",
+        "copy-packages:win": "mkdir .\\build\\node_modules && mkdir .\\build\\node_modules\\@icalingua && xcopy /e ..\\packages\\storageProviders\\build\\ .\\build\\node_modules\\@icalingua\\storage-providers\\ && xcopy /e ..\\packages\\types\\build\\ .\\build\\node_modules\\@icalingua\\types\\",
         "detach-start": "screen -U pnpm start",
         "dev": "NODE_ENV=development node build"
     },
@@ -20,13 +20,14 @@
         "@types/fluent-ffmpeg": "^2.1.20",
         "@types/md5": "^2.3.2",
         "@types/mongodb": "^3.6.20",
-        "@types/node": "^16.18.1",
+        "@types/node": "^16.18.2",
         "prettier": "^2.7.1",
         "ts-node": "^10.9.1",
         "typescript": "^4.8.4"
     },
     "dependencies": {
         "axios": "^0.21.4",
+        "body-parser": "2.0.0-beta.1",
         "express": "^5.0.0-beta.1",
         "fluent-ffmpeg": "^2.1.2",
         "ioredis": "^4.28.5",
