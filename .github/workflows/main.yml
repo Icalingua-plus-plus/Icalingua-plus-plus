@@ -229,7 +229,7 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}/icalingua:/build"
+            --volume "${PWD}:/build"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
@@ -239,7 +239,7 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build
+            cd /build/icalingua
             useradd -m builduser
             su builduser -c 'pnpm build:electron install-app-deps'
 
@@ -295,7 +295,7 @@ jobs:
           distro: ubuntu20.04
           githubToken: ${{ github.token }}
           dockerRunArgs: |
-            --volume "${PWD}/icalingua:/build"
+            --volume "${PWD}:/build"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
@@ -305,7 +305,7 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build
+            cd /build/icalingua
             useradd -m builduser
             su builduser -c 'pnpm build:electron install-app-deps'
 
