@@ -2,6 +2,7 @@ import { BrowserWindow, screen } from 'electron'
 import getStaticPath from './getStaticPath'
 import path from 'path'
 import { getCookies } from '../main/ipc/botAndStorage'
+import { download } from '../main/ipc/downloadManager'
 
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
@@ -40,6 +41,22 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
 
                     await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
                 })()
+            } else if (details.url.includes('file.myqcloud.com')) {
+                const fileName = decodeURIComponent(
+                    details.url
+                        .split('?')[1]
+                        .split('&')
+                        .find((i) => i.startsWith('fileName'))!
+                        .split('=')[1],
+                )
+                const downloadUrl = decodeURIComponent(
+                    details.url
+                        .split('?')[1]
+                        .split('&')
+                        .find((i) => i.startsWith('url'))
+                        .split('=')[1],
+                )
+                if (fileName && downloadUrl) download(downloadUrl, fileName)
             }
             return {
                 action: 'deny',
