@@ -207,7 +207,11 @@ const eventHandlers = {
         storage.addMessage(roomId, message)
         if (config.custom) {
             if (!bot['sendPrivateMsg']) {
-                bot['sendPrivateMsg'] = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
+                bot['sendPrivateMsg'] = async (
+                    user_id: number,
+                    message: MessageElem[] | string,
+                    auto_escape?: boolean,
+                ) => {
                     let custom_room = await storage.getRoom(user_id)
                     if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
                     const _message: Message = {
@@ -227,8 +231,8 @@ const eventHandlers = {
                     }
                     if (user_id === bot.uin || user_id === 3636666661) return data
                     _message._id = data.data.message_id
-                    const parsed = Buffer.from(data.data.message_id, "base64");
-                    const _time = parsed.readUInt32BE(12);
+                    const parsed = Buffer.from(data.data.message_id, 'base64')
+                    const _time = parsed.readUInt32BE(12)
                     if (_time !== lastReceivedMessageInfo.timestamp) {
                         lastReceivedMessageInfo.timestamp = _time
                         lastReceivedMessageInfo.id = 0
@@ -395,9 +399,9 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                (data.operator_id === data.user_id
-                    ? ' 离开了本群'
-                    : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+                  (data.operator_id === data.user_id
+                      ? ' 离开了本群'
+                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member
                 ? data.member.card
                     ? data.member.card
@@ -578,8 +582,9 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname
-            }`
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${
+            transferredUser.card || transferredUser.nickname
+        }`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -731,7 +736,7 @@ const loginHandlers = {
         broadcast('login-smsCodeVerify', data)
     },
     qrcode(data: QrcodeEventData) {
-        const url = "data:image/png;base64," + data.image.toString('base64');
+        const url = 'data:image/png;base64,' + data.image.toString('base64')
         broadcast('login-qrcodeLogin', url)
     },
     slider(data: SliderEventData) {
@@ -1249,7 +1254,7 @@ const adapter = {
                         const content = base64decode(jsonObj.meta.mannounce.text)
                         room.lastMessage.content = `[${title}]`
                         message.content = title + '\n\n' + content
-                    } catch (err) { }
+                    } catch (err) {}
                 }
                 const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                 const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
@@ -1266,7 +1271,7 @@ const adapter = {
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
                         appurl = meta.qqdocurl
-                    } catch (e) { }
+                    } catch (e) {}
                 }
                 if (appurl) {
                     room.lastMessage.content = ''
@@ -1285,7 +1290,7 @@ const adapter = {
                             url: previewUrl,
                         }
                         message.files.push(message.file)
-                    } catch (e) { }
+                    } catch (e) {}
 
                     room.lastMessage.content += appurl
                     message.content += appurl
@@ -1306,8 +1311,8 @@ const adapter = {
                 room.lastMessage.content = '[DEBUG]' + message.content
             }
             message._id = data.data.message_id
-            const parsed = Buffer.from(data.data.message_id, "base64");
-            const _time = parsed.readUInt32BE(12);
+            const parsed = Buffer.from(data.data.message_id, 'base64')
+            const _time = parsed.readUInt32BE(12)
             if (_time !== lastReceivedMessageInfo.timestamp) {
                 lastReceivedMessageInfo.timestamp = _time
                 lastReceivedMessageInfo.id = 0
@@ -1607,7 +1612,7 @@ const adapter = {
         bot.submitSMSCode(smsCode)
     },
     randomDevice(username: number) {
-        const filepath = path.join(require.main ? require.main.path : process.cwd(), "data", String(username))
+        const filepath = path.join(require.main ? require.main.path : process.cwd(), 'data', String(username))
         const devicepath = path.join(filepath, `device-${String(username)}.json`)
         const randomString = (length: number, num: boolean = false) => {
             let result = ''
@@ -1628,7 +1633,7 @@ const adapter = {
         "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(12)}",
         "proc_version": "Linux version 5.10.101-android12-${randomString(8)}",
         "mac_address":  "2D:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
-        "ip_address":   "192.168.${randomString(2, true)}.${randomString(2,true)}",
+        "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
         "imei":         "86${randomString(13, true)}",
         "incremental":  "${randomString(10).toUpperCase()}",
         "--end--":      "修改后可能需要重新验证设备。"
