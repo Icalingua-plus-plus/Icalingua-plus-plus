@@ -13,7 +13,7 @@ and make following contributions easier. >\_<
 You should run prettier before every commit to [icalingua](icalingua), like this:
 
 ```bash
-yarn prettier -m .
+pnpm prettier -m .
 ```
 
 However, in order to avoid ugly spaces before too deeply-nested code,
@@ -23,7 +23,7 @@ If you are not sure what will happen if you run prettier, you can preview it usi
 command follow:
 
 ```bash
-yarn prettier -c .
+pnpm prettier -c .
 ```
 
 And please keep the lines within a moderate length and indent level.

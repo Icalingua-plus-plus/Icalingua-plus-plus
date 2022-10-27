@@ -18,7 +18,7 @@ function dynamicLoadCss(url) {
     head.appendChild(link)
 }
 
-function dynamicLoadJs(url){
+function dynamicLoadJs(url) {
     const head = document.getElementsByTagName('head')[0]
     const script = document.createElement('script')
     script.type = 'text/javascript'

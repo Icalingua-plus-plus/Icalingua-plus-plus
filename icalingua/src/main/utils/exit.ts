@@ -14,7 +14,7 @@ const exit = () => {
     }
     saveConfigFile()
     win.destroy()
-    allWindows.forEach(w => {
+    allWindows.forEach((w) => {
         if (!w.isDestroyed()) {
             w.destroy()
         }
