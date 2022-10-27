@@ -1,12 +1,12 @@
-import {createServer} from 'http'
-import {Server} from 'socket.io'
-import {verify} from 'noble-ed25519'
-import {config, userConfig} from './configManager'
-import adapter, {getBot, loggedIn} from '../adapters/oicqAdapter'
+import { createServer } from 'http'
+import { Server } from 'socket.io'
+import { verify } from 'noble-ed25519'
+import { config, userConfig } from './configManager'
+import adapter, { getBot, loggedIn } from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
-import {app} from './expressProvider'
-import {version, protocolVersion} from '../package.json'
+import { app } from './expressProvider'
+import { version, protocolVersion } from '../package.json'
 import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import fs from 'fs'
@@ -65,8 +65,7 @@ const host = config.host || '0.0.0.0'
 
 export const init = () => {
     if (config.unix) {
-        if (fs.existsSync(config.unix))
-            fs.unlinkSync(config.unix)
+        if (fs.existsSync(config.unix)) fs.unlinkSync(config.unix)
         httpServer.listen(config.unix, () => console.log(`listening on Unix socket: ${config.unix}`))
     } else {
         httpServer.listen(port, host, () => console.log(`listening on http://${host}:${port}`))
