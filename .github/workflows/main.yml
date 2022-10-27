@@ -237,13 +237,12 @@ jobs:
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
-            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
           run: |
             uname -a
             chmod -R 777 /build
             cd /build/icalingua
-            useradd -m builduser
-            su builduser -c 'pnpm build:electron install-app-deps'
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm build:electron install-app-deps
 
       - name: build
         run: pnpm build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
@@ -305,13 +304,12 @@ jobs:
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python2 python -y
             corepack enable
-            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
           run: |
             uname -a
             chmod -R 777 /build
             cd /build/icalingua
-            useradd -m builduser
-            su builduser -c 'pnpm build:electron install-app-deps'
+            pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm build:electron install-app-deps
 
       - name: build
         run: pnpm build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
