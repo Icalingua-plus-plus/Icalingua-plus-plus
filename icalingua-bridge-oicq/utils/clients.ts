@@ -46,6 +46,9 @@ export default {
     revealMessage(messageId: string | number) {
         broadcast('revealMessage', messageId)
     },
+    renewMessage(roomId: number, messageId: string, message: Message) {
+        broadcast('renewMessage', { roomId, messageId, message })
+    },
     renewMessageURL(messageId: string | number, URL: string) {
         broadcast('renewMessageURL', { messageId, URL })
     },

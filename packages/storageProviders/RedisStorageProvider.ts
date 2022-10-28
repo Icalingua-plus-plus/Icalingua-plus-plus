@@ -210,6 +210,19 @@ export default class RedisStorageProvider implements StorageProvider {
         );
     }
 
+    /** 实现 {@link StorageProvider} 类的 `replaceMessage` 方法，
+     * 是对 `msg${roomId}` 的“改”操作。
+     *
+     * 在“重新获取消息内容”等需要改动消息内容的事件中被调用。
+     */
+    async replaceMessage(
+        roomId: number,
+        messageId: string | number,
+        message: Message
+    ): Promise<any> {
+        return await this.updateMessage(roomId, messageId, message);
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
      * 是对 `msg${roomId}` 的“查多个”操作。
      *
