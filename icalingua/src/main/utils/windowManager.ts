@@ -84,6 +84,28 @@ export const loadMainWindow = () => {
 
                 await win.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
             })()
+        } else if (new URL(details.url).hostname == 'docs.qq.com') {
+            ;(async () => {
+                const win1 = newIcalinguaWindow({
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('docs.qq.com')
+                for (const i in cookies) {
+                    await win1.webContents.session.cookies.set({
+                        url: 'https://docs.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                win1.webContents.setWindowOpenHandler((details) => {
+                    return { action: 'deny' }
+                })
+                win1.webContents.on('will-navigate', (event, url) => {
+                    const parsedUrl = new URL(url)
+                    parsedUrl.hostname !== 'docs.qq.com' && event.preventDefault()
+                })
+                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
+            })()
         } else {
             shell.openExternal(details.url)
         }
