@@ -36,7 +36,7 @@ if (!viewer) {
 }
 
 const builtinViewers = new Map<string, BrowserWindow>()
-const openImage = (url: string, external: boolean = false) => {
+const openImage = (url: string, external: boolean = false, urlList: Array<string> = []) => {
     if (!external) {
         const urlMd5 = md5(url)
         if (builtinViewers.get(urlMd5)) {
@@ -50,8 +50,12 @@ const openImage = (url: string, external: boolean = false) => {
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
             //viewerWindow.maximize()
-            viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
-            builtinViewers.set(urlMd5, viewerWindow)
+            if (urlList.length > 0) {
+                // TODO: multiple images
+            } else {
+                viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
+                builtinViewers.set(urlMd5, viewerWindow)
+            }
         }
     } else if (viewer) {
         execFile(viewer, [url])
@@ -59,5 +63,5 @@ const openImage = (url: string, external: boolean = false) => {
         ui.messageError('找不到可用的本地查看器')
     }
 }
-ipcMain.on('openImage', (e, url: string, external: boolean = false) => openImage(url, external))
+ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) => openImage(url, external, urlList))
 export default openImage
