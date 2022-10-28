@@ -54,6 +54,8 @@
 		}
 	</style>
 	<title>图片查看</title>
+    <link rel="stylesheet" href="file-manager/assets/basicContext.min.css">
+    <link rel="stylesheet" href="file-manager/assets/themes/default.min.css">
 </head>
 
 <body style="overflow: hidden;">
@@ -342,6 +344,34 @@
 		BAR.style.opacity = 1
 		BAR.style.visibility = 'visible'
 	}
+	DRAG.addEventListener('contextmenu', (e) => {
+		console.log(e)
+		var items = []
+		items.push({
+			title: '下载',
+			fn: function () {
+					download()
+			}
+		})
+		items.push({
+			title: '复制图片',
+			fn: function () {
+				navigator.clipboard.write([
+					new ClipboardItem({
+						"text/html": new Blob(['<img src="' + IMG.src + '" >'], { type: "text/html" })
+					})
+				])
+			}
+		})
+		items.push({
+			title: '复制 URL',
+			fn: function () {
+				navigator.clipboard.writeText(IMG.src)
+			}
+		})
+		basicContext.show(items, e)
+	})
 </script>
+<script src="file-manager/assets/basicContext.min.js"></script>
 
 </html>
