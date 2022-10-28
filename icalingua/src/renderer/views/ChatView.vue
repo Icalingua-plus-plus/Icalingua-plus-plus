@@ -490,7 +490,7 @@ Chromium ${process.versions.chrome}` : ''
             if (times) {
                 for (let i = 1; i < times; i++) {
                     const msgs = await ipc.fetchMessage(_roomId, this.messages.length + 20 * i)
-                    msgs2add.push(...msgs)
+                    msgs2add.unshift(...msgs)
                 }
             }
             setTimeout(() => {
