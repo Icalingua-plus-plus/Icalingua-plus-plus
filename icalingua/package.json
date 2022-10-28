@@ -243,7 +243,7 @@
         "mini-css-extract-plugin": "0.4.0",
         "minimist": "^1.2.7",
         "multispinner": "^0.2.1",
-        "noble-ed25519": "1.2.5",
+        "@noble/ed25519": "1.7.1",
         "node-loader": "^0.6.0",
         "nodejs-base64": "^2.0.0",
         "prettier": "^2.7.1",
