@@ -41,6 +41,7 @@ import {
     makeForward,
     pinRoom,
     removeChat,
+    renewMessage,
     renewMessageURL,
     requestGfsToken,
     revealMessage,
@@ -1454,6 +1455,12 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 new MenuItem({
                     label: '获取历史消息',
                     click: () => fetchHistory(message._id as string),
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '重新获取该消息内容',
+                    click: () => renewMessage(room.roomId, message._id as string, message),
                 }),
             )
         }

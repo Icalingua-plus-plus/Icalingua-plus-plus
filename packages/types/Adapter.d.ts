@@ -111,6 +111,8 @@ export default interface Adapter {
 
     revealMessage(roomId: number, messageId: string | number): any
 
+    renewMessage(roomId: number, messageId: string, message: Message): any
+
     renewMessageURL(roomId: number, messageId: string | number, URL: string): any
 
     fetchHistory(messageId: string, roomId?: number): any

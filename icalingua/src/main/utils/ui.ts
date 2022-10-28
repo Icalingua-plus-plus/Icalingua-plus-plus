@@ -89,6 +89,9 @@ export default {
     revealMessage(messageId: string | number) {
         sendToMainWindow('revealMessage', messageId)
     },
+    renewMessage(roomId: number, messageId: string, message: Message) {
+        sendToMainWindow('renewMessage', { roomId, messageId, message })
+    },
     renewMessageURL(messageId: string | number, URL: string) {
         sendToMainWindow('renewMessageURL', { messageId, URL })
     },

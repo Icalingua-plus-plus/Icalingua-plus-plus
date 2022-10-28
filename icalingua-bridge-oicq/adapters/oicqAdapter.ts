@@ -1483,6 +1483,36 @@ const adapter = {
     async hideMessage(roomId: number, messageId: string) {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
+    async renewMessage(roomId: number, messageId: string, message: Message) {
+        const res = await bot.getMsg(messageId)
+        if (!res.error) {
+            const data = res.data
+            const newMessage: Message = {
+                senderId: message.senderId,
+                username: message.username,
+                content: '',
+                timestamp: message.timestamp,
+                date: message.date,
+                _id: messageId,
+                time: message.time,
+                role: message.role,
+                title: message.title,
+                files: [],
+                anonymousId: message.anonymousId,
+                anonymousflag: message.anonymousflag,
+            }
+            try {
+                await processMessage(data.message, newMessage, {}, roomId)
+                await storage.replaceMessage(roomId, messageId, newMessage)
+                clients.renewMessage(roomId, messageId, newMessage)
+            } catch (e) {
+                console.log(e)
+            }
+        } else {
+            if (res.error.message !== 'msg not exists') clients.messageError('错误：' + res.error.message)
+            else clients.messageError('错误：该消息不存在。')
+        }
+    },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         clients.renewMessageURL(messageId, URL)
         //await storage.updateURL(roomId, messageId, {file: JSON.stringify({ type: 'video/mp4', url: URL })})

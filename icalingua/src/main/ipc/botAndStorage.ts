@@ -52,6 +52,7 @@ export const {
     deleteMessage,
     hideMessage,
     revealMessage,
+    renewMessage,
     renewMessageURL,
     fetchHistory,
     stopFetchingHistory,
