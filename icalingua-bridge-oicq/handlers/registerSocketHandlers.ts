@@ -26,6 +26,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('reLogin', adapter.reLogin)
     socket.on('removeChat', adapter.removeChat)
     socket.on('revealMessage', adapter.revealMessage)
+    socket.on('renewMessage', adapter.renewMessage)
     socket.on('renewMessageURL', adapter.renewMessageURL)
     socket.on('sendGroupPoke', adapter.sendGroupPoke)
     socket.on('sendMessage', adapter.sendMessage)
