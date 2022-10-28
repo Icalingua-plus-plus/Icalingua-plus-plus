@@ -1697,6 +1697,37 @@ const adapter: OicqAdapter = {
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
         ui.renewMessageURL(messageId, URL)
     },
+    async renewMessage(roomId: number, messageId: string, message: Message) {
+        const res = await bot.getMsg(messageId)
+        if (!res.error) {
+            const data = res.data
+            const newMessage: Message = {
+                senderId: message.senderId,
+                username: message.username,
+                content: '',
+                timestamp: message.timestamp,
+                date: message.date,
+                _id: messageId,
+                time: message.time,
+                role: message.role,
+                title: message.title,
+                files: [],
+                anonymousId: message.anonymousId,
+                anonymousflag: message.anonymousflag,
+            }
+            try {
+                await processMessage(data.message, newMessage, {}, roomId)
+                await storage.replaceMessage(roomId, messageId, newMessage)
+                if (roomId === ui.getSelectedRoomId()) ui.renewMessage(roomId, messageId, newMessage)
+            } catch (e) {
+                errorHandler(e, true)
+            }
+        } else {
+            errorHandler(res.error, true)
+            if (res.error.message !== 'msg not exists') ui.messageError('错误：' + res.error.message)
+            else ui.messageError('错误：该消息不存在。')
+        }
+    },
     stopFetchingHistory() {
         stopFetching = true
     },

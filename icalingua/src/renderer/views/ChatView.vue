@@ -404,6 +404,13 @@ export default {
                 this.messages = [...this.messages]
             }
         })
+        ipcRenderer.on('renewMessage', (_, {messageId, message}) => {
+            const oldMessage = this.messages.findIndex((e) => e._id === messageId)
+            if (oldMessage!==-1 && message) {
+                this.messages[oldMessage] = message
+                this.messages = [...this.messages]
+            }
+        })
         ipcRenderer.on('renewMessageURL', (_, {messageId, URL}) => {
             const message = this.messages.find((e) => e._id === messageId)
             if (message && URL !== 'error') {
