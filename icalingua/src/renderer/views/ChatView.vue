@@ -541,6 +541,7 @@ Chromium ${process.versions.chrome}` : ''
         },
         async chroom(room) {
             if (room === 0) {
+                this.lastUnreadCount = 0
                 this.closeRoom()
                 return
             }
