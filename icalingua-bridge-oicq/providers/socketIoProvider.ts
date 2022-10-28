@@ -1,6 +1,6 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import { verify } from 'noble-ed25519'
+import { verify } from '@noble/ed25519'
 import { config, userConfig } from './configManager'
 import adapter, { getBot, loggedIn } from '../adapters/oicqAdapter'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
