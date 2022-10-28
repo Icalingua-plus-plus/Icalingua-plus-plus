@@ -145,14 +145,10 @@
         </div>
         <div v-if="!loadingMessages">
             <transition name="vac-bounce">
-                <div
-                    v-if="lastUnreadCount >= 10"
-                    class="vac-icon-last-message"
-                    @click="scrollToLastMessage"
-                >
+                <div v-if="lastUnreadCount >= 10" class="vac-icon-last-message" @click="scrollToLastMessage">
                     <transition name="vac-bounce">
                         <div v-if="lastUnreadCount" class="vac-badge-counter vac-messages-count">
-                            {{ lastUnreadCount }} 
+                            {{ lastUnreadCount }}
                         </div>
                     </transition>
                     <slot name="scroll-icon">
@@ -1098,7 +1094,7 @@ export default {
         async scrollToLastMessage() {
             const lastUnreadCount = this.lastUnreadCount
             if (lastUnreadCount === 0) return
-            const fetchNumber = Math.max((lastUnreadCount - this.messages.length), 0)
+            const fetchNumber = Math.max(lastUnreadCount - this.messages.length, 0)
             console.log('Need fetch messages: ', fetchNumber)
             this.$emit('fetch-messages', false, fetchNumber)
             this.$emit('clear-last-unread-count')
