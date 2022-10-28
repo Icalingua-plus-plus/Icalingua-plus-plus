@@ -480,16 +480,16 @@ Chromium ${process.versions.chrome}` : ''
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
         },
-        async fetchMessage(reset, times) {
+        async fetchMessage(reset, number) {
             if (reset) {
                 this.messagesLoaded = false
                 this.messages = []
             }
             const _roomId = this.selectedRoom.roomId
             const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
-            if (times) {
-                for (let i = 1; i < times; i++) {
-                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + 20 * i)
+            if (number) {
+                while (msgs2add.filter((e) => !e.system).length < number) {
+                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
                     msgs2add.unshift(...msgs)
                 }
             }
