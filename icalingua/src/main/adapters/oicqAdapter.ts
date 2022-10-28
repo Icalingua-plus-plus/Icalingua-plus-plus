@@ -1901,9 +1901,13 @@ const adapter: OicqAdapter = {
         "wifi_ssid":    "HUAWEI-${randomString(7)}",
         "bootloader":   "U-boot",
         "android_id":   "IL.${randomString(7, true)}.${randomString(4, true)}",
-        "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(12)}",
+        "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(
+            12,
+        )}",
         "proc_version": "Linux version 5.10.101-android12-${randomString(8)}",
-        "mac_address":  "2D:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
+        "mac_address":  "2D:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
+            2,
+        ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
         "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
         "imei":         "86${randomString(13, true)}",
         "incremental":  "${randomString(10).toUpperCase()}",
