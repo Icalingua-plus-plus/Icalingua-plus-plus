@@ -1506,7 +1506,7 @@ const adapter = {
                 await storage.replaceMessage(roomId, messageId, newMessage)
                 clients.renewMessage(roomId, messageId, newMessage)
             } catch (e) {
-                console.log(e)
+                console.error(e)
             }
         } else {
             if (res.error.message !== 'msg not exists') clients.messageError('错误：' + res.error.message)
@@ -1567,7 +1567,7 @@ const adapter = {
                     messages.push(message)
                     newMsgs.push(message)
                 } catch (e) {
-                    console.log(e)
+                    console.error(e)
                 }
             }
             if (history.data.length < 2) break
