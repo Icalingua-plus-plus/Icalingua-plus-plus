@@ -524,6 +524,7 @@ export default {
                 this.loadingMessages = true
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
+                this.scrollingTolastMessage = 0
                 //this.resetMessage(true)
 
                 this.editAndResend = false
@@ -532,6 +533,7 @@ export default {
             } else if (newVal.roomId === 0) {
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
+                this.scrollingTolastMessage = 0
             }
         },
         messages(newVal, oldVal) {
