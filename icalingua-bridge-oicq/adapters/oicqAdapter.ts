@@ -832,7 +832,7 @@ const attachLoginHandler = () => {
 
 const adapter = {
     async getMsgNewURL(id: string, resolve): Promise<string> {
-        const history = await bot.getMsg(id)
+        const history = await adapter.getMsg(id)
         if (history.error) {
             console.log(history.error)
             if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
@@ -1484,7 +1484,7 @@ const adapter = {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async renewMessage(roomId: number, messageId: string, message: Message) {
-        const res = await bot.getMsg(messageId)
+        const res = await adapter.getMsg(messageId)
         if (!res.error) {
             const data = res.data
             const newMessage: Message = {

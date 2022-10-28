@@ -987,7 +987,7 @@ interface OicqAdapter extends Adapter {
 
 const adapter: OicqAdapter = {
     async getMsgNewURL(id: string): Promise<string> {
-        const history = await bot.getMsg(id)
+        const history = await adapter.getMsg(id)
         if (history.error) {
             errorHandler(history.error, true)
             if (history.error.message !== 'msg not exists') ui.messageError('错误：' + history.error.message)
@@ -1698,7 +1698,7 @@ const adapter: OicqAdapter = {
         ui.renewMessageURL(messageId, URL)
     },
     async renewMessage(roomId: number, messageId: string, message: Message) {
-        const res = await bot.getMsg(messageId)
+        const res = await adapter.getMsg(messageId)
         if (!res.error) {
             const data = res.data
             const newMessage: Message = {

@@ -505,8 +505,8 @@ const adapter: Adapter = {
     revealMessage(roomId: number, messageId: string | number) {
         socket.emit('revealMessage', roomId, messageId)
     },
-    renewMessage(roomId: number, messageId: string) {
-        socket.emit('renewMessage', roomId, messageId)
+    renewMessage(roomId: number, messageId: string, message: Message) {
+        socket.emit('renewMessage', roomId, messageId, message)
     },
     renewMessageURL(roomId: number, messageId: string | number, URL: string) {
         socket.emit('renewMessageURL', roomId, messageId, URL)
