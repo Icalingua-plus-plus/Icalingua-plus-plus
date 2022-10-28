@@ -309,11 +309,10 @@ const buildRoomMenu = (room: Room): Menu => {
                     }
                     win.webContents.setWindowOpenHandler((details) => {
                         console.log(details.url)
-                        if (details.url.replace('http://', 'https://').startsWith('https://qungz.photo.store.qq.com'))
+                        const parsedUrl = new URL(details.url)
+                        if (parsedUrl.hostname === 'qungz.photo.store.qq.com')
                             openImage(details.url)
-                        else if (
-                            details.url.replace('http://', 'https://').startsWith('https://download.photo.qq.com/')
-                        )
+                        else if (parsedUrl.hostname === 'download.photo.qq.com')
                             download(
                                 details.url,
                                 `${room.roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
