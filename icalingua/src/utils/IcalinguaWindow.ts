@@ -14,7 +14,7 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
         win.webContents.setWindowOpenHandler((details) => {
             const url = new URL(details.url)
             if (url.hostname == 'qun.qq.com') {
-                ; (async () => {
+                ;(async () => {
                     const size = screen.getPrimaryDisplay().size
                     const win1 = newIcalinguaWindow({
                         height: size.height - 300,
@@ -42,19 +42,21 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
 
                     await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
                 })()
-            } else if (url.hostname == 'docs.qq.com') { // 导出作业完成情况
-                const search = new URLSearchParams(url.search);
-                const fileName = search.get('fileName');
-                const downloadUrl = search.get('url');
+            } else if (url.hostname == 'docs.qq.com') {
+                // 导出作业完成情况
+                const search = new URLSearchParams(url.search)
+                const fileName = search.get('fileName')
+                const downloadUrl = search.get('url')
                 if (fileName !== null && downloadUrl !== null) download(downloadUrl, fileName)
-                else shell.openExternal(details.url);
-            } else if (url.host.endsWith('file.myqcloud.com')) { // lgtm[js/incomplete-url-substring-sanitization]
+                else shell.openExternal(details.url)
+            } else if (url.host.endsWith('file.myqcloud.com')) {
+                // lgtm[js/incomplete-url-substring-sanitization]
                 // 下载提交的作业文件
                 // 域名为 grouphw-xxxxxx.file.myqcloud.com 形式
-                const fileName = new URLSearchParams(url.search).get('fileName') || '';
-                download(details.url, fileName);
+                const fileName = new URLSearchParams(url.search).get('fileName') || ''
+                download(details.url, fileName)
             } else {
-                shell.openExternal(details.url);
+                shell.openExternal(details.url)
             }
             return {
                 action: 'deny',
