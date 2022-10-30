@@ -48,7 +48,9 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                 const downloadUrl = search.get('url');
                 if (fileName !== null && downloadUrl !== null) download(downloadUrl, fileName)
                 else shell.openExternal(details.url);
-            } else if (url.host.endsWith('file.myqcloud.com')) { // 下载提交的作业文件
+            } else if (url.host.endsWith('file.myqcloud.com')) { // lgtm[js/incomplete-url-substring-sanitization]
+                // 下载提交的作业文件
+                // 域名为 grouphw-xxxxxx.file.myqcloud.com 形式
                 const fileName = new URLSearchParams(url.search).get('fileName') || '';
                 download(details.url, fileName);
             } else {
