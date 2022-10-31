@@ -1,4 +1,4 @@
-import { BrowserWindow, screen } from 'electron'
+import { BrowserWindow, screen, shell } from 'electron'
 import getStaticPath from './getStaticPath'
 import path from 'path'
 import { getCookies } from '../main/ipc/botAndStorage'
@@ -12,7 +12,8 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
         options.webPreferences.preload === path.join(getStaticPath(), 'homeworkPreload.js')
     ) {
         win.webContents.setWindowOpenHandler((details) => {
-            if (new URL(details.url).hostname == 'qun.qq.com') {
+            const url = new URL(details.url)
+            if (url.hostname == 'qun.qq.com') {
                 ;(async () => {
                     const size = screen.getPrimaryDisplay().size
                     const win1 = newIcalinguaWindow({
@@ -41,22 +42,21 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
 
                     await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
                 })()
-            } else if (details.url.includes('file.myqcloud.com')) {
-                const fileName = decodeURIComponent(
-                    details.url
-                        .split('?')[1]
-                        .split('&')
-                        .find((i) => i.startsWith('fileName'))!
-                        .split('=')[1],
-                )
-                const downloadUrl = decodeURIComponent(
-                    details.url
-                        .split('?')[1]
-                        .split('&')
-                        .find((i) => i.startsWith('url'))
-                        .split('=')[1],
-                )
-                if (fileName && downloadUrl) download(downloadUrl, fileName)
+            } else if (url.hostname == 'docs.qq.com') {
+                // 导出作业完成情况
+                const search = new URLSearchParams(url.search)
+                const fileName = search.get('fileName')
+                const downloadUrl = search.get('url')
+                if (fileName !== null && downloadUrl !== null) download(downloadUrl, fileName)
+                else shell.openExternal(details.url)
+            } else if (url.host.endsWith('file.myqcloud.com')) {
+                // lgtm[js/incomplete-url-substring-sanitization]
+                // 下载提交的作业文件
+                // 域名为 grouphw-xxxxxx.file.myqcloud.com 形式
+                const fileName = new URLSearchParams(url.search).get('fileName') || ''
+                download(details.url, fileName)
+            } else {
+                shell.openExternal(details.url)
             }
             return {
                 action: 'deny',

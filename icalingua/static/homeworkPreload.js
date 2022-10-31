@@ -16,4 +16,22 @@ window.external = {
         require('electron').ipcRenderer.send('openImage', url);
     }
 }
+const observer = new MutationObserver(() => {
+    const nodes = document.querySelectorAll('a.btn-download');
+    for (let a of nodes) {
+        if (a.download != '') continue;
+        let fileName = a.parentNode.querySelector('.file-title')?.title;
+        if (fileName != null) {
+            a.download = fileName;
+            a.href = `${a.href}?fileName=${encodeURIComponent(fileName)}`;
+        }
+    }
+});
+window._ob = observer;
+document.addEventListener('DOMContentLoaded', function () {
+    observer.observe(document.body, {
+        subtree: true,
+        childList: true
+    });
+})
 console.log('injected');

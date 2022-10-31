@@ -226,6 +226,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     for (const i in cookies) {
                         await win.webContents.session.cookies.set({
                             url: 'https://web.qun.qq.com',
+                            domain: '.qun.qq.com',
                             name: i,
                             value: cookies[i],
                         })
@@ -310,8 +311,7 @@ const buildRoomMenu = (room: Room): Menu => {
                     win.webContents.setWindowOpenHandler((details) => {
                         console.log(details.url)
                         const parsedUrl = new URL(details.url)
-                        if (parsedUrl.hostname === 'qungz.photo.store.qq.com')
-                            openImage(details.url)
+                        if (parsedUrl.hostname === 'qungz.photo.store.qq.com') openImage(details.url)
                         else if (parsedUrl.hostname === 'download.photo.qq.com')
                             download(
                                 details.url,
