@@ -23,7 +23,7 @@
                         </div>
                     </div>
                     <div class="flex">
-                        <div class="desc">
+                        <div class="desc" :title="desc">
                             {{ desc }}
                         </div>
                         <div v-show="room.unreadCount !== 0">
