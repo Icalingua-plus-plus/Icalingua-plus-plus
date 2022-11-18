@@ -21,8 +21,8 @@ export const loadMainWindow = () => {
                 ? '#131415'
                 : '#fff'
             : theme === 'dark'
-            ? '#131415'
-            : '#fff'
+                ? '#131415'
+                : '#fff'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
@@ -62,7 +62,7 @@ export const loadMainWindow = () => {
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
         if (new URL(details.url).hostname == 'qun.qq.com') {
-            ;(async () => {
+            ; (async () => {
                 const size = screen.getPrimaryDisplay().size
                 const win = newIcalinguaWindow({
                     height: size.height - 200,
@@ -85,7 +85,7 @@ export const loadMainWindow = () => {
                 await win.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
             })()
         } else if (new URL(details.url).hostname == 'docs.qq.com') {
-            ;(async () => {
+            ; (async () => {
                 const win1 = newIcalinguaWindow({
                     autoHideMenuBar: true,
                 })
@@ -131,8 +131,8 @@ export const refreshMainWindowColor = () => {
                 ? '#131415'
                 : '#fff'
             : getConfig().theme === 'dark'
-            ? '#131415'
-            : '#fff',
+                ? '#131415'
+                : '#fff',
     )
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
@@ -213,3 +213,13 @@ export const destroyWindow = () => {
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
 }
 export const getLoginWindow = () => loginWindow
+export const getMainWindowScreen = () => {
+    if (mainWindow) {
+        const bounds = mainWindow.getBounds()
+        return screen.getDisplayNearestPoint({
+            x: bounds.x,
+            y: bounds.y
+        })
+    }
+    return null
+}

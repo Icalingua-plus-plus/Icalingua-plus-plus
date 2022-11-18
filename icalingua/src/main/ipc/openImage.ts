@@ -7,6 +7,7 @@ import getStaticPath from '../../utils/getStaticPath'
 import ui from '../utils/ui'
 import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import { getMainWindowScreen } from '../utils/windowManager'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
@@ -19,7 +20,7 @@ try {
             break
         }
     }
-} catch (e) {}
+} catch (e) { }
 
 if (!viewer) {
     for (const i of VIEWERS) {
@@ -46,6 +47,15 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             const viewerWindow = newIcalinguaWindow({
                 autoHideMenuBar: true,
             })
+            // get main window screen location
+            const bound = viewerWindow.getBounds()
+            const screen = getMainWindowScreen()
+            if (screen) {
+                viewerWindow.setBounds({
+                    x: screen.workArea.x + screen.workArea.width / 2 - bound.width / 2,
+                    y: screen.workArea.y + screen.workArea.height / 2 - bound.height / 2
+                })
+            }
             viewerWindow.loadURL(
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
