@@ -8,6 +8,7 @@ import ui from '../utils/ui'
 import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
+import { toInteger } from 'lodash'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
@@ -51,9 +52,11 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             const bound = viewerWindow.getBounds()
             const screen = getMainWindowScreen()
             if (screen) {
+                const alignX = toInteger(screen.workArea.x + screen.workArea.width / 2 - bound.width / 2);
+                const alignY = toInteger(screen.workArea.y + screen.workArea.height / 2 - bound.height / 2);
                 viewerWindow.setBounds({
-                    x: screen.workArea.x + screen.workArea.width / 2 - bound.width / 2,
-                    y: screen.workArea.y + screen.workArea.height / 2 - bound.height / 2
+                    x: alignX,
+                    y: alignY,
                 })
             }
             viewerWindow.loadURL(
