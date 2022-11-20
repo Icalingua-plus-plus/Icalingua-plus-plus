@@ -875,7 +875,6 @@ const loginHandlers = {
     },
     verify(data: DeviceEventData) {
         console.log(data)
-        bot.sendSMSCode()
         sendToLoginWindow('smsCodeVerify', data)
     },
     qrcode(data: QrcodeEventData) {
@@ -1881,7 +1880,8 @@ const adapter: OicqAdapter = {
         }
     },
     submitSmsCode(smsCode: string) {
-        bot.submitSMSCode(smsCode)
+        if (smsCode === 'sendSmsCode') bot.sendSMSCode()
+        else bot.submitSMSCode(smsCode)
     },
     randomDevice(username: number) {
         const filepath = path.join(app.getPath('userData'), 'data', String(username))

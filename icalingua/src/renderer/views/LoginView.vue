@@ -94,10 +94,12 @@
             :wrapper-closable="false"
             size="100%"
         >
-            <p v-if="phone">已向 {{ phone }} 发送验证码</p>
+            <p v-if="phone">{{ sendTime !== -1 ? '已' : '' }}向 {{ phone }} 发送验证码</p>
             <el-input placeholder="短信验证码" v-model="smsCode" @input="smsCode = smsCode.slice(0, 6)" />
             <center>
-                <el-button @click="submitSmsCode" type="primary"> 提交 </el-button>
+                <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1"> 提交 </el-button>
+                <el-button @click="sendSmsCode" v-if="sendTime === -1"> 发送验证码 </el-button>
+                <el-button @click="sendSmsCode" v-if="sendTime !== -1" :disabled="sendTime !== 0"> 重发 ({{ sendTime }}s) </el-button>
                 <el-button @click="QRCodeVerify"> 扫码验证 </el-button>
             </center>
         </el-drawer>
@@ -129,6 +131,7 @@ export default {
             smsCode: '',
             verifyUrl: '',
             phone: '',
+            sendTime: -1,
         }
     },
     async created() {
@@ -161,6 +164,17 @@ export default {
         },
         submitSmsCode() {
             ipcRenderer.send('submitSmsCode', this.smsCode)
+        },
+        sendSmsCode() {
+            ipcRenderer.send('submitSmsCode', 'sendSmsCode')
+            this.sendTime = 60
+            const timer = setInterval(() => {
+                if (this.sendTime === 0) {
+                    clearInterval(timer)
+                    return
+                }
+                this.sendTime--
+            }, 1000)
         },
         QRCodeVerify() {
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
