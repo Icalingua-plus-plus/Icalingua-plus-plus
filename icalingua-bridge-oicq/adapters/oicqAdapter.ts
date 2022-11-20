@@ -732,7 +732,6 @@ const loginHandlers = {
     },
     verify(data: DeviceEventData) {
         console.log(data)
-        bot.sendSMSCode()
         broadcast('login-smsCodeVerify', data)
     },
     qrcode(data: QrcodeEventData) {
@@ -1640,7 +1639,8 @@ const adapter = {
         return bot.acquireGfs(gin)
     },
     submitSmsCode(smsCode: string) {
-        bot.submitSMSCode(smsCode)
+        if (smsCode === 'sendSmsCode') bot.sendSMSCode()
+        else bot.submitSMSCode(smsCode)
     },
     randomDevice(username: number) {
         const filepath = path.join(require.main ? require.main.path : process.cwd(), 'data', String(username))
