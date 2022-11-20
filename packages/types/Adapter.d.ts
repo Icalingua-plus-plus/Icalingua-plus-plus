@@ -33,6 +33,8 @@ export default interface Adapter {
 
     randomDevice(username: number): void
 
+    sendPacket(type: string, cmd: string, body: Object): Promise<Buffer>
+
     clearRoomUnread(roomId: number): any
 
     getUnreadRooms(): Promise<Room[]>

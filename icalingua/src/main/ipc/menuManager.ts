@@ -50,9 +50,13 @@ import {
     setRoomAutoDownload,
     setRoomAutoDownloadPath,
     setRoomPriority,
+    sendPacket,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
+
+const requireFunc = eval('require')
+const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
 
 const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
@@ -1398,6 +1402,56 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
+        if (await isAdmin() && !history && !message.deleted) {
+            if (room.roomId < 0) {
+                menu.append(
+                    new MenuItem({
+                        label: '设为精华',
+                        click: () => {
+                            const parsed = Buffer.from(message._id as string, "base64")
+                            const seqid = parsed.readUInt32BE(8)
+                            const random = parsed.readUInt32BE(12)
+                            ;(async () => {
+                                const retPacket = await sendPacket('Oidb','OidbSvc.0xeac_1', {
+                                    1: -room.roomId,
+                                    2: seqid,
+                                    3: random,
+                                })
+                                const ret = pb.decode(retPacket)[4]
+                                if (ret[1]) {
+                                    ui.messageError(ret[1].toString())
+                                } else {
+                                    ui.messageSuccess('设置精华成功')
+                                }
+                            })()
+                        },
+                    }),
+                )
+                menu.append(
+                    new MenuItem({
+                        label: '移出精华',
+                        click: () => {
+                            const parsed = Buffer.from(message._id as string, "base64")
+                            const seqid = parsed.readUInt32BE(8)
+                            const random = parsed.readUInt32BE(12)
+                            ;(async () => {
+                                const retPacket = await sendPacket('Oidb','OidbSvc.0xeac_2', {
+                                    1: -room.roomId,
+                                    2: seqid,
+                                    3: random,
+                                })
+                                const ret = pb.decode(retPacket)[4]
+                                if (ret[1]) {
+                                    ui.messageError(ret[1].toString())
+                                } else {
+                                    ui.messageSuccess('移出精华成功')
+                                }
+                            })()
+                        },
+                    }),
+                )
+            }
+        }
         if (!history) {
             menu.append(
                 new MenuItem({

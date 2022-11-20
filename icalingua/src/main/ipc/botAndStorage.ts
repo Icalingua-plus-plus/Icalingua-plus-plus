@@ -60,6 +60,7 @@ export const {
     submitSmsCode,
     reLogin,
     randomDevice,
+    sendPacket,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
