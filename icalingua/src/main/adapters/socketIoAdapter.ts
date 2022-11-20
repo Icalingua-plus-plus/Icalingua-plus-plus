@@ -265,7 +265,7 @@ const attachSocketEvents = () => {
     })
     socket.on('login-smsCodeVerify', (data: DeviceEventData) => {
         showLoginWindow(true)
-        sendToLoginWindow('smsCodeVerify', data)
+        sendToLoginWindow('smsCodeVerify', JSON.stringify(data))
     })
     socket.on('login-error', (message: string) => {
         sendToLoginWindow('error', message)

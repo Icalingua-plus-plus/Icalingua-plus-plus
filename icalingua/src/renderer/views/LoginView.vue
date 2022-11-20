@@ -143,10 +143,11 @@ export default {
             this.shouldSubmitSmsCode = false
         })
         ipcRenderer.on('smsCodeVerify', (_, data) => {
-            console.log(data.url)
+            const parsed = JSON.parse(data)
+            console.log(parsed.url)
             this.shouldSubmitSmsCode = true
-            this.verifyUrl = data.url
-            this.phone = data.phone
+            this.verifyUrl = parsed.url
+            this.phone = parsed.phone
         })
     },
     methods: {

@@ -875,7 +875,7 @@ const loginHandlers = {
     },
     verify(data: DeviceEventData) {
         console.log(data)
-        sendToLoginWindow('smsCodeVerify', data)
+        sendToLoginWindow('smsCodeVerify', JSON.stringify(data))
     },
     qrcode(data: QrcodeEventData) {
         console.log(data)
