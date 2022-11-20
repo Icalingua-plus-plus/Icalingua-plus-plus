@@ -60,4 +60,5 @@ export default (io: Server, socket: Socket) => {
     socket.on('login-slider-ticket', adapter.sliderLogin)
     socket.on('getGroup', adapter.getGroup)
     socket.on('getMsgNewURL', adapter.getMsgNewURL)
+    socket.on('sendPacket', adapter.sendPacket)
 }

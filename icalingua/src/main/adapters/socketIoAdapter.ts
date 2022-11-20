@@ -577,6 +577,11 @@ const adapter: Adapter = {
     handleRequest(type: 'friend' | 'group', flag: string, accept?: boolean): any {
         socket.emit('handleRequest', type, flag, accept)
     },
+    sendPacket(type: string, cmd: string, body: Object): Promise<Buffer> {
+        return new Promise((resolve, reject) => {
+            socket.emit('sendPacket', type, cmd, body, resolve)
+        })
+    },
 }
 
 export default adapter
