@@ -7,6 +7,8 @@ import getStaticPath from '../../utils/getStaticPath'
 import ui from '../utils/ui'
 import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import { getMainWindowScreen } from '../utils/windowManager'
+import { toInteger } from 'lodash'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
@@ -46,6 +48,17 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             const viewerWindow = newIcalinguaWindow({
                 autoHideMenuBar: true,
             })
+            // get main window screen location
+            const bound = viewerWindow.getBounds()
+            const screen = getMainWindowScreen()
+            if (screen) {
+                const alignX = toInteger(screen.workArea.x + screen.workArea.width / 2 - bound.width / 2)
+                const alignY = toInteger(screen.workArea.y + screen.workArea.height / 2 - bound.height / 2)
+                viewerWindow.setBounds({
+                    x: alignX,
+                    y: alignY,
+                })
+            }
             viewerWindow.loadURL(
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
@@ -63,5 +76,7 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
         ui.messageError('找不到可用的本地查看器')
     }
 }
-ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) => openImage(url, external, urlList))
+ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) =>
+    openImage(url, external, urlList),
+)
 export default openImage
