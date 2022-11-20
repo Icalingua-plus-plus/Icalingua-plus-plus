@@ -1919,6 +1919,10 @@ const adapter: OicqAdapter = {
         fs.mkdirSync(filepath, { recursive: true, mode: 0o755 })
         fs.writeFileSync(devicepath, device, { mode: 0o600 })
     },
+    async sendPacket(type: string, cmd: string, body: any): Promise<Buffer> {
+        if (type === 'Uni') return await bot.sendUni(cmd, body)
+        else return await bot.sendOidb(cmd, body)
+    },
 }
 
 export default adapter

@@ -1678,6 +1678,10 @@ const adapter = {
         fs.mkdirSync(filepath, { recursive: true, mode: 0o755 })
         fs.writeFileSync(devicepath, device, { mode: 0o600 })
     },
+    async sendPacket(type: string, cmd: string, body: any, cb) {
+        if (type === 'Uni') cb(await bot.sendUni(cmd, body))
+        else cb(await bot.sendOidb(cmd, body))
+    },
 }
 
 export default adapter
