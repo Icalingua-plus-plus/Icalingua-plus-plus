@@ -21,7 +21,7 @@ try {
             break
         }
     }
-} catch (e) { }
+} catch (e) {}
 
 if (!viewer) {
     for (const i of VIEWERS) {
@@ -52,8 +52,8 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             const bound = viewerWindow.getBounds()
             const screen = getMainWindowScreen()
             if (screen) {
-                const alignX = toInteger(screen.workArea.x + screen.workArea.width / 2 - bound.width / 2);
-                const alignY = toInteger(screen.workArea.y + screen.workArea.height / 2 - bound.height / 2);
+                const alignX = toInteger(screen.workArea.x + screen.workArea.width / 2 - bound.width / 2)
+                const alignY = toInteger(screen.workArea.y + screen.workArea.height / 2 - bound.height / 2)
                 viewerWindow.setBounds({
                     x: alignX,
                     y: alignY,
@@ -76,5 +76,7 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
         ui.messageError('找不到可用的本地查看器')
     }
 }
-ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) => openImage(url, external, urlList))
+ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) =>
+    openImage(url, external, urlList),
+)
 export default openImage
