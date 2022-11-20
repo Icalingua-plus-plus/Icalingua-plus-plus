@@ -7,7 +7,7 @@
                         <el-avatar size="large" :src="roomAvatar" />
                     </el-badge>
                 </div>
-                <div class="right">
+                <div class="right" :title="desc">
                     <div class="flex l1" :class="{ withoutdesc: !desc }">
                         <div class="name">
                             {{ room.roomName }}
