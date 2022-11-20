@@ -38,7 +38,7 @@ export const checkUpdate = async () => {
     } else {
         try {
             const res = await axios.get(
-                'https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/development',
+                'https://api.github.com/repos/Icalingua-plus-plus/Icalingua-plus-plus/git/ref/heads/develop',
                 {
                     proxy: false,
                 },
