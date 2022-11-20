@@ -182,6 +182,7 @@ const eventHandlers = {
             !isSelfMsg
         ) {
             //notification
+            if (lastMessage.content === '[窗口抖动]') showWindow()
             try {
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (ElectronNotification.isSupported()) {
