@@ -213,3 +213,13 @@ export const destroyWindow = () => {
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
 }
 export const getLoginWindow = () => loginWindow
+export const getMainWindowScreen = () => {
+    if (mainWindow) {
+        const bounds = mainWindow.getBounds()
+        return screen.getDisplayNearestPoint({
+            x: bounds.x,
+            y: bounds.y,
+        })
+    }
+    return null
+}
