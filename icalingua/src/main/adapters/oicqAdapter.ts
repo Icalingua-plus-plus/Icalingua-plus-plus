@@ -1783,7 +1783,7 @@ const adapter: OicqAdapter = {
                     }
                     try {
                         const retData = await processMessage(data.message, message, {}, roomId)
-
+                        if (await storage.isChatIgnored(message.senderId)) message.hide = true
                         messages.push(message)
                         newMsgs.push(message)
                         console.log(retData)

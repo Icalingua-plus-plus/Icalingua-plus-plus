@@ -1564,6 +1564,7 @@ const adapter = {
                 }
                 try {
                     await processMessage(data.message, message, {}, roomId)
+                    if (await storage.isChatIgnored(message.senderId)) message.hide = true
                     messages.push(message)
                     newMsgs.push(message)
                 } catch (e) {
