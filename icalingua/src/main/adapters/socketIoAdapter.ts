@@ -137,6 +137,7 @@ const attachSocketEvents = () => {
             isSelfMsg: boolean
             image?: string
         }) => {
+            if (data.data.body === '[窗口抖动]') showWindow()
             if (
                 (!getMainWindow().isFocused() ||
                     !getMainWindow().isVisible() ||
