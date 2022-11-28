@@ -640,7 +640,6 @@ jobs:
       - build-arm64
       - build-armv7l
       - pack-archpkg-x86_64
-      - pack-archpkg-i686
       - pack-archpkg-aarch64
       - pack-archpkg-armv7l
     steps:
@@ -889,7 +888,6 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
       - pack-archpkg-x86_64
-      - pack-archpkg-i686
       - pack-archpkg-aarch64
       - pack-archpkg-armv7l
       - pack-snap-x86_64
@@ -980,12 +978,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: armv7l.tar.xz
-          path: release
-
-      - name: get i686.pkg.tar.zst
-        uses: actions/download-artifact@v3
-        with:
-          name: i686.pkg.tar.zst
           path: release
 
       - name: get x86_64.AppImage
