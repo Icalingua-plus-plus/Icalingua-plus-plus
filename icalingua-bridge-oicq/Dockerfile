@@ -4,7 +4,7 @@ COPY . .
 RUN apk add ffmpeg mongodb-tools fish make gcc g++ alpine-sdk python3 py3-pip
 RUN npm i -g pnpm
 RUN pnpm install
-RUN pnpm compile
+RUN npm run compile
 
 ENV TZ=Asia/Shanghai
 
