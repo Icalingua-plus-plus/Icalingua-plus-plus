@@ -1,0 +1,17 @@
+FROM node:16-alpine as builder
+WORKDIR /app
+COPY . .
+RUN apk add ffmpeg mongodb-tools fish
+RUN npm i -g pnpm
+RUN pnpm install
+RUN pnpm compile
+
+
+FROM node:16-alpine
+
+WORKDIR /app
+ENV TZ=Asia/Shanghai
+
+EXPOSE 6789
+
+CMD echo "icalingua-bridge-oicq Image." && sh
