@@ -414,66 +414,6 @@ jobs:
           sudo mkdir /github
           sudo ln -s $PWD /github/workspace
 
-  pack-snap-x86_64:
-    runs-on: ubuntu-latest
-    needs:
-      - build-x86_64
-      - build-dist-bundle
-    defaults:
-      run:
-        working-directory: icalingua
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-
-      - name: Install pnpm
-        run: corepack enable
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-
-      - name: pnpm install
-        run: pnpm install
-
-      - name: get built files
-        uses: actions/download-artifact@v3
-        with:
-          name: x86_64-unpacked
-          path: icalingua/unpacked
-
-      - name: fix premissions
-        run: chmod +x unpacked/icalingua
-
-      - name: Install Snapcraft
-        run: |
-          sudo snap install snapcraft --classic
-          sudo snap install lxd
-          sudo usermod --append --groups lxd $USER
-          sudo chown root:root /
-          sudo /snap/bin/lxd waitready
-          sudo /snap/bin/lxd init --auto
-          newgrp
-
-      - name: pack
-        id: pack
-        run: |
-          sg lxd -c 'pnpm build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
-          echo "snap=$(readlink -f $(ls build/*.snap))" >> $GITHUB_OUTPUT
-        env:
-          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
-
-      - uses: actions/upload-artifact@v3
-        name: upload snap
-        with:
-          name: x86_64.snap
-          path: icalingua/build/*.snap
-          if-no-files-found: error
-
   pack-otherpkg-x86_64:
     runs-on: ubuntu-latest
     needs:
@@ -890,7 +830,6 @@ jobs:
       - pack-archpkg-x86_64
       - pack-archpkg-aarch64
       - pack-archpkg-armv7l
-      - pack-snap-x86_64
       - pack-otherpkg-x86_64
       - pack-otherpkg-arm64
       - pack-otherpkg-armv7l
@@ -984,12 +923,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: x86_64.AppImage
-          path: release
-
-      - name: get x86_64.snap
-        uses: actions/download-artifact@v3
-        with:
-          name: x86_64.snap
           path: release
 
       - name: get x86_64.tar.xz
