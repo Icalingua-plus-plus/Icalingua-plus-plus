@@ -4,7 +4,7 @@ services:
   icalingua-bridge-oicq:
     container_name: icalingua-bridge-oicq
     image: timochan/icalingua-bridge-oicq:latest
-    command: "sh /app/Icalingua-plus-plus/icalingua-bridge-oicq//run.sh"
+    command: "sh /app/Icalingua-plus-plus/icalingua-bridge-oicq/run.sh"
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production

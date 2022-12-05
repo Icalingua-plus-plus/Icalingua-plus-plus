@@ -4,7 +4,7 @@ node_modules
 data
 build
 # Logs
-logs
+
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -34,13 +34,4 @@ coverage
 !.vscode/launch.json
 !.vscode/extensions.json
 
-patch/dist
-tmp
-out
-release.zip
 
-run
-
-data
-assets
-.env
