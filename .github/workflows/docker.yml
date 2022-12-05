@@ -20,6 +20,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           # list of Docker images to use as base name for tags
+          # Please modify 
           images: |
             timochan/icalingua-bridge-oicq
           # generate Docker tags based on the following events/attributes
@@ -43,6 +44,7 @@ jobs:
         with:
           context: ./icalingua-bridge-oicq
           load: true
+          # Please modify
           tags: ${{ steps.meta.outputs.tags }},timochan/icalingua-bridge-oicq:latest
           labels: ${{ steps.meta.outputs.labels }}
       - name: Build and push
@@ -51,5 +53,6 @@ jobs:
         with:
           context: ./icalingua-bridge-oicq
           push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          # Please modify
           tags: ${{ steps.meta.outputs.tags }},timochan/icalingua-bridge-oicq:latest
           labels: ${{ steps.meta.outputs.labels }}

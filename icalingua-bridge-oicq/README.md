@@ -53,7 +53,52 @@
 
 ### 使用 Docker
 
-Todo
+使用 Docker 部署是一件非常简单的事情，必须的依赖已经全部打包进去，仅仅需要一份 `docker-compose.yml` 以及一份 `config.yaml` 即可。同时，修改 `docker-compose.yml` 中的 `ports` , `network` 以及 `container_name` 即可快速地部署多个实例。
+
+注意：该 `docker-compose,yml` 提供的数据库是 `MongoDB`，并对数据库文件进行了挂载，来实现持久化存储；如果你需要使用其他数据库，可以自行修改数据库的部分，并持久化数据。
+
+如何使用？
+
+安装 Docker 和 Docker Compose(已有 Docker 环境略过)
+```bash
+curl -fsSL https://get.docker.com | bash -s docker
+```
+如果你是国内服务器，可以使用 --mirror 参数指定国内镜像源
+```bash
+curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+```
+
+下载对应的配置文件
+```bash
+# 下载 docker-compose.yml
+wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@develop/icalingua-bridge-oicq/docker-compose.yml
+
+# 下载 config.yaml
+wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@develop/icalingua-bridge-oicq/config.yaml
+```
+依照上文中的方法，修改公钥即可，然后运行
+```bash
+docker compose up -d
+```
+注意：仅仅如此是不可以使用的，你需要进入容器中获取到容器的 IP 地址，然后将其填入 config.yaml 中的 `host` 选项中。
+
+例如：
+```bash
+sudo docker exec -it icalingua-bridge-oicq /bin/sh
+ip add show eth0
+```
+输出如下内容：
+```bash
+918: eth0@if919: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:14:00:03 brd ff:ff:ff:ff:ff:ff
+    inet 172.20.0.3/16 brd 172.20.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+即，将 `172.20.0.3` 填入 `config.yaml` 中的 `host` 选项中，然后重启容器即可。
+```bash
+docker compose restart
+```
+当然，仅仅如此也是比较不安全的，你仍然需要反向代理等过程，以保证安全性。
 
 ## 客户端连接方法
 
@@ -66,6 +111,8 @@ privateKey: 安装的步骤中生成的私钥
 ```
 
 首次运行的时候会弹出登录界面，**需要注意的是数据库是相对应服务器的地址**
+
+如果你的服务端使用 Docker 部署，那么 `MongoDB` 数据库的地址如下 `mongodb://mongo`
 
 ## 登录握手细节
 
