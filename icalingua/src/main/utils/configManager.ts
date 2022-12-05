@@ -16,7 +16,7 @@ type AllConfig = {
     account: LoginForm
     priority: 1 | 2 | 3 | 4 | 5
     aria2: Aria2Config
-    darkTaskIcon: boolean
+    darkTaskIcon: 'auto' | 'true' | 'false'
     winSize: WinSize
     socketIo: string
     adapter: 'oicq' | 'socketIo'
@@ -90,7 +90,7 @@ const defaultConfig: AllConfig = {
     account: emptyLoginForm,
     priority: 3,
     aria2: defaultAria2Config,
-    darkTaskIcon: false,
+    darkTaskIcon: 'auto',
     winSize: defaultWinSize,
     socketIo: '',
     adapter: 'oicq',
@@ -127,6 +127,8 @@ if (fs.existsSync(configFilePath)) {
             config[i] = defaultConfig[i]
         }
     }
+    if (typeof config.darkTaskIcon === 'boolean')
+        config.darkTaskIcon = config.darkTaskIcon ? 'true' : 'false'
     saveConfigFile()
 } else {
     config = defaultConfig

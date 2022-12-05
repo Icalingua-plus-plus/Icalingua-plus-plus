@@ -134,6 +134,7 @@ export const refreshMainWindowColor = () => {
             ? '#131415'
             : '#fff',
     )
+    updateTrayIcon()
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
     if (loginWindow) {

@@ -1,5 +1,5 @@
 import Room from '@icalingua/types/Room'
-import { app, Menu, MenuItem, nativeImage, Tray } from 'electron'
+import { app, Menu, MenuItem, nativeImage, nativeTheme, Tray } from 'electron'
 import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import {
@@ -139,14 +139,39 @@ export const updateTrayMenu = async () => {
     process.platform !== 'darwin' &&
         menu.append(
             new MenuItem({
-                label: '深色图标',
-                type: 'checkbox',
-                checked: getConfig().darkTaskIcon,
-                click(item) {
-                    getConfig().darkTaskIcon = item.checked
-                    updateTrayIcon()
-                    saveConfigFile()
-                },
+                label: '图标颜色',
+                submenu: [
+                    {
+                        label: '与系统颜色相反',
+                        type: 'radio',
+                        checked: getConfig().darkTaskIcon === 'auto',
+                        click(item) {
+                            getConfig().darkTaskIcon = 'auto'
+                            updateTrayIcon()
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: '深色图标',
+                        type: 'radio',
+                        checked: getConfig().darkTaskIcon === 'true',
+                        click(item) {
+                            getConfig().darkTaskIcon = 'true'
+                            updateTrayIcon()
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: '深色图标',
+                        type: 'radio',
+                        checked: getConfig().darkTaskIcon === 'false',
+                        click(item) {
+                            getConfig().darkTaskIcon = 'false'
+                            updateTrayIcon()
+                            saveConfigFile()
+                        },
+                    },
+                ],
             }),
         )
     menu.append(
@@ -158,17 +183,23 @@ export const updateTrayMenu = async () => {
     )
     tray.setContextMenu(menu)
 }
+const getTrayIconColor = () => {
+    if (getConfig().darkTaskIcon === 'auto') 
+        return !nativeTheme.shouldUseDarkColors
+    else if (getConfig().darkTaskIcon === 'true') return true
+    else return false
+}
 export const updateTrayIcon = async () => {
     let p
     const unread = await getUnreadCount()
     const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
     if (unread) {
-        p = getConfig().darkTaskIcon ? darknewmsgIcon : newmsgIcon
+        p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
-        p = getConfig().darkTaskIcon ? darkIcon : lightIcon
+        p = getTrayIconColor() ? darkIcon : lightIcon
         getMainWindow().title = title
     }
     tray.setTitle(unread === 0 ? '' : `${unread}`)
