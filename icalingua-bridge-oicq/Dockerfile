@@ -1,10 +1,14 @@
 FROM node:16-alpine 
 WORKDIR /app
-COPY . .
-RUN apk add ffmpeg mongodb-tools fish make gcc g++ alpine-sdk python3 py3-pip
-RUN npm i -g pnpm
-RUN pnpm install
-RUN npm run compile
+RUN apk add ffmpeg mongodb-tools make gcc g++ alpine-sdk python3 py3-pip  && \
+    rm -rf * && \
+    git clone https://github.com/Icalingua-plus-plus/Icalingua-plus-plus.git --depth 1  && \
+    cd Icalingua-plus-plus && \
+    ls | grep -v  "icalingua-bridge-oicq" | grep -v "package*" | grep -v "pnpm*" | awk  '{system("rm -rf "$1)}' && \
+    cd icalingua-bridge-oicq && \
+    npm i pnpm -g && \
+    pnpm i && \
+    pnpm compile
 
 ENV TZ=Asia/Shanghai
 

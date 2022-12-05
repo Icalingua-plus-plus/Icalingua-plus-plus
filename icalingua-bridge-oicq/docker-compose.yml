@@ -1,20 +1,20 @@
-version: '3.8'
+version: '3'
 
 services:
   icalingua-bridge-oicq:
     container_name: icalingua-bridge-oicq
     image: timochan/icalingua-bridge-oicq:latest
-    command: "/app/icalingua-bridge-oicq/start.sh"
+    command: "sh /app/Icalingua-plus-plus/icalingua-bridge-oicq//run.sh"
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
     volumes:
       # 整个文件夹挂载，如果你认为你需要的话
-      # - ./data/icalingua-bridge-oicq:/app 
+      # - ./data/icalingua-bridge-oicq:/app/Icalingua-plus-plus
       # 仅挂载配置文件
       - type: bind                    
         source: ./config.yaml    # 挂载的文件
-        target: /app/config.yaml
+        target: /app/Icalingua-plus-plus/icalingua-bridge-oicq/config.yaml
     ports:
       - '6789:6789'
     depends_on:
