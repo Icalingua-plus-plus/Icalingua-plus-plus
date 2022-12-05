@@ -1879,6 +1879,8 @@ const copyImage = async (url: string) => {
     }
 }
 
+ipcMain.on('copyImage', (_, url: string) => copyImage(url))
+
 ipcMain.on(
     'popupGroupMemberMenu',
     async (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {

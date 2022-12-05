@@ -47,6 +47,10 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
         } else {
             const viewerWindow = newIcalinguaWindow({
                 autoHideMenuBar: true,
+                webPreferences: {
+                    contextIsolation: false,
+                    preload: path.join(getStaticPath(), 'imgViewPreload.js'),
+                },
             })
             // get main window screen location
             const bound = viewerWindow.getBounds()
