@@ -64,8 +64,8 @@ export default {
                 else if (now.getDate() - time.getDate() === 1)
                     return '昨天'
             if (now.getFullYear() !== time.getFullYear())
-                return (time.getFullYear()) % 100 + '/' + (time.getMonth() + 1) + '/' + time.getDate()
-            return (time.getMonth() + 1) + '/' + time.getDate()
+                return (time.getFullYear()) % 100 + '-' + (time.getMonth() + 1) + '-' + time.getDate()
+            return (time.getMonth() + 1) + '-' + time.getDate()
         },
         roomAvatar() {
             return getAvatarUrl(this.room.roomId)
