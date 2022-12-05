@@ -1,4 +1,35 @@
-# Code of Conduct
+# CONTRIBUTING
+
+## Pull Request Guidelines
+
+- **All development should be done in `develop` branches.**
+
+- Checkout a topic branch from the relevant branch, e.g. `develop`, and merge back against that branch.
+
+- **DO NOT** checkin `dist` in the commits.
+
+- It's OK to have multiple small commits as you work on the PR - GitHub will automatically squash it before merging.
+
+- If adding a new feature:
+
+  - Add accompanying test case.
+  - Provide a convincing reason to add this feature. Ideally, you should open a suggestion issue first and have it approved before working on it.
+
+- If fixing bug:
+
+  - If you are resolving a special issue, add `(fix #xxxx[,#xxxx])` (#xxxx is the issue id) in your PR title for a better release log, e.g. `update entities encoding/decoding (fix #3899)`.
+  - Provide a detailed description of the bug in the PR. Live demo preferred.
+  - Add appropriate test coverage if applicable.
+
+## Development Setup
+
+You will need [Node.js](http://nodejs.org) **version 16** and [pnpm](https://pnpm.io/).
+
+After cloning the repo, run:
+
+```bash
+$ pnpm i # install the dependencies of the project
+```
 
 ## Style Guide
 
