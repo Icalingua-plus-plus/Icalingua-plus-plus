@@ -1,372 +1,372 @@
 <html>
 
 <head>
-	<meta name="viewport" content="width=device-width; initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
-	<style>
-		body {
-			background: black;
-		}
+    <meta name="viewport" content="width=device-width; initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+    <style>
+        body {
+            background: black;
+        }
 
-		#DRAG {
-			touch-action:none;
-		}
+        #DRAG {
+            touch-action:none;
+        }
 
-		.btn {
-			width: 100%;
-			height: 100%;
-			border: none;
-			text-align: center;
-			background-size: 60% 60%;
-			background-color: transparent;
-			outline: none;
-			background-repeat: no-repeat;
-			background-position: center center;
-		}
+        .btn {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            background-size: 60% 60%;
+            background-color: transparent;
+            outline: none;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
 
-		.btn:hover {
-			background-color: rgba(0, 0, 0, 0.3);
-		}
+        .btn:hover {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
 
-		td {
-			text-align: center;
-		}
+        td {
+            text-align: center;
+        }
 
-		* {
-			-webkit-user-select: none;
-			-webkit-user-drag: none;
-		}
+        * {
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+        }
 
-		#BAR {
-			background: rgba(255, 255, 255, 0.7);
-			position: absolute;
-			z-index: 3;
-			left: 50%;
-			bottom: 0;
-			text-align: center;
-			height: 8vh;
-			width: 50vh;
-			min-height: 60px;
-			min-width: 380px;
-			border-radius: 10px;
-			backdrop-filter: blur(2px);
-			transform: translateX(-50%);
-			transition: all 0.3s linear;
-		}
-	</style>
-	<title>图片查看</title>
+        #BAR {
+            background: rgba(255, 255, 255, 0.7);
+            position: absolute;
+            z-index: 3;
+            left: 50%;
+            bottom: 0;
+            text-align: center;
+            height: 8vh;
+            width: 50vh;
+            min-height: 60px;
+            min-width: 380px;
+            border-radius: 10px;
+            backdrop-filter: blur(2px);
+            transform: translateX(-50%);
+            transition: all 0.3s linear;
+        }
+    </style>
+    <title>图片查看</title>
     <link rel="stylesheet" href="file-manager/assets/basicContext.min.css">
     <link rel="stylesheet" href="file-manager/assets/themes/default.min.css">
 </head>
 
 <body style="overflow: hidden;">
-	<img id='IMG' style="position: absolute; z-index: 1" src="">
-	<div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
-	<div id='BAR'>
-		<table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
-			<tr>
-				<!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
-				<!-- toggle -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik00MiA3SDZDNC44OTU0MyA3IDQgNy44OTU0MyA0IDlWMzlDNCA0MC4xMDQ2IDQuODk1NDMgNDEgNiA0MUg0MkM0My4xMDQ2IDQxIDQ0IDQwLjEwNDYgNDQgMzlWOUM0NCA3Ljg5NTQzIDQzLjEwNDYgNyA0MiA3WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTIgMjAuNTc5OUwxNiAxOFYzMCIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMSAyMC41Nzk5TDM1IDE4VjMwIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI0IDIwVjIxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTI0IDI3VjI4IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+);'></button>
-				</td>
-				<!-- Rotate Left -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0xMS4yNzIxIDM2LjcyNzlDMTQuNTI5NCAzOS45ODUzIDE5LjAyOTQgNDIgMjQgNDJDMzMuOTQxMSA0MiA0MiAzMy45NDExIDQyIDI0QzQyIDE0LjA1ODkgMzMuOTQxMSA2IDI0IDZDMTkuMDI5NCA2IDE0LjUyOTQgOC4wMTQ3MiAxMS4yNzIxIDExLjI3MjFDOS42MTQwNyAxMi45MzAxIDYgMTcgNiAxNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02IDlWMTdIMTQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
-				</td>
-				<!-- Rotate Right -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0zNi43Mjc5IDM2LjcyNzlDMzMuNDcwNiAzOS45ODUzIDI4Ljk3MDYgNDIgMjQgNDJDMTQuMDU4OSA0MiA2IDMzLjk0MTEgNiAyNEM2IDE0LjA1ODkgMTQuMDU4OSA2IDI0IDZDMjguOTcwNiA2IDMzLjQ3MDYgOC4wMTQ3MiAzNi43Mjc5IDExLjI3MjFDMzguMzg1OSAxMi45MzAxIDQyIDE3IDQyIDE3IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQyIDhWMTdIMzMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
-				</td>
-				<!-- Zoom In -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxNUwyMSAyNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
-				</td>
-				<!-- Zoom Out -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
-				</td>
-				<!-- Download -->
-				<td>
-					<button class='btn'
-						style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik02IDI0LjAwODNWNDJINDJWMjQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMzMgMjNMMjQgMzJMMTUgMjMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMjMuOTkxNyA2VjMyIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49ImJldmVsIi8+PC9zdmc+);'></button>
-				</td>
-			</tr>
-		</table>
-	</div>
-	<a style="display: none" id='download' download href=""></a>
+    <img id='IMG' style="position: absolute; z-index: 1" src="">
+    <div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
+    <div id='BAR'>
+        <table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
+            <tr>
+                <!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
+                <!-- toggle -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik00MiA3SDZDNC44OTU0MyA3IDQgNy44OTU0MyA0IDlWMzlDNCA0MC4xMDQ2IDQuODk1NDMgNDEgNiA0MUg0MkM0My4xMDQ2IDQxIDQ0IDQwLjEwNDYgNDQgMzlWOUM0NCA3Ljg5NTQzIDQzLjEwNDYgNyA0MiA3WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNMTIgMjAuNTc5OUwxNiAxOFYzMCIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMSAyMC41Nzk5TDM1IDE4VjMwIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTI0IDIwVjIxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTTI0IDI3VjI4IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+);'></button>
+                </td>
+                <!-- Rotate Left -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0xMS4yNzIxIDM2LjcyNzlDMTQuNTI5NCAzOS45ODUzIDE5LjAyOTQgNDIgMjQgNDJDMzMuOTQxMSA0MiA0MiAzMy45NDExIDQyIDI0QzQyIDE0LjA1ODkgMzMuOTQxMSA2IDI0IDZDMTkuMDI5NCA2IDE0LjUyOTQgOC4wMTQ3MiAxMS4yNzIxIDExLjI3MjFDOS42MTQwNyAxMi45MzAxIDYgMTcgNiAxNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik02IDlWMTdIMTQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
+                </td>
+                <!-- Rotate Right -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0zNi43Mjc5IDM2LjcyNzlDMzMuNDcwNiAzOS45ODUzIDI4Ljk3MDYgNDIgMjQgNDJDMTQuMDU4OSA0MiA2IDMzLjk0MTEgNiAyNEM2IDE0LjA1ODkgMTQuMDU4OSA2IDI0IDZDMjguOTcwNiA2IDMzLjQ3MDYgOC4wMTQ3MiAzNi43Mjc5IDExLjI3MjFDMzguMzg1OSAxMi45MzAxIDQyIDE3IDQyIDE3IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQyIDhWMTdIMzMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
+                </td>
+                <!-- Zoom In -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxNUwyMSAyNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
+                </td>
+                <!-- Zoom Out -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'></button>
+                </td>
+                <!-- Download -->
+                <td>
+                    <button class='btn'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik02IDI0LjAwODNWNDJINDJWMjQiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMzMgMjNMMjQgMzJMMTUgMjMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0iYmV2ZWwiLz48cGF0aCBkPSJNMjMuOTkxNyA2VjMyIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49ImJldmVsIi8+PC9zdmc+);'></button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <a style="display: none" id='download' download href=""></a>
 </body>
 <script>
-	const body = document.body
-	const IMG = document.getElementById('IMG')
-	const DRAG = document.getElementById('DRAG')
-	const BAR = document.getElementById('BAR')
-	const DOWNLOAD = document.getElementById('download')
-	const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
-	IMG.src = url
-	DOWNLOAD.href = url
+    const body = document.body
+    const IMG = document.getElementById('IMG')
+    const DRAG = document.getElementById('DRAG')
+    const BAR = document.getElementById('BAR')
+    const DOWNLOAD = document.getElementById('download')
+    const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
+    IMG.src = url
+    DOWNLOAD.href = url
 
-	var centerX = -1	// to center, with % instead
-	var centerY = -1
-	var rotate = 0	// degree
-	var zoom = 1
-	var scale = 1 // store the zoom before scaling
+    var centerX = -1    // to center, with % instead
+    var centerY = -1
+    var rotate = 0    // degree
+    var zoom = 1
+    var scale = 1 // store the zoom before scaling
 
-	var toggle = false
+    var toggle = false
 
-	function deployLT() {
-		if (centerX < 0 || centerY < 0) {
-			centerX = 50
-			centerY = 50
-		}
-		var cX = centerX * body.clientWidth / 100
-		var hX = IMG.offsetWidth / 2
-		var cY = centerY * body.clientHeight / 100
-		var hY = IMG.offsetHeight / 2
-		IMG.style.left = cX - hX
-		IMG.style.right = cX + hX
-		IMG.style.top = cY - hY
-		IMG.style.bottom = cY + hY
-	}
+    function deployLT() {
+        if (centerX < 0 || centerY < 0) {
+            centerX = 50
+            centerY = 50
+        }
+        var cX = centerX * body.clientWidth / 100
+        var hX = IMG.offsetWidth / 2
+        var cY = centerY * body.clientHeight / 100
+        var hY = IMG.offsetHeight / 2
+        IMG.style.left = cX - hX
+        IMG.style.right = cX + hX
+        IMG.style.top = cY - hY
+        IMG.style.bottom = cY + hY
+    }
 
-	function adapt(relative = null) {
-		var absX, absY
+    function adapt(relative = null) {
+        var absX, absY
 
-		centerX = 50
-		centerY = 50
+        centerX = 50
+        centerY = 50
 
-		if (relative) {
-			// force adjust
-			if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
-				// use height
-				var ratio = IMG.offsetWidth / IMG.offsetHeight
-				IMG.style.height = body.clientHeight
-				IMG.style.width = IMG.offsetHeight * ratio
-			}
-			else {
-				var ratio = IMG.offsetHeight / IMG.offsetWidth
-				IMG.style.width = body.clientWidth
-				IMG.style.height = IMG.offsetWidth * ratio
-			}
-		}
-		else if (relative == false) {
-			// force adjust
-			IMG.style.width = IMG.naturalWidth
-			IMG.style.height = IMG.naturalHeight
-		}
-		const w = IMG.offsetWidth, h = IMG.offsetHheight
-		deployLT()
-	}
+        if (relative) {
+            // force adjust
+            if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
+                // use height
+                var ratio = IMG.offsetWidth / IMG.offsetHeight
+                IMG.style.height = body.clientHeight
+                IMG.style.width = IMG.offsetHeight * ratio
+            }
+            else {
+                var ratio = IMG.offsetHeight / IMG.offsetWidth
+                IMG.style.width = body.clientWidth
+                IMG.style.height = IMG.offsetWidth * ratio
+            }
+        }
+        else if (relative == false) {
+            // force adjust
+            IMG.style.width = IMG.naturalWidth
+            IMG.style.height = IMG.naturalHeight
+        }
+        const w = IMG.offsetWidth, h = IMG.offsetHheight
+        deployLT()
+    }
 
-	// Drag and pinch support
-	var starT, starTLT
-	var evCache = new Array()
-	var touchInitialZoom, firstPinchDistanceX, firstPinchDistanceY
+    // Drag and pinch support
+    var starT, starTLT
+    var evCache = new Array()
+    var touchInitialZoom, firstPinchDistanceX, firstPinchDistanceY
 
-	DRAG.onpointerdown = function (ev) {
-		var e = ev || window.event
+    DRAG.onpointerdown = function (ev) {
+        var e = ev || window.event
 
-		starT = [e.clientX, e.clientY]
-		starTLT = [IMG.offsetLeft, IMG.offsetTop]
-		evCache.push(e)
-		touchInitialZoom = zoom
-		window.addEventListener('pointermove', pointermove)
-		window.addEventListener('pointerup', pointerup)
-	}
+        starT = [e.clientX, e.clientY]
+        starTLT = [IMG.offsetLeft, IMG.offsetTop]
+        evCache.push(e)
+        touchInitialZoom = zoom
+        window.addEventListener('pointermove', pointermove)
+        window.addEventListener('pointerup', pointerup)
+    }
 
-	function pointermove(ev) {
-		var e = ev || window.event
-		for (var i = 0; i < evCache.length; i++) {
-			if (ev.pointerId == evCache[i].pointerId) {
-				evCache[i] = ev
-				break;
-			}
-		}
-		if (evCache.length == 1) {
-			if (starT == null) return
+    function pointermove(ev) {
+        var e = ev || window.event
+        for (var i = 0; i < evCache.length; i++) {
+            if (ev.pointerId == evCache[i].pointerId) {
+                evCache[i] = ev
+                break;
+            }
+        }
+        if (evCache.length == 1) {
+            if (starT == null) return
 
-			if (centerX < 0 || centerY < 0) {
-				centerX = 50
-				centerY = 50
-			}
-			
-			IMG.style.left = e.clientX - starT[0] + starTLT[0]
-			IMG.style.top = e.clientY - starT[1] + starTLT[1]
+            if (centerX < 0 || centerY < 0) {
+                centerX = 50
+                centerY = 50
+            }
+            
+            IMG.style.left = e.clientX - starT[0] + starTLT[0]
+            IMG.style.top = e.clientY - starT[1] + starTLT[1]
 
-			centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
-			centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
-		}
-		else if (evCache.length == 2) {
-			const ev0 = evCache[0], ev1 = evCache[1]
-			const distanceX = Math.abs(ev0.clientX - ev1.clientX), distanceY = Math.abs(ev0.clientY - ev1.clientY)
-			if (!firstPinchDistanceX) firstPinchDistanceX = distanceX
-			if (!firstPinchDistanceY) firstPinchDistanceY = distanceY
+            centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
+            centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
+        }
+        else if (evCache.length == 2) {
+            const ev0 = evCache[0], ev1 = evCache[1]
+            const distanceX = Math.abs(ev0.clientX - ev1.clientX), distanceY = Math.abs(ev0.clientY - ev1.clientY)
+            if (!firstPinchDistanceX) firstPinchDistanceX = distanceX
+            if (!firstPinchDistanceY) firstPinchDistanceY = distanceY
 
-			const ratio = Math.sqrt(
-				Math.pow(distanceX / firstPinchDistanceX, 2) + 
-				Math.pow(distanceY / firstPinchDistanceY, 2)
-			) / Math.SQRT2 
-			
-			if (touchInitialZoom * ratio >= 0.3)
-				setZoom(e, touchInitialZoom * ratio)
-		}
-	}
+            const ratio = Math.sqrt(
+                Math.pow(distanceX / firstPinchDistanceX, 2) + 
+                Math.pow(distanceY / firstPinchDistanceY, 2)
+            ) / Math.SQRT2 
+            
+            if (touchInitialZoom * ratio >= 0.3)
+                setZoom(e, touchInitialZoom * ratio)
+        }
+    }
 
-	function pointerup(ev) {
-		for (var i = 0; i < evCache.length; i++) {
-			if (evCache[i].pointerId == ev.pointerId) {
-				evCache.splice(i, 1)
-				break
-			}
-		}
-		if (evCache.length == 1) starT = null
-		if (evCache.length < 2) {
-			touchInitialZoom = undefined
-			firstPinchDistanceX = undefined
-			firstPinchDistanceY = undefined
-		}
-		
-		if (evCache.length == 0) {
-			window.removeEventListener('pointermove', pointermove)
-			window.removeEventListener('pointerup', pointerup)
-		}
-	}
+    function pointerup(ev) {
+        for (var i = 0; i < evCache.length; i++) {
+            if (evCache[i].pointerId == ev.pointerId) {
+                evCache.splice(i, 1)
+                break
+            }
+        }
+        if (evCache.length == 1) starT = null
+        if (evCache.length < 2) {
+            touchInitialZoom = undefined
+            firstPinchDistanceX = undefined
+            firstPinchDistanceY = undefined
+        }
+        
+        if (evCache.length == 0) {
+            window.removeEventListener('pointermove', pointermove)
+            window.removeEventListener('pointerup', pointerup)
+        }
+    }
 
-	// deploy buttons
+    // deploy buttons
 
-	function mkTransform(rotate, zoom) {
-		return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
-	}
+    function mkTransform(rotate, zoom) {
+        return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
+    }
 
-	function resetZoom() {
-		// toggle
-		toggle = !toggle
-		zoom = 1
-		IMG.style.transform = mkTransform(rotate, zoom)
-		adapt(toggle)
-	}
+    function resetZoom() {
+        // toggle
+        toggle = !toggle
+        zoom = 1
+        IMG.style.transform = mkTransform(rotate, zoom)
+        adapt(toggle)
+    }
 
-	function rotateAntiClockwise() {
-		rotate -= 90
-		if (!rotate % 360) rotate = 0
-		IMG.style.transform = mkTransform(rotate, zoom)
-	}
+    function rotateAntiClockwise() {
+        rotate -= 90
+        if (!rotate % 360) rotate = 0
+        IMG.style.transform = mkTransform(rotate, zoom)
+    }
 
-	function rotateClockwise() {
-		rotate += 90
-		if (!rotate % 360) rotate = 0
-		IMG.style.transform = mkTransform(rotate, zoom)
-	}
+    function rotateClockwise() {
+        rotate += 90
+        if (!rotate % 360) rotate = 0
+        IMG.style.transform = mkTransform(rotate, zoom)
+    }
 
-	function zoomIn(e, ratio=0.2) {
-		scale = zoom
-		zoom += ratio
-		IMG.style.transform = mkTransform(rotate, zoom)
-		updatePosition(e)
-	}
+    function zoomIn(e, ratio=0.2) {
+        scale = zoom
+        zoom += ratio
+        IMG.style.transform = mkTransform(rotate, zoom)
+        updatePosition(e)
+    }
 
-	function zoomOut(e, ratio=0.2) {
-		if (zoom < 0.3) return
-		scale = zoom
-		zoom -= ratio
-		IMG.style.transform = mkTransform(rotate, zoom)
-		updatePosition(e)
-	}
+    function zoomOut(e, ratio=0.2) {
+        if (zoom < 0.3) return
+        scale = zoom
+        zoom -= ratio
+        IMG.style.transform = mkTransform(rotate, zoom)
+        updatePosition(e)
+    }
 
-	function setZoom(e, target) {
-		scale = zoom
-		zoom = target
-		IMG.style.transform = mkTransform(rotate, zoom)
-		updatePosition(e)
-	}
+    function setZoom(e, target) {
+        scale = zoom
+        zoom = target
+        IMG.style.transform = mkTransform(rotate, zoom)
+        updatePosition(e)
+    }
 
-	function download() {
-		DOWNLOAD.dispatchEvent(new MouseEvent('click'))
-	}
-	var btnactions = [
-		resetZoom, rotateAntiClockwise, rotateClockwise, zoomIn, zoomOut, download
-	]
+    function download() {
+        DOWNLOAD.dispatchEvent(new MouseEvent('click'))
+    }
+    var btnactions = [
+        resetZoom, rotateAntiClockwise, rotateClockwise, zoomIn, zoomOut, download
+    ]
 
-	var btns = document.getElementsByTagName('button')
-	for (var i in btns) {
-		btns[i].onclick = btnactions[i]
-	}
+    var btns = document.getElementsByTagName('button')
+    for (var i in btns) {
+        btns[i].onclick = btnactions[i]
+    }
 
-	IMG.onload = resetZoom
+    IMG.onload = resetZoom
 
-	// ajust focus 
-	function updatePosition(e) {
-		var focus
-		if (e.type === "click") {
-			focus = { x: body.clientWidth / 2, y: body.clientHeight / 2 }
-		}
-		else {
-			focus = { x: e.clientX, y: e.clientY }
-		}
+    // ajust focus 
+    function updatePosition(e) {
+        var focus
+        if (e.type === "click") {
+            focus = { x: body.clientWidth / 2, y: body.clientHeight / 2 }
+        }
+        else {
+            focus = { x: e.clientX, y: e.clientY }
+        }
 
-		var dx = (focus.x - IMG.offsetLeft - IMG.width / 2) * (1 - zoom / scale);
-		var dy = (focus.y - IMG.offsetTop - IMG.height / 2) * (1 - zoom / scale);
+        var dx = (focus.x - IMG.offsetLeft - IMG.width / 2) * (1 - zoom / scale);
+        var dy = (focus.y - IMG.offsetTop - IMG.height / 2) * (1 - zoom / scale);
 
-		IMG.style.left = IMG.offsetLeft + dx + 'px'
-		IMG.style.top = IMG.offsetTop + dy + 'px'
+        IMG.style.left = IMG.offsetLeft + dx + 'px'
+        IMG.style.top = IMG.offsetTop + dy + 'px'
 
-	}
+    }
 
-	DRAG.onwheel = e => {
-		if (e.shiftKey) {
-			IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
-			return
-		}
-		if (e.wheelDeltaY > 0) {
-			zoomIn(e, e.wheelDeltaY / body.clientHeight)
-		}
-		else if (e.wheelDeltaY < 0) {
-			zoomOut(e, -e.wheelDeltaY / body.clientHeight)
-		}
-	}
+    DRAG.onwheel = e => {
+        if (e.shiftKey) {
+            IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
+            return
+        }
+        if (e.wheelDeltaY > 0) {
+            zoomIn(e, e.wheelDeltaY / body.clientHeight)
+        }
+        else if (e.wheelDeltaY < 0) {
+            zoomOut(e, -e.wheelDeltaY / body.clientHeight)
+        }
+    }
 
-	document.addEventListener('keydown', (e) => {
-		if (e.repeat) return
-		if (e.key === 'w' && e.ctrlKey === true || e.key === 'Escape') {
-			window.close()
-		}
-	})
-	// Hide bar when window is onblur, and show when onfocus
-	window.onblur = function () {
-		BAR.style.opacity = 0
-		BAR.style.visibility = 'hidden'
-	}
-	window.onfocus = function () {
-		BAR.style.opacity = 1
-		BAR.style.visibility = 'visible'
-	}
-	DRAG.addEventListener('contextmenu', (e) => {
-		console.log(e)
-		var items = []
-		items.push({
-			title: '下载',
-			fn: function () {
-					download()
-			}
-		})
-		items.push({
-			title: '复制图片',
-			fn: function () {
-				window.copyImage(IMG.src)
-			}
-		})
-		items.push({
-			title: '复制 URL',
-			fn: function () {
-				navigator.clipboard.writeText(IMG.src)
-			}
-		})
-		basicContext.show(items, e)
-	})
+    document.addEventListener('keydown', (e) => {
+        if (e.repeat) return
+        if (e.key === 'w' && e.ctrlKey === true || e.key === 'Escape') {
+            window.close()
+        }
+    })
+    // Hide bar when window is onblur, and show when onfocus
+    window.onblur = function () {
+        BAR.style.opacity = 0
+        BAR.style.visibility = 'hidden'
+    }
+    window.onfocus = function () {
+        BAR.style.opacity = 1
+        BAR.style.visibility = 'visible'
+    }
+    DRAG.addEventListener('contextmenu', (e) => {
+        console.log(e)
+        var items = []
+        items.push({
+            title: '下载',
+            fn: function () {
+                    download()
+            }
+        })
+        items.push({
+            title: '复制图片',
+            fn: function () {
+                window.copyImage(IMG.src)
+            }
+        })
+        items.push({
+            title: '复制 URL',
+            fn: function () {
+                navigator.clipboard.writeText(IMG.src)
+            }
+        })
+        basicContext.show(items, e)
+    })
 </script>
 <script src="file-manager/assets/basicContext.min.js"></script>
 
