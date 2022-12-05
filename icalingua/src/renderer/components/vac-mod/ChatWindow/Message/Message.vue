@@ -188,7 +188,7 @@
                             </template>
                         </format-message>
 
-                        <div class="vac-text-timestamp">
+                        <div class="vac-text-timestamp" :title="message.date + ' ' + message.timestamp">
                             <span>{{ message.timestamp }}</span>
                         </div>
                     </div>
