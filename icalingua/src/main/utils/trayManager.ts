@@ -162,7 +162,7 @@ export const updateTrayMenu = async () => {
                         },
                     },
                     {
-                        label: '深色图标',
+                        label: '浅色图标',
                         type: 'radio',
                         checked: getConfig().darkTaskIcon === 'false',
                         click(item) {
