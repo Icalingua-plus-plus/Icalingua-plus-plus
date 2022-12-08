@@ -100,6 +100,8 @@ docker compose restart
 ```
 当然，仅仅如此也是比较不安全的，你仍然需要反向代理等过程，以保证安全性。
 
+根据示例可知，反向代理时，需要代理的地址为 `http://172.20.0.3:6789`
+
 ## 客户端连接方法
 
 保持 Icalingua++ 在未运行状态下，编辑 `config.yaml`（Linux：~/.config/icalingua/config.yaml，Windows：%AppData%\icalingua\config.yaml） 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
