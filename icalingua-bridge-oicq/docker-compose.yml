@@ -4,17 +4,17 @@ services:
   icalingua-bridge-oicq:
     container_name: icalingua-bridge-oicq
     image: timochan/icalingua-bridge-oicq:latest
-    command: "sh /app/Icalingua-plus-plus/icalingua-bridge-oicq/run.sh"
+    command: "sh /app/icalingua-bridge-oicq/run.sh"
     environment:
       - TZ=Asia/Shanghai
       - NODE_ENV=production
     volumes:
       # 用户数据文件夹挂载
-      - ./data/icalingua-bridge-oicq:/app/Icalingua-plus-plus/icalingua-bridge-oicq/build/data/
+      - ./data/icalingua-bridge-oicq:/app/icalingua-bridge-oicq/build/data/
       # 挂载配置文件
       - type: bind                    
         source: ./config.yaml    # 挂载的文件
-        target: /app/Icalingua-plus-plus/icalingua-bridge-oicq/config.yaml
+        target: /app/icalingua-bridge-oicq/config.yaml
     ports:
       - '6789:6789'
     depends_on:
