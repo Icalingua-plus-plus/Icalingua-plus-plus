@@ -7,7 +7,7 @@ on:
     tags:
       - 'v*'
   pull_request:
-    branches: [master]
+    branches: [develop]
 
 jobs:
   docker:
