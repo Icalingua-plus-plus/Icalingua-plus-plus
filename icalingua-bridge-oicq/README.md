@@ -51,13 +51,15 @@
 
 4. 转到常规步骤第四步
 
-### 使用 Docker
+### Docker 部署
 
-使用 Docker 部署是一件非常简单的事情，必须的依赖已经全部打包进去，仅仅需要一份 `docker-compose.yml` 以及一份 `config.yaml` 即可。同时，修改 `docker-compose.yml` 中的 `ports` , `network` 以及 `container_name` 即可快速地部署多个实例。
+使用 Docker 部署是一件非常简单的事情，必须的依赖已经全部打包进去，仅仅需要一份 `docker-compose.yml` 以及一份 `config.yaml` 即可。
+
+同时，修改 `docker-compose.yml` 中的 `ports` , `network` 以及 `container_name` 即可快速地部署多个实例。
 
 注意：该 `docker-compose,yml` 提供的数据库是 `MongoDB`，并对数据库文件进行了挂载，来实现持久化存储；如果你需要使用其他数据库，可以自行修改数据库的部分，并持久化数据。
 
-如何使用？
+#### 如何使用？
 
 安装 Docker 和 Docker Compose(已有 Docker 环境略过)
 ```bash
@@ -68,7 +70,10 @@ curl -fsSL https://get.docker.com | bash -s docker
 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
 
-下载对应的配置文件
+#### 下载所需文件
+
+使用 wget 来获取所需文件
+
 ```bash
 # 下载 docker-compose.yml
 wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@develop/icalingua-bridge-oicq/docker-compose.yml
@@ -76,31 +81,56 @@ wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@deve
 # 下载 config.yaml
 wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@develop/icalingua-bridge-oicq/config.yaml
 ```
+
+#### 修改配置文件
+
 依照上文中的方法，修改公钥即可，然后运行
+
+具体跳转到 [常规步骤](#常规步骤) 的第 4,5 个步骤
+
+#### 启动
+
+使用 docker compose 来启动
+
 ```bash
 docker compose up -d
 ```
 注意：仅仅如此是不可以使用的，你需要进入容器中获取到容器的 IP 地址，然后将其填入 config.yaml 中的 `host` 选项中。
 
 例如：
+
 ```bash
-sudo docker exec -it icalingua-bridge-oicq /bin/sh
+# 进入指定容器，并开启 shell
+docker exec -it icalingua-bridge-oicq /bin/sh
+
+# 展示容器的 eth0 网卡的 IP 地址，具体请根据实际情况修改
 ip add show eth0
 ```
 输出如下内容：
+
 ```bash
 918: eth0@if919: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
     link/ether 02:42:ac:14:00:03 brd ff:ff:ff:ff:ff:ff
     inet 172.20.0.3/16 brd 172.20.255.255 scope global eth0
        valid_lft forever preferred_lft forever
 ```
-即，将 `172.20.0.3` 填入 `config.yaml` 中的 `host` 选项中，然后重启容器即可。
+即，将 `172.20.0.3` 填入 `config.yaml` 中的 `host` 选项中，它看起来应该是这样的：
+
+```yaml
+host: 172.20.0.3                                                         # 请修改为你自己容器的 IP 地址
+pubKey: 207a067892821e25d770f1fba0c47c11ff4b813e54162ece9eb839e076231ab6 # 请修改为你自己的公钥
+custom: false
+port: 6789                                                               # 构建容器时已经写死，无需修改，可以修改容器的端口映射
+```
+
+然后重启容器即可。
+
 ```bash
 docker compose restart
 ```
 当然，仅仅如此也是比较不安全的，你仍然需要反向代理等过程，以保证安全性。
 
-根据示例可知，反向代理时，需要代理的地址为 `http://172.20.0.3:6789`
+根据示例可知，反向代理时，需要代理的地址为 `http://172.20.0.3:6789`，即容器的 IP 地址和端口号，具体请根据实际情况修改。
 
 ## 客户端连接方法
 
