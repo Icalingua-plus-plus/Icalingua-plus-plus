@@ -1,12 +1,21 @@
-FROM node:16-alpine 
-WORKDIR /app
-RUN apk add ffmpeg mongodb-tools make gcc g++ alpine-sdk python3 py3-pip  
+FROM node:16-alpine as builder
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk add ffmpeg mongodb-tools make gcc g++ alpine-sdk python3 py3-pip   
+WORKDIR  /app
 COPY . .
-RUN ls | grep -v  "icalingua*" | grep -v "package*" | grep -v "pnpm*" | awk  '{system("rm -rf "$1)}' && \
-    cd icalingua-bridge-oicq && \
-    npm i pnpm -g && \
+RUN npm i pnpm -g 
+RUN cd icalingua-bridge-oicq && \ 
     pnpm i && \
     pnpm compile
+
+
+FROM node:16-alpine as runner
+
+WORKDIR /app
+
+COPY --from=builder /app/icalingua-bridge-oicq/build .
+COPY --from=builder /app/icalingua-bridge-oicq/run.sh /app/run.sh
+RUN npm i
 
 ENV TZ=Asia/Shanghai
 
