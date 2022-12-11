@@ -6,7 +6,7 @@ on:
 
 jobs:
   install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +27,7 @@ jobs:
         run: pnpm install
 
   arch-artifacts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: icalingua
@@ -42,7 +42,7 @@ jobs:
           if-no-files-found: error
 
   build-dist-bundle:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: install
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
@@ -92,7 +92,7 @@ jobs:
 
   # deb rpm appimage 之类的文件可以待会儿再构建，现在拿到 app.asar 之后就能构建 arch 包了
   build-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -141,7 +141,7 @@ jobs:
           if-no-files-found: error
 
   build-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -208,7 +208,7 @@ jobs:
           if-no-files-found: error
 
   build-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -275,7 +275,7 @@ jobs:
           if-no-files-found: error
 
   pack-archpkg-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - arch-artifacts
       - build-x86_64
@@ -321,7 +321,7 @@ jobs:
           sudo ln -s $PWD /github/workspace
 
   pack-archpkg-aarch64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-dist-bundle
       - arch-artifacts
@@ -368,7 +368,7 @@ jobs:
           sudo ln -s $PWD /github/workspace
 
   pack-archpkg-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-dist-bundle
       - arch-artifacts
@@ -414,8 +414,68 @@ jobs:
           sudo mkdir /github
           sudo ln -s $PWD /github/workspace
 
-  pack-otherpkg-x86_64:
+  pack-snap-x86_64:
     runs-on: ubuntu-latest
+    needs:
+      - build-x86_64
+      - build-dist-bundle
+    defaults:
+      run:
+        working-directory: icalingua
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: Cache pnpm and node-modules
+        uses: Icalinguaplusplus/node-pm-action@master
+        with:
+          node-modules: ./node_modules
+          package-manager: pnpm
+
+      - name: pnpm install
+        run: pnpm install
+
+      - name: get built files
+        uses: actions/download-artifact@v3
+        with:
+          name: x86_64-unpacked
+          path: icalingua/unpacked
+
+      - name: fix premissions
+        run: chmod +x unpacked/icalingua
+
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+          sudo snap install lxd
+          sudo usermod --append --groups lxd $USER
+          sudo chown root:root /
+          sudo /snap/bin/lxd waitready
+          sudo /snap/bin/lxd init --auto
+          newgrp
+
+      - name: pack
+        id: pack
+        run: |
+          sg lxd -c 'pnpm build:electron --pd unpacked -l snap -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }} -p never'
+          echo "snap=$(readlink -f $(ls build/*.snap))" >> $GITHUB_OUTPUT
+        env:
+          SNAPCRAFT_BUILD_ENVIRONMENT: lxd
+
+      - uses: actions/upload-artifact@v3
+        name: upload snap
+        with:
+          name: x86_64.snap
+          path: icalingua/build/*.snap
+          if-no-files-found: error
+
+  pack-otherpkg-x86_64:
+    runs-on: ubuntu-22.04
     needs:
       - build-x86_64
       - build-dist-bundle
@@ -467,7 +527,7 @@ jobs:
           if-no-files-found: error
 
   pack-otherpkg-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-arm64
       - build-dist-bundle
@@ -519,7 +579,7 @@ jobs:
           if-no-files-found: error
 
   pack-otherpkg-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build-armv7l
       - build-dist-bundle
@@ -571,7 +631,7 @@ jobs:
           if-no-files-found: error
 
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - pack-otherpkg-arm64
       - pack-otherpkg-x86_64
@@ -600,7 +660,7 @@ jobs:
           name: pkgres
 
   pack-bridge-js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         working-directory: icalingua-bridge-oicq
@@ -824,12 +884,13 @@ jobs:
           if-no-files-found: error
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
       - pack-archpkg-x86_64
       - pack-archpkg-aarch64
       - pack-archpkg-armv7l
+      - pack-snap-x86_64
       - pack-otherpkg-x86_64
       - pack-otherpkg-arm64
       - pack-otherpkg-armv7l
@@ -923,6 +984,12 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: x86_64.AppImage
+          path: release
+
+      - name: get x86_64.snap
+        uses: actions/download-artifact@v3
+        with:
+          name: x86_64.snap
           path: release
 
       - name: get x86_64.tar.xz
