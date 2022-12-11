@@ -14,8 +14,7 @@ FROM node:16-alpine as runner
 
 WORKDIR /app
 RUN apk add ffmpeg mongodb-tools make g++ alpine-sdk python3 py3-pip
-COPY --from=builder /app/icalingua-bridge-oicq/build ./build/
-COPY --from=builder /app/icalingua-bridge-oicq/ ./
+COPY --from=builder /app/icalingua-bridge-oicq ./
 RUN npm i
 COPY --from=builder /app/node_modules/@icalingua ./node_modules/@icalingua
 
