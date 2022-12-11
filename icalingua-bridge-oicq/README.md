@@ -62,10 +62,12 @@
 #### 如何使用？
 
 安装 Docker 和 Docker Compose(已有 Docker 环境略过)
+
 ```bash
 curl -fsSL https://get.docker.com | bash -s docker
 ```
 如果你是国内服务器，可以使用 --mirror 参数指定国内镜像源
+
 ```bash
 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
