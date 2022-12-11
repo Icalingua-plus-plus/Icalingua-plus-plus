@@ -1,6 +1,6 @@
 FROM node:16-alpine as builder
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk add ffmpeg mongodb-tools make gcc g++ alpine-sdk python3 py3-pip   
+RUN apk add ffmpeg mongodb-tools make gcc g++ alpine-sdk python3 py3-pip   
 WORKDIR  /app
 COPY . .
 RUN npm i pnpm -g 
