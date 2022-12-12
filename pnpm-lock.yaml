@@ -75,6 +75,7 @@ importers:
       oicq-icalingua-plus-plus: ^1.22.12
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
+      pinyin-match: ^1.2.2
       prettier: ^2.8.1
       sass: ^1.56.2
       sass-loader: ^10.4.1
@@ -120,6 +121,7 @@ importers:
       oicq-icalingua-plus-plus: 1.22.12
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
+      pinyin-match: 1.2.2
       silk-sdk: 0.2.2
       socket.io: 4.5.4
       sqlite3: 5.1.2
@@ -6139,7 +6141,6 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
-    dev: true
     optional: true
 
   /function-bind/1.1.1:
@@ -9010,6 +9011,12 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /pinyin-match/1.2.2:
+    resolution: {integrity: sha512-C0yOq4LkToJMkDHiQFKOY69El2GRcwdS2lVEjgWjIV8go3wE4mloGFNkVicGHFGYHDg523m2/lKzW8Hh+JR9nw==}
+    dependencies:
+      rollup: 2.79.1
+    dev: false
+
   /pkg-dir/2.0.0:
     resolution: {integrity: sha512-ojakdnUgL5pzJYWw2AIDEupaQCX5OPbM688ZevubICjdIX01PRSYKqm33fJoCOJBRseYCTUlQRnBNX+Pchaejw==}
     engines: {node: '>=4'}
@@ -9905,6 +9912,14 @@ packages:
       sprintf-js: 1.1.2
     dev: true
     optional: true
+
+  /rollup/2.79.1:
+    resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: false
 
   /router/2.0.0-beta.1:
     resolution: {integrity: sha512-GLoYgkhAGAiwVda5nt6Qd4+5RAPuQ4WIYLlZ+mxfYICI+22gnIB3eCfmhgV8+uJNPS1/39DOYi/vdrrz0/ouKA==}

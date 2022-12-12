@@ -30,6 +30,7 @@
 import RoomEntry from './RoomEntry.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import PinyinMatch from 'pinyin-match'
 
 export default {
     name: 'TheRoomsPanel',
@@ -41,7 +42,7 @@ export default {
             if (this.input)
                 tmpr = tmpr.filter(
                     (e) =>
-                        e.roomName.toUpperCase().includes(this.input) ||
+                        PinyinMatch.match(e.roomName, this.input) ||
                         String(e.roomId).includes(this.input),
                 )
             return tmpr.sort((a, b) => b.index - a.index)

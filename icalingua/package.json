@@ -192,6 +192,7 @@
         "oicq-icalingua-plus-plus": "^1.22.12",
         "pg": "^8.8.0",
         "pg-query-stream": "^4.2.4",
+        "pinyin-match": "^1.2.2",
         "silk-sdk": "^0.2.2",
         "socket.io": "^4.5.4",
         "sqlite3": "^5.1.2"

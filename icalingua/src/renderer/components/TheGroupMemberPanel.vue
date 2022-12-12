@@ -16,7 +16,7 @@
                 :group="i.group_id"
                 type="groupmember"
                 :name="i.name"
-                v-show="i.sc.includes(searchContext)"
+                v-show="PinyinMatch(i.sc, searchContext) || !searchContext"
                 @dblclick="$emit('dblclick', i.user_id, i.card)"
             />
         </div>
@@ -26,6 +26,7 @@
 <script>
 import { ipcRenderer } from 'electron'
 import ContactEntry from './ContactEntry.vue'
+import PinyinMatch from 'pinyin-match'
 
 export default {
     components: { ContactEntry },
@@ -82,6 +83,9 @@ export default {
                 })
             }
             this.$message.success('已刷新')
+        },
+        PinyinMatch(str, search) {
+            return PinyinMatch.match(str, search)
         },
     },
 }
