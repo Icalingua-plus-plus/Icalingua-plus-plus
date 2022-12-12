@@ -60,7 +60,7 @@
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
                     @fetch-messages="fetchMessage"
-                    @open-group-member-panel="groupmemberShown = true"
+                    @open-group-member-panel="groupmemberShown = true, groupmemberPanelGin = -selectedRoom.roomId"
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
                 >
@@ -128,7 +128,7 @@
             <TheGroupMemberPanel
                 @dblclick="startChat"
                 :groupmemberShown="groupmemberShown"
-                :gin="-selectedRoom.roomId"
+                :gin="groupmemberPanelGin"
                 v-if="groupmemberShown"
             />
         </el-dialog>
@@ -187,6 +187,7 @@ export default {
             membersCount: 0,
             contactsShown: false,
             groupmemberShown: false,
+            groupmemberPanelGin: 0,
             linkify: true,
             roomPanelAvatarOnly: false,
             roomPanelWidth: undefined,
@@ -260,7 +261,10 @@ export default {
 
         themes.$$DON_CALL$$fetchThemes(STORE_PATH)
 
-        ipcRenderer.on('openGroupMemberPanel', (_, p) => this.groupmemberShown = p)
+        ipcRenderer.on('openGroupMemberPanel', (_, p) => {
+            this.groupmemberShown = p.shown
+            this.groupmemberPanelGin = p.gin
+        })
         ipcRenderer.on('closeLoading', () => this.loading = false)
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
         ipcRenderer.on('addHistoryCount', (_, p) => this.historyCount += p)

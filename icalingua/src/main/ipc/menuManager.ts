@@ -436,7 +436,7 @@ const buildRoomMenu = (room: Room): Menu => {
             new MenuItem({
                 label: '群成员',
                 async click() {
-                    ui.openGroupMemberPanel(true)
+                    ui.openGroupMemberPanel(true, -room.roomId)
                 },
             }),
         )
@@ -1929,12 +1929,12 @@ ipcMain.on(
                     },
                 }),
             )
+            const selectedRoom = await getSelectedRoom()
             menu.append(
                 new MenuItem({
                     label: '禁言',
-                    visible: (await isAdmin()) !== false,
+                    visible: -selectedRoom.roomId === Number(group) && (await isAdmin()) !== false,
                     click: async () => {
-                        const selectedRoom = await getSelectedRoom()
                         const win = newIcalinguaWindow({
                             height: 300,
                             width: 600,
@@ -1966,9 +1966,8 @@ ipcMain.on(
             menu.append(
                 new MenuItem({
                     label: '移出本群',
-                    visible: (await isAdmin()) !== false,
+                    visible: -selectedRoom.roomId === Number(group) && (await isAdmin()) !== false,
                     click: async () => {
-                        const selectedRoom = await getSelectedRoom()
                         const win = newIcalinguaWindow({
                             height: 150,
                             width: 500,
