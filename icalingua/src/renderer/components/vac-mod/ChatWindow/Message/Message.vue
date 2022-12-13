@@ -93,6 +93,7 @@
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
+                            :hide-chat-image-by-default="hideChatImageByDefault"
                             @open-forward="$emit('open-forward', $event)"
                             @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
@@ -125,8 +126,8 @@
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
-                            @open-file="openFile"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
                                 <slot :name="name" v-bind="data" />

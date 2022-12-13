@@ -23,7 +23,7 @@
             </div>
         </div>
 
-        <div v-if="isImage" class="vac-image-reply-container" @click="openImage">
+        <div v-if="isImage && !hideChatImageByDefault" class="vac-image-reply-container" @click="openImage">
             <el-image
                 :src="message.replyMessage.file.url"
                 fit="cover"
@@ -67,6 +67,7 @@ export default {
         roomUsers: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
         forwardResId: { type: String, required: false },
+        hideChatImageByDefault: { type: Boolean, required: true },
     },
 
     computed: {
