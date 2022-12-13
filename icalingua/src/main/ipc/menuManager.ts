@@ -188,7 +188,7 @@ const buildRoomMenu = (room: Room): Menu => {
             ],
         },
     ])
-    const webApps = new Menu();
+    const webApps = new Menu()
     if (room.roomId < 0) {
         webApps.append(
             new MenuItem({
@@ -827,34 +827,6 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '切换会话窗口时自动获取历史消息',
-                type: 'checkbox',
-                checked: getConfig().fetchHistoryOnChatOpen,
-                click: (menuItem) => {
-                    getConfig().fetchHistoryOnChatOpen = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '启动时自动获取历史消息',
-                type: 'checkbox',
-                checked: getConfig().fetchHistoryOnStart,
-                visible: getConfig().adapter === 'oicq', // Bridge is enabled by default
-                click: (menuItem) => {
-                    getConfig().fetchHistoryOnStart = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '静默获取历史消息',
-                type: 'checkbox',
-                checked: getConfig().silentFetchHistory,
-                click: (menuItem) => {
-                    getConfig().silentFetchHistory = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
                 label: '启动时检查更新',
                 type: 'checkbox',
                 checked: getConfig().updateCheck === true,
@@ -874,41 +846,6 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: 'DEBUG MODE',
-                type: 'checkbox',
-                checked: getConfig().debugmode === true,
-                visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
-                click: (menuItem) => {
-                    getConfig().debugmode = menuItem.checked
-                    if (!menuItem.checked) {
-                        getConfig().anonymous = false
-                    }
-                    saveConfigFile()
-                    updateAppMenu()
-                },
-            }),
-            new MenuItem({
-                label: '以匿名方式发送群消息（未完善，慎用）',
-                type: 'checkbox',
-                checked: getConfig().anonymous === true,
-                visible: getConfig().debugmode === true && getConfig().sendRawMessage === false,
-                click: (menuItem) => {
-                    getConfig().anonymous = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: 'Send raw message',
-                type: 'checkbox',
-                checked: getConfig().sendRawMessage === true,
-                visible: getConfig().debugmode === true,
-                click: (menuItem) => {
-                    getConfig().sendRawMessage = menuItem.checked
-                    saveConfigFile()
-                    updateAppMenu()
-                },
-            }),
-            new MenuItem({
                 label: '隐藏聊天图片',
                 type: 'checkbox',
                 checked: getConfig().hideChatImageByDefault,
@@ -918,6 +855,126 @@ export const updateAppMenu = async () => {
                     ui.message('隐藏聊天图片已' + (menuItem.checked ? '开启' : '关闭'))
                     ui.setHideChatImageByDefault(menuItem.checked)
                 },
+            }),
+            new MenuItem({
+                label: 'DEBUG MODE',
+                visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
+                submenu: [
+                    {
+                        label: 'ENABLED',
+                        type: 'checkbox',
+                        checked: getConfig().debugmode === true,
+                        visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
+                        click: (menuItem) => {
+                            getConfig().debugmode = menuItem.checked
+                            if (!menuItem.checked) {
+                                getConfig().anonymous = false
+                            }
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    },
+                    {
+                        label: '以匿名方式发送群消息',
+                        type: 'checkbox',
+                        checked: getConfig().anonymous === true,
+                        visible: getConfig().debugmode === true && getConfig().sendRawMessage === false,
+                        click: (menuItem) => {
+                            getConfig().anonymous = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: 'Send raw message',
+                        type: 'checkbox',
+                        checked: getConfig().sendRawMessage === true,
+                        visible: getConfig().debugmode === true,
+                        click: (menuItem) => {
+                            getConfig().sendRawMessage = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    },
+                ],
+            }),
+            new MenuItem({
+                label: '历史消息相关',
+                submenu: [
+                    {
+                        label: '切换会话窗口时自动获取历史消息',
+                        type: 'checkbox',
+                        checked: getConfig().fetchHistoryOnChatOpen,
+                        click: (menuItem) => {
+                            getConfig().fetchHistoryOnChatOpen = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: '启动时自动获取历史消息',
+                        type: 'checkbox',
+                        checked: getConfig().fetchHistoryOnStart,
+                        visible: getConfig().adapter === 'oicq', // Bridge is enabled by default
+                        click: (menuItem) => {
+                            getConfig().fetchHistoryOnStart = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: '静默获取历史消息',
+                        type: 'checkbox',
+                        checked: getConfig().silentFetchHistory,
+                        click: (menuItem) => {
+                            getConfig().silentFetchHistory = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                ],
+            }),
+            new MenuItem({
+                label: '性能优化方式',
+                submenu: [
+                    {
+                        label: 'infinite-loading (默认)',
+                        sublabel: '较慢，但更稳定',
+                        type: 'radio',
+                        checked: getConfig().optimizeMethod == 'infinite-loading',
+                        click() {
+                            getConfig().optimizeMethod = 'infinite-loading'
+                            ui.setOptimizeMethodSetting('infinite-loading')
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    },
+                    {
+                        label: '滚动 (实验性)',
+                        sublabel: '预加载，有 BUG',
+                        type: 'radio',
+                        checked: getConfig().optimizeMethod == 'scroll',
+                        click() {
+                            getConfig().optimizeMethod = 'scroll'
+                            ui.setOptimizeMethodSetting('scroll')
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    },
+                    {
+                        label: '关闭 (不推荐)',
+                        sublabel: '不优化，快进到卡死 (',
+                        type: 'radio',
+                        checked: getConfig().optimizeMethod == 'none',
+                        click() {
+                            ui.chroom(0)
+                            ui.message(
+                                '不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。' +
+                                    '关闭后若前端卡死，可尝试杀死渲染进程并重新加载，亦可直接重启。',
+                            )
+                            getConfig().optimizeMethod = 'none'
+                            ui.setOptimizeMethodSetting('none')
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    },
+                ],
             }),
             new MenuItem({
                 label: '主题',
@@ -948,55 +1005,6 @@ export const updateAppMenu = async () => {
                             })(theme),
                         })
                     }
-                    return rsp
-                })(),
-            }),
-            new MenuItem({
-                label: '性能优化方式',
-                submenu: (() => {
-                    let rsp: Electron.MenuItemConstructorOptions[] = [
-                        {
-                            label: 'infinite-loading (默认)',
-                            sublabel: '较慢，但更稳定',
-                            type: 'radio',
-                            checked: getConfig().optimizeMethod == 'infinite-loading',
-                            click() {
-                                getConfig().optimizeMethod = 'infinite-loading'
-                                ui.setOptimizeMethodSetting('infinite-loading')
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                        {
-                            label: '滚动 (实验性)',
-                            sublabel: '预加载，有 BUG',
-                            type: 'radio',
-                            checked: getConfig().optimizeMethod == 'scroll',
-                            click() {
-                                getConfig().optimizeMethod = 'scroll'
-                                ui.setOptimizeMethodSetting('scroll')
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                        {
-                            label: '关闭 (不推荐)',
-                            sublabel: '不优化，快进到卡死 (',
-                            type: 'radio',
-                            checked: getConfig().optimizeMethod == 'none',
-                            click() {
-                                ui.chroom(0)
-                                ui.message(
-                                    '不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。' +
-                                        '关闭后若前端卡死，可尝试杀死渲染进程并重新加载，亦可直接重启。',
-                                )
-                                getConfig().optimizeMethod = 'none'
-                                ui.setOptimizeMethodSetting('none')
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                    ]
                     return rsp
                 })(),
             }),
@@ -1082,45 +1090,78 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         if (getConfig().debugmode) {
             menu.append(
                 new MenuItem({
-                    label: '复制时间戳',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.time.toString())
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '复制原始消息 JSON',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(JSON.stringify(message))
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '合并转发本条消息（单条，仅支持文本）',
-                    type: 'normal',
-                    visible: false, //MultiForward panel instead
-                    click: () => {
-                        const msgtoforward = {
-                            user_id: message.senderId,
-                            message: message.content,
-                            nickname: message.username,
-                            time: message.time / 1000,
-                        }
-                        makeForward(msgtoforward)
-                    },
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '尝试撤回本条消息',
-                    type: 'normal',
-                    click: () => {
-                        deleteMessage(room.roomId, message._id as string)
-                    },
+                    label: 'DEBUG MENU',
+                    submenu: [
+                        {
+                            label: '复制 seqid',
+                            type: 'normal',
+                            visible: !history,
+                            click: () => {
+                                let seqid: string
+                                const parsed = Buffer.from(String(message._id), "base64")
+                                if (room.roomId > 0) seqid = String(parsed.readUInt32BE(4))
+                                else seqid = String(parsed.readUInt32BE(8))
+                                clipboard.writeText(seqid)
+                            },
+                        },
+                        {
+                            label: '复制 random',
+                            type: 'normal',
+                            visible: !history,
+                            click: () => {
+                                let random: string
+                                const parsed = Buffer.from(String(message._id), "base64")
+                                if (room.roomId > 0) random = String(parsed.readUInt32BE(8))
+                                else random = String(parsed.readUInt32BE(12))
+                                clipboard.writeText(random)
+                            },
+                        },
+                        {
+                            label: '复制时间戳',
+                            type: 'normal',
+                            click: () => {
+                                clipboard.writeText(message.time.toString())
+                            },
+                        },
+                        {
+                            label: '复制消息 JSON',
+                            type: 'normal',
+                            click: () => {
+                                clipboard.writeText(JSON.stringify(message))
+                            },
+                        },
+                        {
+                            label: '合并转发本条消息',
+                            type: 'normal',
+                            click: () => {
+                                const msgtoforward = {
+                                    user_id: message.senderId,
+                                    message: message.content,
+                                    nickname: message.username,
+                                    time: message.time / 1000,
+                                }
+                                makeForward(msgtoforward)
+                            },
+                        },
+                        {
+                            label: '尝试撤回本条消息',
+                            type: 'normal',
+                            click: () => {
+                                deleteMessage(room.roomId, message._id as string)
+                            },
+                        },
+                        {
+                            label: '发送 Oidb 请求',
+                            type: 'normal',
+                            click: () => {
+                                const oidb = message.content.match(/OidbSvc\.0x(\w+)_(\d+)/)[0]
+                                sendPacket('Oidb', oidb, JSON.parse(message.content.replace(oidb, ''))).then(retPacket => {
+                                    clipboard.writeText(Buffer.from(retPacket).toString('base64'))
+                                    ui.message('Oidb 请求已发送，返回值已复制到剪贴板')
+                                })
+                            }
+                        },
+                    ],
                 }),
             )
             menu.append(
@@ -1424,7 +1465,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             const parsed = Buffer.from(message._id as string, "base64")
                             const seqid = parsed.readUInt32BE(8)
                             const random = parsed.readUInt32BE(12)
-                            sendPacket('Oidb','OidbSvc.0xeac_1', {
+                            sendPacket('Oidb', 'OidbSvc.0xeac_1', {
                                 1: -room.roomId,
                                 2: seqid,
                                 3: random,
@@ -1446,7 +1487,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             const parsed = Buffer.from(message._id as string, "base64")
                             const seqid = parsed.readUInt32BE(8)
                             const random = parsed.readUInt32BE(12)
-                            sendPacket('Oidb','OidbSvc.0xeac_2', {
+                            sendPacket('Oidb', 'OidbSvc.0xeac_2', {
                                 1: -room.roomId,
                                 2: seqid,
                                 3: random,
@@ -1493,7 +1534,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
-            if (!message.file || message.file.type.startsWith('image/'))
+            if (!message.file || message.file.type.startsWith('image/')) {
                 menu.append(
                     new MenuItem({
                         label: '+1',
@@ -1515,6 +1556,30 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         },
                     }),
                 )
+                if (message.code)
+                    menu.append(
+                        new MenuItem({
+                            label: '+1 (卡片消息)',
+                            click: () => {
+                                const isJSON = (str) => {
+                                    try {
+                                        if (typeof JSON.parse(str) == 'object') return true
+                                    } catch (e) {}
+                                    return false
+                                }
+                                const messageType = isJSON(message.code) ? 'json' : 'xml'
+                                const msgToSend = {
+                                    content: message.code,
+                                    replyMessage: message.replyMessage,
+                                    imgpath: undefined,
+                                    at: [],
+                                    messageType,
+                                }
+                                sendMessage(msgToSend)
+                            },
+                        }),
+                    )
+            }
             menu.append(
                 new MenuItem({
                     label: '获取历史消息',
