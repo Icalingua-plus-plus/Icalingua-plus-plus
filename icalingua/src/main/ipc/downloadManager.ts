@@ -9,6 +9,7 @@ import { getConfig, saveConfigFile } from '../utils/configManager'
 import ui from '../utils/ui'
 import { getMainWindow } from '../utils/windowManager'
 import { getGroupFileMeta } from './botAndStorage'
+import fs from 'fs'
 
 let aria: Aria2
 
@@ -28,6 +29,13 @@ export const loadConfig = (config: Aria2Config) => {
 }
 
 export const download = (url: string, out: string, dir?: string) => {
+    const ext = path.extname(out)
+    const base = path.basename(out, ext)
+    let i = 1
+    while (fs.existsSync(path.join(dir ? dir : app.getPath('downloads'), out))) {
+        out = base + ' (' + i + ')' + ext
+        i++
+    }
     if (aria) {
         aria.call('aria2.addUri', [url], { out, dir })
             .then(() => ui.messageSuccess('Pushed to Aria2 JSON RPC'))
