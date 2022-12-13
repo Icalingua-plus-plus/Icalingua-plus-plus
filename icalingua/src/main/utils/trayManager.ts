@@ -147,7 +147,7 @@ export const updateTrayMenu = async () => {
                         checked: getConfig().darkTaskIcon === 'auto',
                         click(item) {
                             getConfig().darkTaskIcon = 'auto'
-                            updateTrayIcon()
+                            updateTrayIcon(true)
                             saveConfigFile()
                         },
                     },
@@ -157,7 +157,7 @@ export const updateTrayMenu = async () => {
                         checked: getConfig().darkTaskIcon === 'true',
                         click(item) {
                             getConfig().darkTaskIcon = 'true'
-                            updateTrayIcon()
+                            updateTrayIcon(true)
                             saveConfigFile()
                         },
                     },
@@ -167,7 +167,7 @@ export const updateTrayMenu = async () => {
                         checked: getConfig().darkTaskIcon === 'false',
                         click(item) {
                             getConfig().darkTaskIcon = 'false'
-                            updateTrayIcon()
+                            updateTrayIcon(true)
                             saveConfigFile()
                         },
                     },
@@ -184,26 +184,30 @@ export const updateTrayMenu = async () => {
     tray.setContextMenu(menu)
 }
 const getTrayIconColor = () => {
-    if (getConfig().darkTaskIcon === 'auto') 
+    if (getConfig().darkTaskIcon === 'auto')
         return !nativeTheme.shouldUseDarkColors
-    else if (getConfig().darkTaskIcon === 'true') return true
-    else return false
+    else return getConfig().darkTaskIcon === 'true';
 }
-export const updateTrayIcon = async () => {
+let currentIconUnread = false;
+export const updateTrayIcon = async (force = false) => {
     let p
     const unread = await getUnreadCount()
     const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
+    let shouldUpdateIcon = false;
     if (unread) {
+        if(!currentIconUnread) shouldUpdateIcon = true;
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
+        if(currentIconUnread) shouldUpdateIcon = true;
         p = getTrayIconColor() ? darkIcon : lightIcon
         getMainWindow().title = title
     }
     tray.setTitle(unread === 0 ? '' : `${unread}`)
-    process.platform !== 'darwin' && tray.setImage(p)
+    if(shouldUpdateIcon || force)
+        process.platform !== 'darwin' && tray.setImage(p)
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
     updateTrayMenu()
