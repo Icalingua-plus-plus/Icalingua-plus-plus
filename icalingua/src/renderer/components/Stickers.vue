@@ -93,6 +93,7 @@ export default {
             default_dir: '',
             current_dir: 'Default',
             errorCount: {},
+            errorTimer: {},
         }
     },
     watch: {
@@ -153,17 +154,19 @@ export default {
             const hash = md5(e.target.src)
             this.errorCount[hash] = this.errorCount[hash] || 0
             this.errorCount[hash]++
-            if (this.errorCount[md5(e.target.src)] > 3) {
-                this.$message.error('Failed to load image: ' + e.target.src)
+            if (this.errorCount[hash] > 20) {
                 console.error('Failed to load image: ' + e.target.src)
                 return
             }
             setTimeout(() => {
                 e.target.src = e.target.src
-            }, 100)
-            setTimeout(() => {
-                this.errorCount[hash] = 0
-            }, 1000)
+            }, 500)
+            if (!errorTimer[hash]) {
+                errorTimer[hash] = setTimeout(() => {
+                    this.errorCount[hash] = 0
+                    errorTimer[hash] = null
+                }, 20000)
+            }
         },
         async generatePreview(file) {
             for (let i of file) {
