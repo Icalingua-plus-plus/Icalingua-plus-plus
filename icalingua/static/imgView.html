@@ -58,11 +58,11 @@
             background: rgba(255, 255, 255, 0.7);
             position: absolute;
             z-index: 2;
-            left: calc(50% - 50px);
-            top: calc(50% - 25px);
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
             height: 50px;
-            width: 100px;
             border-radius: 10px;
             backdrop-filter: blur(2px);
             transition: all 0.3s linear;
@@ -71,8 +71,8 @@
         }
 
         .icon {
-            width: 40px;
-            height: 100%;
+            width: 50px;
+            height: 50px;
             border: none;
             text-align: center;
             background-size: 60% 60%;
@@ -319,7 +319,7 @@
     function zoomIn(e, ratio=0.2) {
         scale = zoom
         zoom *= (1 + ratio)
-        if (zoom * _ratio > 9.99) zoom = 9.99 / _ratio
+        if (zoom * _ratio > 20) zoom = 20 / _ratio
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
@@ -327,7 +327,7 @@
     function zoomOut(e, ratio=0.2) {
         scale = zoom
         zoom *= (1 - ratio)
-        if (zoom * _ratio < 0.3) zoom = 0.3 / _ratio
+        if (zoom * _ratio < 0.2) zoom = 0.2 / _ratio
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
