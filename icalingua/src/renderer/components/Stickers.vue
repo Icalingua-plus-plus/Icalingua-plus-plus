@@ -50,7 +50,15 @@
             </center>
             <div class="grid" v-show="pics.length">
                 <div v-for="i in pics.filter((i) => i[0] !== '.')" :key="i">
-                    <img :src="'file://' + dir + i" @click="picClick(dir + i)" @click.right="itemMenu(dir + i)" />
+                    <img
+                        :src="getPreview(dir + i)"
+                        :origin-src="dir + i"
+                        @click="picClick(dir + i)"
+                        @click.right="itemMenu(dir + i)"
+                        @error="errorHandler"
+                        @mouseover="onmouseover"
+                        @mouseout="onmouseout"
+                    />
                 </div>
             </div>
         </div>
@@ -66,6 +74,8 @@ import { shell } from 'electron'
 import ipc from '../utils/ipc'
 import fs from 'fs'
 import path from 'path'
+import sharp from 'sharp'
+import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
 
 export default {
@@ -82,7 +92,13 @@ export default {
             subdirs: [],
             default_dir: '',
             current_dir: 'Default',
+            errorCount: {},
         }
+    },
+    watch: {
+        async pics(n, o) {
+            await this.generatePreview(n)
+        },
     },
     async created() {
         this.panel = await ipc.getLastUsedStickerType()
@@ -106,6 +122,9 @@ export default {
         if (!fs.existsSync(this.dir)) {
             fs.mkdirSync(this.dir)
         }
+        if (!fs.existsSync(path.join(await ipc.getStorePath(), 'stickers_preview/'))) {
+            fs.mkdirSync(path.join(await ipc.getStorePath(), 'stickers_preview/'))
+        }
         fs.watch(this.dir, () => {
             fs.readdir(this.dir, (_err, files) => {
                 this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
@@ -127,22 +146,50 @@ export default {
         })
     },
     methods: {
-        changeCurrentDir(dir) {
-            console.log(dir)
-            this.current_dir = dir
-            //解除对this.dir的watch
-            fs.unwatchFile(this.dir)
-            this.dir = this.default_dir + this.current_dir + '/'
-            if (dir == 'Default') {
-                this.dir = this.default_dir
+        getPreview(n) {
+            return 'file://' + this.default_dir.replace('stickers', 'stickers_preview') + md5(n)
+        },
+        errorHandler(e) {
+            const hash = md5(e.target.src)
+            this.errorCount[hash] = this.errorCount[hash] || 0
+            this.errorCount[hash]++
+            if (this.errorCount[md5(e.target.src)] > 3) {
+                this.$message.error('Failed to load image: ' + e.target.src)
+                console.error('Failed to load image: ' + e.target.src)
+                return
             }
-            fs.watch(this.dir, () => {
-                fs.readdir(this.dir, (_err, files) => {
-                    this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
+            setTimeout(() => {
+                e.target.src = e.target.src
+            }, 100)
+            setTimeout(() => {
+                this.errorCount[hash] = 0
+            }, 1000)
+        },
+        async generatePreview(file) {
+            for (let i of file) {
+                const n = this.getPreview(this.dir + i).replace('file://', '')
+                if (!fs.existsSync(n)) {
+                    await sharp(this.dir + i).toFile(n)
+                }
+            }
+        },
+        changeCurrentDir(dir) {
+            console.log('Stickers\' directory changed: ', dir)
+            this.current_dir = dir
+            let newDir = this.default_dir + this.current_dir + '/'
+            fs.unwatchFile(this.dir)
+            if (dir == 'Default') {
+                newDir = this.default_dir
+            }
+            fs.watch(newDir, () => {
+                fs.readdir(newDir, (_err, files) => {
+                    this.dir = newDir
+                    this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
                 })
             })
-            fs.readdir(this.dir, (_err, files) => {
-                this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
+            fs.readdir(newDir, (_err, files) => {
+                this.dir = newDir
+                this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
             })
         },
         picClick(pic) {
@@ -167,6 +214,12 @@ export default {
                 left: this.$refs.stickers_dir.scrollLeft + e.deltaY,
                 behavior: 'smooth',
             })
+        },
+        onmouseover(e) {
+            e.target.src = 'file://' + e.target.getAttribute('origin-src')
+        },
+        onmouseout(e) {
+            e.target.src = this.getPreview(e.target.getAttribute('origin-src'))
         },
     },
 }
