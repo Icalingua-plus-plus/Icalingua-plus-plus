@@ -188,8 +188,9 @@ const buildRoomMenu = (room: Room): Menu => {
             ],
         },
     ])
+    const webApps = new Menu();
     if (room.roomId < 0) {
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '查看精华消息',
                 async click() {
@@ -216,7 +217,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群公告',
                 async click() {
@@ -240,7 +241,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群文件',
                 async click() {
@@ -273,7 +274,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群荣誉',
                 async click() {
@@ -296,7 +297,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群相册',
                 async click() {
@@ -329,7 +330,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群作业',
                 async click() {
@@ -360,7 +361,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '群幸运字符',
                 async click() {
@@ -409,7 +410,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '成员活跃数据',
                 async click() {
@@ -499,7 +500,7 @@ const buildRoomMenu = (room: Room): Menu => {
         //         await win.loadURL('https://ti.qq.com/friends/recall?uin=' + room.roomId)
         //     },
         // }))
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '互动标识',
                 async click() {
@@ -521,7 +522,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '幸运字符',
                 async click() {
@@ -543,7 +544,7 @@ const buildRoomMenu = (room: Room): Menu => {
                 },
             }),
         )
-        menu.append(
+        webApps.append(
             new MenuItem({
                 label: '照片墙',
                 async click() {
@@ -573,6 +574,12 @@ const buildRoomMenu = (room: Room): Menu => {
             }),
         )
     }
+    menu.append(
+        new MenuItem({
+            label: '网页应用',
+            submenu: webApps,
+        })
+    )
     menu.append(
         new MenuItem({
             label: '获取历史消息',
