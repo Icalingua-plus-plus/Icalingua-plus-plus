@@ -430,21 +430,36 @@ var Q = ({ socket: t }) => {
         currentDir = a;
         B(0), o(u), d(a);
     }
-    async function k(u) {
+    async function k(u, confirm = false) {
         const a = await t.download(u);
+        if (!confirm) {
+            window['download'] ? window['download'](a.url, a.name) : console.log('error', a);
+            y.success({
+                message: "已发送下载任务",
+                description:
+                    "即将开始下载 " + a.name
+            });
+            return;
+        }
         msgbox.show("确认下载文件名称", "input", {
             button: ['取消', '确定'],
             default: a.name,
             click: function (e) {
                 if (e == 1) {
                     window['download'] ? window['download'](a.url, msgbox.result) : console.log('error', a);
+                    y.success({
+                        message: "已发送下载任务",
+                        description:
+                            "即将开始下载 " + a.name
+                    });
                 }
             }
         })
     }
     function fileContextMenu(u, name, e) {
         var items = []
-        items.push({ title: '下载', fn: () => k(u) })
+        items.push({ title: '下载', fn: () => k(u, false) })
+        items.push({ title: '另存为', fn: () => k(u, true) })
         items.push({ title: '复制链接', fn: async () => {
             const a = await t.download(u);
             window.copyText(a.url);
