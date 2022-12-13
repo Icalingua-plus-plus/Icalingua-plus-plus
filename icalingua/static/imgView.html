@@ -145,6 +145,7 @@
     const RATIO = document.getElementById('RATIO')
     const RATIO_TEXT = document.getElementById('RATIO_TEXT')
     let RATIO_TIMER = null
+    let _ratio = 1
     const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
     IMG.src = url
     DOWNLOAD.href = url
@@ -185,17 +186,20 @@
                 var ratio = IMG.offsetWidth / IMG.offsetHeight
                 IMG.style.height = body.clientHeight
                 IMG.style.width = IMG.offsetHeight * ratio
+                _ratio = body.clientHeight / IMG.naturalHeight
             }
             else {
                 var ratio = IMG.offsetHeight / IMG.offsetWidth
                 IMG.style.width = body.clientWidth
                 IMG.style.height = IMG.offsetWidth * ratio
+                _ratio = body.clientWidth / IMG.naturalWidth
             }
         }
         else if (relative == false) {
             // force adjust
             IMG.style.width = IMG.naturalWidth
             IMG.style.height = IMG.naturalHeight
+            _ratio = 1
         }
         const w = IMG.offsetWidth, h = IMG.offsetHheight
         deployLT()
@@ -279,7 +283,7 @@
 
     function mkTransform(rotate, zoom, showTip = true) {
         if (showTip) {
-            RATIO_TEXT.innerText = (zoom * 100).toFixed(0) + '%'
+            RATIO_TEXT.innerText = (_ratio * zoom * 100).toFixed(0) + '%'
             RATIO.style.visibility = 'visible'
             RATIO.style.opacity = 1
             if (RATIO_TIMER) clearTimeout(RATIO_TIMER)
@@ -296,8 +300,8 @@
         // toggle
         toggle = !toggle
         zoom = 1
-        IMG.style.transform = mkTransform(rotate, zoom, showTip)
         adapt(toggle)
+        IMG.style.transform = mkTransform(rotate, zoom, showTip)
     }
 
     function rotateAntiClockwise() {
@@ -315,7 +319,7 @@
     function zoomIn(e, ratio=0.2) {
         scale = zoom
         zoom *= (1 + ratio)
-        if (zoom > 9.99) zoom = 9.99
+        if (zoom * _ratio > 9.99) zoom = 9.99 / _ratio
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
@@ -323,7 +327,7 @@
     function zoomOut(e, ratio=0.2) {
         scale = zoom
         zoom *= (1 - ratio)
-        if (zoom < 0.3) zoom = 0.3
+        if (zoom * _ratio < 0.3) zoom = 0.3 / _ratio
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
