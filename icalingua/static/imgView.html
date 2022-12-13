@@ -52,6 +52,36 @@
             transform: translateX(-50%);
             transition: all 0.3s linear;
         }
+
+        #RATIO {
+            display: flex;
+            background: rgba(255, 255, 255, 0.7);
+            position: absolute;
+            z-index: 2;
+            left: calc(50% - 50px);
+            top: calc(50% - 25px);
+            text-align: center;
+            height: 50px;
+            width: 100px;
+            border-radius: 10px;
+            backdrop-filter: blur(2px);
+            transition: all 0.3s linear;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .icon {
+            width: 40px;
+            height: 100%;
+            border: none;
+            text-align: center;
+            background-size: 60% 60%;
+            background-color: transparent;
+            outline: none;
+            background-repeat: no-repeat;
+            background-position: center center;
+        }
+
     </style>
     <title>图片查看</title>
     <link rel="stylesheet" href="file-manager/assets/basicContext.min.css">
@@ -61,6 +91,12 @@
 <body style="overflow: hidden;">
     <img id='IMG' style="position: absolute; z-index: 1" src="">
     <div id='DRAG' style="position: absolute; z-index: 2; width: 100%; height: 100%; left: 0px; top: 0px;"></div>
+    <div id="RATIO">
+        <div class='icon'
+        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxNUwyMSAyNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'>
+        </div>
+        <b id='RATIO_TEXT' style="font-size: 20px; line-height: 50px; color: #000000; transform: translateX(-10%);">100%</b>
+    </div>
     <div id='BAR'>
         <table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
             <tr>
@@ -106,6 +142,9 @@
     const DRAG = document.getElementById('DRAG')
     const BAR = document.getElementById('BAR')
     const DOWNLOAD = document.getElementById('download')
+    const RATIO = document.getElementById('RATIO')
+    const RATIO_TEXT = document.getElementById('RATIO_TEXT')
+    let RATIO_TIMER = null
     const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
     IMG.src = url
     DOWNLOAD.href = url
@@ -238,15 +277,26 @@
 
     // deploy buttons
 
-    function mkTransform(rotate, zoom) {
+    function mkTransform(rotate, zoom, showTip = true) {
+        if (showTip) {
+            RATIO_TEXT.innerText = (zoom * 100).toFixed(0) + '%'
+            RATIO.style.visibility = 'visible'
+            RATIO.style.opacity = 1
+            if (RATIO_TIMER) clearTimeout(RATIO_TIMER)
+            RATIO_TIMER = setTimeout(() => {
+                RATIO.style.visibility = 'hidden'
+                RATIO.style.opacity = 0
+                RATIO_TIMER = null
+            }, 2000)
+        }
         return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
     }
 
-    function resetZoom() {
+    function resetZoom(showTip = true) {
         // toggle
         toggle = !toggle
         zoom = 1
-        IMG.style.transform = mkTransform(rotate, zoom)
+        IMG.style.transform = mkTransform(rotate, zoom, showTip)
         adapt(toggle)
     }
 
@@ -264,15 +314,16 @@
 
     function zoomIn(e, ratio=0.2) {
         scale = zoom
-        zoom += ratio
+        zoom *= (1 + ratio)
+        if (zoom > 9.99) zoom = 9.99
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
 
     function zoomOut(e, ratio=0.2) {
-        if (zoom < 0.3) return
         scale = zoom
-        zoom -= ratio
+        zoom *= (1 - ratio)
+        if (zoom < 0.3) zoom = 0.3
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e)
     }
@@ -296,7 +347,7 @@
         btns[i].onclick = btnactions[i]
     }
 
-    IMG.onload = resetZoom
+    IMG.onload = () => resetZoom(false)
 
     // ajust focus 
     function updatePosition(e) {
