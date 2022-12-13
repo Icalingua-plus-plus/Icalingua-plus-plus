@@ -3,7 +3,7 @@ version: '3'
 services:
   icalingua-bridge-oicq:
     container_name: icalingua-bridge-oicq
-    image: timochan/icalingua-bridge-oicq:latest
+    image: icalinguaplusplus/icalingua-bridge-oicq:latest
     command: "node build"
     environment:
       - TZ=Asia/Shanghai
