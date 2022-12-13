@@ -1537,7 +1537,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             if (!message.file || message.file.type.startsWith('image/')) {
                 menu.append(
                     new MenuItem({
-                        label: '+1',
+                        label: `+1${message.code ? ' (普通消息)' : ''}`,
                         click: () => {
                             let messageType
                             if (getConfig().anonymous) messageType = 'anonymous'
