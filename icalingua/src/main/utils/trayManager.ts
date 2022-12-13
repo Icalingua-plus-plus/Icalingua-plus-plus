@@ -186,27 +186,27 @@ export const updateTrayMenu = async () => {
 const getTrayIconColor = () => {
     if (getConfig().darkTaskIcon === 'auto')
         return !nativeTheme.shouldUseDarkColors
-    else return getConfig().darkTaskIcon === 'true';
+    else return getConfig().darkTaskIcon === 'true'
 }
-let currentIconUnread = false;
+let currentIconUnread = false
 export const updateTrayIcon = async (force = false) => {
-    let p
+    let p: Electron.NativeImage
     const unread = await getUnreadCount()
     const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
-    let shouldUpdateIcon = false;
+    let shouldUpdateIcon = false
     if (unread) {
-        if(!currentIconUnread) shouldUpdateIcon = true;
+        if (!currentIconUnread) shouldUpdateIcon = true
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
-        if(currentIconUnread) shouldUpdateIcon = true;
+        if (currentIconUnread) shouldUpdateIcon = true
         p = getTrayIconColor() ? darkIcon : lightIcon
         getMainWindow().title = title
     }
     tray.setTitle(unread === 0 ? '' : `${unread}`)
-    if(shouldUpdateIcon || force)
+    if (shouldUpdateIcon || force)
         process.platform !== 'darwin' && tray.setImage(p)
     app.setBadgeCount(unread)
     pushUnreadCount(unread)

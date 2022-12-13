@@ -851,7 +851,7 @@ const loginHandlers = {
             await bot.setOnlineStatus(loginForm.onlineStatus)
         }
         await updateAppMenu()
-        await updateTrayIcon()
+        await updateTrayIcon(true)
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
         ui.message('正在获取历史消息')

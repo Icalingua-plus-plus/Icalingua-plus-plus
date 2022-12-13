@@ -97,7 +97,7 @@ const attachSocketEvents = () => {
             updateCheck: getConfig().updateCheck,
         }
         adapter.sendOnlineData()
-        await updateTrayIcon()
+        await updateTrayIcon(true)
         await updateAppMenu()
     })
     socket.on('setShutUp', ui.setShutUp)
