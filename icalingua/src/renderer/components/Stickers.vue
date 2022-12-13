@@ -161,10 +161,10 @@ export default {
             setTimeout(() => {
                 e.target.src = e.target.src
             }, 500)
-            if (!errorTimer[hash]) {
-                errorTimer[hash] = setTimeout(() => {
+            if (!this.errorTimer[hash]) {
+                this.errorTimer[hash] = setTimeout(() => {
                     this.errorCount[hash] = 0
-                    errorTimer[hash] = null
+                    this.errorTimer[hash] = null
                 }, 20000)
             }
         },
