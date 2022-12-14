@@ -725,8 +725,6 @@ jobs:
         run: |
           set npm_config_arch=arm64
           set node_version=16.13.0
-          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
-          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
