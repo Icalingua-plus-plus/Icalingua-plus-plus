@@ -19,10 +19,10 @@ export const loadMainWindow = () => {
         theme === 'auto'
             ? nativeTheme.shouldUseDarkColors
                 ? '#131415'
-                : '#fff'
+                : '#FFFFFF'
             : theme === 'dark'
             ? '#131415'
-            : '#fff'
+            : '#FFFFFF'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
@@ -125,15 +125,15 @@ export const showMainWindow = () => {
     }
 }
 export const refreshMainWindowColor = () => {
-    mainWindow.setBackgroundColor(
-        getConfig().theme === 'auto'
-            ? nativeTheme.shouldUseDarkColors
-                ? '#131415'
-                : '#fff'
-            : getConfig().theme === 'dark'
+    const color = getConfig().theme === 'auto'
+        ? nativeTheme.shouldUseDarkColors
             ? '#131415'
-            : '#fff',
-    )
+            : '#FFFFFF'
+        : getConfig().theme === 'dark'
+            ? '#131415'
+            : '#FFFFFF'
+    if (mainWindow.getBackgroundColor() === color) return
+    mainWindow.setBackgroundColor(color)
     updateTrayIcon()
 }
 export const showLoginWindow = (isConfiguringBridge = false) => {
