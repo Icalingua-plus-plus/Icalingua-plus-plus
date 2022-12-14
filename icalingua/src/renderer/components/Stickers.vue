@@ -26,7 +26,12 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" />
+                    <img
+                        :src="i.url"
+                        @click="picClick(i.url)"
+                        @click.right="itemMenu(i.url)"
+                        @error="errorHandler"
+                    />
                 </div>
             </div>
         </div>
@@ -96,8 +101,9 @@ export default {
         }
     },
     watch: {
-        async pics(n, o) {
-            await this.generatePreview(n)
+        pics(n, o) {
+            const files = n.map((i) => this.dir + i)
+            this.generatePreview(files)
         },
     },
     async created() {
@@ -167,13 +173,13 @@ export default {
                 }, 20000)
             }
         },
-        async generatePreview(file) {
-            for (let i of file) {
-                const n = this.getPreview(this.dir + i).replace('file://', '')
+        generatePreview(files) {
+            for (let i of files) {
+                const n = this.getPreview(i).replace('file://', '')
                 if (!fs.existsSync(n)) {
                     let img = document.createElement('img')
                     let canvas = document.createElement('canvas')
-                    img.src = this.dir + i
+                    img.src = i
                     img.onload = () => {
                         canvas.width = img.width
                         canvas.height = img.height
@@ -233,7 +239,8 @@ export default {
             })
         },
         onmouseover(e) {
-            e.target.src = 'file://' + e.target.getAttribute('origin-src')
+            const originSrc = e.target.getAttribute('origin-src')
+            e.target.src = originSrc.startsWith('http') ? '' : 'file://' + originSrc
         },
         onmouseout(e) {
             e.target.src = this.getPreview(e.target.getAttribute('origin-src'))
