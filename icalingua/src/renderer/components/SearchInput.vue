@@ -28,6 +28,8 @@
 </template>
 
 <script>
+import PinyinMatch from 'pinyin-match'
+
 export default {
     data() {
         return {
@@ -87,7 +89,9 @@ export default {
                 this.searchMethod === 'includes'
                     ? this.list.filter(
                           ([name, id]) =>
-                              name[this.searchMethod](this.search) || id.toString()[this.searchMethod](this.search),
+                              name[this.searchMethod](this.search) ||
+                              id.toString()[this.searchMethod](this.search) ||
+                              PinyinMatch.match(name, this.search),
                       )
                     : this.list.filter(([name]) => name[this.searchMethod](this.search))
             if (matched.length === 0) {
