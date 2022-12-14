@@ -233,6 +233,7 @@ div.stickers_dir {
     width: 100%;
     white-space: nowrap;
     overflow-x: auto;
+    overflow: hidden;
     border-bottom: var(--chat-border-style);
     background-color: var(--panel-header-bg);
     display: flex;
