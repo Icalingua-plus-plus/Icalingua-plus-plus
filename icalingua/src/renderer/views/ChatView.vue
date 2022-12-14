@@ -807,4 +807,28 @@ main div {
 .dialog .el-dialog__title {
     color: var(--panel-color-name);
 }
+
+.el-message-box__wrapper .el-message-box {
+    background-color: var(--panel-background);
+    border: var(--chat-border-style);
+}
+
+.el-message-box__wrapper .el-message-box .el-message-box__title {
+    color: var(--panel-color-name);
+}
+.el-message-box__wrapper .el-message-box .el-message-box__content {
+    color: var(--panel-color-desc);
+}
+
+.el-notification {
+    background-color: var(--panel-background);
+    border: var(--chat-border-style);
+}
+
+.el-notification .el-notification__group .el-notification__title {
+    color: var(--panel-color-name);
+}
+.el-notification .el-notification__group .el-notification__content {
+    color: var(--panel-color-desc);
+}
 </style>
