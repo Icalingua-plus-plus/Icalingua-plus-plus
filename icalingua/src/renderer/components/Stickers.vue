@@ -74,7 +74,6 @@ import { shell } from 'electron'
 import ipc from '../utils/ipc'
 import fs from 'fs'
 import path from 'path'
-import sharp from 'sharp'
 import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
 
@@ -172,7 +171,22 @@ export default {
             for (let i of file) {
                 const n = this.getPreview(this.dir + i).replace('file://', '')
                 if (!fs.existsSync(n)) {
-                    await sharp(this.dir + i).toFile(n)
+                    let img = document.createElement('img')
+                    let canvas = document.createElement('canvas')
+                    img.src = this.dir + i
+                    img.onload = () => {
+                        canvas.width = img.width
+                        canvas.height = img.height
+                        let ctx = canvas.getContext('2d')
+                        ctx.drawImage(img, 0, 0, img.width, img.height)
+                        let dataURL = canvas.toDataURL('image/png')
+                        let base64Data = dataURL.replace(/^data:image\/png;base64,/, '')
+                        fs.writeFile(n, base64Data, 'base64', (err) => {
+                            if (err) {
+                                console.error(err)
+                            }
+                        })
+                    }
                 }
             }
         },

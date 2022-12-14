@@ -193,7 +193,6 @@
         "pg": "^8.8.0",
         "pg-query-stream": "^4.2.4",
         "pinyin-match": "^1.2.2",
-        "sharp": "^0.31.2",
         "silk-sdk": "^0.2.2",
         "socket.io": "^4.5.4",
         "sqlite3": "^5.1.4"
@@ -207,7 +206,6 @@
         "@types/minimist": "^1.2.2",
         "@types/mongodb": "^3.6.20",
         "@types/node": "^16.18.9",
-        "@types/sharp": "^0.31.0",
         "@types/uuid": "^8.3.4",
         "@types/webpack": "^5.28.0",
         "@types/winston": "^2.4.4",
