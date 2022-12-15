@@ -98,6 +98,7 @@ export default {
             current_dir: 'Default',
             errorCount: {},
             errorTimer: {},
+            watchedPath: {},
         }
     },
     watch: {
@@ -133,6 +134,7 @@ export default {
         }
         fs.watch(this.dir, () => {
             fs.readdir(this.dir, (_err, files) => {
+                if (this.current_dir != 'Default') return
                 this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
             })
         })
@@ -148,6 +150,7 @@ export default {
             this.subdirs = ['Default', ...this.subdirs]
         })
         fs.readdir(this.dir, (_err, files) => {
+            if (this.current_dir != 'Default') return
             this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
         })
     },
@@ -200,19 +203,21 @@ export default {
             console.log('Stickers\' directory changed: ', dir)
             this.current_dir = dir
             let newDir = this.default_dir + this.current_dir + '/'
-            fs.unwatchFile(this.dir)
             if (dir == 'Default') {
                 newDir = this.default_dir
             }
-            fs.watch(newDir, () => {
+            fs.readdir(newDir, (_err, files) => {
+                if (this.current_dir != dir) return
+                this.dir = newDir
+                this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
+            })
+            if (this.watchedPath[dir] || dir == 'Default') return
+            this.watchedPath[dir] = fs.watch(newDir, () => {
                 fs.readdir(newDir, (_err, files) => {
+                    if (this.current_dir != dir) return
                     this.dir = newDir
                     this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
                 })
-            })
-            fs.readdir(newDir, (_err, files) => {
-                this.dir = newDir
-                this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
             })
         },
         picClick(pic) {
