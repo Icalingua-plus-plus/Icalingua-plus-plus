@@ -183,6 +183,7 @@
                 :room="room"
                 :message-reply="messageReply"
                 :linkify="linkify"
+                :showForwardPanel="showForwardPanel"
                 @reset-message="resetMessage"
             >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">

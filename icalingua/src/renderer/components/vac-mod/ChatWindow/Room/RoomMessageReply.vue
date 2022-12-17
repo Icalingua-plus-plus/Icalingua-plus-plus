@@ -14,6 +14,7 @@
                             :text-formatting="true"
                             :reply="true"
                             :linkify="linkify"
+                            :showForwardPanel="showForwardPanel"
                         />
                     </div>
                 </div>
@@ -47,6 +48,7 @@ export default {
         room: { type: Object, required: true },
         messageReply: { type: Object, default: null },
         linkify: { type: Boolean, default: true },
+        showForwardPanel: { type: Boolean, required: true },
     },
 
     computed: {
