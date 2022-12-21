@@ -742,7 +742,9 @@ export default {
             this.showForwardPanel = true
         })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
-        ipcRenderer.on('setKeyToSendMessage', (_, key) => (keyToSendMessage = key))
+        ipcRenderer.on('setKeyToSendMessage', (_, key) => {
+            keyToSendMessage = key
+        })
         ipcRenderer.on('addMessageText', (_, message) => {
             this.message += message
             this.focusTextarea()

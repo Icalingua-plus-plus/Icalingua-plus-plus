@@ -60,7 +60,7 @@
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
                     @fetch-messages="fetchMessage"
-                    @open-group-member-panel="groupmemberShown = true, groupmemberPanelGin = -selectedRoom.roomId"
+                    @open-group-member-panel=";(groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId)"
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
                 >

@@ -112,7 +112,13 @@
                             <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
 
-                        <LottieAnimation v-else-if="lottie" :path="lottie" :height="250" :width="250" :autoPlay="false" />
+                        <LottieAnimation
+                            v-else-if="lottie"
+                            :path="lottie"
+                            :height="250"
+                            :width="250"
+                            :autoPlay="false"
+                        />
 
                         <message-image
                             v-else-if="isImage && message.files"
