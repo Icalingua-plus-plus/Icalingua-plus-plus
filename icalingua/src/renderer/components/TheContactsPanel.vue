@@ -3,7 +3,7 @@
         <div class="contacts-head-container">
             <div class="contacts-head">
                 <el-input v-model="searchContext" placeholder="Search" prefix-icon="el-icon-search" clearable />
-                <span class="el-icon-refresh-right contacts-refresh" @click="refresh" />
+                <span class="el-icon-refresh-right icon-button" @click="refresh" />
             </div>
         </div>
 
@@ -161,7 +161,7 @@ export default {
     overflow: auto;
 }
 
-.contacts-refresh {
+.icon-button {
     cursor: pointer;
     font-size: larger;
     color: #909399;

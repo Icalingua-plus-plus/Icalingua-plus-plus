@@ -39,6 +39,9 @@ const ipc = {
     setRoomPanelSetting(roomPanelAvatarOnly: boolean, roomPanelWidth: number) {
         ipcRenderer.send('setRoomPanelSetting', roomPanelAvatarOnly, roomPanelWidth)
     },
+    async getClearRoomsBehavior(): Promise<'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo'> {
+        return await ipcRenderer.invoke('getClearRoomsBehavior')
+    },
     async getKeyToSendMessage(): Promise<'Enter' | 'CtrlEnter' | 'ShiftEnter'> {
         return await ipcRenderer.invoke('getKeyToSendMessage')
     },
@@ -132,6 +135,9 @@ const ipc = {
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         return ipcRenderer.invoke('getIgnoredChats')
+    },
+    removeChat(roomId: number) {
+        ipcRenderer.send('removeChat', roomId)
     },
     removeIgnoredChat(roomId: number) {
         ipcRenderer.send('removeIgnoredChat', roomId)

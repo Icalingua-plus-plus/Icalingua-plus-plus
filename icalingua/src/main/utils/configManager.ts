@@ -25,6 +25,7 @@ type AllConfig = {
     fetchHistoryOnChatOpen: boolean
     lastUsedStickerType: 'face' | 'remote' | 'stickers' | 'emojis'
     keyToSendMessage: 'Enter' | 'CtrlEnter' | 'ShiftEnter'
+    clearRoomsBehavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo'
     theme: string
     updateCheck: 'ask' | boolean
     disableBridgeVersionCheck: boolean
@@ -98,6 +99,7 @@ const defaultConfig: AllConfig = {
     //给 @rain15z3 一点面子，而且第一次用的人也没有本地表情
     lastUsedStickerType: 'remote',
     keyToSendMessage: 'Enter',
+    clearRoomsBehavior: '1HourAgo',
     theme: 'auto',
     updateCheck: 'ask',
     disableBridgeVersionCheck: false,
@@ -127,8 +129,7 @@ if (fs.existsSync(configFilePath)) {
             config[i] = defaultConfig[i]
         }
     }
-    if (typeof config.darkTaskIcon === 'boolean')
-        config.darkTaskIcon = config.darkTaskIcon ? 'true' : 'false'
+    if (typeof config.darkTaskIcon === 'boolean') config.darkTaskIcon = config.darkTaskIcon ? 'true' : 'false'
     saveConfigFile()
 } else {
     config = defaultConfig

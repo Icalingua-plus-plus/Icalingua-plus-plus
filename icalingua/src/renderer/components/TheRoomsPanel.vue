@@ -7,7 +7,8 @@
                 </a>
             </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
-            <span class="more el-icon-user contacts-refresh" @click="$emit('show-contacts')" />
+            <span class="more el-icon-user icon-button" @click="$emit('show-contacts')"></span>
+            <span class="more el-icon-delete icon-button" @click="clearRooms"></span>
         </div>
         <div class="content">
             <RoomEntry
@@ -26,24 +27,25 @@
     </div>
 </template>
 
-<script type="ts">
+<script>
 import RoomEntry from './RoomEntry.vue'
 import ipc from '../utils/ipc'
+import { ipcRenderer } from 'electron'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import PinyinMatch from 'pinyin-match'
 
+let clearRoomsBehavior
+
 export default {
     name: 'TheRoomsPanel',
-    components: {RoomEntry},
+    components: { RoomEntry },
     computed: {
         sortedRooms() {
             this.input = this.input.toUpperCase()
             let tmpr = [...this.rooms]
             if (this.input)
                 tmpr = tmpr.filter(
-                    (e) =>
-                        PinyinMatch.match(e.roomName, this.input) ||
-                        String(e.roomId).includes(this.input),
+                    (e) => PinyinMatch.match(e.roomName, this.input) || String(e.roomId).includes(this.input),
                 )
             return tmpr.sort((a, b) => b.index - a.index)
         },
@@ -64,7 +66,28 @@ export default {
         roomMenu(room) {
             ipc.popupRoomMenu(room.roomId)
         },
-        getAvatarUrl
+        async clearRooms() {
+            console.log(this.rooms)
+            console.log(clearRoomsBehavior)
+            const now = Date.now()
+            this.rooms.forEach((r) => {
+                if (
+                    (clearRoomsBehavior === '1HourAgo' && now - r.utime > 3600000) ||
+                    (clearRoomsBehavior === '1DayAgo' && now - r.utime > 86400000) ||
+                    (clearRoomsBehavior === '1WeekAgo' && now - r.utime > 604800000) ||
+                    (clearRoomsBehavior === 'AllUnpined' && !r.index)
+                )
+                    ipc.removeChat(r.roomId)
+            })
+        },
+        getAvatarUrl,
+    },
+    async created() {
+        clearRoomsBehavior = await ipcRenderer.invoke('getClearRoomsBehavior')
+
+        ipcRenderer.on('setClearRoomsBehavior', (_, behavior) => {
+            clearRoomsBehavior = behavior
+        })
     },
 }
 </script>
