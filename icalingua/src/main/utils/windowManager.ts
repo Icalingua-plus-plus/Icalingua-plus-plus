@@ -125,11 +125,12 @@ export const showMainWindow = () => {
     }
 }
 export const refreshMainWindowColor = () => {
-    const color = getConfig().theme === 'auto'
-        ? nativeTheme.shouldUseDarkColors
-            ? '#131415'
-            : '#FFFFFF'
-        : getConfig().theme === 'dark'
+    const color =
+        getConfig().theme === 'auto'
+            ? nativeTheme.shouldUseDarkColors
+                ? '#131415'
+                : '#FFFFFF'
+            : getConfig().theme === 'dark'
             ? '#131415'
             : '#FFFFFF'
     if (mainWindow.getBackgroundColor() === color) return

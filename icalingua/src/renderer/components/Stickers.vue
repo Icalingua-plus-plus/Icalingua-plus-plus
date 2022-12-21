@@ -26,12 +26,7 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img
-                        :src="i.url"
-                        @click="picClick(i.url)"
-                        @click.right="itemMenu(i.url)"
-                        @error="errorHandler"
-                    />
+                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" @error="errorHandler" />
                 </div>
             </div>
         </div>
@@ -200,7 +195,7 @@ export default {
             }
         },
         changeCurrentDir(dir) {
-            console.log('Stickers\' directory changed: ', dir)
+            console.log("Stickers' directory changed: ", dir)
             this.current_dir = dir
             let newDir = this.default_dir + this.current_dir + '/'
             if (dir == 'Default') {
