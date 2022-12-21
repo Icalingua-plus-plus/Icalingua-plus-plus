@@ -71,6 +71,13 @@ const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     updateAppMenu()
 }
 
+const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo') => {
+    getConfig().clearRoomsBehavior = behavior
+    saveConfigFile()
+    ui.setClearRoomsBehavior(behavior)
+    updateAppMenu()
+}
+
 {
     const initMenu = Menu.buildFromTemplate([
         {
@@ -578,7 +585,7 @@ const buildRoomMenu = (room: Room): Menu => {
         new MenuItem({
             label: '网页应用',
             submenu: webApps,
-        })
+        }),
     )
     menu.append(
         new MenuItem({
@@ -806,6 +813,22 @@ export const updateAppMenu = async () => {
                         click: () => setKeyToSendMessage('ShiftEnter'),
                     },
                 ],
+            }),
+            new MenuItem({
+                label: '清理会话按钮行为',
+                submenu: (
+                    [
+                        ['AllUnpined', '所有未置顶'],
+                        ['1WeekAgo', '一周前'],
+                        ['1DayAgo', '一天前'],
+                        ['1HourAgo', '一小时前'],
+                    ] as const
+                ).map(([name, label]) => ({
+                    type: 'radio',
+                    label,
+                    checked: getConfig().clearRoomsBehavior === name,
+                    click: () => setClearRoomsBehavior(name),
+                })),
             }),
             new MenuItem({
                 label: '自动登录',
@@ -1098,7 +1121,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             visible: !history,
                             click: () => {
                                 let seqid: string
-                                const parsed = Buffer.from(String(message._id), "base64")
+                                const parsed = Buffer.from(String(message._id), 'base64')
                                 if (room.roomId > 0) seqid = String(parsed.readUInt32BE(4))
                                 else seqid = String(parsed.readUInt32BE(8))
                                 clipboard.writeText(seqid)
@@ -1110,7 +1133,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             visible: !history,
                             click: () => {
                                 let random: string
-                                const parsed = Buffer.from(String(message._id), "base64")
+                                const parsed = Buffer.from(String(message._id), 'base64')
                                 if (room.roomId > 0) random = String(parsed.readUInt32BE(8))
                                 else random = String(parsed.readUInt32BE(12))
                                 clipboard.writeText(random)
@@ -1155,11 +1178,13 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             type: 'normal',
                             click: () => {
                                 const oidb = message.content.match(/OidbSvc\.0x(\w+)_(\d+)/)[0]
-                                sendPacket('Oidb', oidb, JSON.parse(message.content.replace(oidb, ''))).then(retPacket => {
-                                    clipboard.writeText(Buffer.from(retPacket).toString('base64'))
-                                    ui.message('Oidb 请求已发送，返回值已复制到剪贴板')
-                                })
-                            }
+                                sendPacket('Oidb', oidb, JSON.parse(message.content.replace(oidb, ''))).then(
+                                    (retPacket) => {
+                                        clipboard.writeText(Buffer.from(retPacket).toString('base64'))
+                                        ui.message('Oidb 请求已发送，返回值已复制到剪贴板')
+                                    },
+                                )
+                            },
                         },
                     ],
                 }),
@@ -1456,20 +1481,20 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
-        if (await isAdmin() && !history && !message.deleted) {
+        if ((await isAdmin()) && !history && !message.deleted) {
             if (room.roomId < 0) {
                 menu.append(
                     new MenuItem({
                         label: '设为精华',
                         click: () => {
-                            const parsed = Buffer.from(message._id as string, "base64")
+                            const parsed = Buffer.from(message._id as string, 'base64')
                             const seqid = parsed.readUInt32BE(8)
                             const random = parsed.readUInt32BE(12)
                             sendPacket('Oidb', 'OidbSvc.0xeac_1', {
                                 1: -room.roomId,
                                 2: seqid,
                                 3: random,
-                            }).then(retPacket => {
+                            }).then((retPacket) => {
                                 const ret = pb.decode(retPacket)[4]
                                 if (ret[1]) {
                                     ui.messageError(ret[1].toString())
@@ -1484,14 +1509,14 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     new MenuItem({
                         label: '移出精华',
                         click: () => {
-                            const parsed = Buffer.from(message._id as string, "base64")
+                            const parsed = Buffer.from(message._id as string, 'base64')
                             const seqid = parsed.readUInt32BE(8)
                             const random = parsed.readUInt32BE(12)
                             sendPacket('Oidb', 'OidbSvc.0xeac_2', {
                                 1: -room.roomId,
                                 2: seqid,
                                 3: random,
-                            }).then(retPacket => {
+                            }).then((retPacket) => {
                                 const ret = pb.decode(retPacket)[4]
                                 if (ret[1]) {
                                     ui.messageError(ret[1].toString())
