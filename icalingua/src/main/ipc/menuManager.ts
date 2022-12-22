@@ -71,7 +71,7 @@ const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
     updateAppMenu()
 }
 
-const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo') => {
+const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo' | 'disabled') => {
     getConfig().clearRoomsBehavior = behavior
     saveConfigFile()
     ui.setClearRoomsBehavior(behavior)
@@ -815,13 +815,14 @@ export const updateAppMenu = async () => {
                 ],
             }),
             new MenuItem({
-                label: '清理会话按钮行为',
+                label: '清理会话按钮',
                 submenu: (
                     [
-                        ['AllUnpined', '所有未置顶'],
+                        ['disabled', '禁用'],
                         ['1WeekAgo', '一周前'],
                         ['1DayAgo', '一天前'],
                         ['1HourAgo', '一小时前'],
+                        ['AllUnpined', '所有未置顶'],
                     ] as const
                 ).map(([name, label]) => ({
                     type: 'radio',

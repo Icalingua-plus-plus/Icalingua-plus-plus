@@ -8,7 +8,12 @@
             </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
             <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
-            <span class="more el-icon-delete icon-button" @click="clearRooms" title="清理会话"></span>
+            <span
+                class="more el-icon-delete icon-button"
+                @click="clearRooms"
+                title="清理会话"
+                v-if="clearRoomsBehavior !== 'disabled'"
+            ></span>
         </div>
         <div class="content">
             <RoomEntry
@@ -34,8 +39,6 @@ import { ipcRenderer } from 'electron'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import PinyinMatch from 'pinyin-match'
 
-let clearRoomsBehavior
-
 export default {
     name: 'TheRoomsPanel',
     components: { RoomEntry },
@@ -60,6 +63,7 @@ export default {
     data() {
         return {
             input: '',
+            clearRoomsBehavior: '',
         }
     },
     methods: {
@@ -68,14 +72,14 @@ export default {
         },
         async clearRooms() {
             console.log(this.rooms)
-            console.log(clearRoomsBehavior)
+            console.log(this.clearRoomsBehavior)
             const now = Date.now()
             this.rooms.forEach((r) => {
                 if (
-                    (clearRoomsBehavior === '1HourAgo' && now - r.utime > 3600000) ||
-                    (clearRoomsBehavior === '1DayAgo' && now - r.utime > 86400000) ||
-                    (clearRoomsBehavior === '1WeekAgo' && now - r.utime > 604800000) ||
-                    (clearRoomsBehavior === 'AllUnpined' && !r.index)
+                    (this.clearRoomsBehavior === '1HourAgo' && now - r.utime > 3600000) ||
+                    (this.clearRoomsBehavior === '1DayAgo' && now - r.utime > 86400000) ||
+                    (this.clearRoomsBehavior === '1WeekAgo' && now - r.utime > 604800000) ||
+                    (this.clearRoomsBehavior === 'AllUnpined' && !r.index)
                 )
                     ipc.removeChat(r.roomId)
             })
@@ -83,10 +87,10 @@ export default {
         getAvatarUrl,
     },
     async created() {
-        clearRoomsBehavior = await ipcRenderer.invoke('getClearRoomsBehavior')
+        this.clearRoomsBehavior = await ipcRenderer.invoke('getClearRoomsBehavior')
 
         ipcRenderer.on('setClearRoomsBehavior', (_, behavior) => {
-            clearRoomsBehavior = behavior
+            this.clearRoomsBehavior = behavior
         })
     },
 }

@@ -149,7 +149,7 @@ export default {
     setKeyToSendMessage(key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') {
         sendToMainWindow('setKeyToSendMessage', key)
     },
-    setClearRoomsBehavior(behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo') {
+    setClearRoomsBehavior(behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo' | 'disabled') {
         sendToMainWindow('setClearRoomsBehavior', behavior)
     },
     pasteGif(url: string) {
