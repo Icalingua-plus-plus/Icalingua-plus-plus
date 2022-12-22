@@ -54,6 +54,12 @@ export default class SQLStorageProvider implements StorageProvider {
         this.id = id;
         this.qid = `eqq${id}`;
         this.type = type;
+        let connectOption = { ...connectOpt }
+        if (connectOption.host.includes(':')) {
+            const [host, port] = connectOption.host.split(':')
+            connectOption.host = host
+            connectOption['port'] = Number(port)
+        }
         switch (type) {
             case "sqlite3":
                 const dbPath = path.join(connectOpt.dataPath, "databases");
@@ -74,14 +80,14 @@ export default class SQLStorageProvider implements StorageProvider {
             case "mysql":
                 this.db = knex({
                     client: "mysql",
-                    connection: { ...connectOpt, charset: "utf8mb4" },
+                    connection: { ...connectOption, charset: "utf8mb4" },
                     useNullAsDefault: true,
                 });
                 break;
             case "pg":
                 this.db = knex({
                     client: "pg",
-                    connection: { ...connectOpt, charset: "utf8mb4" },
+                    connection: { ...connectOption, charset: "utf8mb4" },
                     useNullAsDefault: true,
                     searchPath: [this.qid, "public"],
                 });
