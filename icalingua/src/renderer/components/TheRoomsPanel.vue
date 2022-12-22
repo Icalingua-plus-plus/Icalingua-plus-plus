@@ -7,8 +7,8 @@
                 </a>
             </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
-            <span class="more el-icon-user icon-button" @click="$emit('show-contacts')"></span>
-            <span class="more el-icon-delete icon-button" @click="clearRooms"></span>
+            <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
+            <span class="more el-icon-delete icon-button" @click="clearRooms" title="清理会话"></span>
         </div>
         <div class="content">
             <RoomEntry
