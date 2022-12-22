@@ -175,6 +175,47 @@ showmsgbox.prototype = {
 var msgbox = new showmsgbox();
 var currentDir = "";
 
+String.prototype.strLen = function() {
+    var len = 0;
+    for (var i = 0; i < this.length; i++) {
+        if (this.charCodeAt(i) > 255 || this.charCodeAt(i) < 0) len += 2; else len ++;
+    }
+    return len;
+}
+//将字符串拆成字符，并存到数组中
+String.prototype.strToChars = function(){
+    var chars = new Array();
+    for (var i = 0; i < this.length; i++){
+        chars[i] = [this.substr(i, 1), this.isCHS(i)];
+    }
+    String.prototype.charsArray = chars;
+    return chars;
+}
+//判断某个字符是否是汉字
+String.prototype.isCHS = function(i){
+    if (this.charCodeAt(i) > 255 || this.charCodeAt(i) < 0) 
+        return true;
+    else
+        return false;
+}
+//截取字符串（从start字节到end字节）
+String.prototype.subCHString = function(start, end){
+    var len = 0;
+    var str = "";
+    this.strToChars();
+    for (var i = 0; i < this.length; i++) {
+        if(this.charsArray[i][1])
+            len += 2;
+        else
+            len++;
+        if (end < len)
+            return str;
+        else if (start < len)
+            str += this.charsArray[i][0];
+    }
+    return str;
+}
+
 var D = Object.defineProperty;
 var S = (t, e, r) =>
     e in t
@@ -386,7 +427,7 @@ var Q = ({ socket: t }) => {
                 dataIndex: "user_name",
                 key: "userName",
                 render(u) {
-                    return u;
+                    return i("li", { children: String(u).subCHString(0, 16) + "...", title: u });
                 },
                 sorter: (u, a) => u.user_name.localeCompare(a.user_name)
             },
