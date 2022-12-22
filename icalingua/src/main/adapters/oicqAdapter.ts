@@ -1093,6 +1093,9 @@ const adapter: OicqAdapter = {
     async getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
         return (await bot.getGroupMemberInfo(group, member, noCache)).data
     },
+    async _getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
+        return (await bot.getGroupMemberInfo(group, member, noCache)).data
+    },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
         let iterF: IteratorResult<FriendInfo, FriendInfo> = friends.next()

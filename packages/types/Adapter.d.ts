@@ -47,6 +47,8 @@ export default interface Adapter {
 
     getGroupMemberInfo(group: number, member: number, noCache?: boolean): Promise<MemberInfo>
 
+    _getGroupMemberInfo(group: number, member: number, noCache?: boolean): Promise<MemberInfo>
+
     sendMessage(data: SendMessageParams): any
 
     createBot(form: LoginForm): any

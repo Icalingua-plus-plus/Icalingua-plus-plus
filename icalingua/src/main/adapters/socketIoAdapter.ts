@@ -332,6 +332,9 @@ const adapter: Adapter = {
     getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
         return new Promise((resolve) => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
+    _getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
+        return new Promise((resolve) => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
+    },
     sendOnlineData() {
         if (!cachedOnlineData) return
         let sysInfo = getBuildInfo()
