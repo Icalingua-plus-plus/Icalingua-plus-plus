@@ -378,7 +378,17 @@ var Q = ({ socket: t }) => {
                             ]
                         })
                         : i("a", { onClick: () => k(a.fid), onContextMenu: (e) => fileContextMenu(a.fid, u, e), children: u });
-                }
+                },
+                sorter: (u, a) => u.name.localeCompare(a.name)
+            },
+            {
+                title: "创建者",
+                dataIndex: "user_name",
+                key: "userName",
+                render(u) {
+                    return u;
+                },
+                sorter: (u, a) => u.user_name.localeCompare(a.user_name)
             },
             {
                 title: "大小",
@@ -386,7 +396,8 @@ var Q = ({ socket: t }) => {
                 key: "size",
                 render(u, a) {
                     return "is_dir" in a ? `${a.file_count} 项` : H(u);
-                }
+                },
+                sorter: (u, a) => u.size - a.size
             },
             {
                 title: "创建时间",
@@ -394,7 +405,8 @@ var Q = ({ socket: t }) => {
                 key: "createTime",
                 render(u) {
                     return J("yyyy/M/d hh:mm:ss", new Date(u * 1e3));
-                }
+                },
+                sorter: (u, a) => u.create_time - a.create_time
             }
         ];
     return (

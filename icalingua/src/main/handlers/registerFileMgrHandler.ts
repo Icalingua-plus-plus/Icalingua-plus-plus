@@ -7,6 +7,10 @@ export default (io: Server, socket: Socket, gin: number) => {
     socket.on('ls', async (fid: string, start: number, cb) => {
         //列出目录中的文件
         const res = await gfs.ls(fid, start)
+        for (let i = 0; i < res.length; i++) {
+            const member = await adapter.getGroupMemberInfo(gin, res[i].user_id, false)
+            res[i]['user_name'] = (member.card || member.nickname) + '(' + res[i].user_id + ')'
+        }
         cb(res)
     })
 
