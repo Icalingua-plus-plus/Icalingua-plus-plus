@@ -494,9 +494,9 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                (data.operator_id === data.user_id
-                    ? ' 离开了本群'
-                    : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+                  (data.operator_id === data.user_id
+                      ? ' 离开了本群'
+                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member
                 ? data.member.card
                     ? data.member.card
@@ -677,8 +677,9 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${transferredUser.card || transferredUser.nickname
-            }`
+        let content = `${operator.card || operator.nickname} 将群转让给了 ${
+            transferredUser.card || transferredUser.nickname
+        }`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -1442,7 +1443,7 @@ const adapter: OicqAdapter = {
                         const content = base64decode(jsonObj.meta.mannounce.text)
                         room.lastMessage.content = `[${title}]`
                         message.content = title + '\n\n' + content
-                    } catch (err) { }
+                    } catch (err) {}
                 }
                 const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                 const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
@@ -1459,7 +1460,7 @@ const adapter: OicqAdapter = {
                     try {
                         const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
                         appurl = meta.qqdocurl
-                    } catch (e) { }
+                    } catch (e) {}
                 }
                 if (appurl) {
                     room.lastMessage.content = ''
@@ -1478,7 +1479,7 @@ const adapter: OicqAdapter = {
                             url: previewUrl,
                         }
                         message.files.push(message.file)
-                    } catch (e) { }
+                    } catch (e) {}
 
                     room.lastMessage.content += appurl
                     message.content += appurl
