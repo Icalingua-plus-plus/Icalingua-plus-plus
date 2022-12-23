@@ -7,6 +7,8 @@ import sendImgTokenManager from '../utils/sendImgTokenManager'
 export default (io: Server, socket: Socket) => {
     socket.on('addRoom', adapter.addRoom)
     socket.on('updateRoom', adapter.updateRoom)
+    socket.on('addChatGroup', adapter.addChatGroup)
+    socket.on('updateChatGroup', adapter.updateChatGroup)
     socket.on('deleteMessage', adapter.deleteMessage)
     socket.on('hideMessage', adapter.hideMessage)
     socket.on('fetchHistory', adapter.fetchHistory)

@@ -1,6 +1,7 @@
 import IgnoreChatInfo from "@icalingua/types/IgnoreChatInfo";
 import Message from "@icalingua/types/Message";
 import Room from "@icalingua/types/Room";
+import ChatGroup from "@icalingua/types/ChatGroup";
 import StorageProvider from "@icalingua/types/StorageProvider";
 import { Db, MongoClient } from "mongodb";
 
@@ -23,6 +24,17 @@ export default class MongoStorageProvider implements StorageProvider {
             return await this.mdb
                 .collection<Room>("rooms")
                 .find({}, { sort: [["utime", -1]] })
+                .toArray();
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async getAllChatGroups(): Promise<ChatGroup[]> {
+        try {
+            return await this.mdb
+                .collection<ChatGroup>("chatGroups")
+                .find({}, { sort: [["index", 1]] })
                 .toArray();
         } catch (e) {
             return [];
@@ -55,6 +67,10 @@ export default class MongoStorageProvider implements StorageProvider {
             background: true,
             unique: true,
         });
+        await this.mdb.collection("chatGroups").createIndex("name", {
+            background: true,
+            unique: true,
+        });
     }
 
     async addMessage(roomId: number, message: Message): Promise<any> {
@@ -68,6 +84,12 @@ export default class MongoStorageProvider implements StorageProvider {
     async addRoom(room: Room): Promise<any> {
         try {
             return await this.mdb.collection("rooms").insertOne(room);
+        } catch (e) {}
+    }
+
+    async addChatGroup(chatGroup: ChatGroup): Promise<any> {
+        try {
+            return await this.mdb.collection("chatGroups").insertOne(chatGroup);
         } catch (e) {}
     }
 
@@ -123,6 +145,22 @@ export default class MongoStorageProvider implements StorageProvider {
             return await this.mdb
                 .collection("rooms")
                 .updateOne({ roomId: roomId }, { $set: room });
+        } catch (e) {}
+    }
+
+    async removeChatGroup(name: string): Promise<any> {
+        try {
+            return await this.mdb
+                .collection("chatGroups")
+                .findOneAndDelete({ name: name });
+        } catch (e) {}
+    }
+
+    async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any> {
+        try {
+            return await this.mdb
+                .collection("chatGroups")
+                .updateOne({ name: name }, { $set: chatGroup });
         } catch (e) {}
     }
 

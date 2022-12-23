@@ -73,6 +73,7 @@ import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import { getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow } from '../utils/windowManager'
+import ChatGroup from '@icalingua/types/ChatGroup'
 
 let bot: Client
 let storage: StorageProvider
@@ -1136,6 +1137,7 @@ const adapter: OicqAdapter = {
             updateCheck: getConfig().updateCheck,
         })
         ui.setAllRooms(await storage.getAllRooms())
+        ui.setAllChatGroups(await storage.getAllChatGroups())
         if (!updateInfo) {
             checkUpdate().then(adapter.sendOnlineData)
         }
@@ -1581,6 +1583,9 @@ const adapter: OicqAdapter = {
     updateRoom(roomId: number, room: object) {
         return storage.updateRoom(roomId, room)
     },
+    updateChatGroup(name: string, chatGroup: ChatGroup) {
+        return storage.updateChatGroup(name, chatGroup)
+    },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
@@ -1590,6 +1595,9 @@ const adapter: OicqAdapter = {
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
+    },
+    addChatGroup(chatGroup: ChatGroup) {
+        return storage.addChatGroup(chatGroup)
     },
     async getForwardMsg(resId: string, fileName?: string): Promise<Message[]> {
         const history = await bot.getForwardMsg(resId, fileName)
@@ -1675,6 +1683,10 @@ const adapter: OicqAdapter = {
         await storage.removeRoom(roomId)
         ui.setAllRooms(await storage.getAllRooms())
         ui.chroom(0)
+    },
+    async removeChatGroup(name: string) {
+        await storage.removeChatGroup(name)
+        ui.setAllChatGroups(await storage.getAllChatGroups())
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)

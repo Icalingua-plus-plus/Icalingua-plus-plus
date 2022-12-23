@@ -31,6 +31,7 @@ import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow } from '../utils/windowManager'
+import ChatGroup from '@icalingua/types/ChatGroup'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -43,6 +44,7 @@ let currentLoadedMessagesCount = 0
 let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
 let rooms: Room[] = []
+let chatGroups: ChatGroup[] = []
 let loggedIn = false
 let account: LoginForm
 
@@ -109,6 +111,10 @@ const attachSocketEvents = () => {
     socket.on('setAllRooms', (serverRooms: Room[]) => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
+    })
+    socket.on('setAllChatGroups', (serverChatGroups: ChatGroup[]) => {
+        chatGroups = serverChatGroups
+        ui.setAllChatGroups(chatGroups)
     })
     socket.on('startForward', ui.startForward)
     socket.on('closeLoading', ui.closeLoading)
@@ -352,6 +358,7 @@ const adapter: Adapter = {
         cachedOnlineData.sysInfo = sysInfo
         ui.sendOnlineData(cachedOnlineData)
         ui.setAllRooms(rooms)
+        ui.setAllChatGroups(chatGroups)
         if (!updateInfo) {
             checkUpdate().then(adapter.sendOnlineData)
         }
@@ -373,6 +380,10 @@ const adapter: Adapter = {
     addRoom(room: Room) {
         rooms.unshift(room)
         socket.emit('addRoom', room)
+    },
+    addChatGroup(chatGroup: ChatGroup) {
+        chatGroups.unshift(chatGroup)
+        socket.emit('addChatGroup', chatGroup)
     },
     clearCurrentRoomUnread() {
         if (!ui.getSelectedRoomId()) return
@@ -509,6 +520,9 @@ const adapter: Adapter = {
         socket.emit('removeChat', roomId)
         ui.chroom(0)
     },
+    removeChatGroup(name: string) {
+        socket.emit('removeChatGroup', name)
+    },
     revealMessage(roomId: number, messageId: string | number) {
         socket.emit('revealMessage', roomId, messageId)
     },
@@ -567,6 +581,18 @@ const adapter: Adapter = {
             errorHandler(e, true)
         }
         socket.emit('updateRoom', roomId, room)
+    },
+    updateChatGroup(name: string, chatGroup: ChatGroup) {
+        try {
+            Object.assign(
+                chatGroups.find((e) => e.name === name),
+                chatGroup,
+            )
+        } catch (e) {
+            errorHandler(e, true)
+        }
+        // TODO
+        socket.emit('updateChatGroup', name, chatGroup)
     },
     getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
         return new Promise((resolve, reject) => {

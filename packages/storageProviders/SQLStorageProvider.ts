@@ -5,6 +5,7 @@ import path from "path";
 import IgnoreChatInfo from "@icalingua/types/IgnoreChatInfo";
 import Message from "@icalingua/types/Message";
 import Room from "@icalingua/types/Room";
+import ChatGroup from "@icalingua/types/ChatGroup";
 import { DBVersion, MessageInSQLDB } from "@icalingua/types/SQLTableTypes";
 import StorageProvider from "@icalingua/types/StorageProvider";
 import upg0to1 from "./SQLUpgradeScript/0to1";
@@ -176,6 +177,35 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    /** 私有方法，将 icalingua 的 chatGroup 转换成适合放在数据库里的格式 */
+    private chatGroupConToDB(chatGroup: Partial<ChatGroup>): Record<string, any> {
+        try {
+            if (chatGroup)
+                return {
+                    ...chatGroup,
+                    rooms: JSON.stringify(chatGroup.rooms),
+                };
+            return null;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /** 私有方法，将 chatGroup 从数据库内格式转换成 icalingua 使用的格式 */
+    private chatGroupConFromDB(chatGroup: Record<string, any>): ChatGroup {
+        try {
+            if (chatGroup) {
+                return {
+                    ...chatGroup,
+                    rooms: JSON.parse(chatGroup.rooms),
+                } as ChatGroup;
+            }
+            return null;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     /** 私有方法，用来根据当前数据库版本对数据库进行升级，从而在 Icalingua 使用的数据类型发生改变时，数据库可以存放下它们 */
     private async updateDB(dbVersion: number) {
         console.log("info", "正在升级数据库");
@@ -313,6 +343,20 @@ export default class SQLStorageProvider implements StorageProvider {
                 });
             }
 
+            // 建表存放聊天分组
+            const hasChatGroupsTable = await this.db.schema.hasTable(
+                `chatGroups`
+            );
+            if (!hasChatGroupsTable) {
+                await this.db.schema.createTable(`chatGroups`, (table) => {
+                    if (this.type === "mysql")
+                        table.collate("utf8mb4_unicode_ci");
+                    table.string("name").unique().primary();
+                    table.bigInteger("index");
+                    table.text("rooms");
+                });
+            }
+
             // 获取数据库版本
             const dbVersion = await this.db<DBVersion>(`dbVersion`).select(
                 "dbVersion"
@@ -394,6 +438,63 @@ export default class SQLStorageProvider implements StorageProvider {
                 .where("roomId", "=", roomId)
                 .select("*");
             return this.roomConFromDB(room[0]);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `addChatGroup` 方法，
+     * 对应 chatGroup 的“增”操作。
+     *
+     * 在“编辑分组”等需要新增聊天分组时被调用。
+     */
+    async addChatGroup(chatGroup: ChatGroup): Promise<any> {
+        try {
+            return await this.db(`chatGroups`).insert(this.chatGroupConToDB(chatGroup));
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `updateChatGroup` 方法，
+     * 对应 chatGroup 的“改”操作。
+     *
+     * 在“编辑分组”等改变聊天分组时调用。
+     */
+    async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any> {
+        try {
+            await this.db(`chatGroups`)
+                .where("name", "=", name)
+                .update(this.chatGroupConToDB(chatGroup));
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `removeChatGroup` 方法，
+     * 对应 chatGroup 的“删”操作。
+     *
+     * 在删除聊天时调用。
+     */
+    async removeChatGroup(name: string): Promise<any> {
+        try {
+            await this.db(`chatGroups`).where("name", "=", name).delete();
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `getAllChatGroups` 方法，
+     * 对应 chatGroup 的“查所有”操作。
+     *
+     * 在登录成功后调用。
+     */
+    async getAllChatGroups(): Promise<ChatGroup[]> {
+        try {
+            const chatGroups = await this.db<Room>(`chatGroups`)
+                .select("*")
+                .orderBy("index", "asc");
+            return chatGroups.map((chatGroup) => this.chatGroupConFromDB(chatGroup));
         } catch (e) {
             throw e;
         }

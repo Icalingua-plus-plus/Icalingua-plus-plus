@@ -2,6 +2,50 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
+            <el-aside width="65px" style="display: flex; flex-direction: column;">
+                <div class="head">
+                    <el-popover
+                        placement="right-end"
+                        :title="username"
+                        trigger="hover"
+                        :content="`${account}`"
+                    >
+                        <a slot="reference" @click="chroom(account)" style="cursor: pointer">
+                            <el-avatar :src="getAvatarUrl(account)" />
+                        </a>
+                    </el-popover>
+                </div>
+                <!-- chat groups -->
+                <div class="chat-group" style="overflow: overlay;" @mousedown="handleMouseDown">
+                    <SideBarIcon
+                        icon="el-icon-chat-square"
+                        name="All Chats"
+                        :selected="selectedChatGroup === 'chats'"
+                        @click="selectedChatGroup = 'chats'"
+                    />
+                    <SideBarIcon
+                        v-for="chatGroup in chatGroups"
+                        :key="chatGroup.name"
+                        icon="el-icon-chat-square"
+                        :name="chatGroup.name"
+                        :selected="(selectedChatGroup === chatGroup.name)"
+                        @click="selectedChatGroup = chatGroup.name"
+                        @click-middle="removeChatGroup(chatGroup.name)"
+                        @click-right="updateChatGroup(chatGroup.name)"
+                    />
+                    <SideBarIcon
+                        icon="el-icon-edit-outline"
+                        name="Edit"
+                        @click="$message({ type: 'info', message: 'Coming soon... 目前中键删除对应分组，右键增加/删除当前聊天到分组' })"
+                    />
+                    <SideBarIcon
+                        icon="el-icon-plus"
+                        name="Add"
+                        @click="editChatGroups"
+                    />
+                    <div style="height: 10px;"></div>
+                </div>
+            </el-aside>
             <div
                 class="panel rooms-panel"
                 :class="{ 'avatar-only': roomPanelAvatarOnly }"
@@ -9,11 +53,13 @@
             >
                 <TheRoomsPanel
                     ref="roomsPanel"
-                    :rooms="rooms"
+                    :rooms="selectedChatGroup !== 'chats' ? visibleRooms : rooms"
                     :selected="selectedRoom"
                     :priority="priority"
                     :account="account"
                     :username="username"
+                    :selectedChatGroup="selectedChatGroup"
+                    :allRooms="rooms"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
                 />
@@ -194,6 +240,9 @@ export default {
             forwardShown: false,
             lastUnreadCount: 0,
             lastUnreadCheck: 0,
+            selectedChatGroup: 'chats',
+            chatGroups: [],
+            visibleRooms: [],
         }
     },
     async created() {
@@ -331,7 +380,7 @@ export default {
                 } else {
                     fs.rename(filename, path.join(STORE_PATH, 'stickers', path.basename(filename)), () => this.$message('移动成功'))
                 }
-            });
+            })
         })
         ipcRenderer.on('sendDice', (_) => {
             this.$prompt('请输入骰子点数，留空随机', '提示', {
@@ -348,7 +397,7 @@ export default {
                     room: this.selectedRoom,
                     messageType: 'dice',
                 })
-            });
+            })
         })
         ipcRenderer.on('sendRps', (_) => {
             this.$prompt('请输入对应数字，1石头、2剪刀、3布、留空随机', '提示', {
@@ -365,7 +414,7 @@ export default {
                     room: this.selectedRoom,
                     messageType: 'rps',
                 })
-            });
+            })
         })
         ipcRenderer.on('updateRoom', (_, room) => {
             const oldRooms = this.rooms.filter(item => item.roomId !== room.roomId)
@@ -437,6 +486,7 @@ export default {
         })
         ipcRenderer.on('updatePriority', (_, p) => this.priority = p)
         ipcRenderer.on('setAllRooms', (_, p) => this.rooms = p)
+        ipcRenderer.on('setAllChatGroups', (_, p) => this.chatGroups = p || [])
         ipcRenderer.on('setMessages', (_, p) => {
             this.messages = p
             this.messagesLoaded = false
@@ -468,7 +518,7 @@ Chromium ${process.versions.chrome}` : ''
             if (!roomId) roomId = room.roomId
             if (file) {
                 if (file.type.includes('image')) {
-                    const crypto = require('crypto');
+                    const crypto = require('crypto')
                     const buffer = Buffer.from(await file.blob.arrayBuffer())
                     const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
                     const b64 = buffer.toString('base64')
@@ -622,6 +672,81 @@ Chromium ${process.versions.chrome}` : ''
         chooseForwardTarget() {
             this.forwardShown = true
         },
+        editChatGroups() {
+            this.$prompt('请输入新聊天分组名字', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                inputValidator: (value) => {
+                    if (value.length > 10) {
+                        return '聊天分组名字不能超过10个字符'
+                    }
+                },
+            }).then(({ value }) => {
+                if (!value) {
+                    this.$message({
+                        type: 'error',
+                        message: '请输入新聊天分组名字',
+                    })
+                    return
+                }
+                if (this.chatGroups.find(e => e.name === value)) {
+                    this.$message({
+                        type: 'error',
+                        message: '聊天分组名字重复',
+                    })
+                    return
+                }
+                ipc.addChatGroup({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
+                this.chatGroups.push({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
+            })
+        },
+        removeChatGroup(group) {
+            this.$confirm(`此操作将永久删除 ${group} 聊天分组, 是否继续?`, '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }).then(() => {
+                ipc.removeChatGroup(group)
+                this.chatGroups = this.chatGroups.filter(e => e.name !== group)
+                if (this.selectedChatGroup === group) this.selectedChatGroup = 'chats'
+            }).catch()
+        },
+        updateChatGroup(group) {
+            if (this.selectedRoomId === 0) return
+            let edited
+            for (let i in this.chatGroups) {
+                if (this.chatGroups[i].name === group) {
+                    if (this.chatGroups[i].rooms.includes(this.selectedRoomId)) {
+                        this.chatGroups[i].rooms = this.chatGroups[i].rooms.filter(e => e !== this.selectedRoomId)
+                        this.$message({
+                            type: 'success',
+                            message: `已从分组 ${group} 中移除 ${this.selectedRoom.roomName}`,
+                        })
+                    }
+                    else {
+                        this.chatGroups[i].rooms.push(this.selectedRoomId)
+                        this.$message({
+                            type: 'success',
+                            message: `已将 ${this.selectedRoom.roomName} 加入分组 ${group}`,
+                        })
+                    }
+                    edited = this.chatGroups[i]
+                    break
+                }
+            }
+            if (this.selectedChatGroup === group) {
+                this.visibleRooms = this.rooms.filter(e => {
+                    return edited.rooms.includes(e.roomId)
+                })
+            }
+            ipc.updateChatGroup(group, edited)
+        },
+        handleMouseDown(e) {
+            if (e.button === 1) {
+                e.preventDefault()
+            }
+        },
+        getAvatarUrl,
     },
     computed: {
         cssVars() {
@@ -643,7 +768,33 @@ Chromium ${process.versions.chrome}` : ''
                     this.lastUnreadCount = 0
                 }, 30000)
             }
-        }
+        },
+        selectedChatGroup(n, o) {
+            if (n === 'chats') {
+                this.visibleRooms = []
+            } else {
+                console.log('selectedChatGroup', n)
+                // 查找chatGroups对应name的群
+                const group = this.chatGroups.find(g => g.name === n)
+                console.log('group', group)
+                this.visibleRooms = this.rooms.filter(e => {
+                    if (!group) return false
+                    // group.rooms中是否有该群
+                    return group.rooms.includes(e.roomId)
+                })
+            }
+        },
+        rooms(n) {
+            if (this.selectedChatGroup === 'chats') {
+                this.visibleRooms = []
+            }
+            const group = this.chatGroups.find(g => g.name === this.selectedChatGroup)
+                this.visibleRooms = this.rooms.filter(e => {
+                    if (!group) return false
+                    // group.rooms中是否有该群
+                    return group.rooms.includes(e.roomId)
+                })
+        },
     }
 }
 </script>

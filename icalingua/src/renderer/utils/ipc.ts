@@ -1,5 +1,6 @@
 import Aria2Config from '@icalingua/types/Aria2Config'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
+import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
@@ -73,6 +74,9 @@ const ipc = {
     async updateMessage(roomId: number, messageId: string, message: object) {
         return await ipcRenderer.invoke('updateMessage', roomId, messageId, message)
     },
+    updateChatGroup(name: string, chatGroup: ChatGroup) {
+        ipcRenderer.send('updateChatGroup', name, chatGroup)
+    },
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
     },
@@ -124,6 +128,9 @@ const ipc = {
     addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)
     },
+    addChatGroup(chatGroup: ChatGroup) {
+        ipcRenderer.send('addChatGroup', chatGroup)
+    },
     openForward(resId: string, fileName?: string) {
         ipcRenderer.send('openForward', resId, fileName)
     },
@@ -138,6 +145,9 @@ const ipc = {
     },
     removeChat(roomId: number) {
         ipcRenderer.send('removeChat', roomId)
+    },
+    removeChatGroup(name: string) {
+        ipcRenderer.send('removeChatGroup', name)
     },
     removeIgnoredChat(roomId: number) {
         ipcRenderer.send('removeIgnoredChat', roomId)

@@ -1,11 +1,6 @@
 <template>
     <div class="root">
         <div class="head">
-            <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`">
-                <a slot="reference" @click="$emit('chroom', account)" style="cursor: pointer">
-                    <el-avatar :src="getAvatarUrl(account)" />
-                </a>
-            </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
             <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
             <span
@@ -59,6 +54,7 @@ export default {
         priority: Number,
         account: Number,
         username: String,
+        allRooms: Array,
     },
     data() {
         return {
@@ -71,10 +67,10 @@ export default {
             ipc.popupRoomMenu(room.roomId)
         },
         async clearRooms() {
-            console.log(this.rooms)
+            console.log(this.allRooms)
             console.log(this.clearRoomsBehavior)
             const now = Date.now()
-            this.rooms.forEach((r) => {
+            this.allRooms.forEach((r) => {
                 if (
                     (this.clearRoomsBehavior === '1HourAgo' && now - r.utime > 3600000) ||
                     (this.clearRoomsBehavior === '1DayAgo' && now - r.utime > 86400000) ||

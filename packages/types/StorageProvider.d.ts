@@ -1,6 +1,7 @@
 import Room from './Room'
 import Message from './Message'
 import IgnoreChatInfo from './IgnoreChatInfo'
+import ChatGroup from './ChatGroup'
 
 export default interface StorageProvider {
     connect(): Promise<void>
@@ -40,4 +41,12 @@ export default interface StorageProvider {
     addIgnoredChat(info: IgnoreChatInfo): Promise<any>
 
     removeIgnoredChat(roomId: number): Promise<any>
+
+    addChatGroup(chatGroup: ChatGroup): Promise<any>
+
+    removeChatGroup(name: string): Promise<any>
+
+    updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any>
+
+    getAllChatGroups(): Promise<ChatGroup[]>
 }

@@ -16,6 +16,7 @@ import { getConfig } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
 import getFriends from '../utils/getFriends'
 import * as themes from '../utils/themes'
+import ChatGroup from '@icalingua/types/ChatGroup'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -138,11 +139,13 @@ ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset:
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
 ipcMain.on('reLogin', adapter.reLogin)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => adapter.updateRoom(roomId, room))
+ipcMain.on('updateChatGroup', (_, name: string, chatGroup: ChatGroup) => adapter.updateChatGroup(name, chatGroup))
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     adapter.updateMessage(roomId, messageId, message),
 )
 ipcMain.on('sendGroupPoke', (_, gin, uin) => adapter.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => adapter.addRoom(room))
+ipcMain.on('addChatGroup', (_, chatGroup) => adapter.addChatGroup(chatGroup))
 ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
     const messages = await adapter.getForwardMsg(resId, fileName)
     const size = screen.getPrimaryDisplay().size
@@ -175,6 +178,7 @@ ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)
 ipcMain.on('removeChat', (_, roomId) => adapter.removeChat(roomId))
+ipcMain.on('removeChatGroup', (_, name) => adapter.removeChatGroup(name))
 ipcMain.on('removeIgnoredChat', (_, roomId) => adapter.removeIgnoredChat(roomId))
 ipcMain.on('stopFetchMessage', () => adapter.stopFetchingHistory())
 ipcMain.handle('getRoamingStamp', async () => await adapter.getRoamingStamp())

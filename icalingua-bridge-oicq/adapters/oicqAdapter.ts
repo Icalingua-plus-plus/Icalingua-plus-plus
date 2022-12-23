@@ -59,6 +59,7 @@ import getImageUrlByMd5 from '../utils/getImageUrlByMd5'
 import getSysInfo from '../utils/getSysInfo'
 import processMessage from '../utils/processMessage'
 import sleep from '../utils/sleep'
+import ChatGroup from '@icalingua/types/ChatGroup'
 
 let bot: Client
 let storage: StorageProvider
@@ -1386,6 +1387,9 @@ const adapter = {
     updateRoom(roomId: number, room: object) {
         return storage.updateRoom(roomId, room)
     },
+    updateChatGroup(name: string, chatGroup: ChatGroup) {
+        return storage.updateChatGroup(name, chatGroup)
+    },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
@@ -1395,6 +1399,9 @@ const adapter = {
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
+    },
+    addChatGroup(chatGroup: ChatGroup) {
+        return storage.addChatGroup(chatGroup)
     },
     async getForwardMsg(resId: string, fileName: string, resolve) {
         const history = await bot.getForwardMsg(resId, fileName || 'MultiMsg')
@@ -1469,6 +1476,10 @@ const adapter = {
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
         clients.setAllRooms(await storage.getAllRooms())
+    },
+    async removeChatGroup(name: string) {
+        await storage.removeChatGroup(name)
+        clients.setAllChatGroups(await storage.getAllChatGroups())
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)
@@ -1597,6 +1608,7 @@ const adapter = {
             sysInfo: getSysInfo(),
         })
         clients.setAllRooms(await storage.getAllRooms())
+        clients.setAllChatGroups(await storage.getAllChatGroups())
     },
     async getRoamingStamp(no_cache: boolean | undefined, cb) {
         const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data

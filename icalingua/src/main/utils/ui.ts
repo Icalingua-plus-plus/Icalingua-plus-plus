@@ -2,6 +2,7 @@ import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
 import OnlineData from '@icalingua/types/OnlineData'
 import Room from '@icalingua/types/Room'
+import ChatGroup from '@icalingua/types/ChatGroup'
 import { ipcMain } from 'electron'
 import { updateAppMenu } from '../ipc/menuManager'
 import { getConfig } from './configManager'
@@ -109,6 +110,9 @@ export default {
     },
     setAllRooms(rooms: Room[]) {
         sendToMainWindow('setAllRooms', rooms)
+    },
+    setAllChatGroups(chatGroups: ChatGroup[]) {
+        sendToMainWindow('setAllChatGroups', chatGroups)
     },
     setMessages(messages: Message[]) {
         sendToMainWindow('setMessages', messages)

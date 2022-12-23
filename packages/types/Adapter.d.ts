@@ -7,6 +7,7 @@ import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
 import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
+import ChatGroup from './ChatGroup'
 
 type CookiesDomain =
     | 'tenpay.com'
@@ -67,11 +68,15 @@ export default interface Adapter {
 
     updateRoom(roomId: number, room: object): any
 
+    updateChatGroup(name: string, chatGroup: ChatGroup): any
+
     updateMessage(roomId: number, messageId: string, message: object): any
 
     sendGroupPoke(gin: number, uin: number): any
 
     addRoom(room: Room): any
+
+    addChatGroup(chatGroup: ChatGroup): any
 
     getForwardMsg(resId: string, fileName?: string): Promise<Message[]>
 
@@ -108,6 +113,8 @@ export default interface Adapter {
     ignoreChat(data: IgnoreChatInfo): any
 
     removeChat(roomId: number): any
+
+    removeChatGroup(name: string): any
 
     deleteMessage(roomId: number, messageId: string): any
 

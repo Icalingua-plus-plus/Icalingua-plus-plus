@@ -3,6 +3,7 @@ import { compact } from "lodash";
 import IgnoreChatInfo from "@icalingua/types/IgnoreChatInfo";
 import Message from "@icalingua/types/Message";
 import Room from "@icalingua/types/Room";
+import ChatGroup from "@icalingua/types/ChatGroup";
 import StorageProvider from "@icalingua/types/StorageProvider";
 
 export default class RedisStorageProvider implements StorageProvider {
@@ -166,6 +167,77 @@ export default class RedisStorageProvider implements StorageProvider {
         });
         const rooms = (await Promise.all(roomsPAry)) as Room[];
         return rooms;
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `updateChatGroup` 方法，
+     * 对应 chatGroup 的“改”操作。
+     *
+     * 在“收到新消息”等引起房间信息变化的事件时调用。
+     */
+    async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<void> {
+        const chatGroupInDB = JSON.parse(
+            await this.redis.hget(`${this.qid}:chatGroups:rooms`, `${name}`)
+        );
+        const chatGroupToUpdate = { ...chatGroupInDB, ...chatGroup };
+        await this.redis.hset(
+            `${this.qid}:chatGroups:rooms`,
+            `${name}`,
+            JSON.stringify(chatGroupToUpdate)
+        );
+        await this.redis.zadd(
+            `${this.qid}:rooms:keyList`,
+            chatGroupToUpdate.index,
+            `${name}`
+        );
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
+     * 对应 room 的“增”操作。
+     *
+     * 在“新房间收到新消息”等需要新增房间的事件时被调用。
+     */
+    async addChatGroup(chatGroup: ChatGroup): Promise<void> {
+        await this.redis.hset(
+            `${this.qid}:chatGroups:rooms`,
+            `${chatGroup.name}`,
+            JSON.stringify(chatGroup)
+        );
+        if (chatGroup.index)
+            await this.redis.zadd(
+                `${this.qid}:chatGroups:keyList`,
+                chatGroup.index,
+                `${chatGroup.name}`
+            );
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `removeRoom` 方法，
+     * 对应 room 的“删”操作。
+     *
+     * 在删除聊天时调用。
+     */
+    async removeChatGroup(name: string): Promise<void> {
+        await this.redis.hdel(`${this.qid}:chatGroups:rooms`, `${name}`);
+        await this.redis.zrem(`${this.qid}:chatGroups:keyList`, `${name}`);
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `getAllRooms` 方法，
+     * 对应 room 的“查所有”操作。
+     *
+     * 在登录成功后调用。
+     */
+    async getAllChatGroups(): Promise<ChatGroup[]> {
+        const chatGroupsKeys = await this.redis.zrevrange(
+            `${this.qid}:chatGroups:keyList`,
+            0,
+            -1
+        );
+        const chatGroupsPAry = chatGroupsKeys.map(async (key) => {
+            const chatGroup = await this.redis.hget(`${this.qid}:chatGroups:rooms`, key);
+            const pChatGroup = JSON.parse(chatGroup) as ChatGroup;
+            return pChatGroup;
+        });
+        const chatGroups = (await Promise.all(chatGroupsPAry)) as ChatGroup[];
+        return chatGroups;
     }
 
     /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，

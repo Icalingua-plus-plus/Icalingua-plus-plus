@@ -2,6 +2,7 @@ import Message from '@icalingua/types/Message'
 import OnlineData from '@icalingua/types/OnlineData'
 import Room from '@icalingua/types/Room'
 import { broadcast } from '../providers/socketIoProvider'
+import ChatGroup from '@icalingua/types/ChatGroup'
 
 export default {
     updateRoom(room: Room) {
@@ -36,6 +37,9 @@ export default {
     },
     setAllRooms(rooms: Room[]) {
         broadcast('setAllRooms', rooms)
+    },
+    setAllChatGroups(chatGroups: ChatGroup[]) {
+        broadcast('setAllChatGroups', chatGroups)
     },
     closeLoading() {
         broadcast('closeLoading')
