@@ -288,7 +288,7 @@ export default {
             else if (e.key === 'Tab') {
                 let unreadRoom
                 for (let i = 5; i > 0; i--) {
-                    unreadRoom = this.rooms.find((e) => e.unreadCount && e.priority === i)
+                    unreadRoom = this.visibleRooms.find((e) => e.unreadCount && e.priority === i)
                     if (unreadRoom) break
                 }
                 if (unreadRoom) this.chroom(unreadRoom)
