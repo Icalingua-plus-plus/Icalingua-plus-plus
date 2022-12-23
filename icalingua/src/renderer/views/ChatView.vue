@@ -2,21 +2,16 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
-            <el-aside width="65px" style="display: flex; flex-direction: column;" v-if="!disableChatGroups">
+            <el-aside width="65px" style="display: flex; flex-direction: column" v-if="!disableChatGroups">
                 <div class="head">
-                    <el-popover
-                        placement="right-end"
-                        :title="username"
-                        trigger="hover"
-                        :content="`${account}`"
-                    >
+                    <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`">
                         <a slot="reference" @click="chroom(account)" style="cursor: pointer">
                             <el-avatar :src="getAvatarUrl(account)" />
                         </a>
                     </el-popover>
                 </div>
                 <!-- chat groups -->
-                <div class="chat-group" style="overflow: overlay;" @mousedown="handleMouseDown">
+                <div class="chat-group" style="overflow: overlay" @mousedown="handleMouseDown">
                     <SideBarIcon
                         icon="el-icon-chat-square"
                         name="All Chats"
@@ -28,7 +23,7 @@
                         :key="chatGroup.name"
                         icon="el-icon-chat-square"
                         :name="chatGroup.name"
-                        :selected="(selectedChatGroup === chatGroup.name)"
+                        :selected="selectedChatGroup === chatGroup.name"
                         @click="selectedChatGroup = chatGroup.name"
                         @click-middle="removeChatGroup(chatGroup.name)"
                         @click-right="updateChatGroup(chatGroup.name)"
@@ -36,14 +31,15 @@
                     <SideBarIcon
                         icon="el-icon-edit-outline"
                         name="Edit"
-                        @click="$message({ type: 'info', message: 'Coming soon... 目前中键删除对应分组，右键增加/删除当前聊天到分组' })"
+                        @click="
+                            $message({
+                                type: 'info',
+                                message: 'Coming soon... 目前中键删除对应分组，右键增加/删除当前聊天到分组',
+                            })
+                        "
                     />
-                    <SideBarIcon
-                        icon="el-icon-plus"
-                        name="Add"
-                        @click="editChatGroups"
-                    />
-                    <div style="height: 10px;"></div>
+                    <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
+                    <div style="height: 10px"></div>
                 </div>
             </el-aside>
             <div

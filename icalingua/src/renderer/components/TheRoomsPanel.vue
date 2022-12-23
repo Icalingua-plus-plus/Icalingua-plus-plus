@@ -1,7 +1,13 @@
 <template>
     <div class="root">
         <div class="head">
-            <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`" v-if="disableChatGroups">
+            <el-popover
+                placement="right-end"
+                :title="username"
+                trigger="hover"
+                :content="`${account}`"
+                v-if="disableChatGroups"
+            >
                 <a slot="reference" @click="$emit('chroom', account)" style="cursor: pointer">
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
