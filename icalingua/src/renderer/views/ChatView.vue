@@ -777,12 +777,9 @@ Chromium ${process.versions.chrome}` : ''
                 this.visibleRooms = []
             } else {
                 console.log('selectedChatGroup', n)
-                // 查找chatGroups对应name的群
                 const group = this.chatGroups.find(g => g.name === n)
-                console.log('group', group)
                 this.visibleRooms = this.rooms.filter(e => {
                     if (!group) return false
-                    // group.rooms中是否有该群
                     return group.rooms.includes(e.roomId)
                 })
             }
@@ -792,11 +789,10 @@ Chromium ${process.versions.chrome}` : ''
                 this.visibleRooms = []
             }
             const group = this.chatGroups.find(g => g.name === this.selectedChatGroup)
-                this.visibleRooms = this.rooms.filter(e => {
-                    if (!group) return false
-                    // group.rooms中是否有该群
-                    return group.rooms.includes(e.roomId)
-                })
+            this.visibleRooms = n.filter(e => {
+                if (!group) return false
+                return group.rooms.includes(e.roomId)
+            })
         },
     }
 }

@@ -474,7 +474,7 @@ export default class SQLStorageProvider implements StorageProvider {
     /** 实现 {@link StorageProvider} 类的 `removeChatGroup` 方法，
      * 对应 chatGroup 的“删”操作。
      *
-     * 在删除聊天时调用。
+     * 在删除聊天分组时调用。
      */
     async removeChatGroup(name: string): Promise<any> {
         try {
@@ -622,25 +622,6 @@ export default class SQLStorageProvider implements StorageProvider {
         roomId: number,
         messageId: string | number,
         message: Partial<Message>
-    ): Promise<any> {
-        try {
-            await this.db<Message>("messages")
-                .where("_id", "=", `${messageId}`)
-                .update(message);
-        } catch (e) {
-            throw e;
-        }
-    }
-
-    /** 实现 {@link StorageProvider} 类的 `updateURL` 方法，
-     * 是对 `msg${roomId}` 的“改”操作。
-     *
-     * 在“刷新视频地址”等需要改动消息内容的事件中被调用。
-     */
-    async updateURL(
-        roomId: number,
-        messageId: string | number,
-        message: Record<string, any>
     ): Promise<any> {
         try {
             await this.db<Message>("messages")

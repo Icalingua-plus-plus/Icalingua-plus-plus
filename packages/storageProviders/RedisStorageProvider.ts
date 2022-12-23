@@ -172,7 +172,7 @@ export default class RedisStorageProvider implements StorageProvider {
     /** 实现 {@link StorageProvider} 类的 `updateChatGroup` 方法，
      * 对应 chatGroup 的“改”操作。
      *
-     * 在“收到新消息”等引起房间信息变化的事件时调用。
+     * 在“编辑分组”等改变聊天分组时调用。
      */
     async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<void> {
         const chatGroupInDB = JSON.parse(
@@ -191,10 +191,10 @@ export default class RedisStorageProvider implements StorageProvider {
         );
     }
 
-    /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
-     * 对应 room 的“增”操作。
+    /** 实现 {@link StorageProvider} 类的 `addChatGroup` 方法，
+     * 对应 chatGroup 的“增”操作。
      *
-     * 在“新房间收到新消息”等需要新增房间的事件时被调用。
+     * 在“编辑分组”等需要新增聊天分组时被调用。
      */
     async addChatGroup(chatGroup: ChatGroup): Promise<void> {
         await this.redis.hset(
@@ -210,18 +210,18 @@ export default class RedisStorageProvider implements StorageProvider {
             );
     }
 
-    /** 实现 {@link StorageProvider} 类的 `removeRoom` 方法，
-     * 对应 room 的“删”操作。
+    /** 实现 {@link StorageProvider} 类的 `removeChatGroup` 方法，
+     * 对应 chatGroup 的“删”操作。
      *
-     * 在删除聊天时调用。
+     * 在删除聊天分组时调用。
      */
     async removeChatGroup(name: string): Promise<void> {
         await this.redis.hdel(`${this.qid}:chatGroups:rooms`, `${name}`);
         await this.redis.zrem(`${this.qid}:chatGroups:keyList`, `${name}`);
     }
 
-    /** 实现 {@link StorageProvider} 类的 `getAllRooms` 方法，
-     * 对应 room 的“查所有”操作。
+    /** 实现 {@link StorageProvider} 类的 `getAllChatGroups` 方法，
+     * 对应 chatGroup 的“查所有”操作。
      *
      * 在登录成功后调用。
      */
@@ -240,10 +240,10 @@ export default class RedisStorageProvider implements StorageProvider {
         return chatGroups;
     }
 
-    /** 实现 {@link StorageProvider} 类的 `addRoom` 方法，
-     * 对应 room 的“增”操作。
+    /** 实现 {@link StorageProvider} 类的 `addMessage` 方法，
+     * 是对 `msg${roomId}` 的“增”操作。
      *
-     * 在“新房间收到新消息”等需要新增房间的事件时被调用。
+     * 在收到消息时被调用。
      */
     async addMessage(roomId: number, message: Message): Promise<void> {
         await this.redis.hset(

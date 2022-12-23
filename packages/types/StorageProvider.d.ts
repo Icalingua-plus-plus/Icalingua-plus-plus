@@ -16,8 +16,6 @@ export default interface StorageProvider {
 
     updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any>
 
-    //updateURL(roomId: number, messageId: string | number, message: Record<string, any>): Promise<any>
-
     replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any>
 
     fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
