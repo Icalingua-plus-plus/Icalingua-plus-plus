@@ -723,7 +723,7 @@ Chromium ${process.versions.chrome}` : ''
                         this.chatGroups[i].rooms = this.chatGroups[i].rooms.filter(e => e !== this.selectedRoomId)
                         this.$message({
                             type: 'success',
-                            message: `已从分组 ${group} 中移除 ${this.selectedRoom.roomName}`,
+                            message: `已将 ${this.selectedRoom.roomName} 移出分组 ${group}`,
                         })
                     }
                     else {
