@@ -55,7 +55,7 @@ export default class SQLStorageProvider implements StorageProvider {
         this.qid = `eqq${id}`;
         this.type = type;
         let connectOption = { ...connectOpt }
-        if (connectOption.host.includes(':')) {
+        if (connectOption.host && connectOption.host.includes(':')) {
             const [host, port] = connectOption.host.split(':')
             connectOption.host = host
             connectOption['port'] = Number(port)
