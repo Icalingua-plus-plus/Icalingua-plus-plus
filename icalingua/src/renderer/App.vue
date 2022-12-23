@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div id="app" :style="{ fontFamily }">
         <router-view></router-view>
     </div>
 </template>
@@ -38,7 +38,15 @@ export default {
             console.log('custom js applied')
             dynamicLoadJs('file://' + path.join(STORE_PATH, 'addon.js'))
         }
+
+        this.fontFamily = await ipc.getFontFamilySetting()
+        console.log(this.fontFamily)
     },
+	data() {
+        return {
+            fontFamily: ''
+        }
+	}
 }
 </script>
 
@@ -65,7 +73,7 @@ body {
 }
 
 * {
-    font-family: font, 'CircularSpotifyTxT Book Web', msyh, twemoji, 'PingFang SC', sans-serif;
+    font-family: inherit;
 }
 
 :focus {

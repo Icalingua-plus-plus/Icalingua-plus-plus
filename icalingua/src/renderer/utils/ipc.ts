@@ -19,6 +19,9 @@ const ipc = {
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
     },
+    async getFontFamilySetting(): Promise<string> {
+        return await ipcRenderer.invoke('getFontFamilySetting')
+    },
     async getAria2Settings(): Promise<Aria2Config> {
         return await ipcRenderer.invoke('getAria2Settings')
     },
