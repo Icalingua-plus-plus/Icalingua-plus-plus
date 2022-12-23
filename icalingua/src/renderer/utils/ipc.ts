@@ -25,6 +25,9 @@ const ipc = {
     async getlinkifySetting(): Promise<boolean> {
         return await ipcRenderer.invoke('getlinkifySetting')
     },
+    async getDisableChatGroupsSetting(): Promise<boolean> {
+        return await ipcRenderer.invoke('getDisableChatGroupsSetting')
+    },
     async getDebugSetting(): Promise<boolean> {
         return await ipcRenderer.invoke('getDebugSetting')
     },

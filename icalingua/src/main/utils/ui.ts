@@ -165,4 +165,7 @@ export default {
     setHideChatImageByDefault(enabled: boolean) {
         sendToMainWindow('setHideChatImageByDefault', enabled)
     },
+    setDisableChatGroupsSeeting(a: boolean) {
+        sendToMainWindow('setDisableChatGroupsSeeting', a)
+    },
 }

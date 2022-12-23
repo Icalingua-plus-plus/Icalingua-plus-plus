@@ -1,6 +1,11 @@
 <template>
     <div class="root">
         <div class="head">
+            <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`" v-if="disableChatGroups">
+                <a slot="reference" @click="$emit('chroom', account)" style="cursor: pointer">
+                    <el-avatar :src="getAvatarUrl(account)" />
+                </a>
+            </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
             <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
             <span
@@ -55,6 +60,7 @@ export default {
         account: Number,
         username: String,
         allRooms: Array,
+        disableChatGroups: Boolean,
     },
     data() {
         return {

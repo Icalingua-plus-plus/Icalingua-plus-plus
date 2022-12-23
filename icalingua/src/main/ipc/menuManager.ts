@@ -851,6 +851,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '禁用聊天分组',
+                type: 'checkbox',
+                checked: getConfig().disableChatGroups,
+                click: (menuItem) => {
+                    getConfig().disableChatGroups = menuItem.checked
+                    saveConfigFile()
+                    ui.setDisableChatGroupsSeeting(menuItem.checked)
+                },
+            }),
+            new MenuItem({
                 label: '启动时检查更新',
                 type: 'checkbox',
                 checked: getConfig().updateCheck === true,

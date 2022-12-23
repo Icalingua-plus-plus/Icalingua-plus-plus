@@ -2,7 +2,7 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
-            <el-aside width="65px" style="display: flex; flex-direction: column;">
+            <el-aside width="65px" style="display: flex; flex-direction: column;" v-if="!disableChatGroups">
                 <div class="head">
                     <el-popover
                         placement="right-end"
@@ -60,6 +60,7 @@
                     :username="username"
                     :selectedChatGroup="selectedChatGroup"
                     :allRooms="rooms"
+                    :disableChatGroups="disableChatGroups"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
                 />
@@ -243,6 +244,7 @@ export default {
             selectedChatGroup: 'chats',
             chatGroups: [],
             visibleRooms: [],
+            disableChatGroups: false,
         }
     },
     async created() {
@@ -250,6 +252,7 @@ export default {
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
         this.linkify = await ipc.getlinkifySetting()
+        this.disableChatGroups = await ipc.getDisableChatGroupsSetting()
         const roomPanelLastSetting = await ipc.getRoomPanelSetting()
         this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
         this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
@@ -310,6 +313,10 @@ export default {
 
         themes.$$DON_CALL$$fetchThemes(STORE_PATH)
 
+        ipcRenderer.on('setDisableChatGroupsSeeting', (_, p) => {
+            this.disableChatGroups = p
+            this.selectedChatGroup = 'chats'
+        })
         ipcRenderer.on('openGroupMemberPanel', (_, p) => {
             this.groupmemberShown = p.shown
             this.groupmemberPanelGin = p.gin
