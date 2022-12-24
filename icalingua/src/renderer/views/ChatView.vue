@@ -64,7 +64,7 @@
             <MultipaneResizer />
             <div style="flex: 1" class="vac-card-window">
                 <div class="pace-activity" v-show="loading" />
-                <div class="upload-progress" v-show="loading">{{ uploadProgress }}%</div>
+                <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
                 <Room
                     ref="room"
                     :current-user-id="account"
