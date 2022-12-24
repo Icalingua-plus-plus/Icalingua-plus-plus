@@ -716,7 +716,7 @@ export default {
             console.log(event)
             if (event.dataTransfer.files.length) {
                 // Using the path attribute to get absolute file path
-                    this.onFileChange(event.dataTransfer.files)
+                this.onFileChange(event.dataTransfer.files)
             }
         })
     },
