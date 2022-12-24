@@ -1175,12 +1175,43 @@ const adapter: OicqAdapter = {
         if (file && typeof file.type === 'string' && !file.type.includes('image')) {
             //群文件
             if (roomId > 0) {
-                ui.messageError('暂时无法向好友发送文件')
-                return
+                bot.sendFile(roomId, file.path, undefined, ui.uploadProgress)
+                    .then(async (data) => {
+                        if (data.retcode !== 0) {
+                            ui.messageError('文件上传失败')
+                            ui.closeLoading()
+                            return
+                        }
+                        ui.messageSuccess('文件上传成功')
+                        const message: Message = {
+                            _id: data.data.message_id,
+                            senderId: bot.uin,
+                            username: 'You',
+                            content,
+                            timestamp: formatDate('hh:mm:ss'),
+                            date: formatDate('yyyy/MM/dd'),
+                            files: [],
+                        }
+                        message.file = {
+                            type: file.type,
+                            size: file.size,
+                            url: file.path,
+                            name: file.path.split('/').pop().split('\\').pop(),
+                        }
+                        message.files.push(message.file)
+                        ui.addMessage(roomId, message)
+                        storage.addMessage(roomId, message)
+                        ui.closeLoading()
+                        })
+                    .catch((e) => {
+                        ui.messageError('文件上传失败')
+                        console.error(e)
+                        ui.closeLoading()
+                    })
+            } else {
+                const gfs = bot.acquireGfs(-roomId)
+                gfs.upload(file.path, undefined, undefined, ui.uploadProgress).then(ui.closeLoading)
             }
-            const gfs = bot.acquireGfs(-roomId)
-            //TODO: 在界面上反应上传进度
-            gfs.upload(file.path, undefined, undefined, console.log).then(ui.closeLoading)
             ui.message('文件上传中')
             return
         }

@@ -64,6 +64,7 @@
             <MultipaneResizer />
             <div style="flex: 1" class="vac-card-window">
                 <div class="pace-activity" v-show="loading" />
+                <div class="upload-progress" v-show="loading">{{ uploadProgress }}%</div>
                 <Room
                     ref="room"
                     :current-user-id="account"
@@ -76,7 +77,7 @@
                     :show-reaction-emojis="false"
                     :show-new-messages-divider="false"
                     :load-first-room="false"
-                    :accepted-files="selectedRoom.roomId > 0 ? 'image/*' : '*'"
+                    :accepted-files="'*'"
                     :message-actions="[]"
                     :single-room="true"
                     :room-id="selectedRoom.roomId"
@@ -241,6 +242,7 @@ export default {
             chatGroups: [],
             visibleRooms: [],
             disableChatGroups: false,
+            uploadProgress: '0',
         }
     },
     async created() {
@@ -317,7 +319,10 @@ export default {
             this.groupmemberShown = p.shown
             this.groupmemberPanelGin = p.gin
         })
-        ipcRenderer.on('closeLoading', () => this.loading = false)
+        ipcRenderer.on('closeLoading', () => {
+            this.loading = false
+            this.uploadProgress = '0'
+        })
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
         ipcRenderer.on('addHistoryCount', (_, p) => this.historyCount += p)
         ipcRenderer.on('clearHistoryCount', () => this.historyCount = 0)
@@ -507,6 +512,11 @@ Node ${process.versions.node}
 Chromium ${process.versions.chrome}` : ''
             if (updateCheck === 'ask')
                 this.dialogAskCheckUpdateVisible = true
+        })
+        ipcRenderer.on('uploadProgress', (_, p) => {
+            if (p > this.uploadProgress) {
+                this.uploadProgress = p
+            }
         })
         console.log('加载完成')
     },
@@ -865,6 +875,16 @@ main div {
     border-left-color: #29d;
     border-radius: 10px;
     animation: pace-spinner 400ms linear infinite;
+}
+
+.upload-progress {
+    display: block;
+    position: absolute;
+    z-index: 2000;
+    bottom: 66px;
+    right: 35px;
+    height: 14px;
+    color: var(--chat-message-color-date);
 }
 
 @media screen and (max-width: 1200px) {

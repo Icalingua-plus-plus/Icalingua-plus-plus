@@ -168,4 +168,7 @@ export default {
     setDisableChatGroupsSeeting(a: boolean) {
         sendToMainWindow('setDisableChatGroupsSeeting', a)
     },
+    uploadProgress(progress: string) {
+        sendToMainWindow('uploadProgress', progress)
+    },
 }

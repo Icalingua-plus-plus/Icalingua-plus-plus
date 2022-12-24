@@ -699,12 +699,7 @@ export default {
             console.log(imageHTML)
             if (event.clipboardData.files && event.clipboardData.files.length) {
                 // Using the path attribute to get absolute file path
-                const f = event.clipboardData.files[0]
-                const index = f.name.lastIndexOf('.')
-                const ext = f.name.substr(index + 1).toLowerCase()
-                if (this.roomId < 0 || ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext)) {
-                    this.onFileChange(event.clipboardData.files)
-                }
+                this.onFileChange(event.clipboardData.files)
             } else if (imageHTML.indexOf('<img src="') !== -1) {
                 const imageURL = imageHTML.match(/img src="(.*?)"/)
                 console.log(imageURL)
@@ -721,12 +716,7 @@ export default {
             console.log(event)
             if (event.dataTransfer.files.length) {
                 // Using the path attribute to get absolute file path
-                const f = event.dataTransfer.files[0]
-                const index = f.name.lastIndexOf('.')
-                const ext = f.name.substr(index + 1).toLowerCase()
-                if (this.roomId < 0 || ['png', 'jpg', 'jpeg', 'bmp', 'gif', 'webp', 'svg', 'tiff'].includes(ext)) {
                     this.onFileChange(event.dataTransfer.files)
-                }
             }
         })
     },
