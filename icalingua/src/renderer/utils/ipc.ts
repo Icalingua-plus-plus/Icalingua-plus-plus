@@ -22,6 +22,9 @@ const ipc = {
     async getFontFamilySetting(): Promise<string> {
         return await ipcRenderer.invoke('getFontFamilySetting')
     },
+    async getCustomThemeSetting(): Promise<string[]> {
+        return await ipcRenderer.invoke('getCustomThemeSetting')
+    },
     async getAria2Settings(): Promise<Aria2Config> {
         return await ipcRenderer.invoke('getAria2Settings')
     },
@@ -208,6 +211,6 @@ const ipc = {
     },
     async getHideChatImageByDefault(): Promise<boolean> {
         return await ipcRenderer.invoke('getHideChatImageByDefault')
-    },
+    }
 }
 export default ipc

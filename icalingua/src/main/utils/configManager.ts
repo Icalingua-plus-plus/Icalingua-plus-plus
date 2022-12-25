@@ -45,6 +45,7 @@ type AllConfig = {
     hideChatImageByDefault: boolean
     disableChatGroups: boolean
     fontFamily: string
+    customTheme: string[]
 }
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
@@ -120,7 +121,8 @@ const defaultConfig: AllConfig = {
     silentFetchHistory: false,
     hideChatImageByDefault: false,
     disableChatGroups: false,
-    fontFamily: ''
+    fontFamily: '',
+    customTheme: []
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

@@ -11,6 +11,7 @@ ipcMain.handle('getStorePath', () => app.getPath('userData'))
 ipcMain.handle('getlinkifySetting', () => getConfig().linkify)
 ipcMain.handle('getDisableChatGroupsSetting', () => getConfig().disableChatGroups)
 ipcMain.handle('getFontFamilySetting', () => getConfig().fontFamily)
+ipcMain.handle('getCustomThemeSetting', () => getConfig().customTheme)
 ipcMain.handle('getDebugSetting', () => getConfig().debugmode)
 ipcMain.handle('getOptimizeMethodSetting', () => getConfig().optimizeMethod)
 ipcMain.handle('getRoomPanelSetting', () => {
