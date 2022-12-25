@@ -8,6 +8,7 @@
 import fs from 'fs'
 import path from 'path'
 import ipc from './utils/ipc'
+// import ui from '../main/utils/ui'
 
 function dynamicLoadCss(url) {
     const head = document.getElementsByTagName('head')[0]
@@ -30,14 +31,18 @@ export default {
     name: 'app',
     async created() {
         const STORE_PATH = await ipc.getStorePath()
-        if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
-            console.log('custom CSS applied')
-            dynamicLoadCss('file://' + path.join(STORE_PATH, 'style.css'))
-        }
-        if (fs.existsSync(path.join(STORE_PATH, 'addon.js'))) {
-            console.log('custom js applied')
-            dynamicLoadJs('file://' + path.join(STORE_PATH, 'addon.js'))
-        }
+
+        const customTheme = await ipc.getCustomThemeSetting()
+
+        for (const name of customTheme) {
+            const cssPath = path.join(STORE_PATH, 'custom_themes', `${name}.css`)
+            const jsPath = path.join(STORE_PATH, 'custom_themes', `${name}.js`)
+            const existCss = fs.existsSync(cssPath)
+            const existJs = fs.existsSync(jsPath)
+            if (existCss) dynamicLoadCss('file://' + cssPath)
+            if (existJs) dynamicLoadJs('file://' + jsPath)
+            if (!existCss && !existJs) console.error(`没有找到 ${name} 的样式文件`)
+        } 
     },
 }
 </script>
