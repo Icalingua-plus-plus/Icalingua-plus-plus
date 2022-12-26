@@ -891,6 +891,17 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '使用本地图片查看器',
+                type: 'checkbox',
+                checked: getConfig().localImageViewerByDefault,
+                click: (menuItem) => {
+                    getConfig().localImageViewerByDefault = menuItem.checked
+                    saveConfigFile()
+                    ui.message('使用本地图片查看器已' + (menuItem.checked ? '开启' : '关闭'))
+                    ui.setLocalImageViewerByDefault(menuItem.checked)
+                },
+            }),
+            new MenuItem({
                 label: 'DEBUG MODE',
                 visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
                 submenu: [
@@ -1351,7 +1362,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         },
                     }),
                 )
-                if (file.type.startsWith('image/'))
+                if (file.type.startsWith('image/') && !getConfig().localImageViewerByDefault)
                     menu.append(
                         new MenuItem({
                             label: '使用本地查看器打开',
@@ -1431,7 +1442,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     },
                 }),
             )
-            if (message.file.type.startsWith('image/'))
+            if (message.file.type.startsWith('image/') && !getConfig().localImageViewerByDefault)
                 menu.append(
                     new MenuItem({
                         label: '使用本地查看器打开',

@@ -86,6 +86,7 @@ export default {
         content: { type: String, default: '' },
         showForwardPanel: { type: Boolean, required: true },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
+        localImageViewerByDefault: { type: Boolean, required: false, default: false },
     },
 
     data() {
@@ -116,7 +117,7 @@ export default {
     methods: {
         openImage() {
             if (this.showForwardPanel) return
-            ipcRenderer.send('openImage', this.file.url, false)
+            ipcRenderer.send('openImage', this.file.url, this.localImageViewerByDefault)
         },
     },
 }

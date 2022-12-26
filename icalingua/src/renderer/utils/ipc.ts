@@ -206,5 +206,8 @@ const ipc = {
     async getHideChatImageByDefault(): Promise<boolean> {
         return await ipcRenderer.invoke('getHideChatImageByDefault')
     },
+    async getLocalImageViewerByDefault(): Promise<boolean> {
+        return await ipcRenderer.invoke('getLocalImageViewerByDefault')
+    },
 }
 export default ipc

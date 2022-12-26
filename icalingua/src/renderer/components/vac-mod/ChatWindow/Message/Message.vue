@@ -94,6 +94,7 @@
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            :local-image-viewer-by-default="localImageViewerByDefault"
                             @open-forward="$emit('open-forward', $event)"
                             @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
@@ -133,6 +134,7 @@
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            :local-image-viewer-by-default="localImageViewerByDefault"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -151,6 +153,7 @@
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            :local-image-viewer-by-default="localImageViewerByDefault"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -258,6 +261,7 @@ export default {
         forwardResId: { type: String, required: false },
         msgstoForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
+        localImageViewerByDefault: { type: Boolean, required: true },
     },
 
     data() {
