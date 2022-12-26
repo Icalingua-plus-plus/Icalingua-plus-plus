@@ -59,6 +59,7 @@
                     :disableChatGroups="disableChatGroups"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
+                    @update-sorted-rooms="(sortedRooms) => this.sortedRooms = sortedRooms"
                 />
             </div>
             <MultipaneResizer />
@@ -241,6 +242,7 @@ export default {
             selectedChatGroup: 'chats',
             chatGroups: [],
             visibleRooms: [],
+            sortedRooms: [],
             disableChatGroups: false,
             uploadProgress: '0',
         }
@@ -288,13 +290,33 @@ export default {
                 }
             }
             else if (e.key === 'Tab') {
-                let unreadRoom
-                for (let i = 5; i > 0; i--) {
-                    unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
-                    if (unreadRoom) break
+                if (e.ctrlKey) {
+                    const rooms = this.sortedRooms
+                    if (!rooms.length) return
+
+                    const selectedRoomIndex = rooms.indexOf(this.selectedRoom)
+                    let newIndex
+                    if (!this.selectedRoom) newIndex = 0
+                    else if (e.shiftKey) { // prev room
+                        newIndex = selectedRoomIndex - 1
+                        if (newIndex === -1) newIndex = rooms.length - 1
+                    }
+                    else { // next room
+                        newIndex = selectedRoomIndex + 1
+                        if (newIndex === rooms.length) newIndex = 0
+                    }
+
+                    this.chroom(rooms[newIndex])
                 }
-                if (unreadRoom) this.chroom(unreadRoom)
-            }
+                else {
+					let unreadRoom
+					for (let i = 5; i > 0; i--) {
+						unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
+						if (unreadRoom) break
+						if (unreadRoom) this.chroom(unreadRoom)
+					}
+				}
+			}
         })
         //endregion
 

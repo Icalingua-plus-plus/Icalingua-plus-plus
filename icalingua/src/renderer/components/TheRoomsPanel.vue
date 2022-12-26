@@ -101,6 +101,14 @@ export default {
             this.clearRoomsBehavior = behavior
         })
     },
+    watch: {
+        sortedRooms: {
+            handler() {
+                this.$emit('update-sorted-rooms', this.sortedRooms)
+            },
+            immediate: true
+        }
+    }
 }
 </script>
 
