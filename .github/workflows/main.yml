@@ -6,7 +6,7 @@ on:
 
 jobs:
   install:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +27,7 @@ jobs:
         run: pnpm install
 
   arch-artifacts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         working-directory: icalingua
@@ -42,7 +42,7 @@ jobs:
           if-no-files-found: error
 
   build-dist-bundle:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: install
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
@@ -92,7 +92,7 @@ jobs:
 
   # deb rpm appimage 之类的文件可以待会儿再构建，现在拿到 app.asar 之后就能构建 arch 包了
   build-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -141,7 +141,7 @@ jobs:
           if-no-files-found: error
 
   build-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -208,7 +208,7 @@ jobs:
           if-no-files-found: error
 
   build-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: build-dist-bundle
     steps:
       - uses: actions/checkout@v3
@@ -275,7 +275,7 @@ jobs:
           if-no-files-found: error
 
   pack-archpkg-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - arch-artifacts
       - build-x86_64
@@ -321,7 +321,7 @@ jobs:
           sudo ln -s $PWD /github/workspace
 
   pack-archpkg-aarch64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build-dist-bundle
       - arch-artifacts
@@ -368,7 +368,7 @@ jobs:
           sudo ln -s $PWD /github/workspace
 
   pack-archpkg-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build-dist-bundle
       - arch-artifacts
@@ -415,7 +415,7 @@ jobs:
           sudo ln -s $PWD /github/workspace
 
   pack-otherpkg-x86_64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build-x86_64
       - build-dist-bundle
@@ -467,7 +467,7 @@ jobs:
           if-no-files-found: error
 
   pack-otherpkg-arm64:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build-arm64
       - build-dist-bundle
@@ -519,7 +519,7 @@ jobs:
           if-no-files-found: error
 
   pack-otherpkg-armv7l:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - build-armv7l
       - build-dist-bundle
@@ -571,7 +571,7 @@ jobs:
           if-no-files-found: error
 
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
       - pack-otherpkg-arm64
       - pack-otherpkg-x86_64
@@ -600,7 +600,7 @@ jobs:
           name: pkgres
 
   pack-bridge-js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     defaults:
       run:
         working-directory: icalingua-bridge-oicq
@@ -822,7 +822,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     needs:
       - pack-archpkg-x86_64
