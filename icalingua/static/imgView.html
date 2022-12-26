@@ -390,14 +390,25 @@
             window.close()
         }
     })
-    // Hide bar when window is onblur, and show when onfocus
-    window.onblur = function () {
+
+    var timer = setTimeout(() => {
         BAR.style.opacity = 0
-        BAR.style.visibility = 'hidden'
+    }, 5000)
+    BAR.onmouseout = function () {
+        if (timer) {
+            clearTimeout(timer)
+            timer = null
+        }
+        timer = setTimeout(() => {
+            BAR.style.opacity = 0
+        }, 1000)
     }
-    window.onfocus = function () {
+    BAR.onmouseover = function () {
+        if (timer) {
+            clearTimeout(timer)
+            timer = null
+        }
         BAR.style.opacity = 1
-        BAR.style.visibility = 'visible'
     }
     DRAG.addEventListener('contextmenu', (e) => {
         console.log(e)
