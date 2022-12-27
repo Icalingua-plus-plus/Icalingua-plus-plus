@@ -841,6 +841,7 @@ Chromium ${process.versions.chrome}` : ''
     background-color: var(--panel-background);
     align-items: center;
     border-radius: 5px;
+    z-index: 2000;
 
     .pace-activity {
         position: relative;
