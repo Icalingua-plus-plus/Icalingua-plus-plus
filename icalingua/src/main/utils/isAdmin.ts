@@ -5,12 +5,13 @@ import { getGroupMemberInfo, getUin } from '../ipc/botAndStorage'
 let cachedRoomId: number
 let cachedStatus: GroupRole
 
-export default async () => {
-    if (ui.getSelectedRoomId() > -1) return false
-    if (ui.getSelectedRoomId() === cachedRoomId)
+export default async (roomId = 0) => {
+    if (roomId === 0) roomId = ui.getSelectedRoomId()
+    if (roomId > -1) return false
+    if (roomId === cachedRoomId)
         return cachedStatus === 'member' || !cachedStatus ? false : cachedStatus
-    const memberInfo = await getGroupMemberInfo(-ui.getSelectedRoomId(), getUin(), false)
+    const memberInfo = await getGroupMemberInfo(-roomId, getUin(), false)
     cachedStatus = memberInfo?.role
-    cachedRoomId = ui.getSelectedRoomId()
+    cachedRoomId = roomId
     return cachedStatus === 'member' || !cachedStatus ? false : cachedStatus
 }

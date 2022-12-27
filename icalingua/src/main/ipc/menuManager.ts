@@ -277,7 +277,7 @@ const buildRoomMenu = (room: Room): Menu => {
                         download(item.getURL(), item.getFilename())
                     })
                     win.loadURL(url)
-                    win.webContents.executeJavaScript('window.isAdmin = "' + (await isAdmin()) + '"')
+                    win.webContents.executeJavaScript('window.isAdmin = "' + (await isAdmin(room.roomId)) + '"')
                 },
             }),
         )
