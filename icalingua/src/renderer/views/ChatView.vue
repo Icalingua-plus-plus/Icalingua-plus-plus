@@ -59,7 +59,7 @@
                     :disableChatGroups="disableChatGroups"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
-                    @update-sorted-rooms="(sortedRooms) => this.sortedRooms = sortedRooms"
+                    @update-sorted-rooms="(sortedRooms) => (this.sortedRooms = sortedRooms)"
                 />
             </div>
             <MultipaneResizer />

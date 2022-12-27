@@ -106,9 +106,9 @@ export default {
             handler() {
                 this.$emit('update-sorted-rooms', this.sortedRooms)
             },
-            immediate: true
-        }
-    }
+            immediate: true,
+        },
+    },
 }
 </script>
 
