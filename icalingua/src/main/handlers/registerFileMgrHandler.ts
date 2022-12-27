@@ -9,7 +9,8 @@ export default (io: Server, socket: Socket, gin: number) => {
         const res = await gfs.ls(fid, start)
         for (let i = 0; i < res.length; i++) {
             const member = await adapter._getGroupMemberInfo(gin, res[i].user_id, false)
-            res[i]['user_name'] = member ? member.card || member.nickname : res[i].user_id + '(' + res[i].user_id + ')'
+            res[i]['user_name'] =
+                (member ? member.card || member.nickname : res[i].user_id) + '(' + res[i].user_id + ')'
         }
         cb(res)
     })
