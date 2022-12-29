@@ -3,7 +3,7 @@ import which from 'which'
 import ui from '../utils/ui'
 
 let viewer = ''
-const VIEWERS = ['vlc', 'mpv']
+const VIEWERS = ['vlc', 'mpv', 'xdg-open']
 
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'video/mp4']).toString()
