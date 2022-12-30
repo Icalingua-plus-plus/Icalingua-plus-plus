@@ -55,16 +55,18 @@
                 <a
                     v-if="message.forward"
                     style="cursor: pointer"
-                    @click="openForward(message)"
+                    :key="i"
                     :title="parseForwardPreview(code)"
+                    @click="openForward(message)"
                 >
                     View Forwarded Messages
                 </a>
                 <a
                     v-if="message.nestedforward"
                     style="cursor: pointer"
-                    @click="openNested(message)"
+                    :key="i"
                     :title="parseForwardPreview(code)"
+                    @click="openNested(message)"
                 >
                     View Forwarded Messages
                 </a>
