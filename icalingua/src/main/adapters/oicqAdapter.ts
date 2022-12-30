@@ -1883,7 +1883,7 @@ const adapter: OicqAdapter = {
                         const timeDiff = [0, -1, 1]
                         for (let j of timeDiff) {
                             messageIdBuf.writeUInt32BE(timestamp + j, 12)
-                            if (storage.getMessage(roomId, messageIdBuf.toString('base64'))) {
+                            if (await storage.getMessage(roomId, messageIdBuf.toString('base64'))) {
                                 messages.splice(i, 1)
                                 messagesLength--
                                 i--
