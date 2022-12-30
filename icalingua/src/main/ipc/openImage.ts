@@ -11,7 +11,7 @@ import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
 
 let viewer = ''
-const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp']
+const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open']
 
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'image/jpeg']).toString()
