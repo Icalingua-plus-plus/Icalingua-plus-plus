@@ -1608,6 +1608,30 @@ const adapter = {
                     : newMsgs.find((e) => e.senderId == bot.uin)
             if (!firstOwnMsg || (await storage.getMessage(roomId, firstOwnMsg._id as string))) break
         }
+        // 私聊消息去重
+        let messagesLength = messages.length
+        if (roomId > 0) {
+            for (let i = 0; i < messagesLength; i++) {
+                if (messages[i].senderId != bot.uin) continue
+                try {
+                    let messageIdBuf = Buffer.from(messages[i]._id as string, 'base64')
+                    if (messageIdBuf.length != 17) continue
+                    let timestamp = messageIdBuf.readUInt32BE(12)
+                    const timeDiff = [0, -1, 1]
+                    for (let j of timeDiff) {
+                        messageIdBuf.writeUInt32BE(timestamp + j, 12)
+                        if (storage.getMessage(roomId, messageIdBuf.toString('base64'))) {
+                            messages.splice(i, 1)
+                            messagesLength--
+                            i--
+                            break
+                        }
+                    }
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+        }
         console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
         clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
         await storage.addMessages(roomId, messages)
