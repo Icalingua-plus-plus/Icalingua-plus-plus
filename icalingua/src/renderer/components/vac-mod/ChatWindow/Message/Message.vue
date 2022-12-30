@@ -188,6 +188,7 @@
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
+                            :code="message.code"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">

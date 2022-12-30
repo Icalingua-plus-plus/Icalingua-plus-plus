@@ -8,8 +8,7 @@ let cachedStatus: GroupRole
 export default async (roomId = 0) => {
     if (roomId === 0) roomId = ui.getSelectedRoomId()
     if (roomId > -1) return false
-    if (roomId === cachedRoomId)
-        return cachedStatus === 'member' || !cachedStatus ? false : cachedStatus
+    if (roomId === cachedRoomId) return cachedStatus === 'member' || !cachedStatus ? false : cachedStatus
     const memberInfo = await getGroupMemberInfo(-roomId, getUin(), false)
     cachedStatus = memberInfo?.role
     cachedRoomId = roomId
