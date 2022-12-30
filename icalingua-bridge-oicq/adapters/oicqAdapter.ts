@@ -716,8 +716,24 @@ const loginHandlers = {
         console.log('正在获取历史消息')
         {
             const rooms = await storage.getAllRooms()
+            // 先私聊后群聊
             for (const i of rooms) {
                 if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                if (i.roomId < 0) continue
+                const roomId = i.roomId
+                let buffer: Buffer
+                let uid = roomId
+                if (roomId < 0) {
+                    buffer = Buffer.alloc(21)
+                    uid = -uid
+                } else buffer = Buffer.alloc(17)
+                buffer.writeUInt32BE(uid, 0)
+                adapter.fetchHistory(buffer.toString('base64'), roomId, 0)
+                await sleep(500)
+            }
+            for (const i of rooms) {
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                if (i.roomId > 0) continue
                 const roomId = i.roomId
                 let buffer: Buffer
                 let uid = roomId
