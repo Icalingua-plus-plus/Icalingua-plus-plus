@@ -72,7 +72,14 @@ import processMessage from '../utils/processMessage'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
-import { getMainWindow, loadMainWindow, sendToLoginWindow, showRequestWindow, showWindow } from '../utils/windowManager'
+import {
+    getMainWindow,
+    loadMainWindow,
+    sendToLoginWindow,
+    showLoginWindow,
+    showRequestWindow,
+    showWindow,
+} from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
 
 let bot: Client
@@ -831,6 +838,7 @@ const loginHandlers = {
     },
     onErr(data) {
         console.log(data)
+        showLoginWindow()
         sendToLoginWindow('error', data.message)
         loginError = true
     },
@@ -892,6 +900,7 @@ const loginHandlers = {
     },
     verify(data: DeviceEventData) {
         console.log(data)
+        showLoginWindow()
         sendToLoginWindow('smsCodeVerify', JSON.stringify(data))
     },
     qrcode(data: QrcodeEventData) {
