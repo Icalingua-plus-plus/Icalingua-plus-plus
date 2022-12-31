@@ -330,6 +330,8 @@ const buildRoomMenu = (room: Room): Menu => {
                             download(
                                 details.url,
                                 `${room.roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
+                                undefined,
+                                true,
                             )
                         return { action: 'deny' }
                     })
@@ -1289,6 +1291,20 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         }),
                 }),
             )
+            menu.append(
+                new MenuItem({
+                    label: '另存为回复文件',
+                    click: () =>
+                        downloadFileByMessageData(
+                            {
+                                message: message.replyMessage,
+                                room,
+                                action: 'download',
+                            },
+                            true,
+                        ),
+                }),
+            )
         }
         if (message.files) {
             for (let i = 0; i < message.files.length; i++) {
@@ -1379,20 +1395,33 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             },
                         }),
                     )
-                if (file.type.startsWith('image/'))
+                if (file.type.startsWith('image/')) {
                     menu.append(
                         new MenuItem({
                             label: '下载',
                             click: () => downloadImage(file.url),
                         }),
                     )
-                else
+                    menu.append(
+                        new MenuItem({
+                            label: '另存为',
+                            click: () => downloadImage(file.url, true),
+                        }),
+                    )
+                } else {
                     menu.append(
                         new MenuItem({
                             label: '下载',
                             click: () => downloadFileByMessageData({ action: 'download', message, room }),
                         }),
                     )
+                    menu.append(
+                        new MenuItem({
+                            label: '另存为',
+                            click: () => downloadFileByMessageData({ action: 'download', message, room }, true),
+                        }),
+                    )
+                }
                 menu.append(
                     new MenuItem({
                         type: 'separator',
@@ -1449,6 +1478,12 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 new MenuItem({
                     label: '下载',
                     click: () => downloadFileByMessageData({ action: 'download', message, room }),
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '另存为',
+                    click: () => downloadFileByMessageData({ action: 'download', message, room }, true),
                 }),
             )
         }

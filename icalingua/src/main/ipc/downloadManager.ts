@@ -2,7 +2,7 @@ import Aria2Config from '@icalingua/types/Aria2Config'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import Aria2 from 'aria2'
-import { app, ipcMain } from 'electron'
+import { BrowserWindow, app, dialog, ipcMain } from 'electron'
 import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
@@ -28,7 +28,15 @@ export const loadConfig = (config: Aria2Config) => {
     } else aria = null
 }
 
-export const download = (url: string, out: string, dir?: string) => {
+export const download = (url: string, out: string, dir?: string, saveAs = false) => {
+    if (saveAs) {
+        const result = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow() || getMainWindow(), {
+            defaultPath: dir ? path.join(dir, out) : out,
+        })
+        if (!result) return
+        out = path.basename(result)
+        dir = path.dirname(result)
+    }
     const ext = path.extname(out)
     const base = path.basename(out, ext)
     let i = 1
@@ -58,35 +66,36 @@ loadConfig(getConfig().aria2)
 /**
  * 其实就是个只有 url 的下载方法，用来下图片
  */
-export const downloadImage = (url: string) => {
+export const downloadImage = (url: string, saveAs = false) => {
     console.log(url)
     const out = 'QQ_Image_' + new Date().getTime() + '.jpg'
     const dir = app.getPath('downloads')
-    download(url, out, aria ? null : dir)
-    ui.notifySuccess({
-        title: 'Image Saved',
-        message: aria ? out : path.join(dir, out),
-    })
+    download(url, out, aria ? null : dir, saveAs)
+    if (!saveAs)
+        ui.notifySuccess({
+            title: 'Image Saved',
+            message: aria ? out : path.join(dir, out),
+        })
 }
 
-export const downloadGroupFile = async (gin: number, fid: string) => {
+export const downloadGroupFile = async (gin: number, fid: string, saveAs = false) => {
     try {
         const meta = await getGroupFileMeta(gin, fid)
-        download(meta.url, meta.name)
+        download(meta.url, meta.name, undefined, saveAs)
     } catch (e) {
         ui.notifyError(e)
         console.error(e)
     }
 }
 
-export const downloadFileByMessageData = (data: { action: string; message: Message; room: Room }) => {
+export const downloadFileByMessageData = (data: { action: string; message: Message; room: Room }, saveAs = false) => {
     if (data.action === 'download') {
         if (data.message.file.type.includes('image')) {
-            downloadImage(data.message.file.url)
+            downloadImage(data.message.file.url, saveAs)
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
-                downloadGroupFile(-data.room.roomId, data.message.file.fid)
-            else download(data.message.file.url, data.message.content)
+                downloadGroupFile(-data.room.roomId, data.message.file.fid, saveAs)
+            else download(data.message.file.url, data.message.content, undefined, saveAs)
         }
     }
 }
