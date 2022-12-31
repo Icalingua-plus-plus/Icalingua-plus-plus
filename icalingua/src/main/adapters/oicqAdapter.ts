@@ -1874,7 +1874,7 @@ const adapter: OicqAdapter = {
                 }
                 first_loop = false
                 ui.addHistoryCount(newMsgs.length)
-                if (history.data.length < 2) {
+                if (history.data.length < 2 || newMsgs.length === 0) {
                     done = true
                     break
                 }

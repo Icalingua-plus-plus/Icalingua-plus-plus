@@ -1599,7 +1599,7 @@ const adapter = {
                     console.error(e)
                 }
             }
-            if (history.data.length < 2) break
+            if (history.data.length < 2 || newMsgs.length === 0) break
             messageId = newMsgs[0]._id as string
             //todo 所有消息都过一遍，数据库里面都有才能结束
             const firstOwnMsg =
