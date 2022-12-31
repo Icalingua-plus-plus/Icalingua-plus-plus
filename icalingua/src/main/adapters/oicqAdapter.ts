@@ -1223,6 +1223,15 @@ const adapter: OicqAdapter = {
                         name: file.path.split('/').pop().split('\\').pop(),
                     }
                     message.files.push(message.file)
+                    const parsed = Buffer.from(data.data.message_id, 'base64')
+                    const _time = parsed.readUInt32BE(12)
+                    if (_time !== lastReceivedMessageInfo.timestamp) {
+                        lastReceivedMessageInfo.timestamp = _time
+                        lastReceivedMessageInfo.id = 0
+                    }
+                    message.time = _time * 1000 + lastReceivedMessageInfo.id
+                    message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
+                    lastReceivedMessageInfo.id++
                     ui.addMessage(roomId, message)
                     storage.addMessage(roomId, message)
                     ui.closeLoading()
