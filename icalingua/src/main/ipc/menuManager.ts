@@ -843,6 +843,15 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '禁用同会话图片合并',
+                type: 'checkbox',
+                checked: getConfig().singleImageMode,
+                click: (menuItem) => {
+                    getConfig().singleImageMode = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '启用高亮 URL 功能',
                 type: 'checkbox',
                 checked: getConfig().linkify,

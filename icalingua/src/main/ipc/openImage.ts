@@ -9,6 +9,7 @@ import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
+import { getConfig } from '../utils/configManager'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open']
@@ -67,11 +68,25 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
             //viewerWindow.maximize()
-            if (urlList.length > 0) {
+            if (urlList.length > 1 && !getConfig().singleImageMode) {
                 // TODO: multiple images
+                viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify(urlList)}')`)
             } else {
                 viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
                 builtinViewers.set(urlMd5, viewerWindow)
+                viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify([url])}')`)
+                viewerWindow.webContents.executeJavaScript(
+                    `document.getElementById('BAR').style['min-width'] = '380px'`,
+                )
+                viewerWindow.webContents.executeJavaScript(
+                    `document.getElementById('BAR_TABLE').style['min-width'] = '360px'`,
+                )
+                viewerWindow.webContents.executeJavaScript(
+                    `document.getElementById('prev').parentElement.style['display'] = 'none'`,
+                )
+                viewerWindow.webContents.executeJavaScript(
+                    `document.getElementById('next').parentElement.style['display'] = 'none'`,
+                )
             }
         }
     } else if (viewer) {

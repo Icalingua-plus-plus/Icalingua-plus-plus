@@ -133,6 +133,7 @@
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            :messages="messages"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -151,6 +152,7 @@
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
+                            :messages="messages"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">

@@ -86,6 +86,7 @@ export default {
         content: { type: String, default: '' },
         showForwardPanel: { type: Boolean, required: true },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
+        messages: { type: Array, required: false },
     },
 
     data() {
@@ -116,7 +117,20 @@ export default {
     methods: {
         openImage() {
             if (this.showForwardPanel) return
-            ipcRenderer.send('openImage', this.file.url, false)
+            if (!this.messages) ipcRenderer.send('openImage', this.file.url, false)
+            else {
+                let images = []
+                for (let i of this.messages) {
+                    if (i.files) {
+                        for (let j of i.files) {
+                            if (j.type.startsWith('image')) {
+                                images.push(j.url)
+                            }
+                        }
+                    }
+                }
+                ipcRenderer.send('openImage', this.file.url, false, images)
+            }
         },
     },
 }

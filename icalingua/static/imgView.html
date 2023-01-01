@@ -46,7 +46,7 @@
             height: 8vh;
             width: 50vh;
             min-height: 60px;
-            min-width: 380px;
+            min-width: 500px;
             border-radius: 10px;
             backdrop-filter: blur(2px);
             transform: translateX(-50%);
@@ -98,7 +98,7 @@
         <b id='RATIO_TEXT' style="font-size: 20px; line-height: 50px; color: #000000; transform: translateX(-10%);">100%</b>
     </div>
     <div id='BAR'>
-        <table style="width: 48vh; min-width: 360px; height: 100%; margin: auto;">
+        <table id="BAR_TABLE" style="width: 48vh; min-width: 480px; height: 100%; margin: auto;">
             <tr>
                 <!-- Template <td><button class='btn' style='background-image: url(data:image/svg+xml;base64,"></button></td> -->
                 <!-- toggle -->
@@ -115,6 +115,16 @@
                 <td>
                     <button class='btn'
                         style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0zNi43Mjc5IDM2LjcyNzlDMzMuNDcwNiAzOS45ODUzIDI4Ljk3MDYgNDIgMjQgNDJDMTQuMDU4OSA0MiA2IDMzLjk0MTEgNiAyNEM2IDE0LjA1ODkgMTQuMDU4OSA2IDI0IDZDMjguOTcwNiA2IDMzLjQ3MDYgOC4wMTQ3MiAzNi43Mjc5IDExLjI3MjFDMzguMzg1OSAxMi45MzAxIDQyIDE3IDQyIDE3IiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHBhdGggZD0iTTQyIDhWMTdIMzMiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=);'></button>
+                </td>
+                <!-- Previous Image -->
+                <td>
+                    <button class='btn' id='prev'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0yNCA0NEMzNS4wNDU3IDQ0IDQ0IDM1LjA0NTcgNDQgMjRDNDQgMTIuOTU0MyAzNS4wNDU3IDQgMjQgNEMxMi45NTQzIDQgNCAxMi45NTQzIDQgMjRDNCAzNS4wNDU3IDEyLjk1NDMgNDQgMjQgNDRaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMi40OTE3IDI0LjVIMTQuNDkxNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMy40OTE3IDE1LjVMMTQuNDkxNyAyNC41TDIzLjQ5MTcgMzMuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==);'></button>
+                </td>
+                <!-- Next Image -->
+                <td>
+                    <button class='btn' id='next'
+                        style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik0yNCA0NEMzNS4wNDU3IDQ0IDQ0IDM1LjA0NTcgNDQgMjRDNDQgMTIuOTU0MyAzNS4wNDU3IDQgMjQgNEMxMi45NTQzIDQgNCAxMi45NTQzIDQgMjRDNCAzNS4wNDU3IDEyLjk1NDMgNDQgMjQgNDRaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNC40OTE3IDI0LjVIMzIuNDkxNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMy40OTE3IDE1LjVMMzIuNDkxNyAyNC41TDIzLjQ5MTcgMzMuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==);'></button>
                 </td>
                 <!-- Zoom In -->
                 <td>
@@ -146,7 +156,7 @@
     const RATIO_TEXT = document.getElementById('RATIO_TEXT')
     let RATIO_TIMER = null
     let _ratio = 1
-    const url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
+    let url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
     IMG.src = url
     DOWNLOAD.href = url
 
@@ -342,8 +352,44 @@
     function download() {
         DOWNLOAD.dispatchEvent(new MouseEvent('click'))
     }
+
+    function previousImg() {
+        if (!window.imgs) return
+        const index = window.imgs.indexOf(IMG.src)
+        if (index > 0) {
+            url = window.imgs[index - 1]
+            reinit()
+        } else {
+            alert('已经是第一张了')
+        }
+    }
+
+    function nextImg() {
+        if (!window.imgs) return
+        const index = window.imgs.indexOf(IMG.src)
+        if (index < window.imgs.length - 1) {
+            url = window.imgs[index + 1]
+            reinit()
+        } else {
+            alert('已经是最后一张了')
+        }
+    }
+
+    function reinit() {
+        IMG.src = url
+        DOWNLOAD.href = url
+        _ratio = 1
+        centerX = -1    // to center, with % instead
+        centerY = -1
+        rotate = 0    // degree
+        zoom = 1
+        scale = 1 // store the zoom before scaling
+        toggle = false
+        IMG.style = 'position: absolute; z-index: 1'
+    }
+
     var btnactions = [
-        resetZoom, rotateAntiClockwise, rotateClockwise, zoomIn, zoomOut, download
+        resetZoom, rotateAntiClockwise, rotateClockwise, previousImg, nextImg, zoomIn, zoomOut, download
     ]
 
     var btns = document.getElementsByTagName('button')
