@@ -12,7 +12,7 @@ export default async (url: string): Promise<string> => {
         dir = fs.mkdtempSync(path.join(app.getPath('temp'), 'ica'))
     }
     let file = cache.get(url)
-    if (!file) {
+    if (!file || !fs.existsSync(file)) {
         const res = await axios.get(url, {
             responseType: 'arraybuffer',
             proxy: false,
