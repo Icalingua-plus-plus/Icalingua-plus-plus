@@ -248,6 +248,7 @@ export default {
             disableChatGroups: false,
             uploadProgress: '0',
             chatGroupsUnreadCount: {},
+            disableChatGroupsRedPoint: false,
         }
     },
     async created() {
@@ -256,6 +257,7 @@ export default {
         const ver = await ipc.getVersion()
         this.linkify = await ipc.getlinkifySetting()
         this.disableChatGroups = await ipc.getDisableChatGroupsSetting()
+        this.disableChatGroupsRedPoint = (await ipc.getSettings()).disableChatGroupsRedPoint
         const roomPanelLastSetting = await ipc.getRoomPanelSetting()
         this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
         this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
@@ -357,6 +359,22 @@ export default {
         ipcRenderer.on('setDisableChatGroupsSeeting', (_, p) => {
             this.disableChatGroups = p
             this.selectedChatGroup = 'chats'
+        })
+        ipcRenderer.on('setDisableChatGroupsRedPointSeeting', (_, p) => {
+            this.disableChatGroupsRedPoint = p
+            this.chatGroupsUnreadCount = {}
+            if (p) return
+            this.rooms.forEach(e => {
+                if (e.priority >= this.priority || e.at) {
+                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    if (e.unreadCount > 0) {
+                        this.chatGroupsUnreadCount['chats'] = true
+                        groups.forEach(g => {
+                            this.chatGroupsUnreadCount[g.name] = true
+                        })
+                    }
+                }
+            })
         })
         ipcRenderer.on('openGroupMemberPanel', (_, p) => {
             this.groupmemberShown = p.shown
@@ -847,7 +865,7 @@ Chromium ${process.versions.chrome}` : ''
                 return group.rooms.includes(e.roomId)
             })
 
-            if (this.disableChatGroups) return
+            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
             this.chatGroupsUnreadCount = {}
             n.forEach(e => {
                 if (e.priority >= this.priority || e.at) {
@@ -862,7 +880,7 @@ Chromium ${process.versions.chrome}` : ''
             })
         },
         selectedRoomId(n) {
-            if (this.disableChatGroups) return
+            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
             this.chatGroupsUnreadCount = {}
             this.rooms.forEach(e => {
                 if (e.roomId === n) return

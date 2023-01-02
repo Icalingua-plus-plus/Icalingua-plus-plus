@@ -168,6 +168,9 @@ export default {
     setDisableChatGroupsSeeting(a: boolean) {
         sendToMainWindow('setDisableChatGroupsSeeting', a)
     },
+    setDisableChatGroupsRedPointSeeting(a: boolean) {
+        sendToMainWindow('setDisableChatGroupsRedPointSeeting', a)
+    },
     uploadProgress(progress: string) {
         sendToMainWindow('uploadProgress', progress)
     },

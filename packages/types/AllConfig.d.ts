@@ -35,6 +35,7 @@ type AllConfig = {
     hideChatImageByDefault: boolean
     disableChatGroups: boolean
     singleImageMode: boolean
+    disableChatGroupsRedPoint: boolean
 }
 
 export default AllConfig

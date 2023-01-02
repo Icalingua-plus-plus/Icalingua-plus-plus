@@ -843,35 +843,6 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '禁用同会话多图切换',
-                type: 'checkbox',
-                checked: getConfig().singleImageMode,
-                click: (menuItem) => {
-                    getConfig().singleImageMode = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '启用高亮 URL 功能',
-                type: 'checkbox',
-                checked: getConfig().linkify,
-                click: (menuItem) => {
-                    getConfig().linkify = menuItem.checked
-                    saveConfigFile()
-                    ui.message('高亮 URL 功能已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效')
-                },
-            }),
-            new MenuItem({
-                label: '禁用聊天分组',
-                type: 'checkbox',
-                checked: getConfig().disableChatGroups,
-                click: (menuItem) => {
-                    getConfig().disableChatGroups = menuItem.checked
-                    saveConfigFile()
-                    ui.setDisableChatGroupsSeeting(menuItem.checked)
-                },
-            }),
-            new MenuItem({
                 label: '启动时检查更新',
                 type: 'checkbox',
                 checked: getConfig().updateCheck === true,
@@ -891,15 +862,59 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '隐藏聊天图片',
-                type: 'checkbox',
-                checked: getConfig().hideChatImageByDefault,
-                click: (menuItem) => {
-                    getConfig().hideChatImageByDefault = menuItem.checked
-                    saveConfigFile()
-                    ui.message('隐藏聊天图片已' + (menuItem.checked ? '开启' : '关闭'))
-                    ui.setHideChatImageByDefault(menuItem.checked)
-                },
+                label: '定制聊天界面',
+                submenu: [
+                    {
+                        label: '禁用同会话多图切换',
+                        type: 'checkbox',
+                        checked: getConfig().singleImageMode,
+                        click: (menuItem) => {
+                            getConfig().singleImageMode = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
+                        label: '禁用聊天分组功能',
+                        type: 'checkbox',
+                        checked: getConfig().disableChatGroups,
+                        click: (menuItem) => {
+                            getConfig().disableChatGroups = menuItem.checked
+                            saveConfigFile()
+                            ui.setDisableChatGroupsSeeting(menuItem.checked)
+                        },
+                    },
+                    {
+                        label: '关闭分组会话红点',
+                        type: 'checkbox',
+                        checked: getConfig().disableChatGroupsRedPoint,
+                        click: (menuItem) => {
+                            getConfig().disableChatGroupsRedPoint = menuItem.checked
+                            saveConfigFile()
+                            ui.setDisableChatGroupsRedPointSeeting(menuItem.checked)
+                        },
+                    },
+                    {
+                        label: '启用高亮 URL 功能',
+                        type: 'checkbox',
+                        checked: getConfig().linkify,
+                        click: (menuItem) => {
+                            getConfig().linkify = menuItem.checked
+                            saveConfigFile()
+                            ui.message('高亮 URL 功能已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效')
+                        },
+                    },
+                    {
+                        label: '隐藏聊天图片',
+                        type: 'checkbox',
+                        checked: getConfig().hideChatImageByDefault,
+                        click: (menuItem) => {
+                            getConfig().hideChatImageByDefault = menuItem.checked
+                            saveConfigFile()
+                            ui.message('隐藏聊天图片已' + (menuItem.checked ? '开启' : '关闭'))
+                            ui.setHideChatImageByDefault(menuItem.checked)
+                        },
+                    },
+                ],
             }),
             new MenuItem({
                 label: 'DEBUG MODE',
