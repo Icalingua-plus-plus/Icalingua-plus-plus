@@ -16,6 +16,7 @@
                         icon="el-icon-chat-square"
                         name="All Chats"
                         :selected="selectedChatGroup === 'chats'"
+                        :redPoint="chatGroupsUnreadCount['chats']"
                         @click="selectedChatGroup = 'chats'"
                     />
                     <SideBarIcon
@@ -24,6 +25,7 @@
                         icon="el-icon-chat-square"
                         :name="chatGroup.name"
                         :selected="selectedChatGroup === chatGroup.name"
+                        :redPoint="chatGroupsUnreadCount[chatGroup.name]"
                         @click="selectedChatGroup = chatGroup.name"
                         @click-middle="removeChatGroup(chatGroup.name)"
                         @click-right="updateChatGroup(chatGroup.name)"
@@ -245,6 +247,7 @@ export default {
             sortedRooms: [],
             disableChatGroups: false,
             uploadProgress: '0',
+            chatGroupsUnreadCount: {},
         }
     },
     async created() {
@@ -724,7 +727,7 @@ Chromium ${process.versions.chrome}` : ''
                     })
                     return
                 }
-                if (this.chatGroups.find(e => e.name === value)) {
+                if (this.chatGroups.find(e => e.name === value) || value === 'chats') {
                     this.$message({
                         type: 'error',
                         message: '聊天分组名字重复',
@@ -825,7 +828,37 @@ Chromium ${process.versions.chrome}` : ''
                 if (!group) return false
                 return group.rooms.includes(e.roomId)
             })
+
+            if (this.disableChatGroups) return
+            this.chatGroupsUnreadCount = {}
+            n.forEach(e => {
+                if (e.priority >= this.priority || e.at) {
+                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    if (e.unreadCount > 0) {
+                        this.chatGroupsUnreadCount['chats'] = true
+                        groups.forEach(g => {
+                            this.chatGroupsUnreadCount[g.name] = true
+                        })
+                    }
+                }
+            })
         },
+        selectedRoomId(n) {
+            if (this.disableChatGroups) return
+            this.chatGroupsUnreadCount = {}
+            this.rooms.forEach(e => {
+                if (e.roomId === n) return
+                if (e.priority >= this.priority || e.at) {
+                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    if (e.unreadCount > 0) {
+                        this.chatGroupsUnreadCount['chats'] = true
+                        groups.forEach(g => {
+                            this.chatGroupsUnreadCount[g.name] = true
+                        })
+                    }
+                }
+            })
+        }
     }
 }
 </script>
