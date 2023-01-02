@@ -87,6 +87,8 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
         messages: { type: Array, required: false },
+        message: { type: Object, required: false },
+        img_index: { type: Number, required: false },
     },
 
     data() {
@@ -122,16 +124,19 @@ export default {
                 ipcRenderer.send('openImage', this.file.url, false)
             else {
                 let images = []
+                const imgUrl = this.file.url + `&message_id=${this.message._id}&img_index=${this.img_index}`
                 for (let i of this.messages) {
                     if (i.files) {
-                        for (let j of i.files) {
-                            if (j.type.startsWith('image')) {
-                                images.push(j.url)
+                        for (let j in i.files) {
+                            if (i.files[j].type.startsWith('image')) {
+                                images.push(i.files[j].url + `&message_id=${i._id}&img_index=${j}`)
                             }
                         }
+                    } else if (this.message[i].file && this.message[i].file.type.startsWith('image')) {
+                        images.push(i.file.url + `&message_id=${i._id}&img_index=0`)
                     }
                 }
-                ipcRenderer.send('openImage', this.file.url, false, images)
+                ipcRenderer.send('openImage', imgUrl, false, images)
             }
         },
     },

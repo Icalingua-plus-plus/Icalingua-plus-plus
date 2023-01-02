@@ -134,6 +134,8 @@
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
                             :messages="messages"
+                            :message="message"
+                            :img_index="i"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">
@@ -153,6 +155,8 @@
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
                             :messages="messages"
+                            :message="message"
+                            :img_index="0"
                             @open-file="openFile"
                         >
                             <template v-for="(i, name) in $scopedSlots" #[name]="data">

@@ -182,8 +182,8 @@
     let TIP_TIMER = null
     let _ratio = 1
     let url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
-    IMG.src = url
-    DOWNLOAD.href = url
+    IMG.src = url.split('&message_id=')[0]
+    DOWNLOAD.href = url.split('&message_id=')[0]
 
     var centerX = -1    // to center, with % instead
     var centerY = -1
@@ -380,7 +380,7 @@
 
     function previousImg() {
         if (!window.imgs) return
-        const index = window.imgs.indexOf(IMG.src)
+        const index = window.imgs.indexOf(url)
         if (index > 0) {
             url = window.imgs[index - 1]
             reinit()
@@ -391,7 +391,7 @@
 
     function nextImg() {
         if (!window.imgs) return
-        const index = window.imgs.indexOf(IMG.src)
+        const index = window.imgs.indexOf(url)
         if (index < window.imgs.length - 1) {
             url = window.imgs[index + 1]
             reinit()
@@ -401,8 +401,8 @@
     }
 
     function reinit() {
-        IMG.src = url
-        DOWNLOAD.href = url
+        IMG.src = url.split('&message_id=')[0]
+        DOWNLOAD.href = url.split('&message_id=')[0]
         _ratio = 1
         centerX = -1    // to center, with % instead
         centerY = -1
