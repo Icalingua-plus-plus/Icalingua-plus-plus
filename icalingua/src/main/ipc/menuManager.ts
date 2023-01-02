@@ -843,7 +843,7 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '禁用同会话图片合并',
+                label: '禁用同会话多图切换',
                 type: 'checkbox',
                 checked: getConfig().singleImageMode,
                 click: (menuItem) => {

@@ -70,6 +70,23 @@
             pointer-events: none;
         }
 
+        #TIP {
+            display: flex;
+            background: rgba(255, 255, 255, 0.7);
+            position: absolute;
+            z-index: 3;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            height: 50px;
+            border-radius: 10px;
+            backdrop-filter: blur(2px);
+            transition: all 0.3s linear;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
         .icon {
             width: 50px;
             height: 50px;
@@ -96,6 +113,11 @@
         style='background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDQ4IDQ4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0id2hpdGUiIGZpbGwtb3BhY2l0eT0iMC4wMSIvPjxwYXRoIGQ9Ik0yMSAzOEMzMC4zODg4IDM4IDM4IDMwLjM4ODggMzggMjFDMzggMTEuNjExMiAzMC4zODg4IDQgMjEgNEMxMS42MTEyIDQgNCAxMS42MTEyIDQgMjFDNCAzMC4zODg4IDExLjYxMTIgMzggMjEgMzhaIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0yMSAxNUwyMSAyNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0xNSAyMUwyNyAyMSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxwYXRoIGQ9Ik0zMy4yMjE4IDMzLjIyMThMNDEuNzA3MSA0MS43MDcxIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+);'>
         </div>
         <b id='RATIO_TEXT' style="font-size: 20px; line-height: 50px; color: #000000; transform: translateX(-10%);">100%</b>
+    </div>
+    <div id="TIP">
+        <div style="width: 10px;"></div>
+        <b id='TIP_TEXT' style="font-size: 20px; line-height: 50px; color: #000000;">TIP</b>
+        <div style="width: 10px;"></div>
     </div>
     <div id='BAR'>
         <table id="BAR_TABLE" style="width: 48vh; min-width: 480px; height: 100%; margin: auto;">
@@ -154,7 +176,10 @@
     const DOWNLOAD = document.getElementById('download')
     const RATIO = document.getElementById('RATIO')
     const RATIO_TEXT = document.getElementById('RATIO_TEXT')
+    const TIP = document.getElementById('TIP')
+    const TIP_TEXT = document.getElementById('TIP_TEXT')
     let RATIO_TIMER = null
+    let TIP_TIMER = null
     let _ratio = 1
     let url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
     IMG.src = url
@@ -360,7 +385,7 @@
             url = window.imgs[index - 1]
             reinit()
         } else {
-            alert('已经是第一张了')
+            showTips('已经是第一张了')
         }
     }
 
@@ -371,7 +396,7 @@
             url = window.imgs[index + 1]
             reinit()
         } else {
-            alert('已经是最后一张了')
+            showTips('已经是最后一张了')
         }
     }
 
@@ -386,6 +411,18 @@
         scale = 1 // store the zoom before scaling
         toggle = false
         IMG.style = 'position: absolute; z-index: 1'
+    }
+
+    function showTips(str) {
+        TIP_TEXT.innerText = str
+        TIP.style.visibility = 'visible'
+        TIP.style.opacity = 1
+        if (TIP_TIMER) clearTimeout(TIP_TIMER)
+        TIP_TIMER = setTimeout(() => {
+            TIP.style.visibility = 'hidden'
+            TIP.style.opacity = 0
+            TIP_TIMER = null
+        }, 2000)
     }
 
     var btnactions = [

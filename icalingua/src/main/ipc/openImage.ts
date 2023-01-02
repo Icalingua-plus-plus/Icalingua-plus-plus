@@ -69,24 +69,21 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             )
             //viewerWindow.maximize()
             if (urlList.length > 1 && !getConfig().singleImageMode) {
-                // TODO: multiple images
-                viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify(urlList)}')`)
+                viewerWindow.webContents.on('did-finish-load', () => {
+                    viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify(urlList)}');`)
+                })
             } else {
                 viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
                 builtinViewers.set(urlMd5, viewerWindow)
-                viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify([url])}')`)
-                viewerWindow.webContents.executeJavaScript(
-                    `document.getElementById('BAR').style['min-width'] = '380px'`,
-                )
-                viewerWindow.webContents.executeJavaScript(
-                    `document.getElementById('BAR_TABLE').style['min-width'] = '360px'`,
-                )
-                viewerWindow.webContents.executeJavaScript(
-                    `document.getElementById('prev').parentElement.style['display'] = 'none'`,
-                )
-                viewerWindow.webContents.executeJavaScript(
-                    `document.getElementById('next').parentElement.style['display'] = 'none'`,
-                )
+                viewerWindow.webContents.on('did-finish-load', () => {
+                    viewerWindow.webContents.executeJavaScript(
+                        `window.imgs = JSON.parse('${JSON.stringify([url])}');` +
+                        `document.getElementById('BAR').style['min-width'] = '380px';` + 
+                        `document.getElementById('BAR_TABLE').style['min-width'] = '360px';` +
+                        `document.getElementById('prev').parentElement.style['display'] = 'none';` +
+                        `document.getElementById('next').parentElement.style['display'] = 'none';`,
+                    )
+                })
             }
         }
     } else if (viewer) {

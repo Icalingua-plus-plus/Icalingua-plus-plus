@@ -208,7 +208,7 @@ const ipc = {
         ipcRenderer.send('ignoreChat', data)
     },
     async getHideChatImageByDefault(): Promise<boolean> {
-        return await ipcRenderer.invoke('getHideChatImageByDefault')
+        return (await this.getSettings()).hideChatImageByDefault
     },
 }
 export default ipc
