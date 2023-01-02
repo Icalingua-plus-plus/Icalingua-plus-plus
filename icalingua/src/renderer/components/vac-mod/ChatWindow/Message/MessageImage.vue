@@ -120,8 +120,7 @@ export default {
         async openImage() {
             if (this.showForwardPanel) return
             const singleImageMode = (await ipcRenderer.invoke('getSettings')).singleImageMode
-            if (!this.messages || singleImageMode)
-                ipcRenderer.send('openImage', this.file.url, false)
+            if (!this.messages || singleImageMode) ipcRenderer.send('openImage', this.file.url, false)
             else {
                 let images = []
                 const imgUrl = this.file.url + `&message_id=${this.message._id}&img_index=${this.img_index}`

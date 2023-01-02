@@ -70,7 +70,9 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             //viewerWindow.maximize()
             if (urlList.length > 1 && !getConfig().singleImageMode) {
                 viewerWindow.webContents.on('did-finish-load', () => {
-                    viewerWindow.webContents.executeJavaScript(`window.imgs = JSON.parse('${JSON.stringify(urlList)}');`)
+                    viewerWindow.webContents.executeJavaScript(
+                        `window.imgs = JSON.parse('${JSON.stringify(urlList)}');`,
+                    )
                 })
             } else {
                 viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
@@ -78,10 +80,10 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                 viewerWindow.webContents.on('did-finish-load', () => {
                     viewerWindow.webContents.executeJavaScript(
                         `window.imgs = JSON.parse('${JSON.stringify([url])}');` +
-                        `document.getElementById('BAR').style['min-width'] = '380px';` + 
-                        `document.getElementById('BAR_TABLE').style['min-width'] = '360px';` +
-                        `document.getElementById('prev').parentElement.style['display'] = 'none';` +
-                        `document.getElementById('next').parentElement.style['display'] = 'none';`,
+                            `document.getElementById('BAR').style['min-width'] = '380px';` +
+                            `document.getElementById('BAR_TABLE').style['min-width'] = '360px';` +
+                            `document.getElementById('prev').parentElement.style['display'] = 'none';` +
+                            `document.getElementById('next').parentElement.style['display'] = 'none';`,
                     )
                 })
             }
