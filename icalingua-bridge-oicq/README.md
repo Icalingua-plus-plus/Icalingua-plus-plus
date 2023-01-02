@@ -101,7 +101,7 @@ wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@deve
 
 依照上文中的方法，修改公钥即可，然后运行
 
-具体跳转到 [常规步骤](#常规步骤) 的第 4,5 个步骤
+具体跳转到 [常规安装](#常规安装) 的第 4,5 个步骤
 
 #### 启动
 
