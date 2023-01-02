@@ -4,14 +4,10 @@ import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
 
 ipcMain.handle('getVersion', () => version.version)
-ipcMain.handle('getAria2Settings', () => getConfig().aria2)
+ipcMain.handle('getSettings', () => getConfig())
 ipcMain.handle('getKeyToSendMessage', () => getConfig().keyToSendMessage)
 ipcMain.handle('getClearRoomsBehavior', () => getConfig().clearRoomsBehavior)
 ipcMain.handle('getStorePath', () => app.getPath('userData'))
-ipcMain.handle('getlinkifySetting', () => getConfig().linkify)
-ipcMain.handle('getDisableChatGroupsSetting', () => getConfig().disableChatGroups)
-ipcMain.handle('getDebugSetting', () => getConfig().debugmode)
-ipcMain.handle('getOptimizeMethodSetting', () => getConfig().optimizeMethod)
 ipcMain.handle('getRoomPanelSetting', () => {
     const config = getConfig()
     return {

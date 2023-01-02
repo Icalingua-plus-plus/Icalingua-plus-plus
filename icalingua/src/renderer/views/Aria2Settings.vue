@@ -36,7 +36,7 @@ export default {
             /**
              * @type Aria2Config
              */
-            aria2: null,
+            aria2: {},
         }
     },
     async created() {

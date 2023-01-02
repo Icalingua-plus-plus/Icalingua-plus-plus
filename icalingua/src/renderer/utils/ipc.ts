@@ -1,4 +1,5 @@
 import Aria2Config from '@icalingua/types/Aria2Config'
+import AllConfig from '@icalingua/types/AllConfig'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
@@ -19,20 +20,23 @@ const ipc = {
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
     },
+    async getSettings(): Promise<AllConfig> {
+        return await ipcRenderer.invoke('getSettings')
+    },
     async getAria2Settings(): Promise<Aria2Config> {
-        return await ipcRenderer.invoke('getAria2Settings')
+        return (await this.getSettings()).aria2
     },
     async getlinkifySetting(): Promise<boolean> {
-        return await ipcRenderer.invoke('getlinkifySetting')
+        return (await this.getSettings()).linkify
     },
     async getDisableChatGroupsSetting(): Promise<boolean> {
-        return await ipcRenderer.invoke('getDisableChatGroupsSetting')
+        return (await this.getSettings()).disableChatGroups
     },
     async getDebugSetting(): Promise<boolean> {
-        return await ipcRenderer.invoke('getDebugSetting')
+        return (await this.getSettings()).debugmode
     },
     async getOptimizeMethodSetting(): Promise<string> {
-        return (await ipcRenderer.invoke('getOptimizeMethodSetting')) || 'infinite-loading'
+        return (await this.getSettings()).optimizeMethod || 'infinite-loading'
     },
     async getRoomPanelSetting(): Promise<{ roomPanelAvatarOnly: boolean; roomPanelWidth: number }> {
         return await ipcRenderer.invoke('getRoomPanelSetting')
