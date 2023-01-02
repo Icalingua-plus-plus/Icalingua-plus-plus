@@ -276,12 +276,10 @@ export default {
         document.addEventListener('keydown', (e) => {
             if (e.repeat) {
                 return
-            }
-            else if (e.key === 'F1') {
+            } else if (e.key === 'F1') {
                 if (this.selectedRoomId)
                     this.panel = this.panel === 'stickers' ? '' : 'stickers'
-            }
-            else if (e.key === 'Escape') {
+            } else if (e.key === 'Escape') {
                 if (document.webkitIsFullScreen)
                     return
                 if (this.$refs.room.messageReply || this.$refs.room.editAndResend || this.$refs.room.message)
@@ -291,8 +289,7 @@ export default {
                 else {
                     this.closeRoom()
                 }
-            }
-            else if (e.key === 'Tab') {
+            } else if (e.key === 'Tab') {
                 if (e.ctrlKey) {
                     const rooms = this.sortedRooms
                     if (!rooms.length) return
@@ -319,7 +316,28 @@ export default {
 						if (unreadRoom) this.chroom(unreadRoom)
 					}
 				}
-			}
+			} else if (e.ctrlKey) {
+                switch (e.key) {
+                    case '1':
+                        this.selectedChatGroup = 'chats'
+                        break
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        const n = Number(e.key)
+                        if (this.chatGroups[n - 2]) {
+                            this.selectedChatGroup = this.chatGroups[n - 2].name
+                        }
+                        break
+                    default:
+                        break
+                }
+            }
         })
         //endregion
 
