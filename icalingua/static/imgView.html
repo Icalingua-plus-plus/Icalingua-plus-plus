@@ -426,13 +426,26 @@
     }
 
     window.addEventListener('keydown', (e) => {
-        const ltArrow = 37;
-        const rtArrow = 39;
+        const ltArrow = 37
+        const rtArrow = 39
+        const upArrow = 38
+        const dnArrow = 40
         let _key
         if (e) _key = e.which
         else _key = window.event.keyCode
-        if (_key == ltArrow) previousImg()
-        else if (_key == rtArrow) nextImg()
+        if (_key == ltArrow) {
+            if (!e.shiftKey) previousImg()
+            else IMG.style.left = IMG.offsetLeft + 10 + 'px'
+        } else if (_key == rtArrow) {
+            if (!e.shiftKey) nextImg()
+            else IMG.style.left = IMG.offsetLeft - 10 + 'px'
+        } else if (_key == upArrow) {
+            if (e.ctrlKey) zoomIn()
+            else IMG.style.top = IMG.offsetTop + 10 + 'px'
+        } else if (_key == dnArrow) {
+            if (e.ctrlKey) zoomOut()
+            else IMG.style.top = IMG.offsetTop - 10 + 'px'
+        }
     })
 
     var btnactions = [
@@ -470,6 +483,7 @@
     DRAG.onwheel = e => {
         if (e.shiftKey) {
             IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
+            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX / 10 + 'px'
             return
         }
         if (e.wheelDeltaY > 0) {
