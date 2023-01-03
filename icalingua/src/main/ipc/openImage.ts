@@ -1,6 +1,6 @@
 import { execFileSync, execFile } from 'child_process'
 import which from 'which'
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, app, ipcMain } from 'electron'
 import path from 'path'
 import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
@@ -10,6 +10,7 @@ import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
 import { getConfig } from '../utils/configManager'
+import { download } from './downloadManager'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open']
@@ -97,4 +98,11 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
 ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) =>
     openImage(url, external, urlList),
 )
+ipcMain.on('saveSticker', (e, url: string) => {
+    download(
+        url,
+        String(new Date().getTime()),
+        path.join(app.getPath('userData'), 'stickers'),
+    )
+})
 export default openImage

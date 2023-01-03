@@ -526,7 +526,7 @@
         items.push({
             title: '下载',
             fn: function () {
-                    download()
+                download()
             }
         })
         items.push({
@@ -539,6 +539,12 @@
             title: '复制 URL',
             fn: function () {
                 navigator.clipboard.writeText(IMG.src)
+            }
+        })
+        items.push({
+            title: '添加为默认表情',
+            fn: function () {
+                window.saveSticker(IMG.src)
             }
         })
         basicContext.show(items, e)
