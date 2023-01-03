@@ -425,6 +425,16 @@
         }, 2000)
     }
 
+    window.addEventListener('keydown', (e) => {
+        const ltArrow = 37;
+        const rtArrow = 39;
+        let _key
+        if (e) _key = e.which
+        else _key = window.event.keyCode
+        if (_key == ltArrow) previousImg()
+        else if (_key == rtArrow) nextImg()
+    })
+
     var btnactions = [
         resetZoom, rotateAntiClockwise, rotateClockwise, previousImg, nextImg, zoomIn, zoomOut, download
     ]
