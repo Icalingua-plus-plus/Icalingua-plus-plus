@@ -440,10 +440,10 @@
             if (!e.shiftKey) nextImg()
             else IMG.style.left = IMG.offsetLeft - 10 + 'px'
         } else if (_key == upArrow) {
-            if (e.ctrlKey) zoomIn()
+            if (e.ctrlKey) zoomIn({ type: 'click' })
             else IMG.style.top = IMG.offsetTop + 10 + 'px'
         } else if (_key == dnArrow) {
-            if (e.ctrlKey) zoomOut()
+            if (e.ctrlKey) zoomOut({ type: 'click' })
             else IMG.style.top = IMG.offsetTop - 10 + 'px'
         }
     })
