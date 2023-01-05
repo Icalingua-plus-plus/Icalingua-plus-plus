@@ -26,7 +26,7 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" @error="errorHandler" />
+                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" />
                 </div>
             </div>
         </div>
@@ -91,16 +91,8 @@ export default {
             subdirs: [],
             default_dir: '',
             current_dir: 'Default',
-            errorCount: {},
-            errorTimer: {},
             watchedPath: {},
         }
-    },
-    watch: {
-        pics(n, o) {
-            const files = n.map((i) => this.dir + i)
-            this.generatePreview(files)
-        },
     },
     async created() {
         this.panel = await ipc.getLastUsedStickerType()
@@ -154,43 +146,28 @@ export default {
             return 'file://' + this.default_dir.replace('stickers', 'stickers_preview') + md5(n)
         },
         errorHandler(e) {
-            const hash = md5(e.target.src)
-            this.errorCount[hash] = this.errorCount[hash] || 0
-            this.errorCount[hash]++
-            if (this.errorCount[hash] > 20) {
-                console.error('Failed to load image: ' + e.target.src)
-                return
-            }
-            setTimeout(() => {
-                e.target.src = e.target.src
-            }, 500)
-            if (!this.errorTimer[hash]) {
-                this.errorTimer[hash] = setTimeout(() => {
-                    this.errorCount[hash] = 0
-                    this.errorTimer[hash] = null
-                }, 20000)
-            }
-        },
-        generatePreview(files) {
-            for (let i of files) {
-                const n = this.getPreview(i).replace('file://', '')
-                if (!fs.existsSync(n)) {
-                    let img = document.createElement('img')
-                    let canvas = document.createElement('canvas')
-                    img.src = i
-                    img.onload = () => {
-                        canvas.width = img.width
-                        canvas.height = img.height
-                        let ctx = canvas.getContext('2d')
-                        ctx.drawImage(img, 0, 0, img.width, img.height)
-                        let dataURL = canvas.toDataURL('image/webp', 0.8)
-                        let base64Data = dataURL.replace(/^data:image\/webp;base64,/, '')
-                        fs.writeFile(n, base64Data, 'base64', (err) => {
-                            if (err) {
-                                console.error(err)
-                            }
-                        })
-                    }
+            // generate preview
+            const originSrc = e.target.getAttribute('origin-src')
+            const n = this.getPreview(originSrc).replace('file://', '')
+            if (!fs.existsSync(n)) {
+                let img = document.createElement('img')
+                let canvas = document.createElement('canvas')
+                img.src = originSrc.startsWith('http') ? '' : 'file://' + originSrc
+                img.onload = () => {
+                    canvas.width = img.width
+                    canvas.height = img.height
+                    let ctx = canvas.getContext('2d')
+                    ctx.drawImage(img, 0, 0, img.width, img.height)
+                    let dataURL = canvas.toDataURL('image/webp', 0.8)
+                    let base64Data = dataURL.replace(/^data:image\/webp;base64,/, '')
+                    fs.writeFile(n, base64Data, 'base64', (err) => {
+                        if (err) {
+                            console.error(err)
+                            return
+                        }
+                        console.log('Preview generated', originSrc)
+                        e.target.src = e.target.src
+                    })
                 }
             }
         },

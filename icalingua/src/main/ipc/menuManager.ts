@@ -676,10 +676,18 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '清除缓存并重新加载',
+                label: '清除网页缓存并重载',
                 click: () => {
                     ui.chroom(0)
                     getMainWindow().webContents.session.clearCache()
+                    getMainWindow().reload()
+                },
+            }),
+            new MenuItem({
+                label: '清除表情缓存并重载',
+                click: () => {
+                    fs.rmdirSync(path.join(app.getPath('userData'), 'stickers_preview'), { recursive: true })
+                    ui.chroom(0)
                     getMainWindow().reload()
                 },
             }),
