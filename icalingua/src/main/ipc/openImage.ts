@@ -71,9 +71,7 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             //viewerWindow.maximize()
             if (urlList.length > 1 && !getConfig().singleImageMode) {
                 viewerWindow.webContents.on('did-finish-load', () => {
-                    viewerWindow.webContents.executeJavaScript(
-                        `window.imgs = ${JSON.stringify(urlList)};`,
-                    )
+                    viewerWindow.webContents.executeJavaScript(`window.imgs = ${JSON.stringify(urlList)};`)
                 })
             } else {
                 viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
@@ -99,10 +97,6 @@ ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Arr
     openImage(url, external, urlList),
 )
 ipcMain.on('saveSticker', (e, url: string) => {
-    download(
-        url,
-        String(new Date().getTime()),
-        path.join(app.getPath('userData'), 'stickers'),
-    )
+    download(url, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
 })
 export default openImage

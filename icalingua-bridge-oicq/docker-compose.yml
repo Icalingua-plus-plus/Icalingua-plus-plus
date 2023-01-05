@@ -1,44 +1,44 @@
 version: '3'
 
 services:
-  icalingua-bridge-oicq:
-    container_name: icalingua-bridge-oicq
-    image: icalinguaplusplus/icalingua-bridge-oicq:latest
-    command: "node build"
-    environment:
-      - TZ=Asia/Shanghai
-    volumes:
-      # 用户数据文件夹挂载
-      - ./data/icalingua-bridge-oicq:/app/build/data/
-      # 挂载配置文件
-      - type: bind                    
-        source: ./config.yaml    # 挂载的文件
-        target: /app/config.yaml
-    ports:
-      - '6789:6789'
-    depends_on:
-      - mongo
-    links:
-      - mongo
-    networks:
-      - icalingua-bridge-oicq-network
-    restart: always
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:6789']
-      interval: 1m30s
-      timeout: 30s
-      retries: 5
-      start_period: 30s
+    icalingua-bridge-oicq:
+        container_name: icalingua-bridge-oicq
+        image: icalinguaplusplus/icalingua-bridge-oicq:latest
+        command: 'node build'
+        environment:
+            - TZ=Asia/Shanghai
+        volumes:
+            # 用户数据文件夹挂载
+            - ./data/icalingua-bridge-oicq:/app/build/data/
+            # 挂载配置文件
+            - type: bind
+              source: ./config.yaml # 挂载的文件
+              target: /app/config.yaml
+        ports:
+            - '6789:6789'
+        depends_on:
+            - mongo
+        links:
+            - mongo
+        networks:
+            - icalingua-bridge-oicq-network
+        restart: always
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://127.0.0.1:6789']
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
 
-  mongo:
-    container_name: mongo
-    image: mongo
-    volumes:
-      - ./data/db:/data/db
-    networks:
-      - icalingua-bridge-oicq-network
-    restart: always
+    mongo:
+        container_name: mongo
+        image: mongo
+        volumes:
+            - ./data/db:/data/db
+        networks:
+            - icalingua-bridge-oicq-network
+        restart: always
 
 networks:
-  icalingua-bridge-oicq-network:
-    driver: bridge
+    icalingua-bridge-oicq-network:
+        driver: bridge
