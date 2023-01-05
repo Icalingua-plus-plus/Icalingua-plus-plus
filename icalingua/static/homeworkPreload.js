@@ -14,6 +14,9 @@ window.external = {
     },
     viewImage(url) {
         require('electron').ipcRenderer.send('openImage', url);
+    },
+    closeWebWindow() {
+        window.close()
     }
 }
 const observer = new MutationObserver(() => {
