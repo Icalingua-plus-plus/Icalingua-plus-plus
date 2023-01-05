@@ -1051,6 +1051,22 @@ const adapter = {
                     id: replyMessage._id,
                 },
             })
+
+            if (roomId < 0 && replyMessage.senderId)
+                chain.push(
+                    {
+                        type: 'at',
+                        data: {
+                            qq: replyMessage.senderId,
+                        },
+                    },
+                    {
+                        type: 'text',
+                        data: {
+                            text: ' ',
+                        },
+                    },
+                )
         }
         if (content) {
             //这里是处理@人和表情 markup 的逻辑
