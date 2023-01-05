@@ -39,7 +39,10 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                             if (!win.isDestroyed()) win.reload()
                         }, 0)
                     })
-
+                    win1.webContents.on('did-finish-load', () => {
+                        if (details.url.includes('qun.qq.com/homework/p/features/index.html#/answer'))
+                            win1.webContents.insertCSS('#answer .answer-content {overflow: auto;}')
+                    })
                     await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
                 })()
             } else if (url.hostname == 'docs.qq.com') {
