@@ -1370,14 +1370,16 @@ const adapter: OicqAdapter = {
                         },
                     }
                 } else if (messageType === 'json') {
-                    chain.length = 0
-                    chain.push({
-                        type: 'json',
-                        data: {
-                            data: content,
-                        },
-                    })
-                    break
+                    const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0)
+                    ui.closeLoading()
+                    if (retData.error) {
+                        ui.notifyError({
+                            title: 'Failed to send',
+                            message: retData.error.message,
+                        })
+                        ui.addMessageText(message.content)
+                    }
+                    return
                 } else if (messageType === 'xml') {
                     chain.length = 0
                     chain.push({

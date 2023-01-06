@@ -1137,14 +1137,16 @@ const adapter = {
                         },
                     }
                 } else if (messageType === 'json') {
-                    chain.length = 0
-                    chain.push({
-                        type: 'json',
-                        data: {
-                            data: content,
-                        },
-                    })
-                    break
+                    const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0)
+                    clients.closeLoading()
+                    if (retData.error) {
+                        clients.notifyError({
+                            title: 'Failed to send',
+                            message: retData.error.message,
+                        })
+                        clients.addMessageText(message.content)
+                    }
+                    return
                 } else if (messageType === 'xml') {
                     chain.length = 0
                     chain.push({
