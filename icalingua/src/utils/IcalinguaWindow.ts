@@ -50,13 +50,13 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
                 const search = new URLSearchParams(url.search)
                 const fileName = search.get('fileName')
                 const downloadUrl = search.get('url')
-                if (fileName !== null && downloadUrl !== null) download(downloadUrl, fileName)
+                if (fileName !== null && downloadUrl !== null) download(downloadUrl, fileName, undefined, true)
             } else if (url.host.endsWith('file.myqcloud.com')) {
                 // lgtm[js/incomplete-url-substring-sanitization]
                 // 下载提交的作业文件
                 // 域名为 grouphw-xxxxxx.file.myqcloud.com 形式
                 const fileName = new URLSearchParams(url.search).get('fileName') || ''
-                download(details.url, fileName)
+                download(details.url, fileName, undefined, true)
             }
             return {
                 action: 'deny',
