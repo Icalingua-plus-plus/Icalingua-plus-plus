@@ -12,17 +12,25 @@ import silkDecode from './silkDecode'
 const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
     if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]
     let lastType
+    let lastReply = false
     for (let i = 0; i < oicqMessage.length; i++) {
         const m = oicqMessage[i]
         let appurl
         let url
         switch (m.type) {
             case 'at':
-                if (lastType === 'reply') break
+                if (lastType === 'reply') {
+                    lastReply = true
+                    break
+                }
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
                 // PCQQ 发送的消息的换行符是 \r，统一转成 \n
-                const text = m.data.text.split('\r\n').join('\n').split('\r').join('\n')
+                let text = m.data.text.split('\r\n').join('\n').split('\r').join('\n')
+                if (lastReply) {
+                    lastReply = false
+                    text = text.replace(/^ /, '')
+                }
                 lastMessage.content += text
                 message.content += text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
