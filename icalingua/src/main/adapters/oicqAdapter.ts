@@ -1286,12 +1286,18 @@ const adapter: OicqAdapter = {
                 },
             })
 
-            if (roomId < 0 && replyMessage.senderId)
+            let replyUin = replyMessage.senderId
+            if (!replyUin) {
+                const parsed = Buffer.from(replyMessage._id, 'base64')
+                replyUin = parsed.readUInt32BE(roomId < 0 ? 4 : 0)
+            }
+
+            if (roomId < 0)
                 chain.push(
                     {
                         type: 'at',
                         data: {
-                            qq: replyMessage.senderId,
+                            qq: replyUin,
                         },
                     },
                     {
