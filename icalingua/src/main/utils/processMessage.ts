@@ -203,8 +203,8 @@ const processMessage = async (
                     lastMessage.content += '[群相册]' + jsonObj.prompt
                     message.content += '[群相册]' + jsonObj.prompt
                 } else {
-                    lastMessage.content = '[JSON]'
-                    message.content = '[JSON]'
+                    lastMessage.content = '[JSON]' + (jsonObj.prompt || '')
+                    message.content = '[JSON]' + (jsonObj.prompt || '')
                 }
                 break
             case 'xml':
@@ -240,8 +240,13 @@ const processMessage = async (
                     }
                     message.files.push(message.file)
                 } else {
+                    const brief_reg = m.data.data.match(/brief="([^"]+)"/)
                     lastMessage.content += '[XML]'
                     message.content += '[XML]'
+                    if (brief_reg && brief_reg[1]) {
+                        lastMessage.content += brief_reg[1]
+                        message.content += brief_reg[1]
+                    }
                 }
                 break
             case 'face':
