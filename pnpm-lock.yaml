@@ -72,11 +72,11 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.2
+      oicq-icalingua-plus-plus: ^1.23.3
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       pinyin-match: ^1.2.2
-      prettier: ^2.8.1
+      prettier: ^2.8.2
       sass: ^1.57.1
       sass-loader: ^10.4.1
       silk-sdk: ^0.2.2
@@ -118,7 +118,7 @@ importers:
       knex: 0.95.15_r2xbi4zbllusb5q2fougkvkh6i
       mongodb: 4.13.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.2
+      oicq-icalingua-plus-plus: 1.23.3
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       pinyin-match: 1.2.2
@@ -175,7 +175,7 @@ importers:
       multispinner: 0.2.1
       node-loader: 0.6.0
       nodejs-base64: 2.0.0
-      prettier: 2.8.1
+      prettier: 2.8.2
       sass: 1.57.1
       sass-loader: 10.4.1_sass@1.57.1+webpack@4.46.0
       socket.io-client: 4.5.4
@@ -229,10 +229,10 @@ importers:
       mongodb: ^4.13.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.2
+      oicq-icalingua-plus-plus: ^1.23.3
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
-      prettier: ^2.8.1
+      prettier: ^2.8.2
       silk-sdk: ^0.2.2
       socket.io: ^4.5.4
       sqlite3: ^5.1.4
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.13.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.2
+      oicq-icalingua-plus-plus: 1.23.3
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -272,7 +272,7 @@ importers:
       '@types/md5': 2.3.2
       '@types/mongodb': 3.6.20
       '@types/node': 16.18.11
-      prettier: 2.8.1
+      prettier: 2.8.2
       ts-node: 10.9.1_qacynw5b4krdzzrloasmebsynu
       typescript: 4.9.4
 
@@ -1600,7 +1600,7 @@ packages:
     resolution: {integrity: sha512-aNmNHyLPsw+sVvlQFQ2/8sjNuLtK54TC6cuKnVzAY93ks4ZBrvwQSnkkIh7bsbNhum5hJBS00wSDipQ937f5DA==}
     dependencies:
       '@babel/parser': 7.20.7
-      postcss: 8.4.20
+      postcss: 8.4.21
       source-map: 0.6.1
     dev: true
 
@@ -1616,7 +1616,7 @@ packages:
       source-map: 0.6.1
       vue-template-es2015-compiler: 1.9.1
     optionalDependencies:
-      prettier: 2.8.1
+      prettier: 2.8.2
     transitivePeerDependencies:
       - arc-templates
       - atpl
@@ -8644,8 +8644,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.2:
-    resolution: {integrity: sha512-q+7dpTQ0J3NlIOyU3E+IMY0BSD6DLYgjL4uMN4F1EDKJoPx6gt/H4WYqqMQCdfkSIRDO1hf8o216fYJpaW/LGQ==}
+  /oicq-icalingua-plus-plus/1.23.3:
+    resolution: {integrity: sha512-JXZBkxhcDXKCRQKYupy9i2j2c0CNSncq19ySBZSffNriROeuNG/3E+jqeNGl2G1CWB6tnf2Q6zz6M9GwlS77mQ==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -9363,8 +9363,8 @@ packages:
       source-map: 0.6.1
     dev: true
 
-  /postcss/8.4.20:
-    resolution: {integrity: sha512-6Q04AXR1212bXr5fh03u8aAwbLxAQNGQ/Q1LNa0VfOI06ZAlhPHtQvE4OIdpj4kLThXilalPnmDSOD65DcHt+g==}
+  /postcss/8.4.21:
+    resolution: {integrity: sha512-tP7u/Sn/dVxK2NnruI4H9BG+x+Wxz6oeZ1cJ8P6G/PZY0IKk4k/63TDsQf2kQq3+qoJeLm2kIBUNlZe3zgb4Zg==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       nanoid: 3.3.4
@@ -9404,8 +9404,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /prettier/2.8.1:
-    resolution: {integrity: sha512-lqGoSJBQNJidqCHE80vqZJHWHRFoNYsSpP9AjFhlhi9ODCJA541svILes/+/1GM3VaL/abZi7cpFzOpdR9UPKg==}
+  /prettier/2.8.2:
+    resolution: {integrity: sha512-BtRV9BcncDyI2tsuS19zzhzoxD8Dh8LiCx7j7tHzrkz8GFXAexeWFdi22mjE1d16dftH2qNaytVxqiRTGlMfpw==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true

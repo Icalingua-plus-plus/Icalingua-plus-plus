@@ -1008,6 +1008,24 @@ export default {
 
             if (!debugmode && message.match(/serviceID[\s]*?=[\s]*?('|")(13|60|76|83)('|")/g)) return
 
+            const map = [
+                '73686f7773656e646572',
+                '636f6d2e74656e63656e742e6175746f7265706c79',
+                '6a712e71712e636f6d',
+                '76696577526563656970744d657373616765',
+                '636f6d2e74656e63656e742e6d6f62696c6571712e72656164696e67',
+                '74692e71712e636f6d',
+            ]
+            const mode = Buffer.from('aGV4', 'base64').toString()
+            if (!debugmode) {
+                for (let i of map) {
+                    if (message.toLowerCase().includes(Buffer.from(i, mode).toString())) {
+                        this.resetMessage(true)
+                        return
+                    }
+                }
+            }
+
             const msgType = isJSON(message) ? 'json' : 'xml'
 
             this.$emit('send-message', {
