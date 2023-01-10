@@ -751,6 +751,12 @@ export default {
     },
     methods: {
         sendForward(target, name) {
+            const isJSON = (str) => {
+                try {
+                    if (typeof JSON.parse(str) == 'object') return true
+                } catch (e) {}
+                return false
+            }
             if (this.msgstoForward.length <= 0) {
                 console.log('No Message Selected.')
                 return
@@ -795,6 +801,13 @@ export default {
                                     },
                                 })
                         })
+                    }
+                    if (msg.code) {
+                        if (isJSON(msg.code)) {
+                            singleMessage.message = [{ type: 'json', data: { json: msg.code } }]
+                        } else {
+                            singleMessage.message = [{ type: 'xml', data: { xml: msg.code } }]
+                        }
                     }
                     singleMessage.nickname = msg.senderId !== this.account ? msg.username : this.username
                     singleMessage.time = Math.floor(msg.time / 1000)
