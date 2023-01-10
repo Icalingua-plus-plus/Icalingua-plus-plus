@@ -1050,6 +1050,7 @@ const adapter = {
                 type: 'reply',
                 data: {
                     id: replyMessage._id,
+                    text: replyMessage.content,
                 },
             })
 

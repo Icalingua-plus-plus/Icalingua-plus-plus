@@ -1283,6 +1283,7 @@ const adapter: OicqAdapter = {
                 type: 'reply',
                 data: {
                     id: replyMessage._id,
+                    text: replyMessage.content,
                 },
             })
 
