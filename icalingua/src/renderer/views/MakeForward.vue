@@ -7,6 +7,7 @@
         <el-input v-model="content" type="textarea" placeholder="content" :rows="6" />
         <el-input v-model="timestamp" placeholder="timestamp" @input="timestamp = timestamp.replace(/[^\d]/g, '')" />
         <el-input v-model="origin" placeholder="origin" @input="origin = origin.replace(/[^\d]/g, '')" />
+        <el-input v-model="styleMsgId" placeholder="Style From Msg ID" />
         <el-switch v-model="dm" inactive-text="群聊模式" active-text="私聊模式"></el-switch>
         <div class="dialog-footer">
             <el-button type="primary" @click="addMessage">加入</el-button>
@@ -29,6 +30,7 @@ export default {
             Messages: [],
             dm: false,
             origin: '',
+            styleMsgId: '',
         }
     },
     created() {
@@ -41,6 +43,7 @@ export default {
                 message: [],
                 nickname: '',
                 time: 0,
+                id: this.styleMsgId,
             }
             if (this.uid != '') {
                 if (this.timestamp == '') {
