@@ -782,6 +782,15 @@ export default {
                 }
                 if (msg) {
                     singleMessage.user_id = msg.senderId
+                    if (msg.replyMessage) {
+                        singleMessage.message.push({
+                            type: 'reply',
+                            data: {
+                                id: msg.replyMessage._id,
+                                text: msg.replyMessage.content,
+                            },
+                        })
+                    }
                     singleMessage.message.push({
                         type: 'text',
                         data: {
@@ -842,6 +851,10 @@ export default {
             console.log('delMsgtoForward')
         },
         scrollToMessage(messageId) {
+            if (this.$route.name === 'history-page') {
+                this.$message.error('转发消息中不支持跳转')
+                return
+            }
             const judgeSameMessage = (a, b) => {
                 if (a === b) return true
                 const parsedA = Buffer.from(a, 'base64')
