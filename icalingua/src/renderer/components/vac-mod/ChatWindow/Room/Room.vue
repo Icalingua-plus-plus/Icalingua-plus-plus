@@ -791,12 +791,40 @@ export default {
                             },
                         })
                     }
-                    singleMessage.message.push({
-                        type: 'text',
-                        data: {
-                            text: msg.content,
-                        },
-                    })
+                    if (msg.content) {
+                        const FACE_REGEX = /\[Face: (\d+)]/
+                        const Parts = []
+                        let splitContent = msg.content
+                        while (FACE_REGEX.test(splitContent)) {
+                            const exec = FACE_REGEX.exec(splitContent)
+                            const index = exec.index
+                            const before = splitContent.substr(0, index)
+                            const text = exec[0]
+                            splitContent = splitContent.substr(index + text.length)
+                            before && Parts.push(before)
+                            Parts.push(text)
+                        }
+                        Parts.push(splitContent)
+                        for (const part of Parts) {
+                            const isFace = FACE_REGEX.test(part)
+                            if (isFace) {
+                                var temp = FACE_REGEX.exec(part)[1]
+                                singleMessage.message.push({
+                                    type: 'face',
+                                    data: {
+                                        id: Number.parseInt(temp, 10),
+                                    },
+                                })
+                            } else {
+                                singleMessage.message.push({
+                                    type: 'text',
+                                    data: {
+                                        text: part,
+                                    },
+                                })
+                            }
+                        }
+                    }
                     if (msg.files) {
                         msg.files.forEach((file) => {
                             if (file.type.startsWith('image/'))
