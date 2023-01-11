@@ -720,7 +720,7 @@ const loginHandlers = {
             const rooms = await storage.getAllRooms()
             // 先私聊后群聊
             for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
                 if (i.roomId < 0) continue
                 const roomId = i.roomId
                 let buffer: Buffer
@@ -734,7 +734,7 @@ const loginHandlers = {
                 await sleep(500)
             }
             for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) return
+                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
                 if (i.roomId > 0) continue
                 const roomId = i.roomId
                 let buffer: Buffer
@@ -748,6 +748,7 @@ const loginHandlers = {
                 await sleep(500)
             }
         }
+        clients.messageSuccess('历史消息获取完成')
     },
     verify(data: DeviceEventData) {
         console.log(data)
