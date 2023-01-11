@@ -929,7 +929,9 @@ export const updateAppMenu = async () => {
                         click: (menuItem) => {
                             getConfig().localImageViewerByDefault = menuItem.checked
                             saveConfigFile()
-                            ui.message('默认使用' + (menuItem.checked ? '本地图片查看器' : '内置图片查看器') + '查看图片')
+                            ui.message(
+                                '默认使用' + (menuItem.checked ? '本地图片查看器' : '内置图片查看器') + '查看图片',
+                            )
                             ui.setLocalImageViewerByDefault(menuItem.checked)
                         },
                     },
@@ -1199,10 +1201,8 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             label: '复制 bubble id',
                             type: 'normal',
                             click: () => {
-                                if (message.bubble_id)
-                                    clipboard.writeText(String(message.bubble_id))
-                                else
-                                    ui.messageError('未获取到 bubble id')
+                                if (message.bubble_id) clipboard.writeText(String(message.bubble_id))
+                                else ui.messageError('未获取到 bubble id')
                             },
                         },
                         {

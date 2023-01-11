@@ -176,5 +176,5 @@ export default {
     },
     setLocalImageViewerByDefault(enable: boolean) {
         sendToMainWindow('setLocalImageViewerByDefault', enable)
-    }
+    },
 }
