@@ -778,7 +778,8 @@ export default {
                     message: [],
                     nickname: '',
                     time: 0,
-                    id: msg._id
+                    id: msg._id,
+                    consistent: true
                 }
                 if (msg) {
                     singleMessage.user_id = msg.senderId
