@@ -130,6 +130,28 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         message.replyMessage.files = replyMessage.files
                     }
                     if (replyMessage.senderId === adapter.getUin()) message.at = true
+                } else {
+                    try {
+                        let user_id: number, time: number
+                        const parsed = Buffer.from(m.data.id, 'base64')
+                        if (m.data.id.length > 24) {
+                            // Group
+                            user_id = parsed.readUInt32BE(4)
+                            time = parsed.readUInt32BE(16)
+                        } else {
+                            // C2C
+                            user_id = parsed.readUInt32BE(0)
+                            time = parsed.readUInt32BE(12)
+                        }
+                        message.replyMessage = {
+                            _id: m.data.id,
+                            username: user_id === adapter.getUin() ? 'You' : String(user_id),
+                            content: `无法找到原消息(${m.data.id})(${time})`,
+                            files: [],
+                        }
+                    } catch (err) {
+                        console.error(err)
+                    }
                 }
                 break
             case 'json':
