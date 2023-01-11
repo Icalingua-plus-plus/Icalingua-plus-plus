@@ -1187,7 +1187,6 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         {
                             label: '复制 bubble id',
                             type: 'normal',
-                            visible: !history,
                             click: () => {
                                 if (message.bubble_id)
                                     clipboard.writeText(String(message.bubble_id))

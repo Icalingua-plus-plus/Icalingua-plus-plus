@@ -1033,6 +1033,7 @@ const adapter: OicqAdapter = {
                 _id: id,
                 time: data.time * 1000,
                 files: [],
+                bubble_id: data.bubble_id,
             }
             await processMessage(data.message, message, {}, ui.getSelectedRoomId())
             if (message.file) {
@@ -1721,6 +1722,7 @@ const adapter: OicqAdapter = {
                 _id: data.group_id || -1,
                 time: data.time * 1000,
                 files: [],
+                bubble_id: data.bubble_id,
             }
             await processMessage(data.message, message, {}, ui.getSelectedRoomId())
             messages.push(message)
@@ -1821,6 +1823,7 @@ const adapter: OicqAdapter = {
                 files: [],
                 anonymousId: message.anonymousId,
                 anonymousflag: message.anonymousflag,
+                bubble_id: message.bubble_id,
             }
             try {
                 await processMessage(data.message, newMessage, {}, roomId)
@@ -1887,6 +1890,7 @@ const adapter: OicqAdapter = {
                             (<GroupMessageEventData>data).group_id && (<GroupMessageEventData>data).anonymous
                                 ? (<GroupMessageEventData>data).anonymous.flag
                                 : null,
+                        bubble_id: (<GroupMessageEventData>data).bubble_id,
                     }
                     try {
                         const retData = await processMessage(data.message, message, {}, roomId)
