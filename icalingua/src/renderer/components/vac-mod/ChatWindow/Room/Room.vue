@@ -779,7 +779,8 @@ export default {
                     nickname: '',
                     time: 0,
                     id: msg._id,
-                    consistent: true
+                    consistent: true,
+                    bubble_id: msg.bubble_id
                 }
                 if (msg) {
                     singleMessage.user_id = msg.senderId

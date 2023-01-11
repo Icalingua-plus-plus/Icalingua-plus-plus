@@ -31,4 +31,5 @@ export default interface Message {
     anonymousId?: number
     anonymousflag?: string
     hide?: boolean
+    bubble_id?: number
 }

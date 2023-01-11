@@ -8,7 +8,9 @@
         <el-input v-model="timestamp" placeholder="timestamp" @input="timestamp = timestamp.replace(/[^\d]/g, '')" />
         <el-input v-model="origin" placeholder="origin" @input="origin = origin.replace(/[^\d]/g, '')" />
         <el-input v-model="styleMsgId" placeholder="Style From Msg ID" />
+        <el-input v-model="bubble_id" placeholder="bubble" @input="bubble_id = bubble_id.replace(/[^\d]/g, '')" />
         <el-switch v-model="dm" inactive-text="群聊模式" active-text="私聊模式"></el-switch>
+        <el-switch v-model="consistent" inactive-text="fake" active-text="consistent"></el-switch>
         <div class="dialog-footer">
             <el-button type="primary" @click="addMessage">加入</el-button>
             <el-button type="primary" @click="createForward">生成</el-button>
@@ -31,6 +33,8 @@ export default {
             dm: false,
             origin: '',
             styleMsgId: '',
+            consistent: false,
+            bubble_id: '',
         }
     },
     created() {
@@ -44,6 +48,8 @@ export default {
                 nickname: '',
                 time: 0,
                 id: this.styleMsgId,
+                consistent: this.consistent,
+                bubble_id: this.bubble_id === '' ? 0 : parseInt(this.bubble_id),
             }
             if (this.uid != '') {
                 if (this.timestamp == '') {

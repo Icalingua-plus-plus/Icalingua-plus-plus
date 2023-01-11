@@ -1185,6 +1185,17 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             },
                         },
                         {
+                            label: '复制 bubble id',
+                            type: 'normal',
+                            visible: !history,
+                            click: () => {
+                                if (message.bubble_id)
+                                    clipboard.writeText(String(message.bubble_id))
+                                else
+                                    ui.messageError('未获取到 bubble id')
+                            },
+                        },
+                        {
                             label: '复制时间戳',
                             type: 'normal',
                             click: () => {
