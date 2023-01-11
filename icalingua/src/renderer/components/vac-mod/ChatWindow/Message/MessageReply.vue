@@ -68,6 +68,7 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         forwardResId: { type: String, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
+        localImageViewerByDefault: { type: Boolean, required: true },
     },
 
     computed: {
@@ -83,7 +84,7 @@ export default {
         },
         openImage(e) {
             if (this.showForwardPanel) return
-            ipcRenderer.send('openImage', this.message.replyMessage.file.url, false)
+            ipcRenderer.send('openImage', this.message.replyMessage.file.url, this.localImageViewerByDefault)
             e.stopPropagation()
         },
     },

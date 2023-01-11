@@ -86,6 +86,7 @@ export default {
         content: { type: String, default: '' },
         showForwardPanel: { type: Boolean, required: true },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
+        localImageViewerByDefault: { type: Boolean, required: false, default: false },
         messages: { type: Array, required: false },
         message: { type: Object, required: false },
         img_index: { type: Number, required: false },
@@ -120,7 +121,8 @@ export default {
         async openImage() {
             if (this.showForwardPanel) return
             const singleImageMode = (await ipcRenderer.invoke('getSettings')).singleImageMode
-            if (!this.messages || singleImageMode) ipcRenderer.send('openImage', this.file.url, false)
+            if (!this.messages || singleImageMode || this.localImageViewerByDefault)
+                ipcRenderer.send('openImage', this.file.url, this.localImageViewerByDefault)
             else {
                 let images = []
                 const imgUrl = this.file.url + `&message_id=${this.message._id}&img_index=${this.img_index}`

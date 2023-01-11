@@ -174,4 +174,7 @@ export default {
     uploadProgress(progress: string) {
         sendToMainWindow('uploadProgress', progress)
     },
+    setLocalImageViewerByDefault(enable: boolean) {
+        sendToMainWindow('setLocalImageViewerByDefault', enable)
+    }
 }

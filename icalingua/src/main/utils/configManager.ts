@@ -88,6 +88,7 @@ const defaultConfig: AllConfig = {
     disableChatGroups: false,
     singleImageMode: false,
     disableChatGroupsRedPoint: false,
+    localImageViewerByDefault: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

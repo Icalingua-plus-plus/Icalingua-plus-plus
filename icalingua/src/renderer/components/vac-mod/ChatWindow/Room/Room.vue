@@ -117,6 +117,7 @@
                                 @del-msg-to-forward="delMsgtoForward"
                                 @scroll-to-message="scrollToMessage"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
+                                :local-image-viewer-by-default="localImageViewerByDefault"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -439,7 +440,6 @@ export default {
         account: { type: Number, required: true },
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
-        hideChatImageByDefault: { type: Boolean, required: false, default: false },
         lastUnreadCount: { type: Number, required: false, default: 0 },
     },
     data() {
@@ -486,6 +486,8 @@ export default {
             },
             optimizeMethod: 'infinite-loading',
             scrollingTolastMessage: 0,
+            hideChatImageByDefault: false,
+            localImageViewerByDefault: false,
         }
     },
     computed: {
@@ -747,6 +749,10 @@ export default {
         this.hideChatImageByDefault = await ipc.getHideChatImageByDefault()
         ipcRenderer.on('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
             this.hideChatImageByDefault = hideChatImageByDefault
+        })
+        this.localImageViewerByDefault = (await ipc.getSettings()).localImageViewerByDefault
+        ipcRenderer.on('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {
+            this.localImageViewerByDefault = localImageViewerByDefault
         })
     },
     methods: {
