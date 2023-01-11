@@ -964,7 +964,7 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
-                        label: 'Send raw message',
+                        label: 'Send raw OICQ message',
                         type: 'checkbox',
                         checked: getConfig().sendRawMessage === true,
                         visible: getConfig().debugmode === true,

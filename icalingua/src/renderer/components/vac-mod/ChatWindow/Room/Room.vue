@@ -1047,6 +1047,15 @@ export default {
 
             const messageType = await ipc.getMessgeTypeSetting()
 
+            if (messageType === 'raw') {
+                const { action } = await this.$confirm('你确定要发送 OICQ 原始消息吗？', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                })
+                if (action === 'cancel') return
+            }
+
             this.$emit('send-message', {
                 content: message,
                 file: this.file,
