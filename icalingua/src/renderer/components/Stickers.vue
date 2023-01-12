@@ -41,7 +41,7 @@
                 >{{ i }}</a
             >
         </div>
-        <div v-if="panel === 'stickers'" style="overflow: auto">
+        <div v-if="panel === 'stickers'" style="overflow: auto; height: 100vh">
             <center v-show="!pics.length">
                 <p>No stickers found</p>
                 <p>
