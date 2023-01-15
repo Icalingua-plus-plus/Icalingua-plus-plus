@@ -142,28 +142,35 @@ function compileToHTML(json) {
 function parseContent(item) {
     const result = []
 
-    item.content.forEach((it) => {
+    for (let j = 0; j < item.content.length; j++) {
+        const it = item.content[j]
         if (typeof it === 'string') {
             result.push({
-                types: [item.type],
+                types: j === 0 ? [item.type] : '',
                 value: it,
             })
         } else {
-            it.content.forEach((i) => {
-                if (typeof i === 'string') {
+            for (let i = 0; i < it.content.length; i++) {
+                let types = []
+                if (i === 0) {
+                    types = types.concat([it.type])
+                    if (j === 0) types = types.concat([item.type])
+                }
+                if (typeof it.content[i] === 'string') {
                     result.push({
-                        types: [it.type].concat([item.type]),
-                        value: i,
+                        types: types,
+                        value: it.content[i],
                     })
                 } else {
+                    types = [it.content[i].type].concat(types)
                     result.push({
-                        types: [i.type].concat([it.type]).concat([item.type]),
+                        types: types,
                         value: parseContent(i),
                     })
                 }
-            })
+            }
         }
-    })
+    }
     if (item.content.length === 0 && item.start === '\n') {
         result.push({
             types: [item.type],

@@ -45,14 +45,17 @@
                         <span class="vac-message-content">{{ message.value }}</span>
                     </template>
                 </component>
-                <br v-if="message.breakLine && message.face" :key="i" />
-                <img
-                    class="face"
+                <span
                     v-if="message.face"
                     :key="i"
-                    :src="'file://' + facepath + preZeroFill(Number(message.value), 3)"
-                    :alt="message.value"
-                />
+                >
+                    <br v-if="message.breakLine && message.face" />
+                    <img
+                        class="face"
+                        :src="'file://' + facepath + preZeroFill(Number(message.value), 3)"
+                        :alt="message.value"
+                    />
+                </span>
                 <a
                     v-if="message.forward"
                     style="cursor: pointer"
