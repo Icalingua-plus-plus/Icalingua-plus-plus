@@ -1775,6 +1775,11 @@ const adapter = {
         if (type === 'Uni') cb(await bot.sendUni(cmd, body))
         else cb(await bot.sendOidb(cmd, body))
     },
+    async preloadImages(urls: string[]) {
+        const ret = await bot.preloadImages(urls)
+        if (ret.error) return false
+        else return true
+    }
 }
 
 export default adapter

@@ -1011,6 +1011,8 @@ interface OicqAdapter extends Adapter {
     getGroupInfo(group_id: number): GroupInfo
 
     acquireGfs(group_id: number): Gfs
+
+    preloadImages(urls: string[]): Promise<boolean>
 }
 
 const adapter: OicqAdapter = {
@@ -2059,6 +2061,11 @@ const adapter: OicqAdapter = {
         if (type === 'Uni') return await bot.sendUni(cmd, body)
         else return await bot.sendOidb(cmd, body)
     },
+    async preloadImages(urls: string[]) {
+        const ret = await bot.preloadImages(urls)
+        if (ret.error) return false
+        else return true
+    }
 }
 
 export default adapter
