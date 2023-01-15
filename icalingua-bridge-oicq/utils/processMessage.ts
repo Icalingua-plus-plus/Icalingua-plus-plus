@@ -149,6 +149,9 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                             content: `无法找到原消息(${m.data.id})(${time})`,
                             files: [],
                         }
+                        if (m.data.text) {
+                            message.replyMessage.content = m.data.text
+                        }
                     } catch (err) {
                         console.error(err)
                     }

@@ -161,6 +161,9 @@ const processMessage = async (
                             content: `无法找到原消息(${m.data.id})(${time})`,
                             files: [],
                         }
+                        if (m.data.text) {
+                            message.replyMessage.content = m.data.text
+                        }
                     } catch (err) {
                         logger.error(err)
                     }

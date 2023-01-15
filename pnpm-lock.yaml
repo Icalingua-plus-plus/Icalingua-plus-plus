@@ -47,7 +47,7 @@ importers:
       csv-writer: ^1.6.0
       del: ^3.0.0
       devtron: ^1.4.0
-      electron: 21.3.3
+      electron: 21.3.4
       electron-builder: ^23.6.0
       electron-debug: ^3.2.0
       electron-devtools-installer: ^3.2.0
@@ -72,11 +72,11 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.7
+      oicq-icalingua-plus-plus: ^1.23.8
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       pinyin-match: ^1.2.2
-      prettier: ^2.8.2
+      prettier: ^2.8.3
       sass: ^1.57.1
       sass-loader: ^10.4.1
       silk-sdk: ^0.2.2
@@ -118,7 +118,7 @@ importers:
       knex: 0.95.15_r2xbi4zbllusb5q2fougkvkh6i
       mongodb: 4.13.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.7
+      oicq-icalingua-plus-plus: 1.23.8
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       pinyin-match: 1.2.2
@@ -155,7 +155,7 @@ importers:
       csv-writer: 1.6.0
       del: 3.0.0
       devtron: 1.4.0
-      electron: 21.3.3
+      electron: 21.3.4
       electron-builder: 23.6.0
       electron-debug: 3.2.0
       electron-devtools-installer: 3.2.0
@@ -175,7 +175,7 @@ importers:
       multispinner: 0.2.1
       node-loader: 0.6.0
       nodejs-base64: 2.0.0
-      prettier: 2.8.2
+      prettier: 2.8.3
       sass: 1.57.1
       sass-loader: 10.4.1_sass@1.57.1+webpack@4.46.0
       socket.io-client: 4.5.4
@@ -229,10 +229,10 @@ importers:
       mongodb: ^4.13.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.7
+      oicq-icalingua-plus-plus: ^1.23.8
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
-      prettier: ^2.8.2
+      prettier: ^2.8.3
       silk-sdk: ^0.2.2
       socket.io: ^4.5.4
       sqlite3: ^5.1.4
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.13.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.7
+      oicq-icalingua-plus-plus: 1.23.8
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -272,7 +272,7 @@ importers:
       '@types/md5': 2.3.2
       '@types/mongodb': 3.6.20
       '@types/node': 16.18.11
-      prettier: 2.8.2
+      prettier: 2.8.3
       ts-node: 10.9.1_qacynw5b4krdzzrloasmebsynu
       typescript: 4.9.4
 
@@ -1279,7 +1279,7 @@ packages:
       detect-libc: 2.0.1
       https-proxy-agent: 5.0.1
       make-dir: 3.1.0
-      node-fetch: 2.6.7
+      node-fetch: 2.6.8
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
@@ -1616,7 +1616,7 @@ packages:
       source-map: 0.6.1
       vue-template-es2015-compiler: 1.9.1
     optionalDependencies:
-      prettier: 2.8.2
+      prettier: 2.8.3
     transitivePeerDependencies:
       - arc-templates
       - atpl
@@ -2194,7 +2194,7 @@ packages:
     resolution: {integrity: sha512-qTBr2RY8RZQmiUmbj2KXFvkErNxU4aTHZszszzwhE8svy2PEVX+IYR/c4Rp9Tuw4QkeU8cylGy6McV6Yl8i7Qw==}
     engines: {node: '>= 10'}
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.6.8
       ws: 7.5.9
     transitivePeerDependencies:
       - bufferutil
@@ -2361,7 +2361,7 @@ packages:
     resolution: {integrity: sha512-WKExI/eSGgGAkWAO+wMVdFObZV7hQen54UpD1kCCTN3tvlL3W1jL4+lPP/M7MwoP7Q4RHzKtO3JQ4HxYEcd+xQ==}
     dependencies:
       browserslist: 1.7.7
-      caniuse-db: 1.0.30001442
+      caniuse-db: 1.0.30001445
       normalize-range: 0.1.2
       num2fraction: 1.2.2
       postcss: 5.2.18
@@ -3528,7 +3528,7 @@ packages:
     deprecated: Browserslist 2 could fail on reading Browserslist >3.0 config used in other tools.
     hasBin: true
     dependencies:
-      caniuse-db: 1.0.30001442
+      caniuse-db: 1.0.30001445
       electron-to-chromium: 1.4.284
     dev: true
 
@@ -3536,7 +3536,7 @@ packages:
     resolution: {integrity: sha512-WHVocJYavUwVgVViC0ORikPHQquXwVh939TaelZ4WDqpWgTX/FsGhl/+P4qBUAGcRvtOgDgC+xftNWWp2RUTAQ==}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001442
+      caniuse-lite: 1.0.30001445
       electron-to-chromium: 1.4.284
     dev: true
 
@@ -3545,7 +3545,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001442
+      caniuse-lite: 1.0.30001445
       electron-to-chromium: 1.4.284
       node-releases: 2.0.8
       update-browserslist-db: 1.0.10_browserslist@4.21.4
@@ -3791,17 +3791,17 @@ packages:
     resolution: {integrity: sha512-SBTl70K0PkDUIebbkXrxWqZlHNs0wRgRD6QZ8guctShjbh63gEPfF+Wj0Yw+75f5Y8tSzqAI/NcisYv/cCah2Q==}
     dependencies:
       browserslist: 1.7.7
-      caniuse-db: 1.0.30001442
+      caniuse-db: 1.0.30001445
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
     dev: true
 
-  /caniuse-db/1.0.30001442:
-    resolution: {integrity: sha512-GKxj27NKBeIUDghMkllsj1PrJ3P/CEDmPptCSPDPwC0tIu7RgEOAvRXrnZ0iWT1Jl/s3Reiq2AqvUj2iCZrbKw==}
+  /caniuse-db/1.0.30001445:
+    resolution: {integrity: sha512-4UuGW9wqnDMq+132sSUBZ1NlPXjEKOGb5KbwYd56CaVBh5U7B811LdJcnKirruwN1OhpUSto7gNT/Tkb4SG3dg==}
     dev: true
 
-  /caniuse-lite/1.0.30001442:
-    resolution: {integrity: sha512-239m03Pqy0hwxYPYR5JwOIxRJfLTWtle9FV8zosfV5pHg+/51uD4nxcUlM8+mWWGfwKtt8lJNHnD3cWw9VZ6ow==}
+  /caniuse-lite/1.0.30001445:
+    resolution: {integrity: sha512-8sdQIdMztYmzfTMO6KfLny878Ln9c2M0fc7EH60IjlP4Dc4PiCy7K2Vl3ITmWgOyPgVQKa5x+UP/KqFsxj4mBg==}
     dev: true
 
   /center-align/0.1.3:
@@ -5270,8 +5270,8 @@ packages:
     resolution: {integrity: sha512-M8WEXFuKXMYMVr45fo8mq0wUrrJHheiKZf6BArTKk9ZBYCKJEOU5H8cdWgDT+qCVZf7Na4lVUaZsA+h6uA9+PA==}
     dev: true
 
-  /electron/21.3.3:
-    resolution: {integrity: sha512-2a9l8mUQlzXH/9WZrGYDJTyJOliLKbmEuCrQ8bfX1McAQOmI6PDQxfHV4qFUtyCDUp5SHrq5nuvg0c1pIkDBhg==}
+  /electron/21.3.4:
+    resolution: {integrity: sha512-700+zY0j7DikPtBRxb68i24HGGcJKqyJ9MrJoHc0J1pwcJLJFoDBP7lj2CK7QmHTO95D0d30jnvQQwreKhyozA==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
     requiresBuild: true
@@ -5449,7 +5449,7 @@ packages:
       is-string: 1.0.7
       is-typed-array: 1.1.10
       is-weakref: 1.0.2
-      object-inspect: 1.12.2
+      object-inspect: 1.12.3
       object-keys: 1.1.1
       object.assign: 4.1.4
       regexp.prototype.flags: 1.4.3
@@ -5910,7 +5910,7 @@ packages:
   /filelist/1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
     dependencies:
-      minimatch: 5.1.2
+      minimatch: 5.1.4
     dev: true
 
   /fill-range/4.0.0:
@@ -8098,8 +8098,8 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
 
-  /minimatch/5.1.2:
-    resolution: {integrity: sha512-bNH9mmM9qsJ2X4r2Nat1B//1dJVcn3+iBLa3IgqJ7EbGaDNepL9QSHOxN4ng33s52VMMhhIfgCYDk3C4ZmlDAg==}
+  /minimatch/5.1.4:
+    resolution: {integrity: sha512-U0iNYXt9wALljzfnGkhFSy5sAC6/SCR3JrHrlsdJz4kF8MvhTRQNiC59iUi1iqsitV7abrNAJWElVL9pdnoUgw==}
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
@@ -8406,8 +8406,8 @@ packages:
     resolution: {integrity: sha512-73sE9+3UaLYYFmDsFZnqCInzPyh3MqIwZO9cw58yIqAZhONrrabrYyYe3TuIqtIiOuTXVhsGau8hcrhhwSsDIQ==}
     dev: false
 
-  /node-fetch/2.6.7:
-    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
+  /node-fetch/2.6.8:
+    resolution: {integrity: sha512-RZ6dBYuj8dRSfxpUSu+NsdF1dpPpluJxwOp+6IoDp/sH2QNDSvurYsAa+F1WxY2RjA1iP93xhcsUoYbF2XBqVg==}
     engines: {node: 4.x || >=6.0.0}
     peerDependencies:
       encoding: ^0.1.0
@@ -8590,8 +8590,8 @@ packages:
     resolution: {integrity: sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==}
     engines: {node: '>= 6'}
 
-  /object-inspect/1.12.2:
-    resolution: {integrity: sha512-z+cPxW0QGUp0mcqcsgQyLVRDoXFQbXOwBaqyF7VIgI4TWNQsDHrBpUQslRmIfAoYWdYzs6UlKJtB2XJpTaNSpQ==}
+  /object-inspect/1.12.3:
+    resolution: {integrity: sha512-geUvdk7c+eizMNUDkRpW1wJwgfOiOeHbxBR/hLXK1aT6zmVSO0jsQcs7fj6MGw89jC/cjGfLcNOrtMYtGqm81g==}
     dev: true
 
   /object-is/1.1.5:
@@ -8645,8 +8645,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.7:
-    resolution: {integrity: sha512-7KfVTIde7rNBMAVNRKDS/ylwdTTOj+ytPlite4+xv9QvbEKXKpoCFu7XuiEzwQsrVlM2MsLFhd3gdDFdFP0c9g==}
+  /oicq-icalingua-plus-plus/1.23.8:
+    resolution: {integrity: sha512-3ThMV7DkF2RWYSBuoXSOIKdU619R+PrbEOaaL1KdZ9ZAkQWrDFKZC7RQzHw6BxqGkl7VbAdB0ruiL57TSeIZLw==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -9405,8 +9405,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /prettier/2.8.2:
-    resolution: {integrity: sha512-BtRV9BcncDyI2tsuS19zzhzoxD8Dh8LiCx7j7tHzrkz8GFXAexeWFdi22mjE1d16dftH2qNaytVxqiRTGlMfpw==}
+  /prettier/2.8.3:
+    resolution: {integrity: sha512-tJ/oJ4amDihPoufT5sM0Z1SKEuKay8LfVAMlbbhnnkvt6BUserZylqo2PN+p9KeljLr0OHa2rXHU1T8reeoTrw==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
@@ -10294,7 +10294,7 @@ packages:
     dependencies:
       call-bind: 1.0.2
       get-intrinsic: 1.1.3
-      object-inspect: 1.12.2
+      object-inspect: 1.12.3
     dev: true
 
   /signal-exit/3.0.7:
