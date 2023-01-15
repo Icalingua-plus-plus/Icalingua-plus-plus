@@ -45,10 +45,7 @@
                         <span class="vac-message-content">{{ message.value }}</span>
                     </template>
                 </component>
-                <span
-                    v-if="message.face"
-                    :key="i"
-                >
+                <span v-if="message.face" :key="i">
                     <br v-if="message.breakLine && message.face" />
                     <img
                         class="face"

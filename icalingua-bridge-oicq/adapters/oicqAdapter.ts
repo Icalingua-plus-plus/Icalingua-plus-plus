@@ -1779,7 +1779,7 @@ const adapter = {
         const ret = await bot.preloadImages(urls)
         if (ret.error) return false
         else return true
-    }
+    },
 }
 
 export default adapter
