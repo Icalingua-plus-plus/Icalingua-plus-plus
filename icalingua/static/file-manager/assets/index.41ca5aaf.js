@@ -483,31 +483,16 @@ var Q = ({ socket: t }) => {
         currentDir = a;
         B(0), o(u), d(a);
     }
-    async function k(u, confirm = false) {
+    async function k(u, saveAs = false) {
         const a = await t.download(u);
-        if (!confirm) {
-            window['download'] ? window['download'](a.url, a.name) : console.log('error', a);
+        window['download'] ? window['download'](a.url, a.name, undefined, saveAs) : console.log('error', a);
+        if (!saveAs) {
             y.success({
                 message: "已发送下载任务",
                 description:
                     "即将开始下载 " + a.name
             });
-            return;
         }
-        msgbox.show("确认下载文件名称", "input", {
-            button: ['取消', '确定'],
-            default: a.name,
-            click: function (e) {
-                if (e == 1) {
-                    window['download'] ? window['download'](a.url, msgbox.result) : console.log('error', a);
-                    y.success({
-                        message: "已发送下载任务",
-                        description:
-                            "即将开始下载 " + a.name
-                    });
-                }
-            }
-        })
     }
     function fileContextMenu(u, name, e) {
         var items = []

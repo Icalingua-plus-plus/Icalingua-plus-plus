@@ -1,2 +1,2 @@
-window.download=(url, out)=>require('electron').ipcRenderer.send('download', url, out)
+window.download=(url, out, dir, saveAs)=>require('electron').ipcRenderer.send('download', url, out, dir, saveAs)
 window.copyText=(text)=>navigator.clipboard.writeText(text)

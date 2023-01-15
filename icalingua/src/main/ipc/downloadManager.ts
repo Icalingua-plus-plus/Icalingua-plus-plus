@@ -40,7 +40,7 @@ export const download = (url: string, out: string, dir?: string, saveAs = false)
     const ext = path.extname(out)
     const base = path.basename(out, ext)
     let i = 1
-    while (fs.existsSync(path.join(dir ? dir : app.getPath('downloads'), out))) {
+    while (!saveAs && fs.existsSync(path.join(dir ? dir : app.getPath('downloads'), out))) {
         out = base + ' (' + i + ')' + ext
         i++
     }
@@ -100,7 +100,7 @@ export const downloadFileByMessageData = (data: { action: string; message: Messa
     }
 }
 
-ipcMain.on('download', (_, url, out, dir) => download(url, out, dir))
+ipcMain.on('download', (_, url, out, dir, saveAs) => download(url, out, dir, saveAs))
 ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Message; room: Room }) =>
     downloadFileByMessageData(data),
 )
