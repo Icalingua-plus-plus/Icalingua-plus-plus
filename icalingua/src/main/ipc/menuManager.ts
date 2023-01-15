@@ -1562,6 +1562,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             menu.append(
                 new MenuItem({
                     label: '撤回',
+                    visible:
+                        message.time > Date.now() - 1000 * 60 * 2 ||
+                        ((await isAdmin()) && (message.senderId === getUin() || message.role !== 'owner')),
                     click: () => {
                         if (message.senderId === getUin()) {
                             deleteMessage(room.roomId, message._id as string)
@@ -1575,6 +1578,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             menu.append(
                 new MenuItem({
                     label: '一分钟后撤回',
+                    visible:
+                        message.time > Date.now() - 1000 * 60 * 1 ||
+                        ((await isAdmin()) && (message.senderId === getUin() || message.role !== 'owner')),
                     click: () => {
                         setTimeout(() => deleteMessage(room.roomId, message._id as string), 1000 * 60)
                     },
