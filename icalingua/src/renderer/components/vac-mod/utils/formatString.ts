@@ -164,6 +164,12 @@ function parseContent(item) {
             })
         }
     })
+    if (item.content.length === 0 && item.start === '\n') {
+        result.push({
+            types: [item.type],
+            value: '',
+        })
+    }
 
     return result
 }

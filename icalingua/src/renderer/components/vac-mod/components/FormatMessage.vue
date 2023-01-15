@@ -45,6 +45,7 @@
                         <span class="vac-message-content">{{ message.value }}</span>
                     </template>
                 </component>
+                <br v-if="message.breakLine && message.face" :key="i" />
                 <img
                     class="face"
                     v-if="message.face"
@@ -111,7 +112,16 @@ export default {
 
     computed: {
         linkifiedMessage() {
-            const message = formatString(this.formatTags(this.content), this.linkify)
+            const content = this.formatTags(String(this.content))
+            const message = formatString(content, this.linkify)
+
+            // 尾部如果有换行需要增加一个
+            if (content.length > 0 && content[content.length - 1] === '\n') {
+                message.push({
+                    value: '',
+                    types: ['breakLine'],
+                })
+            }
 
             message.forEach((m) => {
                 m.url = this.checkType(m, 'url')
