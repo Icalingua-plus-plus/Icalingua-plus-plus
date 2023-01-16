@@ -1051,7 +1051,7 @@ export default {
             setTimeout(() => this.focusTextarea(), 0)
         },
         async sendMessage() {
-            let message = this.message.trim()
+            let message = this.message
 
             if (!this.file && !message) return
 
