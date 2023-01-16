@@ -1248,6 +1248,23 @@ const adapter = {
             }
             message.files.push(message.file)
         }
+        if (messageType === 'text') {
+            const idReg = content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+            if (idReg && idReg.length >= 3 && content === idReg[0]) {
+                const qlottie = idReg[1]
+                const faceId = idReg[2]
+                chain.length = 0
+                chain.push({
+                    type: 'face',
+                    data: {
+                        id: Number.parseInt(faceId, 10),
+                        qlottie: qlottie,
+                    },
+                })
+                delete message.file
+                message.files.length = 0
+            }
+        }
         //发送消息链
         let data: Ret<{ message_id: string }>
         if (roomId > 0) data = await bot._sendPrivateMsg(roomId, chain, true)

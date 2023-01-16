@@ -147,6 +147,7 @@
                                 $refs.room.useMessageContent(`[Face: ${$event}]`)
                                 $refs.room.focusTextarea()
                             "
+                            @sendLottie="sendLottie"
                         />
                     </transition>
                 </div>
@@ -652,6 +653,16 @@ Chromium ${process.versions.chrome}` : ''
                     messageType: messageType === 'anonymous' ? 'anonymous' : undefined,
                 })
             this.$refs.room.focusTextarea()
+            if (window.innerWidth < 1200) {
+                this.panel = ''
+            }
+        },
+        sendLottie(lottie) {
+            this.sendMessage({
+                content: `[QLottie: ${lottie.qlottie},${lottie.id}]`,
+                room: this.selectedRoom,
+                messageType: 'text',
+            })
             if (window.innerWidth < 1200) {
                 this.panel = ''
             }

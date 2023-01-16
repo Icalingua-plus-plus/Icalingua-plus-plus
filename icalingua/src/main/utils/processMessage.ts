@@ -304,6 +304,9 @@ const processMessage = async (
             case 'face':
                 message.content += `[Face: ${m.data.id}]`
                 lastMessage.content += `[${m.data.text ? m.data.text : '表情'}]`
+                if (m.data.qlottie) {
+                    message.content = `[QLottie: ${m.data.qlottie},${m.data.id}]`
+                }
                 break
             case 'video':
                 message.content = ''

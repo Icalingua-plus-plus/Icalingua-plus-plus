@@ -190,7 +190,7 @@
                         </div>
 
                         <format-message
-                            v-if="(!message.deleted && !message.hide) || message.reveal"
+                            v-if="((!message.deleted && !message.hide) || message.reveal) && !lottie"
                             :content="message.content"
                             :users="roomUsers"
                             :text-formatting="textFormatting"
@@ -279,7 +279,7 @@ export default {
             optionsOpened: false,
             emojiOpened: false,
             newMessage: {},
-            lottie: getLottieFace(this.message.content),
+            lottie: getLottieFace(this.message.content, this.message.time),
             tgLogo: `file://${__static}/tg.svg`,
         }
     },

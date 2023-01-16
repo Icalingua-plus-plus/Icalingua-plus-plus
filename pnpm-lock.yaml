@@ -72,7 +72,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.8
+      oicq-icalingua-plus-plus: ^1.23.9
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       pinyin-match: ^1.2.2
@@ -118,7 +118,7 @@ importers:
       knex: 0.95.15_r2xbi4zbllusb5q2fougkvkh6i
       mongodb: 4.13.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.8
+      oicq-icalingua-plus-plus: 1.23.9
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       pinyin-match: 1.2.2
@@ -229,7 +229,7 @@ importers:
       mongodb: ^4.13.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.8
+      oicq-icalingua-plus-plus: ^1.23.9
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       prettier: ^2.8.3
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.13.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.8
+      oicq-icalingua-plus-plus: 1.23.9
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -5352,7 +5352,7 @@ packages:
     dependencies:
       '@socket.io/component-emitter': 3.1.0
       debug: 4.3.4
-      engine.io-parser: 5.0.5
+      engine.io-parser: 5.0.6
       ws: 8.2.3
       xmlhttprequest-ssl: 2.0.0
     transitivePeerDependencies:
@@ -5361,8 +5361,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /engine.io-parser/5.0.5:
-    resolution: {integrity: sha512-mjEyaa4zhuuRhaSLOdjEb57X0XPP9JEsnXI4E+ivhwT0GgzUogARx4MqoY1jQyB+4Bkz3BUOmzL7t9RMKmlG3g==}
+  /engine.io-parser/5.0.6:
+    resolution: {integrity: sha512-tjuoZDMAdEhVnSFleYPCtdL2GXwVTGtNjoeJd9IhIG3C1xs9uwxqRNEu5WpnDZCaozwVlK/nuQhpodhXSIMaxw==}
     engines: {node: '>=10.0.0'}
 
   /engine.io/6.2.1:
@@ -5377,7 +5377,7 @@ packages:
       cookie: 0.4.2
       cors: 2.8.5
       debug: 4.3.4
-      engine.io-parser: 5.0.5
+      engine.io-parser: 5.0.6
       ws: 8.2.3
     transitivePeerDependencies:
       - bufferutil
@@ -8645,8 +8645,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.8:
-    resolution: {integrity: sha512-3ThMV7DkF2RWYSBuoXSOIKdU619R+PrbEOaaL1KdZ9ZAkQWrDFKZC7RQzHw6BxqGkl7VbAdB0ruiL57TSeIZLw==}
+  /oicq-icalingua-plus-plus/1.23.9:
+    resolution: {integrity: sha512-xKHX3UHJZVRhI+JFmXQbE0whA3ucGYfjBjXM03i4Wb6eEZ4Z9EHNeDIlMmvOGtD4y2Zk9gqJC1ROD1vtMU9SiA==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -10181,8 +10181,8 @@ packages:
       randombytes: 2.1.0
     dev: true
 
-  /serialize-javascript/6.0.0:
-    resolution: {integrity: sha512-Qr3TosvguFt8ePWqsvRfrKyQXIiW+nGbYpy8XK24NQHE83caxWt+mIymTT19DGFbNWNLfEwsrkSmN64lVWB9ag==}
+  /serialize-javascript/6.0.1:
+    resolution: {integrity: sha512-owoXEFjWRllis8/M1Q+Cw5k8ZH40e3zhp/ovX+Xr/vi1qj6QesbyXXViFbpNvWvPNAD62SutwEXavefrLJWj7w==}
     dependencies:
       randombytes: 2.1.0
     dev: true
@@ -10977,7 +10977,7 @@ packages:
       '@jridgewell/trace-mapping': 0.3.17
       jest-worker: 27.5.1
       schema-utils: 3.1.1
-      serialize-javascript: 6.0.0
+      serialize-javascript: 6.0.1
       terser: 5.16.1
       webpack: 5.75.0_webpack-cli@3.3.12
     dev: true

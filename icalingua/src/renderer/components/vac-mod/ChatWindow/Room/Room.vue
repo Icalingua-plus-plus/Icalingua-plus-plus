@@ -915,7 +915,7 @@ export default {
                 message.scrollIntoView({ behavior: 'smooth' })
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
                 setTimeout(() => {
-                    message.parentElement.style =  ''
+                    message.parentElement.style = ''
                 }, 3000)
                 return
             } else {

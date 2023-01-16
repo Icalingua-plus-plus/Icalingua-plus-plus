@@ -16,7 +16,7 @@
         <div v-show="panel === 'face'" style="overflow: auto">
             <div class="face grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
-                    <img :src="'file://' + dir_face + i" @click="pickFace(i)" />
+                    <img :src="'file://' + dir_face + i" @click="pickFace(i)" @click.right="pickLottie(i)" />
                 </div>
             </div>
         </div>
@@ -76,6 +76,7 @@ import fs from 'fs'
 import path from 'path'
 import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
+import getLottieFace from '../utils/getLottieFace'
 
 export default {
     name: 'Stickers',
@@ -197,6 +198,17 @@ export default {
         },
         pickFace(face) {
             this.$emit('selectFace', face)
+        },
+        pickLottie(face) {
+            const faceId = parseInt(face)
+            const lottiePath = getLottieFace(`[QLottie: 0,${face}]`, 1673877600100)
+            const qlottie = path.basename(lottiePath, '.json')
+
+            if (!qlottie || qlottie === '0') {
+                this.$message.error(`Face ${faceId} 没有对应的 Lottie 超级表情`)
+                return
+            }
+            this.$emit('sendLottie', { qlottie: qlottie, id: face })
         },
         folder() {
             shell.openPath(this.dir)
