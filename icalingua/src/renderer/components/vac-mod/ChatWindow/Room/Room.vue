@@ -856,6 +856,17 @@ export default {
                             singleMessage.message = [{ type: 'xml', data: { xml: msg.code } }]
                         }
                     }
+                    const idReg = msg.content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+                    if (idReg && msg.content === idReg[0]) {
+                        singleMessage.message = [
+                            {
+                                type: 'face',
+                                data: {
+                                    id: parseInt(idReg[2]),
+                                },
+                            },
+                        ]
+                    }
                     singleMessage.nickname = msg.senderId !== this.account ? msg.username : this.username
                     singleMessage.time = Math.floor(msg.time / 1000)
                     messagesToSend.push(singleMessage)
