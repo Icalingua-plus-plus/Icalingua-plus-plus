@@ -911,6 +911,10 @@ export default {
             const message = document.getElementById(messageId)
             if (message) {
                 message.scrollIntoView({ behavior: 'smooth' })
+                message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
+                setTimeout(() => {
+                    message.parentElement.style =  ''
+                }, 3000)
                 return
             } else {
                 const index = this.messages.findIndex((e) => judgeSameMessage(e._id, messageId))
@@ -933,6 +937,10 @@ export default {
                         const message = document.getElementById(this.messages[index]._id)
                         if (message) {
                             message.scrollIntoView()
+                            message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
+                            setTimeout(() => {
+                                message.parentElement.style = ''
+                            }, 3000)
                         }
                     })
                     return
