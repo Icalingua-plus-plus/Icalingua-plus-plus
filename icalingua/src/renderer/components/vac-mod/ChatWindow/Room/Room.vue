@@ -595,19 +595,21 @@ export default {
                     this.loadingMessages = false
                 }, 0)
             }
-            if (this.scrollingTolastMessage && newVal.length >= this.scrollingTolastMessage) {
-                const msgCount = this.scrollingTolastMessage
-                this.scrollingTolastMessage = 0
-                setTimeout(() => {
-                    const nonSystemMessages = newVal.filter((msg) => !msg.system)
-                    const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
-                    if (!_id) {
-                        this.$message.error('Message not found')
-                        return
-                    }
-                    console.log('last unread message ID', _id)
-                    this.scrollToMessage(_id)
-                }, 0)
+            if (this.scrollingTolastMessage) {
+                const nonSystemMessages = newVal.filter((msg) => !msg.system)
+                if (nonSystemMessages.length >= this.scrollingTolastMessage) {
+                    const msgCount = this.scrollingTolastMessage
+                    this.scrollingTolastMessage = 0
+                    setTimeout(() => {
+                        const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
+                        if (!_id) {
+                            this.$message.error('Message not found')
+                            return
+                        }
+                        console.log('last unread message ID', _id)
+                        this.scrollToMessage(_id)
+                    }, 0)
+                }
             }
             setTimeout(() => (this.loadingHeadMessages = false), 0)
         },
