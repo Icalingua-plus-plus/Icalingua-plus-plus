@@ -177,9 +177,10 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                         message.content = title + '\n\n' + content
                         if (jsonObj.meta.mannounce.pic) {
                             for (const pic of jsonObj.meta.mannounce.pic) {
+                                if (!pic.url) continue
                                 message.file = {
                                     type: 'image/jpeg',
-                                    url: `https://gdynamic.qpic.cn/gdynamic/${pic}/628`,
+                                    url: `https://gdynamic.qpic.cn/gdynamic/${pic.url}/628`,
                                 }
                                 message.files.push(message.file)
                             }
