@@ -187,6 +187,15 @@ const processMessage = async (
                         const content = base64decode(jsonObj.meta.mannounce.text)
                         lastMessage.content = `[${title}]`
                         message.content = title + '\n\n' + content
+                        if (jsonObj.meta.mannounce.pic) {
+                            for (const pic of jsonObj.meta.mannounce.pic) {
+                                message.file = {
+                                    type: 'image/jpeg',
+                                    url: `https://gdynamic.qpic.cn/gdynamic/${pic}/628`,
+                                }
+                                message.files.push(message.file)
+                            }
+                        }
                         break
                     } catch (err) {}
                 }
