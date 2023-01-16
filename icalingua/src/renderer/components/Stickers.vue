@@ -13,14 +13,14 @@
                 </div>
             </a>
         </div>
-        <div v-show="panel === 'face'" style="overflow: auto">
+        <div v-show="panel === 'face'" style="overflow: auto; height: 100vh">
             <div class="face grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
                     <img :src="'file://' + dir_face + i" @click="pickFace(i)" @click.right="pickLottie(i)" />
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'remote'" style="overflow: auto">
+        <div v-show="panel === 'remote'" style="overflow: auto; height: 100vh">
             <center v-show="!remote_pics.length">
                 <p>No remote stickers found</p>
             </center>
@@ -372,6 +372,7 @@ div.head {
 
 .emoji-panel {
     @include emoji-flex;
+    height: 100vh;
 }
 
 ::v-deep #Emojis {
