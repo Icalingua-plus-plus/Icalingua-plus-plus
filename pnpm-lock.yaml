@@ -72,7 +72,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.9
+      oicq-icalingua-plus-plus: ^1.23.10
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       pinyin-match: ^1.2.2
@@ -118,7 +118,7 @@ importers:
       knex: 0.95.15_r2xbi4zbllusb5q2fougkvkh6i
       mongodb: 4.13.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.9
+      oicq-icalingua-plus-plus: 1.23.10
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       pinyin-match: 1.2.2
@@ -229,7 +229,7 @@ importers:
       mongodb: ^4.13.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.9
+      oicq-icalingua-plus-plus: ^1.23.10
       pg: ^8.8.0
       pg-query-stream: ^4.2.4
       prettier: ^2.8.3
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.13.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.9
+      oicq-icalingua-plus-plus: 1.23.10
       pg: 8.8.0
       pg-query-stream: 4.2.4_pg@8.8.0
       silk-sdk: 0.2.2
@@ -7474,8 +7474,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /klona/2.0.5:
-    resolution: {integrity: sha512-pJiBpiXMbt7dkzXe8Ghj/u4FfXOOa98fPW+bihOJ4SjnoijweJrNThJfd3ifXpXhREjpoF2mZVH1GfS9LV3kHQ==}
+  /klona/2.0.6:
+    resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
     engines: {node: '>= 8'}
     dev: true
 
@@ -8645,8 +8645,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.9:
-    resolution: {integrity: sha512-xKHX3UHJZVRhI+JFmXQbE0whA3ucGYfjBjXM03i4Wb6eEZ4Z9EHNeDIlMmvOGtD4y2Zk9gqJC1ROD1vtMU9SiA==}
+  /oicq-icalingua-plus-plus/1.23.10:
+    resolution: {integrity: sha512-rrmjGr9sqzLaiPHgRht4Ly7u82xgHjx5/GpR76owQEVWRozuIc1t+rLzfCx5gJqBsk/I/jw6lVEtvCYJMDy9rA==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -10031,7 +10031,7 @@ packages:
       sass:
         optional: true
     dependencies:
-      klona: 2.0.5
+      klona: 2.0.6
       loader-utils: 2.0.4
       neo-async: 2.6.2
       sass: 1.57.1
