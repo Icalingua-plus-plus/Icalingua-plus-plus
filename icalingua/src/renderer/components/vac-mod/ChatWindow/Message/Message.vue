@@ -114,7 +114,7 @@
                         </div>
 
                         <LottieAnimation
-                            v-else-if="lottie"
+                            v-else-if="lottie && !disableQLottie"
                             :path="lottie"
                             :height="250"
                             :width="250"
@@ -192,7 +192,7 @@
                         <format-message
                             v-if="
                                 ((!message.deleted && !message.hide) || message.reveal) &&
-                                !(lottie && message.content.startsWith('[QLottie'))
+                                !(lottie && message.content.startsWith('[QLottie') && !disableQLottie)
                             "
                             :content="message.content"
                             :users="roomUsers"
@@ -201,6 +201,7 @@
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
                             :code="message.code"
+                            :disableQLottie="disableQLottie"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">
@@ -272,6 +273,7 @@ export default {
         msgstoForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
+        disableQLottie: { type: Boolean, required: true },
     },
 
     data() {

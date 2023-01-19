@@ -118,6 +118,7 @@
                                 @scroll-to-message="scrollToMessage"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
+                                :disableQLottie="disableQLottie"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -488,6 +489,7 @@ export default {
             scrollingTolastMessage: 0,
             hideChatImageByDefault: false,
             localImageViewerByDefault: false,
+            disableQLottie: false,
         }
     },
     computed: {
@@ -755,6 +757,10 @@ export default {
         this.localImageViewerByDefault = (await ipc.getSettings()).localImageViewerByDefault
         ipcRenderer.on('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {
             this.localImageViewerByDefault = localImageViewerByDefault
+        })
+        this.disableQLottie = (await ipc.getSettings()).disableQLottie
+        ipcRenderer.on('setDisableQLottie', (_, a) => {
+            this.disableQLottie = a
         })
     },
     methods: {

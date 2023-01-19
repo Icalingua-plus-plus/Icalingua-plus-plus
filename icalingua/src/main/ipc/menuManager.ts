@@ -923,6 +923,16 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '禁用超级表情',
+                        type: 'checkbox',
+                        checked: getConfig().disableQLottie,
+                        click: (menuItem) => {
+                            getConfig().disableQLottie = menuItem.checked
+                            saveConfigFile()
+                            ui.setDisableQLottie(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '默认使用本地图片查看器',
                         type: 'checkbox',
                         checked: getConfig().localImageViewerByDefault,

@@ -177,4 +177,7 @@ export default {
     setLocalImageViewerByDefault(enable: boolean) {
         sendToMainWindow('setLocalImageViewerByDefault', enable)
     },
+    setDisableQLottie(enable: boolean) {
+        sendToMainWindow('setDisableQLottie', enable)
+    },
 }

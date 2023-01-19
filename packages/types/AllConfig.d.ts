@@ -37,6 +37,7 @@ type AllConfig = {
     singleImageMode: boolean
     disableChatGroupsRedPoint: boolean
     localImageViewerByDefault: boolean
+    disableQLottie: boolean
 }
 
 export default AllConfig

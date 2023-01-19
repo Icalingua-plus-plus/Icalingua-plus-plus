@@ -101,6 +101,7 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         forwardResId: { type: String, required: false },
         code: { type: String, required: false },
+        disableQLottie: { type: Boolean, required: false },
     },
 
     data() {
@@ -112,7 +113,13 @@ export default {
 
     computed: {
         linkifiedMessage() {
-            const content = this.formatTags(String(this.content))
+            let content = this.formatTags(String(this.content))
+            if (this.disableQLottie) {
+                const idReg = content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+                if (idReg && idReg[0] === content) {
+                    content = `[Face: ${idReg[2]}]`
+                }
+            }
             const message = formatString(content, this.linkify)
 
             // 尾部如果有换行需要增加一个
