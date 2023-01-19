@@ -79,10 +79,8 @@ const map2 = new Map([
 ])
 
 export default (msgText: string, time: number): string => {
-    if (time > 1673877600000) {
-        //2023-01-16 22:00:00 UTC+8
-        const idReg = msgText.match(/\[QLottie: (\d+)\,(\d+)\]/)
-        if (!idReg) return
+    const idReg = msgText.match(/\[QLottie: (\d+)\,(\d+)\]/)
+    if (idReg) {
         if (msgText !== idReg[0]) return
         const id = idReg[1]
         const faceId = parseInt(idReg[2])

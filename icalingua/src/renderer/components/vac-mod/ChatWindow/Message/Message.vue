@@ -190,7 +190,10 @@
                         </div>
 
                         <format-message
-                            v-if="((!message.deleted && !message.hide) || message.reveal) && !lottie"
+                            v-if="
+                                ((!message.deleted && !message.hide) || message.reveal) &&
+                                !(lottie && message.content.startsWith('[QLottie'))
+                            "
                             :content="message.content"
                             :users="roomUsers"
                             :text-formatting="textFormatting"
