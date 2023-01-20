@@ -293,7 +293,9 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                 message.content += `[Face: ${m.data.id}]`
                 lastMessage.content += `[${m.data.text ? m.data.text : '表情'}]`
                 if (m.data.qlottie) {
-                    message.content = `[QLottie: ${m.data.qlottie},${m.data.id}]`
+                    let qlottie = m.data.qlottie.replace(/\D/g, '')
+                    if (!qlottie) qlottie = '0'
+                    message.content = `[QLottie: ${qlottie},${m.data.id}]`
                 }
                 break
             case 'video':
