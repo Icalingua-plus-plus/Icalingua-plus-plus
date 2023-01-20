@@ -92,6 +92,19 @@ export const downloadFileByMessageData = (data: { action: string; message: Messa
     if (data.action === 'download') {
         if (data.message.file.type.includes('image')) {
             downloadImage(data.message.file.url, saveAs)
+        } else if (data.message.file.type.toLowerCase().includes('audio/')) {
+            const file = data.message.file
+            if (file.url === file.name){
+                let recordPath = ''
+                if (getConfig().adapter === 'socketIo') {
+                    recordPath = getConfig().server + '/records/' + file.url
+                } else {
+                    recordPath = path.join(app.getPath('userData'), 'records', file.url)
+                }
+                download(recordPath, 'QQ_Record_' + file.url, undefined, saveAs)
+            } else {
+                download(file.url, 'QQ_Record_' + new Date().getTime() + '.ogg', undefined, saveAs)
+            }
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
                 downloadGroupFile(-data.room.roomId, data.message.file.fid, saveAs)

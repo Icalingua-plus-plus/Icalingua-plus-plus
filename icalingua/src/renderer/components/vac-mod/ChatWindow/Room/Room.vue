@@ -119,6 +119,7 @@
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
                                 :disableQLottie="disableQLottie"
+                                :record-path="recordPath"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -504,6 +505,7 @@ export default {
             hideChatImageByDefault: false,
             localImageViewerByDefault: false,
             disableQLottie: false,
+            recordPath: '',
         }
     },
     computed: {
@@ -776,6 +778,12 @@ export default {
         ipcRenderer.on('setDisableQLottie', (_, a) => {
             this.disableQLottie = a
         })
+        const isAdapter = (await ipc.getSettings()).adapter === 'socketIo'
+        if (isAdapter) {
+            this.recordPath = (await ipc.getSettings()).server + '/records'
+        } else {
+            this.recordPath = 'file:///' + (await ipc.getStorePath()) + '/records'
+        }
     },
     methods: {
         sendForward(target, name) {

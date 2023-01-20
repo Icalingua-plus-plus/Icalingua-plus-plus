@@ -176,7 +176,7 @@
                         <div v-else-if="isAudio" class="vac-audio-message">
                             <div id="vac-audio-player">
                                 <audio controls controlslist="nodownload noremoteplayback novolume nomute">
-                                    <source :src="message.file.url" />
+                                    <source :src="audioPath" />
                                 </audio>
                             </div>
                         </div>
@@ -274,6 +274,7 @@ export default {
         hideChatImageByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
+        recordPath: { type: String, required: true },
     },
 
     data() {
@@ -307,6 +308,12 @@ export default {
         },
         isAudio() {
             return this.checkAudioType(this.message.file)
+        },
+        audioPath() {
+            if (this.message.file.url === this.message.file.name) {
+                return this.recordPath + '/' + this.message.file.name
+            }
+            return this.message.file.url
         },
         isCheckmarkVisible() {
             return (
@@ -597,7 +604,7 @@ export default {
 
 .selector:not(*:root),
 #vac-audio-player {
-    max-width: 250px;
+    max-width: 300px;
     overflow: hidden;
     border-top-right-radius: 1em;
     border-bottom-right-radius: 2.5em 1em;
