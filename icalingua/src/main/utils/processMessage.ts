@@ -319,9 +319,14 @@ const processMessage = async (
                 break
             case 'record':
                 try {
+                    const fileName = await silkDecode(m.data.url)
                     message.file = {
                         type: 'audio/ogg',
-                        url: await silkDecode(m.data.url),
+                        url: fileName,
+                        name: fileName,
+                    }
+                    if (typeof m.data.file === 'string') {
+                        message.file.fid = m.data.file
                     }
                     message.files.push(message.file)
                 } catch (e) {

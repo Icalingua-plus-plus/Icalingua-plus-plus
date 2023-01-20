@@ -274,6 +274,7 @@ export default {
         hideChatImageByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
+        recordPath: { type: String, required: true },
     },
 
     data() {
@@ -306,7 +307,11 @@ export default {
             return this.checkVideoType(this.message.file)
         },
         isAudio() {
-            return this.checkAudioType(this.message.file)
+            const ret = this.checkAudioType(this.message.file)
+            if (ret && this.message.file.url === this.message.file.name) {
+                this.message.file.url = this.recordPath + '/' + this.message.file.name
+            }
+            return ret
         },
         isCheckmarkVisible() {
             return (
