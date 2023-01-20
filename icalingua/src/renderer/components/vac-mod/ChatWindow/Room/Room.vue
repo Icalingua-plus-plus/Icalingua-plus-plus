@@ -929,7 +929,7 @@ export default {
             }
             const message = document.getElementById(messageId)
             if (message) {
-                message.scrollIntoView({ behavior: 'smooth' })
+                message.scrollIntoView()
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
                 setTimeout(() => {
                     message.parentElement.style = ''
