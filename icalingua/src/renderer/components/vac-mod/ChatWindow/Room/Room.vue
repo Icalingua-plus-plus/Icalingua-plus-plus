@@ -325,7 +325,12 @@
                         <svg-icon name="emoji" />
                     </div>
 
-                    <div v-if="showFiles" class="vac-svg-button" @click="launchFilePicker">
+                    <div
+                        v-if="showFiles"
+                        class="vac-svg-button"
+                        @click="launchFilePicker(false)"
+                        @click.right="launchFilePicker(true)"
+                    >
                         <slot name="paperclip-icon">
                             <svg-icon name="paperclip" />
                         </slot>
@@ -344,6 +349,15 @@
                         :accept="acceptedFiles"
                         style="display: none"
                         @change="onFileChange($event.target.files)"
+                    />
+
+                    <input
+                        v-if="showFiles"
+                        ref="fileForce"
+                        type="file"
+                        :accept="acceptedFiles"
+                        style="display: none"
+                        @change="onFileChange($event.target.files, true)"
                     />
 
                     <div
@@ -1231,11 +1245,16 @@ export default {
             el.style.height = 0
             el.style.height = el.scrollHeight - padding * 2 + 'px'
         },
-        launchFilePicker() {
+        launchFilePicker(force) {
+            if (force) {
+                this.$refs.fileForce.value = ''
+                this.$refs.fileForce.click()
+                return
+            }
             this.$refs.file.value = ''
             this.$refs.file.click()
         },
-        async onFileChange(files) {
+        async onFileChange(files, force = false) {
             this.fileDialog = true
             this.resetMediaFile()
 
@@ -1253,7 +1272,7 @@ export default {
                 localUrl: fileURL,
                 path: file.path,
             }
-
+            if (force) this.file.type = ''
             if (isImageFile(this.file)) {
                 this.imageFile = fileURL
             } else if (isVideoFile(this.file)) {
