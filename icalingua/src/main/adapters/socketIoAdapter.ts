@@ -143,7 +143,10 @@ const attachSocketEvents = () => {
             isSelfMsg: boolean
             image?: string
         }) => {
-            if (data.data.body === '[窗口抖动]') showWindow()
+            if (data.data.body === '[窗口抖动]') {
+                showWindow()
+                ui.chroom(data.roomId)
+            }
             if (
                 (!getMainWindow().isFocused() ||
                     !getMainWindow().isVisible() ||
