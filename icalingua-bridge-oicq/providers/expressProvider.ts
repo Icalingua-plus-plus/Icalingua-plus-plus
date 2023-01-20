@@ -16,3 +16,4 @@ app.post('/api/:token/sendMessage', parser, (req, res) => {
 })
 
 app.use('/file-manager', express.static('static/file-manager'))
+app.use('/records', express.static('data/records'))

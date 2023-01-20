@@ -1,12 +1,24 @@
 import axios from 'axios'
 import { fork } from 'child_process'
+import fs from 'fs'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
         responseType: 'arraybuffer',
     })
+    const md5 = require('crypto').createHash('md5').update(res.data).digest('hex')
+    const Path = require('path').join(__dirname, 'data', 'records')
+    const filePath = require('path').join(Path, md5 + '.ogg')
+    if (fs.existsSync(filePath)) {
+        return md5 + '.ogg'
+    }
     const bufOgg = await conventSilk(res.data)
-    return 'data:audio/ogg;base64,' + bufOgg.toString('base64')
+
+    if (fs.existsSync(Path)) {
+        fs.mkdirSync(Path)
+    }
+    fs.writeFileSync(filePath, bufOgg)
+    return md5 + '.ogg'
 }
 
 const conventSilk = (silkBuf: Buffer): Promise<Buffer> => {
