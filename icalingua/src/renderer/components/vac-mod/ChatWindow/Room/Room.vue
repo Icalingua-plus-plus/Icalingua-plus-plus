@@ -764,13 +764,12 @@ export default {
         ipcRenderer.on('setDisableQLottie', (_, a) => {
             this.disableQLottie = a
         })
-        const isAdapter = (await ipc.getSettings()).socketIo
+        const isAdapter = (await ipc.getSettings()).adapter === 'socketIo'
         if (isAdapter) {
             this.recordPath = (await ipc.getSettings()).server + '/records'
         } else {
-            this.recordPath = ipc.getStorePath() + '/records'
+            this.recordPath = 'file:///' + (await ipc.getStorePath()) + '/records'
         }
-        
     },
     methods: {
         sendForward(target, name) {

@@ -16,7 +16,7 @@ export default async (url: string) => {
     }
     const bufOgg = await conventSilk(res.data)
 
-    if (fs.existsSync(Path)) {
+    if (!fs.existsSync(Path)) {
         fs.mkdirSync(Path)
     }
     fs.writeFileSync(filePath, bufOgg)

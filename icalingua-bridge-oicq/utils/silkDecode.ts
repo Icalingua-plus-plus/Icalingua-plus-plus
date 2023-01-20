@@ -7,14 +7,14 @@ export default async (url: string) => {
         responseType: 'arraybuffer',
     })
     const md5 = require('crypto').createHash('md5').update(res.data).digest('hex')
-    const Path = require('path').join(__dirname, 'data', 'records')
+    const Path = require('path').join(__dirname, '../data', 'records')
     const filePath = require('path').join(Path, md5 + '.ogg')
     if (fs.existsSync(filePath)) {
         return md5 + '.ogg'
     }
     const bufOgg = await conventSilk(res.data)
 
-    if (fs.existsSync(Path)) {
+    if (!fs.existsSync(Path)) {
         fs.mkdirSync(Path)
     }
     fs.writeFileSync(filePath, bufOgg)
