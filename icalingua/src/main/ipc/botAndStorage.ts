@@ -99,7 +99,7 @@ ipcMain.on('QRCodeVerify', (event, url: string) => {
         width: 500,
         webPreferences: {},
     })
-    veriWin.on('close', () => {
+    veriWin.on('closed', () => {
         reLogin()
     })
     veriWin.webContents.on('did-finish-load', function () {

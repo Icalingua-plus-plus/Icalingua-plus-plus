@@ -1082,15 +1082,15 @@ main div {
 }
 
 .el-message-box__wrapper .el-message-box {
-    background-color: var(--panel-background);
-    border: var(--chat-border-style);
+    background-color: var(--panel-background, #ffffff);
+    border: var(--chat-border-style, 1px solid #e1e4e8);
 }
 
 .el-message-box__wrapper .el-message-box .el-message-box__title {
-    color: var(--panel-color-name);
+    color: var(--panel-color-name, #303133);
 }
 .el-message-box__wrapper .el-message-box .el-message-box__content {
-    color: var(--panel-color-desc);
+    color: var(--panel-color-desc, #606266);
 }
 
 .el-notification {
