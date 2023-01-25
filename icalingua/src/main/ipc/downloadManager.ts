@@ -10,6 +10,8 @@ import ui from '../utils/ui'
 import { getMainWindow } from '../utils/windowManager'
 import { getGroupFileMeta } from './botAndStorage'
 import fs from 'fs'
+import crypto from 'crypto'
+import ChildProcess from 'child_process'
 
 let aria: Aria2
 
@@ -76,6 +78,44 @@ export const downloadImage = (url: string, saveAs = false) => {
             title: 'Image Saved',
             message: aria ? out : path.join(dir, out),
         })
+}
+
+export const downloadImage2Open = (url: string) => {
+    console.log(url)
+    let out = '', dir = '', image = ''
+    if (url.startsWith('https://gchat.qpic.cn/gchatpic_new/')) {
+        const md5 = url.replace('https://gchat.qpic.cn/gchatpic_new/', '').split('/')[1].split('-')[2]
+        out = 'QQ_Image_' + md5 + '.jpg'
+        dir = app.getPath('temp')
+        image = path.join(dir, out)
+    } else {
+        const md5 = crypto.createHash('md5')
+        md5.update(url)
+        out = 'QQ_Image_' + md5.digest('hex') + '.jpg'
+        dir = app.getPath('temp')
+        image = path.join(dir, out)
+    }
+    if (fs.existsSync(image)) {
+        ChildProcess.exec(image, (error) => {
+            if (error) {
+                ui.messageError('本地查看器错误')
+                console.log(`exec error: ${error}`)
+            }
+        })
+        return
+    }
+    edl.download(getMainWindow(), url, {
+        directory: dir,
+        filename: out,
+        onCompleted: () => {
+            ChildProcess.exec(image, (error) => {
+                if (error) {
+                    ui.messageError('本地查看器错误')
+                    console.log(`exec error: ${error}`)
+                }
+            })
+        },
+    })
 }
 
 export const downloadGroupFile = async (gin: number, fid: string, saveAs = false) => {

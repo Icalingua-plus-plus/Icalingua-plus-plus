@@ -10,7 +10,7 @@ import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
 import { getConfig } from '../utils/configManager'
-import { download } from './downloadManager'
+import { download, downloadImage2Open } from './downloadManager'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open']
@@ -89,6 +89,8 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
         }
     } else if (viewer) {
         execFile(viewer, [url])
+    } else if (process.platform === 'win32' || process.platform === 'darwin') {
+        downloadImage2Open(url)
     } else {
         ui.messageError('找不到可用的本地查看器')
     }
