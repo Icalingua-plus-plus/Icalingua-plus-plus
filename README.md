@@ -32,19 +32,19 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 - 指定配置: `--config xxx.yaml` 或 `-c xxx.yaml`
 - 自定义数据目录: `--user-data-dir=`$path-you-want
 
-### 自定义脚本、样式、主题、插件相关
-
-#### 自定义脚本
-
-客户端默认会加载数据目录下的 `addon.js`，但是默认不会创建这个文件。
-
-数据目录:
+### 默认数据目录
 
 | 操作系统 | 路径                  |
 |---------|-----------------------|
 | Linux   | `~/.config/icalingua` |
 | Windows | `%AppData%\icalingua` |
 | macOS   | `~/Library/Application Support/icalingua`|
+
+### 自定义脚本、样式、主题、插件相关
+
+#### 自定义脚本
+
+客户端默认会加载数据目录下的 `addon.js`，但是默认不会创建这个文件。
 
 #### 自定义样式
 
