@@ -28,7 +28,7 @@ export function registerTheme(theme: string, style: any) {
         }
     }
 
-    patchObject(style, themeSysDefault)
+    patchObject(style, style.baseTheme ? defaultThemeStyles[style.baseTheme] : themeSysDefault)
     availableThemes[theme] = style
 }
 
