@@ -113,14 +113,6 @@
                             <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
 
-                        <LottieAnimation
-                            v-else-if="lottie && !disableQLottie"
-                            :path="lottie"
-                            :height="250"
-                            :width="250"
-                            :autoPlay="false"
-                        />
-
                         <message-image
                             v-else-if="isImage && message.files"
                             v-for="(file, i) in message.files"
@@ -188,6 +180,14 @@
                                 </slot>
                             </div>
                         </div>
+
+                        <LottieAnimation
+                            v-else-if="lottie && !disableQLottie"
+                            :path="lottie"
+                            :height="250"
+                            :width="250"
+                            :autoPlay="false"
+                        />
 
                         <format-message
                             v-if="
