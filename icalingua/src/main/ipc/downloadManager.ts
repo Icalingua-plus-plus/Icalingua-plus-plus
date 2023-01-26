@@ -82,7 +82,9 @@ export const downloadImage = (url: string, saveAs = false) => {
 
 export const downloadImage2Open = (url: string) => {
     console.log(url)
-    let out = '', dir = '', image = ''
+    let out = '',
+        dir = '',
+        image = ''
     if (url.startsWith('https://gchat.qpic.cn/gchatpic_new/')) {
         const md5 = url.replace('https://gchat.qpic.cn/gchatpic_new/', '').split('/')[1].split('-')[2]
         out = 'QQ_Image_' + md5 + '.jpg'
@@ -134,7 +136,7 @@ export const downloadFileByMessageData = (data: { action: string; message: Messa
             downloadImage(data.message.file.url, saveAs)
         } else if (data.message.file.type.toLowerCase().includes('audio/')) {
             const file = data.message.file
-            if (file.url === file.name){
+            if (file.url === file.name) {
                 let recordPath = ''
                 if (getConfig().adapter === 'socketIo') {
                     recordPath = getConfig().server + '/records/' + file.url

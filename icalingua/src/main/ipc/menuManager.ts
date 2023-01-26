@@ -1441,7 +1441,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         label: '复制 URL',
                         type: 'normal',
                         click: () => {
-                            clipboard.writeText(file.type.toLowerCase().includes('audio/') ? (file.fid || file.url) : file.url)
+                            clipboard.writeText(
+                                file.type.toLowerCase().includes('audio/') ? file.fid || file.url : file.url,
+                            )
                         },
                     }),
                 )
