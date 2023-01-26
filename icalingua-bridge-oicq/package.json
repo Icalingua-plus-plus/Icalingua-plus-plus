@@ -16,7 +16,7 @@
         "dev": "NODE_ENV=development node build"
     },
     "devDependencies": {
-        "@types/express": "^4.17.15",
+        "@types/express": "^4.17.16",
         "@types/fluent-ffmpeg": "^2.1.20",
         "@types/md5": "^2.3.2",
         "@types/mongodb": "^3.6.20",
@@ -27,7 +27,7 @@
     },
     "dependencies": {
         "@noble/ed25519": "1.7.1",
-        "axios": "^1.2.2",
+        "axios": "^1.2.5",
         "body-parser": "2.0.0-beta.1",
         "express": "^5.0.0-beta.1",
         "fluent-ffmpeg": "^2.1.2",
@@ -39,7 +39,7 @@
         "mongodb": "^4.13.0",
         "mysql": "^2.18.1",
         "nodejs-base64": "^2.0.0",
-        "oicq-icalingua-plus-plus": "^1.23.10",
+        "oicq-icalingua-plus-plus": "^1.23.11",
         "pg": "^8.8.0",
         "pg-query-stream": "^4.2.4",
         "silk-sdk": "^0.2.2",
