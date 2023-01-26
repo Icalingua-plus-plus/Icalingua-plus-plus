@@ -180,6 +180,7 @@ const processMessage = async (
             case 'json':
                 const json: string = m.data.data
                 message.code = json
+                if (!json) break
                 const jsonObj = JSON.parse(json)
                 if (jsonObj.app === 'com.tencent.mannounce') {
                     try {

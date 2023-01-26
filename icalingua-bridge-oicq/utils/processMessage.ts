@@ -168,6 +168,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
             case 'json':
                 const json: string = m.data.data
                 message.code = json
+                if (!json) break
                 const jsonObj = JSON.parse(json)
                 if (jsonObj.app === 'com.tencent.mannounce') {
                     try {
