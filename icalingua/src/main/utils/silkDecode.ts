@@ -37,7 +37,7 @@ const conventSilk = (silkBuf: Buffer): Promise<Buffer> => {
         })
         child.on('exit', (code, signal) => {
             console.log(`Child process exited with code ${code} and signal ${signal}`)
-            if (code !== 0) reject(new Error('Child process exited with code ${code} and signal ${signal}'))
+            if (code !== 0) reject(new Error(`Child process exited with code ${code} and signal ${signal}`))
         })
         child.send(silkBuf.toString('binary'))
     })

@@ -12,6 +12,7 @@ import { getGroupFileMeta } from './botAndStorage'
 import fs from 'fs'
 import crypto from 'crypto'
 import ChildProcess from 'child_process'
+import errorHandler from '../utils/errorHandler'
 
 let aria: Aria2
 
@@ -26,6 +27,7 @@ export const loadConfig = (config: Aria2Config) => {
             .catch((err) => {
                 ui.messageError('Aria2 failed')
                 console.log('Aria2 failed', err)
+                errorHandler(err, true)
             })
     } else aria = null
 }
@@ -50,7 +52,7 @@ export const download = (url: string, out: string, dir?: string, saveAs = false)
         aria.call('aria2.addUri', [url], { out, dir })
             .then(() => ui.messageSuccess('Pushed to Aria2 JSON RPC'))
             .catch((err) => {
-                console.log(err)
+                errorHandler(err, true)
                 ui.messageError('Aria2 failed')
             })
     } else {
@@ -101,7 +103,7 @@ export const downloadImage2Open = (url: string) => {
         ChildProcess.exec(image, (error) => {
             if (error) {
                 ui.messageError('本地查看器错误')
-                console.log(`exec error: ${error}`)
+                errorHandler(error, true)
             }
         })
         return
@@ -113,7 +115,7 @@ export const downloadImage2Open = (url: string) => {
             ChildProcess.exec(image, (error) => {
                 if (error) {
                     ui.messageError('本地查看器错误')
-                    console.log(`exec error: ${error}`)
+                    errorHandler(error, true)
                 }
             })
         },
@@ -126,7 +128,7 @@ export const downloadGroupFile = async (gin: number, fid: string, saveAs = false
         download(meta.url, meta.name, undefined, saveAs)
     } catch (e) {
         ui.notifyError(e)
-        console.error(e)
+        errorHandler(e, true)
     }
 }
 

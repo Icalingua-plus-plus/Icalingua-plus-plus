@@ -279,7 +279,7 @@ const eventHandlers = {
                     notif.push()
                 }
             } catch (e) {
-                console.error(e)
+                errorHandler(e, true)
                 ui.messageError('通知发送失败' + JSON.stringify({ error: e }))
             }
         }
@@ -358,7 +358,7 @@ const eventHandlers = {
                 requireFunc(custom_path).onMessage(data, bot)
             } catch (e) {
                 ui.messageError('自定义插件出错')
-                console.error(e)
+                errorHandler(e, true)
             }
         }
     },
@@ -961,7 +961,7 @@ const initStorage = async () => {
             })
         })
     } catch (err) {
-        console.log(err)
+        errorHandler(err, true)
         getConfig().account.autologin = false
         saveConfigFile()
         await dialog.showMessageBox(getMainWindow(), {
@@ -1717,7 +1717,7 @@ const adapter: OicqAdapter = {
     async getForwardMsg(resId: string, fileName?: string): Promise<Message[]> {
         const history = await bot.getForwardMsg(resId, fileName)
         if (history.error) {
-            console.log(history.error)
+            errorHandler(history.error, true)
             const res: [Message] = [
                 {
                     senderId: 0,
@@ -1919,7 +1919,6 @@ const adapter: OicqAdapter = {
                         if (await storage.isChatIgnored(message.senderId)) message.hide = true
                         messages.push(message)
                         newMsgs.push(message)
-                        console.log(retData)
                         if (first_loop) {
                             lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
                                 username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
