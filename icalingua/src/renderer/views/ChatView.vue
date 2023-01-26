@@ -277,6 +277,7 @@ export default {
         })
         //keyboard
         document.addEventListener('keydown', (e) => {
+            if (e.isComposing) return
             if (e.repeat) {
                 return
             } else if (e.key === 'F1') {
