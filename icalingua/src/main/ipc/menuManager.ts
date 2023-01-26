@@ -1101,17 +1101,32 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '缩放比例',
-                submenu: [100, 110, 125, 150, 175, 200].map((factor) => ({
-                    type: 'radio',
-                    label: `${factor}%`,
-                    checked: getConfig().zoomFactor === factor,
-                    click: () => {
-                        getMainWindow().webContents.setZoomFactor(factor / 100)
-                        getConfig().zoomFactor = factor
-                        saveConfigFile()
-                        updateAppMenu()
-                    },
-                })),
+                submenu: [100, 110, 125, 150, 175, 200, 0].map((factor) => {
+                    if (factor === 0) {
+                        return {
+                            type: 'radio',
+                            label: `${getConfig().zoomFactor}%`,
+                            checked: true,
+                            visible: ![100, 110, 125, 150, 175, 200].includes(getConfig().zoomFactor),
+                            click: () => {
+                                getMainWindow().webContents.setZoomFactor(getConfig().zoomFactor / 100)
+                                saveConfigFile()
+                                updateAppMenu()
+                            },
+                        }
+                    }
+                    return {
+                        type: 'radio',
+                        label: `${factor}%`,
+                        checked: getConfig().zoomFactor === factor,
+                        click: () => {
+                            getMainWindow().webContents.setZoomFactor(factor / 100)
+                            getConfig().zoomFactor = factor
+                            saveConfigFile()
+                            updateAppMenu()
+                        },
+                    }
+                }),
             }),
         ],
         //捷径

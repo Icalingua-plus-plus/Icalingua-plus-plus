@@ -114,7 +114,10 @@ export const loadMainWindow = () => {
         }
     })
 
-    mainWindow.webContents.on('did-finish-load', sendOnlineData)
+    mainWindow.webContents.on('did-finish-load', () => {
+        mainWindow.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        sendOnlineData()
+    })
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
 }
