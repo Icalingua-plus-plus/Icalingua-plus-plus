@@ -312,14 +312,14 @@ export default {
 
                     this.chroom(rooms[newIndex])
                 } else {
-					let unreadRoom
-					for (let i = 5; i > 0; i--) {
-						unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
-						if (unreadRoom) break
-					}
+                    let unreadRoom
+                    for (let i = 5; i > 0; i--) {
+                        unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
+                        if (unreadRoom) break
+                    }
                     if (unreadRoom) this.chroom(unreadRoom)
-				}
-			} else if (e.ctrlKey) {
+                }
+            } else if (e.ctrlKey) {
                 switch (e.key) {
                     case '1':
                         this.selectedChatGroup = 'chats'
