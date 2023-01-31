@@ -30,7 +30,13 @@
 
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <loader :show="loadingMessages" />
-            <div class="vac-messages-container">
+            <div
+                ref="messagesContainer"
+                class="vac-messages-container"
+                @mousedown.right="startMouseSelect"
+                @mouseup.right="endMouseSelect"
+            >
+                <div v-if="mouseSelecting" ref="mouseSelectArea" class="vac-mouse-select-area"></div>
                 <div :class="{ 'vac-messages-hidden': loadingMessages }">
                     <transition name="vac-fade-message">
                         <div v-if="showNoMessages" class="vac-text-started">
@@ -101,6 +107,7 @@
                                 :text-formatting="textFormatting"
                                 :emojis-list="emojisList"
                                 :showForwardPanel="showForwardPanel"
+                                :selectUpdateKey="selectUpdateKey"
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
@@ -479,6 +486,7 @@ export default {
             textMessages: require('../../locales').default,
             editAndResend: false,
             msgstoForward: [],
+            selectUpdateKey: 0,
             showForwardPanel: false,
             isQuickFaceOn: false,
             isQuickAtOn: false,
@@ -506,6 +514,8 @@ export default {
             localImageViewerByDefault: false,
             disableQLottie: false,
             recordPath: '',
+            mouseSelecting: false,
+            mouseSelectArea: null,
         }
     },
     computed: {
@@ -751,6 +761,7 @@ export default {
             if (this.showForwardPanel) return
             this.selectedMessage = _id
             this.msgstoForward.push(_id)
+            this.selectUpdateKey = 1
             this.showForwardPanel = true
         })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
@@ -911,6 +922,7 @@ export default {
             this.closeForwardPanel()
         },
         closeForwardPanel() {
+            this.selectUpdateKey = 0
             this.showForwardPanel = false
             this.msgstoForward = []
             this.selectedMessage = ''
@@ -1430,6 +1442,80 @@ export default {
                 this.groupMembers = groupMembers
             }
         },
+        updateMouseSelectAreaStyleImmediately() {
+            const el = this.$refs.mouseSelectArea
+            if (!el) return
+
+            const area = this.mouseSelectArea
+            el.style.left = Math.min(area.x1, area.x2) + 'px'
+            el.style.top = Math.min(area.y1, area.y2) + 'px'
+            el.style.width = Math.abs(area.x1 - area.x2) + 'px'
+            el.style.height = Math.abs(area.y1 - area.y2) + 'px'
+        },
+        startMouseSelect(e) {
+            if (this.mouseSelecting) return
+
+            for (let el = e.target; el.className !== 'vac-messages-container'; el = el.parentElement) {
+                if (el.className.includes('vac-message-container') || el.className === 'vac-message-sender-avatar')
+                    return
+            }
+
+            this.mouseSelecting = true
+
+            this.$refs.messagesContainer.addEventListener('mousemove', this.continueMouseSelect)
+
+            const { pageX: x, pageY: y } = e
+            this.mouseSelectArea = {
+                x1: x,
+                y1: y,
+                x2: x,
+                y2: y,
+            }
+            this.updateMouseSelectAreaStyleImmediately()
+        },
+        continueMouseSelect(e) {
+            if (!this.mouseSelecting) return
+
+            const { pageX: x, pageY: y } = e
+
+            this.mouseSelectArea.x2 = x
+            this.mouseSelectArea.y2 = y
+
+            this.updateMouseSelectAreaStyleImmediately()
+        },
+        endMouseSelect(e) {
+            if (!this.mouseSelecting) return
+
+            this.continueMouseSelect(e)
+
+            this.mouseSelecting = false
+
+            const area = this.mouseSelectArea
+
+            const container = this.$refs.messagesContainer
+            container.removeEventListener('mousemove', this.continueMouseSelect)
+
+            const selectedIds = [...container.querySelectorAll('.vac-message-box')]
+                .filter((msgBox) => {
+                    const msgCard = msgBox.querySelector('.vac-message-card')
+                    const { x: x1, y: y1, width: w, height: h } = msgCard.getBoundingClientRect()
+                    const x2 = x1 + w,
+                        y2 = y1 + h
+                    const [ax1, ax2] = [area.x1, area.x2].sort((a, b) => a - b)
+                    const [ay1, ay2] = [area.y1, area.y2].sort((a, b) => a - b)
+                    if (ax2 < x1 || x2 < ax1 || ay2 < y1 || y2 < ay1) return false
+                    return true
+                })
+                .map((msgBox) => msgBox.id)
+
+            if (selectedIds.length) {
+                if (!this.showForwardPanel) this.showForwardPanel = true
+                this.selectUpdateKey++
+                selectedIds.forEach((id) => {
+                    if (!this.msgstoForward.includes(id)) this.msgstoForward.push(id)
+                })
+            }
+        },
     },
 }
 </script>
@@ -1691,6 +1777,14 @@ export default {
 
 .vac-messages-hidden {
     opacity: 0;
+}
+
+.vac-mouse-select-area {
+    position: fixed;
+    z-index: 2;
+    background: rgba(#c2dcf2, 0.5);
+    border: 2px solid #c2dcf2;
+    border-radius: 2px;
 }
 
 @media only screen and (max-width: 768px) {
