@@ -267,6 +267,7 @@ export default {
         textFormatting: { type: Boolean, required: true },
         emojisList: { type: Object, required: true },
         showForwardPanel: { type: Boolean, required: true },
+        selectUpdateKey: { type: Number, require: true },
         selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
         forwardResId: { type: String, required: false },
@@ -338,7 +339,7 @@ export default {
             if (!val.length || !this.showNewMessagesDivider) return
             this.newMessage = val.reduce((res, obj) => (obj.index < res.index ? obj : res))
         },
-        showForwardPanel: {
+        selectUpdateKey: {
             handler(newValue) {
                 if (!newValue) {
                     this.selected = false
