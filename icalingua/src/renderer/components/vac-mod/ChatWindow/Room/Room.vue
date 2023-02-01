@@ -30,12 +30,7 @@
 
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <loader :show="loadingMessages" />
-            <div
-                ref="messagesContainer"
-                class="vac-messages-container"
-                @mousedown.right="startMouseSelect"
-                @mouseup.right="endMouseSelect"
-            >
+            <div ref="messagesContainer" class="vac-messages-container" @mousedown.left="startMouseSelect">
                 <div v-if="mouseSelecting" ref="mouseSelectArea" class="vac-mouse-select-area"></div>
                 <div :class="{ 'vac-messages-hidden': loadingMessages }">
                     <transition name="vac-fade-message">
@@ -1456,13 +1451,13 @@ export default {
             if (this.mouseSelecting) return
 
             for (let el = e.target; el.className !== 'vac-messages-container'; el = el.parentElement) {
-                if (el.className.includes('vac-message-container') || el.className === 'vac-message-sender-avatar')
-                    return
+                if (el.className.includes('vac-message-container')) return
             }
 
             this.mouseSelecting = true
 
-            this.$refs.messagesContainer.addEventListener('mousemove', this.continueMouseSelect)
+            window.addEventListener('mousemove', this.continueMouseSelect)
+            window.addEventListener('mouseup', this.endMouseSelect)
 
             const { pageX: x, pageY: y } = e
             this.mouseSelectArea = {
@@ -1492,9 +1487,10 @@ export default {
 
             const area = this.mouseSelectArea
 
-            const container = this.$refs.messagesContainer
-            container.removeEventListener('mousemove', this.continueMouseSelect)
+            window.removeEventListener('mousemove', this.continueMouseSelect)
+            window.removeEventListener('mouseup', this.endMouseSelect)
 
+            const container = this.$refs.messagesContainer
             const selectedIds = [...container.querySelectorAll('.vac-message-box')]
                 .filter((msgBox) => {
                     const msgCard = msgBox.querySelector('.vac-message-card')
