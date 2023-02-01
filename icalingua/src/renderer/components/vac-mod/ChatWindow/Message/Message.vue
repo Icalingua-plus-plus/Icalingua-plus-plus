@@ -246,12 +246,6 @@ export default {
         LottieAnimation,
     },
 
-    data() {
-        return {
-            selected: false,
-        }
-    },
-
     props: {
         currentUserId: { type: [String, Number], required: true },
         textMessages: { type: Object, required: true },
@@ -288,6 +282,7 @@ export default {
             newMessage: {},
             lottie: getLottieFace(this.message.content, this.message.time),
             tgLogo: `file://${__static}/tg.svg`,
+            selected: false,
         }
     },
 
