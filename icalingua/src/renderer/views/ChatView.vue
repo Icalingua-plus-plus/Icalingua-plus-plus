@@ -59,6 +59,7 @@
                     :selectedChatGroup="selectedChatGroup"
                     :allRooms="rooms"
                     :disableChatGroups="disableChatGroups"
+                    :roomPanelAvatarOnly="roomPanelAvatarOnly"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
                     @update-sorted-rooms="(sortedRooms) => (this.sortedRooms = sortedRooms)"
@@ -734,7 +735,7 @@ Chromium ${process.versions.chrome}` : ''
             document.title = 'Icalingua++'
         },
         roomPanelResize(pane, resizer, size) {
-            if (pane.className !== 'panel rooms-panel') return // 表情面板调整大小也会触发这个事件
+            if (!pane.className.includes('panel rooms-panel')) return // 表情面板调整大小也会触发这个事件
             size = + size.slice(0, -2)
             // 140px: Min width with avatars
             // 80px: Width without avatars

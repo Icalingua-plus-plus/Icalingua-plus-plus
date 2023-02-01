@@ -1,6 +1,6 @@
 <template>
     <div class="root">
-        <div class="head">
+        <div class="head" v-show="!roomPanelAvatarOnly || disableChatGroups">
             <el-popover
                 placement="right-end"
                 :title="username"
@@ -67,6 +67,7 @@ export default {
         username: String,
         allRooms: Array,
         disableChatGroups: Boolean,
+        roomPanelAvatarOnly: Boolean,
     },
     data() {
         return {
