@@ -289,7 +289,7 @@
                 Math.pow(distanceY / firstPinchDistanceY, 2)
             ) / Math.SQRT2 
             
-            if (touchInitialZoom * ratio >= 0.3)
+            if (touchInitialZoom * ratio * _ratio >= 0.2 && touchInitialZoom * ratio * _ratio <= 20)
                 setZoom(e, touchInitialZoom * ratio)
         }
     }
