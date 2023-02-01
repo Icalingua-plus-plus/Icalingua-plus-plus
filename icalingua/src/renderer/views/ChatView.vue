@@ -798,35 +798,38 @@ Chromium ${process.versions.chrome}` : ''
                 if (this.selectedChatGroup === group) this.selectedChatGroup = 'chats'
             }).catch()
         },
-        updateChatGroup(group) {
+        updateChatGroup(groupName) {
             if (this.selectedRoomId === 0) return
-            let edited
-            for (let i in this.chatGroups) {
-                if (this.chatGroups[i].name === group) {
-                    if (this.chatGroups[i].rooms.includes(this.selectedRoomId)) {
-                        this.chatGroups[i].rooms = this.chatGroups[i].rooms.filter(e => e !== this.selectedRoomId)
-                        this.$message({
-                            type: 'success',
-                            message: `已将 ${this.selectedRoom.roomName} 移出分组 ${group}`,
-                        })
-                    }
-                    else {
-                        this.chatGroups[i].rooms.push(this.selectedRoomId)
-                        this.$message({
-                            type: 'success',
-                            message: `已将 ${this.selectedRoom.roomName} 加入分组 ${group}`,
-                        })
-                    }
-                    edited = this.chatGroups[i]
-                    break
-                }
-            }
-            if (this.selectedChatGroup === group) {
-                this.visibleRooms = this.rooms.filter(e => {
-                    return edited.rooms.includes(e.roomId)
+
+            // 找到要更改的 chat group
+            const chatGroup = Object.values(this.chatGroups)
+                .find(({ name }) => name === groupName)
+
+            // 移除 room
+            if (chatGroup.rooms.includes(this.selectedRoomId)) {
+                chatGroup.rooms = chatGroup.rooms.filter(e => e !== this.selectedRoomId)
+                this.$message({
+                    type: 'success',
+                    message: `已将 ${this.selectedRoom.roomName} 移出分组 ${groupName}`,
                 })
             }
-            ipc.updateChatGroup(group, edited)
+            // 添加 room
+            else {
+                chatGroup.rooms.push(this.selectedRoomId)
+                this.$message({
+                    type: 'success',
+                    message: `已将 ${this.selectedRoom.roomName} 加入分组 ${groupName}`,
+                })
+            }
+
+            // 如果当前选中的 chat group 被更改，要刷新显示的 room
+            if (this.selectedChatGroup === groupName) {
+                this.visibleRooms = this.rooms.filter(e => edited.rooms.includes(e.roomId))
+            }
+
+            // 保存更改到数据库
+            const { rooms } = chatGroup
+            ipc.updateChatGroup(groupName, { rooms })
         },
         handleMouseDown(e) {
             if (e.button === 1) {
