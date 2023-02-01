@@ -64,7 +64,7 @@
                     @update-sorted-rooms="(sortedRooms) => (this.sortedRooms = sortedRooms)"
                 />
             </div>
-            <MultipaneResizer />
+            <MultipaneResizer style="z-index: 3" />
             <div style="flex: 1" class="vac-card-window">
                 <div class="pace-activity" v-show="loading" />
                 <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
