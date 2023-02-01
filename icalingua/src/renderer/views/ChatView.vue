@@ -2,7 +2,7 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
-            <el-aside width="65px" style="display: flex; flex-direction: column" v-if="!disableChatGroups">
+            <el-aside width="65px" style="display: flex; flex-direction: column; z-index: 3" v-if="!disableChatGroups">
                 <div class="head">
                     <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`">
                         <a slot="reference" @click="chroom(account)" style="cursor: pointer">
@@ -1015,6 +1015,7 @@ main div {
     min-width: 140px;
     width: 300px;
     max-width: 500px;
+    z-index: 3;
 
     &.avatar-only {
         min-width: 80px;

@@ -1448,6 +1448,7 @@ export default {
             el.style.height = Math.abs(area.y1 - area.y2) + 'px'
         },
         startMouseSelect(e) {
+            if (this.$route.name === 'history-page') return
             if (this.mouseSelecting) return
 
             for (let el = e.target; el.className !== 'vac-messages-container'; el = el.parentElement) {
