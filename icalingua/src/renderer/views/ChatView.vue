@@ -799,11 +799,13 @@ Chromium ${process.versions.chrome}` : ''
             }).catch()
         },
         updateChatGroup(groupName) {
+            // 所有会话分组不能被更新
             if (this.selectedRoomId === 0) return
 
             // 找到要更改的 chat group
-            const chatGroup = Object.values(this.chatGroups)
-                .find(({ name }) => name === groupName)
+            const index = Object.values(this.chatGroups)
+                .findIndex(({ name }) => name === groupName)
+            const chatGroup = this.chatGroups[index]
 
             // 移除 room
             if (chatGroup.rooms.includes(this.selectedRoomId)) {
@@ -824,11 +826,11 @@ Chromium ${process.versions.chrome}` : ''
 
             // 如果当前选中的 chat group 被更改，要刷新显示的 room
             if (this.selectedChatGroup === groupName) {
-                this.visibleRooms = this.rooms.filter(e => edited.rooms.includes(e.roomId))
+                this.visibleRooms = this.rooms.filter(e => chatGroup.rooms.includes(e.roomId))
             }
 
             // 保存更改到数据库
-            const { rooms } = chatGroup
+            const { rooms } = chatGroup // 解构防止响应式对象破坏存储
             ipc.updateChatGroup(groupName, { rooms })
         },
         handleMouseDown(e) {
