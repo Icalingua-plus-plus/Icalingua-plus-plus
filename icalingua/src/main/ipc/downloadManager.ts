@@ -168,3 +168,8 @@ ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     loadConfig(config)
     saveConfigFile()
 })
+
+ipcMain.on('setLockPassword', (_, password: string) => {
+    getConfig().lockPassword = password
+    saveConfigFile()
+})

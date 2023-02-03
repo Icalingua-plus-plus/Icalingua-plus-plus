@@ -1,5 +1,5 @@
 import { app, Menu, protocol } from 'electron'
-import { destroyWindow, getLoginWindow, showLoginWindow, showWindow } from './utils/windowManager'
+import { destroyWindow, getLoginWindow, showLoginWindow, tryToShowAllWindows } from './utils/windowManager'
 import { createBot, logOut } from './ipc/botAndStorage'
 import { getConfig } from './utils/configManager'
 import repl from 'repl'
@@ -22,7 +22,7 @@ if (getConfig().account.autologin || getConfig().adapter === 'socketIo') {
     showLoginWindow()
 }
 
-app.on('activate', showWindow)
+app.on('activate', tryToShowAllWindows)
 
 app.on('window-all-closed', () => {
     logOut()
@@ -31,7 +31,7 @@ app.on('window-all-closed', () => {
     }, 1000)
 })
 
-app.on('second-instance', showWindow)
+app.on('second-instance', tryToShowAllWindows)
 
 app.on('before-quit', () => {
     logOut()

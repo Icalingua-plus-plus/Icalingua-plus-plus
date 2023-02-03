@@ -15,9 +15,9 @@ import exit from './exit'
 import setPriority from './setPriority'
 import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
-import { getMainWindow } from './windowManager'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
+import { getMainWindow, tryToShowMainWindow } from './windowManager'
 
 let tray: Tray
 
@@ -29,11 +29,7 @@ let lightIcon = nativeImage.createFromPath(path.join(getStaticPath(), '256x256.p
 export const createTray = () => {
     tray = new Tray(path.join(getStaticPath(), 'trayTemplate.png'))
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
-    tray.on('click', () => {
-        const window = getMainWindow()
-        window.show()
-        window.focus()
-    })
+    tray.on('click', tryToShowMainWindow())
     return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
@@ -47,11 +43,7 @@ export const updateTrayMenu = async () => {
         {
             label: '打开',
             type: 'normal',
-            click: () => {
-                const window = getMainWindow()
-                window.show()
-                window.focus()
-            },
+            click: tryToShowMainWindow(),
         },
     ])
     menu.append(new MenuItem({ type: 'separator' }))
@@ -60,12 +52,9 @@ export const updateTrayMenu = async () => {
             menu.append(
                 new MenuItem({
                     label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
-                    click() {
-                        const window = getMainWindow()
-                        window.show()
-                        window.focus()
+                    click: tryToShowMainWindow(() => {
                         ui.chroom(unreadRoom.roomId)
-                    },
+                    })
                 }),
             )
             menu.append(

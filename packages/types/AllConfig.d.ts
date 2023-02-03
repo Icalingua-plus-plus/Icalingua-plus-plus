@@ -39,6 +39,7 @@ type AllConfig = {
     localImageViewerByDefault: boolean
     disableQLottie: boolean
     disableNotification: boolean
+    lockPassword: string
 }
 
 export default AllConfig

@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, nativeTheme, shell, screen } from 'electron'
+import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, ipcRenderer } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -9,8 +9,13 @@ import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
 
-let loginWindow: BrowserWindow, mainWindow: BrowserWindow, requestWindow: BrowserWindow
+let loginWindow: BrowserWindow
+let mainWindow: BrowserWindow
+let requestWindow: BrowserWindow
+let unlockWindow: BrowserWindow
+let isLocked: boolean = false
 
+export const isAppLocked = () => isLocked
 export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
@@ -200,17 +205,90 @@ export const sendToRequestWindow = (channel: string, payload?: any) => {
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.webContents.send(channel, payload)
 }
 export const getMainWindow = () => mainWindow
-export const showWindow = () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
+export const showSetLockPasswordWindow = () => {
+    const setLockPasswordWindow = newIcalinguaWindow({
+        height: 160,
+        width: 500,
+        autoHideMenuBar: true,
+        maximizable: false,
+        modal: true,
+        parent: mainWindow,
+        webPreferences: {
+            contextIsolation: false,
+            nodeIntegration: true,
+        }
+    })
+    setLockPasswordWindow.loadURL(getWinUrl() + '#/setLockPassword')
+}
+export const lockMainWindow = () => {
+    const { lockPassword } = getConfig()
+    if (!lockPassword) {
+        showSetLockPasswordWindow()
+    }
+    else {
+        mainWindow.hide()
+        isLocked = true
+    }
+}
+export const tryTotryToShowAllWindows = (callback: () => void) => {
+    if (isLocked) {
+        if (!unlockWindow) {
+            unlockWindow = newIcalinguaWindow({
+                height: 160,
+                width: 500,
+                autoHideMenuBar: true,
+                maximizable: false,
+                modal: true,
+                parent: mainWindow,
+                webPreferences: {
+                    contextIsolation: false,
+                    nodeIntegration: true,
+                }
+            })
+            unlockWindow.loadURL(getWinUrl() + '#/unlock').then(() => {
+                ipcMain.on('unlock', (_, password: string) => {
+                    if (password === getConfig().lockPassword) {
+                        isLocked = false
+                        unlockWindow.webContents.send('unlock-succeed')
+
+                        setTimeout(() => {
+                            unlockWindow.hide()
+                            callback()
+                        }, 500)
+                    }
+                    else {
+                        unlockWindow.webContents.send('unlock-fail')
+                    }
+                })
+            })
+        }
+        else {
+            unlockWindow.show()
+        }
+    }
+    else {
+        callback()
+    }
+}
+export const tryToShowMainWindow = (callback?: () => void) =>
+    () => tryTotryToShowAllWindows(() => {
         mainWindow.show()
         mainWindow.focus()
-    } else if (loginWindow && !loginWindow.isDestroyed()) {
-        loginWindow.show()
-        loginWindow.focus()
-    } else if (requestWindow && !requestWindow.isDestroyed()) {
-        requestWindow.show()
-        requestWindow.focus()
-    }
+        callback?.()
+    })
+export const tryToShowAllWindows = () => {
+    tryTotryToShowAllWindows(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.show()
+            mainWindow.focus()
+        } else if (loginWindow && !loginWindow.isDestroyed()) {
+            loginWindow.show()
+            loginWindow.focus()
+        } else if (requestWindow && !requestWindow.isDestroyed()) {
+            requestWindow.show()
+            requestWindow.focus()
+        }
+    })
 }
 export const destroyWindow = () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
