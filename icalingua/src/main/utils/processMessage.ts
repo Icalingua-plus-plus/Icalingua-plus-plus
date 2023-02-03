@@ -56,7 +56,17 @@ const processMessage = async (
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'image':
                 lastMessage.content += '[Image]'
-                url = m.data.url
+                url = m.data.url || ''
+                if (typeof m.data.file !== 'string' && !url) {
+                    const md5 = require('crypto').createHash('md5').update(m.data.file).digest('hex')
+                    url = getImageUrlByMd5(md5)
+                }
+                if (typeof m.data.file === 'string' && !url) url = m.data.file
+                if (url && typeof url === 'string' && url.startsWith('base64://')) {
+                    const base64 = url.slice(9)
+                    const md5 = require('crypto').createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
+                    url = getImageUrlByMd5(md5)
+                }
                 if (typeof m.data.file === 'string' && url.includes('https://gchat.qpic.cn/download')) {
                     // 解决新 QQ 发送的图片链接短时间即失效的问题
                     const success = await oicq.preloadImages([url])
@@ -316,7 +326,7 @@ const processMessage = async (
                 lastMessage.content = `[Video]`
                 message.file = {
                     type: 'video/mp4',
-                    url: m.data.url,
+                    url: m.data.url || m.data.file,
                 }
                 message.files.push(message.file)
                 break
@@ -404,10 +414,11 @@ const processMessage = async (
                 break
             default:
                 console.log('[无法解析的消息]', m)
-                if (!getConfig().debugmode) return
+                if (!getConfig().debugmode) break
                 lastMessage.content += '[无法解析的消息]'
                 message.content += '[无法解析的消息]'
                 message.code += JSON.stringify(m)
+                break
         }
         lastType = m.type
     }

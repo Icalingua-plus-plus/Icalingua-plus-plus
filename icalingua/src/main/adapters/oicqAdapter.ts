@@ -49,6 +49,7 @@ import {
     PrivateMessageEventData,
     QrcodeEventData,
     Ret,
+    Sendable,
     SyncMessageEventData,
     SyncReadedEventData,
 } from 'oicq-icalingua-plus-plus'
@@ -87,6 +88,9 @@ let bot: Client
 let storage: StorageProvider
 let loginForm: LoginForm
 let loginError: boolean = false
+let _sendPrivateMsg: {
+    (user_id: number, message: Sendable, auto_escape?: boolean): Promise<Ret<{ message_id: string }>>
+}
 
 let currentLoadedMessagesCount = 0
 let loggedIn = false
@@ -307,51 +311,6 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         updateTrayIcon()
         if (getConfig().custom) {
-            if (!bot['sendPrivateMsg']) {
-                bot['sendPrivateMsg'] = async (
-                    user_id: number,
-                    message: MessageElem[] | string,
-                    auto_escape?: boolean,
-                ) => {
-                    let custom_room = await storage.getRoom(user_id)
-                    if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
-                    const _message: Message = {
-                        _id: '',
-                        senderId: bot.uin,
-                        username: 'You',
-                        content: '',
-                        timestamp: formatDate('hh:mm:ss'),
-                        date: formatDate('yyyy/MM/dd'),
-                        files: [],
-                    }
-                    let data = await bot._sendPrivateMsg(user_id, message, auto_escape)
-                    await processMessage(message, _message, {}, user_id)
-                    custom_room.lastMessage = {
-                        content: _message.content,
-                        timestamp: formatDate('hh:mm'),
-                    }
-                    if (user_id === bot.uin || user_id === 3636666661) return data
-                    _message._id = data.data.message_id
-                    const parsed = Buffer.from(data.data.message_id, 'base64')
-                    const _time = parsed.readUInt32BE(12)
-                    if (_time !== lastReceivedMessageInfo.timestamp) {
-                        lastReceivedMessageInfo.timestamp = _time
-                        lastReceivedMessageInfo.id = 0
-                    }
-                    custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
-                    _message.time = _time * 1000 + lastReceivedMessageInfo.id
-                    _message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
-                    lastReceivedMessageInfo.id++
-                    ui.updateRoom(custom_room)
-                    ui.addMessage(custom_room.roomId, _message)
-                    storage.addMessage(user_id, _message)
-                    storage.updateRoom(custom_room.roomId, {
-                        utime: custom_room.utime,
-                        lastMessage: custom_room.lastMessage,
-                    })
-                    return data
-                }
-            }
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
             try {
@@ -1252,16 +1211,6 @@ const adapter: OicqAdapter = {
             return
         }
 
-        const message: Message = {
-            _id: '',
-            senderId: bot.uin,
-            username: 'You',
-            content,
-            timestamp: formatDate('hh:mm:ss'),
-            date: formatDate('yyyy/MM/dd'),
-            files: [],
-        }
-
         const chain: MessageElem[] = []
 
         if (messageType === 'anonymous') {
@@ -1276,16 +1225,6 @@ const adapter: OicqAdapter = {
         }
 
         if (replyMessage) {
-            message.replyMessage = {
-                _id: replyMessage._id,
-                username: replyMessage.username,
-                content: replyMessage.content,
-                files: [],
-            }
-            if (replyMessage.file) {
-                message.replyMessage.file = replyMessage.file
-            }
-
             chain.push({
                 type: 'reply',
                 data: {
@@ -1398,7 +1337,7 @@ const adapter: OicqAdapter = {
                             title: 'Failed to send',
                             message: retData.error.message,
                         })
-                        ui.addMessageText(message.content)
+                        ui.addMessageText(content)
                     }
                     return
                 } else if (messageType === 'xml') {
@@ -1450,40 +1389,27 @@ const adapter: OicqAdapter = {
                 data: {
                     file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
                     type: sticker ? 'face' : 'image',
+                    url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
                 },
             })
-            message.file = {
-                type: 'image/jpeg',
-                url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
-            }
-            message.files.push(message.file)
         } else if (imgpath) {
             chain.push({
                 type: 'image',
                 data: {
                     file: imgpath,
                     type: sticker ? 'face' : 'image',
+                    url: imgpath.replace(/\\/g, '/'),
                 },
             })
-            message.file = {
-                type: 'image/jpeg',
-                url: imgpath.replace(/\\/g, '/'),
-            }
-            message.files.push(message.file)
         } else if (file) {
             chain.push({
                 type: 'image',
                 data: {
                     file: file.path,
                     type: sticker ? 'face' : 'image',
+                    url: file.path,
                 },
             })
-            message.file = {
-                url: file.path,
-                size: file.size,
-                type: file.type,
-            }
-            message.files.push(message.file)
         }
         if (messageType === 'text') {
             const idReg = content.match(/\[QLottie: (\d+)\,(\d+)\]/)
@@ -1498,13 +1424,11 @@ const adapter: OicqAdapter = {
                         qlottie: qlottie,
                     },
                 })
-                delete message.file
-                message.files.length = 0
             }
         }
         //发送消息链
         let data: Ret<{ message_id: string }>
-        if (roomId > 0) data = await bot._sendPrivateMsg(roomId, chain, true)
+        if (roomId > 0) data = await bot.sendPrivateMsg(roomId, chain, true)
         else data = await bot.sendGroupMsg(-roomId, chain, true)
 
         ui.closeLoading()
@@ -1513,130 +1437,8 @@ const adapter: OicqAdapter = {
                 title: 'Failed to send',
                 message: data.error.message,
             })
-            ui.addMessageText(message.content)
+            ui.addMessageText(content)
             return
-        }
-        if (roomId > 0 && roomId !== bot.uin && roomId !== 3636666661) {
-            console.log(data)
-            room.lastMessage = {
-                content,
-                timestamp: formatDate('hh:mm'),
-            }
-            if (file || b64img || imgpath) room.lastMessage.content += '[Image]'
-            let appurl
-            let url
-            if (messageType === 'xml') {
-                message.code = message.content
-                const urlRegex = /url="([^"]+)"/
-                const resIdRegex = /m_resid="([\w+=/]+)"/
-                const md5ImageRegex = /image [^<>]*md5="([A-F\d]{32})"/
-                if (urlRegex.test(message.code)) appurl = message.code.match(urlRegex)[1].replace(/\\\//g, '/')
-                if (message.code.includes('action="viewMultiMsg"') && resIdRegex.test(message.code)) {
-                    const resId = message.code.match(resIdRegex)[1]
-                    console.log(resId)
-                    room.lastMessage.content = '[Forward multiple messages]'
-                    message.content = `[Forward: ${resId}]`
-                } else if (appurl) {
-                    appurl = appurl.replace(/&amp;/g, '&')
-                    room.lastMessage.content = appurl
-                    message.content = appurl
-                } else if (md5ImageRegex.test(message.code)) {
-                    const imgMd5 = (appurl = message.code.match(md5ImageRegex)[1])
-                    room.lastMessage.content = '[Image]'
-                    url = getImageUrlByMd5(imgMd5)
-                    message.file = {
-                        type: 'image/jpeg',
-                        url,
-                    }
-                    message.files.push(message.file)
-                } else {
-                    room.lastMessage.content = '[XML]'
-                    message.content = '[XML]'
-                }
-            } else if (messageType === 'json') {
-                const json: string = message.content
-                message.code = json
-                const jsonObj = JSON.parse(json)
-                if (jsonObj.app === 'com.tencent.mannounce') {
-                    try {
-                        const title = base64decode(jsonObj.meta.mannounce.title)
-                        const content = base64decode(jsonObj.meta.mannounce.text)
-                        room.lastMessage.content = `[${title}]`
-                        message.content = title + '\n\n' + content
-                    } catch (err) {}
-                }
-                const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
-                const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
-                const biliRegex2 = /(https?:\\?\/\\?\/\w*\.?bilibili\.com\\?\/[^?"=]*)\??/
-                const jsonLinkRegex = /{.*"app":"com.tencent.structmsg".*"jumpUrl":"(https?:\\?\/\\?\/[^",]*)".*}/
-                const jsonAppLinkRegex = /"contentJumpUrl": ?"(https?:\\?\/\\?\/[^",]*)"/
-                if (biliRegex.test(json)) appurl = json.match(biliRegex)[1].replace(/\\\//g, '/')
-                else if (biliRegex2.test(json)) appurl = json.match(biliRegex2)[1].replace(/\\\//g, '/')
-                else if (zhihuRegex.test(json)) appurl = json.match(zhihuRegex)[1].replace(/\\\//g, '/')
-                else if (jsonLinkRegex.test(json)) appurl = json.match(jsonLinkRegex)[1].replace(/\\\//g, '/')
-                else if (jsonAppLinkRegex.test(json)) appurl = json.match(jsonAppLinkRegex)[1].replace(/\\\//g, '/')
-                else {
-                    //作为一般通过小程序解析内部 URL，像腾讯文档就可以
-                    try {
-                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
-                        appurl = meta.qqdocurl
-                    } catch (e) {}
-                }
-                if (appurl) {
-                    room.lastMessage.content = ''
-                    message.content = ''
-                    try {
-                        const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
-                        room.lastMessage.content = meta.desc + ' '
-                        message.content = meta.desc + '\n\n'
-
-                        let previewUrl = meta.preview
-                        if (!previewUrl.toLowerCase().startsWith('http')) {
-                            previewUrl = 'https://' + previewUrl
-                        }
-                        message.file = {
-                            type: 'image/jpeg',
-                            url: previewUrl,
-                        }
-                        message.files.push(message.file)
-                    } catch (e) {}
-
-                    room.lastMessage.content += appurl
-                    message.content += appurl
-                } else {
-                    room.lastMessage.content = '[JSON]'
-                    message.content = '[JSON]'
-                }
-            } else if (messageType === 'rps') {
-                const rps = ['石头', '剪刀', '布']
-                room.lastMessage.content = '[猜拳]'
-                message.content = '[猜拳]' + rps[parseInt(content) - 1]
-            } else if (messageType === 'dice') {
-                room.lastMessage.content = '[随机骰子]'
-                message.content = '[随机骰子]点数' + content
-            } else if (messageType === 'raw') {
-                message.content = ''
-                await processMessage(chain, message, {}, roomId)
-                room.lastMessage.content = '[DEBUG]' + message.content
-            }
-            message._id = data.data.message_id
-            const parsed = Buffer.from(data.data.message_id, 'base64')
-            const _time = parsed.readUInt32BE(12)
-            if (_time !== lastReceivedMessageInfo.timestamp) {
-                lastReceivedMessageInfo.timestamp = _time
-                lastReceivedMessageInfo.id = 0
-            }
-            room.utime = _time * 1000 + lastReceivedMessageInfo.id
-            message.time = _time * 1000 + lastReceivedMessageInfo.id
-            message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
-            lastReceivedMessageInfo.id++
-            ui.updateRoom(room)
-            ui.addMessage(room.roomId, message)
-            storage.addMessage(roomId, message)
-            storage.updateRoom(room.roomId, {
-                utime: room.utime,
-                lastMessage: room.lastMessage,
-            })
         }
     },
     createBot(form: LoginForm) {
@@ -1649,6 +1451,60 @@ const adapter: OicqAdapter = {
                 brief: true,
                 log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'off',
             })
+            _sendPrivateMsg = bot.sendPrivateMsg
+            bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
+                if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
+                let data = await _sendPrivateMsg.call(bot, user_id, message, auto_escape)
+                if (user_id === bot.uin || user_id === 3636666661) return data
+
+                let custom_room = await storage.getRoom(user_id)
+                if (!custom_room) {
+                    // create room
+                    const fl = bot.fl.get(user_id)
+                    const roomName = fl ? fl.remark || fl.nickname : String(user_id)
+                    custom_room = createRoom(user_id, roomName)
+                    await storage.addRoom(custom_room)
+                }
+                const _message: Message = {
+                    _id: '',
+                    senderId: bot.uin,
+                    username: 'You',
+                    content: '',
+                    timestamp: formatDate('hh:mm:ss'),
+                    date: formatDate('yyyy/MM/dd'),
+                    files: [],
+                }
+                const lastMessage = {
+                    content: '',
+                    timestamp: formatDate('hh:mm'),
+                    username: 'You',
+                }
+                try {
+                    await processMessage(message, _message, lastMessage, user_id)
+                } catch (e) {
+                    errorHandler(e, true)
+                }
+                custom_room.lastMessage = lastMessage
+                _message._id = data.data.message_id
+                const parsed = Buffer.from(data.data.message_id, 'base64')
+                const _time = parsed.readUInt32BE(12)
+                if (_time !== lastReceivedMessageInfo.timestamp) {
+                    lastReceivedMessageInfo.timestamp = _time
+                    lastReceivedMessageInfo.id = 0
+                }
+                custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
+                _message.time = _time * 1000 + lastReceivedMessageInfo.id
+                _message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
+                lastReceivedMessageInfo.id++
+                ui.updateRoom(custom_room)
+                ui.addMessage(custom_room.roomId, _message)
+                storage.addMessage(user_id, _message)
+                storage.updateRoom(custom_room.roomId, {
+                    utime: custom_room.utime,
+                    lastMessage: custom_room.lastMessage,
+                })
+                return data
+            }
             bot.setMaxListeners(233)
             attachLoginHandler()
         }
