@@ -90,6 +90,7 @@ const defaultConfig: AllConfig = {
     disableChatGroupsRedPoint: false,
     localImageViewerByDefault: false,
     disableQLottie: false,
+    disableNotification: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

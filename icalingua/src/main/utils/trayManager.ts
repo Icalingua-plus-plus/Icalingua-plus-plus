@@ -17,7 +17,7 @@ import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import { getMainWindow } from './windowManager'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
-import { setOnlineStatus } from '../ipc/menuManager'
+import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
 
 let tray: Tray
 
@@ -121,6 +121,20 @@ export const updateTrayMenu = async () => {
                     label: '5',
                     checked: getConfig().priority === 5,
                     click: () => setPriority(5),
+                },
+                {
+                    type: 'separator',
+                },
+                {
+                    type: 'checkbox',
+                    label: '禁用通知',
+                    checked: getConfig().disableNotification,
+                    click: (item) => {
+                        getConfig().disableNotification = item.checked
+                        updateAppMenu()
+                        updateTrayMenu()
+                        saveConfigFile()
+                    },
                 },
             ],
         }),

@@ -38,6 +38,7 @@ type AllConfig = {
     disableChatGroupsRedPoint: boolean
     localImageViewerByDefault: boolean
     disableQLottie: boolean
+    disableNotification: boolean
 }
 
 export default AllConfig

@@ -194,7 +194,7 @@ const eventHandlers = {
         if (
             (!getMainWindow().isFocused() || !getMainWindow().isVisible() || roomId !== ui.getSelectedRoomId()) &&
             (room.priority >= getConfig().priority || at) &&
-            !isSelfMsg
+            !isSelfMsg && !getConfig().disableNotification
         ) {
             //notification
             if (lastMessage.content === '[窗口抖动]') {

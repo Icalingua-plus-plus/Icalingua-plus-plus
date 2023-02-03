@@ -726,6 +726,18 @@ export const updateAppMenu = async () => {
                     label: '帮助',
                     click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
                 },
+                {
+                    // @ts-ignore
+                    type: 'checkbox',
+                    label: '禁用通知',
+                    checked: getConfig().disableNotification,
+                    click: (item) => {
+                        getConfig().disableNotification = item.checked
+                        updateAppMenu()
+                        updateTrayMenu()
+                        saveConfigFile()
+                    },
+                },
             ],
         }),
         //设置

@@ -152,7 +152,7 @@ const attachSocketEvents = () => {
                     !getMainWindow().isVisible() ||
                     data.roomId !== ui.getSelectedRoomId()) &&
                 (data.priority >= getConfig().priority || data.at) &&
-                !data.isSelfMsg
+                !data.isSelfMsg && !getConfig().disableNotification
             ) {
                 //notification
                 if (process.platform === 'darwin' || process.platform === 'win32') {
