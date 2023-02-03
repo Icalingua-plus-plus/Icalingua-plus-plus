@@ -1384,9 +1384,10 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 }),
             )
         }
-        if (message.files) {
-            for (let i = 0; i < message.files.length; i++) {
-                const file = message.files[i]
+        const messageFiles = message.files || [message.file]
+        if (messageFiles) {
+            for (let i = 0; i < messageFiles.length; i++) {
+                const file = messageFiles[i]
                 if (menu.items.length && menu.items[menu.items.length - 1].type !== 'separator')
                     //只有在上面有内容而且不是分隔符的时候加
                     menu.append(
@@ -1508,64 +1509,6 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                     }),
                 )
             }
-        } else if (message.file) {
-            if (message.file.type.includes('image')) {
-                menu.append(
-                    new MenuItem({
-                        label: '复制图片',
-                        type: 'normal',
-                        click: async () => copyImage(message.file.url),
-                    }),
-                )
-                menu.append(
-                    new MenuItem({
-                        label: '添加为表情',
-                        type: 'normal',
-                        click: () => {
-                            download(
-                                message.file.url,
-                                String(new Date().getTime()),
-                                path.join(app.getPath('userData'), 'stickers'),
-                            )
-                        },
-                    }),
-                )
-            }
-            menu.append(
-                new MenuItem({
-                    label: '复制 URL',
-                    type: 'normal',
-                    click: () => {
-                        clipboard.writeText(message.file.url)
-                    },
-                }),
-            )
-            if (message.file.type.startsWith('image/') && !getConfig().localImageViewerByDefault)
-                menu.append(
-                    new MenuItem({
-                        label: '使用本地查看器打开',
-                        click: () => openImage(message.file.url, true),
-                    }),
-                )
-            if (message.file.type.startsWith('video/') || message.file.type.startsWith('audio/'))
-                menu.append(
-                    new MenuItem({
-                        label: '使用本地播放器打开',
-                        click: () => openMedia(message.file.url),
-                    }),
-                )
-            menu.append(
-                new MenuItem({
-                    label: '下载',
-                    click: () => downloadFileByMessageData({ action: 'download', message, room }),
-                }),
-            )
-            menu.append(
-                new MenuItem({
-                    label: '另存为',
-                    click: () => downloadFileByMessageData({ action: 'download', message, room }, true),
-                }),
-            )
         }
         menu.append(
             new MenuItem({
