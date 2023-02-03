@@ -16,6 +16,8 @@ import setPriority from './setPriority'
 import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import { getMainWindow } from './windowManager'
+import OnlineStatusType from '@icalingua/types/OnlineStatusType'
+import { setOnlineStatus } from '../ipc/menuManager'
 
 let tray: Tray
 
@@ -134,6 +136,49 @@ export const updateTrayMenu = async () => {
                 getMainWindow().setAutoHideMenuBar(!item.checked)
                 saveConfigFile()
             },
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: '在线状态',
+            submenu: [
+                {
+                    type: 'radio',
+                    label: '在线',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.Online,
+                    click: () => setOnlineStatus(OnlineStatusType.Online),
+                },
+                {
+                    type: 'radio',
+                    label: '离开',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.Afk,
+                    click: () => setOnlineStatus(OnlineStatusType.Afk),
+                },
+                {
+                    type: 'radio',
+                    label: '隐身',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
+                    click: () => setOnlineStatus(OnlineStatusType.Hide),
+                },
+                {
+                    type: 'radio',
+                    label: '忙碌',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.Busy,
+                    click: () => setOnlineStatus(OnlineStatusType.Busy),
+                },
+                {
+                    type: 'radio',
+                    label: 'Q我吧',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.Qme,
+                    click: () => setOnlineStatus(OnlineStatusType.Qme),
+                },
+                {
+                    type: 'radio',
+                    label: '请勿打扰',
+                    checked: getConfig().account.onlineStatus === OnlineStatusType.DontDisturb,
+                    click: () => setOnlineStatus(OnlineStatusType.DontDisturb),
+                },
+            ],
         }),
     )
     process.platform !== 'darwin' &&

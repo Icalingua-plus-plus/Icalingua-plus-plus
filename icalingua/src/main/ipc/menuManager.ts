@@ -54,14 +54,16 @@ import {
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
+import { updateTrayMenu } from '../utils/trayManager'
 
 const requireFunc = eval('require')
 const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
 
-const setOnlineStatus = (status: OnlineStatusType) => {
+export const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
     getConfig().account.onlineStatus = status
     updateAppMenu()
+    updateTrayMenu()
     saveConfigFile()
 }
 const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
