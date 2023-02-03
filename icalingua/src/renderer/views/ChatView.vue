@@ -291,6 +291,8 @@ export default {
                     this.$refs.room.resetMessage()
                 else if (this.$refs.room.file)
                     this.$refs.room.resetMediaFile()
+                else if (this.$refs.room.showForwardPanel)
+                    this.$refs.room.closeForwardPanel()
                 else {
                     this.closeRoom()
                 }
