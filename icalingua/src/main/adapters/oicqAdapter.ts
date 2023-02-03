@@ -83,6 +83,7 @@ import {
     showWindow,
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import { stringify } from 'querystring'
 
 let bot: Client
 let storage: StorageProvider
@@ -559,14 +560,27 @@ const eventHandlers = {
         console.log(data)
         const roomId = -data.group_id
         if (await storage.isChatIgnored(roomId)) return
+        const enableMap = new Map<string, string>([
+            ['enable_guest', '游客查看消息'],
+            ['enable_anonymous', '群内匿名聊天'],
+            ['enable_upload_album', '群员上传相册'],
+            ['enable_upload_file', '群员上传文件'],
+            ['enable_temp_chat', '群内临时会话'],
+            ['enable_new_group', '群员发起新群'],
+            ['enable_show_honor', '显示群员荣誉'],
+            ['enable_show_level', '显示群员等级'],
+            ['enable_show_title', '显示群员头衔'],
+            ['enable_confess', '群内坦白说'],
+        ])
         const now = new Date(data.time * 1000)
-        let content = '管理员修改了群设置： '
-        content += (data.enable_anonymous ? '允许' : '禁止') + '匿名 | '
-        content += (data.enable_upload_album ? '允许' : '禁止') + '群员上传相册 | '
-        content += (data.enable_upload_file ? '允许' : '禁止') + '群员上传文件 | '
-        content += (data.enable_temp_chat ? '允许' : '禁止') + '群内临时会话 | '
-        content += (data.enable_new_group ? '允许' : '禁止') + '群员发起新群 | '
-        content += (data.enable_confess ? '允许' : '禁止') + '群内坦白说 | '
+        const enableKeys = Object.keys(data).filter((key) => enableMap.has(key))
+        let content = '管理员修改了群设置:'
+        for (const key of enableKeys) {
+            content += ` ${data[key] ? '允许' : '禁止'}${enableMap.get(key)}`
+        }
+        if (data.avatar) {
+            content += ' 群头像已变更'
+        }
         const message: Message = {
             _id: `setting-${now.getTime()}-${data.group_id}`,
             content,
@@ -588,6 +602,10 @@ const eventHandlers = {
             // create room
             room = createRoom(roomId, roomName)
             await storage.addRoom(room)
+        }
+        if (data.group_name && data.group_name !== room.roomName) {
+            room.roomName = data.group_name
+            message.content += ` 群名变更为 ${data.group_name}`
         }
         room.utime = data.time * 1000
         room.lastMessage = {
