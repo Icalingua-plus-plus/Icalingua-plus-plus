@@ -311,7 +311,7 @@ const eventHandlers = {
         storage.addMessage(roomId, message)
         await storage.updateRoom(roomId, room)
         updateTrayIcon()
-        if (getConfig().custom) {
+        if (getConfig().custom && data.post_type === 'message') {
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
             try {

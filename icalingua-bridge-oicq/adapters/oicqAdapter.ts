@@ -212,7 +212,7 @@ const eventHandlers = {
         await storage.updateRoom(roomId, room)
         clients.updateRoom(room)
         storage.addMessage(roomId, message)
-        if (config.custom) {
+        if (config.custom && data.post_type === 'message') {
             try {
                 require('../custom').onMessage(data, bot)
             } catch (e) {
