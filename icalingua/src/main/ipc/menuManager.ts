@@ -25,7 +25,7 @@ import setPriority from '../utils/setPriority'
 import * as themes from '../utils/themes'
 import ui from '../utils/ui'
 import version from '../utils/version'
-import { getMainWindow, showRequestWindow } from '../utils/windowManager'
+import { getMainWindow, lockMainWindow, showRequestWindow, showSetLockPasswordWindow } from '../utils/windowManager'
 import {
     deleteMessage,
     fetchHistory,
@@ -604,7 +604,7 @@ let versionClickTimes = 0
 
 export const updateAppMenu = async () => {
     let globalMenu = {
-        //应用菜单
+        // 应用菜单
         app: [
             new MenuItem({
                 label: version.version,
@@ -698,6 +698,10 @@ export const updateAppMenu = async () => {
                 role: 'toggleDevTools',
             }),
             new MenuItem({
+                label: '锁定',
+                click: lockMainWindow,
+            }),
+            new MenuItem({
                 label: '关闭窗口',
                 role: 'close',
             }),
@@ -705,29 +709,24 @@ export const updateAppMenu = async () => {
                 label: '退出',
                 click: exit,
             }),
-        ] as (Electron.MenuItem | Electron.MenuItemConstructorOptions)[],
+        ],
         priority: new MenuItem({
             label: '通知优先级',
             submenu: [
-                // @ts-ignore TS 出 bug 了
-                ...[1, 2, 3, 4, 5].map((e) => ({
-                    type: 'radio',
+                ...([1, 2, 3, 4, 5] as const).map((e) => ({
+                    type: 'radio' as const,
                     label: `${e}`,
                     checked: getConfig().priority === e,
-                    // @ts-ignore
                     click: () => setPriority(e),
                 })),
                 {
-                    // @ts-ignore
                     type: 'separator',
                 },
-                // @ts-ignore
                 {
                     label: '帮助',
                     click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
                 },
                 {
-                    // @ts-ignore
                     type: 'checkbox',
                     label: '禁用通知',
                     checked: getConfig().disableNotification,
@@ -740,7 +739,7 @@ export const updateAppMenu = async () => {
                 },
             ],
         }),
-        //设置
+        // 设置
         options: [
             new MenuItem({
                 label: '在线状态',
@@ -782,6 +781,10 @@ export const updateAppMenu = async () => {
                         click: () => setOnlineStatus(OnlineStatusType.DontDisturb),
                     },
                 ],
+            }),
+            new MenuItem({
+                label: '设置解锁口令',
+                click: showSetLockPasswordWindow
             }),
             new MenuItem({
                 label: '管理屏蔽的会话',
@@ -1141,7 +1144,7 @@ export const updateAppMenu = async () => {
                         },
                     }
                 }),
-            }),
+            })
         ],
         //捷径
         shortcuts: Object.entries(getConfig().shortcuts).map(
@@ -1918,7 +1921,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                     })
                     await win.loadURL(
                         getWinUrl() +
-                            '#/MuteUser/' +
+                            '#/muteUser/' +
                             -room.roomId +
                             '/' +
                             message.senderId +
@@ -2133,7 +2136,7 @@ ipcMain.on(
                         })
                         await win.loadURL(
                             getWinUrl() +
-                                '#/MuteUser/' +
+                                '#/muteUser/' +
                                 group +
                                 '/' +
                                 displayId +

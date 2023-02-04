@@ -91,6 +91,7 @@ const defaultConfig: AllConfig = {
     localImageViewerByDefault: false,
     disableQLottie: false,
     disableNotification: false,
+    lockPassword: ''
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

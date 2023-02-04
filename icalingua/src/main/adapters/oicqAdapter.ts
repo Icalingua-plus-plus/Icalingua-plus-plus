@@ -76,11 +76,12 @@ import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import {
     getMainWindow,
+    isAppLocked,
     loadMainWindow,
     sendToLoginWindow,
     showLoginWindow,
     showRequestWindow,
-    showWindow,
+    tryToShowAllWindows,
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { stringify } from 'querystring'
@@ -190,15 +191,16 @@ const eventHandlers = {
         if (!room.priority) {
             room.priority = groupId ? 2 : 4
         }
-        //notification
+
         if (
+            !isAppLocked() &&
             (!getMainWindow().isFocused() || !getMainWindow().isVisible() || roomId !== ui.getSelectedRoomId()) &&
             (room.priority >= getConfig().priority || at) &&
             !isSelfMsg && !getConfig().disableNotification
         ) {
-            //notification
+            // notification
             if (lastMessage.content === '[窗口抖动]') {
-                showWindow()
+                tryToShowAllWindows()
                 ui.chroom(room.roomId)
             }
             try {
@@ -219,7 +221,7 @@ const eventHandlers = {
                         })
                         notif.on('click', () => {
                             notif.close()
-                            showWindow()
+                            tryToShowAllWindows()
                             ui.chroom(room.roomId)
                         })
                         notif.on('action', () => adapter.clearRoomUnread(room.roomId))
@@ -264,7 +266,7 @@ const eventHandlers = {
                     notif.on('action', (action: string) => {
                         switch (action) {
                             case 'default':
-                                showWindow()
+                                tryToShowAllWindows()
                                 ui.chroom(room.roomId)
                                 break
                             case 'read':

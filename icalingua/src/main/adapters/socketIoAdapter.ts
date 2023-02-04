@@ -30,7 +30,7 @@ import isInlineReplySupported from '../utils/isInlineReplySupported'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
-import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, showWindow } from '../utils/windowManager'
+import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, tryToShowAllWindows } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
@@ -144,7 +144,7 @@ const attachSocketEvents = () => {
             image?: string
         }) => {
             if (data.data.body === '[窗口抖动]') {
-                showWindow()
+                tryToShowAllWindows()
                 ui.chroom(data.roomId)
             }
             if (
@@ -172,7 +172,7 @@ const attachSocketEvents = () => {
                     })
                     notif.on('click', () => {
                         notif.close()
-                        showWindow()
+                        tryToShowAllWindows()
                         ui.chroom(data.roomId)
                     })
                     notif.on('action', () => adapter.clearRoomUnread(data.roomId))
@@ -215,7 +215,7 @@ const attachSocketEvents = () => {
                     notif.on('action', (action: string) => {
                         switch (action) {
                             case 'default':
-                                showWindow()
+                                tryToShowAllWindows()
                                 ui.chroom(data.roomId)
                                 break
                             case 'read':

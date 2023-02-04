@@ -11,6 +11,8 @@ import KickAndExit from '../views/KickAndExit.vue'
 import OpenForward from '../views/OpenForward.vue'
 import MuteUser from '../views/MuteUser.vue'
 import MakeForward from '../views/MakeForward.vue'
+import UnlockView from '../views/UnlockView.vue'
+import SetLockPasswordView from '../views/SetLockPasswordView.vue'
 
 Vue.use(Router)
 
@@ -32,7 +34,7 @@ export default new Router({
             component: KickAndExit,
         },
         {
-            path: '/MuteUser/:gin/:uin/:groupName/:userName/:anonymousflag',
+            path: '/muteUser/:gin/:uin/:groupName/:userName/:anonymousflag',
             name: 'mute-user-confirm-page',
             component: MuteUser,
         },
@@ -71,5 +73,15 @@ export default new Router({
             name: 'make-forward-page',
             component: MakeForward,
         },
+        {
+            path: '/unlock',
+            name: 'unlock-page',
+            component: UnlockView,
+        },
+        {
+            path: '/setLockPassword',
+            name: 'set-lock-password-page',
+            component: SetLockPasswordView,
+        }
     ],
 })

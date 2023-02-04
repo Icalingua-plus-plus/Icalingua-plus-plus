@@ -186,8 +186,9 @@
 </template>
 
 <script lang="js">
-import Room from '../components/vac-mod/ChatWindow/Room/Room'
-import Stickers from '../components/Stickers'
+import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
+import Stickers from '../components/Stickers.vue'
+import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate.vue'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import path from 'path'
 import {ipcRenderer} from 'electron'
@@ -200,7 +201,6 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 import fs from 'fs'
 import * as themes from '../utils/themes'
-import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate'
 
 export default {
     components: {
@@ -339,6 +339,9 @@ export default {
                         if (this.chatGroups[n - 2]) {
                             this.selectedChatGroup = this.chatGroups[n - 2].name
                         }
+                        break
+                    case 'L':
+                        ipc.lock()
                         break
                     default:
                         break

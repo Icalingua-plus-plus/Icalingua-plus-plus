@@ -210,5 +210,14 @@ const ipc = {
     async getHideChatImageByDefault(): Promise<boolean> {
         return (await this.getSettings()).hideChatImageByDefault
     },
+    lock() {
+        ipcRenderer.send('lock')
+    },
+    unlock(password: string) {
+        ipcRenderer.send('unlock', password)
+    },
+    setLockPassword(password: string) {
+        ipcRenderer.send('setLockPassword', password)
+    },
 }
 export default ipc
