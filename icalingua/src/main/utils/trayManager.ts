@@ -52,9 +52,10 @@ export const updateTrayMenu = async () => {
             menu.append(
                 new MenuItem({
                     label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
-                    click: () => tryToShowMainWindow(() => {
-                        ui.chroom(unreadRoom.roomId)
-                    })
+                    click: () =>
+                        tryToShowMainWindow(() => {
+                            ui.chroom(unreadRoom.roomId)
+                        }),
                 }),
             )
             menu.append(

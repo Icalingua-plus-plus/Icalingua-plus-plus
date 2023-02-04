@@ -784,7 +784,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '设置解锁口令',
-                click: showSetLockPasswordWindow
+                click: showSetLockPasswordWindow,
             }),
             new MenuItem({
                 label: '管理屏蔽的会话',
@@ -1144,7 +1144,7 @@ export const updateAppMenu = async () => {
                         },
                     }
                 }),
-            })
+            }),
         ],
         //捷径
         shortcuts: Object.entries(getConfig().shortcuts).map(

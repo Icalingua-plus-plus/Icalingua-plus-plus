@@ -7,12 +7,12 @@
 </template>
 
 <script>
-import ipc from "../utils/ipc"
+import ipc from '../utils/ipc'
 
 export default {
     data() {
         return {
-            password: ''
+            password: '',
         }
     },
     created() {
@@ -22,8 +22,8 @@ export default {
         confirm() {
             ipc.setLockPassword(this.password)
             window.close()
-        }
-    }
+        },
+    },
 }
 </script>
 

@@ -221,7 +221,7 @@ export const showSetLockPasswordWindow = () => {
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
-        }
+        },
     })
     setLockPasswordWindow.loadURL(getWinUrl() + '#/setLockPassword')
 }
@@ -229,8 +229,7 @@ export const lockMainWindow = () => {
     const { lockPassword } = getConfig()
     if (!lockPassword) {
         showSetLockPasswordWindow()
-    }
-    else {
+    } else {
         mainWindow.hide()
         isLocked = true
     }
@@ -252,18 +251,16 @@ export const judgeLocked = (callback: () => void) => {
                 webPreferences: {
                     contextIsolation: false,
                     nodeIntegration: true,
-                }
+                },
             })
             unlockWindow.on('closed', () => {
                 unlockWindow = null
             })
             unlockWindow.loadURL(getWinUrl() + '#/unlock')
-        }
-        else {
+        } else {
             unlockWindow.show()
         }
-    }
-    else {
+    } else {
         callback()
     }
 }
@@ -317,8 +314,7 @@ ipcMain.on('unlock', (_, password: string) => {
             unlockWindow.destroy()
             unlockCallback()
         }, 500)
-    }
-    else {
+    } else {
         unlockWindow.webContents.send('unlock-fail')
     }
 })

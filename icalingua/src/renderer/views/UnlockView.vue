@@ -13,14 +13,14 @@ import ipc from '../utils/ipc'
 const displayStates = {
     failed: '解锁失败',
     succeeded: '解锁成功',
-    none: ''
+    none: '',
 }
 
 export default {
     data() {
         return {
             password: '',
-            state: 'none'
+            state: 'none',
         }
     },
     created() {
@@ -36,13 +36,13 @@ export default {
                 this.password = ''
                 this.state = 'succeeded'
             })
-        }
+        },
     },
     computed: {
         displayState() {
             return displayStates[this.state]
-        }
-    }
+        },
+    },
 }
 </script>
 

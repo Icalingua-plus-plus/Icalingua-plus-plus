@@ -82,6 +82,6 @@ export default new Router({
             path: '/setLockPassword',
             name: 'set-lock-password-page',
             component: SetLockPasswordView,
-        }
+        },
     ],
 })
