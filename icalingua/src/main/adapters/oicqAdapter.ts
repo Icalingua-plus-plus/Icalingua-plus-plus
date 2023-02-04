@@ -84,7 +84,6 @@ import {
     tryToShowAllWindows,
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
-import { stringify } from 'querystring'
 
 let bot: Client
 let storage: StorageProvider
@@ -469,7 +468,7 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                  (data.operator_id === data.user_id
+                  (data.operator_id === data.user_id || !operator
                       ? ' 离开了本群'
                       : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member
@@ -1572,6 +1571,7 @@ const adapter: OicqAdapter = {
         bot.login()
     },
     updateRoom(roomId: number, room: object) {
+        if (!storage) return
         return storage.updateRoom(roomId, room)
     },
     updateChatGroup(name: string, chatGroup: ChatGroup) {
