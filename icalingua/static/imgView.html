@@ -526,6 +526,12 @@
         items.push({
             title: '下载',
             fn: function () {
+                window.downloadImage(IMG.src)
+            }
+        })
+        items.push({
+            title: '另存为',
+            fn: function () {
                 download()
             }
         })
