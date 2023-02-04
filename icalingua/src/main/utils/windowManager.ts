@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, ipcRenderer } from 'electron'
+import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -14,6 +14,7 @@ let mainWindow: BrowserWindow
 let requestWindow: BrowserWindow
 let unlockWindow: BrowserWindow
 let isLocked: boolean = false
+let unlockCallback: Function
 
 export const isAppLocked = () => isLocked
 export const loadMainWindow = () => {
@@ -161,6 +162,10 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
             },
         })
 
+        loginWindow.on('closed', () => {
+            loginWindow = null
+        })
+
         if (process.env.NODE_ENV === 'development') {
             loginWindow.webContents.session.loadExtension(path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
             loginWindow.minimize()
@@ -230,8 +235,12 @@ export const lockMainWindow = () => {
         isLocked = true
     }
 }
-export const tryTotryToShowAllWindows = (callback: () => void) => {
+export const judgeLocked = (callback: () => void) => {
     if (isLocked) {
+        unlockCallback = () => {
+            isLocked = false
+            callback()
+        }
         if (!unlockWindow) {
             unlockWindow = newIcalinguaWindow({
                 height: 160,
@@ -245,22 +254,10 @@ export const tryTotryToShowAllWindows = (callback: () => void) => {
                     nodeIntegration: true,
                 }
             })
-            unlockWindow.loadURL(getWinUrl() + '#/unlock').then(() => {
-                ipcMain.on('unlock', (_, password: string) => {
-                    if (password === getConfig().lockPassword) {
-                        isLocked = false
-                        unlockWindow.webContents.send('unlock-succeed')
-
-                        setTimeout(() => {
-                            unlockWindow.hide()
-                            callback()
-                        }, 500)
-                    }
-                    else {
-                        unlockWindow.webContents.send('unlock-fail')
-                    }
-                })
+            unlockWindow.on('closed', () => {
+                unlockWindow = null
             })
+            unlockWindow.loadURL(getWinUrl() + '#/unlock')
         }
         else {
             unlockWindow.show()
@@ -270,14 +267,15 @@ export const tryTotryToShowAllWindows = (callback: () => void) => {
         callback()
     }
 }
-export const tryToShowMainWindow = (callback?: () => void) =>
-    () => tryTotryToShowAllWindows(() => {
+export const tryToShowMainWindow = (callback?: () => void) => {
+    judgeLocked(() => {
         mainWindow.show()
         mainWindow.focus()
         callback?.()
     })
+}
 export const tryToShowAllWindows = () => {
-    tryTotryToShowAllWindows(() => {
+    judgeLocked(() => {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.show()
             mainWindow.focus()
@@ -306,3 +304,21 @@ export const getMainWindowScreen = () => {
     }
     return null
 }
+
+ipcMain.on('lock', () => {
+    lockMainWindow()
+})
+ipcMain.on('unlock', (_, password: string) => {
+    if (!unlockWindow) return
+    if (password === getConfig().lockPassword) {
+        unlockWindow.webContents.send('unlock-succeed')
+
+        setTimeout(() => {
+            unlockWindow.destroy()
+            unlockCallback()
+        }, 500)
+    }
+    else {
+        unlockWindow.webContents.send('unlock-fail')
+    }
+})

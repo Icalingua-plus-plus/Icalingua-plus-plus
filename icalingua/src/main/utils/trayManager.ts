@@ -29,7 +29,7 @@ let lightIcon = nativeImage.createFromPath(path.join(getStaticPath(), '256x256.p
 export const createTray = () => {
     tray = new Tray(path.join(getStaticPath(), 'trayTemplate.png'))
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
-    tray.on('click', tryToShowMainWindow())
+    tray.on('click', () => tryToShowMainWindow())
     return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
@@ -43,7 +43,7 @@ export const updateTrayMenu = async () => {
         {
             label: '打开',
             type: 'normal',
-            click: tryToShowMainWindow(),
+            click: () => tryToShowMainWindow(),
         },
     ])
     menu.append(new MenuItem({ type: 'separator' }))
@@ -52,7 +52,7 @@ export const updateTrayMenu = async () => {
             menu.append(
                 new MenuItem({
                     label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
-                    click: tryToShowMainWindow(() => {
+                    click: () => tryToShowMainWindow(() => {
                         ui.chroom(unreadRoom.roomId)
                     })
                 }),

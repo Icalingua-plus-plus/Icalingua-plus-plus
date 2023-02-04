@@ -39,3 +39,8 @@ ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 
     getConfig().lastUsedStickerType = type
     saveConfigFile()
 })
+
+ipcMain.on('setLockPassword', (_, password: string) => {
+    getConfig().lockPassword = password
+    saveConfigFile()
+})

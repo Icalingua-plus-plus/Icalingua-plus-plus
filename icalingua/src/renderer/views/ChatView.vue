@@ -340,6 +340,7 @@ export default {
                             this.selectedChatGroup = this.chatGroups[n - 2].name
                         }
                         break
+                    case 'l':
                     case 'L':
                         ipc.lock()
                         break

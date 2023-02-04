@@ -17,7 +17,6 @@ import errorHandler from '../utils/errorHandler'
 import getFriends from '../utils/getFriends'
 import * as themes from '../utils/themes'
 import ChatGroup from '@icalingua/types/ChatGroup'
-import { lockMainWindow } from '../utils/windowManager'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -198,6 +197,3 @@ ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
-ipcMain.on('lock', () => {
-    lockMainWindow()
-})
