@@ -24,7 +24,7 @@ export default {
         }
     },
     created() {
-        document.title = 'icalingua 已锁定'
+        document.title = 'Icalingua++ 已锁定'
     },
     methods: {
         unlock() {

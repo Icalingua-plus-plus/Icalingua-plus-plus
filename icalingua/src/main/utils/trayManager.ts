@@ -17,7 +17,7 @@ import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
-import { getMainWindow, tryToShowMainWindow } from './windowManager'
+import { getMainWindow, isAppLocked, tryToShowMainWindow } from './windowManager'
 
 let tray: Tray
 
@@ -64,6 +64,7 @@ export const updateTrayMenu = async () => {
                             ? `${unreadRoom.lastMessage.content.slice(0, 25)}...`
                             : unreadRoom.lastMessage.content,
                     enabled: false,
+                    visible: !isAppLocked(),
                 }),
             )
         }

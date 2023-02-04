@@ -30,7 +30,7 @@ import isInlineReplySupported from '../utils/isInlineReplySupported'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
-import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow, tryToShowAllWindows } from '../utils/windowManager'
+import { getMainWindow, isAppLocked, loadMainWindow, sendToLoginWindow, showLoginWindow, tryToShowAllWindows } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
@@ -143,18 +143,19 @@ const attachSocketEvents = () => {
             isSelfMsg: boolean
             image?: string
         }) => {
-            if (data.data.body === '[窗口抖动]') {
-                tryToShowAllWindows()
-                ui.chroom(data.roomId)
-            }
             if (
+                !isAppLocked() &&
                 (!getMainWindow().isFocused() ||
                     !getMainWindow().isVisible() ||
                     data.roomId !== ui.getSelectedRoomId()) &&
                 (data.priority >= getConfig().priority || data.at) &&
                 !data.isSelfMsg && !getConfig().disableNotification
             ) {
-                //notification
+                if (data.data.body === '[窗口抖动]') {
+                    tryToShowAllWindows()
+                    ui.chroom(data.roomId)
+                }
+                // notification
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
                     const notif = new ElectronNotification({
