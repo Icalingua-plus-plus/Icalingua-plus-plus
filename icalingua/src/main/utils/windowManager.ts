@@ -2,7 +2,7 @@ import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain } fr
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
-import { updateTrayIcon } from './trayManager'
+import { updateTrayIcon, updateTrayMenu } from './trayManager'
 import path from 'path'
 import ui from './ui'
 import argv from './argv'
@@ -232,12 +232,14 @@ export const lockMainWindow = () => {
     } else {
         mainWindow.hide()
         isLocked = true
+        updateTrayMenu()
     }
 }
 export const judgeLocked = (callback: () => void) => {
     if (isLocked) {
         unlockCallback = () => {
             isLocked = false
+            updateTrayMenu()
             callback()
         }
         if (!unlockWindow) {

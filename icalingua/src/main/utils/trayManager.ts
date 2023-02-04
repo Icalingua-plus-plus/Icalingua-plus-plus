@@ -17,7 +17,7 @@ import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
-import { getMainWindow, isAppLocked, tryToShowMainWindow } from './windowManager'
+import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
 
 let tray: Tray
 
@@ -44,6 +44,18 @@ export const updateTrayMenu = async () => {
             label: '打开',
             type: 'normal',
             click: () => tryToShowMainWindow(),
+        },
+        {
+            label: '锁定',
+            type: 'checkbox',
+            checked: isAppLocked(),
+            click: () => {
+                if (isAppLocked()) {
+                    tryToShowMainWindow()
+                } else {
+                    lockMainWindow()
+                }
+            },
         },
     ])
     menu.append(new MenuItem({ type: 'separator' }))
