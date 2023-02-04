@@ -68,6 +68,8 @@ nrm use npm
 
 同时，修改 `docker-compose.yml` 中的 `ports` , `network` 以及 `container_name` 即可快速地部署多个实例。
 
+目前支持了 `x86_64` 和 `arm64` 两种架构的镜像。
+
 注意：该 `docker-compose.yml` 提供的数据库是 `MongoDB`，并对数据库文件进行了挂载，来实现持久化存储；
 
 如果你需要使用其他数据库，可以自行参考 `docker-compose.yml` 的 `db` 部分修改，并持久化数据，即挂载数据库文件为数据卷（强烈建议，否则会出现数据库容器重建后丢失数据的问题）；当然，你也可以删除 DB 部分，连接宿主机本身的数据库。
