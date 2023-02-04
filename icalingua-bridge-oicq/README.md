@@ -66,6 +66,8 @@ nrm use npm
 
 使用 Docker 部署是一件非常简单的事情，必要的依赖已经全部打包进去，仅仅需要一份 `docker-compose.yml` 以及一份 `config.yaml` 即可。
 
+目前支持了 `x86_64` 和 `arm64v8` 两种架构。
+
 同时，修改 `docker-compose.yml` 中的 `ports` , `network` 以及 `container_name` 即可快速地部署多个实例。
 
 注意：该 `docker-compose.yml` 提供的数据库是 `MongoDB`，并对数据库文件进行了挂载，来实现持久化存储；
