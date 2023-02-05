@@ -11,7 +11,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getStaticPath from '../../utils/getStaticPath'
 import getWinUrl from '../../utils/getWinUrl'
-import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import { newIcalinguaWindow, openMannounceWindow } from '../../utils/IcalinguaWindow'
 import socketIoProvider from '../providers/socketIoProvider'
 import atCache from '../utils/atCache'
 import { getConfig, saveConfigFile } from '../utils/configManager'
@@ -236,6 +236,10 @@ const buildRoomMenu = (room: Room): Menu => {
                         width: 500,
                         autoHideMenuBar: true,
                         title: '群公告',
+                        webPreferences: {
+                            preload: path.join(getStaticPath(), 'mannouncePreload.js'),
+                            contextIsolation: false,
+                        },
                     })
                     const cookies = await getCookies('qun.qq.com')
                     for (const i in cookies) {
@@ -248,29 +252,17 @@ const buildRoomMenu = (room: Room): Menu => {
                     }
                     win.webContents.setWindowOpenHandler((details) => {
                         if (details.url.startsWith('https://web.qun.qq.com/mannounce/')) {
-                            const size = screen.getPrimaryDisplay().size
-                            const win1 = newIcalinguaWindow({
-                                height: size.height - 300,
-                                width: 500,
-                                autoHideMenuBar: true,
-                                title: '查看群公告',
-                                webPreferences: {
-                                    preload: path.join(getStaticPath(), 'photoWallPreload.js'),
-                                    contextIsolation: false,
-                                }
+                            const win1 = openMannounceWindow('查看群公告', 250, details.url)
+                            win1.on('closed', () => {
+                                win.webContents.reload()
                             })
-                            win1.webContents.on('did-finish-load', () => {
-                                win1.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'photoWallInj.js'), 'utf-8'),)
-                            })
-                            win1.webContents.setWindowOpenHandler((details1) => {
-                                if (details.url.startsWith('https://web.qun.qq.com/mannounce/'))
-                                    return { action: 'allow' }
-                                shell.openExternal(details1.url)
-                                return { action: 'deny' }
-                            })
-                            win1.loadURL(details.url)
                         }
                         return { action: 'deny' }
+                    })
+                    win.webContents.on('did-finish-load', () => {
+                        win.webContents.executeJavaScript(
+                            fs.readFileSync(path.join(getStaticPath(), 'mannounceInj.js'), 'utf-8'),
+                        )
                     })
                     await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
                 },

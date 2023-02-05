@@ -1,6 +1,7 @@
 import { BrowserWindow, screen, shell } from 'electron'
 import getStaticPath from './getStaticPath'
 import path from 'path'
+import fs from 'fs'
 import { getCookies } from '../main/ipc/botAndStorage'
 import { download } from '../main/ipc/downloadManager'
 
@@ -63,5 +64,50 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
             }
         })
     }
+    return win
+}
+
+/** 不带 Cookie 打开群公告相关窗口，打开前需确保有 Cookie，用于子窗口 */
+export function openMannounceWindow(title: string, decreaseSize: number, url: string): BrowserWindow {
+    const size = screen.getPrimaryDisplay().size
+    const win = newIcalinguaWindow({
+        height: size.height - decreaseSize,
+        width: 500,
+        autoHideMenuBar: true,
+        title: title,
+        webPreferences: {
+            preload: path.join(getStaticPath(), 'mannouncePreload.js'),
+            contextIsolation: false,
+        },
+    })
+    win.webContents.setWindowOpenHandler((details) => {
+        let win1: BrowserWindow
+        if (details.url.startsWith('https://web.qun.qq.com/mannounce/detail.html')) {
+            win1 = openMannounceWindow('查看群公告', decreaseSize + 50, details.url)
+        } else if (details.url.startsWith('https://web.qun.qq.com/mannounce/edit.html')) {
+            win1 = openMannounceWindow('编辑群公告', decreaseSize + 50, details.url)
+        }
+        if (
+            url.startsWith('https://web.qun.qq.com/mannounce/detail.html') &&
+            !details.url.startsWith('https://web.qun.qq.com/mannounce/')
+        )
+            shell.openExternal(details.url)
+        if (win1) {
+            win1.on('closed', () => {
+                win.webContents.reload()
+            })
+        }
+        return {
+            action: 'deny',
+        }
+    })
+    win.webContents.on('did-finish-load', () => {
+        win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'mannounceInj.js'), 'utf-8'))
+    })
+    win.loadURL(url)
+    win.on('closed', () => {
+        console.log('a')
+    })
+
     return win
 }
