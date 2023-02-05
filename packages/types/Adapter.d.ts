@@ -82,6 +82,8 @@ export default interface Adapter {
 
     makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): any
 
+    getBkn(): number
+
     getUin(): number
 
     getNickname(): string

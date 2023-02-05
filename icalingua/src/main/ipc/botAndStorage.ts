@@ -30,6 +30,7 @@ export const {
     getGroupMembers,
     getUnreadRooms,
     requestGfsToken,
+    getBkn,
     getUin,
     getNickname,
     getGroupFileMeta,

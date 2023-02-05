@@ -1,3 +1,6 @@
+let file, b64File, fileData
+const gid = location.href.match(/#gc=(\d+)/)[1]
+
 window.mqq.media.showPicture=({imageIDs, index})=>window.eqqShowImage(imageIDs[index])
 window.mqq.ui.showDialog = (a, b) => {
     const button = confirm(String(a.text) + '\n是否' + String(a.okBtnText)) ? 0 : 1
@@ -58,35 +61,58 @@ window.mqq.ui.showTips = (o) => {
         window.close()
 }
 _invoke = window.mqq.invoke
-window.mqq.invoke = function (b, c , d, e) {
+window.mqq.invoke = function (b, c, d, e) {
     if (b === 'ui' && c === 'showTips') {
         window.mqq.ui.showTips(d)
+    } else if (b === 'troopNotice' && c === 'sendPicture') {
+        console.log('POST', d.cgiURL)
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', d.cgiURL)
+        xhr.onload = () => {
+            console.log(xhr.readyState, xhr.status,xhr.responseText)
+            const data = JSON.parse(xhr.responseText)
+            console.log(data)
+            if (data.ec === 0) {
+                console.log(d.callback)
+                d.callback(data)
+            }
+        }
+        let form = new FormData()
+        form.append('pic_up', file, file.name)
+        form.append('m', 0)
+        form.append('source', 'troopNotice')
+        form.append('bkn', String(window.qq_bkn))
+        form.append('qid', String(gid))
+        console.log(form)
+        xhr.send(form)
     } else {
+        console.log(b, c, d, e)
+        d.callback(window.testObj)
         _invoke.call(this, b, c, d, e)
     }
 }
+mqq.callback = (a) => a
 window.mqq.media.getPicture = (type, callback) => {
-    alert('暂未实现图片上传功能')
-    /*
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
     input.onchange = () => {
-        const file = input.files[0]
-        console.log(file.name)
+        file = input.files[0]
+        console.log(file)
         const reader = new FileReader()
         reader.onload = () => {
-            const base64 = reader.result.toString('base64')
+            fileData = reader.result
+            b64File = fileData.toString('base64')
             callback(0, [{
-                data: base64,
-                imageID: '/storage/emulated/0/DCIM/' + file.name,
+                data: b64File,
+                imageID: file.path,
                 match: 0,
             }])
         }
         reader.readAsDataURL(file)
     }
     input.click()
-    */
+    
 }
 
 /** 插入按钮样式 */ 

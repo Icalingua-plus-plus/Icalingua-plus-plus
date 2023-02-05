@@ -1672,6 +1672,7 @@ const adapter: OicqAdapter = {
         return messages
     },
 
+    getBkn: () => bot.bkn,
     getUin: () => bot.uin,
     getNickname: () => bot.nickname,
     getGroupFileMeta: (gin: number, fid: string) => bot.acquireGfs(gin).download(fid),

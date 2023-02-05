@@ -2,7 +2,7 @@ import { BrowserWindow, screen, shell } from 'electron'
 import getStaticPath from './getStaticPath'
 import path from 'path'
 import fs from 'fs'
-import { getCookies } from '../main/ipc/botAndStorage'
+import { getBkn, getCookies } from '../main/ipc/botAndStorage'
 import { download } from '../main/ipc/downloadManager'
 
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
@@ -103,6 +103,7 @@ export function openMannounceWindow(title: string, decreaseSize: number, url: st
     })
     win.webContents.on('did-finish-load', () => {
         win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'mannounceInj.js'), 'utf-8'))
+        win.webContents.executeJavaScript(`window.qq_bkn = ${getBkn()}`)
     })
     win.loadURL(url)
     return win

@@ -1428,6 +1428,7 @@ const adapter = {
         resolve(messages)
     },
 
+    getBkn: () => bot.bkn,
     getUin: () => bot.uin,
     getGroupFileMeta: async (gin: number, fid: string, resolve) => resolve(await bot.acquireGfs(gin).download(fid)),
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
@@ -1618,6 +1619,7 @@ const adapter = {
             nick: bot.nickname,
             uin: bot.uin,
             sysInfo: getSysInfo(),
+            bkn: bot.bkn,
         })
         clients.setAllRooms(await storage.getAllRooms())
         clients.setAllChatGroups(await storage.getAllChatGroups())
