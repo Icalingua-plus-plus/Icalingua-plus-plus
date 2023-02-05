@@ -1,5 +1,4 @@
 let file, b64File, fileData
-const gid = location.href.match(/#gc=(\d+)/)[1]
 
 window.mqq.media.showPicture=({imageIDs, index})=>window.eqqShowImage(imageIDs[index])
 window.mqq.ui.showDialog = (a, b) => {
@@ -67,6 +66,7 @@ window.mqq.invoke = function (b, c, d, e) {
     } else if (b === 'troopNotice' && c === 'sendPicture') {
         console.log('POST', d.cgiURL)
         const xhr = new XMLHttpRequest()
+        const gid = location.href.match(/#gc=(\d+)/)[1]
         xhr.open('POST', d.cgiURL)
         xhr.onload = () => {
             console.log(xhr.readyState, xhr.status,xhr.responseText)
