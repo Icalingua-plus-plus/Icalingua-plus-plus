@@ -5,6 +5,6 @@ type OnlineData = {
     priority?: 1 | 2 | 3 | 4 | 5
     sysInfo?: string
     updateCheck?: 'ask' | boolean
-    bkn: number
+    bkn?: number
 }
 export default OnlineData
