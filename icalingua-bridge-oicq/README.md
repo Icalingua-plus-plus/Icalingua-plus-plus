@@ -93,6 +93,8 @@ curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 使用 wget 来获取所需文件
 
 ```bash
+mkdir qq-bridge && cd qq-bridge
+
 # 下载 docker-compose.yml
 wget https://fastly.jsdelivr.net/gh/Icalingua-plus-plus/Icalingua-plus-plus@develop/icalingua-bridge-oicq/docker-compose.yml
 
