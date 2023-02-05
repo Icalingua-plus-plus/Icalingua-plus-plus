@@ -1661,7 +1661,7 @@ const adapter: OicqAdapter = {
                 content: '',
                 timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                 date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
-                _id: data.group_id || -1,
+                _id: String(data.group_id || -1) + '-' + i,
                 time: data.time * 1000,
                 files: [],
                 bubble_id: data.bubble_id,

@@ -1531,7 +1531,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             new MenuItem({
                 label: history
                     ? message._id !== -1
-                        ? `复制转发来源 ID ${message._id}`
+                        ? `复制转发来源 ID ${String(message._id).split('-')[0]}`
                         : '转发来源未知（可能来自私聊消息）'
                     : '复制消息 ID',
                 type: 'normal',
