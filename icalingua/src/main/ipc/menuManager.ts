@@ -246,6 +246,32 @@ const buildRoomMenu = (room: Room): Menu => {
                             value: cookies[i],
                         })
                     }
+                    win.webContents.setWindowOpenHandler((details) => {
+                        if (details.url.startsWith('https://web.qun.qq.com/mannounce/')) {
+                            const size = screen.getPrimaryDisplay().size
+                            const win1 = newIcalinguaWindow({
+                                height: size.height - 300,
+                                width: 500,
+                                autoHideMenuBar: true,
+                                title: '查看群公告',
+                                webPreferences: {
+                                    preload: path.join(getStaticPath(), 'photoWallPreload.js'),
+                                    contextIsolation: false,
+                                }
+                            })
+                            win1.webContents.on('did-finish-load', () => {
+                                win1.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'photoWallInj.js'), 'utf-8'),)
+                            })
+                            win1.webContents.setWindowOpenHandler((details1) => {
+                                if (details.url.startsWith('https://web.qun.qq.com/mannounce/'))
+                                    return { action: 'allow' }
+                                shell.openExternal(details1.url)
+                                return { action: 'deny' }
+                            })
+                            win1.loadURL(details.url)
+                        }
+                        return { action: 'deny' }
+                    })
                     await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
                 },
             }),
