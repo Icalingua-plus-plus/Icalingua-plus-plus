@@ -578,14 +578,16 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const enableKeys = Object.keys(data).filter((key) => enableMap.has(key))
         let content = '管理员修改了群设置:'
+        let keys = ''
         for (const key of enableKeys) {
             content += ` ${data[key] ? '允许' : '禁止'}${enableMap.get(key)}`
+            keys += key
         }
         if (data.avatar) {
             content += ' 群头像已变更'
         }
         const message: Message = {
-            _id: `setting-${now.getTime()}-${data.group_id}`,
+            _id: `setting-${now.getTime()}-${data.group_id}-${keys}`,
             content,
             username: '群系统信息',
             senderId: 10000,
@@ -609,7 +611,7 @@ const eventHandlers = {
         if (data.group_name && data.group_name !== room.roomName) {
             room.roomName = data.group_name
             message.content += ` 群名变更为 ${data.group_name}`
-        }
+        } else if (data.group_name && data.group_name === room.roomName) return
         room.utime = data.time * 1000
         room.lastMessage = {
             content: message.content,
