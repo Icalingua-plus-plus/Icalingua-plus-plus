@@ -4,9 +4,9 @@
 
 基于 OICQ 的 Icalingua++ 中继，可以部署在自己的服务器上，服务器通过 OICQ 库与上级服务器通信，本地电脑与自己的服务器通信。这样可以实现一些原先无法实现的功能：
 
--   在电脑关闭时保持在线和消息同步
--   在多个地点同时使用一个帐号
--   通过创建不同实例同时登录多个账号
+- 在电脑关闭时保持在线和消息同步
+- 在多个地点同时使用一个帐号
+- 通过创建不同实例同时登录多个账号
 
 ## 安装方法
 
@@ -50,7 +50,7 @@ nrm use npm
     port: 6789 # 如果需要运行多个实例，可以设置不同端口
     ```
 
-6. 执行 `node build`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 Caddy , Nginx 等）将端口绑定到域名（虚拟主机）上，并安装 SSL 证书；或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）
+6. 执行 `node build`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 Caddy , Nginx 等）将端口绑定到域名（虚拟主机）上，并安装 SSL 证书；或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）， 关于反向代理的配置文件示例，可以参考仓库当前目录下的 [nginx.example.conf](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/develop/icalingua-bridge-oicq/nginx.example.conf)。
 
 ### 安装预打包的 bridge
 
@@ -117,6 +117,8 @@ docker compose up -d
 当然，仅仅如此也是比较不安全的，你仍然需要反向代理等过程，以保证安全性。
 
 反向代理时，需要代理的地址为`http://127.0.0.1:6789`，即容器映射后的端口，具体请根据实际情况修改。
+
+关于反向代理的配置文件示例，可以参考仓库当前目录下的 [nginx.example.conf](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/develop/icalingua-bridge-oicq/nginx.example.conf)。
 
 ## 客户端连接方法
 
