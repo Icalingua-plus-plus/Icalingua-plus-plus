@@ -252,7 +252,11 @@ const buildRoomMenu = (room: Room): Menu => {
                     }
                     win.webContents.setWindowOpenHandler((details) => {
                         if (details.url.startsWith('https://web.qun.qq.com/mannounce/')) {
-                            const win1 = openMannounceWindow('查看群公告', 250, details.url)
+                            const win1 = openMannounceWindow(
+                                details.url.includes('detail') ? '查看群公告' : '发布新公告',
+                                250,
+                                details.url,
+                            )
                             win1.on('closed', () => {
                                 win.webContents.reload()
                             })

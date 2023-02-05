@@ -65,6 +65,29 @@ window.mqq.invoke = function (b, c , d, e) {
         _invoke.call(this, b, c, d, e)
     }
 }
+window.mqq.media.getPicture = (type, callback) => {
+    alert('暂未实现图片上传功能')
+    /*
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = () => {
+        const file = input.files[0]
+        console.log(file.name)
+        const reader = new FileReader()
+        reader.onload = () => {
+            const base64 = reader.result.toString('base64')
+            callback(0, [{
+                data: base64,
+                imageID: '/storage/emulated/0/DCIM/' + file.name,
+                match: 0,
+            }])
+        }
+        reader.readAsDataURL(file)
+    }
+    input.click()
+    */
+}
 
 /** 插入按钮样式 */ 
 function appendCss() {

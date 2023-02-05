@@ -105,9 +105,5 @@ export function openMannounceWindow(title: string, decreaseSize: number, url: st
         win.webContents.executeJavaScript(fs.readFileSync(path.join(getStaticPath(), 'mannounceInj.js'), 'utf-8'))
     })
     win.loadURL(url)
-    win.on('closed', () => {
-        console.log('a')
-    })
-
     return win
 }
