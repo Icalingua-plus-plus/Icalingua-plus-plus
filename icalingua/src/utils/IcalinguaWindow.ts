@@ -94,6 +94,7 @@ export function openMannounceWindow(title: string, decreaseSize: number, url: st
             shell.openExternal(details.url)
         if (win1) {
             win1.on('closed', () => {
+                if (win.isDestroyed()) return
                 win.webContents.reload()
             })
         }

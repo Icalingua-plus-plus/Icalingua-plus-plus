@@ -258,6 +258,7 @@ const buildRoomMenu = (room: Room): Menu => {
                                 details.url,
                             )
                             win1.on('closed', () => {
+                                if (win.isDestroyed()) return
                                 win.webContents.reload()
                             })
                         }

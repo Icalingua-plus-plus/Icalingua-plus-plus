@@ -28,10 +28,21 @@ window.mqq.ui.setTitleButtons = (o) => {
             if (choose) window.delete()
         }
         const a = setInterval(() => {
-            const buttongroup = document.getElementsByClassName('qui-button-group')
-            if (buttongroup.length) {
-                buttongroup[0].appendChild(deleteButton)
+            const buttongroup = document.getElementsByClassName('qui-button-group')[0]
+            if (buttongroup) {
+                buttongroup.appendChild(deleteButton)
                 clearInterval(a)
+                return
+            }
+            const originButton = document.getElementsByClassName('qui-button qui-button_primary qui-button_large')[0]
+            if (originButton) {
+                const detailEditDiv = originButton.parentElement
+                if (originButton.innerText === '确认收到') return
+                if (!detailEditDiv.className.includes('detail-edit')) return
+                const buttonGroup = document.createElement('div')
+                buttonGroup.className = 'qui-button-group'
+                buttonGroup.appendChild(originButton)
+                detailEditDiv.appendChild(buttonGroup)
             }
         }, 100)
     }
@@ -46,8 +57,8 @@ window.mqq.ui.setTitleButtons = (o) => {
         newButton.innerText = '发布新公告'
         newButton.onclick = () => window.newMannounce()
         newDiv.appendChild(newButton)
-        const announcementMain = document.getElementsByClassName('announcement-main')
-        announcementMain[0].appendChild(newDiv)
+        const announcementMain = document.getElementsByClassName('announcement-main')[0]
+        announcementMain.appendChild(newDiv)
     }
     if (o.left && o.left.title === '返回') {
         window.return = o.left.callback
