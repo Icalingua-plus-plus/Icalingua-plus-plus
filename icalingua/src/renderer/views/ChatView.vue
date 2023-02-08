@@ -509,6 +509,7 @@ export default {
         ipcRenderer.on('addMessage', (_, {roomId, message}) => {
             if (roomId !== this.selectedRoomId) return
             this.messages = [...this.messages, message]
+            if (this.lastUnreadCount) this.lastUnreadCount++
         })
         ipcRenderer.on('deleteMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
