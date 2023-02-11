@@ -63,6 +63,7 @@ export const {
     reLogin,
     randomDevice,
     sendPacket,
+    sendGroupSign,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer

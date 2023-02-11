@@ -30,6 +30,7 @@ export default (io: Server, socket: Socket) => {
     socket.on('renewMessage', adapter.renewMessage)
     socket.on('renewMessageURL', adapter.renewMessageURL)
     socket.on('sendGroupPoke', adapter.sendGroupPoke)
+    socket.on('sendGroupSign', adapter.sendGroupSign)
     socket.on('sendMessage', adapter.sendMessage)
     socket.on('setOnlineStatus', adapter.setOnlineStatus)
     socket.on('setRoomAutoDownload', adapter.setRoomAutoDownload)

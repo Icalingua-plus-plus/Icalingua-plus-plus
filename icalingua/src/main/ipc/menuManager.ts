@@ -51,6 +51,7 @@ import {
     setRoomAutoDownloadPath,
     setRoomPriority,
     sendPacket,
+    sendGroupSign,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
@@ -464,6 +465,14 @@ const buildRoomMenu = (room: Room): Menu => {
                         })
                     }
                     await win.loadURL('https://qun.qq.com/m/qun/activedata/active.html?gc=' + -room.roomId)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '群打卡',
+                async click() {
+                    sendGroupSign(-room.roomId)
                 },
             }),
         )

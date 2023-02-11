@@ -554,6 +554,9 @@ const adapter: Adapter = {
     sendGroupPoke(gin: number, uin: number) {
         socket.emit('sendGroupPoke', gin, uin)
     },
+    sendGroupSign(gin: number) {
+        socket.emit('sendGroupSign', gin)
+    },
     async sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room) data.roomId = ui.getSelectedRoomId()
         if (data.imgpath && !/^https?:\/\//.test(data.imgpath) && !data.imgpath.startsWith('send_')) {

@@ -74,6 +74,8 @@ export default interface Adapter {
 
     sendGroupPoke(gin: number, uin: number): any
 
+    sendGroupSign(gin: number): any
+
     addRoom(room: Room): any
 
     addChatGroup(chatGroup: ChatGroup): any

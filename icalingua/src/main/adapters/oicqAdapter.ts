@@ -38,6 +38,7 @@ import {
     GroupPokeEventData,
     GroupRecallEventData,
     GroupSettingEventData,
+    GroupSignEventData,
     GroupTitleEventData,
     GroupTransferEventData,
     MemberBaseInfo,
@@ -404,6 +405,35 @@ const eventHandlers = {
                 username: '',
                 content: msg,
                 senderId: data.operator_id,
+                timestamp: formatDate('hh:mm:ss'),
+                date: formatDate('yyyy/MM/dd'),
+                _id: data.time,
+                system: true,
+                time: data.time * 1000,
+                files: [],
+            }
+            ui.addMessage(room.roomId, message)
+            ui.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(room.roomId, message)
+        }
+    },
+    async groupSign(data: GroupSignEventData) {
+        console.log(data)
+        if (await storage.isChatIgnored(-data.group_id)) return
+        const room = await storage.getRoom(-data.group_id)
+        if (room) {
+            room.utime = data.time * 1000
+            let msg = `${data.nickname} (${data.user_id}) ${data.sign_text}`
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: data.user_id,
                 timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
@@ -1002,6 +1032,7 @@ const attachEventHandler = () => {
     bot.on('system.offline', eventHandlers.onOffline)
     bot.on('notice.friend.poke', eventHandlers.friendPoke)
     bot.on('notice.group.poke', eventHandlers.groupPoke)
+    bot.on('notice.group.sign', eventHandlers.groupSign)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
     bot.on('notice.group.ban', eventHandlers.groupMute)
@@ -1627,6 +1658,9 @@ const adapter: OicqAdapter = {
     async sendGroupPoke(gin: number, uin: number) {
         const res = await bot.sendGroupPoke(gin, uin)
         if (res.error?.code === 1002) ui.messageError('对方已关闭头像双击功能')
+    },
+    async sendGroupSign(gin: number) {
+        await bot.sendGroupSign(gin)
     },
     addRoom(room: Room) {
         return storage.addRoom(room)
