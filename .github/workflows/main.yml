@@ -740,35 +740,8 @@ jobs:
           path: icalingua/build/Icalingua++*.exe
           if-no-files-found: error
 
-  install-macos-x64:
-    runs-on: macos-11
-    defaults:
-      run:
-        working-directory: icalingua
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        with:
-          node-version: "16"
-
-      - name: Install pnpm
-        run: corepack enable
-
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
-        with:
-          node-modules: ./node_modules
-          package-manager: pnpm
-
-      - name: pnpm install
-        run: pnpm install
-
   build-macos-x64:
     runs-on: macos-11
-    needs: install-macos-x64
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
