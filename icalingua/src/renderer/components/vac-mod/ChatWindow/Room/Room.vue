@@ -106,7 +106,7 @@
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
-                                :msgstoForward="msgstoForward"
+                                :msgsToForward="msgsToForward"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
@@ -115,8 +115,8 @@
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
-                                @add-msg-to-forward="addMsgtoForward"
-                                @del-msg-to-forward="delMsgtoForward"
+                                @add-msg-to-forward="addmsgToForward"
+                                @del-msg-to-forward="delmsgToForward"
                                 @scroll-to-message="scrollToMessage"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
@@ -198,7 +198,7 @@
             <RoomForwardMessage
                 :messages="messages"
                 :showForwardPanel="showForwardPanel"
-                :msgstoForward="msgstoForward"
+                :msgsToForward="msgsToForward"
                 @choose-forward-target="$emit('choose-forward-target')"
                 @close-forward-panel="closeForwardPanel"
                 :account="account"
@@ -481,7 +481,7 @@ export default {
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
             editAndResend: false,
-            msgstoForward: [],
+            msgsToForward: [],
             selectUpdateKey: 0,
             showForwardPanel: false,
             isQuickFaceOn: false,
@@ -757,7 +757,7 @@ export default {
         ipcRenderer.on('startForward', (_, _id) => {
             if (this.showForwardPanel) return
             this.selectedMessage = _id
-            this.msgstoForward.push(_id)
+            this.msgsToForward.push(_id)
             this.selectUpdateKey = 1
             this.showForwardPanel = true
         })
@@ -801,7 +801,7 @@ export default {
                 } catch (e) {}
                 return false
             }
-            if (this.msgstoForward.length <= 0) {
+            if (this.msgsToForward.length <= 0) {
                 console.log('No Message Selected.')
                 return
             }
@@ -809,7 +809,7 @@ export default {
             const dm = target > 0
 
             this.messages.forEach((message) => {
-                this.msgstoForward.forEach((msgId) => {
+                this.msgsToForward.forEach((msgId) => {
                     if (message._id === msgId) {
                         ForwardMessages.push(message)
                     }
@@ -921,20 +921,20 @@ export default {
         closeForwardPanel() {
             this.selectUpdateKey = 0
             this.showForwardPanel = false
-            this.msgstoForward = []
+            this.msgsToForward = []
             this.selectedMessage = ''
             console.log('closeForwardPanel')
         },
-        addMsgtoForward(messageId) {
-            this.msgstoForward.push(messageId)
-            console.log('addMsgtoForward')
+        addmsgToForward(messageId) {
+            this.msgsToForward.push(messageId)
+            console.log('addmsgToForward')
         },
-        delMsgtoForward(messageId) {
-            this.msgstoForward = this.msgstoForward.filter((e) => e !== messageId)
-            if (this.msgstoForward.length === 0) {
+        delmsgToForward(messageId) {
+            this.msgsToForward = this.msgsToForward.filter((e) => e !== messageId)
+            if (this.msgsToForward.length === 0) {
                 this.closeForwardPanel()
             }
-            console.log('delMsgtoForward')
+            console.log('delmsgToForward')
         },
         scrollToMessage(messageId) {
             if (this.$route.name === 'history-page') {
@@ -1466,11 +1466,11 @@ export default {
             if (! _.isEqual(selectedIds, this.mouseSelectIds)) {
                 this.$nextTick(() => {
                     this.selectUpdateKey++
-                    this.msgstoForward = this.msgstoForward.filter((id) =>
+                    this.msgsToForward = this.msgsToForward.filter((id) =>
                         !this.mouseSelectIds.includes(id)
                     )
                     selectedIds.forEach((id) => {
-                        if (!this.msgstoForward.includes(id)) this.msgstoForward.push(id)
+                        if (!this.msgsToForward.includes(id)) this.msgsToForward.push(id)
                     })
                     this.mouseSelectIds = selectedIds
                 })

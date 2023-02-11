@@ -1297,13 +1297,13 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                             label: '合并转发本条消息',
                             type: 'normal',
                             click: () => {
-                                const msgtoforward = {
+                                const msgToForward = {
                                     user_id: message.senderId,
                                     message: message.content,
                                     nickname: message.username,
                                     time: message.time / 1000,
                                 }
-                                makeForward(msgtoforward)
+                                makeForward(msgToForward)
                             },
                         },
                         {
