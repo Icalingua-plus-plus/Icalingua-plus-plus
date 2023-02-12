@@ -72,10 +72,10 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.16
+      oicq-icalingua-plus-plus: ^1.23.17
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
-      pinyin-match: ^1.2.2
+      pinyin-match: ^1.2.3
       prettier: ^2.8.4
       sass: ^1.58.0
       sass-loader: ^10.4.1
@@ -118,10 +118,10 @@ importers:
       knex: 0.95.15_vmflzcdwkj5ey2f4pdilto6i7m
       mongodb: 4.14.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.16
+      oicq-icalingua-plus-plus: 1.23.17
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
-      pinyin-match: 1.2.2
+      pinyin-match: 1.2.3
       silk-sdk: 0.2.2
       socket.io: 4.6.0
       sqlite3: 5.1.4
@@ -229,7 +229,7 @@ importers:
       mongodb: ^4.14.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.16
+      oicq-icalingua-plus-plus: ^1.23.17
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
       prettier: ^2.8.4
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.14.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.16
+      oicq-icalingua-plus-plus: 1.23.17
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
       silk-sdk: 0.2.2
@@ -6164,6 +6164,7 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
+    dev: true
     optional: true
 
   /function-bind/1.1.1:
@@ -8651,8 +8652,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.16:
-    resolution: {integrity: sha512-mpOTE8xIyzCCzoMRjssBBZL01zhnnxC036f7COnFbUBo5kvmBE+zrI51EZ1tukKupczrznSRDk94PgZizPpfPA==}
+  /oicq-icalingua-plus-plus/1.23.17:
+    resolution: {integrity: sha512-s1V54Hnj3lznXeJbaguLcHN42n7j8HyYV6mtiJCMHvDvTvHKJuqlvXQ5Mna4LQN1GHqzV+5VmOKB60lf3gpa7w==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -9058,10 +9059,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /pinyin-match/1.2.2:
-    resolution: {integrity: sha512-C0yOq4LkToJMkDHiQFKOY69El2GRcwdS2lVEjgWjIV8go3wE4mloGFNkVicGHFGYHDg523m2/lKzW8Hh+JR9nw==}
-    dependencies:
-      rollup: 2.79.1
+  /pinyin-match/1.2.3:
+    resolution: {integrity: sha512-K8lMh8xEB3U+nSWbfimU0h6JgyZKUndl3tfQLLjWVFLJG7LGk7BVKkyVsfhK9bh3xbEyE+aUU8KCRg9B2NyZ+w==}
     dev: false
 
   /pkg-dir/2.0.0:
@@ -9953,14 +9952,6 @@ packages:
       sprintf-js: 1.1.2
     dev: true
     optional: true
-
-  /rollup/2.79.1:
-    resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
 
   /router/2.0.0-beta.1:
     resolution: {integrity: sha512-GLoYgkhAGAiwVda5nt6Qd4+5RAPuQ4WIYLlZ+mxfYICI+22gnIB3eCfmhgV8+uJNPS1/39DOYi/vdrrz0/ouKA==}
