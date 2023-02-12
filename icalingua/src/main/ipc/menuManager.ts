@@ -1569,7 +1569,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                 type: 'normal',
                 enabled: !(history && message._id === -1),
                 click: () => {
-                    clipboard.writeText(String(message._id))
+                    clipboard.writeText(String(message._id).split('-')[0])
                 },
             }),
         )
