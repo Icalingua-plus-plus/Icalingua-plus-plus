@@ -25,7 +25,8 @@ export default async (url: string) => {
 
 const conventSilk = (silkBuf: Buffer): Promise<Buffer> => {
     return new Promise((resolve, reject) => {
-        const childPath = process.env.NODE_ENV === 'development' ? 'static/silkchild.js' : 'dist/electron/static/silkchild.js'
+        const childPath =
+            process.env.NODE_ENV === 'development' ? 'static/silkchild.js' : 'dist/electron/static/silkchild.js'
         const child = fork(require('path').join(app.getAppPath(), childPath))
         child.on('message', (bufOggStr: String) => {
             const bufOgg = Buffer.from(bufOggStr, 'binary')
