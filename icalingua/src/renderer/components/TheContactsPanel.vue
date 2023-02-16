@@ -13,9 +13,11 @@
                     <el-collapse v-model="activeFriendGroup">
                         <el-collapse-item
                             v-for="(v, i) in friendsAll"
-                            :title="`${v.name} ` + `(${v.friends.filter((e) => e.sc.includes(searchContext)).length})`"
+                            :title="`${v.name} ` + `(${searchFriendResults[i]})`"
                             :name="i"
                             :key="i"
+                            ref="friendItems" 
+                            v-show="searchFriendResults[i] > 0"
                         >
                             <ContactEntry
                                 v-for="i in v.friends"
@@ -86,6 +88,25 @@ export default {
                 this.searchContextEdit = val.toUpperCase()
             },
         },
+        searchFriendResults() {
+            if (!this.searchContextEdit) return this.friendsAll.map(friendGroup => friendGroup.friends.length)
+            return this.friendsAll.map(friendGroup => friendGroup.friends.filter(f => f.sc.includes(this.searchContextEdit)).length)
+        }
+    },
+    watch: {
+        searchContext(newResults, oldResults) {
+            let self = this
+            let resultIndexArray = new Array(this.searchFriendResults.length).fill(1).map((e, i) => i).filter(e => this.searchFriendResults[e] > 0)
+            if (resultIndexArray.length > 3) {
+                self.$refs.friendItems.filter(item => item.$el.className.includes('is-active')).forEach(item => {
+                    item.dispatch('ElCollapse', 'item-click', item)
+                })
+                return
+            }
+            resultIndexArray.filter(i => !self.$refs.friendItems[i].$el.className.includes('is-active')).forEach(i => {
+                self.$refs.friendItems[i].dispatch('ElCollapse', 'item-click', self.$refs.friendItems[i])
+            })
+        }
     },
     created() {
         ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
@@ -110,6 +131,10 @@ export default {
 </script>
 
 <style>
+
+.el-collapse {
+    border: none;
+}
 .el-collapse-item__header {
     padding-left: 12px;
     border-bottom: var(--chat-border-style);
@@ -123,6 +148,7 @@ export default {
 }
 
 .el-collapse-item__wrap {
+    background: unset;
     border-bottom: var(--chat-border-style);
 }
 
