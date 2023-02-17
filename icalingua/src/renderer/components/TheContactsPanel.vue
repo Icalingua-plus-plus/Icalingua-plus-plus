@@ -16,7 +16,7 @@
                             :title="`${v.name} ` + `(${searchFriendResults[i]})`"
                             :name="i"
                             :key="i"
-                            ref="friendItems" 
+                            ref="friendItems"
                             v-show="searchFriendResults[i] > 0"
                         >
                             <ContactEntry
@@ -89,24 +89,33 @@ export default {
             },
         },
         searchFriendResults() {
-            if (!this.searchContextEdit) return this.friendsAll.map(friendGroup => friendGroup.friends.length)
-            return this.friendsAll.map(friendGroup => friendGroup.friends.filter(f => f.sc.includes(this.searchContextEdit)).length)
-        }
+            if (!this.searchContextEdit) return this.friendsAll.map((friendGroup) => friendGroup.friends.length)
+            return this.friendsAll.map(
+                (friendGroup) => friendGroup.friends.filter((f) => f.sc.includes(this.searchContextEdit)).length,
+            )
+        },
     },
     watch: {
         searchContext(newResults, oldResults) {
             let self = this
-            let resultIndexArray = new Array(this.searchFriendResults.length).fill(1).map((e, i) => i).filter(e => this.searchFriendResults[e] > 0)
+            let resultIndexArray = new Array(this.searchFriendResults.length)
+                .fill(1)
+                .map((e, i) => i)
+                .filter((e) => this.searchFriendResults[e] > 0)
             if (resultIndexArray.length > 3) {
-                self.$refs.friendItems.filter(item => item.$el.className.includes('is-active')).forEach(item => {
-                    item.dispatch('ElCollapse', 'item-click', item)
-                })
+                self.$refs.friendItems
+                    .filter((item) => item.$el.className.includes('is-active'))
+                    .forEach((item) => {
+                        item.dispatch('ElCollapse', 'item-click', item)
+                    })
                 return
             }
-            resultIndexArray.filter(i => !self.$refs.friendItems[i].$el.className.includes('is-active')).forEach(i => {
-                self.$refs.friendItems[i].dispatch('ElCollapse', 'item-click', self.$refs.friendItems[i])
-            })
-        }
+            resultIndexArray
+                .filter((i) => !self.$refs.friendItems[i].$el.className.includes('is-active'))
+                .forEach((i) => {
+                    self.$refs.friendItems[i].dispatch('ElCollapse', 'item-click', self.$refs.friendItems[i])
+                })
+        },
     },
     created() {
         ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
@@ -131,7 +140,6 @@ export default {
 </script>
 
 <style>
-
 .el-collapse {
     border: none;
 }
