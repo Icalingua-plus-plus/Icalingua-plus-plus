@@ -1,6 +1,6 @@
 <template>
     <div class="root">
-        <el-input type="password" placeholder="口令" v-model="password" />
+        <el-input type="password" placeholder="口令" v-model="password" @keydown.enter.native="unlock" />
         <p :class="state">{{ displayState }}</p>
         <el-button @click="unlock">解锁</el-button>
     </div>

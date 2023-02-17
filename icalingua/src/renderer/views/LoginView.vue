@@ -95,7 +95,12 @@
             size="100%"
         >
             <p v-if="phone">{{ sendTime !== -1 ? '已' : '' }}向 {{ phone }} 发送验证码</p>
-            <el-input placeholder="短信验证码" v-model="smsCode" @input="smsCode = smsCode.slice(0, 6)" />
+            <el-input
+                placeholder="短信验证码"
+                v-model="smsCode"
+                @input="smsCode = smsCode.slice(0, 6)"
+                @keydown.enter.native="submitSmsCode"
+            />
             <center>
                 <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1"> 提交 </el-button>
                 <el-button @click="sendSmsCode" v-if="sendTime === -1"> 发送验证码 </el-button>
