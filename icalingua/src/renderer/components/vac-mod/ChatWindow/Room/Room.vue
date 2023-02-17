@@ -106,7 +106,7 @@
                                 :selectedMessage="selectedMessage"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
-                                :msgstoForward="msgstoForward"
+                                :msgsToForward="msgsToForward"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
@@ -115,8 +115,8 @@
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
-                                @add-msg-to-forward="addMsgtoForward"
-                                @del-msg-to-forward="delMsgtoForward"
+                                @add-msg-to-forward="addmsgToForward"
+                                @del-msg-to-forward="delmsgToForward"
                                 @scroll-to-message="scrollToMessage"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
@@ -198,7 +198,7 @@
             <RoomForwardMessage
                 :messages="messages"
                 :showForwardPanel="showForwardPanel"
-                :msgstoForward="msgstoForward"
+                :msgsToForward="msgsToForward"
                 @choose-forward-target="$emit('choose-forward-target')"
                 @close-forward-panel="closeForwardPanel"
                 :account="account"
@@ -382,6 +382,10 @@
 </template>
 
 <script>
+import path from 'path'
+import { ipcRenderer } from 'electron'
+import _ from 'lodash'
+
 import InfiniteLoading from 'vue-infinite-loading'
 import vClickOutside from 'v-click-outside'
 import emojis from 'vue-emoji-picker/src/emojis'
@@ -397,15 +401,12 @@ import SearchInput from '../../../SearchInput'
 
 import faceNames from '../../../../../../static/faceNames'
 import getStaticPath from '../../../../../utils/getStaticPath'
-import path from 'path'
-const faceDir = path.join(getStaticPath(), 'face')
-
-import { ipcRenderer } from 'electron'
-
-const { detectMobile, iOSDevice } = require('../../utils/mobileDetection')
-const { isImageFile, isVideoFile } = require('../../utils/mediaFile')
 
 import ipc from '../../../../utils/ipc'
+import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
+import { isImageFile, isVideoFile } from '../../utils/mediaFile'
+
+const faceDir = path.join(getStaticPath(), 'face')
 
 /** @type 'Enter'|'CtrlEnter'|'ShiftEnter' */
 let keyToSendMessage
@@ -480,7 +481,7 @@ export default {
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
             editAndResend: false,
-            msgstoForward: [],
+            msgsToForward: [],
             selectUpdateKey: 0,
             showForwardPanel: false,
             isQuickFaceOn: false,
@@ -511,6 +512,7 @@ export default {
             recordPath: '',
             mouseSelecting: false,
             mouseSelectArea: null,
+            mouseSelectIds: null
         }
     },
     computed: {
@@ -755,7 +757,7 @@ export default {
         ipcRenderer.on('startForward', (_, _id) => {
             if (this.showForwardPanel) return
             this.selectedMessage = _id
-            this.msgstoForward.push(_id)
+            this.msgsToForward.push(_id)
             this.selectUpdateKey = 1
             this.showForwardPanel = true
         })
@@ -799,7 +801,7 @@ export default {
                 } catch (e) {}
                 return false
             }
-            if (this.msgstoForward.length <= 0) {
+            if (this.msgsToForward.length <= 0) {
                 console.log('No Message Selected.')
                 return
             }
@@ -807,7 +809,7 @@ export default {
             const dm = target > 0
 
             this.messages.forEach((message) => {
-                this.msgstoForward.forEach((msgId) => {
+                this.msgsToForward.forEach((msgId) => {
                     if (message._id === msgId) {
                         ForwardMessages.push(message)
                     }
@@ -919,20 +921,20 @@ export default {
         closeForwardPanel() {
             this.selectUpdateKey = 0
             this.showForwardPanel = false
-            this.msgstoForward = []
+            this.msgsToForward = []
             this.selectedMessage = ''
             console.log('closeForwardPanel')
         },
-        addMsgtoForward(messageId) {
-            this.msgstoForward.push(messageId)
-            console.log('addMsgtoForward')
+        addmsgToForward(messageId) {
+            this.msgsToForward.push(messageId)
+            console.log('addmsgToForward')
         },
-        delMsgtoForward(messageId) {
-            this.msgstoForward = this.msgstoForward.filter((e) => e !== messageId)
-            if (this.msgstoForward.length === 0) {
+        delmsgToForward(messageId) {
+            this.msgsToForward = this.msgsToForward.filter((e) => e !== messageId)
+            if (this.msgsToForward.length === 0) {
                 this.closeForwardPanel()
             }
-            console.log('delMsgtoForward')
+            console.log('delmsgToForward')
         },
         scrollToMessage(messageId) {
             if (this.$route.name === 'history-page') {
@@ -1446,6 +1448,33 @@ export default {
             el.style.top = Math.min(area.y1, area.y2) + 'px'
             el.style.width = Math.abs(area.x1 - area.x2) + 'px'
             el.style.height = Math.abs(area.y1 - area.y2) + 'px'
+
+            const container = this.$refs.messagesContainer
+            const selectedIds = [...container.querySelectorAll('.vac-message-box')]
+                .filter((msgBox) => {
+                    const msgCard = msgBox.querySelector('.vac-message-card')
+                    const { x: x1, y: y1, width: w, height: h } = msgCard.getBoundingClientRect()
+                    const x2 = x1 + w,
+                        y2 = y1 + h
+                    const [ax1, ax2] = [area.x1, area.x2].sort((a, b) => a - b)
+                    const [ay1, ay2] = [area.y1, area.y2].sort((a, b) => a - b)
+                    if (ax2 < x1 || x2 < ax1 || ay2 < y1 || y2 < ay1) return false
+                    return true
+                })
+                .map((msgBox) => msgBox.id)
+
+            if (! _.isEqual(selectedIds, this.mouseSelectIds)) {
+                this.$nextTick(() => {
+                    this.selectUpdateKey++
+                    this.msgsToForward = this.msgsToForward.filter((id) =>
+                        !this.mouseSelectIds.includes(id)
+                    )
+                    selectedIds.forEach((id) => {
+                        if (!this.msgsToForward.includes(id)) this.msgsToForward.push(id)
+                    })
+                    this.mouseSelectIds = selectedIds
+                })
+            }
         },
         startMouseSelect(e) {
             if (this.$route.name === 'history-page') return
@@ -1467,6 +1496,8 @@ export default {
                 x2: x,
                 y2: y,
             }
+            this.mouseSelectIds = []
+
             this.updateMouseSelectAreaStyleImmediately()
         },
         continueMouseSelect(e) {
@@ -1486,31 +1517,11 @@ export default {
 
             this.mouseSelecting = false
 
-            const area = this.mouseSelectArea
-
             window.removeEventListener('mousemove', this.continueMouseSelect)
             window.removeEventListener('mouseup', this.endMouseSelect)
 
-            const container = this.$refs.messagesContainer
-            const selectedIds = [...container.querySelectorAll('.vac-message-box')]
-                .filter((msgBox) => {
-                    const msgCard = msgBox.querySelector('.vac-message-card')
-                    const { x: x1, y: y1, width: w, height: h } = msgCard.getBoundingClientRect()
-                    const x2 = x1 + w,
-                        y2 = y1 + h
-                    const [ax1, ax2] = [area.x1, area.x2].sort((a, b) => a - b)
-                    const [ay1, ay2] = [area.y1, area.y2].sort((a, b) => a - b)
-                    if (ax2 < x1 || x2 < ax1 || ay2 < y1 || y2 < ay1) return false
-                    return true
-                })
-                .map((msgBox) => msgBox.id)
-
-            if (selectedIds.length) {
-                if (!this.showForwardPanel) this.showForwardPanel = true
-                this.selectUpdateKey++
-                selectedIds.forEach((id) => {
-                    if (!this.msgstoForward.includes(id)) this.msgstoForward.push(id)
-                })
+            if (this.mouseSelectIds.length) {
+                this.showForwardPanel = true
             }
         },
     },

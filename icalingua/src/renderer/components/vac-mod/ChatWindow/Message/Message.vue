@@ -265,7 +265,7 @@ export default {
         selectedMessage: { type: String, required: true },
         linkify: { type: Boolean, default: true },
         forwardResId: { type: String, required: false },
-        msgstoForward: { type: Array, required: false },
+        msgsToForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
@@ -336,11 +336,9 @@ export default {
         },
         selectUpdateKey: {
             handler(newValue) {
-                if (!newValue) {
-                    this.selected = false
-                } else if (this.message._id === this.selectedMessage || this.msgstoForward.includes(this.message._id)) {
-                    this.selected = true
-                }
+                if (!newValue) this.selected = false
+                else this.selected = this.message._id === this.selectedMessage
+                    || this.msgsToForward.includes(this.message._id)
             },
             immediate: true,
         },

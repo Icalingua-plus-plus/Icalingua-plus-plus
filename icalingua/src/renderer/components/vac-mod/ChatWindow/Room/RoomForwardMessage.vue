@@ -2,11 +2,11 @@
     <transition name="vac-slide-up">
         <div v-if="showForwardPanel" class="vac-forward-container">
             <div class="vac-forward-box">
-                <el-button type="primary" @click="stopForward(true)" :disabled="msgstoForward.length === 0"
-                    >合并转发 {{ msgstoForward.length }} 条消息</el-button
+                <el-button type="primary" @click="stopForward(true)" :disabled="msgsToForward.length === 0"
+                    >合并转发 {{ msgsToForward.length }} 条消息</el-button
                 >
-                <el-button type="primary" @click="recallMsgs" :disabled="msgstoForward.length === 0"
-                    >撤回 {{ msgstoForward.length }} 条消息</el-button
+                <el-button type="primary" @click="recallMsgs" :disabled="msgsToForward.length === 0"
+                    >撤回 {{ msgsToForward.length }} 条消息</el-button
                 >
             </div>
 
@@ -32,7 +32,7 @@ export default {
 
     props: {
         messages: { type: Array, required: true },
-        msgstoForward: { type: Array, required: true },
+        msgsToForward: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
         account: { type: Number, required: true },
         username: { type: String, required: true },
@@ -44,7 +44,7 @@ export default {
             else this.$emit('close-forward-panel')
         },
         recallMsgs() {
-            this.msgstoForward.forEach((msg, index) => {
+            this.msgsToForward.forEach((msg, index) => {
                 setTimeout(() => {
                     ipc.deleteMessage(this.roomId, msg)
                 }, index * 50)
