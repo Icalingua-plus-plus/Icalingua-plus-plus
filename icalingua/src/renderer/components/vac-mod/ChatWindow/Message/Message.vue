@@ -337,8 +337,9 @@ export default {
         selectUpdateKey: {
             handler(newValue) {
                 if (!newValue) this.selected = false
-                else this.selected = this.message._id === this.selectedMessage
-                    || this.msgsToForward.includes(this.message._id)
+                else
+                    this.selected =
+                        this.message._id === this.selectedMessage || this.msgsToForward.includes(this.message._id)
             },
             immediate: true,
         },

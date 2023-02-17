@@ -512,7 +512,7 @@ export default {
             recordPath: '',
             mouseSelecting: false,
             mouseSelectArea: null,
-            mouseSelectIds: null
+            mouseSelectIds: null,
         }
     },
     computed: {
@@ -1463,12 +1463,10 @@ export default {
                 })
                 .map((msgBox) => msgBox.id)
 
-            if (! _.isEqual(selectedIds, this.mouseSelectIds)) {
+            if (!_.isEqual(selectedIds, this.mouseSelectIds)) {
                 this.$nextTick(() => {
                     this.selectUpdateKey++
-                    this.msgsToForward = this.msgsToForward.filter((id) =>
-                        !this.mouseSelectIds.includes(id)
-                    )
+                    this.msgsToForward = this.msgsToForward.filter((id) => !this.mouseSelectIds.includes(id))
                     selectedIds.forEach((id) => {
                         if (!this.msgsToForward.includes(id)) this.msgsToForward.push(id)
                     })
