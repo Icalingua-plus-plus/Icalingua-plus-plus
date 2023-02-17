@@ -72,7 +72,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.18
+      oicq-icalingua-plus-plus: ^1.23.19
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
       pinyin-match: ^1.2.3
@@ -118,7 +118,7 @@ importers:
       knex: 0.95.15_vmflzcdwkj5ey2f4pdilto6i7m
       mongodb: 4.14.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.18
+      oicq-icalingua-plus-plus: 1.23.19
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
       pinyin-match: 1.2.3
@@ -229,7 +229,7 @@ importers:
       mongodb: ^4.14.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.18
+      oicq-icalingua-plus-plus: ^1.23.19
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
       prettier: ^2.8.4
@@ -256,7 +256,7 @@ importers:
       mongodb: 4.14.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.18
+      oicq-icalingua-plus-plus: 1.23.19
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
       silk-sdk: 0.2.2
@@ -8643,8 +8643,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.18:
-    resolution: {integrity: sha512-v/+PzKn2mcfM+PPfFQ/5xFq59fk+rk9pKwuDeoSFj3Ngb5xUgGYX1q2xQ5flqgYH7DOayRVWus6zgd4ciATmGQ==}
+  /oicq-icalingua-plus-plus/1.23.19:
+    resolution: {integrity: sha512-khj8GCOAdHVrco5P/WTIzAc4bVWd7nUW+MPV18caabKrmqT0Qte0TD4CMqnIrfeofNrlrU88c45i6fP0q5Dh0w==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
@@ -10971,7 +10971,7 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
-      terser: 5.16.3
+      terser: 5.16.4
       webpack: 5.75.0_webpack-cli@3.3.12
     dev: true
 
@@ -10986,8 +10986,8 @@ packages:
       source-map-support: 0.5.21
     dev: true
 
-  /terser/5.16.3:
-    resolution: {integrity: sha512-v8wWLaS/xt3nE9dgKEWhNUFP6q4kngO5B8eYFUuebsu7Dw/UNAnpUod6UHo04jSSkv8TzKHjZDSd7EXdDQAl8Q==}
+  /terser/5.16.4:
+    resolution: {integrity: sha512-5yEGuZ3DZradbogeYQ1NaGz7rXVBDWujWlx1PT8efXO6Txn+eWbfKqB2bTDVmFXmePFkoLU6XI8UektMIEA0ug==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
