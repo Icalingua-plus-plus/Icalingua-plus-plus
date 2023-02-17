@@ -1296,6 +1296,11 @@ const adapter = {
         }
     },
     createBot(form: LoginForm) {
+        const filepath = path.join(require.main ? require.main.path : process.cwd(), 'data', String(form.username))
+        const devicepath = path.join(filepath, `device-${String(form.username)}.json`)
+        if (!fs.existsSync(devicepath)) adapter.randomDevice(Number(form.username))
+        const deviceData = fs.readFileSync(devicepath, 'utf-8')
+        if (!deviceData.includes('ILPP')) adapter.randomDevice(Number(form.username))
         bot = createClient(Number(form.username), {
             platform: Number(form.protocol),
             ignore_self: false,
@@ -1719,16 +1724,16 @@ const adapter = {
         "product":      "ILPP-${randomString(5).toUpperCase()}",
         "device":       "${randomString(5).toUpperCase()}",
         "board":        "${randomString(5).toUpperCase()}",
-        "brand":        "${randomString(4).toUpperCase()}",
+        "brand":        "HUAWEI",
         "model":        "ILPP ${randomString(4).toUpperCase()}",
         "wifi_ssid":    "HUAWEI-${randomString(7)}",
         "bootloader":   "U-boot",
-        "android_id":   "IL.${randomString(7, true)}.${randomString(4, true)}",
+        "android_id":   "ILPP.${randomString(7, true)}.${randomString(4, true)}",
         "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(
             12,
         )}",
-        "proc_version": "Linux version 5.10.101-android12-${randomString(8)}",
-        "mac_address":  "2D:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
+        "proc_version": "Linux version 4.19.101-android10-${randomString(8)}",
+        "mac_address":  "2B:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
             2,
         ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
         "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
