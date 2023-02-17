@@ -34,7 +34,7 @@ const emptyLoginForm: LoginForm = {
     sqlDatabase: '',
     username: '',
     password: '',
-    protocol: 5,
+    protocol: 2,
     autologin: false,
     onlineStatus: OnlineStatusType.Online,
 }
