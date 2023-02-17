@@ -63,6 +63,17 @@ export default {
         document.title = '查看转发的消息记录'
         this.linkify = await ipc.getlinkifySetting()
         ipcRenderer.on('loadMessages', (event, args) => {
+            let lastSeq = 0
+            let fake = false
+            for (let m of args) {
+                const seq = Number.parseInt(m._id.split('|')[1]) || lastSeq
+                if (lastSeq > seq) {
+                    fake = true
+                    break
+                }
+                lastSeq = seq
+            }
+            if (fake) this.room.roomName += ' (此转发极有可能是伪造的)'
             console.log(args)
             this.messages = [...args]
         })

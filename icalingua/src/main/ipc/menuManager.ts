@@ -1562,14 +1562,14 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
         menu.append(
             new MenuItem({
                 label: history
-                    ? message._id !== -1
-                        ? `复制转发来源 ID ${String(message._id).split('-')[0]}`
+                    ? String(message._id).split('|')[0] !== '-1'
+                        ? `复制转发来源 ID ${String(message._id).split('|')[0]}`
                         : '转发来源未知（可能来自私聊消息）'
                     : '复制消息 ID',
                 type: 'normal',
-                enabled: !(history && message._id === -1),
+                enabled: !(history && String(message._id).split('|')[0] === '-1'),
                 click: () => {
-                    clipboard.writeText(String(message._id).split('-')[0])
+                    clipboard.writeText(String(message._id).split('|')[0])
                 },
             }),
         )
