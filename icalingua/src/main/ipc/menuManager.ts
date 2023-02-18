@@ -994,6 +994,19 @@ export const updateAppMenu = async () => {
                             ui.setLocalImageViewerByDefault(menuItem.checked)
                         },
                     },
+                    {
+                        label: '启用自适应单面板模式',
+                        type: 'checkbox',
+                        checked: getConfig().useSinglePanel,
+                        click: (menuItem) => {
+                            getConfig().useSinglePanel = menuItem.checked
+                            saveConfigFile()
+                            ui.message(
+                                menuItem.checked ? '已开启，将在宽度较低时使用单面板模式' : '默认不开启，可以手动调整联系人栏到单头像模式',
+                            )
+                            ui.useSinglePanel(menuItem.checked)
+                        },
+                    },
                 ],
             }),
             new MenuItem({
