@@ -17,10 +17,12 @@
             :menu-actions="menuActions"
             :room="room"
             :members-count="membersCount"
+            :showSinglePanel="showSinglePanel"
             @toggle-rooms-list="$emit('toggle-rooms-list')"
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
             @room-menu="roomMenu"
+            @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
             <template v-for="(index, name) in $scopedSlots" #[name]="data">
@@ -460,6 +462,7 @@ export default {
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
         lastUnreadCount: { type: Number, required: false, default: 0 },
+        showSinglePanel: { type: Boolean, require: true, default: false }
     },
     data() {
         return {

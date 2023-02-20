@@ -40,6 +40,7 @@ type AllConfig = {
     disableQLottie: boolean
     disableNotification: boolean
     lockPassword: string
+    useSinglePanel: boolean
 }
 
 export default AllConfig

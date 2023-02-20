@@ -46,8 +46,10 @@
             </el-aside>
             <div
                 class="panel rooms-panel"
-                :class="{ 'avatar-only': roomPanelAvatarOnly }"
+                :class="{ 'avatar-only': roomPanelAvatarOnly, 'is-single': showSinglePanel }"
                 :style="{ width: roomPanelWidth + 'px' }"
+                v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'contact')"
+                ref="roomPanel"
             >
                 <TheRoomsPanel
                     ref="roomsPanel"
@@ -66,7 +68,8 @@
                 />
             </div>
             <MultipaneResizer style="z-index: 3" />
-            <div style="flex: 1" class="vac-card-window">
+            <div style="flex: 1" class="vac-card-window"
+                v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'chat')">
                 <div class="pace-activity" v-show="loading" />
                 <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
                 <Room
@@ -99,6 +102,7 @@
                     :account="account"
                     :username="username"
                     :last-unread-count="lastUnreadCount"
+                    :showSinglePanel="showSinglePanel"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @send-message="sendMessage"
                     @open-file="openImage"
@@ -111,6 +115,7 @@
                     @open-group-member-panel=";(groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId)"
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
+                    @back-contact="backContact"
                 >
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
@@ -251,6 +256,9 @@ export default {
             uploadProgress: '0',
             chatGroupsUnreadCount: {},
             disableChatGroupsRedPoint: false,
+            useSinglePanel: false,
+            showSinglePanel: false,
+            showPanel: 'chat' // 'chat' or 'contact', 只有showSinglePanel为true有效
         }
     },
     async created() {
@@ -263,6 +271,7 @@ export default {
         const roomPanelLastSetting = await ipc.getRoomPanelSetting()
         this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
         this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
+        this.useSinglePanel = (await ipc.getSettings()).useSinglePanel
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {
@@ -588,10 +597,20 @@ Chromium ${process.versions.chrome}` : ''
                 this.uploadProgress = p
             }
         })
+        ipcRenderer.on('useSinglePanel', (_, b) => {
+            if (this.useSinglePanel && window.innerWidth > 720 ) {
+                this.$refs.roomPanel.style.width = '360px'
+            }
+            this.useSinglePanel = b
+            this.handleResize({ target: { innerWidth: window.innerWidth } })
+        })
+
+        window.addEventListener("resize", this.handleResize)
+        this.handleResize({ target: { innerWidth: window.innerWidth } })
         console.log('加载完成')
     },
     methods: {
-        async sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, resend, sticker, messageType}) {
+        async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, resend, sticker, messageType }) {
             this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
@@ -699,6 +718,7 @@ Chromium ${process.versions.chrome}` : ''
                 this.closeRoom()
                 return
             }
+            this.showPanel = 'chat'
             if (room === this.account)
                 return this.startChat(this.account, this.username)
             if ((typeof room) === 'number')
@@ -753,6 +773,9 @@ Chromium ${process.versions.chrome}` : ''
             if (this.roomPanelAvatarOnly && size > 80) {
                 this.roomPanelAvatarOnly = false
                 this.roomPanelWidth = 140
+            }
+            if (!this.roomPanelAvatarOnly && size > 140) {
+                this.roomPanelWidth = size
             }
         },
         roomPanelResizeStop(pane, resizer, size) {
@@ -846,6 +869,22 @@ Chromium ${process.versions.chrome}` : ''
             }
         },
         getAvatarUrl,
+        handleResize(e) {
+            let newWidth = e.target.innerWidth
+            if (!this.useSinglePanel) {
+                if (newWidth < 880) {
+                    this.roomPanelResize(this.$refs.roomPanel, null, `${newWidth - 500}px`)
+                }
+                return
+            }
+            let oldValue = this.showSinglePanel
+            this.showSinglePanel = newWidth < 720
+            if (this.showSinglePanel && this.selectedRoomId === 0) this.showPanel = 'contact'
+            if (oldValue && !this.showSinglePanel) this.$refs.roomPanel.style.width = '300px'
+        },
+        backContact() {
+            this.showPanel = 'contact'
+        }
     },
     computed: {
         cssVars() {
@@ -951,6 +990,7 @@ Chromium ${process.versions.chrome}` : ''
 .el-main {
     padding: 0;
     height: 100vh;
+    overflow-x: hidden;
 }
 
 .el-aside {
@@ -1028,7 +1068,7 @@ main div {
 .rooms-panel {
     min-width: 140px;
     width: 300px;
-    max-width: 500px;
+    max-width: 720px;
     z-index: 3;
 
     &.avatar-only {
@@ -1043,6 +1083,10 @@ main div {
     }
     @media (min-width: 2000px) {
         width: 400px;
+    }
+
+    &.is-single {
+        flex-grow: 1;
     }
 }
 </style>
@@ -1061,6 +1105,8 @@ main div {
     border-radius: var(--chat-container-border-radius);
     box-shadow: var(--chat-container-box-shadow);
     -webkit-tap-highlight-color: transparent;
+    min-width: 300px;
+    flex-grow: 1;
 
     * {
         font-family: inherit;

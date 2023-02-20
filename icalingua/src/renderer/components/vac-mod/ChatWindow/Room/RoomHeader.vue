@@ -2,6 +2,9 @@
     <div class="vac-room-header vac-app-border-b">
         <slot name="room-header" v-bind="{ room, typingUsers }">
             <div class="vac-room-wrapper">
+                <div v-show="showSinglePanel" class="vac-svg-button vac-room-back" @click="$emit('back-contact')">
+                    <i class="el-icon-back"></i>
+                </div>
                 <div
                     v-if="!singleRoom"
                     class="vac-svg-button vac-toggle-button"
@@ -92,6 +95,7 @@ export default {
         menuActions: { type: Array, required: true },
         room: { type: Object, required: true },
         membersCount: { type: Number, default: 0 },
+        showSinglePanel: { type: Boolean, require: false, default: false }
     },
 
     data() {
@@ -178,6 +182,13 @@ export default {
 
 .vac-room-options {
     margin-left: auto;
+}
+
+.vac-room-back {
+    padding-right: .6rem;
+    padding-left: .2rem;
+    width: 1.5rem;
+    font-size: 1.5rem;
 }
 
 @media only screen and (max-width: 768px) {

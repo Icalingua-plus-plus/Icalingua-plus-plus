@@ -180,4 +180,7 @@ export default {
     setDisableQLottie(enable: boolean) {
         sendToMainWindow('setDisableQLottie', enable)
     },
+    useSinglePanel(enable: boolean) {
+        sendToMainWindow('useSinglePanel', enable)
+    },
 }
