@@ -95,7 +95,7 @@ export default {
         menuActions: { type: Array, required: true },
         room: { type: Object, required: true },
         membersCount: { type: Number, default: 0 },
-        showSinglePanel: { type: Boolean, require: false, default: false }
+        showSinglePanel: { type: Boolean, require: false, default: false },
     },
 
     data() {
@@ -185,8 +185,8 @@ export default {
 }
 
 .vac-room-back {
-    padding-right: .6rem;
-    padding-left: .2rem;
+    padding-right: 0.6rem;
+    padding-left: 0.2rem;
     width: 1.5rem;
     font-size: 1.5rem;
 }

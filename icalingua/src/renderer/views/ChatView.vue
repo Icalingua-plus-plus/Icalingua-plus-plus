@@ -68,8 +68,11 @@
                 />
             </div>
             <MultipaneResizer style="z-index: 3" />
-            <div style="flex: 1" class="vac-card-window"
-                v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'chat')">
+            <div
+                style="flex: 1"
+                class="vac-card-window"
+                v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'chat')"
+            >
                 <div class="pace-activity" v-show="loading" />
                 <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
                 <Room

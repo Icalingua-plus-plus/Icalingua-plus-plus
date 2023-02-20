@@ -462,7 +462,7 @@ export default {
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
         lastUnreadCount: { type: Number, required: false, default: 0 },
-        showSinglePanel: { type: Boolean, require: true, default: false }
+        showSinglePanel: { type: Boolean, require: true, default: false },
     },
     data() {
         return {

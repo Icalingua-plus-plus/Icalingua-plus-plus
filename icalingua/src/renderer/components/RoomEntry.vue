@@ -5,7 +5,12 @@
                 <div class="left">
                     <el-badge value="@" :type="room.at === 'all' ? 'warning' : undefined" :hidden="!room.at">
                         <el-avatar size="large" :src="roomAvatar" />
-                        <el-badge class="avatar-only-unread" :value="room.unreadCount" :type="room.priority < priority ? 'info' : undefined"  v-show="room.unreadCount > 0" />
+                        <el-badge
+                            class="avatar-only-unread"
+                            :value="room.unreadCount"
+                            :type="room.priority < priority ? 'info' : undefined"
+                            v-show="room.unreadCount > 0"
+                        />
                     </el-badge>
                 </div>
                 <div class="right" :title="desc">
