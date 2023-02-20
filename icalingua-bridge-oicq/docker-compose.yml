@@ -10,7 +10,9 @@ services:
         volumes:
             # 用户数据文件夹挂载
             - ./data/icalingua-bridge-oicq:/app/build/data/
-            # 挂载配置文件
+            # user 配置文件挂载
+            - ./data/config:/app/data
+            # bridge 挂载配置文件
             - type: bind
               source: ./config.yaml # 挂载的文件
               target: /app/config.yaml
@@ -24,7 +26,7 @@ services:
             - icalingua-bridge-oicq-network
         restart: always
         healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://127.0.0.1:6789']
+            test: [ 'CMD', 'curl', '-f', 'http://127.0.0.1:6789/ping' ]
             interval: 1m30s
             timeout: 30s
             retries: 5
