@@ -1296,11 +1296,6 @@ const adapter = {
         }
     },
     createBot(form: LoginForm) {
-        const filepath = path.join(require.main ? require.main.path : process.cwd(), 'data', String(form.username))
-        const devicepath = path.join(filepath, `device-${String(form.username)}.json`)
-        if (!fs.existsSync(devicepath)) adapter.randomDevice(Number(form.username))
-        const deviceData = fs.readFileSync(devicepath, 'utf-8')
-        if (!deviceData.includes('ILPP')) adapter.randomDevice(Number(form.username))
         bot = createClient(Number(form.username), {
             platform: Number(form.protocol),
             ignore_self: false,

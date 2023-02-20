@@ -1536,11 +1536,6 @@ const adapter: OicqAdapter = {
         }
     },
     createBot(form: LoginForm) {
-        const filepath = path.join(app.getPath('userData'), 'data', String(form.username))
-        const devicepath = path.join(filepath, `device-${String(form.username)}.json`)
-        if (!fs.existsSync(devicepath)) adapter.randomDevice(Number(form.username))
-        const deviceData = fs.readFileSync(devicepath, 'utf-8')
-        if (!deviceData.includes('ILPP')) adapter.randomDevice(Number(form.username))
         if (!bot || form.username != bot.uin || loginError) {
             loginError = false
             bot = createClient(Number(form.username), {
