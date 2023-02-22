@@ -734,12 +734,28 @@ export const updateAppMenu = async () => {
                 click: lockMainWindow,
             }),
             new MenuItem({
+                label: '最小化',
+                role: 'minimize',
+            }),
+            new MenuItem({
+                label: '全屏',
+                role: 'togglefullscreen',
+            }),
+            new MenuItem({
                 label: '关闭窗口',
                 role: 'close',
+            }),
+            // https://stackoverflow.com/questions/57081237/electron-js-multiple-accelerators
+            new MenuItem({
+                label: '关闭窗口 (hidden)',
+                role: 'close',
+                visible: false,
+                accelerator: 'CommandOrControl+H'
             }),
             new MenuItem({
                 label: '退出',
                 click: exit,
+                accelerator: 'CommandOrControl+Q'
             }),
         ],
         priority: new MenuItem({
