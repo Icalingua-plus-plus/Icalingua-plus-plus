@@ -1723,13 +1723,13 @@ const adapter = {
         "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(
             12,
         )}",
-        "proc_version": "Linux version 4.19.101-android10-${randomString(8)}",
+        "proc_version": "Linux version 4.19.101-android10-${randomString(8)} (android-build@xxx.xxx.xxx.xxx.com)",
         "mac_address":  "2B:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
             2,
         ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
         "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
         "imei":         "86${randomString(13, true)}",
-        "incremental":  "${randomString(10).toUpperCase()}",
+        "incremental":  "${randomString(10, true)}",
         "--end--":      "修改后可能需要重新验证设备。"
     }`
         if (fs.existsSync(filepath)) {
