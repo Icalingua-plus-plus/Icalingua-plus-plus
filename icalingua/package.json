@@ -183,7 +183,7 @@
         },
         "mac": {
             "target": "dmg",
-            "singleArchFiles": "node_modules/sqlite3/lib/binding/*"
+            "singleArchFiles": "node_modules/sqlite3/lib/binding/**"
         },
         "npmRebuild": false
     },
