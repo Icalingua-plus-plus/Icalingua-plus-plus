@@ -758,7 +758,7 @@ jobs:
           path: icalingua/build/Icalingua++*.exe
           if-no-files-found: error
 
-  build-macos-x64:
+  build-macos:
     runs-on: macos-11
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
@@ -798,17 +798,13 @@ jobs:
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
       - name: build
-        run: pnpm build
+        run: pnpm build --universal -c.npmRebuild=true
         working-directory: icalingua
 
-      - name: rename
-        run: for i in *.dmg;do mv "$i" "${i%.dmg}_x64.dmg" ;done
-        working-directory: icalingua/build
-
       - uses: actions/upload-artifact@v3
-        name: Upload Icalingua++_x64.dmg
+        name: Upload Icalingua++.dmg
         with:
-          name: Icalingua++_x64.dmg
+          name: Icalingua++.dmg
           path: icalingua/build/Icalingua++*.dmg
           if-no-files-found: error
 
