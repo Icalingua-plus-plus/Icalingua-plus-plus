@@ -68,6 +68,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 let bot: Client
 let storage: StorageProvider
 let loginForm: LoginForm
+let loginError: boolean = false
 let _sendPrivateMsg: {
     (user_id: number, message: Sendable, auto_escape?: boolean): Promise<Ret<{ message_id: string }>>
 }
@@ -811,6 +812,7 @@ const loginHandlers = {
     },
     onErr(data: LoginErrorEventData) {
         broadcast('login-error', data.message)
+        loginError = true
     },
 }
 //endregion
@@ -1292,68 +1294,71 @@ const adapter = {
         }
     },
     createBot(form: LoginForm) {
-        bot = createClient(Number(form.username), {
-            platform: Number(form.protocol),
-            ignore_self: false,
-            brief: true,
-        })
-        _sendPrivateMsg = bot.sendPrivateMsg
-        bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
-            if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
-            let data = await _sendPrivateMsg.call(bot, user_id, message, auto_escape)
-            if (user_id === bot.uin || user_id === 3636666661) return data
-
-            let custom_room = await storage.getRoom(user_id)
-            if (!custom_room) {
-                // create room
-                const fl = bot.fl.get(user_id)
-                const roomName = fl ? fl.remark || fl.nickname : String(user_id)
-                custom_room = createRoom(user_id, roomName)
-                await storage.addRoom(custom_room)
-            }
-            const _message: Message = {
-                _id: '',
-                senderId: bot.uin,
-                username: 'You',
-                content: '',
-                timestamp: formatDate('hh:mm:ss'),
-                date: formatDate('yyyy/MM/dd'),
-                files: [],
-            }
-            const lastMessage = {
-                content: '',
-                timestamp: formatDate('hh:mm'),
-                username: 'You',
-            }
-            try {
-                await processMessage(message, _message, lastMessage, user_id)
-            } catch (e) {
-                console.error(e)
-            }
-            custom_room.lastMessage = lastMessage
-            _message._id = data.data.message_id
-            const parsed = Buffer.from(data.data.message_id, 'base64')
-            const _time = parsed.readUInt32BE(12)
-            if (_time !== lastReceivedMessageInfo.timestamp) {
-                lastReceivedMessageInfo.timestamp = _time
-                lastReceivedMessageInfo.id = 0
-            }
-            custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
-            _message.time = _time * 1000 + lastReceivedMessageInfo.id
-            _message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
-            lastReceivedMessageInfo.id++
-            clients.updateRoom(custom_room)
-            clients.addMessage(custom_room.roomId, _message)
-            storage.addMessage(user_id, _message)
-            storage.updateRoom(custom_room.roomId, {
-                utime: custom_room.utime,
-                lastMessage: custom_room.lastMessage,
+        if (!bot || form.username != bot.uin || loginError) {
+            loginError = false
+            bot = createClient(Number(form.username), {
+                platform: Number(form.protocol),
+                ignore_self: false,
+                brief: true,
             })
-            return data
+            _sendPrivateMsg = bot.sendPrivateMsg
+            bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
+                if (typeof message === 'string') message = [{type: 'text', data: {text: message}}]
+                let data = await _sendPrivateMsg.call(bot, user_id, message, auto_escape)
+                if (user_id === bot.uin || user_id === 3636666661) return data
+
+                let custom_room = await storage.getRoom(user_id)
+                if (!custom_room) {
+                    // create room
+                    const fl = bot.fl.get(user_id)
+                    const roomName = fl ? fl.remark || fl.nickname : String(user_id)
+                    custom_room = createRoom(user_id, roomName)
+                    await storage.addRoom(custom_room)
+                }
+                const _message: Message = {
+                    _id: '',
+                    senderId: bot.uin,
+                    username: 'You',
+                    content: '',
+                    timestamp: formatDate('hh:mm:ss'),
+                    date: formatDate('yyyy/MM/dd'),
+                    files: [],
+                }
+                const lastMessage = {
+                    content: '',
+                    timestamp: formatDate('hh:mm'),
+                    username: 'You',
+                }
+                try {
+                    await processMessage(message, _message, lastMessage, user_id)
+                } catch (e) {
+                    console.error(e)
+                }
+                custom_room.lastMessage = lastMessage
+                _message._id = data.data.message_id
+                const parsed = Buffer.from(data.data.message_id, 'base64')
+                const _time = parsed.readUInt32BE(12)
+                if (_time !== lastReceivedMessageInfo.timestamp) {
+                    lastReceivedMessageInfo.timestamp = _time
+                    lastReceivedMessageInfo.id = 0
+                }
+                custom_room.utime = _time * 1000 + lastReceivedMessageInfo.id
+                _message.time = _time * 1000 + lastReceivedMessageInfo.id
+                _message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
+                lastReceivedMessageInfo.id++
+                clients.updateRoom(custom_room)
+                clients.addMessage(custom_room.roomId, _message)
+                storage.addMessage(user_id, _message)
+                storage.updateRoom(custom_room.roomId, {
+                    utime: custom_room.utime,
+                    lastMessage: custom_room.lastMessage,
+                })
+                return data
+            }
+            bot.setMaxListeners(233)
+            attachLoginHandler()
         }
-        bot.setMaxListeners(233)
         loginForm = form
-        attachLoginHandler()
         bot.login(form.password)
     },
     async getGroups(resolve) {
