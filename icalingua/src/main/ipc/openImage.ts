@@ -13,7 +13,7 @@ import { getConfig } from '../utils/configManager'
 import { download, downloadImage2Open } from './downloadManager'
 
 let viewer = ''
-const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open']
+const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open', 'open']
 
 try {
     const xdgDefault = execFileSync('xdg-mime', ['query', 'default', 'image/jpeg']).toString()
