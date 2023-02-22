@@ -210,6 +210,20 @@ const processMessage = async (
                         }
                         break
                     } catch (err) {}
+                } else if (jsonObj.app === 'com.tencent.multimsg') {
+                    try {
+                        const resId = jsonObj.meta?.detail?.resid
+                        const fileName = jsonObj.meta?.detail?.uniseq
+                        if (resId) {
+                            lastMessage.content += '[Forward multiple messages]'
+                            message.content = `[Forward: ${resId}]`
+                            break
+                        } else if (fileName) {
+                            lastMessage.content += '[Forward multiple messages]'
+                            message.content = `[NestedForward: ${fileName}]`
+                            break
+                        }
+                    } catch (err) {}
                 }
                 const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                 const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
