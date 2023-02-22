@@ -1717,18 +1717,18 @@ const adapter = {
         }
         const device = `{
         "--begin--":    "该设备文件为尝试解决${username}的风控时随机生成。",
-        "product":      "ILPP-${randomString(5).toUpperCase()}",
-        "device":       "${randomString(5).toUpperCase()}",
-        "board":        "${randomString(5).toUpperCase()}",
-        "brand":        "HUAWEI",
+        "product":      "M2012K11AC",
+        "device":       "alioth",
+        "board":        "alioth",
+        "brand":        "Redmi",
         "model":        "ILPP ${randomString(4).toUpperCase()}",
-        "wifi_ssid":    "HUAWEI-${randomString(7)}",
+        "wifi_ssid":    "Redmi-${randomString(7).toUpperCase()}",
         "bootloader":   "U-boot",
-        "android_id":   "ILPP.${randomString(7, true)}.${randomString(4, true)}",
+        "android_id":   "${randomString(16)}",
         "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(
             12,
         )}",
-        "proc_version": "Linux version 4.19.101-android10-${randomString(8)} (android-build@xxx.xxx.xxx.xxx.com)",
+        "proc_version": "Linux version 4.19.157-${randomString(13)} (android-build@xiaomi.com)",
         "mac_address":  "2B:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
             2,
         ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
