@@ -1179,12 +1179,8 @@ const adapter = {
                     }
                 } else if (messageType === 'json') {
                     const md5 = (data) => crypto.createHash('md5').update(data).digest()
-                    if (!md5) return
-                    let a = ['KCgpPT57cmV0dXJuIG1kNS', 'udG9TdHJpbmcoKSA|htZDUoY29udGVudCk']
-                    a = [a[0], a[1].split('|')[1], a[1].split('|')[0]]
-                    a.push('rIFN0cm,luZyhNYXRo,LmFicyhyb29tSWQp,KSkudG9TdHJpb,mcoKX0pKCk=')
-                    const b = eval(Buffer.from(a.join().split(',').join(''), 'base64').toString())
-                    const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0, b)
+                    const hash = md5(md5(content).toString() + String(Math.abs(roomId))).toString()
+                    const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0, hash)
                     clients.closeLoading()
                     if (retData.error) {
                         clients.notifyError({
