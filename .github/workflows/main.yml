@@ -820,7 +820,7 @@ jobs:
       - pack-otherpkg-armv7l
       - build-dist-bundle
       - build-windows64
-      - build-macos-x64
+      - build-macos
       - build-windows-arm64
     steps:
       - name: Make dir
