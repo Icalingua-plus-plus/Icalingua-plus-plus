@@ -152,9 +152,21 @@
         </div>
         <div v-if="!loadingMessages">
             <transition name="vac-bounce">
-                <div v-if="lastUnreadCount >= 10" class="vac-icon-last-message" @click="scrollToLastMessage">
+                <div v-if="lastUnreadAt" class="vac-icon-last-at-message" @click="scrollToLastAtMessage">
                     <transition name="vac-bounce">
-                        <div v-if="lastUnreadCount" class="vac-badge-counter vac-messages-count">
+                        <div v-if="lastUnreadAt" class="vac-badge-counter vac-messages-count">
+                            @
+                        </div>
+                    </transition>
+                    <slot name="scroll-icon">
+                        <svg-icon name="dropdown" style="transform: rotate(180deg)" />
+                    </slot>
+                </div>
+            </transition>
+            <transition name="vac-bounce">
+                <div v-if="!lastUnreadAt && lastUnreadCount >= 10" class="vac-icon-last-message" @click="scrollToLastMessage">
+                    <transition name="vac-bounce">
+                        <div v-if="!lastUnreadAt && lastUnreadCount" class="vac-badge-counter vac-messages-count">
                             {{ lastUnreadCount }}
                         </div>
                     </transition>
@@ -462,6 +474,7 @@ export default {
         username: { type: String, required: true },
         forwardResId: { type: String, required: false },
         lastUnreadCount: { type: Number, required: false, default: 0 },
+        lastUnreadAt: { type: Boolean, required: false, default: false },
         showSinglePanel: { type: Boolean, require: true, default: false },
     },
     data() {
@@ -1244,6 +1257,9 @@ export default {
             this.$emit('clear-last-unread-count')
             this.scrollingTolastMessage = lastUnreadCount
         },
+        async scrollToLastAtMessage() {
+            this.$emit('clear-last-unread-at')
+        },
         onChangeInput() {
             this.keepKeyboardOpen = true
             this.resizeTextarea()
@@ -1601,6 +1617,24 @@ export default {
     display: flex;
     cursor: pointer;
     z-index: 10;
+
+    svg {
+        height: 25px;
+        width: 25px;
+    }
+}
+
+.vac-icon-last-at-message {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    padding: 8px;
+    background: var(--chat-bg-scroll-icon);
+    border-radius: 50%;
+    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    display: flex;
+    cursor: pointer;
+    z-index: 20;
 
     svg {
         height: 25px;

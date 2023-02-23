@@ -105,8 +105,10 @@
                     :account="account"
                     :username="username"
                     :last-unread-count="lastUnreadCount"
+                    :last-unread-at="lastUnreadAt"
                     :showSinglePanel="showSinglePanel"
                     @clear-last-unread-count="clearLastUnreadCount"
+                    @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
                     @open-file="openImage"
                     @pokefriend="pokeFriend"
@@ -251,6 +253,8 @@ export default {
             forwardShown: false,
             lastUnreadCount: 0,
             lastUnreadCheck: 0,
+            lastUnreadAt: false,
+            lastUnreadCheck2: 0,
             selectedChatGroup: 'chats',
             chatGroups: [],
             visibleRooms: [],
@@ -518,6 +522,7 @@ export default {
             if (roomId !== this.selectedRoomId) return
             this.messages = [...this.messages, message]
             if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
+            if (message.at) this.lastUnreadAt = true
         })
         ipcRenderer.on('deleteMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
@@ -642,6 +647,31 @@ Chromium ${process.versions.chrome}` : ''
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
         },
+        async clearLastUnreadAt() {
+            let cnt = 0
+            while (true) {
+                const atMessages = this.messages.filter(e => e.at)
+                if (atMessages.length) {
+                    this.lastUnreadAt = false
+                    setTimeout(() => {
+                        const _id = atMessages[atMessages.length - 1]._id
+                        if (!_id) {
+                            this.$message.error('Message not found')
+                            return
+                        }
+                        console.log('last unread at message ID', _id)
+                        this.$refs.room.scrollToMessage(_id)
+                    }, 0)
+                    break
+                } else {
+                    await this.fetchMessage(false)
+                }
+                if (cnt > 5000) {
+                    this.$message.error('Message not found')
+                    break
+                }
+            }
+        },
         async fetchMessage(reset, number) {
             if (reset) {
                 this.messagesLoaded = false
@@ -714,6 +744,7 @@ Chromium ${process.versions.chrome}` : ''
         async chroom(room) {
             if (room === 0) {
                 this.lastUnreadCount = 0
+                this.lastUnreadAt = false
                 this.closeRoom()
                 return
             }
@@ -724,6 +755,7 @@ Chromium ${process.versions.chrome}` : ''
                 room = this.rooms.find(e => e.roomId === room)
             if (!room) return
             this.lastUnreadCount = room.unreadCount
+            this.lastUnreadAt = !!room.at
             this.selectedRoom.at = false
             ipc.updateRoom(this.selectedRoom.roomId, { at: false })
             if (this.selectedRoom.roomId === room.roomId) return
@@ -903,6 +935,18 @@ Chromium ${process.versions.chrome}` : ''
                 this.lastUnreadCheck = setTimeout(() => {
                     console.log('Timeout')
                     this.lastUnreadCount = 0
+                }, 30000)
+            }
+        },
+        lastUnreadAt(n, o) {
+            console.log('lastUnreadAt', n)
+            if (n) {
+                if (this.lastUnreadCheck2) {
+                    clearTimeout(this.lastUnreadCheck2)
+                }
+                this.lastUnreadCheck2 = setTimeout(() => {
+                    console.log('Timeout')
+                    this.lastUnreadAt = false
                 }, 30000)
             }
         },
