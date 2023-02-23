@@ -622,7 +622,7 @@ Chromium ${process.versions.chrome}` : ''
             if (!room) room = this.rooms.find((e) => e.roomId === roomId)
             if (!roomId) roomId = room.roomId
             if (file) {
-                if (file.type.includes('image')) {
+                if (file.type.includes('image')  && file.extension != 'svg') {
                     const crypto = require('crypto')
                     const buffer = Buffer.from(await file.blob.arrayBuffer())
                     const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()

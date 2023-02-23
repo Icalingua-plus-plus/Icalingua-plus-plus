@@ -1258,7 +1258,7 @@ const adapter: OicqAdapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
-        if (file && typeof file.type === 'string' && !file.type.includes('image')) {
+        if (file && typeof file.type === 'string' && (!file.type.includes('image') || file.type.includes('svg'))) {
             //群文件
             if (roomId > 0) {
                 bot.sendFile(roomId, file.path, undefined, ui.uploadProgress).then(async (data) => {

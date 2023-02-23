@@ -1054,7 +1054,7 @@ const adapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
-        if (file && ((file.type && !file.type.includes('image')) || !file.type)) {
+        if (file && ((file.type && (!file.type.includes('image') || file.type.includes('svg'))) || !file.type)) {
             // //群文件
             // if (roomId > 0) {
             //     clients.messageError('暂时无法向好友发送文件')
