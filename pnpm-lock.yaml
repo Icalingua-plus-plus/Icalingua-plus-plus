@@ -31,7 +31,7 @@ importers:
       '@types/winston': ^2.4.4
       ajv: ^6.12.6
       aria2: ^4.1.2
-      axios: ^1.3.3
+      axios: ^1.3.4
       babel-core: ^6.26.3
       babel-loader: ^7.1.5
       babel-minify-webpack-plugin: ^0.3.1
@@ -47,7 +47,7 @@ importers:
       csv-writer: ^1.6.0
       del: ^3.0.0
       devtron: ^1.4.0
-      electron: ^21.4.1
+      electron: ^21.4.2
       electron-builder: ^23.6.0
       electron-debug: ^3.2.0
       electron-devtools-installer: ^3.2.0
@@ -72,7 +72,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.20
+      oicq-icalingua-plus-plus: ^1.23.21
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
       pinyin-match: ^1.2.3
@@ -80,8 +80,8 @@ importers:
       sass: ^1.58.3
       sass-loader: ^10.4.1
       silk-sdk: ^0.2.2
-      socket.io: ^4.6.0
-      socket.io-client: ^4.6.0
+      socket.io: ^4.6.1
+      socket.io-client: ^4.6.1
       sqlite3: ^5.1.4
       style-loader: ^0.21.0
       thread-loader: ^3.0.4
@@ -118,12 +118,12 @@ importers:
       knex: 0.95.15_vmflzcdwkj5ey2f4pdilto6i7m
       mongodb: 4.14.0
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.23.20
+      oicq-icalingua-plus-plus: 1.23.21
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
       pinyin-match: 1.2.3
       silk-sdk: 0.2.2
-      socket.io: 4.6.0
+      socket.io: 4.6.1
       sqlite3: 5.1.4
     devDependencies:
       '@noble/ed25519': 1.7.1
@@ -139,7 +139,7 @@ importers:
       '@types/winston': 2.4.4
       ajv: 6.12.6
       aria2: 4.1.2
-      axios: 1.3.3
+      axios: 1.3.4
       babel-core: 6.26.3
       babel-loader: 7.1.5_bastiv6eh6a5mui3csmnhyhq2m
       babel-minify-webpack-plugin: 0.3.1_webpack@4.46.0
@@ -155,7 +155,7 @@ importers:
       csv-writer: 1.6.0
       del: 3.0.0
       devtron: 1.4.0
-      electron: 21.4.1
+      electron: 21.4.2
       electron-builder: 23.6.0
       electron-debug: 3.2.0
       electron-devtools-installer: 3.2.0
@@ -178,7 +178,7 @@ importers:
       prettier: 2.8.4
       sass: 1.58.3
       sass-loader: 10.4.1_sass@1.58.3+webpack@4.46.0
-      socket.io-client: 4.6.0
+      socket.io-client: 4.6.1
       style-loader: 0.21.0
       thread-loader: 3.0.4_webpack@4.46.0
       ts-loader: 8.4.0_vag2rrccetrnhfgvcymhondcyi
@@ -217,7 +217,7 @@ importers:
       '@types/md5': ^2.3.2
       '@types/mongodb': ^3.6.20
       '@types/node': ^16.18.12
-      axios: ^1.3.3
+      axios: ^1.3.4
       body-parser: 2.0.0-beta.1
       express: ^5.0.0-beta.1
       fluent-ffmpeg: ^2.1.2
@@ -229,12 +229,12 @@ importers:
       mongodb: ^4.14.0
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.23.20
+      oicq-icalingua-plus-plus: ^1.23.21
       pg: ^8.9.0
       pg-query-stream: ^4.3.0
       prettier: ^2.8.4
       silk-sdk: ^0.2.2
-      socket.io: ^4.6.0
+      socket.io: ^4.6.1
       sqlite3: ^5.1.4
       ts-node: ^10.9.1
       typescript: ^4.9.5
@@ -244,7 +244,7 @@ importers:
       yaml: ^1.10.2
     dependencies:
       '@noble/ed25519': 1.7.1
-      axios: 1.3.3
+      axios: 1.3.4
       body-parser: 2.0.0-beta.1
       express: 5.0.0-beta.1
       fluent-ffmpeg: 2.1.2
@@ -256,11 +256,11 @@ importers:
       mongodb: 4.14.0
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.23.20
+      oicq-icalingua-plus-plus: 1.23.21
       pg: 8.9.0
       pg-query-stream: 4.3.0_pg@8.9.0
       silk-sdk: 0.2.2
-      socket.io: 4.6.0
+      socket.io: 4.6.1
       sqlite3: 5.1.4
       uuid: 8.3.2
       winston: 3.8.2
@@ -356,13 +356,13 @@ packages:
     dev: false
     optional: true
 
-  /@aws-sdk/client-cognito-identity/3.272.0:
-    resolution: {integrity: sha512-uMjRWcNvX7SoGaVn0mXWD43+Z1awPahQwGW3riDLfXHZdOgw2oFDhD3Jg5jQ8OzQLUfDvArhE3WyZwlS4muMuQ==}
+  /@aws-sdk/client-cognito-identity/3.276.0:
+    resolution: {integrity: sha512-haFxr8QKNxoRLIWyawc4EfEN6ep4yrWv5e5KWzbulJaw6QwLKmTCLyv09mScbk1FUgpn1MaIy2mJiijiu2RJJQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
       '@aws-crypto/sha256-js': 3.0.0
-      '@aws-sdk/client-sts': 3.272.0
+      '@aws-sdk/client-sts': 3.276.0
       '@aws-sdk/config-resolver': 3.272.0
       '@aws-sdk/credential-provider-node': 3.272.0
       '@aws-sdk/fetch-http-handler': 3.272.0
@@ -482,8 +482,8 @@ packages:
     dev: false
     optional: true
 
-  /@aws-sdk/client-sts/3.272.0:
-    resolution: {integrity: sha512-kigxCxURp3WupufGaL/LABMb7UQfzAQkKcj9royizL3ItJ0vw5kW/JFrPje5IW1mfLgdPF7PI9ShOjE0fCLTqA==}
+  /@aws-sdk/client-sts/3.276.0:
+    resolution: {integrity: sha512-J6FR4tYa/WdDdwWAKhw/mXQXKWUaZZQpMiyFEbFPQyURSWu3u17nv97NUdvVOgCth48H6Wb6a4ksssYy4K9tFQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
@@ -520,7 +520,7 @@ packages:
       '@aws-sdk/util-user-agent-browser': 3.272.0
       '@aws-sdk/util-user-agent-node': 3.272.0
       '@aws-sdk/util-utf8': 3.254.0
-      fast-xml-parser: 4.0.11
+      fast-xml-parser: 4.1.2
       tslib: 2.5.0
     transitivePeerDependencies:
       - aws-crt
@@ -539,11 +539,11 @@ packages:
     dev: false
     optional: true
 
-  /@aws-sdk/credential-provider-cognito-identity/3.272.0:
-    resolution: {integrity: sha512-rVx0rtQjbiYCM0nah2rB/2ut2YJYPpRr1AbW/Hd4r/PI+yiusrmXAwuT4HIW2yr34zsQMPi1jZ3WHN9Rn9mzlg==}
+  /@aws-sdk/credential-provider-cognito-identity/3.276.0:
+    resolution: {integrity: sha512-LaIQNt2F+XWvX031MzYNoHWuqjpyomsdI+1y6KaeC/9z51Y+usmB/ay1jYK/kUmXl/NcBmZR5gPELZu7P6WtaQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@aws-sdk/client-cognito-identity': 3.272.0
+      '@aws-sdk/client-cognito-identity': 3.276.0
       '@aws-sdk/property-provider': 3.272.0
       '@aws-sdk/types': 3.272.0
       tslib: 2.5.0
@@ -647,15 +647,15 @@ packages:
     dev: false
     optional: true
 
-  /@aws-sdk/credential-providers/3.272.0:
-    resolution: {integrity: sha512-ucd6Xq6aBMf+nM4uz5zkjL11mwaE5BV1Q4hkulaGu2v1dRA8n6zhLJk/sb4hOJ7leelqMJMErlbQ2T3MkYvlJQ==}
+  /@aws-sdk/credential-providers/3.276.0:
+    resolution: {integrity: sha512-pgKP0dRMP48eDfXIcGENKzi6CIA7IVUAqFdWLY1bonq7DGSLveBvD7hkxu1ZXVp6HlucLiGtncgGrRKBmtK6Jg==}
     engines: {node: '>=14.0.0'}
     requiresBuild: true
     dependencies:
-      '@aws-sdk/client-cognito-identity': 3.272.0
+      '@aws-sdk/client-cognito-identity': 3.276.0
       '@aws-sdk/client-sso': 3.272.0
-      '@aws-sdk/client-sts': 3.272.0
-      '@aws-sdk/credential-provider-cognito-identity': 3.272.0
+      '@aws-sdk/client-sts': 3.276.0
+      '@aws-sdk/credential-provider-cognito-identity': 3.276.0
       '@aws-sdk/credential-provider-env': 3.272.0
       '@aws-sdk/credential-provider-imds': 3.272.0
       '@aws-sdk/credential-provider-ini': 3.272.0
@@ -1126,16 +1126,16 @@ packages:
     engines: {node: '>=6.9.0'}
     dev: true
 
-  /@babel/parser/7.21.0:
-    resolution: {integrity: sha512-ONjtg4renj14A9pj3iA5T5+r5Eijxbr2eNIkMBTC74occDSsRZUpe8vowmowAjFR1imWlkD8eEmjYXiREZpGZg==}
+  /@babel/parser/7.21.2:
+    resolution: {integrity: sha512-URpaIJQwEkEC2T9Kn+Ai6Xe/02iNaVCuT/PtoRz3GPVJVDpPd7mLo+VddTbhCRU9TXqW5mSrQfXZyi8kDKOVpQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
     dependencies:
-      '@babel/types': 7.21.0
+      '@babel/types': 7.21.2
     dev: true
 
-  /@babel/types/7.21.0:
-    resolution: {integrity: sha512-uR7NWq2VNFnDi7EYqiRz2Jv/VQIu38tu64Zy8TX2nQFQ6etJ9V/Rr2msW8BS132mum2rL645qpDrLtAJtVpuow==}
+  /@babel/types/7.21.2:
+    resolution: {integrity: sha512-3wRZSs7jiFaB8AjxiiD+VqN5DTG2iRvJGQ+qYFrs/654lg6kGTQWIOFjlBo5RaXuAZjBmP3+OQH4dmhqiiyYxw==}
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/helper-string-parser': 7.19.4
@@ -1600,7 +1600,7 @@ packages:
   /@vue/compiler-sfc/2.7.14:
     resolution: {integrity: sha512-aNmNHyLPsw+sVvlQFQ2/8sjNuLtK54TC6cuKnVzAY93ks4ZBrvwQSnkkIh7bsbNhum5hJBS00wSDipQ937f5DA==}
     dependencies:
-      '@babel/parser': 7.21.0
+      '@babel/parser': 7.21.2
       postcss: 8.4.21
       source-map: 0.6.1
     dev: true
@@ -2165,7 +2165,7 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       delegates: 1.0.0
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
     dev: false
 
   /are-we-there-yet/3.0.1:
@@ -2173,7 +2173,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     dependencies:
       delegates: 1.0.0
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
     dev: false
     optional: true
 
@@ -2374,8 +2374,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /axios/1.3.3:
-    resolution: {integrity: sha512-eYq77dYIFS77AQlhzEL937yUBSepBfPIe8FcgEDN35vMNZKMrs81pgnyrQpwfy4NF4b4XWX1Zgx7yX+25w8QJA==}
+  /axios/1.3.4:
+    resolution: {integrity: sha512-toYm+Bsyl6VC5wSkfkbbNB6ROv7KY93PEBBL6xyDczaIHasAiv4wPqQ/c4RjoQzipxRD2W5g21cOqQulZ7rHwQ==}
     dependencies:
       follow-redirects: 1.15.2_debug@4.3.4
       form-data: 4.0.0
@@ -3514,7 +3514,7 @@ packages:
       elliptic: 6.5.4
       inherits: 2.0.4
       parse-asn1: 5.1.6
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
       safe-buffer: 5.2.1
     dev: true
 
@@ -3530,7 +3530,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-db: 1.0.30001457
-      electron-to-chromium: 1.4.302
+      electron-to-chromium: 1.4.308
     dev: true
 
   /browserslist/3.2.8:
@@ -3538,7 +3538,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001457
-      electron-to-chromium: 1.4.302
+      electron-to-chromium: 1.4.308
     dev: true
 
   /browserslist/4.21.5:
@@ -3547,7 +3547,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001457
-      electron-to-chromium: 1.4.302
+      electron-to-chromium: 1.4.308
       node-releases: 2.0.10
       update-browserslist-db: 1.0.10_browserslist@4.21.5
     dev: true
@@ -4243,7 +4243,7 @@ packages:
     dependencies:
       buffer-from: 1.1.2
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       typedarray: 0.0.6
     dev: true
 
@@ -5162,7 +5162,7 @@ packages:
     dependencies:
       end-of-stream: 1.4.4
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       stream-shift: 1.0.1
     dev: true
 
@@ -5193,7 +5193,7 @@ packages:
       lazy-val: 1.0.5
       read-config-file: 6.2.0
       simple-update-notifier: 1.1.0
-      yargs: 17.7.0
+      yargs: 17.7.1
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5273,12 +5273,12 @@ packages:
       - supports-color
     dev: true
 
-  /electron-to-chromium/1.4.302:
-    resolution: {integrity: sha512-Uk7C+7aPBryUR1Fwvk9VmipBcN9fVsqBO57jV2ZjTm+IZ6BMNqu7EDVEg2HxCNufk6QcWlFsBkhQyQroB2VWKw==}
+  /electron-to-chromium/1.4.308:
+    resolution: {integrity: sha512-qyTx2aDFjEni4UnRWEME9ubd2Xc9c0zerTUl/ZinvD4QPsF0S7kJTV/Es/lPCTkNX6smyYar+z/n8Cl6pFr8yQ==}
     dev: true
 
-  /electron/21.4.1:
-    resolution: {integrity: sha512-uhFf3vpE6th6X2E1NSIy1+dWVeS9gb7W8EWd/cn5MacEiv4aVY3gtypaglTaVhYPfnJfcD+v3Ql6gGvx4Efh6A==}
+  /electron/21.4.2:
+    resolution: {integrity: sha512-AM2MbPUB7el/9O1UXL3xYA8pTDOPDxiT0HrLuXKkX8Oe0yCvjozNRzEac27gIUd1V/hg0BBvQuYjaRU1Rcxhyg==}
     engines: {node: '>= 10.17.0'}
     hasBin: true
     requiresBuild: true
@@ -5846,8 +5846,8 @@ packages:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
     dev: true
 
-  /fast-xml-parser/4.0.11:
-    resolution: {integrity: sha512-4aUg3aNRR/WjQAcpceODG1C3x3lFANXRo8+1biqfieHmg9pyMt7qB4lQV/Ta6sJCTbA5vfD8fnA8S54JATiFUA==}
+  /fast-xml-parser/4.1.2:
+    resolution: {integrity: sha512-CDYeykkle1LiA/uqQyNwYpFbyF6Axec6YapmpUP+/RHWIoR1zKjocdvNaTsxCxZzQ6v9MLXaSYm9Qq0thv0DHg==}
     hasBin: true
     dependencies:
       strnum: 1.0.5
@@ -6032,7 +6032,7 @@ packages:
     resolution: {integrity: sha512-3Z4XhFZ3992uIq0XOqb9AreonueSYphE6oYbpt5+3u06JWklbsPkNv3ZKkP9Bz/r+1MWCaMoSQ28P85+1Yc77w==}
     dependencies:
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /fn.name/1.1.0:
@@ -6099,7 +6099,7 @@ packages:
     resolution: {integrity: sha512-OMcX/4IC/uqEPVgGeyfN22LJk6AZrMkRZHxcHBMBvHScDGgwTm2GT2Wkgtocyd3JfZffjj2kYUDXXII0Fk9W0g==}
     dependencies:
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /fs-extra/10.1.0:
@@ -6141,7 +6141,7 @@ packages:
       graceful-fs: 4.2.10
       iferr: 0.1.5
       imurmurhash: 0.1.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /fs.realpath/1.0.0:
@@ -6513,7 +6513,7 @@ packages:
     engines: {node: '>=4'}
     dependencies:
       inherits: 2.0.4
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
       safe-buffer: 5.2.1
     dev: true
 
@@ -6591,7 +6591,7 @@ packages:
     dependencies:
       inherits: 2.0.4
       obuf: 1.1.2
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       wbuf: 1.7.3
     dev: true
 
@@ -7429,7 +7429,7 @@ packages:
     dependencies:
       lie: 3.3.0
       pako: 1.0.11
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       setimmediate: 1.0.5
     dev: true
 
@@ -7959,7 +7959,7 @@ packages:
     resolution: {integrity: sha512-cda4JKCxReDXFXRqOHPQscuIYg1PvxbE2S2GP45rnwfEK+vZaXC8C1OFvdHIbgw0DLzowXGVoxLaAmlgRy14GQ==}
     dependencies:
       errno: 0.1.8
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /memory-fs/0.5.0:
@@ -7967,7 +7967,7 @@ packages:
     engines: {node: '>=4.3.0 <5.0.0 || >=5.10'}
     dependencies:
       errno: 0.1.8
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /memory-pager/1.5.0:
@@ -8171,8 +8171,8 @@ packages:
     dependencies:
       yallist: 4.0.0
 
-  /minipass/4.0.3:
-    resolution: {integrity: sha512-OW2r4sQ0sI+z5ckEt5c1Tri4xTgZwYDxpE54eqWlQloQRoWtXjqt9udJ5Z4dSv7wK+nfFI7FRXyCpBSft+gpFw==}
+  /minipass/4.2.0:
+    resolution: {integrity: sha512-ExlilAIS7zJ2EWUMaVXi14H+FnZ18kr17kFkGemMqBx6jW0m8P6XfqwYVPEG53ENlgsED+alVP9ZxC3JzkK23Q==}
     engines: {node: '>=8'}
 
   /minizlib/2.1.2:
@@ -8257,7 +8257,7 @@ packages:
       mongodb-connection-string-url: 2.6.0
       socks: 2.7.1
     optionalDependencies:
-      '@aws-sdk/credential-providers': 3.272.0
+      '@aws-sdk/credential-providers': 3.276.0
       saslprep: 1.0.3
     transitivePeerDependencies:
       - aws-crt
@@ -8468,7 +8468,7 @@ packages:
       process: 0.11.10
       punycode: 1.4.1
       querystring-es3: 0.2.1
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       stream-browserify: 2.0.2
       stream-http: 2.8.3
       string_decoder: 1.3.0
@@ -8652,12 +8652,12 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.23.20:
-    resolution: {integrity: sha512-lHOC6AKSsnStrpfr9oKOlZmh/e7Gwfg7yVhlXgaqilPANVJGqLqdK4fztJujVLEPXbw6u+VhC13NyYExM71pbA==}
+  /oicq-icalingua-plus-plus/1.23.21:
+    resolution: {integrity: sha512-VTSpDHLOTX7xf/gM+Xx1lnVjW3Yf9ChKtchMlFjNTpfExgYsz1xluTFowqz+sluPFC27joUaZw8kdY3wBp8UlA==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
-      axios: 1.3.3
+      axios: 1.3.4
       jsqr: 1.4.0
       log4js: 6.8.0
       long: 4.0.0
@@ -8819,7 +8819,7 @@ packages:
     dependencies:
       cyclist: 1.0.1
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /param-case/2.1.1:
@@ -9652,9 +9652,22 @@ packages:
       safe-buffer: 5.1.2
       string_decoder: 1.1.1
       util-deprecate: 1.0.2
+    dev: false
 
-  /readable-stream/3.6.0:
-    resolution: {integrity: sha512-BViHy7LKeTz4oNnkcLJ+lVSL6vpiFeX6/d3oSH8zCW7UxP2onchk+vTGB143xuFjHS3deTgkKoXXymXqymiIdA==}
+  /readable-stream/2.3.8:
+    resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
+    dependencies:
+      core-util-is: 1.0.3
+      inherits: 2.0.4
+      isarray: 1.0.0
+      process-nextick-args: 2.0.1
+      safe-buffer: 5.1.2
+      string_decoder: 1.1.1
+      util-deprecate: 1.0.2
+    dev: true
+
+  /readable-stream/3.6.1:
+    resolution: {integrity: sha512-+rQmrWMYGA90yenhTYsLWAsLsqVC8osOw6PKE1HDYiO0gdPeKe/xDHNzIAIn4C91YQ6oenEhfYqqc1883qHbjQ==}
     engines: {node: '>= 6'}
     dependencies:
       inherits: 2.0.4
@@ -9665,7 +9678,7 @@ packages:
     resolution: {integrity: sha512-ePeK6cc1EcKLEhJFt/AebMCLL+GgSKhuygrZ/GLaKZYEecIgIECf4UaUuaByiGtzckwR4ain9VzUh95T1exYGw==}
     engines: {node: '>=8'}
     dependencies:
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
     dev: true
 
   /readdirp/2.2.1:
@@ -9674,7 +9687,7 @@ packages:
     dependencies:
       graceful-fs: 4.2.10
       micromatch: 3.1.10
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -9686,7 +9699,7 @@ packages:
     dependencies:
       graceful-fs: 4.2.10
       micromatch: 3.1.10_supports-color@6.1.0
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -10402,8 +10415,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /socket.io-client/4.6.0:
-    resolution: {integrity: sha512-2XOp18xnGghUICSd5ziUIS4rB0dhr6S8OvAps8y+HhOjFQlqGcf+FIh6fCIsKKZyWFxJeFPrZRNPGsHDTsz1Ug==}
+  /socket.io-client/4.6.1:
+    resolution: {integrity: sha512-5UswCV6hpaRsNg5kkEHVcbBIXEYoVbMQaHJBXJCyEQ+CiFPV1NIOY0XOFWG4XR4GZcB8Kn6AsRs/9cy9TbqVMQ==}
     engines: {node: '>=10.0.0'}
     dependencies:
       '@socket.io/component-emitter': 3.1.0
@@ -10425,8 +10438,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /socket.io/4.6.0:
-    resolution: {integrity: sha512-b65bp6INPk/BMMrIgVvX12x3Q+NqlGqSlTuvKQWt0BUJ3Hyy3JangBl7fEoWZTXbOKlCqNPbQ6MbWgok/km28w==}
+  /socket.io/4.6.1:
+    resolution: {integrity: sha512-KMcaAi4l/8+xEjkRICl6ak8ySoxsYG+gG6/XfRCPJPQ/haCRIJBTL4wIl8YCsmtaBovcAXGLOShyVWQ/FG8GZA==}
     engines: {node: '>=10.0.0'}
     dependencies:
       accepts: 1.3.8
@@ -10565,7 +10578,7 @@ packages:
       detect-node: 2.1.0
       hpack.js: 2.1.6
       obuf: 1.1.2
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
       wbuf: 1.7.3
     transitivePeerDependencies:
       - supports-color
@@ -10686,7 +10699,7 @@ packages:
     resolution: {integrity: sha512-nX6hmklHs/gr2FuxYDltq8fJA1GDlxKQCz8O/IM4atRqBH8OORmBNgfvW5gG10GT/qQ9u0CzIvr2X5Pkt6ntqg==}
     dependencies:
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
     dev: true
 
   /stream-combiner/0.2.2:
@@ -10708,7 +10721,7 @@ packages:
     dependencies:
       builtin-status-codes: 3.0.0
       inherits: 2.0.4
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       to-arraybuffer: 1.0.1
       xtend: 4.0.2
     dev: true
@@ -10926,7 +10939,7 @@ packages:
     dependencies:
       chownr: 2.0.0
       fs-minipass: 2.1.0
-      minipass: 4.0.3
+      minipass: 4.2.0
       minizlib: 2.1.2
       mkdirp: 1.0.4
       yallist: 4.0.0
@@ -10981,7 +10994,7 @@ packages:
       jest-worker: 27.5.1
       schema-utils: 3.1.1
       serialize-javascript: 6.0.1
-      terser: 5.16.4
+      terser: 5.16.5
       webpack: 5.75.0_webpack-cli@3.3.12
     dev: true
 
@@ -10996,8 +11009,8 @@ packages:
       source-map-support: 0.5.21
     dev: true
 
-  /terser/5.16.4:
-    resolution: {integrity: sha512-5yEGuZ3DZradbogeYQ1NaGz7rXVBDWujWlx1PT8efXO6Txn+eWbfKqB2bTDVmFXmePFkoLU6XI8UektMIEA0ug==}
+  /terser/5.16.5:
+    resolution: {integrity: sha512-qcwfg4+RZa3YvlFh0qjifnzBHjKGNbtDo9yivMqMFDy9Q6FSaQWSB/j1xKhsoUFJIqDOM3TsN6D5xbrMrFcHbg==}
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
@@ -11036,7 +11049,7 @@ packages:
   /through2/2.0.5:
     resolution: {integrity: sha512-/mrRod8xqpA+IHSLyGCQ2s8SPHiCDEeQJSep1jqLYeEUClOFG2Qsh+4FU6G9VeqpZnGW/Su8LQGc4YKni5rYSQ==}
     dependencies:
-      readable-stream: 2.3.7
+      readable-stream: 2.3.8
       xtend: 4.0.2
     dev: true
 
@@ -12072,7 +12085,7 @@ packages:
     engines: {node: '>= 6.4.0'}
     dependencies:
       logform: 2.5.1
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
       triple-beam: 1.3.0
 
   /winston/3.8.2:
@@ -12085,7 +12098,7 @@ packages:
       is-stream: 2.0.1
       logform: 2.5.1
       one-time: 1.0.0
-      readable-stream: 3.6.0
+      readable-stream: 3.6.1
       safe-stable-stringify: 2.4.2
       stack-trace: 0.0.10
       triple-beam: 1.3.0
@@ -12254,8 +12267,8 @@ packages:
       yargs-parser: 13.1.2
     dev: true
 
-  /yargs/17.7.0:
-    resolution: {integrity: sha512-dwqOPg5trmrre9+v8SUo2q/hAwyKoVfu8OC1xPHKJGNdxAvPl4sKxL4vBnh3bQz/ZvvGAFeA5H3ou2kcOY8sQQ==}
+  /yargs/17.7.1:
+    resolution: {integrity: sha512-cwiTb08Xuv5fqF4AovYacTFNxk62th7LKJ6BL9IGUpTJrWoU7/7WdQGTP2SjKf1dUNBGzDd28p/Yfs/GI6JrLw==}
     engines: {node: '>=12'}
     dependencies:
       cliui: 8.0.1
