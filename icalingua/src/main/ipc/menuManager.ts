@@ -730,16 +730,17 @@ export const updateAppMenu = async () => {
                 role: 'toggleDevTools',
             }),
             new MenuItem({
+                label: '全屏',
+                role: 'togglefullscreen',
+            }),
+            new MenuItem({
                 label: '锁定',
                 click: lockMainWindow,
+                accelerator: 'CommandOrControl+L'
             }),
             new MenuItem({
                 label: '最小化',
                 role: 'minimize',
-            }),
-            new MenuItem({
-                label: '全屏',
-                role: 'togglefullscreen',
             }),
             new MenuItem({
                 label: '关闭窗口',
