@@ -357,6 +357,21 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                     if (!message.mirai.eqq) {
                         message.mirai = null
                         break
+                    } else if (message.mirai.eqq.type === 'tg' && message.mirai.eqq.version === 2) {
+                        if (message.mirai.eqq.noSplitSender) break
+                        const index = message.content.indexOf(': \n')
+                        let sender = ''
+                        if (index > -1) {
+                            sender = message.content.substring(0, index)
+                            message.content = message.content.substring(index + 3)
+                        } else {
+                            //是图片之类没有真实文本内容的
+                            //去除尾部：
+                            sender = message.content.substring(0, message.content.length - 2)
+                            message.content = ''
+                        }
+                        message.username = lastMessage.username = sender
+                        lastMessage.content = lastMessage.content.substring(sender.length + 3)
                     } else if (message.mirai.eqq.type === 'tg') {
                         const index = message.content.indexOf('：\n')
                         let sender = ''

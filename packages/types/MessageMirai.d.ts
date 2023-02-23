@@ -3,6 +3,8 @@ type MiraiTg = {
     tgUid: number
     avatarMd5?: string
     avatarUrl?: string
+    noSplitSender?: boolean
+    version?: 2
 }
 
 type MessageMirai = { eqq?: MiraiTg }
