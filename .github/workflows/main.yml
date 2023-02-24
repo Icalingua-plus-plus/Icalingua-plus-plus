@@ -946,10 +946,10 @@ jobs:
           name: Icalingua_Windows_arm64.exe
           path: release
 
-      - name: get Icalingua++_x64.dmg
+      - name: get Icalingua++.dmg
         uses: actions/download-artifact@v3
         with:
-          name: Icalingua++_x64.dmg
+          name: Icalingua++.dmg
           path: release
 
       - name: Release
