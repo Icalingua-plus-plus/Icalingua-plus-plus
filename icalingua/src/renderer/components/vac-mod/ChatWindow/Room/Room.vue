@@ -1249,6 +1249,9 @@ export default {
             })
         },
         async scrollToLastMessage() {
+            if (this.lastUnreadCount > 100) {
+                this.$message('加载消息中，请耐心等待')
+            }
             const lastUnreadCount = this.lastUnreadCount
             if (lastUnreadCount === 0) return
             const fetchNumber = Math.max(lastUnreadCount - this.messages.length, 0)
@@ -1258,6 +1261,9 @@ export default {
             this.scrollingTolastMessage = lastUnreadCount
         },
         async scrollToLastAtMessage() {
+            if (this.lastUnreadCount > 100) {
+                this.$message('加载消息中，请耐心等待')
+            }
             this.$emit('clear-last-unread-at')
         },
         onChangeInput() {

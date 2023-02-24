@@ -648,31 +648,10 @@ Chromium ${process.versions.chrome}` : ''
             this.lastUnreadCount = 0
         },
         async clearLastUnreadAt() {
-            let cnt = 0
-            while (true) {
-                const atMessages = this.messages.filter(e => e.at)
-                if (atMessages.length) {
-                    this.lastUnreadAt = false
-                    setTimeout(() => {
-                        const _id = atMessages[atMessages.length - 1]._id
-                        if (!_id) {
-                            this.$message.error('Message not found')
-                            return
-                        }
-                        console.log('last unread at message ID', _id)
-                        this.$refs.room.scrollToMessage(_id)
-                    }, 0)
-                    break
-                } else {
-                    await this.fetchMessage(false)
-                }
-                if (cnt > 5000) {
-                    this.$message.error('Message not found')
-                    break
-                }
-            }
+            this.lastUnreadAt = false
+            await this.fetchMessage(false, this.lastUnreadCount, true)
         },
-        async fetchMessage(reset, number) {
+        async fetchMessage(reset, number, at = false) {
             if (reset) {
                 this.messagesLoaded = false
                 this.messages = []
@@ -693,6 +672,25 @@ Chromium ${process.versions.chrome}` : ''
                     this.messages = [...msgs2add, ...this.messages]
                 }
                 else this.messagesLoaded = true
+
+                if (at) {
+                    const atMessages = this.messages.filter(e => e.at)
+                    if (atMessages.length) {
+                        setTimeout(() => {
+                            const _id = atMessages[atMessages.length - 1]._id
+                            if (!_id) {
+                                this.$message.error('Message not found')
+                                return
+                            }
+                            console.log('last unread at message ID', _id)
+                            setTimeout(() => {
+                                this.$refs.room.scrollToMessage(_id)
+                            }, 0)
+                        }, 0)
+                    } else {
+                        this.$message.error('Message not found')
+                    }
+                }
             }, 0)
 
             return msgs2add[msgs2add.length - 1]
