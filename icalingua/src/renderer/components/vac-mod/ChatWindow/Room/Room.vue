@@ -903,6 +903,15 @@ export default {
                     }
                     if (msg.code) {
                         if (isJSON(msg.code)) {
+                            const jsonObj = JSON.parse(msg.code)
+                            if (jsonObj.app === 'com.tencent.multimsg') {
+                                const extra = jsonObj.extra
+                                if (typeof extra !== 'string') {
+                                    const resId = jsonObj.meta?.detail?.resid
+                                    const fileName = jsonObj.meta?.detail?.uniseq
+                                    if (resId && fileName) jsonObj.extra = `{"tsum":1,"filename":"${fileName}"}`
+                                }
+                            }
                             singleMessage.message = [{ type: 'json', data: { data: msg.code } }]
                         } else {
                             singleMessage.message = [{ type: 'xml', data: { data: msg.code } }]
