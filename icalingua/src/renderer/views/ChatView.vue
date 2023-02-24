@@ -741,8 +741,6 @@ Chromium ${process.versions.chrome}` : ''
         },
         async chroom(room) {
             if (room === 0) {
-                this.lastUnreadCount = 0
-                this.lastUnreadAt = false
                 this.closeRoom()
                 return
             }
@@ -787,6 +785,8 @@ Chromium ${process.versions.chrome}` : ''
             this.selectedRoomId = 0
             this.messages = []
             this.panel = ''
+            this.lastUnreadCount = 0
+            this.lastUnreadAt = false
             ipc.setSelectedRoom(0, '')
             document.title = 'Icalingua++'
         },
