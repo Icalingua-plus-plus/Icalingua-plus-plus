@@ -107,7 +107,7 @@
                 <el-button @click="sendSmsCode" v-if="sendTime !== -1" :disabled="sendTime !== 0">
                     重发 ({{ sendTime }}s)
                 </el-button>
-                <el-button @click="QRCodeVerify"> 扫码验证 </el-button>
+                <el-button v-if="verifyUrl" @click="QRCodeVerify"> 扫码验证 </el-button>
             </center>
         </el-drawer>
     </div>
