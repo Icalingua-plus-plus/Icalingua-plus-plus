@@ -17,7 +17,7 @@
     },
     "devDependencies": {
         "@types/express": "^4.17.17",
-        "@types/fluent-ffmpeg": "^2.1.20",
+        "@types/fluent-ffmpeg": "^2.1.21",
         "@types/md5": "^2.3.2",
         "@types/mongodb": "^3.6.20",
         "@types/node": "^16.18.12",
@@ -39,7 +39,7 @@
         "mongodb": "^4.14.0",
         "mysql": "^2.18.1",
         "nodejs-base64": "^2.0.0",
-        "oicq-icalingua-plus-plus": "^1.23.21",
+        "oicq-icalingua-plus-plus": "^1.23.22",
         "pg": "^8.9.0",
         "pg-query-stream": "^4.3.0",
         "silk-sdk": "^0.2.2",

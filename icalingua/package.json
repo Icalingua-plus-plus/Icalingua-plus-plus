@@ -193,7 +193,7 @@
         "knex": "^0.95.15",
         "mongodb": "^4.14.0",
         "mysql": "^2.18.1",
-        "oicq-icalingua-plus-plus": "^1.23.21",
+        "oicq-icalingua-plus-plus": "^1.23.22",
         "pg": "^8.9.0",
         "pg-query-stream": "^4.3.0",
         "pinyin-match": "^1.2.3",
@@ -203,7 +203,7 @@
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",
-        "@types/fluent-ffmpeg": "^2.1.20",
+        "@types/fluent-ffmpeg": "^2.1.21",
         "@types/ioredis": "^4.28.10",
         "@types/lowdb": "^1.0.11",
         "@types/md5": "^2.3.2",

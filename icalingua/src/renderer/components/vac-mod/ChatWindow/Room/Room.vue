@@ -903,9 +903,9 @@ export default {
                     }
                     if (msg.code) {
                         if (isJSON(msg.code)) {
-                            singleMessage.message = [{ type: 'json', data: { json: msg.code } }]
+                            singleMessage.message = [{ type: 'json', data: { data: msg.code } }]
                         } else {
-                            singleMessage.message = [{ type: 'xml', data: { xml: msg.code } }]
+                            singleMessage.message = [{ type: 'xml', data: { data: msg.code } }]
                         }
                     }
                     const idReg = msg.content.match(/\[QLottie: (\d+)\,(\d+)\]/)
