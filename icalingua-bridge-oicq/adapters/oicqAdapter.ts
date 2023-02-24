@@ -1180,18 +1180,14 @@ const adapter = {
                         },
                     }
                 } else if (messageType === 'json') {
-                    const md5 = (data) => crypto.createHash('md5').update(data).digest()
-                    const hash = md5(md5(content).toString() + String(Math.abs(roomId))).toString()
-                    const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0, hash)
-                    clients.closeLoading()
-                    if (retData.error) {
-                        clients.notifyError({
-                            title: 'Failed to send',
-                            message: retData.error.message,
-                        })
-                        clients.addMessageText(content)
-                    }
-                    return
+                    chain.length = 0
+                    chain.push({
+                        type: 'json',
+                        data: {
+                            data: content,
+                        },
+                    })
+                    break
                 } else if (messageType === 'xml') {
                     chain.length = 0
                     chain.push({
@@ -1285,6 +1281,19 @@ const adapter = {
 
         clients.closeLoading()
         if (data.error) {
+            if (messageType === 'json') {
+                const md5 = (data) => crypto.createHash('md5').update(data).digest()
+                const hash = md5(md5(content).toString() + String(Math.abs(roomId))).toString()
+                const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0, hash)
+                if (retData.error) {
+                    clients.notifyError({
+                        title: 'Failed to send',
+                        message: retData.error.message,
+                    })
+                    clients.addMessageText(content)
+                }
+                return
+            }
             clients.notifyError({
                 title: 'Failed to send',
                 message: data.error.message,
