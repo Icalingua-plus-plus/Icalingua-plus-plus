@@ -191,7 +191,7 @@ const processMessage = async (oicqMessage: MessageElem[], message: Message, last
                                 if (!pic.url) continue
                                 message.file = {
                                     type: 'image/jpeg',
-                                    url: `https://gdynamic.qpic.cn/gdynamic/${pic.url}/628`,
+                                    url: `https://gdynamic.qpic.cn/gdynamic/${pic.url}/0`,
                                 }
                                 message.files.push(message.file)
                             }
