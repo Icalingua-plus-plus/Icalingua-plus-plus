@@ -907,8 +907,13 @@ export default {
                             if (jsonObj.app === 'com.tencent.multimsg') {
                                 const extra = jsonObj.extra
                                 if (typeof extra !== 'string') {
-                                    const resId = jsonObj.meta?.detail?.resid
-                                    const fileName = jsonObj.meta?.detail?.uniseq
+                                    let resId, fileName
+                                    try {
+                                        resId = jsonObj.meta.detail.resid
+                                        fileName = jsonObj.meta.detail.uniseq
+                                    } catch (e) {
+                                        console.error(e)
+                                    }
                                     if (resId && fileName) jsonObj.extra = `{"tsum":1,"filename":"${fileName}"}`
                                 }
                             }
