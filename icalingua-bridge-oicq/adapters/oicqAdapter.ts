@@ -1376,7 +1376,7 @@ const adapter = {
     async getGroups(resolve) {
         const groups = bot.gl.values()
         let iterG = groups.next()
-        const groupsAll = []
+        const groupsAll = [] as Array<GroupInfo & { sc: string }>
         while (!iterG.done) {
             const f = {...iterG.value}
             f.sc = (f.group_name + f.group_id).toUpperCase()
