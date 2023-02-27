@@ -32,7 +32,7 @@ io.on('connection', (socket) => {
             case 'fileMgr':
                 const gin = gfsTokenManager.verify(sign)
                 if (gin) {
-                    registerFileMgrHandler(io, socket, gin)
+                    registerFileMgrHandler(io, socket, gin, oicqAdapter)
                     console.log('客户端验证成功')
                     socket.emit('authSucceed', gin, oicqAdapter.getGroupInfo(gin))
                 } else {

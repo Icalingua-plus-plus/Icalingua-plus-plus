@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io'
-import adapter from '../adapters/oicqAdapter'
+import type oicqAdapter from '../adapters/oicqAdapter'
 
-export default (io: Server, socket: Socket, gin: number) => {
+export default (io: Server, socket: Socket, gin: number, adapter: typeof oicqAdapter) => {
     const gfs = adapter.acquireGfs(gin)
 
     socket.on('ls', async (fid: string, start: number, cb) => {

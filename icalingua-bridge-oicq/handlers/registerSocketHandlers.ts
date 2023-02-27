@@ -1,10 +1,10 @@
 import Message from '@icalingua/types/Message'
 import { Server, Socket } from 'socket.io'
-import adapter from '../adapters/oicqAdapter'
+import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
 
-export default (io: Server, socket: Socket) => {
+export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('addRoom', adapter.addRoom)
     socket.on('addChatGroup', adapter.addChatGroup)
     socket.on('updateChatGroup', adapter.updateChatGroup)
