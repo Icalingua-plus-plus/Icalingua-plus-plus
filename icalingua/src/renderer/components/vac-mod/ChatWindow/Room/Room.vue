@@ -903,6 +903,7 @@ export default {
                     }
                     if (msg.code) {
                         if (isJSON(msg.code)) {
+                            let jsonCode = msg.code
                             const jsonObj = JSON.parse(msg.code)
                             if (jsonObj.app === 'com.tencent.multimsg') {
                                 const extra = jsonObj.extra
@@ -915,9 +916,10 @@ export default {
                                         console.error(e)
                                     }
                                     if (resId && fileName) jsonObj.extra = `{"tsum":1,"filename":"${fileName}"}`
+                                    jsonCode = JSON.stringify(jsonObj)
                                 }
                             }
-                            singleMessage.message = [{ type: 'json', data: { data: msg.code } }]
+                            singleMessage.message = [{ type: 'json', data: { data: jsonCode } }]
                         } else {
                             singleMessage.message = [{ type: 'xml', data: { data: msg.code } }]
                         }
