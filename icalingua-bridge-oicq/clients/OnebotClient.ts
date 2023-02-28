@@ -1,8 +1,14 @@
 import { random } from 'lodash'
 import { EventEmitter } from 'eventemitter3'
 import { Gender, MessageElem, Sendable } from 'oicq-icalingua-plus-plus'
+import WebSocket from 'ws'
 
-type BaseMessage = {
+type BaseEvent = {
+    self_id: number
+    time: number
+}
+
+type BaseMessage = BaseEvent & {
     message_id: number
     user_id: number
     message: MessageElem[]
@@ -14,9 +20,7 @@ type BaseMessage = {
         sex: Gender
         age: number
     }
-    self_id: number
-    time: number
-    post_type: 'message'
+    post_type: 'message' | 'message_sent'
 }
 
 export type PrivateMessage = BaseMessage & {
@@ -28,7 +32,6 @@ export type PrivateMessage = BaseMessage & {
 export type GroupMessage = BaseMessage & {
     message_type: 'group'
     sub_type: 'normal' | 'anonymous' | 'notice'
-    temp_source?: number
     group_id: number
     anonymous?: {
         id: number
@@ -38,28 +41,76 @@ export type GroupMessage = BaseMessage & {
 }
 
 export default class extends EventEmitter<{
-    message: []
+    message: [GroupMessage | PrivateMessage]
+    friendRecall: [BaseEvent & {
+        post_type: 'notice',
+        notice_type: 'friend_recall',
+        user_id: number,
+        message_id: number
+    }]
+    groupRecall: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'group_recall'
+        group_id: number
+        user_id: number
+        operator_id: number
+        message_id: number
+    }]
+    friendPoke: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'notify'
+        sub_type: 'poke'
+        sender_id: number
+        user_id: number
+        target_id: number
+    }]
+    groupPoke: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'notify'
+        sub_type: 'poke'
+        group_id: number
+        user_id: number
+        target_id: number
+    }]
 }> {
-    private readonly socket: WebSocket
+    private socket: WebSocket
     private readonly echoMap: { [key: string]: { resolve: (result: any) => void, reject: (result: any) => void } } = {}
 
-    public constructor(url: string) {
+    public constructor(private readonly url: string) {
         super()
-        this.socket = new WebSocket(url)
-        this.socket.addEventListener('message', event => this.handleWebSocketMessage(event.data))
+    }
+
+    public connect() {
+        return new Promise(resolve => {
+            this.socket = new WebSocket(this.url)
+            this.socket.on('open', resolve)
+            this.socket.on('message', event => this.handleWebSocketMessage(event.toString()))
+        })
     }
 
     private async handleWebSocketMessage(message: string) {
+        console.log('receive', message)
         const data = JSON.parse(message)
         if (data.echo) {
             const promise = this.echoMap[data.echo]
             if (!promise) return
-            if (data.status === 'OK') {
+            if (data.status === 'ok') {
                 promise.resolve(data.data)
             } else {
                 promise.reject(data.msg + '\n' + data.wording)
             }
             return
+        } else if (data.post_type === 'message' || data.post_type === 'message_sent') {
+            this.emit('message', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'friend_recall') {
+            this.emit('friendRecall', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'group_recall') {
+            this.emit('groupRecall', data)
+        } else if (data.post_type === 'notice' && data.sub_type === 'poke') {
+            if ('group_id' in data)
+                this.emit('groupPoke', data)
+            else
+                this.emit('friendPoke', data)
         }
     }
 
@@ -67,7 +118,8 @@ export default class extends EventEmitter<{
         return new Promise<T>((resolve, reject) => {
             const echo = `${new Date().getTime()}${random(100000, 999999)}`
             this.echoMap[echo] = {resolve, reject}
-            this.socket.send(JSON.stringify({action, params}))
+            this.socket.send(JSON.stringify({action, params, echo}))
+            console.log('send', JSON.stringify({action, params, echo}))
         })
     }
 

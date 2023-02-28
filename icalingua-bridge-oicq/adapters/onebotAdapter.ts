@@ -1,5 +1,5 @@
 import type oicqAdapter from './oicqAdapter'
-import { saveUserConfig, userConfig } from '../providers/configManager'
+import { config, saveUserConfig, userConfig } from '../providers/configManager'
 import LoginForm from '@icalingua/types/LoginForm'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import MongoStorageProvider from '@icalingua/storage-providers/build/MongoStorageProvider'
@@ -29,12 +29,18 @@ import SendMessageParams from '@icalingua/types/SendMessageParams'
 import crypto from 'crypto'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { isArrayLike } from 'lodash'
+import createRoom from 'icalingua/src/utils/createRoom'
+import { group } from '@actions/core'
 
 let bot: OnebotClient
 let loginForm: LoginForm
 let storage: StorageProvider
 let uin: number
 let nickname: string
+let lastReceivedMessageInfo = {
+    timestamp: 0,
+    id: 0,
+}
 
 const initStorage = async () => {
     try {
@@ -88,13 +94,226 @@ const initStorage = async () => {
     }
 }
 const attachEventHandler = () => {
+    bot.on('message', async data => {
+        if (data.time !== lastReceivedMessageInfo.timestamp) {
+            lastReceivedMessageInfo.timestamp = data.time
+            lastReceivedMessageInfo.id = 0
+        }
+        const now = new Date(data.time * 1000)
+        const groupId = (data as GroupMessage).group_id
+        const senderId = data.sender.user_id
+        let roomId = groupId ? -groupId : data.user_id
+        if (await storage.isChatIgnored(roomId)) return
+        const isSelfMsg = uin === senderId
+        let senderName: string
+        if (groupId && (<GroupMessage>data).anonymous)
+            senderName = (<GroupMessage>data).anonymous.name
+        else if (groupId && isSelfMsg) senderName = 'You'
+        else if (groupId) senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
+        else senderName = (data.sender as FriendInfo).remark || data.sender.nickname
+        const group = groupId ? await bot.getGroupInfo(groupId) : null
+        let roomName = groupId ? group.group_name : senderName
+
+        const message: Message = {
+            senderId: senderId,
+            username: senderName,
+            content: '',
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            _id: data.message_id,
+            role: (data.sender as MemberBaseInfo).role,
+            title: groupId && (<GroupMessage>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
+            files: [],
+            anonymousId:
+                groupId && (<GroupMessage>data).anonymous ? (<GroupMessage>data).anonymous.id : null,
+            anonymousflag:
+                groupId && (<GroupMessage>data).anonymous
+                    ? (<GroupMessage>data).anonymous.flag
+                    : null,
+        }
+
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            if (data.post_type === 'message_sent') {
+                const info = await adapter.getFriendInfo(data.user_id)
+                roomName = info.remark || info.nickname
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        } else {
+            if (!room.roomName.startsWith(roomName) && data.post_type === 'message') {
+                room.roomName = roomName
+            }
+        }
+
+        //begin process msg
+        const lastMessage = {
+            content: '',
+            timestamp: formatDate('hh:mm', now),
+            username: senderName,
+        }
+        ////process message////
+        await processMessage(data.message, message, lastMessage, roomId)
+
+        // 鬼知道服务器改了什么，收到的语言消息有时候没有 url，尝试重新获取
+        if (message.content === '[无法处理的语音]undefined') {
+            const regetMsg = await adapter.getMsg(data.message_id.toString())
+            if (!regetMsg.error && regetMsg.data) {
+                message.content = ''
+                await processMessage(regetMsg.data.message, message, lastMessage, roomId)
+            }
+        }
+
+        // 自动回复消息作为小通知短暂显示
+        // if ('auto_reply' in data && data.auto_reply) {
+        //     clients.message(message.content)
+        //     return
+        // }
+
+        const at = message.at
+        if (at) room.at = at
+
+        if (!room.priority) {
+            room.priority = groupId ? 2 : 4
+        }
+
+        //可能要发通知，所以由客户端来决定
+        let image
+        if (message.file && message.file.type.startsWith('image/')) image = message.file.url
+        broadcast('notify', {
+            priority: room.priority,
+            roomId,
+            at,
+            isSelfMsg,
+            image,
+            data: {
+                title: room.roomName,
+                body: (groupId ? senderName + ': ' : '') + lastMessage.content,
+                hasReply: true,
+                replyPlaceholder: 'Reply to ' + room.roomName,
+            },
+        })
+
+        if (isSelfMsg) {
+            room.unreadCount = 0
+            room.at = false
+        } else room.unreadCount++
+        // 加上同一秒收到消息的id，防止消息乱序
+        room.utime = data.time * 1000 + lastReceivedMessageInfo.id
+        room.lastMessage = lastMessage
+        message.time = data.time * 1000 + lastReceivedMessageInfo.id
+        lastReceivedMessageInfo.id++
+        if (await storage.isChatIgnored(senderId)) message.hide = true
+        clients.addMessage(room.roomId, message)
+        await storage.updateRoom(roomId, room)
+        clients.updateRoom(room)
+        storage.addMessage(roomId, message)
+        if (config.custom && data.post_type === 'message') {
+            try {
+                require('../custom').onMessage(data, bot)
+            } catch (e) {
+                clients.messageError('自定义插件出错')
+                console.error(e)
+            }
+        }
+    })
+    bot.on('friendRecall', async data => {
+        clients.deleteMessage(data.message_id.toString())
+        storage.updateMessage(data.user_id, data.message_id, {deleted: true, reveal: false})
+    })
+    bot.on('groupRecall', async data => {
+        clients.deleteMessage(data.message_id.toString())
+        storage.updateMessage(-data.group_id, data.message_id, {deleted: true, reveal: false})
+    })
+    bot.on('friendPoke', async data => {
+        const roomId = data.sender_id == uin ? data.user_id : data.sender_id
+        if (await storage.isChatIgnored(roomId)) return
+        const room = await storage.getRoom(roomId)
+        if (room) {
+            room.utime = data.time * 1000
+            let msg = ''
+            if (data.sender_id != uin) msg += room.roomName
+            else msg += '你'
+            msg += '戳了戳'
+            // msg += data.action
+            if (data.sender_id == data.target_id) msg += '自己'
+            else if (data.target_id != uin) msg += room.roomName
+            else msg += '你'
+            // if (data.suffix) msg += data.suffix
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: data.sender_id,
+                timestamp: formatDate('hh:mm:ss'),
+                date: formatDate('yyyy/MM/dd'),
+                _id: data.time,
+                system: true,
+                time: data.time * 1000,
+                files: [],
+            }
+            clients.addMessage(roomId, message)
+            clients.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(roomId, message)
+        }
+    })
+    bot.on('groupPoke', async data => {
+        if (await storage.isChatIgnored(-data.group_id)) return
+        const room = await storage.getRoom(-data.group_id)
+        if (room) {
+            room.utime = data.time * 1000
+            const operatorObj = await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
+            const operator = operatorObj.card ? operatorObj.card : operatorObj.nickname
+            const userObj = await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
+            const user = userObj.card ? userObj.card : userObj.nickname
+            let msg = ''
+            if (data.user_id !== uin) msg += operator
+            else msg += '你'
+            msg += '戳了戳'
+            // msg += data.action
+            if (data.user_id !== uin) msg += user
+            else if (data.user_id === uin) msg += '自己'
+            else msg += '你'
+            // if (data.suffix) msg += data.suffix
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: data.user_id,
+                timestamp: formatDate('hh:mm:ss'),
+                date: formatDate('yyyy/MM/dd'),
+                _id: data.time,
+                system: true,
+                time: data.time * 1000,
+                files: [],
+            }
+            clients.addMessage(room.roomId, message)
+            clients.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(room.roomId, message)
+        }
+    })
 }
 
 const adapter: typeof oicqAdapter = {
     loggedIn: false,
-    async createBot(form: LoginForm & { onebot: string }) {
-        bot = new OnebotClient(form.onebot)
+    async createBot(form: LoginForm) {
+        bot = new OnebotClient(config.onebot)
+        await bot.connect()
         adapter.loggedIn = true
+        const loginInfo = await bot.getLoginInfo()
+        uin = loginInfo.user_id
+        nickname = loginInfo.nickname
         loginForm = form
         await initStorage()
         attachEventHandler()
@@ -102,9 +321,6 @@ const adapter: typeof oicqAdapter = {
         userConfig.account = loginForm
         saveUserConfig()
         adapter.sendOnlineData()
-        const loginInfo = await bot.getLoginInfo()
-        uin = loginInfo.user_id
-        nickname = loginInfo.nickname
     },
     async sendOnlineData() {
         const versionInfo = await bot.getVersionInfo()
