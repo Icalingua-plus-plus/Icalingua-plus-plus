@@ -31,7 +31,7 @@ export const init = (adapter: typeof oicqAdapter) => {
         console.log('new client connected')
         //客户端对这个服务器发来的时间用私钥签名给服务端验证
         const salt = md5(new Date().getTime().toString())
-        socket.onAny(console.log)
+        //socket.onAny(console.log)
         socket.emit('requireAuth', salt, {
             version,
             protocolVersion,
