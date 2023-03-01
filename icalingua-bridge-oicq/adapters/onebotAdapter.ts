@@ -303,6 +303,260 @@ const attachEventHandler = () => {
             storage.addMessage(room.roomId, message)
         }
     })
+    bot.on('groupIncrease', async data => {
+        const now = new Date(data.time * 1000)
+        const groupId = data.group_id
+        const senderId = data.user_id
+        const roomId = -groupId
+        if (await storage.isChatIgnored(roomId)) return
+        const userInfo = await bot.getGroupMemberInfo(data.group_id, data.user_id)
+        const message: Message = {
+            _id: `${now.getTime()}-${groupId}-${senderId}`,
+            content: `${userInfo.nickname} 加入了本群`,
+            username: userInfo.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = await bot.getGroupInfo(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+    bot.on('groupDecrease', async data => {
+        const now = new Date(data.time * 1000)
+        const groupId = data.group_id
+        const senderId = data.user_id
+        let operator: Awaited<ReturnType<OnebotClient['getGroupMemberInfo']>>
+        try {
+            operator = await bot.getGroupMemberInfo(groupId, data.operator_id)
+        } catch {
+        }
+        let roomId = -groupId
+        if (await storage.isChatIgnored(roomId)) return
+        const message: Message = {
+            _id: `${now.getTime()}-${groupId}-${senderId}`,
+            content: data.user_id +
+                (data.sub_type === 'leave'
+                    ? ' 离开了本群'
+                    : ` 被 ${operator?.card ? operator?.card : operator?.nickname} 踢了`),
+            username: data.user_id.toString(),
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = await bot.getGroupInfo(groupId)
+            let roomName = groupId.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+    bot.on('groupBan', async data => {
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        const operator = await bot.getGroupMemberInfo(data.group_id, data.operator_id)
+        let mutedUserName: string
+        let muteAll = false
+        if (data.user_id === 0) muteAll = true
+        else if (data.user_id === 80000000) mutedUserName = '匿名用户'
+        else {
+            const mutedUser = await bot.getGroupMemberInfo(data.group_id, data.user_id)
+            mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
+        }
+        let content = `${operator.card || operator.nickname} `
+        if (muteAll && data.duration > 0) content += '开启了全员禁言'
+        else if (muteAll) content += '关闭了全员禁言'
+        else if (data.duration === 0) content += `将 ${mutedUserName} 解除禁言`
+        else content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        const message: Message = {
+            _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
+            content,
+            username: operator.card || operator.nickname,
+            senderId: data.operator_id,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = await bot.getGroupInfo(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+    bot.on('groupAdmin', async data => {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        const newAdmin = await bot.getGroupMemberInfo(data.group_id, data.user_id)
+        let content = data.sub_type === 'set'
+            ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
+            : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
+        const message: Message = {
+            _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
+            content,
+            username: '群系统信息',
+            senderId: 10000,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = await bot.getGroupInfo(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', new Date(data.time)),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+    bot.on('groupTitle', async data => {
+        console.log(data)
+        const roomId = -data.group_id
+        if (await storage.isChatIgnored(roomId)) return
+        const now = new Date(data.time * 1000)
+        const member = await bot.getGroupMemberInfo(data.group_id, data.user_id)
+        let content = `恭喜 ${member.nickname}(${data.user_id}) 获得群主授予的 ${data.title} 头衔`
+        const message: Message = {
+            _id: `title-${now.getTime()}-${data.group_id}-${data.user_id}`,
+            content,
+            username: '群系统信息',
+            senderId: 10000,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            const group = await bot.getGroupInfo(data.group_id)
+            let roomName = data.group_id.toString()
+            if (group && group.group_name) {
+                roomName = group.group_name
+            }
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+    bot.on('friendAdd', async data => {
+        const now = new Date(data.time * 1000)
+        const senderId = data.user_id
+        const roomId = senderId
+        const friend = await bot.getStrangerInfo(data.user_id)
+        const roomName = friend.nickname
+        const message: Message = {
+            _id: `${now.getTime()}-${senderId}-friendIncrease`,
+            content: '你们成为了好友',
+            username: friend.nickname,
+            senderId,
+            time: data.time * 1000,
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        let room = await storage.getRoom(roomId)
+        if (!room) {
+            // create room
+            room = createRoom(roomId, roomName)
+            await storage.addRoom(room)
+        }
+        room.utime = data.time * 1000
+        room.lastMessage = {
+            content: message.content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
 }
 
 const adapter: typeof oicqAdapter = {

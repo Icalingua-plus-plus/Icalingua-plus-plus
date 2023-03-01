@@ -72,6 +72,51 @@ export default class extends EventEmitter<{
         user_id: number
         target_id: number
     }]
+    groupIncrease: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'group_increase'
+        sub_type: 'approve' | 'invite'
+        group_id: number
+        operator_id: number
+        user_id: number
+    }]
+    groupDecrease: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'group_decrease'
+        sub_type: 'leave' | 'kick' | 'kick_me'
+        group_id: number
+        operator_id: number
+        user_id: number
+    }]
+    groupBan: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'group_ban'
+        sub_type: 'ban' | 'lift_ban'
+        group_id: number
+        operator_id: number
+        user_id: number
+        duration: number
+    }]
+    groupAdmin: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'group_admin'
+        sub_type: 'set' | 'unset'
+        group_id: number
+        user_id: number
+    }]
+    groupTitle: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'notify'
+        sub_type: 'title'
+        group_id: number
+        user_id: number
+        title: string
+    }]
+    friendAdd: [BaseEvent & {
+        post_type: 'notice'
+        notice_type: 'friend_add'
+        user_id: number
+    }]
 }> {
     private socket: WebSocket
     private readonly echoMap: { [key: string]: { resolve: (result: any) => void, reject: (result: any) => void } } = {}
@@ -111,6 +156,18 @@ export default class extends EventEmitter<{
                 this.emit('groupPoke', data)
             else
                 this.emit('friendPoke', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'group_increase') {
+            this.emit('groupIncrease', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'group_decrease') {
+            this.emit('groupDecrease', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'group_ban') {
+            this.emit('groupBan', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'group_admin') {
+            this.emit('groupAdmin', data)
+        } else if (data.post_type === 'notice' && data.sub_type === 'title') {
+            this.emit('groupTitle', data)
+        } else if (data.post_type === 'notice' && data.notice_type === 'friend_add') {
+            this.emit('friendAdd', data)
         }
     }
 
