@@ -193,8 +193,10 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build/icalingua
+            cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm install
+            cd icalingua
             pnpm build:electron install-app-deps
 
       - name: build
@@ -262,8 +264,10 @@ jobs:
           run: |
             uname -a
             chmod -R 777 /build
-            cd /build/icalingua
+            cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
+            pnpm install
+            cd icalingua
             pnpm build:electron install-app-deps
 
       - name: build
