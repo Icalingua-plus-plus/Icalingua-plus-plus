@@ -17,14 +17,18 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+  "scripts": {
+    "prepare": "husky install"
   },
   "lint-staged": {
-    "**/*": [
-      "echo"
+    "icalingua/*": [
+      "prettier --write"
+    ],
+    "icalingua-bridge-oicq/*": [
+      "prettier --write"
+    ],
+    "packages/*": [
+      "prettier --write"
     ]
   }
 }
