@@ -8,7 +8,7 @@ import SQLStorageProvider from '@icalingua/storage-providers/build/SQLStoragePro
 import { broadcast } from '../providers/socketIoProvider'
 import OnebotClient, { GroupMessage } from '../clients/OnebotClient'
 import Room from '@icalingua/types/Room'
-import ChatGroup from '@icalingua/types/build/ChatGroup'
+import ChatGroup from '@icalingua/types/ChatGroup'
 import clients from '../utils/clients'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import getSysInfo from '../utils/getSysInfo'
