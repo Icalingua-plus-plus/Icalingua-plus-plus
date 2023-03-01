@@ -1,61 +1,57 @@
-import fs from "fs";
-import knex, { Knex } from "knex";
-import lodash from "lodash";
-import path from "path";
-import IgnoreChatInfo from "@icalingua/types/IgnoreChatInfo";
-import Message from "@icalingua/types/Message";
-import Room from "@icalingua/types/Room";
-import ChatGroup from "@icalingua/types/ChatGroup";
-import { DBVersion, MessageInSQLDB } from "@icalingua/types/SQLTableTypes";
-import StorageProvider from "@icalingua/types/StorageProvider";
-import upg0to1 from "./SQLUpgradeScript/0to1";
-import upg1to2 from "./SQLUpgradeScript/1to2";
-import upg2to3 from "./SQLUpgradeScript/2to3";
-import upg3to4 from "./SQLUpgradeScript/3to4";
-import upg4to5 from "./SQLUpgradeScript/4to5";
-import upg5to6 from "./SQLUpgradeScript/5to6";
-import upg6to7 from "./SQLUpgradeScript/6to7";
-import upg7to8 from "./SQLUpgradeScript/7to8";
-import upg8to9 from "./SQLUpgradeScript/8to9";
-import upg9to10 from "./SQLUpgradeScript/9to10";
-import upg10to11 from "./SQLUpgradeScript/10to11";
-import upg11to12 from "./SQLUpgradeScript/11to12";
+import fs from 'fs'
+import knex, { Knex } from 'knex'
+import lodash from 'lodash'
+import path from 'path'
+import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
+import Message from '@icalingua/types/Message'
+import Room from '@icalingua/types/Room'
+import ChatGroup from '@icalingua/types/ChatGroup'
+import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
+import StorageProvider from '@icalingua/types/StorageProvider'
+import upg0to1 from './SQLUpgradeScript/0to1'
+import upg1to2 from './SQLUpgradeScript/1to2'
+import upg2to3 from './SQLUpgradeScript/2to3'
+import upg3to4 from './SQLUpgradeScript/3to4'
+import upg4to5 from './SQLUpgradeScript/4to5'
+import upg5to6 from './SQLUpgradeScript/5to6'
+import upg6to7 from './SQLUpgradeScript/6to7'
+import upg7to8 from './SQLUpgradeScript/7to8'
+import upg8to9 from './SQLUpgradeScript/8to9'
+import upg9to10 from './SQLUpgradeScript/9to10'
+import upg10to11 from './SQLUpgradeScript/10to11'
+import upg11to12 from './SQLUpgradeScript/11to12'
 
-const dbVersionLatest = 12;
+const dbVersionLatest = 12
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
-    host: string;
-    user: string;
-    password: string;
-    database: string;
-    dataPath?: never;
+    host: string
+    user: string
+    password: string
+    database: string
+    dataPath?: never
 }
 
 /** SQLite 存放 DB 文件需要的信息的类型定义 */
 interface SQLiteOpt {
-    dataPath: string;
-    host?: never;
-    user?: never;
-    password?: never;
-    database?: never;
+    dataPath: string
+    host?: never
+    user?: never
+    password?: never
+    database?: never
 }
 
 export default class SQLStorageProvider implements StorageProvider {
-    id: string;
-    type: "pg" | "mysql" | "sqlite3";
-    db: Knex;
-    private qid: string;
+    id: string
+    type: 'pg' | 'mysql' | 'sqlite3'
+    db: Knex
+    private qid: string
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
-    constructor(
-        id: string,
-        type: "pg" | "mysql" | "sqlite3",
-        connectOpt: PgMyOpt | SQLiteOpt
-    ) {
-        this.id = id;
-        this.qid = `eqq${id}`;
-        this.type = type;
+    constructor(id: string, type: 'pg' | 'mysql' | 'sqlite3', connectOpt: PgMyOpt | SQLiteOpt) {
+        this.id = id
+        this.qid = `eqq${id}`
+        this.type = type
         let connectOption = { ...connectOpt }
         if (connectOption.host && connectOption.host.includes(':')) {
             const [host, port] = connectOption.host.split(':')
@@ -63,39 +59,39 @@ export default class SQLStorageProvider implements StorageProvider {
             connectOption['port'] = Number(port)
         }
         switch (type) {
-            case "sqlite3":
-                const dbPath = path.join(connectOpt.dataPath, "databases");
+            case 'sqlite3':
+                const dbPath = path.join(connectOpt.dataPath, 'databases')
                 if (!fs.existsSync(dbPath)) {
                     fs.mkdirSync(dbPath, {
                         recursive: true,
-                    });
+                    })
                 }
                 this.db = knex({
-                    client: "sqlite3",
+                    client: 'sqlite3',
                     connection: {
                         filename: `${path.join(dbPath, this.qid)}.db`,
-                        charset: "utf8mb4",
+                        charset: 'utf8mb4',
                     },
                     useNullAsDefault: true,
-                });
-                break;
-            case "mysql":
+                })
+                break
+            case 'mysql':
                 this.db = knex({
-                    client: "mysql",
-                    connection: { ...connectOption, charset: "utf8mb4" },
+                    client: 'mysql',
+                    connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
-                });
-                break;
-            case "pg":
+                })
+                break
+            case 'pg':
                 this.db = knex({
-                    client: "pg",
-                    connection: { ...connectOption, charset: "utf8mb4" },
+                    client: 'pg',
+                    connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
-                    searchPath: [this.qid, "public"],
-                });
-                break;
+                    searchPath: [this.qid, 'public'],
+                })
+                break
             default:
-                break;
+                break
         }
     }
 
@@ -108,11 +104,11 @@ export default class SQLStorageProvider implements StorageProvider {
                     users: JSON.stringify(room.users),
                     lastMessage: JSON.stringify(room.lastMessage),
                     at: JSON.stringify(room.at),
-                };
+                }
             }
-            return null;
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -126,12 +122,12 @@ export default class SQLStorageProvider implements StorageProvider {
                     utime: Number(room.utime),
                     users: JSON.parse(room.users),
                     lastMessage: JSON.parse(room.lastMessage),
-                    downloadPath: room.downloadPath ? room.downloadPath : "",
+                    downloadPath: room.downloadPath ? room.downloadPath : '',
                     at: JSON.parse(room.at),
-                } as Room;
-            return null;
+                } as Room
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -149,10 +145,10 @@ export default class SQLStorageProvider implements StorageProvider {
                     at: JSON.stringify(message.at),
                     mirai: JSON.stringify(message.mirai),
                     roomId,
-                };
-            return null;
+                }
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -160,7 +156,7 @@ export default class SQLStorageProvider implements StorageProvider {
     private msgConFromDB(message: Record<string, any>): Message {
         try {
             if (message) {
-                delete message.roomId;
+                delete message.roomId
                 return {
                     ...message,
                     senderId: Number(message.senderId),
@@ -170,11 +166,11 @@ export default class SQLStorageProvider implements StorageProvider {
                     replyMessage: JSON.parse(message.replyMessage),
                     at: JSON.parse(message.at),
                     mirai: JSON.parse(message.mirai),
-                } as Message;
+                } as Message
             }
-            return null;
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -185,10 +181,10 @@ export default class SQLStorageProvider implements StorageProvider {
                 return {
                     ...chatGroup,
                     rooms: JSON.stringify(chatGroup.rooms),
-                };
-            return null;
+                }
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -199,50 +195,50 @@ export default class SQLStorageProvider implements StorageProvider {
                 return {
                     ...chatGroup,
                     rooms: JSON.parse(chatGroup.rooms),
-                } as ChatGroup;
+                } as ChatGroup
             }
-            return null;
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
     /** 私有方法，用来根据当前数据库版本对数据库进行升级，从而在 Icalingua 使用的数据类型发生改变时，数据库可以存放下它们 */
     private async updateDB(dbVersion: number) {
-        console.log("info", "正在升级数据库");
+        console.log('info', '正在升级数据库')
         // 这个 switch 居然不用 break，好耶！
         try {
             switch (dbVersion) {
                 case 0:
-                    await upg0to1(this.db);
+                    await upg0to1(this.db)
                 case 1:
-                    await upg1to2(this.db);
+                    await upg1to2(this.db)
                 case 2:
-                    await upg2to3(this.db);
+                    await upg2to3(this.db)
                 case 3:
-                    await upg3to4(this.db);
+                    await upg3to4(this.db)
                 case 4:
-                    await upg4to5(this.db);
+                    await upg4to5(this.db)
                 case 5:
-                    await upg5to6(this.db);
+                    await upg5to6(this.db)
                 case 6:
-                    await upg6to7(this.db, this.type);
+                    await upg6to7(this.db, this.type)
                 case 7:
-                    await upg7to8(this.db);
+                    await upg7to8(this.db)
                 case 8:
-                    if (dbVersion >= 7) await upg8to9(this.db);
+                    if (dbVersion >= 7) await upg8to9(this.db)
                 case 9:
-                    if (dbVersion >= 7) await upg9to10(this.db);
+                    if (dbVersion >= 7) await upg9to10(this.db)
                 case 10:
-                    await upg10to11(this.db);
+                    await upg10to11(this.db)
                 case 11:
-                    if (dbVersion >= 7) await upg11to12(this.db);
+                    if (dbVersion >= 7) await upg11to12(this.db)
                 default:
-                    break;
+                    break
             }
-            return true;
+            return true
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -259,118 +255,107 @@ export default class SQLStorageProvider implements StorageProvider {
     async connect(): Promise<void> {
         // PostgreSQL 特有功能，可用一个数据库存放所有用户的聊天数据
         try {
-            if (this.type === "pg") {
-                await this.db.schema.createSchemaIfNotExists(this.qid);
+            if (this.type === 'pg') {
+                await this.db.schema.createSchemaIfNotExists(this.qid)
             }
 
             // 建表存放数据库版本以便日后升级
-            const hasVersionTable = await this.db.schema.hasTable(`dbVersion`);
+            const hasVersionTable = await this.db.schema.hasTable(`dbVersion`)
             if (!hasVersionTable) {
                 await this.db.schema.createTable(`dbVersion`, (table) => {
-                    if (this.type === "mysql")
-                        table.collate("utf8mb4_unicode_ci");
-                    table.integer("dbVersion");
-                    table.primary(["dbVersion"]);
-                });
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
+                    table.integer('dbVersion')
+                    table.primary(['dbVersion'])
+                })
                 await this.db(`dbVersion`).insert({
                     dbVersion: dbVersionLatest,
-                });
+                })
             }
 
             // 建表存放聊天房间
-            const hasRoomTable = await this.db.schema.hasTable(`rooms`);
+            const hasRoomTable = await this.db.schema.hasTable(`rooms`)
             if (!hasRoomTable) {
                 await this.db.schema.createTable(`rooms`, (table) => {
-                    if (this.type === "mysql")
-                        table.collate("utf8mb4_unicode_ci");
-                    table.string("roomId").unique().primary();
-                    table.string("roomName");
-                    table.integer("index");
-                    table.integer("unreadCount");
-                    table.integer("priority");
-                    table.bigInteger("utime").index();
-                    table.text("users");
-                    table.text("lastMessage");
-                    table.string("at").nullable();
-                    table.boolean("autoDownload").nullable();
-                    table.string("downloadPath").nullable();
-                });
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
+                    table.string('roomId').unique().primary()
+                    table.string('roomName')
+                    table.integer('index')
+                    table.integer('unreadCount')
+                    table.integer('priority')
+                    table.bigInteger('utime').index()
+                    table.text('users')
+                    table.text('lastMessage')
+                    table.string('at').nullable()
+                    table.boolean('autoDownload').nullable()
+                    table.string('downloadPath').nullable()
+                })
             }
 
             // 建表存放聊天记录
-            const hasMessagesTable = await this.db.schema.hasTable(`messages`);
+            const hasMessagesTable = await this.db.schema.hasTable(`messages`)
             if (!hasMessagesTable) {
                 await this.db.schema.createTable(`messages`, (table) => {
-                    if (this.type === "mysql")
-                        table.collate("utf8mb4_unicode_ci");
-                    table.string("_id").unique().primary();
-                    table.string("senderId");
-                    table.string("username");
-                    table.text("content").nullable();
-                    table.text("code").nullable();
-                    table.string("timestamp");
-                    table.string("date");
-                    table.string("role");
-                    table.text("file").nullable();
-                    table.text("files").nullable();
-                    table.bigInteger("time").index();
-                    table.text("replyMessage").nullable();
-                    table.string("at").nullable();
-                    table.boolean("deleted").nullable();
-                    table.boolean("system").nullable();
-                    table.text("mirai").nullable();
-                    table.boolean("reveal").nullable();
-                    table.boolean("flash").nullable();
-                    table.string("title", 24).nullable();
-                    table.bigInteger("roomId").index();
-                    table.string("anonymousId").nullable();
-                    table.string("anonymousflag").nullable();
-                    table.boolean("hide").nullable();
-                    table.bigInteger("bubble_id").nullable();
-                    table.index(["roomId", "time"]);
-                });
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
+                    table.string('_id').unique().primary()
+                    table.string('senderId')
+                    table.string('username')
+                    table.text('content').nullable()
+                    table.text('code').nullable()
+                    table.string('timestamp')
+                    table.string('date')
+                    table.string('role')
+                    table.text('file').nullable()
+                    table.text('files').nullable()
+                    table.bigInteger('time').index()
+                    table.text('replyMessage').nullable()
+                    table.string('at').nullable()
+                    table.boolean('deleted').nullable()
+                    table.boolean('system').nullable()
+                    table.text('mirai').nullable()
+                    table.boolean('reveal').nullable()
+                    table.boolean('flash').nullable()
+                    table.string('title', 24).nullable()
+                    table.bigInteger('roomId').index()
+                    table.string('anonymousId').nullable()
+                    table.string('anonymousflag').nullable()
+                    table.boolean('hide').nullable()
+                    table.bigInteger('bubble_id').nullable()
+                    table.index(['roomId', 'time'])
+                })
             }
 
             // 建表存放忽略聊天房间
-            const hasIgnoredTable = await this.db.schema.hasTable(
-                `ignoredChats`
-            );
+            const hasIgnoredTable = await this.db.schema.hasTable(`ignoredChats`)
             if (!hasIgnoredTable) {
                 await this.db.schema.createTable(`ignoredChats`, (table) => {
-                    if (this.type === "mysql")
-                        table.collate("utf8mb4_unicode_ci");
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
                     table
-                        .bigInteger("id") // 在 pgSQL 里会被返回成 string，不知有无 bug
+                        .bigInteger('id') // 在 pgSQL 里会被返回成 string，不知有无 bug
                         .unique()
-                        .primary();
-                    table.string("name");
-                });
+                        .primary()
+                    table.string('name')
+                })
             }
 
             // 建表存放聊天分组
-            const hasChatGroupsTable = await this.db.schema.hasTable(
-                `chatGroups`
-            );
+            const hasChatGroupsTable = await this.db.schema.hasTable(`chatGroups`)
             if (!hasChatGroupsTable) {
                 await this.db.schema.createTable(`chatGroups`, (table) => {
-                    if (this.type === "mysql")
-                        table.collate("utf8mb4_unicode_ci");
-                    table.string("name").unique().primary();
-                    table.bigInteger("index");
-                    table.text("rooms");
-                });
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
+                    table.string('name').unique().primary()
+                    table.bigInteger('index')
+                    table.text('rooms')
+                })
             }
 
             // 获取数据库版本
-            const dbVersion = await this.db<DBVersion>(`dbVersion`).select(
-                "dbVersion"
-            );
+            const dbVersion = await this.db<DBVersion>(`dbVersion`).select('dbVersion')
             // 若版本低于当前版本则启动升级函数
             if (dbVersion[0].dbVersion < dbVersionLatest) {
-                await this.updateDB(dbVersion[0].dbVersion);
+                await this.updateDB(dbVersion[0].dbVersion)
             }
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -381,9 +366,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addRoom(room: Room): Promise<any> {
         try {
-            return await this.db(`rooms`).insert(this.roomConToDB(room));
+            return await this.db(`rooms`).insert(this.roomConToDB(room))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -394,11 +379,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         try {
-            await this.db(`rooms`)
-                .where("roomId", "=", roomId)
-                .update(this.roomConToDB(room));
+            await this.db(`rooms`).where('roomId', '=', roomId).update(this.roomConToDB(room))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -409,9 +392,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async removeRoom(roomId: number): Promise<any> {
         try {
-            await this.db(`rooms`).where("roomId", "=", roomId).delete();
+            await this.db(`rooms`).where('roomId', '=', roomId).delete()
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -422,12 +405,10 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getAllRooms(): Promise<Room[]> {
         try {
-            const rooms = await this.db<Room>(`rooms`)
-                .select("*")
-                .orderBy("utime", "desc");
-            return rooms.map((room) => this.roomConFromDB(room));
+            const rooms = await this.db<Room>(`rooms`).select('*').orderBy('utime', 'desc')
+            return rooms.map((room) => this.roomConFromDB(room))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -438,12 +419,10 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getRoom(roomId: number): Promise<Room> {
         try {
-            const room = await this.db<Room>(`rooms`)
-                .where("roomId", "=", roomId)
-                .select("*");
-            return this.roomConFromDB(room[0]);
+            const room = await this.db<Room>(`rooms`).where('roomId', '=', roomId).select('*')
+            return this.roomConFromDB(room[0])
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -454,9 +433,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addChatGroup(chatGroup: ChatGroup): Promise<any> {
         try {
-            return await this.db(`chatGroups`).insert(this.chatGroupConToDB(chatGroup));
+            return await this.db(`chatGroups`).insert(this.chatGroupConToDB(chatGroup))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -467,11 +446,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any> {
         try {
-            await this.db(`chatGroups`)
-                .where("name", "=", name)
-                .update(this.chatGroupConToDB(chatGroup));
+            await this.db(`chatGroups`).where('name', '=', name).update(this.chatGroupConToDB(chatGroup))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -482,9 +459,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async removeChatGroup(name: string): Promise<any> {
         try {
-            await this.db(`chatGroups`).where("name", "=", name).delete();
+            await this.db(`chatGroups`).where('name', '=', name).delete()
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -495,12 +472,10 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getAllChatGroups(): Promise<ChatGroup[]> {
         try {
-            const chatGroups = await this.db<Room>(`chatGroups`)
-                .select("*")
-                .orderBy("index", "asc");
-            return chatGroups.map((chatGroup) => this.chatGroupConFromDB(chatGroup));
+            const chatGroups = await this.db<Room>(`chatGroups`).select('*').orderBy('index', 'asc')
+            return chatGroups.map((chatGroup) => this.chatGroupConFromDB(chatGroup))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -512,16 +487,12 @@ export default class SQLStorageProvider implements StorageProvider {
     async getUnreadCount(priority: number): Promise<number> {
         try {
             const unreadRooms = await this.db<Room>(`rooms`)
-                .where("unreadCount", ">", 0)
-                .where("priority", ">=", priority)
-                .count("roomId");
-            return Number(
-                unreadRooms[0]["count(`roomId`)"] ||
-                    unreadRooms[0]["count"] ||
-                    0
-            );
+                .where('unreadCount', '>', 0)
+                .where('priority', '>=', priority)
+                .count('roomId')
+            return Number(unreadRooms[0]['count(`roomId`)'] || unreadRooms[0]['count'] || 0)
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -533,14 +504,14 @@ export default class SQLStorageProvider implements StorageProvider {
     async getFirstUnreadRoom(priority: number): Promise<Room> {
         try {
             const unreadRooms = await this.db<Room>(`rooms`)
-                .where("unreadCount", ">", 0)
-                .where("priority", "=", priority)
-                .orderBy("utime", "desc")
-                .select("*");
-            if (unreadRooms.length >= 1) return unreadRooms[0];
-            return null;
+                .where('unreadCount', '>', 0)
+                .where('priority', '=', priority)
+                .orderBy('utime', 'desc')
+                .select('*')
+            if (unreadRooms.length >= 1) return unreadRooms[0]
+            return null
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -551,9 +522,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getIgnoredChats(): Promise<IgnoreChatInfo[]> {
         try {
-            return await this.db<IgnoreChatInfo>(`ignoredChats`).select("*");
+            return await this.db<IgnoreChatInfo>(`ignoredChats`).select('*')
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -564,12 +535,10 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async isChatIgnored(id: number): Promise<boolean> {
         try {
-            const ignoredChats = await this.db<IgnoreChatInfo>(
-                `ignoredChats`
-            ).where("id", "=", id);
-            return ignoredChats.length !== 0;
+            const ignoredChats = await this.db<IgnoreChatInfo>(`ignoredChats`).where('id', '=', id)
+            return ignoredChats.length !== 0
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -580,9 +549,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addIgnoredChat(info: IgnoreChatInfo): Promise<any> {
         try {
-            await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info);
+            await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info)
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -593,11 +562,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async removeIgnoredChat(roomId: number): Promise<any> {
         try {
-            await this.db<IgnoreChatInfo>(`ignoredChats`)
-                .where("id", "=", roomId)
-                .delete();
+            await this.db<IgnoreChatInfo>(`ignoredChats`).where('id', '=', roomId).delete()
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -608,12 +575,9 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessage(roomId: number, message: Message): Promise<any> {
         try {
-            await this.db<Message>("messages")
-                .insert(this.msgConToDB(message, roomId))
-                .onConflict()
-                .ignore();
+            await this.db<Message>('messages').insert(this.msgConToDB(message, roomId)).onConflict().ignore()
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -622,17 +586,11 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在“用户撤回消息”等需要改动消息内容的事件中被调用。
      */
-    async updateMessage(
-        roomId: number,
-        messageId: string | number,
-        message: Partial<Message>
-    ): Promise<any> {
+    async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
-            await this.db<Message>("messages")
-                .where("_id", "=", `${messageId}`)
-                .update(message);
+            await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -641,17 +599,13 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在“重新获取消息内容”等需要改动消息内容的事件中被调用。
      */
-    async replaceMessage(
-        roomId: number,
-        messageId: string | number,
-        message: Message
-    ): Promise<any> {
+    async replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any> {
         try {
-            await this.db<Message>("messages")
-                .where("_id", "=", `${messageId}`)
-                .update(this.msgConToDB(message, roomId));
+            await this.db<Message>('messages')
+                .where('_id', '=', `${messageId}`)
+                .update(this.msgConToDB(message, roomId))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -660,23 +614,17 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在进入房间时，该方法被调用。
      */
-    async fetchMessages(
-        roomId: number,
-        skip: number,
-        limit: number
-    ): Promise<Message[]> {
+    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
         try {
-            const messages = await this.db<MessageInSQLDB>("messages")
-                .where("roomId", roomId)
-                .orderBy("time", "desc")
+            const messages = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .orderBy('time', 'desc')
                 .limit(limit)
                 .offset(skip)
-                .select("*");
-            return messages
-                .reverse()
-                .map((message) => this.msgConFromDB(message));
+                .select('*')
+            return messages.reverse().map((message) => this.msgConFromDB(message))
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -687,14 +635,14 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getMessage(roomId: number, messageId: string): Promise<Message> {
         try {
-            const message = await this.db<MessageInSQLDB>("messages")
-                .where("_id", messageId)
-                .where("roomId", roomId)
-                .select("*");
-            if (message.length === 0) return null;
-            return this.msgConFromDB(message[0]);
+            const message = await this.db<MessageInSQLDB>('messages')
+                .where('_id', messageId)
+                .where('roomId', roomId)
+                .select('*')
+            if (message.length === 0) return null
+            return this.msgConFromDB(message[0])
         } catch (e) {
-            throw e;
+            throw e
         }
     }
 
@@ -705,19 +653,14 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
-            const msgToInsert = messages.map((message) =>
-                this.msgConToDB(message, roomId)
-            );
-            const chunkedMessages = lodash.chunk(msgToInsert, 200);
+            const msgToInsert = messages.map((message) => this.msgConToDB(message, roomId))
+            const chunkedMessages = lodash.chunk(msgToInsert, 200)
             const pAry = chunkedMessages.map(async (chunkedMessage) => {
-                await this.db<Message>("messages")
-                    .insert(chunkedMessage)
-                    .onConflict("_id")
-                    .ignore();
-            });
-            await Promise.all(pAry);
+                await this.db<Message>('messages').insert(chunkedMessage).onConflict('_id').ignore()
+            })
+            await Promise.all(pAry)
         } catch (e) {
-            return e;
+            return e
         }
     }
 }

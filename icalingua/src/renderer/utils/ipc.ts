@@ -64,7 +64,7 @@ const ipc = {
         return await ipcRenderer.invoke('getUin')
     },
     async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
+        return await ipcRenderer.invoke('fetchMessage', { roomId, offset })
     },
     stopFetchMessage() {
         ipcRenderer.send('stopFetchMessage')

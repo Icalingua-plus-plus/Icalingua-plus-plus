@@ -53,7 +53,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     if (typeof m.data.file === 'string' && !url) url = m.data.file
                     if (url && typeof url === 'string' && url.startsWith('base64://')) {
                         const base64 = url.slice(9)
-                        const md5 = require('crypto').createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
+                        const md5 = require('crypto')
+                            .createHash('md5')
+                            .update(Buffer.from(base64, 'base64'))
+                            .digest('hex')
                         url = getImageUrlByMd5(md5)
                     }
                     if (typeof m.data.file === 'string' && url.includes('https://gchat.qpic.cn/download')) {
@@ -76,10 +79,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     break
                 case 'bface':
                     lastMessage.content += '[Sticker]' + m.data.text
-                    url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(
+                    url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
                         0,
-                        32,
-                    )}/300x300.png`
+                        2,
+                    )}/${m.data.file.substr(0, 32)}/300x300.png`
                     message.file = {
                         type: 'image/webp',
                         url,
@@ -119,8 +122,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                     ? (data as GroupMessageEventData).anonymous
                                         ? (data as GroupMessageEventData).anonymous.name
                                         : adapter.getUin() === data.sender.user_id
-                                            ? 'You'
-                                            : (data.sender as MemberBaseInfo).card || data.sender.nickname
+                                        ? 'You'
+                                        : (data.sender as MemberBaseInfo).card || data.sender.nickname
                                     : (data.sender as FriendInfo).remark || data.sender.nickname
                             replyMessage = {
                                 _id: '',
@@ -198,8 +201,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 }
                             }
                             break
-                        } catch (err) {
-                        }
+                        } catch (err) {}
                     } else if (jsonObj.app === 'com.tencent.multimsg') {
                         try {
                             const resId = jsonObj.meta?.detail?.resid
@@ -213,8 +215,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 message.content = `[NestedForward: ${fileName}]`
                                 break
                             }
-                        } catch (err) {
-                        }
+                        } catch (err) {}
                     }
                     const biliRegex = /(https?:\\?\/\\?\/b23\.tv\\?\/\w*)\??/
                     const zhihuRegex = /(https?:\\?\/\\?\/\w*\.?zhihu\.com\\?\/[^?"=]*)\??/
@@ -231,12 +232,12 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         try {
                             const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1
                             appurl = meta.qqdocurl
-                        } catch (e) {
-                        }
+                        } catch (e) {}
                     }
                     if (appurl) {
                         try {
-                            const meta = (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
+                            const meta =
+                                (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
                             lastMessage.content = meta.desc + ' '
                             message.content = meta.desc + '\n\n'
 
@@ -249,12 +250,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 url: previewUrl,
                             }
                             message.files.push(message.file)
-                        } catch (e) {
-                        }
+                        } catch (e) {}
 
                         lastMessage.content += appurl
                         message.content += appurl
-                    } else if (jsonObj.app === 'com.tencent.groupphoto' || jsonObj.app === 'com.tencent.qzone.albumShare') {
+                    } else if (
+                        jsonObj.app === 'com.tencent.groupphoto' ||
+                        jsonObj.app === 'com.tencent.qzone.albumShare'
+                    ) {
                         try {
                             const pics = jsonObj.meta.albumData.pics
                             pics.forEach((pic: any) => {
@@ -268,8 +271,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 }
                                 message.files.push(message.file)
                             })
-                        } catch (e) {
-                        }
+                        } catch (e) {}
 
                         lastMessage.content += '[群相册]' + jsonObj.prompt
                         message.content += '[群相册]' + jsonObj.prompt
@@ -353,7 +355,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     } catch (e) {
                         message.file = null
                         message.content = '[无法处理的语音]' + m.data.url
-                        message.code = JSON.stringify({error: e})
+                        message.code = JSON.stringify({ error: e })
                     }
                     lastMessage.content = '[Audio]'
                     break
@@ -393,8 +395,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             message.username = lastMessage.username = sender
                             lastMessage.content = lastMessage.content.substr(sender.length + 1)
                         }
-                    } catch (e) {
-                    }
+                    } catch (e) {}
                     break
                 case 'rps':
                     const rps = ['石头', '剪刀', '布']
@@ -442,7 +443,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
             }
             lastType = m.type
         }
-        return {message, lastMessage}
+        return { message, lastMessage }
     }
     return processMessage
 }

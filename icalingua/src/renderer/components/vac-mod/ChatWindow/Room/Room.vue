@@ -154,9 +154,7 @@
             <transition name="vac-bounce">
                 <div v-if="lastUnreadAt" class="vac-icon-last-at-message" @click="scrollToLastAtMessage">
                     <transition name="vac-bounce">
-                        <div v-if="lastUnreadAt" class="vac-badge-counter vac-messages-count">
-                            @
-                        </div>
+                        <div v-if="lastUnreadAt" class="vac-badge-counter vac-messages-count">@</div>
                     </transition>
                     <slot name="scroll-icon">
                         <svg-icon name="dropdown" style="transform: rotate(180deg)" />
@@ -164,7 +162,11 @@
                 </div>
             </transition>
             <transition name="vac-bounce">
-                <div v-if="!lastUnreadAt && lastUnreadCount >= 10" class="vac-icon-last-message" @click="scrollToLastMessage">
+                <div
+                    v-if="!lastUnreadAt && lastUnreadCount >= 10"
+                    class="vac-icon-last-message"
+                    @click="scrollToLastMessage"
+                >
                     <transition name="vac-bounce">
                         <div v-if="!lastUnreadAt && lastUnreadCount" class="vac-badge-counter vac-messages-count">
                             {{ lastUnreadCount }}

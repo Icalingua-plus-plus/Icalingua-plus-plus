@@ -26,4 +26,3 @@ app.get('/ping', (req, res) => {
         data: 'pong',
     })
 })
-

@@ -14,9 +14,13 @@ import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import getSysInfo from '../utils/getSysInfo'
 import {
     FakeMessage,
-    FriendInfo, Gender,
+    FriendInfo,
+    Gender,
     GroupInfo,
-    GroupMessageEventData, GroupRole, MemberBaseInfo, MemberInfo,
+    GroupMessageEventData,
+    GroupRole,
+    MemberBaseInfo,
+    MemberInfo,
     MessageElem,
     PrivateMessageEventData,
     Ret,
@@ -81,7 +85,7 @@ const initStorage = async () => {
                 if (e.roomId > -1) return
                 const group = await bot.getGroupInfo(-e.roomId)
                 if (group && group.group_name !== e.roomName) {
-                    await storage.updateRoom(e.roomId, {roomName: group.group_name})
+                    await storage.updateRoom(e.roomId, { roomName: group.group_name })
                 }
             })
         })
@@ -93,7 +97,7 @@ const initStorage = async () => {
     }
 }
 const attachEventHandler = () => {
-    bot.on('message', async data => {
+    bot.on('message', async (data) => {
         if (data.time !== lastReceivedMessageInfo.timestamp) {
             lastReceivedMessageInfo.timestamp = data.time
             lastReceivedMessageInfo.id = 0
@@ -105,8 +109,7 @@ const attachEventHandler = () => {
         if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = uin === senderId
         let senderName: string
-        if (groupId && (<GroupMessage>data).anonymous)
-            senderName = (<GroupMessage>data).anonymous.name
+        if (groupId && (<GroupMessage>data).anonymous) senderName = (<GroupMessage>data).anonymous.name
         else if (groupId && isSelfMsg) senderName = 'You'
         else if (groupId) senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
         else senderName = (data.sender as FriendInfo).remark || data.sender.nickname
@@ -123,12 +126,8 @@ const attachEventHandler = () => {
             role: (data.sender as MemberBaseInfo).role,
             title: groupId && (<GroupMessage>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
             files: [],
-            anonymousId:
-                groupId && (<GroupMessage>data).anonymous ? (<GroupMessage>data).anonymous.id : null,
-            anonymousflag:
-                groupId && (<GroupMessage>data).anonymous
-                    ? (<GroupMessage>data).anonymous.flag
-                    : null,
+            anonymousId: groupId && (<GroupMessage>data).anonymous ? (<GroupMessage>data).anonymous.id : null,
+            anonymousflag: groupId && (<GroupMessage>data).anonymous ? (<GroupMessage>data).anonymous.flag : null,
         }
 
         let room = await storage.getRoom(roomId)
@@ -217,15 +216,15 @@ const attachEventHandler = () => {
             }
         }
     })
-    bot.on('friendRecall', async data => {
+    bot.on('friendRecall', async (data) => {
         clients.deleteMessage(data.message_id.toString())
-        storage.updateMessage(data.user_id, data.message_id, {deleted: true, reveal: false})
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false })
     })
-    bot.on('groupRecall', async data => {
+    bot.on('groupRecall', async (data) => {
         clients.deleteMessage(data.message_id.toString())
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: true, reveal: false})
+        storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
     })
-    bot.on('friendPoke', async data => {
+    bot.on('friendPoke', async (data) => {
         const roomId = data.sender_id == uin ? data.user_id : data.sender_id
         if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
@@ -262,7 +261,7 @@ const attachEventHandler = () => {
             storage.addMessage(roomId, message)
         }
     })
-    bot.on('groupPoke', async data => {
+    bot.on('groupPoke', async (data) => {
         if (await storage.isChatIgnored(-data.group_id)) return
         const room = await storage.getRoom(-data.group_id)
         if (room) {
@@ -302,7 +301,7 @@ const attachEventHandler = () => {
             storage.addMessage(room.roomId, message)
         }
     })
-    bot.on('groupIncrease', async data => {
+    bot.on('groupIncrease', async (data) => {
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
@@ -342,20 +341,20 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
-    bot.on('groupDecrease', async data => {
+    bot.on('groupDecrease', async (data) => {
         const now = new Date(data.time * 1000)
         const groupId = data.group_id
         const senderId = data.user_id
         let operator: Awaited<ReturnType<OnebotClient['getGroupMemberInfo']>>
         try {
             operator = await bot.getGroupMemberInfo(groupId, data.operator_id)
-        } catch {
-        }
+        } catch {}
         let roomId = -groupId
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
-            content: data.user_id +
+            content:
+                data.user_id +
                 (data.sub_type === 'leave'
                     ? ' 离开了本群'
                     : ` 被 ${operator?.card ? operator?.card : operator?.nickname} 踢了`),
@@ -389,7 +388,7 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
-    bot.on('groupBan', async data => {
+    bot.on('groupBan', async (data) => {
         const roomId = -data.group_id
         if (await storage.isChatIgnored(roomId)) return
         const now = new Date(data.time * 1000)
@@ -440,15 +439,16 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
-    bot.on('groupAdmin', async data => {
+    bot.on('groupAdmin', async (data) => {
         console.log(data)
         const roomId = -data.group_id
         if (await storage.isChatIgnored(roomId)) return
         const now = new Date(data.time * 1000)
         const newAdmin = await bot.getGroupMemberInfo(data.group_id, data.user_id)
-        let content = data.sub_type === 'set'
-            ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
-            : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
+        let content =
+            data.sub_type === 'set'
+                ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
+                : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
@@ -482,7 +482,7 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
-    bot.on('groupTitle', async data => {
+    bot.on('groupTitle', async (data) => {
         console.log(data)
         const roomId = -data.group_id
         if (await storage.isChatIgnored(roomId)) return
@@ -522,7 +522,7 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
-    bot.on('friendAdd', async data => {
+    bot.on('friendAdd', async (data) => {
         const now = new Date(data.time * 1000)
         const senderId = data.user_id
         const roomId = senderId
@@ -582,7 +582,9 @@ const adapter: typeof oicqAdapter = {
             online: (await bot.getStatus()).online,
             nick: nickname,
             uin,
-            sysInfo: getSysInfo() + '\n\n' +
+            sysInfo:
+                getSysInfo() +
+                '\n\n' +
                 `OneBot Backend: ${versionInfo.app_name} ${versionInfo.app_version}\n` +
                 `${versionInfo.runtime_os} ${versionInfo.runtime_version}`,
             bkn: 0,
@@ -593,60 +595,61 @@ const adapter: typeof oicqAdapter = {
     async getMsg(id: string) {
         const message = await bot.getMessage(Number(id))
         return {
-            data: message.message_type === 'group' ? {
-                message: message.message,
-                message_id: message.message_id.toString(),
-                sub_type: 'normal',
-                message_type: 'group',
-                atme: false,
-                block: false,
-                group_id: message.group_id,
-                group_name: '',
-                font: '',
-                anonymous: null,
-                sender: {
-                    user_id: message.sender.user_id,
-                    age: 0,
-                    nickname: message.sender.nickname,
-                    card: '',
-                    sex: 'unknown',
-                    role: 'member',
-                    title: '',
-                    area: '',
-                    level: 0,
-                },
-                user_id: message.sender.user_id,
-                bubble_id: 0,
-                time: message.time,
-                post_type: 'message',
-                reply(...args: any) {
-                },
-                seqid: 0,
-                self_id: uin,
-                raw_message: message.raw_message,
-            } as GroupMessageEventData : {
-                user_id: message.sender.user_id,
-                message: message.message,
-                message_id: message.message_id.toString(),
-                self_id: uin,
-                raw_message: message.raw_message,
-                time: message.time,
-                post_type: 'message',
-                reply(...args: any) {
-                },
-                sub_type: 'friend',
-                font: '',
-                bubble_id: 0,
-                sender: {
-                    user_id: message.sender.user_id,
-                    age: 0,
-                    sex: 'unknown',
-                    nickname: message.sender.nickname,
-                    remark: message.sender.nickname,
-                },
-                auto_reply: false,
-                message_type: 'private',
-            } as PrivateMessageEventData,
+            data:
+                message.message_type === 'group'
+                    ? ({
+                          message: message.message,
+                          message_id: message.message_id.toString(),
+                          sub_type: 'normal',
+                          message_type: 'group',
+                          atme: false,
+                          block: false,
+                          group_id: message.group_id,
+                          group_name: '',
+                          font: '',
+                          anonymous: null,
+                          sender: {
+                              user_id: message.sender.user_id,
+                              age: 0,
+                              nickname: message.sender.nickname,
+                              card: '',
+                              sex: 'unknown',
+                              role: 'member',
+                              title: '',
+                              area: '',
+                              level: 0,
+                          },
+                          user_id: message.sender.user_id,
+                          bubble_id: 0,
+                          time: message.time,
+                          post_type: 'message',
+                          reply(...args: any) {},
+                          seqid: 0,
+                          self_id: uin,
+                          raw_message: message.raw_message,
+                      } as GroupMessageEventData)
+                    : ({
+                          user_id: message.sender.user_id,
+                          message: message.message,
+                          message_id: message.message_id.toString(),
+                          self_id: uin,
+                          raw_message: message.raw_message,
+                          time: message.time,
+                          post_type: 'message',
+                          reply(...args: any) {},
+                          sub_type: 'friend',
+                          font: '',
+                          bubble_id: 0,
+                          sender: {
+                              user_id: message.sender.user_id,
+                              age: 0,
+                              sex: 'unknown',
+                              nickname: message.sender.nickname,
+                              remark: message.sender.nickname,
+                          },
+                          auto_reply: false,
+                          message_type: 'private',
+                      } as PrivateMessageEventData),
             error: null,
             status: 'ok',
             retcode: 0,
@@ -665,7 +668,7 @@ const adapter: typeof oicqAdapter = {
     },
     async getGroupFileMeta(gin: number, fid: string, resolve) {
         const data = await bot.getGroupFileUrl(gin, fid, 0)
-        resolve({url: data.url})
+        resolve({ url: data.url })
     },
     async getForwardMsg(resId: string, fileName: string, resolve) {
         try {
@@ -709,7 +712,7 @@ const adapter: typeof oicqAdapter = {
     },
     async getGroups(resolve) {
         const groups = await bot.getGroupList()
-        const groupsAll: Array<GroupInfo & { sc: string }> = groups.map(it => ({
+        const groupsAll: Array<GroupInfo & { sc: string }> = groups.map((it) => ({
             group_id: it.group_id,
             group_name: it.group_name,
             shutup_time_me: 0,
@@ -730,17 +733,17 @@ const adapter: typeof oicqAdapter = {
     },
     //roomId 和 room 必有一个
     async sendMessage({
-                          content,
-                          roomId,
-                          file,
-                          replyMessage,
-                          room,
-                          b64img,
-                          imgpath,
-                          at,
-                          sticker,
-                          messageType,
-                      }: SendMessageParams) {
+        content,
+        roomId,
+        file,
+        replyMessage,
+        room,
+        b64img,
+        imgpath,
+        at,
+        sticker,
+        messageType,
+    }: SendMessageParams) {
         if (!messageType) {
             messageType = 'text'
         }
@@ -809,7 +812,7 @@ const adapter: typeof oicqAdapter = {
             let splitContent = [content]
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
-            for (const {text} of at) {
+            for (const { text } of at) {
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
@@ -1015,7 +1018,7 @@ const adapter: typeof oicqAdapter = {
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMessage(Number(messageId))
         clients.deleteMessage(messageId)
-        await storage.updateMessage(roomId, messageId, {deleted: true, reveal: false})
+        await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
     },
     async getFriendInfo(user_id: number): Promise<FriendInfo> {
         const data = await bot.getStrangerInfo(user_id)
@@ -1029,7 +1032,7 @@ const adapter: typeof oicqAdapter = {
     },
     async getFriendsFallback(cb) {
         const friends = await bot.getFriendList()
-        const list: SearchableFriend[] = friends.map(them => ({
+        const list: SearchableFriend[] = friends.map((them) => ({
             user_id: them.user_id,
             age: 0,
             sex: 'unknown',
@@ -1043,7 +1046,7 @@ const adapter: typeof oicqAdapter = {
     },
     async _getGroupMemberInfo(group: number, member: number, noCache: boolean) {
         const data = await bot.getGroupMemberInfo(group, member, noCache)
-        return ({
+        return {
             ...data,
             rank: '',
             shutup_time: 0,
@@ -1051,7 +1054,7 @@ const adapter: typeof oicqAdapter = {
             sex: data.sex as Gender,
             level: Number(data.level),
             role: data.role as GroupRole,
-        })
+        }
     },
     async getGroupMemberInfo(group: number, member: number, noCache: boolean, resolve) {
         resolve(await adapter._getGroupMemberInfo(group, member, noCache))
@@ -1062,7 +1065,7 @@ const adapter: typeof oicqAdapter = {
     async getGroupMembers(group: number, resolve) {
         try {
             const data = await bot.getGroupMemberList(group, true)
-            const all: MemberInfo[] = data.map(them => ({
+            const all: MemberInfo[] = data.map((them) => ({
                 ...them,
                 rank: '',
                 shutup_time: 0,
@@ -1099,10 +1102,10 @@ const adapter: typeof oicqAdapter = {
         if (!Array.isArray(fakes)) {
             fakes = Array.from(fakes as Iterable<FakeMessage>)
         }
-        const nodes = (fakes as Array<FakeMessage>).map(data => ({
+        const nodes = (fakes as Array<FakeMessage>).map((data) => ({
             type: 'node',
             data,
-        })) as { type: 'node', data: any }[]
+        })) as { type: 'node'; data: any }[]
         if (dm) {
             await bot.sendPrivateForwardMessage(target, nodes)
         } else {
@@ -1195,19 +1198,10 @@ const adapter: typeof oicqAdapter = {
                         _id: data.message_id,
                         time: data.time * 1000,
                         role: (data.sender as MemberBaseInfo).role,
-                        title:
-                            data.group_id && data.anonymous
-                                ? '匿名'
-                                : (data.sender as MemberBaseInfo).title,
+                        title: data.group_id && data.anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
                         files: [],
-                        anonymousId:
-                            data.group_id && data.anonymous
-                                ? data.anonymous.id
-                                : null,
-                        anonymousflag:
-                            data.group_id && data.anonymous
-                                ? data.anonymous.flag
-                                : null,
+                        anonymousId: data.group_id && data.anonymous ? data.anonymous.id : null,
+                        anonymousflag: data.group_id && data.anonymous ? data.anonymous.flag : null,
                         bubble_id: 0,
                     }
                     try {
@@ -1265,7 +1259,6 @@ const adapter: typeof oicqAdapter = {
             .then((messages) => clients.setMessages(roomId, messages))
     },
 
-
     // 存储动作
     async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
         if (!offset) {
@@ -1276,8 +1269,7 @@ const adapter: typeof oicqAdapter = {
             if (roomId < 0) {
                 const gid = -roomId
                 const group = await bot.getGroupInfo(gid)
-                if (group)
-                    client.emit('setShutUp', false)
+                if (group) client.emit('setShutUp', false)
                 else {
                     client.emit('setShutUp', true)
                     client.emit('message', '你已经不是群成员了')
@@ -1298,17 +1290,17 @@ const adapter: typeof oicqAdapter = {
         return storage.addChatGroup(chatGroup)
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, {priority})
+        await storage.updateRoom(roomId, { priority })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
-        await storage.updateRoom(roomId, {autoDownload})
+        await storage.updateRoom(roomId, { autoDownload })
     },
     async setRoomAutoDownloadPath(roomId: number, downloadPath: string) {
-        await storage.updateRoom(roomId, {downloadPath})
+        await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, {index: pin ? 1 : 0})
+        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async ignoreChat(data: IgnoreChatInfo) {
@@ -1324,11 +1316,11 @@ const adapter: typeof oicqAdapter = {
         clients.setAllChatGroups(await storage.getAllChatGroups())
     },
     async hideMessage(roomId: number, messageId: string) {
-        await storage.updateMessage(roomId, messageId, {hide: true, reveal: false})
+        await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async revealMessage(roomId: number, messageId: string | number) {
         clients.revealMessage(messageId)
-        await storage.updateMessage(roomId, messageId, {hide: false, reveal: true})
+        await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
     getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) =>
@@ -1352,7 +1344,6 @@ const adapter: typeof oicqAdapter = {
         return storage.updateMessage(roomId, messageId, message)
     },
 
-
     // 本地动作
     getUin: () => uin,
     async renewMessageURL(roomId: number, messageId: string | number, URL) {
@@ -1365,13 +1356,7 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 未支持动作
-    disabledFeatures: [
-        'IdLogin',
-        'WebApps',
-        'RemoteStickers',
-        'GroupFiles',
-        'OnlineStatus',
-    ],
+    disabledFeatures: ['IdLogin', 'WebApps', 'RemoteStickers', 'GroupFiles', 'OnlineStatus'],
     getBkn: () => 0,
     async getCookies(domain: any, resolve) {
         resolve()
@@ -1391,22 +1376,14 @@ const adapter: typeof oicqAdapter = {
     setOnlineStatus(status: number) {
         return null
     },
-    async sendGroupPoke(gin: number, uin: number) {
-    },
-
+    async sendGroupPoke(gin: number, uin: number) {},
 
     // 没必要实现的动作
-    logOut() {
-    },
-    randomDevice(username: number) {
-    },
-    reLogin() {
-    },
-    sliderLogin(ticket: string) {
-    },
-    submitSmsCode(smsCode: string) {
-    },
-
+    logOut() {},
+    randomDevice(username: number) {},
+    reLogin() {},
+    sliderLogin(ticket: string) {},
+    submitSmsCode(smsCode: string) {},
 }
 
 const processMessage = createProcessMessage(adapter)

@@ -93,15 +93,15 @@ export default {
             default_dir: '',
             current_dir: 'Default',
             watchedPath: {},
-            supportRemote: false
+            supportRemote: false,
         }
     },
     async created() {
         this.panel = await ipc.getLastUsedStickerType()
 
         // Remote Stickers
-        if(!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
-            this.supportRemote = true;
+        if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
+            this.supportRemote = true
             setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp()), 10 * 1000)
         }
 

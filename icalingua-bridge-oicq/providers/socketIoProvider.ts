@@ -57,7 +57,7 @@ export const init = (adapter: typeof oicqAdapter) => {
                     if (gin) {
                         registerFileMgrHandler(io, socket, gin, adapter)
                         console.log('客户端验证成功')
-                        adapter.getGroup(gin, group => socket.emit('authSucceed', gin, group))
+                        adapter.getGroup(gin, (group) => socket.emit('authSucceed', gin, group))
                     } else {
                         console.log('客户端验证失败')
                         socket.emit('authFailed')

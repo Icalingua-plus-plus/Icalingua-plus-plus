@@ -171,7 +171,9 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
             loginWindow.minimize()
         }
 
-        return loginWindow.loadURL(getWinUrl() + `#/login?bridge=${isConfiguringBridge}&disableIdLogin=${disableIdLogin}`)
+        return loginWindow.loadURL(
+            getWinUrl() + `#/login?bridge=${isConfiguringBridge}&disableIdLogin=${disableIdLogin}`,
+        )
     }
 }
 export const showRequestWindow = () => {

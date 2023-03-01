@@ -81,7 +81,7 @@ const attachSocketEvents = () => {
         }
         await updateTrayIcon()
     })
-    socket.on('addMessage', ({roomId, message}: { roomId: number; message: Message }) => {
+    socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
         ui.addMessage(roomId, message)
         if (
             typeof message._id === 'string' &&
@@ -136,15 +136,15 @@ const attachSocketEvents = () => {
     socket.on('revealMessage', ui.revealMessage)
     socket.on(
         'renewMessage',
-        ({roomId, messageId, message}: { roomId: number; messageId: string; message: Message }) => {
+        ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Message }) => {
             ui.renewMessage(roomId, messageId, message)
         },
     )
-    socket.on('renewMessageURL', ({messageId, URL}: { messageId: string | number; URL: string }) => {
+    socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number; URL: string }) => {
         ui.renewMessageURL(messageId, URL)
     })
     socket.on('syncRead', ui.clearRoomUnread)
-    socket.on('setMessages', ({roomId, messages}: { roomId: number; messages: Message[] }) => {
+    socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
     })
     socket.on(
@@ -279,9 +279,9 @@ const attachSocketEvents = () => {
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
                 'console.log=(a)=>{' +
-                'if(typeof a === "string"&&' +
-                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                'window.close()}',
+                    'if(typeof a === "string"&&' +
+                    'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                    'window.close()}',
             )
         })
         veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
@@ -418,7 +418,7 @@ const adapter: Adapter = {
             room.unreadCount = 0
             room.at = false
         }
-        adapter.updateRoom(roomId, {unreadCount: 0, at: false})
+        adapter.updateRoom(roomId, { unreadCount: 0, at: false })
         updateTrayIcon()
     },
     async createBot(form: LoginForm) {
@@ -531,8 +531,7 @@ const adapter: Adapter = {
     ignoreChat(data: IgnoreChatInfo) {
         socket.emit('ignoreChat', data)
     },
-    logOut(): void {
-    },
+    logOut(): void {},
     pinRoom(roomId: number, pin: boolean) {
         socket.emit('pinRoom', roomId, pin)
     },
@@ -571,12 +570,12 @@ const adapter: Adapter = {
         }
         data.b64img
             ? socket.emit('requestToken', (token: string) =>
-                axios
-                    .post(getConfig().server + `/api/${token}/sendMessage`, data, {
-                        proxy: false,
-                    })
-                    .catch(console.log),
-            )
+                  axios
+                      .post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                          proxy: false,
+                      })
+                      .catch(console.log),
+              )
             : socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
@@ -641,7 +640,7 @@ const adapter: Adapter = {
     getDisabledFeatures(): Promise<SpecialFeature[]> {
         if (disabledFeatures) return Promise.resolve(disabledFeatures)
         return new Promise((resolve, reject) => {
-            socket.emit('getDisabledFeatures', features => {
+            socket.emit('getDisabledFeatures', (features) => {
                 disabledFeatures = features
                 resolve(features)
             })

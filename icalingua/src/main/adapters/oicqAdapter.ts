@@ -2051,7 +2051,7 @@ const adapter: OicqAdapter = {
         const ret = await bot.preloadImages(urls)
         if (ret.error) return false
         else return true
-    }
+    },
 }
 
 export default adapter

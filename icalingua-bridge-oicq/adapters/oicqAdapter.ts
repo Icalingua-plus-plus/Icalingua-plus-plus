@@ -26,7 +26,8 @@ import {
     FriendPokeEventData,
     FriendRecallEventData,
     GroupAddEventData,
-    GroupAdminEventData, GroupInfo,
+    GroupAdminEventData,
+    GroupInfo,
     GroupInviteEventData,
     GroupMessageEventData,
     GroupMuteEventData,
@@ -226,11 +227,11 @@ const eventHandlers = {
     },
     friendRecall(data: FriendRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, {deleted: true, reveal: false})
+        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false })
     },
     groupRecall(data: GroupRecallEventData) {
         clients.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, {deleted: true, reveal: false})
+        storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
     },
     online() {
         clients.setOnline()
@@ -393,9 +394,9 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                (data.operator_id === data.user_id || !operator
-                    ? ' 离开了本群'
-                    : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+                  (data.operator_id === data.user_id || !operator
+                      ? ' 离开了本群'
+                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
             username: data.member
                 ? data.member.card
                     ? data.member.card
@@ -677,7 +678,7 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         clients.syncRead(roomId)
-        storage.updateRoom(roomId, {unreadCount: 0, at: false})
+        storage.updateRoom(roomId, { unreadCount: 0, at: false })
     },
     //TODO 这里应该有好多重复代码的说，应该可以合并一下
     async friendIncrease(data: FriendIncreaseEventData) {
@@ -857,7 +858,7 @@ const initStorage = async () => {
                 if (e.roomId > -1) return
                 const group = bot.gl.get(-e.roomId)
                 if (group && group.group_name !== e.roomName) {
-                    storage.updateRoom(e.roomId, {roomName: group.group_name})
+                    storage.updateRoom(e.roomId, { roomName: group.group_name })
                 }
             })
         })
@@ -1040,17 +1041,17 @@ const adapter = {
     },
     //roomId 和 room 必有一个
     async sendMessage({
-                          content,
-                          roomId,
-                          file,
-                          replyMessage,
-                          room,
-                          b64img,
-                          imgpath,
-                          at,
-                          sticker,
-                          messageType,
-                      }: SendMessageParams) {
+        content,
+        roomId,
+        file,
+        replyMessage,
+        room,
+        b64img,
+        imgpath,
+        at,
+        sticker,
+        messageType,
+    }: SendMessageParams) {
         if (!messageType) {
             messageType = 'text'
         }
@@ -1119,7 +1120,7 @@ const adapter = {
             let splitContent = [content]
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
-            for (const {text} of at) {
+            for (const { text } of at) {
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
@@ -1317,7 +1318,7 @@ const adapter = {
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
-                if (typeof message === 'string') message = [{type: 'text', data: {text: message}}]
+                if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
                 let data = await _sendPrivateMsg.call(bot, user_id, message, auto_escape)
                 if (user_id === bot.uin || user_id === 3636666661) return data
 
@@ -1380,7 +1381,7 @@ const adapter = {
         let iterG = groups.next()
         const groupsAll = [] as Array<GroupInfo & { sc: string }>
         while (!iterG.done) {
-            const f = {...iterG.value}
+            const f = { ...iterG.value }
             f.sc = (f.group_name + f.group_id).toUpperCase()
             groupsAll.push(f)
             iterG = groups.next()
@@ -1493,17 +1494,17 @@ const adapter = {
     getMsg: (id: string) => bot.getMsg(id),
 
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, {priority})
+        await storage.updateRoom(roomId, { priority })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
-        await storage.updateRoom(roomId, {autoDownload})
+        await storage.updateRoom(roomId, { autoDownload })
     },
     async setRoomAutoDownloadPath(roomId: number, downloadPath: string) {
-        await storage.updateRoom(roomId, {downloadPath})
+        await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, {index: pin ? 1 : 0})
+        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
         clients.setAllRooms(await storage.getAllRooms())
     },
     async ignoreChat(data: IgnoreChatInfo) {
@@ -1522,7 +1523,7 @@ const adapter = {
         const res = await bot.deleteMsg(messageId)
         if (!res.error) {
             clients.deleteMessage(messageId)
-            await storage.updateMessage(roomId, messageId, {deleted: true, reveal: false})
+            await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
         } else {
             clients.notifyError({
                 title: 'Failed to delete message',
@@ -1531,7 +1532,7 @@ const adapter = {
         }
     },
     async hideMessage(roomId: number, messageId: string) {
-        await storage.updateMessage(roomId, messageId, {hide: true, reveal: false})
+        await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async renewMessage(roomId: number, messageId: string, message: Message) {
         const res = await adapter.getMsg(messageId)
@@ -1569,7 +1570,7 @@ const adapter = {
     },
     async revealMessage(roomId: number, messageId: string | number) {
         clients.revealMessage(messageId)
-        await storage.updateMessage(roomId, messageId, {hide: false, reveal: true})
+        await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)
@@ -1694,7 +1695,7 @@ const adapter = {
         let ret_msg = {}
         for (let index in msgs) {
             const flag = msgs[index].flag
-            ret_msg[flag] = {...msgs[index]}
+            ret_msg[flag] = { ...msgs[index] }
             //ret_msg.push({flag: {...msgs[index]}})
         }
 
@@ -1752,10 +1753,10 @@ const adapter = {
         "--end--":      "修改后可能需要重新验证设备。"
     }`
         if (fs.existsSync(filepath)) {
-            fs.rmSync(filepath, {recursive: true, force: true})
+            fs.rmSync(filepath, { recursive: true, force: true })
         }
-        fs.mkdirSync(filepath, {recursive: true, mode: 0o755})
-        fs.writeFileSync(devicepath, device, {mode: 0o600})
+        fs.mkdirSync(filepath, { recursive: true, mode: 0o755 })
+        fs.writeFileSync(devicepath, device, { mode: 0o600 })
     },
     async sendPacket(type: string, cmd: string, body: any, cb) {
         if (type === 'Uni') cb(await bot.sendUni(cmd, body))
