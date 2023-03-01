@@ -6,11 +6,19 @@
     "packages/*"
   ],
   "dependencies": {
+    "@actions/core": "1.10.0",
     "@icalingua/storage-providers": "workspace:*",
     "@icalingua/types": "workspace:*",
     "icalingua": "workspace:*",
-    "icalingua-bridge-oicq": "workspace:*",
-    "@actions/core": "1.10.0"
+    "icalingua-bridge-oicq": "workspace:*"
   },
-  "packageManager": "pnpm@7.8.0"
+  "packageManager": "pnpm@7.8.0",
+  "devDependencies": {
+    "lint-staged": "^13.1.2"
+  },
+  "lint-staged": {
+    "**/*": [
+      "echo"
+    ]
+  }
 }
