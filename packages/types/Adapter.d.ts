@@ -8,6 +8,7 @@ import SearchableGroup from './SearchableGroup'
 import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
+import SpecialFeature from './SpecialFeature'
 
 type CookiesDomain =
     | 'tenpay.com'
@@ -157,4 +158,6 @@ export default interface Adapter {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any
 
     requestGfsToken(gin: number): Promise<string>
+
+    getDisabledFeatures(): Promise<SpecialFeature[]>
 }

@@ -146,7 +146,7 @@ export const refreshMainWindowColor = () => {
     mainWindow.setBackgroundColor(color)
     updateTrayIcon()
 }
-export const showLoginWindow = (isConfiguringBridge = false) => {
+export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = false) => {
     if (loginWindow) {
         loginWindow.show()
         loginWindow.focus()
@@ -171,7 +171,7 @@ export const showLoginWindow = (isConfiguringBridge = false) => {
             loginWindow.minimize()
         }
 
-        return loginWindow.loadURL(getWinUrl() + `#/login?bridge=${isConfiguringBridge}`)
+        return loginWindow.loadURL(getWinUrl() + `#/login?bridge=${isConfiguringBridge}&disableIdLogin=${disableIdLogin}`)
     }
 }
 export const showRequestWindow = () => {

@@ -39,6 +39,7 @@ import {
     tryToShowAllWindows,
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -55,6 +56,7 @@ let rooms: Room[] = []
 let chatGroups: ChatGroup[] = []
 let loggedIn = false
 let account: LoginForm
+let disabledFeatures: SpecialFeature[]
 
 const attachSocketEvents = () => {
     socket.off('connect_error')
@@ -79,7 +81,7 @@ const attachSocketEvents = () => {
         }
         await updateTrayIcon()
     })
-    socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
+    socket.on('addMessage', ({roomId, message}: { roomId: number; message: Message }) => {
         ui.addMessage(roomId, message)
         if (
             typeof message._id === 'string' &&
@@ -134,15 +136,15 @@ const attachSocketEvents = () => {
     socket.on('revealMessage', ui.revealMessage)
     socket.on(
         'renewMessage',
-        ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Message }) => {
+        ({roomId, messageId, message}: { roomId: number; messageId: string; message: Message }) => {
             ui.renewMessage(roomId, messageId, message)
         },
     )
-    socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number; URL: string }) => {
+    socket.on('renewMessageURL', ({messageId, URL}: { messageId: string | number; URL: string }) => {
         ui.renewMessageURL(messageId, URL)
     })
     socket.on('syncRead', ui.clearRoomUnread)
-    socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
+    socket.on('setMessages', ({roomId, messages}: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
     })
     socket.on(
@@ -253,7 +255,8 @@ const attachSocketEvents = () => {
     socket.on('requestSetup', async (data: LoginForm) => {
         console.log('bridge 未登录')
         account = data
-        showLoginWindow(true)
+        const disabledFeatures = await adapter.getDisabledFeatures()
+        showLoginWindow(true, disabledFeatures.includes('IdLogin'))
     })
     socket.on('fatal', async (message: string) => {
         socket.off('connect_error')
@@ -276,9 +279,9 @@ const attachSocketEvents = () => {
         veriWin.webContents.on('did-finish-load', function () {
             veriWin.webContents.executeJavaScript(
                 'console.log=(a)=>{' +
-                    'if(typeof a === "string"&&' +
-                    'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                    'window.close()}',
+                'if(typeof a === "string"&&' +
+                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+                'window.close()}',
             )
         })
         veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
@@ -415,7 +418,7 @@ const adapter: Adapter = {
             room.unreadCount = 0
             room.at = false
         }
-        adapter.updateRoom(roomId, { unreadCount: 0, at: false })
+        adapter.updateRoom(roomId, {unreadCount: 0, at: false})
         updateTrayIcon()
     },
     async createBot(form: LoginForm) {
@@ -528,7 +531,8 @@ const adapter: Adapter = {
     ignoreChat(data: IgnoreChatInfo) {
         socket.emit('ignoreChat', data)
     },
-    logOut(): void {},
+    logOut(): void {
+    },
     pinRoom(roomId: number, pin: boolean) {
         socket.emit('pinRoom', roomId, pin)
     },
@@ -567,12 +571,12 @@ const adapter: Adapter = {
         }
         data.b64img
             ? socket.emit('requestToken', (token: string) =>
-                  axios
-                      .post(getConfig().server + `/api/${token}/sendMessage`, data, {
-                          proxy: false,
-                      })
-                      .catch(console.log),
-              )
+                axios
+                    .post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                        proxy: false,
+                    })
+                    .catch(console.log),
+            )
             : socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
@@ -632,6 +636,15 @@ const adapter: Adapter = {
     sendPacket(type: string, cmd: string, body: Object): Promise<Buffer> {
         return new Promise((resolve, reject) => {
             socket.emit('sendPacket', type, cmd, body, resolve)
+        })
+    },
+    getDisabledFeatures(): Promise<SpecialFeature[]> {
+        if (disabledFeatures) return Promise.resolve(disabledFeatures)
+        return new Promise((resolve, reject) => {
+            socket.emit('getDisabledFeatures', features => {
+                disabledFeatures = features
+                resolve(features)
+            })
         })
     },
 }

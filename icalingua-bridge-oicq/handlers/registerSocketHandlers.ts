@@ -63,4 +63,5 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('getGroup', adapter.getGroup)
     socket.on('getMsgNewURL', adapter.getMsgNewURL)
     socket.on('sendPacket', adapter.sendPacket)
+    socket.on('getDisabledFeatures', (cb) => cb(adapter.disabledFeatures))
 }

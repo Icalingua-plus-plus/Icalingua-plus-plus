@@ -9,6 +9,7 @@ import Room from '@icalingua/types/Room'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
 import { FakeMessage, MemberInfo } from 'oicq-icalingua-plus-plus'
+import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 const ipc = {
     sendMessage(data) {
@@ -16,6 +17,9 @@ const ipc = {
     },
     async isOnline(): Promise<boolean> {
         return await ipcRenderer.invoke('isOnline')
+    },
+    async getDisabledFeatures(): Promise<SpecialFeature[]> {
+        return await ipcRenderer.invoke('getDisabledFeatures')
     },
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
@@ -60,7 +64,7 @@ const ipc = {
         return await ipcRenderer.invoke('getUin')
     },
     async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessage', { roomId, offset })
+        return await ipcRenderer.invoke('fetchMessage', {roomId, offset})
     },
     stopFetchMessage() {
         ipcRenderer.send('stopFetchMessage')

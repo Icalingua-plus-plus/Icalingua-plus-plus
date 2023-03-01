@@ -569,6 +569,7 @@ const adapter: typeof oicqAdapter = {
         uin = loginInfo.user_id
         nickname = loginInfo.nickname
         loginForm = form
+        loginForm.username = loginInfo.user_id
         await initStorage()
         attachEventHandler()
         setInterval(adapter.sendOnlineData, 1000 * 60)
@@ -1365,6 +1366,13 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 未支持动作
+    disabledFeatures: [
+        'IdLogin',
+        'WebApps',
+        'RemoteStickers',
+        'GroupFiles',
+        'OnlineStatus',
+    ],
     getBkn: () => 0,
     async getCookies(domain: any, resolve) {
         resolve()

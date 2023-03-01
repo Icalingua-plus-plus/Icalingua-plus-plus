@@ -4,7 +4,7 @@
             <div class="title">
                 <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">Stickers</a>
                 <a @click="setPanel('face')" :class="{ selected: panel === 'face' }">Face</a>
-                <a @click="setPanel('remote')" :class="{ selected: panel === 'remote' }">Remote</a>
+                <a @click="setPanel('remote')" :class="{ selected: panel === 'remote' }" v-if="supportRemote">Remote</a>
                 <a @click="setPanel('emojis')" :class="{ selected: panel === 'emojis' }">Emojis</a>
             </div>
             <a @click="menu">
@@ -93,13 +93,17 @@ export default {
             default_dir: '',
             current_dir: 'Default',
             watchedPath: {},
+            supportRemote: false
         }
     },
     async created() {
         this.panel = await ipc.getLastUsedStickerType()
 
         // Remote Stickers
-        setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp()), 10 * 1000)
+        if(!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
+            this.supportRemote = true;
+            setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp()), 10 * 1000)
+        }
 
         // Face
         this.dir_face = path.join(getStaticPath(), 'face/')

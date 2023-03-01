@@ -64,6 +64,7 @@ import getSysInfo from '../utils/getSysInfo'
 import createProcessMessage from '../utils/processMessage'
 import sleep from '../utils/sleep'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 let bot: Client
 let storage: StorageProvider
@@ -902,6 +903,7 @@ const attachLoginHandler = () => {
 
 const adapter = {
     loggedIn: false,
+    disabledFeatures: [] as SpecialFeature[],
     async getMsgNewURL(id: string, resolve): Promise<string> {
         const history = await adapter.getMsg(id)
         if (history.error) {

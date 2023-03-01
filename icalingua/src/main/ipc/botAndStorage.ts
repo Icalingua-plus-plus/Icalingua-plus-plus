@@ -64,6 +64,7 @@ export const {
     randomDevice,
     sendPacket,
     sendGroupSign,
+    getDisabledFeatures,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
@@ -90,6 +91,7 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
     return ret
 }
 
+ipcMain.on('getDisabledFeatures', () => getDisabledFeatures())
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.on('randomDevice', (event, username: number) => {
     randomDevice(username)
@@ -107,9 +109,9 @@ ipcMain.on('QRCodeVerify', (event, url: string) => {
     veriWin.webContents.on('did-finish-load', function () {
         veriWin.webContents.executeJavaScript(
             'console.log=(a)=>{' +
-                'if(typeof a === "string"&&' +
-                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                'window.close()}',
+            'if(typeof a === "string"&&' +
+            'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
+            'window.close()}',
         )
     })
     veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
@@ -125,7 +127,7 @@ ipcMain.handle('getFriendsAndGroups', async () => {
         friends = null
         friendsFallback = await getFriendsFallback()
     }
-    return { groups, friends, friendsFallback }
+    return {groups, friends, friendsFallback}
 })
 ipcMain.on('sendMessage', (_, data) => {
     data.at = atCache.get()
@@ -134,7 +136,7 @@ ipcMain.on('sendMessage', (_, data) => {
 })
 ipcMain.on('deleteMessage', (_, roomId: number, messageId: string) => deleteMessage(roomId, messageId))
 ipcMain.on('hideMessage', (_, roomId: number, messageId: string) => hideMessage(roomId, messageId))
-ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset: number }) => {
+ipcMain.handle('fetchMessage', (_, {roomId, offset}: { roomId: number; offset: number }) => {
     offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
 })

@@ -86,6 +86,7 @@ import {
     tryToShowAllWindows,
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 let bot: Client
 let storage: StorageProvider
@@ -1072,6 +1073,9 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    getDisabledFeatures(): Promise<SpecialFeature[]> {
+        return Promise.resolve([])
+    },
     async getMsgNewURL(id: string): Promise<string> {
         const history = await adapter.getMsg(id)
         if (history.error) {
@@ -2047,7 +2051,7 @@ const adapter: OicqAdapter = {
         const ret = await bot.preloadImages(urls)
         if (ret.error) return false
         else return true
-    },
+    }
 }
 
 export default adapter
