@@ -65,15 +65,17 @@ export default {
         ipcRenderer.on('loadMessages', (event, args) => {
             let lastSeq = 0
             let fake = false
+            let originId = -1
             for (let m of args) {
-                const seq = Number.parseInt(m._id.split('|')[1]) || lastSeq
+                const seq = Number.parseInt(String(m._id).split('|')[1]) || lastSeq
+                originId = Number.parseInt(String(m._id).split('|')[0]) || originId
                 if (lastSeq > seq) {
                     fake = true
                     break
                 }
                 lastSeq = seq
             }
-            if (fake) this.room.roomName += ' (此转发极有可能是伪造的)'
+            if (fake && originId > 0) this.room.roomName += ' (此转发极有可能是伪造的)'
             console.log(args)
             this.messages = [...args]
         })
