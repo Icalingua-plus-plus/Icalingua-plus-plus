@@ -14,7 +14,13 @@
   },
   "packageManager": "pnpm@7.8.0",
   "devDependencies": {
+    "husky": "^8.0.3",
     "lint-staged": "^13.1.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "lint-staged": {
     "**/*": [

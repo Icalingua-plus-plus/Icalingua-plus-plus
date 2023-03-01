@@ -7,6 +7,7 @@ importers:
       '@actions/core': 1.10.0
       '@icalingua/storage-providers': workspace:*
       '@icalingua/types': workspace:*
+      husky: ^8.0.3
       icalingua: workspace:*
       icalingua-bridge-oicq: workspace:*
       lint-staged: ^13.1.2
@@ -17,6 +18,7 @@ importers:
       icalingua: link:icalingua
       icalingua-bridge-oicq: link:icalingua-bridge-oicq
     devDependencies:
+      husky: 8.0.3
       lint-staged: 13.1.2
 
   icalingua:
@@ -6873,6 +6875,12 @@ packages:
   /humanize-plus/1.8.2:
     resolution: {integrity: sha512-jaLeQyyzjjINGv7O9JJegjsaUcWjSj/1dcXvLEgU3pGdqCdP1PiC/uwr+saJXhTNBHZtmKnmpXyazgh+eceRxA==}
     engines: {node: '>= 0.8.0'}
+    dev: true
+
+  /husky/8.0.3:
+    resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
+    engines: {node: '>=14'}
+    hasBin: true
     dev: true
 
   /iconv-corefoundation/1.1.7:
