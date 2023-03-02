@@ -1527,7 +1527,7 @@ const adapter: OicqAdapter = {
                 const md5 = (data) => crypto.createHash('md5').update(data).digest()
                 const hash = md5(md5(content).toString() + String(Math.abs(roomId))).toString()
                 const retData = await bot.sendJsonMsg(Math.abs(roomId), content, roomId < 0, hash)
-                if (!retData.error) {
+                if (retData.error) {
                     ui.notifyError({
                         title: 'Failed to send',
                         message: retData.error.message,
