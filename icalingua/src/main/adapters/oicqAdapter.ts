@@ -1561,7 +1561,7 @@ const adapter: OicqAdapter = {
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
                 if (typeof message === 'string') message = [{ type: 'text', data: { text: message } }]
                 let data = await _sendPrivateMsg.call(bot, user_id, message, auto_escape)
-                if (user_id === bot.uin || user_id === 3636666661) return data
+                if (user_id === bot.uin || user_id === 3636666661 || data.error) return data
 
                 let custom_room = await storage.getRoom(user_id)
                 if (!custom_room) {
