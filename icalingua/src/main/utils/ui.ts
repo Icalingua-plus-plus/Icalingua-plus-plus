@@ -58,6 +58,13 @@ export default {
     notifySuccess(data: { title: string; message: string }) {
         sendToMainWindow('notifySuccess', data)
     },
+    notifyProgress(id: string, string: string) {
+        sendToMainWindow('notifyProgress', { id, string })
+        return {
+            value: (value: number) => sendToMainWindow('notifyProgressValue', { id, value }),
+            close: () => sendToMainWindow('notifyProgressClose', id),
+        }
+    },
     message(string: string) {
         if (getConfig().silentFetchHistory && string.startsWith('已拉取')) return
         sendToMainWindow('message', string)
