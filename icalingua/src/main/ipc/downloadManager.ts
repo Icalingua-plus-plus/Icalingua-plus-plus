@@ -2,7 +2,7 @@ import Aria2Config from '@icalingua/types/Aria2Config'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import Aria2 from 'aria2'
-import { BrowserWindow, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, DownloadItem, app, dialog, ipcMain } from 'electron'
 import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
@@ -32,6 +32,43 @@ export const loadConfig = (config: Aria2Config) => {
     } else aria = null
 }
 
+const downloads = new Map<string, DownloadItem>()
+
+const formatFileSize = (size: number) => {
+    if (size < 1024) return size + 'B'
+    else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + 'KB'
+    else if (size < 1024 * 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + 'MB'
+    else if (size < 1024 * 1024 * 1024 * 1024) return (size / 1024 / 1024 / 1024).toFixed(2) + 'GB'
+    else return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + 'TB'
+}
+
+const registerDownload = (item: DownloadItem, url: string, fileName: string) => {
+    const size = item.getTotalBytes()
+    const uiProgress = ui.notifyProgress(url, `正在下载 ${fileName} (${formatFileSize(size)})`)
+    downloads.set(url, item)
+
+    item.on('updated', () => {
+        uiProgress.value((item.getReceivedBytes() / size) * 100)
+    })
+
+    item.on('done', (_, state) => {
+        downloads.delete(url)
+        uiProgress.close()
+
+        switch (state) {
+            case 'cancelled':
+                ui.messageError(`下载已取消 ${fileName}`)
+                break
+            case 'interrupted':
+                ui.messageError(`下载中止 ${fileName}`)
+                break
+            case 'completed':
+                ui.messageSuccess(`下载完成 ${fileName}`)
+                break
+        }
+    })
+}
+
 export const download = (url: string, out: string, dir?: string, saveAs = false) => {
     if (saveAs) {
         const result = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow() || getMainWindow(), {
@@ -55,13 +92,17 @@ export const download = (url: string, out: string, dir?: string, saveAs = false)
                 errorHandler(err, true)
                 ui.messageError('Aria2 failed')
             })
-    } else {
+    } else if (!downloads.has(url)) {
         edl.download(getMainWindow(), url, {
             directory: dir,
             filename: out,
-            onCompleted: () => ui.messageSuccess('下载完成'),
+            onStarted(item) {
+                // 修复 electron-dl 多文件同时下载时错误发送事件的问题
+                if (item.getURL() === url) {
+                    registerDownload(item, url, out)
+                }
+            },
         })
-        ui.message('已开始下载')
     }
 }
 
@@ -163,6 +204,7 @@ ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Mes
 )
 ipcMain.on('downloadImage', (_, url) => downloadImage(url))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
+ipcMain.on('cancelDownload', (_, url: string) => downloads.get(url)?.cancel())
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     getConfig().aria2 = config
     loadConfig(config)

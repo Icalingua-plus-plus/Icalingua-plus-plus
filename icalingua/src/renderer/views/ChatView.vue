@@ -206,6 +206,7 @@ import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
+import ProgressBar from '../components/ProgressBar.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
@@ -223,6 +224,7 @@ export default {
         TheGroupMemberPanel,
         Multipane,
         MultipaneResizer,
+        ProgressBar
     },
     data() {
         return {
@@ -265,7 +267,8 @@ export default {
             disableChatGroupsRedPoint: false,
             useSinglePanel: false,
             showSinglePanel: false,
-            showPanel: 'contact' // 'chat' or 'contact', 只有showSinglePanel为true有效
+            showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
+            notifyProgresses: new Map(),
         }
     },
     async created() {
@@ -409,6 +412,31 @@ export default {
         ipcRenderer.on('clearHistoryCount', () => this.historyCount = 0)
         ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
         ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))
+        ipcRenderer.on('notifyProgress', (_, { id, string }) => {
+            const progressBar = this.$createElement('ProgressBar')
+            const notification = this.$notify({
+                message: this.$createElement('div', [string, progressBar]),
+                customClass: 'el-notification-progress',
+                duration: 0,
+                onClose: () => {
+                    ipc.cancelDownload(id)
+                    this.notifyProgresses.delete(id)
+                }
+            })
+            this.notifyProgresses.set(id, { progressBar, notification })
+        })
+        ipcRenderer.on('notifyProgressValue', (_, { id, value }) => {
+            const instance = this.notifyProgresses.get(id)
+            if (instance) {
+                instance.progressBar.componentInstance.setValue(value)
+            }
+        })
+        ipcRenderer.on('notifyProgressClose', (_, id) => {
+            const instance = this.notifyProgresses.get(id)
+            if (instance) {
+                instance.notification.close()
+            }
+        })
         ipcRenderer.on('message', (_, p) => this.$message(p))
         ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
         ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
@@ -1206,5 +1234,12 @@ main div {
 }
 .el-notification .el-notification__group .el-notification__content {
     color: var(--panel-color-desc);
+}
+
+.el-notification-progress .el-notification__group {
+    width: 100%;
+}
+.el-notification-progress .el-progress-bar {
+    margin-top: 8px;
 }
 </style>
