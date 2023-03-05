@@ -267,8 +267,8 @@ export default {
             disableChatGroupsRedPoint: false,
             useSinglePanel: false,
             showSinglePanel: false,
-            showPanel: 'chat', // 'chat' or 'contact', 只有showSinglePanel为true有效
-            notifyProgresses: new Map()
+            showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
+            notifyProgresses: new Map(),
         }
     },
     async created() {
@@ -815,6 +815,7 @@ Chromium ${process.versions.chrome}` : ''
             this.panel = ''
             this.lastUnreadCount = 0
             this.lastUnreadAt = false
+            this.showPanel = 'contact'
             ipc.setSelectedRoom(0, '')
             document.title = 'Icalingua++'
         },
