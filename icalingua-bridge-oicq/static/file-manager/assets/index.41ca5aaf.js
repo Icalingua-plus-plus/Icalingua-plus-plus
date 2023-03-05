@@ -485,6 +485,13 @@ var Q = ({ socket: t }) => {
     }
     async function k(u, saveAs = false) {
         const a = await t.download(u);
+        if (a.url === 'error') {
+            y.error({
+                message: "下载失败",
+                description: a.name
+            });
+            return;
+        }
         window['download'] ? window['download'](a.url, a.name, undefined, saveAs) : console.log('error', a);
         if (!saveAs) {
             y.success({

@@ -20,8 +20,16 @@ export default (io: Server, socket: Socket, gin: number, adapter: typeof oicqAda
 
     //参数：gin, fid
     socket.on('download', async (fid, cb) => {
-        const res = await gfs.download(fid)
-        cb(res)
+        try {
+            const res = await gfs.download(fid)
+            cb(res)
+        } catch (e) {
+            console.error(e)
+            cb({
+                name: e.message + '(' + e.code + ')',
+                url: 'error',
+            })
+        }
     })
 
     socket.on('stat', async (fid: string, cb) => {
