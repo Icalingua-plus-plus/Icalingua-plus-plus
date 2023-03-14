@@ -1480,7 +1480,18 @@ const adapter = {
 
     getBkn: () => bot.bkn,
     getUin: () => bot.uin,
-    getGroupFileMeta: async (gin: number, fid: string, resolve) => resolve(await bot.acquireGfs(gin).download(fid)),
+    getGroupFileMeta: async (gin: number, fid: string, resolve) => {
+        try {
+            const res = await bot.acquireGfs(gin).download(fid)
+            resolve(res)
+        } catch (e) {
+            console.error(e)
+            resolve({
+                name: e.message + '(' + e.code + ')',
+                url: 'error',
+            })
+        }
+    },
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),
     getFirstUnreadRoom: async (priority: 1 | 2 | 3 | 4 | 5, resolve) =>
         resolve(await storage.getFirstUnreadRoom(priority)),

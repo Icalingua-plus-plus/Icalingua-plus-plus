@@ -1721,7 +1721,19 @@ const adapter: OicqAdapter = {
     getBkn: () => bot.bkn,
     getUin: () => bot.uin,
     getNickname: () => bot.nickname,
-    getGroupFileMeta: (gin: number, fid: string) => bot.acquireGfs(gin).download(fid),
+    getGroupFileMeta: (gin: number, fid: string) => {
+        let meta
+        try {
+            meta = bot.acquireGfs(gin).download(fid)
+        } catch (e) {
+            errorHandler(e)
+            meta = {
+                name: e.message + '(' + e.code + ')',
+                url: 'error',
+            }
+        }
+        return meta
+    },
     getUnreadCount: async () => await storage.getUnreadCount(getConfig().priority),
     getFirstUnreadRoom: async () => await storage.getFirstUnreadRoom(getConfig().priority),
     getSelectedRoom: async () => await storage.getRoom(ui.getSelectedRoomId()),

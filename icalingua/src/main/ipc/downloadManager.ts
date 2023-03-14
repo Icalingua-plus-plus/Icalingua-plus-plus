@@ -166,6 +166,13 @@ export const downloadImage2Open = (url: string) => {
 export const downloadGroupFile = async (gin: number, fid: string, saveAs = false) => {
     try {
         const meta = await getGroupFileMeta(gin, fid)
+        if (meta.url === 'error') {
+            ui.notifyError({
+                title: '下载失败',
+                message: meta.name,
+            })
+            return
+        }
         download(meta.url, meta.name, undefined, saveAs)
     } catch (e) {
         ui.notifyError(e)
