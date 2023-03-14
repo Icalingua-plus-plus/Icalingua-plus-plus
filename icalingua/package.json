@@ -10,7 +10,7 @@
     "scripts": {
         "deps:woa:sqlite3": "cd ../node_modules/sqlite3 && cross-env npm_config_arch=arm64 npx node-pre-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-pre-gyp build --target_arch=arm64",
         "deps:woa:silk-sdk": "cd ../node_modules/silk-sdk && cross-env npm_config_arch=arm64 npx node-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-gyp rebuild --target_arch=arm64",
-        "deps:mac:sqlite3": "cd ../node_modules/sqlite3 && cross-env npm_config_arch=arm64 npx node-pre-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-pre-gyp build --target_arch=arm64",
+        "deps:mac:sqlite3": "cd ../node_modules/sqlite3 && cross-env npm_config_arch=arm64 npx node-pre-gyp configure --target_arch=arm64 && cross-env npm_config_arch=arm64 npx node-pre-gyp install --target_arch=arm64",
         "deps:mac:silk-sdk": "cd ../node_modules/silk-sdk && cross-env npm_config_arch=universal npx node-gyp configure --target_arch=universal && cross-env npm_config_arch=universal npx node-gyp rebuild --target_arch=universal",
         "deps:woa": "npm run deps:woa:sqlite3 && npm run deps:woa:silk-sdk",
         "deps:mac": "npm run deps:mac:sqlite3 && npm run deps:mac:silk-sdk",
