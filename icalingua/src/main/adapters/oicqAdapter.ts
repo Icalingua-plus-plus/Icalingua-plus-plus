@@ -2027,6 +2027,22 @@ const adapter: OicqAdapter = {
             for (let i = length; i > 0; --i) result += map[Math.floor(Math.random() * map.length)]
             return result
         }
+        const _genIMEI = () => {
+            const imei = `86${randomString(12, true)}`
+            function calcSP(imei: string) {
+                let sum = 0
+                for (let i = 0; i < imei.length; ++i) {
+                    if (i % 2) {
+                        let j = parseInt(imei[i]) * 2
+                        sum += (j % 10) + Math.floor(j / 10)
+                    } else {
+                        sum += parseInt(imei[i])
+                    }
+                }
+                return (100 - sum) % 10
+            }
+            return imei + calcSP(imei)
+        }
         const device = `{
         "--begin--":    "该设备文件为尝试解决${username}的风控时随机生成。",
         "product":      "M2012K11AC",
@@ -2036,16 +2052,14 @@ const adapter: OicqAdapter = {
         "model":        "ILPP ${randomString(4).toUpperCase()}",
         "wifi_ssid":    "Redmi-${randomString(7).toUpperCase()}",
         "bootloader":   "U-boot",
-        "android_id":   "${randomString(16)}",
-        "boot_id":      "${randomString(8)}-${randomString(4)}-${randomString(4)}-${randomString(4)}-${randomString(
-            12,
-        )}",
+        "android_id":   "${randomString(4)}.${randomString(6, true)}.${randomString(4, true)}",
+        "boot_id":      "${crypto.randomUUID()}",
         "proc_version": "Linux version 4.19.157-${randomString(13)} (android-build@xiaomi.com)",
         "mac_address":  "2B:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
             2,
         ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
         "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
-        "imei":         "86${randomString(13, true)}",
+        "imei":         "${_genIMEI()}",
         "incremental":  "${randomString(10, true)}",
         "--end--":      "修改后可能需要重新验证设备。"
     }`
