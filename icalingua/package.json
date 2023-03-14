@@ -200,9 +200,9 @@
         "pg": "^8.10.0",
         "pg-query-stream": "^4.4.0",
         "pinyin-match": "^1.2.4",
-        "silk-sdk": "0.2.2",
+        "silk-sdk": "^0.2.2",
         "socket.io": "^4.6.1",
-        "sqlite3": "5.1.5"
+        "sqlite3": "^5.1.5"
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",
