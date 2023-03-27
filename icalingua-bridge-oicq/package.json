@@ -41,7 +41,7 @@
         "mongodb": "^4.14.0",
         "mysql": "^2.18.1",
         "nodejs-base64": "^2.0.0",
-        "oicq-icalingua-plus-plus": "^1.23.26",
+        "oicq-icalingua-plus-plus": "^1.23.27",
         "pg": "^8.10.0",
         "pg-query-stream": "^4.4.0",
         "silk-sdk": "^0.2.2",
