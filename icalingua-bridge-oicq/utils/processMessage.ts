@@ -238,8 +238,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         try {
                             const meta =
                                 (<BilibiliMiniApp>jsonObj).meta.detail_1 || (<StructMessageCard>jsonObj).meta.news
-                            lastMessage.content = meta.desc + ' '
-                            message.content = meta.desc + '\n\n'
+                            lastMessage.content = meta.title + ' ' + meta.desc + ' '
+                            message.content = meta.title + '\n\n' + meta.desc + '\n\n'
 
                             let previewUrl = meta.preview
                             if (!previewUrl.toLowerCase().startsWith('http')) {
