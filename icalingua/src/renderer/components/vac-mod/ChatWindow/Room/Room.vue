@@ -1134,6 +1134,7 @@ export default {
         },
         async sendMessage() {
             let message = this.message
+            this.message = ''
 
             if (!this.file && !message) return
 
