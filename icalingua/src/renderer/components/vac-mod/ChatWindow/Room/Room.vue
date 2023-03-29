@@ -1524,7 +1524,7 @@ export default {
             if (this.mouseSelecting) return
 
             for (let el = e.target; el.className !== 'vac-messages-container'; el = el.parentElement) {
-                if (el.className.includes('vac-message-container')) return
+                if (el.className.includes && el.className.includes('vac-message-container')) return
             }
 
             this.mouseSelecting = true
