@@ -166,14 +166,12 @@
             </tr>
         </table>
     </div>
-    <a style="display: none" id='download' download href=""></a>
 </body>
 <script>
     const body = document.body
     const IMG = document.getElementById('IMG')
     const DRAG = document.getElementById('DRAG')
     const BAR = document.getElementById('BAR')
-    const DOWNLOAD = document.getElementById('download')
     const RATIO = document.getElementById('RATIO')
     const RATIO_TEXT = document.getElementById('RATIO_TEXT')
     const TIP = document.getElementById('TIP')
@@ -183,7 +181,6 @@
     let _ratio = 1
     let url = decodeURIComponent(new RegExp('\\?url=(.*)').exec(window.parent.location.href)[1]).trim()
     IMG.src = url.split('&message_id=')[0]
-    DOWNLOAD.href = url.split('&message_id=')[0]
 
     var centerX = -1    // to center, with % instead
     var centerY = -1
@@ -375,7 +372,7 @@
     }
 
     function download() {
-        DOWNLOAD.dispatchEvent(new MouseEvent('click'))
+        window.downloadImage(IMG.src, true)
     }
 
     function previousImg() {
@@ -402,7 +399,6 @@
 
     function reinit() {
         IMG.src = url.split('&message_id=')[0]
-        DOWNLOAD.href = url.split('&message_id=')[0]
         _ratio = 1
         centerX = -1    // to center, with % instead
         centerY = -1

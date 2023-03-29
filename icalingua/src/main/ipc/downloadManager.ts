@@ -209,7 +209,7 @@ ipcMain.on('download', (_, url, out, dir, saveAs) => download(url, out, dir, sav
 ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Message; room: Room }) =>
     downloadFileByMessageData(data),
 )
-ipcMain.on('downloadImage', (_, url) => downloadImage(url))
+ipcMain.on('downloadImage', (_, url, saveAs = false) => downloadImage(url, saveAs))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('cancelDownload', (_, url: string) => downloads.get(url)?.cancel())
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
