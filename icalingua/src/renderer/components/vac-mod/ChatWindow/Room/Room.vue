@@ -1472,6 +1472,7 @@ export default {
             const { roomId } = this.room
             if (roomId < 0) {
                 const groupMembers = await ipc.getGroupMembers(-roomId)
+                if (roomId !== this.room.roomId) return
                 const self = groupMembers.find((member) => member.user_id === this.currentUserId)
                 if (self && (self.role === 'owner' || self.role === 'admin')) {
                     groupMembers.unshift({
