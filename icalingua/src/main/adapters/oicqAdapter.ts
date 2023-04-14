@@ -1025,11 +1025,6 @@ const initStorage = async () => {
     }
 }
 const attachEventHandler = () => {
-    bot.off('system.login.slider', loginHandlers.slider)
-    bot.off('system.login.error', loginHandlers.onErr)
-    bot.off('system.online', loginHandlers.onSucceed)
-    bot.off('system.login.device', loginHandlers.verify)
-    bot.off('system.login.qrcode', loginHandlers.qrcode)
     bot.on('message', eventHandlers.onQQMessage)
     bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
