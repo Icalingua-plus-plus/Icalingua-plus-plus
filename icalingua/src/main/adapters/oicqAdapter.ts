@@ -408,7 +408,7 @@ const eventHandlers = {
                 senderId: data.operator_id,
                 timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
-                _id: data.time,
+                _id: `poke-${data.time * 1000}-${data.group_id}-${data.user_id}`,
                 system: true,
                 time: data.time * 1000,
                 files: [],
@@ -437,7 +437,7 @@ const eventHandlers = {
                 senderId: data.user_id,
                 timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
-                _id: data.time,
+                _id: `sign-${data.time * 1000}-${data.group_id}-${data.user_id}`,
                 system: true,
                 time: data.time * 1000,
                 files: [],
@@ -457,7 +457,7 @@ const eventHandlers = {
         if (await storage.isChatIgnored(roomId)) return
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
-            content: `${data.nickname} 加入了本群`,
+            content: `${data.nickname} (${data.user_id}) 加入了本群`,
             username: data.nickname,
             senderId,
             time: data.time * 1000,
@@ -501,9 +501,11 @@ const eventHandlers = {
             content: data.dismiss
                 ? '群解散了'
                 : (data.member ? (data.member.card ? data.member.card : data.member.nickname) : data.user_id) +
-                  (data.operator_id === data.user_id || !operator
-                      ? ' 离开了本群'
-                      : ` 被 ${operator.card ? operator.card : operator.nickname} 踢了`),
+                  (data.operator_id === data.user_id
+                      ? ` (${data.user_id}) 离开了本群`
+                      : ` (${data.user_id}) 被 ${
+                            operator ? (operator.card ? operator.card : operator.nickname) : data.operator_id
+                        } (${data.operator_id}) 踢了`),
             username: data.member
                 ? data.member.card
                     ? data.member.card
