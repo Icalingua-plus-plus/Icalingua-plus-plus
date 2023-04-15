@@ -931,12 +931,14 @@ Chromium ${process.versions.chrome}` : ''
             let newWidth = e.target.innerWidth
             if (!this.useSinglePanel) {
                 if (newWidth < 880) {
+                    this.showSinglePanel = false
                     this.roomPanelResize(this.$refs.roomPanel, null, `${newWidth - 500}px`)
                 }
                 return
             }
             let oldValue = this.showSinglePanel
             this.showSinglePanel = newWidth < 720
+            if (this.showSinglePanel) this.roomPanelResize(this.$refs.roomPanel, null, '300px')
             if (this.showSinglePanel && this.selectedRoomId === 0) this.showPanel = 'contact'
             if (oldValue && !this.showSinglePanel) this.$refs.roomPanel.style.width = '300px'
         },
