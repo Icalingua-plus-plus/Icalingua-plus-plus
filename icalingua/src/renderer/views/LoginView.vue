@@ -85,7 +85,7 @@
                     <span v-show="!form.password && $route.query.bridge !== 'true'">QR Code</span>
                     Login
                 </el-button>
-                <el-button type="warning" v-if="errmsg !== ''" v-on:click="cannotLogin"> 无法登录?</el-button>
+                <el-button type="warning" v-if="errmsg !== ''" v-on:click="cannotLogin"> 更换设备信息</el-button>
             </el-form-item>
         </el-form>
         <QrcodeDrawer @login="onSubmit('loginForm')" />
@@ -152,6 +152,28 @@ export default {
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
+
+            const tmp = String(msg).split(' ')
+            const code = tmp[tmp.length - 1]
+            switch (code) {
+                case '(235)':
+                    this.$alert('设备信息可能被封禁, 请点击 更换设备信息 按钮后重试')
+                    break
+                case '(237)':
+                    this.$alert('账号登录过于频繁，请稍后再试')
+                    break
+                case '(45)':
+                    if (this.form.protocol === 3) break
+                    if (String(msg).includes('你当前使用的QQ版本过低'))
+                        this.$alert('账号被限制使用内置的 QQ 版本登录，请等待更新或尝试测试版')
+                    else
+                        this.$alert(
+                            '可能为非常用环境登录，请等待更新 tlv544 和数据包签名算法，或 MacOS 协议登录后删除数据目录下的 token 再更换协议重试',
+                        )
+                    break
+                default:
+                    break
+            }
         })
         ipcRenderer.on('smsCodeVerify', (_, data) => {
             const parsed = JSON.parse(data)
