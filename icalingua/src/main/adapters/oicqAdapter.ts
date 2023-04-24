@@ -1961,14 +1961,14 @@ const adapter: OicqAdapter = {
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
-            ui.messageSuccess(`${roomId} 已拉取 ${messages.length} 条消息`)
+            ui.messageSuccess(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
         } else {
-            ui.message(`${roomId} 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            ui.message(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)
-                ui.messageSuccess(`${roomId} 已拉取 ${messages.length} 条消息`)
+                ui.messageSuccess(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
                 ui.clearHistoryCount()
             }
         }
