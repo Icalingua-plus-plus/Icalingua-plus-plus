@@ -1670,7 +1670,8 @@ const adapter = {
             }
         }
         console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
-        clients.messageSuccess(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
+        let room = await storage.getRoom(roomId)
+        clients.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
         await storage.addMessages(roomId, messages)
         storage
             .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)

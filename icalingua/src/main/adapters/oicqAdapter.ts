@@ -1958,24 +1958,24 @@ const adapter: OicqAdapter = {
         }
         const { messages, done } = await fetchLoop(60)
         await storage.addMessages(roomId, messages)
+        let room = await storage.getRoom(roomId)
         if (roomId === ui.getSelectedRoomId())
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
-            ui.messageSuccess(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
+            ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
         } else {
-            ui.message(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            ui.message(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)
-                ui.messageSuccess(`${roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
+                ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
                 ui.clearHistoryCount()
             }
         }
 
         // 更新最近消息
         if (!messages.length) return
-        let room = await storage.getRoom(roomId)
         if (room.utime > lastMessageTime) return
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
