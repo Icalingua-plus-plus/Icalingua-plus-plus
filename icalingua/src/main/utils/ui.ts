@@ -66,14 +66,14 @@ export default {
         }
     },
     message(string: string) {
-        if (getConfig().silentFetchHistory && string.startsWith('已拉取')) return
+        if (getConfig().silentFetchHistory && string.endsWith(' 条消息')) return
         sendToMainWindow('message', string)
     },
     messageError(string: string) {
         sendToMainWindow('messageError', string)
     },
     messageSuccess(string: string) {
-        if (getConfig().silentFetchHistory && (string.startsWith('已拉取') || string === '开始拉取消息')) return
+        if (getConfig().silentFetchHistory && (string.endsWith(' 条消息') || string === '开始拉取消息')) return
         sendToMainWindow('messageSuccess', string)
     },
     updateRoom(room: Room) {
