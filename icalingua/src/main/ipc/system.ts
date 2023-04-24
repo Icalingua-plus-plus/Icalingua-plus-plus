@@ -23,8 +23,7 @@ ipcMain.on('setRoomPanelSetting', (_, roomPanelAvatarOnly: boolean, roomPanelWid
 ipcMain.handle('getMessgeTypeSetting', () => {
     let messageType = 'text'
     if (getConfig().anonymous) messageType = 'anonymous'
-    if (getConfig().sendRawMessage) messageType = 'raw'
-    if (!getConfig().debugmode) messageType = 'text'
+    if (getConfig().sendRawMessage) messageType = getConfig().debugmode ? 'raw' : messageType
     return messageType
 })
 

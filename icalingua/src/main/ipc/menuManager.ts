@@ -523,6 +523,18 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 },
             }),
         )
+        menu.append(
+            new MenuItem({
+                label: '匿名发送群消息',
+                type: 'checkbox',
+                checked: getConfig().anonymous === true,
+                visible: getConfig().sendRawMessage === false,
+                click: (menuItem) => {
+                    getConfig().anonymous = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+        )
     } else {
         // menu.append(new MenuItem({
         //     label: 'ta 的线索',
@@ -1042,21 +1054,8 @@ export const updateAppMenu = async () => {
                         visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
                         click: (menuItem) => {
                             getConfig().debugmode = menuItem.checked
-                            if (!menuItem.checked) {
-                                getConfig().anonymous = false
-                            }
                             saveConfigFile()
                             updateAppMenu()
-                        },
-                    },
-                    {
-                        label: '以匿名方式发送群消息',
-                        type: 'checkbox',
-                        checked: getConfig().anonymous === true,
-                        visible: getConfig().debugmode === true && getConfig().sendRawMessage === false,
-                        click: (menuItem) => {
-                            getConfig().anonymous = menuItem.checked
-                            saveConfigFile()
                         },
                     },
                     {
