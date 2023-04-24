@@ -36,7 +36,7 @@
                         @click="
                             $message({
                                 type: 'info',
-                                message: 'Coming soon... 目前中键删除对应分组，右键增加/删除当前聊天到分组',
+                                message: '懒得写了（目前中键删除对应分组，右键增加/删除当前聊天到分组',
                             })
                         "
                     />
