@@ -195,6 +195,11 @@ export default {
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
+                    setTimeout(() => {
+                        this.$alert(
+                            '登录时间似乎过长了，请检查网络是否正常，如果安卓系/苹果系协议互相切换请先删除 token，若还不能登录请携带日志反馈',
+                        )
+                    }, 60 * 1000)
                     await ipcRenderer.send('createBot', this.form)
                 } else {
                     return false

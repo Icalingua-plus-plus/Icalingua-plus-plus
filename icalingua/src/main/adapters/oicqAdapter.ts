@@ -1559,7 +1559,7 @@ const adapter: OicqAdapter = {
                 data_dir: path.join(app.getPath('userData'), '/data'),
                 ignore_self: false,
                 brief: true,
-                log_level: process.env.NODE_ENV === 'development' ? 'mark' : 'warn',
+                log_level: process.env.NODE_ENV === 'development' ? 'warn' : 'error',
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
