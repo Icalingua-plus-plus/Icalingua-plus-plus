@@ -31,6 +31,8 @@
                     <el-radio-button label="4">MacOS</el-radio-button>
                     <el-radio-button label="5">iPad</el-radio-button>
                     <el-radio-button label="6">FIX</el-radio-button>
+                    <el-radio-button label="7">Android 8933</el-radio-button>
+                    <el-radio-button label="8">aPad 8933</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
@@ -167,11 +169,11 @@ export default {
                     if (this.form.protocol === 3) break
                     if (String(msg).includes('你当前使用的QQ版本过低'))
                         this.$alert(
-                            '账号被限制使用内置的 QQ 版本登录，请使用 FIX 协议登录成功后再更换 aPad 协议重试，或尝试使用v2.9.4或等待更新',
+                            '账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
                         )
                     else
                         this.$alert(
-                            '可能为非常用环境登录，请等待更新 tlv544 和数据包签名算法，或使用 FIX 协议登录成功后再更换 aPad 协议重试',
+                            '可能为非常用环境登录，请等待更新 tlv544 和数据包签名算法，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
                         )
                     break
                 default:
