@@ -41,6 +41,11 @@ const USER_CONFIG_PATH = argv.data || `data/${config.port}.json`
 export const userConfig: UserConfig = fs.existsSync(USER_CONFIG_PATH)
     ? JSON.parse(fs.readFileSync(USER_CONFIG_PATH, 'utf8'))
     : { account: emptyLoginForm }
+if (!userConfig.account) userConfig.account = Object.assign({}, emptyLoginForm)
+Object.keys(emptyLoginForm).forEach((key) => {
+    console.log(key, userConfig.account[key], emptyLoginForm[key])
+    if (userConfig.account[key] === undefined) userConfig.account[key] = emptyLoginForm[key]
+})
 export const saveUserConfig = () => {
     fs.writeFileSync(USER_CONFIG_PATH, JSON.stringify(userConfig), 'utf-8')
 }
