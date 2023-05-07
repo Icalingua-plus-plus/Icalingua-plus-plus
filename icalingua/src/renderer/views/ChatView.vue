@@ -652,6 +652,13 @@ Chromium ${process.versions.chrome}` : ''
             if (!roomId) roomId = room.roomId
             if (file) {
                 if (file.type.includes('image')) {
+                    if (file.size >= 104857600) {
+                        this.$message.error('图片过大，无法发送')
+                        return
+                    }
+                    if (file.size >= 10485760) {
+                        this.$message.warning('图片较大，发送可能失败，软件可能卡死')
+                    }
                     const crypto = require('crypto')
                     const buffer = Buffer.from(await file.blob.arrayBuffer())
                     const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
@@ -660,6 +667,13 @@ Chromium ${process.versions.chrome}` : ''
                     imgpath = imgpath || `send_https://gchat.qpic.cn/gchatpic_new/0/0-0-${imgHashStr}/0`
                     file = null
                 } else if (file.type.startsWith('audio')) {
+                    if (file.size >= 104857600) {
+                        this.$message.error('语音过大，无法发送')
+                        return
+                    }
+                    if (file.size >= 10485760) {
+                        this.$message.warning('语音较大，发送可能失败，软件可能卡死')
+                    }
                     const buffer = Buffer.from(await file.blob.arrayBuffer())
                     b64img = `data:audio;base64,${buffer.toString('base64')}`
                     file = {

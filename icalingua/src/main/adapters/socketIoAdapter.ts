@@ -574,7 +574,14 @@ const adapter: Adapter = {
                     .post(getConfig().server + `/api/${token}/sendMessage`, data, {
                         proxy: false,
                     })
-                    .catch(console.log),
+                    .catch((e) => {
+                        console.log(e)
+                        if (e.response.status === 413) {
+                            ui.messageError('语音过大，无法发送')
+                        } else {
+                            ui.messageError('语音上传失败，请检查日志')
+                        }
+                    }),
             )
             return
         }
@@ -584,7 +591,14 @@ const adapter: Adapter = {
                       .post(getConfig().server + `/api/${token}/sendMessage`, data, {
                           proxy: false,
                       })
-                      .catch(console.log),
+                      .catch((e) => {
+                          console.log(e)
+                          if (e.response.status === 413) {
+                              ui.messageError('图片过大，无法发送')
+                          } else {
+                              ui.messageError('图片上传失败，请检查日志')
+                          }
+                      }),
               )
             : socket.emit('sendMessage', data)
     },
