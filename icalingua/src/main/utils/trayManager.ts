@@ -18,6 +18,7 @@ import ui from './ui'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
 import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
+import openImage from '../ipc/openImage'
 
 let tray: Tray
 
@@ -93,40 +94,25 @@ export const updateTrayMenu = async () => {
     }
     menu.append(
         new MenuItem({
-            label: '通知优先级',
+            label: '通知设置',
             submenu: [
                 {
-                    type: 'radio',
-                    label: '1',
-                    checked: getConfig().priority === 1,
-                    click: () => setPriority(1),
-                },
-                {
-                    type: 'radio',
-                    label: '2',
-                    checked: getConfig().priority === 2,
-                    click: () => setPriority(2),
-                },
-                {
-                    type: 'radio',
-                    label: '3',
-                    checked: getConfig().priority === 3,
-                    click: () => setPriority(3),
-                },
-                {
-                    type: 'radio',
-                    label: '4',
-                    checked: getConfig().priority === 4,
-                    click: () => setPriority(4),
-                },
-                {
-                    type: 'radio',
-                    label: '5',
-                    checked: getConfig().priority === 5,
-                    click: () => setPriority(5),
-                },
-                {
-                    type: 'separator',
+                    label: '通知优先级',
+                    submenu: [
+                        ...([1, 2, 3, 4, 5] as const).map((e) => ({
+                            type: 'radio' as const,
+                            label: `${e}`,
+                            checked: getConfig().priority === e,
+                            click: () => setPriority(e),
+                        })),
+                        {
+                            type: 'separator',
+                        },
+                        {
+                            label: '帮助',
+                            click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
+                        },
+                    ],
                 },
                 {
                     type: 'checkbox',
@@ -134,6 +120,18 @@ export const updateTrayMenu = async () => {
                     checked: getConfig().disableNotification,
                     click: (item) => {
                         getConfig().disableNotification = item.checked
+                        updateAppMenu()
+                        updateTrayMenu()
+                        saveConfigFile()
+                    },
+                },
+                {
+                    type: 'checkbox',
+                    label: '禁用全体通知',
+                    checked: getConfig().disableAtAll,
+                    visible: !getConfig().disableNotification,
+                    click: (item) => {
+                        getConfig().disableAtAll = item.checked
                         updateAppMenu()
                         updateTrayMenu()
                         saveConfigFile()

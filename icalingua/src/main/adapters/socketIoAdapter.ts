@@ -162,7 +162,7 @@ const attachSocketEvents = () => {
                 (!getMainWindow().isFocused() ||
                     !getMainWindow().isVisible() ||
                     data.roomId !== ui.getSelectedRoomId()) &&
-                (data.priority >= getConfig().priority || data.at) &&
+                (data.priority >= getConfig().priority || data.at === true || (data.at && !getConfig().disableAtAll)) &&
                 !data.isSelfMsg &&
                 !getConfig().disableNotification
             ) {

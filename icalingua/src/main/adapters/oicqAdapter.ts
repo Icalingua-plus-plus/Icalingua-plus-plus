@@ -199,7 +199,7 @@ const eventHandlers = {
         if (
             !isAppLocked() &&
             (!getMainWindow().isFocused() || !getMainWindow().isVisible() || roomId !== ui.getSelectedRoomId()) &&
-            (room.priority >= getConfig().priority || at) &&
+            (room.priority >= getConfig().priority || at === true || (at && !getConfig().disableAtAll)) &&
             !isSelfMsg &&
             !getConfig().disableNotification
         ) {

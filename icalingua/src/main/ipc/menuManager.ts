@@ -774,20 +774,25 @@ export const updateAppMenu = async () => {
             }),
         ],
         priority: new MenuItem({
-            label: '通知优先级',
+            label: '通知设置',
             submenu: [
-                ...([1, 2, 3, 4, 5] as const).map((e) => ({
-                    type: 'radio' as const,
-                    label: `${e}`,
-                    checked: getConfig().priority === e,
-                    click: () => setPriority(e),
-                })),
                 {
-                    type: 'separator',
-                },
-                {
-                    label: '帮助',
-                    click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
+                    label: '通知优先级',
+                    submenu: [
+                        ...([1, 2, 3, 4, 5] as const).map((e) => ({
+                            type: 'radio' as const,
+                            label: `${e}`,
+                            checked: getConfig().priority === e,
+                            click: () => setPriority(e),
+                        })),
+                        {
+                            type: 'separator',
+                        },
+                        {
+                            label: '帮助',
+                            click: () => openImage(path.join(getStaticPath(), 'notification.webp')),
+                        },
+                    ],
                 },
                 {
                     type: 'checkbox',
@@ -795,6 +800,18 @@ export const updateAppMenu = async () => {
                     checked: getConfig().disableNotification,
                     click: (item) => {
                         getConfig().disableNotification = item.checked
+                        updateAppMenu()
+                        updateTrayMenu()
+                        saveConfigFile()
+                    },
+                },
+                {
+                    type: 'checkbox',
+                    label: '禁用全体通知',
+                    checked: getConfig().disableAtAll,
+                    visible: !getConfig().disableNotification,
+                    click: (item) => {
+                        getConfig().disableAtAll = item.checked
                         updateAppMenu()
                         updateTrayMenu()
                         saveConfigFile()
