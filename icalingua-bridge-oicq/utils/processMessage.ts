@@ -28,6 +28,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                 case 'text':
                     // PCQQ 发送的消息的换行符是 \r，统一转成 \n
                     let text = m.data.text.split('\r\n').join('\n').split('\r').join('\n')
+                    // 去除 \x00 字符，防止 postgreSQL 存储失败
+                    text = text.split('\x00').join('')
                     if (lastReply) {
                         lastReply = false
                         text = text.replace(/^ /, '')
