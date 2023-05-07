@@ -5,7 +5,7 @@ import { json } from 'body-parser'
 
 export const app = express()
 const parser = json({
-    limit: '10mb',
+    limit: '100mb',
 })
 
 export const initExpress = (adapter: typeof oicqAdapter) => {

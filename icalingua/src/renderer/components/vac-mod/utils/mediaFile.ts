@@ -9,3 +9,9 @@ export function isVideoFile(file: { type: string }) {
     const { type } = file
     return type.toLowerCase().startsWith('video/')
 }
+
+export function isAudioFile(file: { type: string }) {
+    if (!file) return
+    const { type } = file
+    return type.toLowerCase().startsWith('audio/')
+}

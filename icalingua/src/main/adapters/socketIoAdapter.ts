@@ -568,6 +568,16 @@ const adapter: Adapter = {
             data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
             data.imgpath = null
         }
+        if (data.file && data.file.type.startsWith('audio/')) {
+            socket.emit('requestToken', (token: string) =>
+                axios
+                    .post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                        proxy: false,
+                    })
+                    .catch(console.log),
+            )
+            return
+        }
         data.b64img
             ? socket.emit('requestToken', (token: string) =>
                   axios

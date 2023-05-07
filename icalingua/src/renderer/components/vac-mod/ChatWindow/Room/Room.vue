@@ -420,7 +420,7 @@ import getStaticPath from '../../../../../utils/getStaticPath'
 
 import ipc from '../../../../utils/ipc'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
-import { isImageFile, isVideoFile } from '../../utils/mediaFile'
+import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
 
 const faceDir = path.join(getStaticPath(), 'face')
 
@@ -718,7 +718,10 @@ export default {
                 const lastMessage = ownMessages[ownMessages.length - 1]
                 if (lastMessage.file && lastMessage.file.type.startsWith('image')) {
                     this.onPasteGif(lastMessage.file.url)
+                } else if (lastMessage.file && lastMessage.file.type.startsWith('audio')) {
+                    return
                 } else {
+                    return
                     this.file = lastMessage.file
                 }
                 this.messageReply = lastMessage.replyMessage
@@ -1337,6 +1340,9 @@ export default {
             if (isImageFile(this.file)) {
                 this.imageFile = fileURL
             } else if (isVideoFile(this.file)) {
+                this.videoFile = fileURL
+                setTimeout(() => this.onMediaLoad(), 50)
+            } else if (isAudioFile(this.file)) {
                 this.videoFile = fileURL
                 setTimeout(() => this.onMediaLoad(), 50)
             } else {

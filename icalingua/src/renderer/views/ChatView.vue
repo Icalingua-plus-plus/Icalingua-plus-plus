@@ -659,8 +659,15 @@ Chromium ${process.versions.chrome}` : ''
                     b64img = `data:${file.type};base64,${b64}`
                     imgpath = imgpath || `send_https://gchat.qpic.cn/gchatpic_new/0/0-0-${imgHashStr}/0`
                     file = null
-                }
-                else
+                } else if (file.type.startsWith('audio')) {
+                    const buffer = Buffer.from(await file.blob.arrayBuffer())
+                    b64img = `data:audio;base64,${buffer.toString('base64')}`
+                    file = {
+                        type: file.type,
+                        size: file.size,
+                        path: file.path.substring(file.path.split('\\').join('/').lastIndexOf('/') + 1),
+                    }
+                } else
                     file = {
                         type: file.type,
                         size: file.size,

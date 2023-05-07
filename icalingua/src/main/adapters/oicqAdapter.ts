@@ -1266,7 +1266,7 @@ const adapter: OicqAdapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
-        if (file && typeof file.type === 'string' && !file.type.includes('image')) {
+        if (file && typeof file.type === 'string' && !file.type.includes('image') && !file.type.startsWith('audio')) {
             //群文件
             if (roomId > 0) {
                 bot.sendFile(roomId, file.path, undefined, ui.uploadProgress).then(async (data) => {
@@ -1478,14 +1478,23 @@ const adapter: OicqAdapter = {
             }
         }
         if (b64img) {
-            chain.push({
-                type: 'image',
-                data: {
-                    file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
-                    type: sticker ? 'face' : 'image',
-                    url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
-                },
-            })
+            if (file && file.type.startsWith('audio')) {
+                chain.push({
+                    type: 'record',
+                    data: {
+                        file: Buffer.from(b64img.replace(/^data:.+;base64,/, ''), 'base64'),
+                    },
+                })
+            } else {
+                chain.push({
+                    type: 'image',
+                    data: {
+                        file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
+                        type: sticker ? 'face' : 'image',
+                        url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
+                    },
+                })
+            }
         } else if (imgpath) {
             chain.push({
                 type: 'image',
