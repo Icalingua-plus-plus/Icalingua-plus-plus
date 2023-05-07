@@ -43,7 +43,7 @@ import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
-const EXCEPTED_PROTOCOL_VERSION = '2.9.8'
+const EXCEPTED_PROTOCOL_VERSION = '2.9.10'
 
 let socket: Socket
 let uin = 0
@@ -312,7 +312,7 @@ const attachSocketEvents = () => {
         })
         veriWin.loadURL(url, {
             userAgent:
-                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/77.0.3865.120 MQQBrowser/6.2 TBS/045426 Mobile Safari/537.36 V1_AND_SQ_8.3.9_0_TIM_D QQ/3.1.1.2900 NetType/WIFI WebP/0.3.0 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1015712',
+                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/98.0.4758.102 MQQBrowser/6.2 TBS/046403 Mobile Safari/537.36 V1_AND_SQ_8.9.50_3898_YYB_D QQ/8.9.50.10650 NetType/WIFI WebP/0.3.0 AppId/537155599 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1000 StudyMode/0 CurrentMode/0 CurrentFontScale/1.0 GlobalDensityScale/1.0285714 AllowLandscape/false InMagicWin/0',
         })
     })
 }
