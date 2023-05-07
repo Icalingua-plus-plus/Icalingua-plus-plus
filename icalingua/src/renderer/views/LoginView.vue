@@ -146,12 +146,14 @@ export default {
             verifyUrl: '',
             phone: '',
             sendTime: -1,
+            loginTimeout: null,
         }
     },
     async created() {
         this.ver = await ipc.getVersion()
         this.form = await ipc.getAccount()
         ipcRenderer.on('error', (_, msg) => {
+            if (this.loginTimeout) clearTimeout(this.loginTimeout)
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
@@ -181,6 +183,7 @@ export default {
             }
         })
         ipcRenderer.on('smsCodeVerify', (_, data) => {
+            if (this.loginTimeout) clearTimeout(this.loginTimeout)
             const parsed = JSON.parse(data)
             console.log(parsed.url)
             this.shouldSubmitSmsCode = true
@@ -195,7 +198,7 @@ export default {
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
-                    setTimeout(() => {
+                    this.loginTimeout = setTimeout(() => {
                         this.$alert(
                             '登录时间似乎过长了，请检查网络是否正常，如果安卓系/苹果系协议互相切换请先删除 token，若还不能登录请携带日志反馈',
                         )
@@ -221,6 +224,7 @@ export default {
             }, 1000)
         },
         QRCodeVerify() {
+            if (this.loginTimeout) clearTimeout(this.loginTimeout)
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
         cannotLogin() {
