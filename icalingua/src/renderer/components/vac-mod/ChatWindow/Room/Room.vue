@@ -720,7 +720,7 @@ export default {
                     this.onPasteGif(lastMessage.file.url)
                 } else if (lastMessage.file && lastMessage.file.type.startsWith('audio')) {
                     return
-                } else {
+                } else if (lastMessage.file) {
                     return
                     this.file = lastMessage.file
                 }
