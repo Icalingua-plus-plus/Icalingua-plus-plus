@@ -1323,7 +1323,7 @@ export default {
             this.resetMediaFile()
 
             const file = files[0]
-            const fileURL = URL.createObjectURL(file)
+            const fileURL = file.path ? file.path : URL.createObjectURL(file)
             const blobFile = await fetch(fileURL).then((res) => res.blob())
             const typeIndex = file.name.lastIndexOf('.')
 
