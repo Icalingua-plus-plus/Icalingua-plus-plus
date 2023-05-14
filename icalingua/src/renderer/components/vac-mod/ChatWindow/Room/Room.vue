@@ -18,6 +18,7 @@
             :room="room"
             :members-count="membersCount"
             :showSinglePanel="showSinglePanel"
+            :removeGroupNameEmotes="removeGroupNameEmotes"
             @toggle-rooms-list="$emit('toggle-rooms-list')"
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
@@ -478,6 +479,7 @@ export default {
         lastUnreadCount: { type: Number, required: false, default: 0 },
         lastUnreadAt: { type: Boolean, required: false, default: false },
         showSinglePanel: { type: Boolean, require: true, default: false },
+        removeGroupNameEmotes: { type: Boolean, required: false, default: false },
     },
     data() {
         return {

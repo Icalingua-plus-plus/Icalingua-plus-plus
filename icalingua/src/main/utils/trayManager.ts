@@ -19,6 +19,7 @@ import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
 import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
 import openImage from '../ipc/openImage'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let tray: Tray
 
@@ -251,13 +252,20 @@ let currentIconUnread = false
 export const updateTrayIcon = async (force = false) => {
     let p: Electron.NativeImage
     const unread = await getUnreadCount()
-    const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
+    let selectedRoomName = ui.getSelectedRoomName()
+    if (getConfig().removeGroupNameEmotes) {
+        selectedRoomName = removeGroupNameEmotes(selectedRoomName)
+    }
+    const title = selectedRoomName ? selectedRoomName + ' — Icalingua++' : 'Icalingua++'
     const shouldUpdateIcon = currentIconUnread !== unread > 0
     currentIconUnread = unread > 0
     if (unread) {
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
-        const newMsgRoom = await getFirstUnreadRoom()
-        const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
+        let newMsgRoomName = (await getFirstUnreadRoom())?.roomName ?? ''
+        if (getConfig().removeGroupNameEmotes) {
+            newMsgRoomName = removeGroupNameEmotes(newMsgRoomName)
+        }
+        const extra = newMsgRoomName ? ' : ' + newMsgRoomName : ''
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
         p = getTrayIconColor() ? darkIcon : lightIcon

@@ -15,10 +15,14 @@
                     <div>
                         <span v-if="item.request_type === 'friend'"> 来源：{{ item.source }} </span>
                         <span v-if="item.request_type === 'group' && item.sub_type === 'add'">
-                            申请加入：{{ item.group_name }}({{ item.group_id }})
+                            申请加入：
+                            {{ removeGroupNameEmotes ? removeEmotes(item.group_name) : item.group_name }}
+                            ({{ item.group_id }})
                         </span>
                         <span v-if="item.request_type === 'group' && item.sub_type === 'invite'">
-                            邀请你加入：{{ item.group_name }}({{ item.group_id }})
+                            邀请你加入：
+                            {{ removeGroupNameEmotes ? removeEmotes(item.group_name) : item.group_name }}
+                            ({{ item.group_id }})
                         </span>
                     </div>
                     <div>
@@ -37,6 +41,7 @@
 <script>
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import removeEmotes from '../../utils/removeGroupNameEmotes'
 import { ipcRenderer } from 'electron'
 
 export default {
@@ -44,12 +49,14 @@ export default {
     data: function () {
         return {
             request: {},
+            removeGroupNameEmotes: false,
         }
     },
 
     async created() {
         document.title = '验证消息'
         this.request = { ...this.request, ...(await ipc.getSystemMsg()) }
+        this.removeGroupNameEmotes = (await ipc.getSettings()).removeGroupNameEmotes
         ipcRenderer.on('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
     },
 
@@ -65,6 +72,7 @@ export default {
             ipc.handleRequest(type, flag, false)
             this.$delete(this.request, flag)
         },
+        removeEmotes,
     },
 }
 </script>

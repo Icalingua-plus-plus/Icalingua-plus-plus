@@ -47,7 +47,7 @@
                         v-for="i in groupsAll"
                         :key="i.group_id"
                         :id="-i.group_id"
-                        :remark="i.group_name"
+                        :remark="removeGroupNameEmotes ? removeEmotes(i.group_name) : i.group_name"
                         :group="i"
                         v-show="i.sc.includes(searchContext) || PinyinMatch(i.sc, searchContext)"
                         @click="$emit('click', -i.group_id, i.group_name)"
@@ -63,9 +63,13 @@
 import { ipcRenderer } from 'electron'
 import ContactEntry from './ContactEntry.vue'
 import PinyinMatch from 'pinyin-match'
+import removeEmotes from '../../utils/removeGroupNameEmotes'
 
 export default {
     components: { ContactEntry },
+    props: {
+        removeGroupNameEmotes: Boolean,
+    },
     data() {
         return {
             activeName: 'friends',
@@ -135,6 +139,7 @@ export default {
             })
         },
         PinyinMatch: PinyinMatch.match,
+        removeEmotes,
     },
 }
 </script>

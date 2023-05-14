@@ -56,7 +56,8 @@ import {
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
-import { updateTrayMenu } from '../utils/trayManager'
+import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 const requireFunc = eval('require')
 const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
@@ -1058,6 +1059,18 @@ export const updateAppMenu = async () => {
                             ui.useSinglePanel(menuItem.checked)
                         },
                     },
+                    {
+                        label: '移除群名里的表情',
+                        type: 'checkbox',
+                        checked: getConfig().removeGroupNameEmotes,
+                        click: (menuItem) => {
+                            getConfig().removeGroupNameEmotes = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                            updateTrayIcon()
+                            ui.removeGroupNameEmotes(menuItem.checked)
+                        },
+                    },
                 ],
             }),
             new MenuItem({
@@ -1266,9 +1279,12 @@ export const updateAppMenu = async () => {
     }
     const selectedRoom = await getSelectedRoom()
     if (selectedRoom) {
+        const roomName = getConfig().removeGroupNameEmotes
+            ? removeGroupNameEmotes(selectedRoom.roomName)
+            : selectedRoom.roomName
         menu.append(
             new MenuItem({
-                label: `${selectedRoom.roomName}(${Math.abs(selectedRoom.roomId)})`,
+                label: `${roomName}(${Math.abs(selectedRoom.roomId)})`,
                 submenu: await buildRoomMenu(selectedRoom),
             }),
         )

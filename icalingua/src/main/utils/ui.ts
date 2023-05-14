@@ -190,4 +190,7 @@ export default {
     useSinglePanel(enable: boolean) {
         sendToMainWindow('useSinglePanel', enable)
     },
+    removeGroupNameEmotes(enable: boolean) {
+        sendToMainWindow('removeGroupNameEmotes', enable)
+    },
 }

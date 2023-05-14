@@ -62,6 +62,7 @@
                     :allRooms="rooms"
                     :disableChatGroups="disableChatGroups"
                     :roomPanelAvatarOnly="roomPanelAvatarOnly"
+                    :removeGroupNameEmotes="removeGroupNameEmotes"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
                     @update-sorted-rooms="(sortedRooms) => (this.sortedRooms = sortedRooms)"
@@ -107,6 +108,7 @@
                     :last-unread-count="lastUnreadCount"
                     :last-unread-at="lastUnreadAt"
                     :showSinglePanel="showSinglePanel"
+                    :removeGroupNameEmotes="removeGroupNameEmotes"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
@@ -178,10 +180,10 @@
             </span>
         </el-dialog>
         <el-dialog title="联系人" :visible.sync="contactsShown" top="5vh" class="dialog">
-            <TheContactsPanel @dblclick="startChat" />
+            <TheContactsPanel @dblclick="startChat" :removeGroupNameEmotes="removeGroupNameEmotes" />
         </el-dialog>
         <el-dialog title="转发到..." :visible.sync="forwardShown" top="5vh" class="dialog">
-            <TheContactsPanel @click="sendForward" />
+            <TheContactsPanel @click="sendForward" :removeGroupNameEmotes="removeGroupNameEmotes" />
         </el-dialog>
         <el-dialog title="群成员" :visible.sync="groupmemberShown" top="5vh" class="dialog">
             <TheGroupMemberPanel
@@ -267,6 +269,7 @@ export default {
             disableChatGroupsRedPoint: false,
             useSinglePanel: false,
             showSinglePanel: false,
+            removeGroupNameEmotes: false,
             showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
             notifyProgresses: new Map(),
         }
@@ -282,6 +285,7 @@ export default {
         this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
         this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
         this.useSinglePanel = (await ipc.getSettings()).useSinglePanel
+        this.removeGroupNameEmotes = (await ipc.getSettings()).removeGroupNameEmotes
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {
@@ -635,6 +639,9 @@ Chromium ${process.versions.chrome}` : ''
             }
             this.useSinglePanel = b
             this.handleResize({ target: { innerWidth: window.innerWidth } })
+        })
+        ipcRenderer.on('removeGroupNameEmotes', (_, b) => {
+            this.removeGroupNameEmotes = b
         })
 
         window.addEventListener("resize", this.handleResize)
