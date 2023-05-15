@@ -8,6 +8,7 @@ import { updateAppMenu } from '../ipc/menuManager'
 import { getConfig } from './configManager'
 import { updateTrayIcon } from './trayManager'
 import { sendToMainWindow, sendToRequestWindow } from './windowManager'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let selectedRoomId = 0
 let selectedRoomName = ''
@@ -74,6 +75,7 @@ export default {
     },
     messageSuccess(string: string) {
         if (getConfig().silentFetchHistory && (string.endsWith(' 条消息') || string === '开始拉取消息')) return
+        if (getConfig().removeGroupNameEmotes && string.endsWith(' 条消息')) string = removeGroupNameEmotes(string)
         sendToMainWindow('messageSuccess', string)
     },
     updateRoom(room: Room) {
@@ -190,7 +192,7 @@ export default {
     useSinglePanel(enable: boolean) {
         sendToMainWindow('useSinglePanel', enable)
     },
-    removeGroupNameEmotes(enable: boolean) {
-        sendToMainWindow('removeGroupNameEmotes', enable)
+    setRemoveGroupNameEmotes(enable: boolean) {
+        sendToMainWindow('setRemoveGroupNameEmotes', enable)
     },
 }

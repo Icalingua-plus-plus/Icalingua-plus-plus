@@ -108,7 +108,7 @@
                     :last-unread-count="lastUnreadCount"
                     :last-unread-at="lastUnreadAt"
                     :showSinglePanel="showSinglePanel"
-                    :removeGroupNameEmotes="removeGroupNameEmotes"
+                    :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
@@ -212,6 +212,7 @@ import ProgressBar from '../components/ProgressBar.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
@@ -640,7 +641,7 @@ Chromium ${process.versions.chrome}` : ''
             this.useSinglePanel = b
             this.handleResize({ target: { innerWidth: window.innerWidth } })
         })
-        ipcRenderer.on('removeGroupNameEmotes', (_, b) => {
+        ipcRenderer.on('setRemoveGroupNameEmotes', (_, b) => {
             this.removeGroupNameEmotes = b
         })
 
@@ -915,12 +916,15 @@ Chromium ${process.versions.chrome}` : ''
                 .findIndex(({ name }) => name === groupName)
             const chatGroup = this.chatGroups[index]
 
+            const roomName = this.selectedRoomId < 0 && this.removeGroupNameEmotes
+                ? removeGroupNameEmotes(this.selectedRoom.roomName)
+                : this.selectedRoom.roomName
             // 移除 room
             if (chatGroup.rooms.includes(this.selectedRoomId)) {
                 chatGroup.rooms = chatGroup.rooms.filter(e => e !== this.selectedRoomId)
                 this.$message({
                     type: 'success',
-                    message: `已将 ${this.selectedRoom.roomName} 移出分组 ${groupName}`,
+                    message: `已将 ${roomName} 移出分组 ${groupName}`,
                 })
             }
             // 添加 room
@@ -928,7 +932,7 @@ Chromium ${process.versions.chrome}` : ''
                 chatGroup.rooms.push(this.selectedRoomId)
                 this.$message({
                     type: 'success',
-                    message: `已将 ${this.selectedRoom.roomName} 加入分组 ${groupName}`,
+                    message: `已将 ${roomName} 加入分组 ${groupName}`,
                 })
             }
 

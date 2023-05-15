@@ -6,7 +6,13 @@
         </div>
         <div class="groups">
             <b v-if="ignoredGroups.length">群组</b>
-            <GroupEntry v-for="chat in ignoredGroups" :key="chat.id" :chat="chat" @click="rm(chat)" />
+            <GroupEntry
+                v-for="chat in ignoredGroups"
+                :key="chat.id"
+                :chat="chat"
+                :removeEmotes="removeGroupNameEmotes"
+                @click="rm(chat)"
+            />
         </div>
         <div class="friends">
             <b v-if="ignoredFriends.length">好友</b>
@@ -26,6 +32,7 @@ export default {
     data() {
         return {
             ignoredChats: [],
+            removeGroupNameEmotes: false,
         }
     },
     computed: {
@@ -46,6 +53,7 @@ export default {
     async created() {
         document.title = '管理屏蔽的会话'
         this.ignoredChats = await ipc.getIgnoredChats()
+        this.removeGroupNameEmotes = (await ipc.getSettings()).removeGroupNameEmotes
     },
 }
 </script>

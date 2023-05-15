@@ -28,7 +28,7 @@
                 :room="room"
                 :selected="room.roomId === selected.roomId"
                 :priority="priority"
-                :removeGroupNameEmotes="removeGroupNameEmotes"
+                :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
                 @click="
                     input = ''
                     $emit('chroom', room)

@@ -97,7 +97,7 @@ export default {
         room: { type: Object, required: true },
         membersCount: { type: Number, default: 0 },
         showSinglePanel: { type: Boolean, require: false, default: false },
-        removeGroupNameEmotes: { type: Boolean, require: false, default: false },
+        removeEmotes: { type: Boolean, require: false, default: false },
     },
 
     data() {
@@ -114,7 +114,7 @@ export default {
             return getAvatarUrl(this.room.roomId)
         },
         roomName() {
-            return this.removeGroupNameEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
+            return this.removeEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
         },
     },
 

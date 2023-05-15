@@ -148,7 +148,14 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         },
         {
             label: '屏蔽消息',
-            click: () => ui.confirmIgnoreChat({ id: room.roomId, name: room.roomName }),
+            click: () =>
+                ui.confirmIgnoreChat({
+                    id: room.roomId,
+                    name:
+                        room.roomId < 0 && getConfig().removeGroupNameEmotes
+                            ? removeGroupNameEmotes(room.roomName)
+                            : room.roomName,
+                }),
         },
         {
             label: '复制名称',
@@ -1068,7 +1075,7 @@ export const updateAppMenu = async () => {
                             saveConfigFile()
                             updateAppMenu()
                             updateTrayIcon()
-                            ui.removeGroupNameEmotes(menuItem.checked)
+                            ui.setRemoveGroupNameEmotes(menuItem.checked)
                         },
                     },
                 ],
@@ -1279,9 +1286,10 @@ export const updateAppMenu = async () => {
     }
     const selectedRoom = await getSelectedRoom()
     if (selectedRoom) {
-        const roomName = getConfig().removeGroupNameEmotes
-            ? removeGroupNameEmotes(selectedRoom.roomName)
-            : selectedRoom.roomName
+        const roomName =
+            selectedRoom.roomId < 0 && getConfig().removeGroupNameEmotes
+                ? removeGroupNameEmotes(selectedRoom.roomName)
+                : selectedRoom.roomName
         menu.append(
             new MenuItem({
                 label: `${roomName}(${Math.abs(selectedRoom.roomId)})`,
@@ -2025,7 +2033,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                             '/' +
                             message.senderId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(message.username) +
                             '/' +
@@ -2058,7 +2070,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                             '/' +
                             message.senderId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(message.username),
                     )
@@ -2124,7 +2140,9 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                             '/' +
                             displayId +
                             '/0/' +
-                            querystring.escape(remark) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                            ) +
                             '/0',
                     )
                 },
@@ -2240,7 +2258,11 @@ ipcMain.on(
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(selectedRoom.roomName) +
+                                querystring.escape(
+                                    getConfig().removeGroupNameEmotes
+                                        ? removeGroupNameEmotes(selectedRoom.roomName)
+                                        : selectedRoom.roomName,
+                                ) +
                                 '/' +
                                 querystring.escape(remark) +
                                 '/' +
@@ -2273,7 +2295,11 @@ ipcMain.on(
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(selectedRoom.roomName) +
+                                querystring.escape(
+                                    getConfig().removeGroupNameEmotes
+                                        ? removeGroupNameEmotes(selectedRoom.roomName)
+                                        : selectedRoom.roomName,
+                                ) +
                                 '/' +
                                 querystring.escape(remark),
                         )

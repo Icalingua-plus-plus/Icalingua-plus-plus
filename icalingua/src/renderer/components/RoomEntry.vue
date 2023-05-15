@@ -52,7 +52,7 @@ export default {
         room: Object,
         selected: Boolean,
         priority: Number,
-        removeGroupNameEmotes: Boolean,
+        removeEmotes: Boolean,
     },
     computed: {
         desc() {
@@ -77,7 +77,7 @@ export default {
             return getAvatarUrl(this.room.roomId)
         },
         roomName() {
-            return this.removeGroupNameEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
+            return this.removeEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
         },
     },
 }

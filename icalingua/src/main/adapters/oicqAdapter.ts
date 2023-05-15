@@ -204,9 +204,10 @@ const eventHandlers = {
             !isSelfMsg &&
             !getConfig().disableNotification
         ) {
-            const notifRoomName = getConfig().removeGroupNameEmotes
-                ? removeGroupNameEmotes(room.roomName)
-                : room.roomName
+            const notifRoomName =
+                room.roomId < 0 && getConfig().removeGroupNameEmotes
+                    ? removeGroupNameEmotes(room.roomName)
+                    : room.roomName
             // notification
             if (lastMessage.content === '[窗口抖动]') {
                 tryToShowAllWindows()

@@ -172,9 +172,10 @@ const attachSocketEvents = () => {
                     ui.chroom(data.roomId)
                 }
                 // notification
-                const notifRoomName = getConfig().removeGroupNameEmotes
-                    ? removeGroupNameEmotes(data.data.title)
-                    : data.data.title
+                const notifRoomName =
+                    data.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(data.data.title)
+                        : data.data.title
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
                     const notif = new ElectronNotification({
