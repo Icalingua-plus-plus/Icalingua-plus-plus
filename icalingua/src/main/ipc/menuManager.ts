@@ -361,13 +361,17 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         console.log(details.url)
                         const parsedUrl = new URL(details.url)
                         if (parsedUrl.hostname === 'qungz.photo.store.qq.com') openImage(details.url)
-                        else if (parsedUrl.hostname === 'download.photo.qq.com')
+                        else if (parsedUrl.hostname === 'download.photo.qq.com') {
+                            const roomName = getConfig().removeGroupNameEmotes
+                                ? removeGroupNameEmotes(room.roomName)
+                                : room.roomName
                             download(
                                 details.url,
-                                `${room.roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
+                                `${roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
                                 undefined,
                                 true,
                             )
+                        }
                         return { action: 'deny' }
                     })
                     await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
@@ -447,7 +451,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                             '#/groupNickEdit/' +
                             -room.roomId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(memberInfo.card || memberInfo.nickname),
                     )
