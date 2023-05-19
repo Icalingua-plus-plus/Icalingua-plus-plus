@@ -89,6 +89,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import { LoginErrorEventData } from 'oicq-icalingua-plus-plus'
 import { SliderEventData } from 'oicq-icalingua-plus-plus'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let bot: Client
 let storage: StorageProvider
@@ -203,6 +204,10 @@ const eventHandlers = {
             !isSelfMsg &&
             !getConfig().disableNotification
         ) {
+            const notifRoomName =
+                room.roomId < 0 && getConfig().removeGroupNameEmotes
+                    ? removeGroupNameEmotes(room.roomName)
+                    : room.roomName
             // notification
             if (lastMessage.content === '[窗口抖动]') {
                 tryToShowAllWindows()
@@ -212,10 +217,10 @@ const eventHandlers = {
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (ElectronNotification.isSupported()) {
                         const notif = new ElectronNotification({
-                            title: room.roomName,
+                            title: notifRoomName,
                             body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                             hasReply: true,
-                            replyPlaceholder: 'Reply to ' + room.roomName,
+                            replyPlaceholder: 'Reply to ' + notifRoomName,
                             icon: await avatarCache(getAvatarUrl(roomId, true)),
                             actions: [
                                 {
@@ -253,7 +258,7 @@ const eventHandlers = {
                     if (await isInlineReplySupported()) actions['inline-reply'] = '回复...'
 
                     const notifParams = {
-                        summary: room.roomName,
+                        summary: notifRoomName,
                         appName: 'Icalingua++',
                         category: 'im.received',
                         'desktop-entry': 'icalingua',
@@ -261,7 +266,7 @@ const eventHandlers = {
                         timeout: 5000,
                         body: (groupId ? senderName + ': ' : '') + lastMessage.content,
                         icon: await avatarCache(getAvatarUrl(roomId, true)),
-                        'x-kde-reply-placeholder-text': '发送到 ' + room.roomName,
+                        'x-kde-reply-placeholder-text': '发送到 ' + notifRoomName,
                         'x-kde-reply-submit-button-text': '发送',
                         actions,
                     }
@@ -785,6 +790,15 @@ const eventHandlers = {
     async requestAdd(data: FriendAddEventData | GroupAddEventData | GroupInviteEventData) {
         //console.log(data)
         ui.sendAddRequest(data)
+        let notifBody
+        if (data.request_type === 'friend') {
+            notifBody = '申请添加你为好友'
+        } else {
+            const groupName = getConfig().removeGroupNameEmotes
+                ? removeGroupNameEmotes(data.group_name)
+                : data.group_name
+            notifBody = '申请加入：' + groupName
+        }
 
         //notification
         const notif = new Notification({
@@ -794,7 +808,7 @@ const eventHandlers = {
             'desktop-entry': 'icalingua',
             urgency: 1,
             timeout: 0,
-            body: data.request_type === 'friend' ? '申请添加你为好友' : '申请加入：' + data.group_name,
+            body: notifBody,
             icon: await avatarCache(getAvatarUrl(data.user_id)),
             actions: {
                 default: '',

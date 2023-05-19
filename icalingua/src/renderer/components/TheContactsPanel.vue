@@ -49,6 +49,7 @@
                         :id="-i.group_id"
                         :remark="i.group_name"
                         :group="i"
+                        :removeEmotes="removeGroupNameEmotes"
                         v-show="i.sc.includes(searchContext) || PinyinMatch(i.sc, searchContext)"
                         @click="$emit('click', -i.group_id, i.group_name)"
                         @dblclick="$emit('dblclick', -i.group_id, i.group_name)"
@@ -66,6 +67,9 @@ import PinyinMatch from 'pinyin-match'
 
 export default {
     components: { ContactEntry },
+    props: {
+        removeGroupNameEmotes: Boolean,
+    },
     data() {
         return {
             activeName: 'friends',

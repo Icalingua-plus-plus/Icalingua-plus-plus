@@ -94,6 +94,7 @@ const defaultConfig: AllConfig = {
     lockPassword: '',
     useSinglePanel: false,
     disableAtAll: false,
+    removeGroupNameEmotes: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

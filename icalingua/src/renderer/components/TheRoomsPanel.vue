@@ -28,6 +28,7 @@
                 :room="room"
                 :selected="room.roomId === selected.roomId"
                 :priority="priority"
+                :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
                 @click="
                     input = ''
                     $emit('chroom', room)
@@ -68,6 +69,7 @@ export default {
         allRooms: Array,
         disableChatGroups: Boolean,
         roomPanelAvatarOnly: Boolean,
+        removeGroupNameEmotes: Boolean,
     },
     data() {
         return {

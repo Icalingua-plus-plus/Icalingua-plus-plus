@@ -19,6 +19,7 @@ import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
 import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
 import openImage from '../ipc/openImage'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let tray: Tray
 
@@ -62,9 +63,13 @@ export const updateTrayMenu = async () => {
     menu.append(new MenuItem({ type: 'separator' }))
     if (unreadRooms.length) {
         for (const unreadRoom of unreadRooms) {
+            const roomName =
+                unreadRoom.roomId < 0 && getConfig().removeGroupNameEmotes
+                    ? removeGroupNameEmotes(unreadRoom.roomName)
+                    : unreadRoom.roomName
             menu.append(
                 new MenuItem({
-                    label: `${unreadRoom.roomName} (${unreadRoom.unreadCount})`,
+                    label: `${roomName} (${unreadRoom.unreadCount})`,
                     click: () =>
                         tryToShowMainWindow(() => {
                             ui.chroom(unreadRoom.roomId)
@@ -251,13 +256,25 @@ let currentIconUnread = false
 export const updateTrayIcon = async (force = false) => {
     let p: Electron.NativeImage
     const unread = await getUnreadCount()
-    const title = ui.getSelectedRoomName() ? ui.getSelectedRoomName() + ' — Icalingua++' : 'Icalingua++'
+    let selectedRoomId = ui.getSelectedRoomId()
+    let selectedRoomName = ui.getSelectedRoomName()
+    if (selectedRoomId < 0 && getConfig().removeGroupNameEmotes) {
+        selectedRoomName = removeGroupNameEmotes(selectedRoomName)
+    }
+    const title = selectedRoomName ? selectedRoomName + ' — Icalingua++' : 'Icalingua++'
     const shouldUpdateIcon = currentIconUnread !== unread > 0
     currentIconUnread = unread > 0
     if (unread) {
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
-        const extra = newMsgRoom ? ' : ' + newMsgRoom.roomName : ''
+        let extra = ''
+        if (newMsgRoom) {
+            let newMsgRoomName = newMsgRoom.roomName
+            if (newMsgRoom.roomId < 0 && getConfig().removeGroupNameEmotes) {
+                newMsgRoomName = removeGroupNameEmotes(newMsgRoomName)
+            }
+            extra = ' : ' + newMsgRoomName
+        }
         getMainWindow().title = `(${unread}${extra}) ${title}`
     } else {
         p = getTrayIconColor() ? darkIcon : lightIcon

@@ -56,7 +56,8 @@ import {
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
-import { updateTrayMenu } from '../utils/trayManager'
+import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 const requireFunc = eval('require')
 const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
@@ -147,7 +148,14 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         },
         {
             label: '屏蔽消息',
-            click: () => ui.confirmIgnoreChat({ id: room.roomId, name: room.roomName }),
+            click: () =>
+                ui.confirmIgnoreChat({
+                    id: room.roomId,
+                    name:
+                        room.roomId < 0 && getConfig().removeGroupNameEmotes
+                            ? removeGroupNameEmotes(room.roomName)
+                            : room.roomName,
+                }),
         },
         {
             label: '复制名称',
@@ -353,13 +361,17 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         console.log(details.url)
                         const parsedUrl = new URL(details.url)
                         if (parsedUrl.hostname === 'qungz.photo.store.qq.com') openImage(details.url)
-                        else if (parsedUrl.hostname === 'download.photo.qq.com')
+                        else if (parsedUrl.hostname === 'download.photo.qq.com') {
+                            const roomName = getConfig().removeGroupNameEmotes
+                                ? removeGroupNameEmotes(room.roomName)
+                                : room.roomName
                             download(
                                 details.url,
-                                `${room.roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
+                                `${roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
                                 undefined,
                                 true,
                             )
+                        }
                         return { action: 'deny' }
                     })
                     await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
@@ -439,7 +451,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                             '#/groupNickEdit/' +
                             -room.roomId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(memberInfo.card || memberInfo.nickname),
                     )
@@ -1058,6 +1074,18 @@ export const updateAppMenu = async () => {
                             ui.useSinglePanel(menuItem.checked)
                         },
                     },
+                    {
+                        label: '移除群名里的表情',
+                        type: 'checkbox',
+                        checked: getConfig().removeGroupNameEmotes,
+                        click: (menuItem) => {
+                            getConfig().removeGroupNameEmotes = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                            updateTrayIcon()
+                            ui.setRemoveGroupNameEmotes(menuItem.checked)
+                        },
+                    },
                 ],
             }),
             new MenuItem({
@@ -1266,9 +1294,13 @@ export const updateAppMenu = async () => {
     }
     const selectedRoom = await getSelectedRoom()
     if (selectedRoom) {
+        const roomName =
+            selectedRoom.roomId < 0 && getConfig().removeGroupNameEmotes
+                ? removeGroupNameEmotes(selectedRoom.roomName)
+                : selectedRoom.roomName
         menu.append(
             new MenuItem({
-                label: `${selectedRoom.roomName}(${Math.abs(selectedRoom.roomId)})`,
+                label: `${roomName}(${Math.abs(selectedRoom.roomId)})`,
                 submenu: await buildRoomMenu(selectedRoom),
             }),
         )
@@ -2009,7 +2041,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                             '/' +
                             message.senderId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(message.username) +
                             '/' +
@@ -2042,7 +2078,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
                             '/' +
                             message.senderId +
                             '/' +
-                            querystring.escape(room.roomName) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName,
+                            ) +
                             '/' +
                             querystring.escape(message.username),
                     )
@@ -2108,7 +2148,9 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                             '/' +
                             displayId +
                             '/0/' +
-                            querystring.escape(remark) +
+                            querystring.escape(
+                                getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                            ) +
                             '/0',
                     )
                 },
@@ -2224,7 +2266,11 @@ ipcMain.on(
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(selectedRoom.roomName) +
+                                querystring.escape(
+                                    getConfig().removeGroupNameEmotes
+                                        ? removeGroupNameEmotes(selectedRoom.roomName)
+                                        : selectedRoom.roomName,
+                                ) +
                                 '/' +
                                 querystring.escape(remark) +
                                 '/' +
@@ -2257,7 +2303,11 @@ ipcMain.on(
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(selectedRoom.roomName) +
+                                querystring.escape(
+                                    getConfig().removeGroupNameEmotes
+                                        ? removeGroupNameEmotes(selectedRoom.roomName)
+                                        : selectedRoom.roomName,
+                                ) +
                                 '/' +
                                 querystring.escape(remark),
                         )

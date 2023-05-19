@@ -5,7 +5,10 @@
                 <el-avatar size="large" :src="getAvatarUrl(chat.id)" />
             </div>
             <div class="right">
-                <p class="name withoutdesc">{{ chat.name }} ({{ Math.abs(chat.id) }})</p>
+                <p class="name withoutdesc">
+                    {{ removeEmotes ? removeGroupNameEmotes(chat.name) : chat.name }}
+                    ({{ Math.abs(chat.id) }})
+                </p>
             </div>
         </el-card>
     </a>
@@ -13,12 +16,14 @@
 
 <script>
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 export default {
     name: 'GroupEntry',
-    props: ['chat'],
+    props: ['chat', 'removeEmotes'],
     methods: {
         getAvatarUrl,
+        removeGroupNameEmotes,
     },
 }
 </script>

@@ -40,6 +40,7 @@ import {
 } from '../utils/windowManager'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -171,10 +172,14 @@ const attachSocketEvents = () => {
                     ui.chroom(data.roomId)
                 }
                 // notification
+                const notifRoomName =
+                    data.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(data.data.title)
+                        : data.data.title
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
                     const notif = new ElectronNotification({
-                        title: data.data.title,
+                        title: notifRoomName,
                         body: data.data.body,
                         hasReply: data.data.hasReply,
                         replyPlaceholder: data.data.replyPlaceholder,
@@ -215,14 +220,14 @@ const attachSocketEvents = () => {
 
                     const notifParams = {
                         ...data.data,
-                        summary: data.data.title,
+                        summary: notifRoomName,
                         appName: 'Icalingua++',
                         category: 'im.received',
                         'desktop-entry': 'icalingua',
                         urgency: 1,
                         timeout: 5000,
                         icon: await avatarCache(getAvatarUrl(data.roomId, true)),
-                        'x-kde-reply-placeholder-text': '发送到 ' + data.data.title,
+                        'x-kde-reply-placeholder-text': '发送到 ' + notifRoomName,
                         'x-kde-reply-submit-button-text': '发送',
                         actions,
                     }

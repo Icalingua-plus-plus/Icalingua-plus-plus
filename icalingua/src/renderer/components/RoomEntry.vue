@@ -16,7 +16,7 @@
                 <div class="right" :title="desc">
                     <div class="flex l1" :class="{ withoutdesc: !desc }">
                         <div class="name">
-                            {{ room.roomName }}
+                            {{ roomName }}
                         </div>
                         <div class="icon" v-show="room.priority < priority">
                             <i class="el-icon-close-notification"></i>
@@ -44,6 +44,7 @@
 
 <script>
 import getAvatarUrl from '../../utils/getAvatarUrl'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 export default {
     name: 'RoomEntry',
@@ -51,6 +52,7 @@ export default {
         room: Object,
         selected: Boolean,
         priority: Number,
+        removeEmotes: Boolean,
     },
     computed: {
         desc() {
@@ -73,6 +75,9 @@ export default {
         },
         roomAvatar() {
             return getAvatarUrl(this.room.roomId)
+        },
+        roomName() {
+            return this.removeEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
         },
     },
 }
