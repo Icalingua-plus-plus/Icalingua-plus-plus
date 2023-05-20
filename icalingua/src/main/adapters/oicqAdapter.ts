@@ -1728,18 +1728,35 @@ const adapter: OicqAdapter = {
         const messages = []
         for (let i = 0; i < history.data.length; i++) {
             const data = history.data[i]
-            const message: Message = {
-                senderId: data.user_id,
-                username: data.nickname,
-                content: '',
-                timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
-                date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
-                _id: String(data.group_id || -1) + '|' + data.seq,
-                time: data.time * 1000,
-                files: [],
-                bubble_id: data.bubble_id,
+            data.time = Number(data.time)
+            let message: Message
+            try {
+                message = {
+                    senderId: data.user_id,
+                    username: data.nickname,
+                    content: '',
+                    timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
+                    date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
+                    _id: String(data.group_id || -1) + '|' + data.seq,
+                    time: data.time * 1000,
+                    files: [],
+                    bubble_id: data.bubble_id,
+                }
+                await processMessage(data.message, message, {}, ui.getSelectedRoomId())
+            } catch (e) {
+                message = {
+                    senderId: 0,
+                    username: '错误',
+                    content: JSON.stringify(data),
+                    code: JSON.stringify(e),
+                    timestamp: formatDate('hh:mm:ss'),
+                    date: formatDate('yyyy/MM/dd'),
+                    _id: Date.now(),
+                    time: Date.now(),
+                    files: [],
+                }
+                errorHandler(e)
             }
-            await processMessage(data.message, message, {}, ui.getSelectedRoomId())
             messages.push(message)
         }
         return messages
