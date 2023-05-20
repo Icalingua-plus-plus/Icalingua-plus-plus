@@ -706,11 +706,13 @@ Chromium ${process.versions.chrome}` : ''
                 this.messages = []
             }
             const _roomId = this.selectedRoom.roomId
-            const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            const messagesLength = this.messages.length
+            const msgs2add = await ipc.fetchMessage(_roomId, messagesLength)
             if (number) {
                 while (msgs2add.filter((e) => !e.system).length < number) {
-                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
+                    const msgs = await ipc.fetchMessage(_roomId, messagesLength + msgs2add.length)
                     msgs2add.unshift(...msgs)
+                    if (!msgs.length) break
                 }
             }
             setTimeout(() => {
