@@ -33,6 +33,7 @@
                     <el-radio-button label="6">FIX</el-radio-button>
                     <el-radio-button label="7">Android 8933</el-radio-button>
                     <el-radio-button label="8">aPad 8933</el-radio-button>
+                    <el-radio-button label="9">iPad 8933</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
