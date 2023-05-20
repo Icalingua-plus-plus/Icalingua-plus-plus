@@ -1533,7 +1533,7 @@ const adapter: OicqAdapter = {
             if (idReg && idReg.length >= 3 && content === idReg[0]) {
                 const qlottie = idReg[1]
                 const faceId = idReg[2]
-                chain.length = 0
+                chain.length = chain[0].type === 'anonymous' ? 1 : 0
                 chain.push({
                     type: 'face',
                     data: {
