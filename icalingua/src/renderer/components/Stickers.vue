@@ -26,7 +26,16 @@
             </center>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
-                    <img :src="i.url" @click="picClick(i.url)" @click.right="itemMenu(i.url)" />
+                    <img
+                        :src="i.url"
+                        @click="picClick(i.url)"
+                        @click.right="
+                            itemMenu(
+                                i.url,
+                                remote_pics.map((img) => img.url),
+                            )
+                        "
+                    />
                 </div>
             </div>
         </div>
@@ -54,7 +63,13 @@
                         :src="getPreview(dir + i)"
                         :origin-src="dir + i"
                         @click="picClick(dir + i)"
-                        @click.right="itemMenu(dir + i)"
+                        @click.right="
+                            itemMenu(
+                                dir + i,
+                                pics.filter((i) => i[0] !== '.'),
+                                dir,
+                            )
+                        "
                         @error="errorHandler"
                         @mouseover="onmouseover"
                         @mouseout="onmouseout"

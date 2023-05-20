@@ -1885,8 +1885,26 @@ ipcMain.on('popupStickerMenu', () => {
         },
     ]).popup({ window: getMainWindow() })
 })
-ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
+ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList?: Array<string>, pathName?: string) => {
+    console.log(itemName, itemList, pathName)
+    if (pathName && itemList) {
+        itemList = itemList.map((item) => pathName + item)
+    }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
+    menu.push({
+        label: '以图片方式发送',
+        type: 'normal',
+        click() {
+            ui.pasteGif(itemName)
+        },
+    })
+    menu.push({
+        label: '查看大图',
+        type: 'normal',
+        click() {
+            openImage(itemName, false, itemList)
+        },
+    })
     if (/^https?:\/\//i.test(itemName)) {
         menu.push({
             label: '添加到本地表情',
@@ -1896,20 +1914,6 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string) => {
             },
         })
     } else {
-        menu.push({
-            label: '以图片方式发送',
-            type: 'normal',
-            click() {
-                ui.pasteGif(itemName)
-            },
-        })
-        menu.push({
-            label: '查看大图',
-            type: 'normal',
-            click() {
-                openImage(itemName)
-            },
-        })
         menu.push({
             label: '移动到分类',
             type: 'normal',
