@@ -773,11 +773,12 @@ Chromium ${process.versions.chrome}` : ''
                 this.panel = ''
             }
         },
-        sendLottie(lottie) {
+        async sendLottie(lottie) {
+            const messageType = await ipc.getMessgeTypeSetting()
             this.sendMessage({
                 content: `[QLottie: ${lottie.qlottie},${lottie.id}]`,
                 room: this.selectedRoom,
-                messageType: 'text',
+                messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
             })
             if (window.innerWidth < 1200) {
                 this.panel = ''
