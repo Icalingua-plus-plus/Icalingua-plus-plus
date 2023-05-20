@@ -85,6 +85,7 @@ export default {
         sendToMainWindow('setShutUp', isShutUp)
     },
     addMessage(roomId: number, message: Message) {
+        if (roomId != selectedRoomId) return
         sendToMainWindow('addMessage', { roomId, message })
     },
     chroom(roomId: number) {

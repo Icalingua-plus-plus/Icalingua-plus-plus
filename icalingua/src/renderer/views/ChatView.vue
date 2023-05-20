@@ -650,6 +650,8 @@ Chromium ${process.versions.chrome}` : ''
             this.removeGroupNameEmotes = b
         })
 
+        ipc.setSelectedRoom(0, '')
+
         window.addEventListener("resize", this.handleResize)
         this.handleResize({ target: { innerWidth: window.innerWidth } })
         console.log('加载完成')
