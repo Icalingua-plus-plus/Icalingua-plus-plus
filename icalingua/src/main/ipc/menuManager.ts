@@ -58,6 +58,7 @@ import { download, downloadFileByMessageData, downloadImage } from './downloadMa
 import openImage from './openImage'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import sleep from '../../utils/sleep'
 
 const requireFunc = eval('require')
 const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
@@ -1909,6 +1910,16 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList?: Array<string
             type: 'normal',
             click() {
                 download(itemName, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+            },
+        })
+        menu.push({
+            label: '全部添加到本地',
+            type: 'normal',
+            click() {
+                itemList?.forEach(async (item, index) => {
+                    await sleep(1000 * index)
+                    download(item, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+                })
             },
         })
     } else {
