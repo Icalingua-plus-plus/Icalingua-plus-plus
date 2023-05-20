@@ -651,6 +651,7 @@ Chromium ${process.versions.chrome}` : ''
         })
 
         ipc.setSelectedRoom(0, '')
+        ipc.requestOnlineData()
 
         window.addEventListener("resize", this.handleResize)
         this.handleResize({ target: { innerWidth: window.innerWidth } })

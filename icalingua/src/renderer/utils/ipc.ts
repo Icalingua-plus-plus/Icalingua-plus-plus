@@ -226,5 +226,8 @@ const ipc = {
     setLockPassword(password: string) {
         ipcRenderer.send('setLockPassword', password)
     },
+    requestOnlineData() {
+        ipcRenderer.send('requestOnlineData')
+    },
 }
 export default ipc
