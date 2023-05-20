@@ -112,7 +112,6 @@ loadConfig(getConfig().aria2)
  * 其实就是个只有 url 的下载方法，用来下图片
  */
 export const downloadImage = (url: string, saveAs = false) => {
-    console.log(url)
     const out = 'QQ_Image_' + new Date().getTime() + '.jpg'
     const dir = app.getPath('downloads')
     download(url, out, aria ? null : dir, saveAs)
@@ -124,7 +123,6 @@ export const downloadImage = (url: string, saveAs = false) => {
 }
 
 export const downloadImage2Open = (url: string) => {
-    console.log(url)
     let out = '',
         dir = '',
         image = ''

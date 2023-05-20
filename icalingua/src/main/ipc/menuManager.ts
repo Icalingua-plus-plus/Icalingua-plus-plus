@@ -358,7 +358,6 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         })
                     }
                     win.webContents.setWindowOpenHandler((details) => {
-                        console.log(details.url)
                         const parsedUrl = new URL(details.url)
                         if (parsedUrl.hostname === 'qungz.photo.store.qq.com') openImage(details.url)
                         else if (parsedUrl.hostname === 'download.photo.qq.com') {
@@ -1886,7 +1885,6 @@ ipcMain.on('popupStickerMenu', () => {
     ]).popup({ window: getMainWindow() })
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList?: Array<string>, pathName?: string) => {
-    console.log(itemName, itemList, pathName)
     if (pathName && itemList) {
         itemList = itemList.map((item) => pathName + item)
     }

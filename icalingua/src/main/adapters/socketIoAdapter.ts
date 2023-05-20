@@ -436,7 +436,7 @@ const adapter: Adapter = {
                 transports: ['websocket'],
             })
             socket.once('connect_error', async (e) => {
-                console.log(e)
+                errorHandler(e, true)
                 await dialog.showMessageBox(getMainWindow(), {
                     title: '错误',
                     message: e && e.message ? e.message : '连接失败',
@@ -580,7 +580,7 @@ const adapter: Adapter = {
                         proxy: false,
                     })
                     .catch((e) => {
-                        console.log(e)
+                        errorHandler(e, true)
                         if (e.response.status === 413) {
                             ui.messageError('语音过大，无法发送')
                         } else {
@@ -597,7 +597,7 @@ const adapter: Adapter = {
                           proxy: false,
                       })
                       .catch((e) => {
-                          console.log(e)
+                          errorHandler(e, true)
                           if (e.response.status === 413) {
                               ui.messageError('图片过大，无法发送')
                           } else {
