@@ -720,7 +720,10 @@ Chromium ${process.versions.chrome}` : ''
                 while (msgs2add.filter((e) => !e.system).length < number) {
                     const msgs = await ipc.fetchMessage(_roomId, messagesLength + msgs2add.length)
                     msgs2add.unshift(...msgs)
-                    if (!msgs.length) break
+                    if (!msgs.length) {
+                        this.$message.error('Message not found')
+                        break
+                    }
                 }
             }
             setTimeout(() => {
