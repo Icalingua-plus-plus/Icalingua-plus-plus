@@ -553,6 +553,11 @@ export default {
         })
         ipcRenderer.on('addMessage', (_, {roomId, message}) => {
             if (roomId !== this.selectedRoomId) return
+            const index = this.messages.findIndex((e) => e._id === message._id)
+            if (index !== -1) {
+                console.warning(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[index])
+                return
+            }
             this.messages = [...this.messages, message]
             if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
             if (message.at) this.lastUnreadAt = true
