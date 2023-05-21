@@ -7,7 +7,7 @@ export default async (url: string) => {
         responseType: 'arraybuffer',
     })
     const md5 = require('crypto').createHash('md5').update(res.data).digest('hex')
-    const Path = require('path').join(__dirname, '../data', 'records')
+    const Path = require('path').join(require.main ? require.main.path : process.cwd(), 'data', 'records')
     const filePath = require('path').join(Path, md5 + '.ogg')
     if (fs.existsSync(filePath)) {
         return md5 + '.ogg'

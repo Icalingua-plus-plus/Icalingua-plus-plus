@@ -2,6 +2,7 @@ import express from 'express'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import { json } from 'body-parser'
+import path from 'path'
 
 export const app = express()
 const parser = json({
@@ -18,7 +19,7 @@ export const initExpress = (adapter: typeof oicqAdapter) => {
 }
 
 app.use('/file-manager', express.static('static/file-manager'))
-app.use('/records', express.static('data/records'))
+app.use('/records', express.static(path.join(require.main ? require.main.path : process.cwd(), 'data', 'records')))
 app.get('/ping', (req, res) => {
     res.json({
         code: '200',
