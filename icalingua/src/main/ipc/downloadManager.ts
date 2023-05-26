@@ -13,6 +13,8 @@ import fs from 'fs'
 import crypto from 'crypto'
 import ChildProcess from 'child_process'
 import errorHandler from '../utils/errorHandler'
+import fileType from 'file-type'
+import axios from 'axios'
 
 let aria: Aria2
 
@@ -108,11 +110,19 @@ export const download = (url: string, out: string, dir?: string, saveAs = false)
 
 loadConfig(getConfig().aria2)
 
+const getImageExt = async (url: string) => {
+    const request = await axios.get(url, {
+        responseType: 'stream',
+    })
+    const type = await fileType.fromStream(request.data)
+    return type ? type.ext : 'jpg'
+}
+
 /**
  * 其实就是个只有 url 的下载方法，用来下图片
  */
-export const downloadImage = (url: string, saveAs = false) => {
-    const out = 'QQ_Image_' + new Date().getTime() + '.jpg'
+export const downloadImage = async (url: string, saveAs = false) => {
+    const out = 'QQ_Image_' + new Date().getTime() + '.' + (await getImageExt(url))
     const dir = app.getPath('downloads')
     download(url, out, aria ? null : dir, saveAs)
     if (!saveAs)
@@ -122,42 +132,29 @@ export const downloadImage = (url: string, saveAs = false) => {
         })
 }
 
-export const downloadImage2Open = (url: string) => {
-    let out = '',
-        dir = '',
-        image = ''
+export const downloadImage2Open = async (url: string) => {
+    let md5 = ''
     if (url.startsWith('https://gchat.qpic.cn/gchatpic_new/')) {
-        const md5 = url.replace('https://gchat.qpic.cn/gchatpic_new/', '').split('/')[1].split('-')[2]
-        out = 'QQ_Image_' + md5 + '.jpg'
-        dir = app.getPath('temp')
-        image = path.join(dir, out)
+        md5 = url.replace('https://gchat.qpic.cn/gchatpic_new/', '').split('/')[1].split('-')[2]
     } else {
-        const md5 = crypto.createHash('md5')
-        md5.update(url)
-        out = 'QQ_Image_' + md5.digest('hex') + '.jpg'
-        dir = app.getPath('temp')
-        image = path.join(dir, out)
+        const hash = crypto.createHash('md5')
+        hash.update(url)
+        md5 = hash.digest('hex')
     }
-    if (fs.existsSync(image)) {
-        ChildProcess.exec(image, (error) => {
-            if (error) {
-                ui.messageError('本地查看器错误')
-                errorHandler(error, true)
-            }
+    const dir = app.getPath('temp')
+    const out = 'QQ_Image_' + md5 + '.' + (await getImageExt(url))
+    const image = path.join(dir, out)
+    if (!fs.existsSync(image)) {
+        await edl.download(getMainWindow(), url, {
+            directory: dir,
+            filename: out,
         })
-        return
     }
-    edl.download(getMainWindow(), url, {
-        directory: dir,
-        filename: out,
-        onCompleted: () => {
-            ChildProcess.exec(image, (error) => {
-                if (error) {
-                    ui.messageError('本地查看器错误')
-                    errorHandler(error, true)
-                }
-            })
-        },
+    ChildProcess.exec(image, (error) => {
+        if (error) {
+            ui.messageError('本地查看器错误')
+            errorHandler(error, true)
+        }
     })
 }
 
