@@ -2005,7 +2005,7 @@ const adapter: OicqAdapter = {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
         } else {
-            ui.message(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            ui.message(`${room.roomName}(${Math.abs(roomId)}) 后台拉取中，已拉取 ${messages.length} 条消息`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)
