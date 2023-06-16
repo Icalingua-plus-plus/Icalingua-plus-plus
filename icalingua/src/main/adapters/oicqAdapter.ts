@@ -146,6 +146,7 @@ const eventHandlers = {
                     ? (<GroupMessageEventData>data).anonymous.flag
                     : null,
             bubble_id: data.bubble_id,
+            subid: data.sender['subid'],
         }
 
         let room = await storage.getRoom(roomId)
