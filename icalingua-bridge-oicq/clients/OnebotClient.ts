@@ -332,6 +332,7 @@ export default class extends EventEmitter<{
             title_expire_time: number
             card_changeable: boolean
             shut_up_timestamp: number
+            subid: number
         }>('get_group_member_info', { group_id, user_id, no_cache })
     public setGroupCard = (group_id: number, user_id: number, card: string) =>
         this.callApi('set_group_card', { group_id, user_id, card })
