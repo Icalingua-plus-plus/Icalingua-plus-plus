@@ -218,7 +218,7 @@ const eventHandlers = {
         storage.addMessage(roomId, message)
         if (config.custom && data.post_type === 'message') {
             try {
-                require('../custom').onMessage(data, bot)
+                require('../custom').onMessage(data, bot, { storage, ui: clients })
             } catch (e) {
                 clients.messageError('自定义插件出错')
                 console.error(e)

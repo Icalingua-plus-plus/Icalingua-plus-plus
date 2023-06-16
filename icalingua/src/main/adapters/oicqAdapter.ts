@@ -327,7 +327,7 @@ const eventHandlers = {
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
             try {
-                requireFunc(custom_path).onMessage(data, bot)
+                requireFunc(custom_path).onMessage(data, bot, { storage, ui })
             } catch (e) {
                 ui.messageError('自定义插件出错')
                 errorHandler(e, true)
