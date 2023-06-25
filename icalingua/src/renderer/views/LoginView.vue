@@ -23,6 +23,9 @@
             >
                 <el-input type="password" placeholder="Password" v-model="form.password" />
             </el-form-item>
+            <el-form-item prop="signAPIAddress" v-if="$route.query.disableIdLogin === 'false'">
+                <el-input type="text" placeholder="Head Sign API Address" v-model.number="form.signAPIAddress" />
+            </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
                 <el-radio-group v-model="form.protocol" size="small">
                     <el-radio-button label="1">Android</el-radio-button>
@@ -34,6 +37,7 @@
                     <el-radio-button label="7">Android 8933</el-radio-button>
                     <el-radio-button label="8">aPad 8933</el-radio-button>
                     <el-radio-button label="9">iPad 8933</el-radio-button>
+                    <el-radio-button label="10">TIM 3.5.1</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
@@ -153,6 +157,7 @@ export default {
     async created() {
         this.ver = await ipc.getVersion()
         this.form = await ipc.getAccount()
+        if (!this.form.signAPIAddress) this.form.signAPIAddress = ''
         ipcRenderer.on('error', (_, msg) => {
             if (this.loginTimeout) clearTimeout(this.loginTimeout)
             this.errmsg = msg

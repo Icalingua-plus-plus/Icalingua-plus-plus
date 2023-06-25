@@ -1584,6 +1584,7 @@ const adapter: OicqAdapter = {
                 ignore_self: false,
                 brief: true,
                 log_level: process.env.NODE_ENV === 'development' ? 'warn' : 'error',
+                sign_api_addr: form.signAPIAddress,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {

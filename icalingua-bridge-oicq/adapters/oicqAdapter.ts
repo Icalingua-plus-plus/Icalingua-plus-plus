@@ -1327,6 +1327,7 @@ const adapter = {
                 platform: Number(form.protocol),
                 ignore_self: false,
                 brief: true,
+                sign_api_addr: form.signAPIAddress,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {

@@ -37,6 +37,7 @@ const emptyLoginForm: LoginForm = {
     protocol: 2,
     autologin: false,
     onlineStatus: OnlineStatusType.Online,
+    signAPIAddress: '',
 }
 const defaultAria2Config: Aria2Config = {
     enabled: false,

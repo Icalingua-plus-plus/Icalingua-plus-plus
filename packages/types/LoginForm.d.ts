@@ -13,6 +13,7 @@ type LoginForm = {
     sqlUsername?: string
     sqlPassword?: string
     sqlDatabase?: string
+    signAPIAddress?: string
 }
 
 export default LoginForm
