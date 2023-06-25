@@ -206,7 +206,7 @@ export default {
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
-                    if (!form.signAPIAddress) {
+                    if (!this.form.signAPIAddress) {
                         this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
                     }
                     this.loginTimeout = setTimeout(() => {
