@@ -176,12 +176,12 @@ export default {
                 case '(45)':
                     if (this.form.protocol === 3) break
                     if (String(msg).includes('你当前使用的QQ版本过低'))
-                        this.$alert(
-                            '账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
-                        )
+                        this.$alert('账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 TIM 协议登录')
                     else
                         this.$alert(
-                            '可能为非常用环境登录，请等待更新数据包签名算法，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
+                            this.form.signAPIAddress
+                                ? '可能为非常用环境登录，建议使用 TIM 协议登录'
+                                : '账号被风控需要头部签名，请配置头部签名 API 地址，或使用 TIM 协议登录',
                         )
                     break
                 default:
@@ -204,6 +204,9 @@ export default {
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
+                    if (!form.signAPIAddress) {
+                        this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
+                    }
                     this.loginTimeout = setTimeout(() => {
                         this.$alert(
                             '登录时间似乎过长了，请检查网络是否正常，如果安卓系/苹果系协议互相切换请先删除 token，若还不能登录请携带日志反馈',
