@@ -21,6 +21,7 @@ import upg9to10 from './SQLUpgradeScript/9to10'
 import upg10to11 from './SQLUpgradeScript/10to11'
 import upg11to12 from './SQLUpgradeScript/11to12'
 import upg12to13 from './SQLUpgradeScript/12to13'
+import upg13to14 from './SQLUpgradeScript/13to14'
 
 const dbVersionLatest = 13
 
@@ -236,6 +237,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     if (dbVersion >= 7) await upg11to12(this.db)
                 case 12:
                     if (dbVersion >= 7) await upg12to13(this.db)
+                case 13:
+                    await upg13to14(this.db)
                 default:
                     break
             }
@@ -325,6 +328,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('bubble_id').nullable()
                     table.bigInteger('subid').nullable()
                     table.index(['roomId', 'time'])
+                    table.index(['subid', 'time'])
                 })
             }
 
