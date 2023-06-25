@@ -267,7 +267,7 @@
                         {{ file.name }}
                     </div>
                     <div v-else class="vac-file-message-room">
-                        {{ message }}
+                        {{ $refs.roomTextarea.message }}
                     </div>
                     <div class="vac-svg-button vac-icon-remove" @click="resetMessage(null, true)">
                         <slot name="file-close-icon">
@@ -316,10 +316,9 @@
                     </SearchInput>
                 </transition>
 
-                <textarea
+                <room-text-area
                     v-show="!file || imageFile || videoFile"
                     ref="roomTextarea"
-                    v-model="message"
                     :placeholder="textMessages.TYPE_MESSAGE"
                     class="vac-textarea"
                     :class="{
@@ -330,7 +329,7 @@
                         'padding-left': `${mediaDimensions ? mediaDimensions.width - 10 : 12}px`,
                     }"
                     @input="onChangeInput"
-                    @click.right="textctx"
+                    @click-right="textctx"
                     spellcheck="false"
                 />
 
@@ -413,6 +412,7 @@ import SvgIcon from '../../components/SvgIcon'
 import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
+import RoomTextArea from './RoomTextArea'
 import Message from '../Message/Message'
 import SearchInput from '../../../SearchInput'
 
@@ -440,6 +440,7 @@ export default {
         RoomHeader,
         RoomMessageReply,
         RoomForwardMessage,
+        RoomTextArea,
         Message,
         SearchInput,
     },
@@ -533,6 +534,7 @@ export default {
             mouseSelecting: false,
             mouseSelectArea: null,
             mouseSelectIds: null,
+            isMessageEmpty: true,
         }
     },
     computed: {
@@ -548,9 +550,6 @@ export default {
         },
         showMessagesStarted() {
             return this.messages.length && this.messagesLoaded && this.visibleViewport.head === 0
-        },
-        isMessageEmpty() {
-            return !this.file && !this.message.trim()
         },
         maxViewportLength() {
             const w = window.visualViewport ? window.visualViewport : window
@@ -665,19 +664,24 @@ export default {
                 else this.infiniteState.head.complete()
             }
         },
+        file(val) {
+            this.isMessageEmpty = !val && !this.$refs.roomTextarea.message.trim()
+        },
     },
     async mounted() {
         this.newMessages = []
-        this.$refs.roomTextarea.addEventListener('keydown', (e) => {
+        this.$refs.roomTextarea.$refs.roomTextarea.addEventListener('keydown', (e) => {
             if (e.isComposing) return
             if (e.key === 'Enter') {
                 switch (keyToSendMessage) {
                     case 'Enter':
                         if (e.ctrlKey) {
-                            let selectionStart = this.$refs.roomTextarea.selectionStart
-                            let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                            this.message =
-                                this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            let selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
+                            let selectionEnd = this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd
+                            this.$refs.roomTextarea.message =
+                                this.$refs.roomTextarea.message.substr(0, selectionStart) +
+                                '\n' +
+                                this.$refs.roomTextarea.message.substr(selectionEnd)
                             setTimeout(() => this.onChangeInput(), 0)
                         } else if (e.shiftKey) {
                             setTimeout(() => this.onChangeInput(), 0)
@@ -696,10 +700,12 @@ export default {
                         break
                     case 'ShiftEnter':
                         if (e.ctrlKey) {
-                            let selectionStart = this.$refs.roomTextarea.selectionStart
-                            let selectionEnd = this.$refs.roomTextarea.selectionEnd
-                            this.message =
-                                this.message.substr(0, selectionStart) + '\n' + this.message.substr(selectionEnd)
+                            let selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
+                            let selectionEnd = this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd
+                            this.$refs.roomTextarea.message =
+                                this.$refs.roomTextarea.message.substr(0, selectionStart) +
+                                '\n' +
+                                this.$refs.roomTextarea.message.substr(selectionEnd)
                             setTimeout(() => this.onChangeInput(), 0)
                         } else if (!e.shiftKey) {
                             setTimeout(() => this.onChangeInput(), 0)
@@ -712,7 +718,7 @@ export default {
                         console.log('qwq')
                 }
             } else if (e.key === 'ArrowUp') {
-                if (this.message) return
+                if (this.$refs.roomTextarea.message) return
                 //编辑重发上一条消息
                 e.preventDefault()
                 const ownMessages = this.messages.filter((e) => e.senderId === this.currentUserId)
@@ -727,11 +733,12 @@ export default {
                     this.file = lastMessage.file
                 }
                 this.messageReply = lastMessage.replyMessage
-                this.message = lastMessage.content
+                this.$refs.roomTextarea.message = lastMessage.content
                 this.$nextTick(
                     () =>
-                        (this.$refs.roomTextarea.selectionStart = this.$refs.roomTextarea.selectionEnd =
-                            this.message.length),
+                        (this.$refs.roomTextarea.$refs.roomTextarea.selectionStart =
+                            this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd =
+                                this.$refs.roomTextarea.message.length),
                 )
                 this.editAndResend = lastMessage._id
             } else if (e.key === 'e' && e.ctrlKey) {
@@ -789,7 +796,7 @@ export default {
             keyToSendMessage = key
         })
         ipcRenderer.on('addMessageText', (_, message) => {
-            this.message += message
+            this.$refs.roomTextarea.message += message
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
@@ -1054,12 +1061,12 @@ export default {
 
             if (editFile) {
                 this.file = null
-                this.message = ''
+                this.$refs.roomTextarea.message = ''
                 return
             }
 
             this.resetTextareaSize()
-            this.message = ''
+            this.$refs.roomTextarea.message = ''
             this.editedMessage = {}
             this.messageReply = null
             this.file = null
@@ -1081,23 +1088,26 @@ export default {
             this.$nextTick(() => this.resizeTextarea())
         },
         resetTextareaSize() {
-            if (!this.$refs['roomTextarea']) return
-            this.$refs['roomTextarea'].style.height = '20px'
+            if (!this.$refs.roomTextarea.$refs.roomTextarea) return
+            this.$refs.roomTextarea.$refs.roomTextarea.style.height = '20px'
         },
         useMessageContent(content) {
-            const textarea = this.$refs.roomTextarea
+            const textarea = this.$refs.roomTextarea.$refs.roomTextarea
             const { selectionStart, selectionEnd } = textarea
-            this.message = this.message.slice(0, selectionStart) + content + this.message.slice(selectionEnd)
+            this.$refs.roomTextarea.message =
+                this.$refs.roomTextarea.message.slice(0, selectionStart) +
+                content +
+                this.$refs.roomTextarea.message.slice(selectionEnd)
             const newStart = selectionStart + content.length
             this.$nextTick(() => textarea.setSelectionRange(newStart, newStart))
         },
         focusTextarea(disableMobileFocus) {
             if (detectMobile() && disableMobileFocus) return
-            if (!this.$refs['roomTextarea']) return
-            this.$refs['roomTextarea'].focus()
+            if (!this.$refs.roomTextarea.$refs.roomTextarea) return
+            this.$refs.roomTextarea.$refs.roomTextarea.focus()
         },
         preventKeyboardFromClosing() {
-            if (this.keepKeyboardOpen) this.$refs['roomTextarea'].focus()
+            if (this.keepKeyboardOpen) this.$refs.roomTextarea.$refs.roomTextarea.focus()
         },
         closeQuickFace() {
             this.isQuickFaceOn = false
@@ -1138,8 +1148,8 @@ export default {
             setTimeout(() => this.focusTextarea(), 0)
         },
         async sendMessage() {
-            let message = this.message
-            this.message = ''
+            let message = this.$refs.roomTextarea.message
+            this.$refs.roomTextarea.message = ''
 
             if (!this.file && !message) return
 
@@ -1172,7 +1182,7 @@ export default {
                 return false
             }
             const debugmode = await ipc.getDebugSetting()
-            let message = this.message.trim()
+            let message = this.$refs.roomTextarea.message.trim()
 
             if (!this.file && !message) return
 
@@ -1252,7 +1262,7 @@ export default {
                 setTimeout(() => this.onMediaLoad(), 50)
             }
 
-            this.message = message.content
+            this.$refs.roomTextarea.message = message.content
         },
         getTopScroll(element) {
             const { scrollTop } = element
@@ -1293,16 +1303,19 @@ export default {
         onChangeInput() {
             this.keepKeyboardOpen = true
             this.resizeTextarea()
-            this.$emit('typing-message', this.message)
-            const selectionStart = this.$refs.roomTextarea.selectionStart
-            if (this.room.roomId < 0 && this.message.slice(selectionStart - 1, selectionStart) === '@') {
+            this.$emit('typing-message', this.$refs.roomTextarea.message)
+            const selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
+            if (
+                this.room.roomId < 0 &&
+                this.$refs.roomTextarea.message.slice(selectionStart - 1, selectionStart) === '@'
+            ) {
                 this.useAtKey = true
                 this.isQuickAtOn = true
                 this.$nextTick(() => this.$refs.quickat.focus())
             }
         },
         resizeTextarea() {
-            const el = this.$refs['roomTextarea']
+            const el = this.$refs.roomTextarea.$refs.roomTextarea
 
             if (!el) return
 
@@ -1348,7 +1361,7 @@ export default {
                 this.videoFile = fileURL
                 setTimeout(() => this.onMediaLoad(), 50)
             } else {
-                this.message = file.name
+                this.$refs.roomTextarea.message = file.name
             }
 
             setTimeout(() => (this.fileDialog = false), 500)
@@ -1378,7 +1391,7 @@ export default {
             this.$emit('open-file', { message, action, room: this.room })
         },
         textareaActionHandler() {
-            this.$emit('textarea-action-handler', this.message)
+            this.$emit('textarea-action-handler', this.$refs.roomTextarea.message)
         },
         msgctx(message) {
             const sect = window.getSelection().toString()
