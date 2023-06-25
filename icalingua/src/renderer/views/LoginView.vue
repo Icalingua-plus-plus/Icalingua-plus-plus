@@ -38,6 +38,8 @@
                     <el-radio-button label="8">aPad 8933</el-radio-button>
                     <el-radio-button label="9">iPad 8933</el-radio-button>
                     <el-radio-button label="10">TIM 3.5.1</el-radio-button>
+                    <el-radio-button label="11">Android 8958</el-radio-button>
+                    <el-radio-button label="12">aPad 8958</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
