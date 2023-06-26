@@ -158,8 +158,9 @@ export default {
     },
     async created() {
         this.ver = await ipc.getVersion()
-        this.form = await ipc.getAccount()
-        if (!this.form.signAPIAddress) this.form.signAPIAddress = ''
+        const _form = await ipc.getAccount()
+        if (!_form.signAPIAddress) _form.signAPIAddress = ''
+        this.form = _form
         ipcRenderer.on('error', (_, msg) => {
             if (this.loginTimeout) clearTimeout(this.loginTimeout)
             this.errmsg = msg
