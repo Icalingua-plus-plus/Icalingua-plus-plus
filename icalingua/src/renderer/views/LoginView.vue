@@ -40,6 +40,8 @@
                     <el-radio-button label="10">TIM 3.5.1</el-radio-button>
                     <el-radio-button label="11">Android 8958</el-radio-button>
                     <el-radio-button label="12">aPad 8958</el-radio-button>
+                    <el-radio-button label="13">Android 8963</el-radio-button>
+                    <el-radio-button label="14">aPad 8963</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
@@ -184,7 +186,7 @@ export default {
                         this.$alert(
                             this.form.signAPIAddress
                                 ? '可能为非常用环境登录，建议使用 TIM 协议登录'
-                                : '账号被风控需要头部签名，请配置头部签名 API 地址，或使用 TIM 协议登录',
+                                : '账号被风控需要头部签名，请根据 README 配置头部签名 API 地址',
                         )
                     break
                 default:
