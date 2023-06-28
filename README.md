@@ -31,17 +31,15 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 
 **不要随意使用无法信任的 API**，因为这可能导致**消息内容的泄露**
 
-**⚠警告: 截至 2023/06/27，高版本登录后一小时左右冻结的问题暂未完美解决**
+**⚠警告: 截至 2023/06/28，高版本（8.9.58/8.9.63）登录后一小时左右冻结的问题暂未完美解决**
 
-#### 适配 8.9.63 的 API
+#### 自行部署 API
 
-可自行搭建: https://github.com/fuqiuluo/unidbg-fetch-qsign
+相关项目: https://github.com/fuqiuluo/unidbg-fetch-qsign
 
-docker 一键搭建: `docker run -d --restart=always --name qsign -p 8080:8080 xzhouqd/qsign:8.9.63`
+#### 公共 API
 
-#### 适配 8.9.50/8.9.58 的 API
-
-可使用适配 Icalingua++/ICQQ 的 API，在 TG 群组中有提供
+可使用适配 Icalingua++/ICQQ 的公共 API，在 TG 群组中有提供支持 QQ8.9.50 / QQ8.9.58 / TIM3.5.1 的 API
 
 ### 常用启动参数
 
