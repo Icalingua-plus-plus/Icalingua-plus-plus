@@ -146,6 +146,7 @@ const eventHandlers = {
                     ? (<GroupMessageEventData>data).anonymous.flag
                     : null,
             bubble_id: data.bubble_id,
+            subid: data.sender['subid'],
         }
 
         let room = await storage.getRoom(roomId)
@@ -327,7 +328,7 @@ const eventHandlers = {
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
             try {
-                requireFunc(custom_path).onMessage(data, bot)
+                requireFunc(custom_path).onMessage(data, bot, { storage, ui })
             } catch (e) {
                 ui.messageError('自定义插件出错')
                 errorHandler(e, true)
@@ -1583,6 +1584,7 @@ const adapter: OicqAdapter = {
                 ignore_self: false,
                 brief: true,
                 log_level: process.env.NODE_ENV === 'development' ? 'warn' : 'error',
+                sign_api_addr: form.signAPIAddress,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
@@ -2005,7 +2007,7 @@ const adapter: OicqAdapter = {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()
         } else {
-            ui.message(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息，正在后台继续拉取`)
+            ui.message(`${room.roomName}(${Math.abs(roomId)}) 后台拉取中，已拉取 ${messages.length} 条消息`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)

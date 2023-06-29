@@ -438,8 +438,8 @@ export default {
 }
 
 .vac-card-system {
-    max-width: 250px;
-    padding: 8px 4px;
+    width: fit-content;
+    padding: 8px 20px;
     color: var(--chat-message-color-system);
     background: var(--chat-message-bg-color-system);
 }

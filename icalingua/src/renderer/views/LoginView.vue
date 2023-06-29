@@ -23,6 +23,9 @@
             >
                 <el-input type="password" placeholder="Password" v-model="form.password" />
             </el-form-item>
+            <el-form-item prop="signAPIAddress" v-if="$route.query.disableIdLogin === 'false'">
+                <el-input type="text" placeholder="Head Sign API Address" v-model="form.signAPIAddress" />
+            </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
                 <el-radio-group v-model="form.protocol" size="small">
                     <el-radio-button label="1">Android</el-radio-button>
@@ -34,6 +37,11 @@
                     <el-radio-button label="7">Android 8933</el-radio-button>
                     <el-radio-button label="8">aPad 8933</el-radio-button>
                     <el-radio-button label="9">iPad 8933</el-radio-button>
+                    <el-radio-button label="10">TIM 3.5.1</el-radio-button>
+                    <el-radio-button label="11">Android 8958</el-radio-button>
+                    <el-radio-button label="12">aPad 8958</el-radio-button>
+                    <el-radio-button label="13">Android 8963</el-radio-button>
+                    <el-radio-button label="14">aPad 8963</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
@@ -152,7 +160,9 @@ export default {
     },
     async created() {
         this.ver = await ipc.getVersion()
-        this.form = await ipc.getAccount()
+        const _form = await ipc.getAccount()
+        if (!_form.signAPIAddress) _form.signAPIAddress = ''
+        this.form = _form
         ipcRenderer.on('error', (_, msg) => {
             if (this.loginTimeout) clearTimeout(this.loginTimeout)
             this.errmsg = msg
@@ -171,12 +181,12 @@ export default {
                 case '(45)':
                     if (this.form.protocol === 3) break
                     if (String(msg).includes('你当前使用的QQ版本过低'))
-                        this.$alert(
-                            '账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
-                        )
+                        this.$alert('账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 TIM 协议登录')
                     else
                         this.$alert(
-                            '可能为非常用环境登录，请等待更新数据包签名算法，或使用 FIX 协议登录成功后再更换带 8933 的协议重试',
+                            this.form.signAPIAddress
+                                ? '可能为非常用环境登录，建议使用 TIM 协议登录'
+                                : '账号被风控需要头部签名，请根据 README 配置头部签名 API 地址',
                         )
                     break
                 default:
@@ -199,6 +209,9 @@ export default {
                     this.disabled = true
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
+                    if (!this.form.signAPIAddress) {
+                        this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
+                    }
                     this.loginTimeout = setTimeout(() => {
                         this.$alert(
                             '登录时间似乎过长了，请检查网络是否正常，如果安卓系/苹果系协议互相切换请先删除 token，若还不能登录请携带日志反馈',

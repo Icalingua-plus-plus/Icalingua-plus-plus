@@ -134,6 +134,7 @@ const eventHandlers = {
                     ? (<GroupMessageEventData>data).anonymous.flag
                     : null,
             bubble_id: data.bubble_id,
+            subid: data.sender['subid'],
         }
 
         let room = await storage.getRoom(roomId)
@@ -218,7 +219,7 @@ const eventHandlers = {
         storage.addMessage(roomId, message)
         if (config.custom && data.post_type === 'message') {
             try {
-                require('../custom').onMessage(data, bot)
+                require('../custom').onMessage(data, bot, { storage, ui: clients })
             } catch (e) {
                 clients.messageError('自定义插件出错')
                 console.error(e)
@@ -1326,6 +1327,7 @@ const adapter = {
                 platform: Number(form.protocol),
                 ignore_self: false,
                 brief: true,
+                sign_api_addr: form.signAPIAddress,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
