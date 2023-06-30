@@ -1356,7 +1356,7 @@ const adapter: OicqAdapter = {
                 replyUin = parsed.readUInt32BE(roomId < 0 ? 4 : 0)
             }
 
-            if (roomId < 0)
+            if (roomId < 0 && replyUin !== 80000000)
                 chain.push(
                     {
                         type: 'at',

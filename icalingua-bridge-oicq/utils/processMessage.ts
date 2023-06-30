@@ -14,13 +14,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
         if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]
         let lastType
         let lastReply = false
+        let replyAnonymous = false
         for (let i = 0; i < oicqMessage.length; i++) {
             const m = oicqMessage[i]
             let appurl
             let url
             switch (m.type) {
                 case 'at':
-                    if (lastType === 'reply') {
+                    if (lastType === 'reply' && !replyAnonymous) {
                         lastReply = true
                         break
                     }
@@ -108,6 +109,18 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     message.content += m.data.url
                     break
                 case 'reply':
+                    let user_id: number, time: number
+                    const parsed = Buffer.from(m.data.id, 'base64')
+                    if (m.data.id.length > 24) {
+                        // Group
+                        user_id = parsed.readUInt32BE(4)
+                        time = parsed.readUInt32BE(16)
+                    } else {
+                        // C2C
+                        user_id = parsed.readUInt32BE(0)
+                        time = parsed.readUInt32BE(12)
+                    }
+                    if (user_id === 80000000) replyAnonymous = true
                     let replyMessage: Message
                     if (roomId) {
                         replyMessage = await adapter.getMessageFromStorage(roomId, m.data.id)
@@ -156,17 +169,6 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         if (replyMessage.senderId === adapter.getUin()) message.at = true
                     } else {
                         try {
-                            let user_id: number, time: number
-                            const parsed = Buffer.from(m.data.id, 'base64')
-                            if (m.data.id.length > 24) {
-                                // Group
-                                user_id = parsed.readUInt32BE(4)
-                                time = parsed.readUInt32BE(16)
-                            } else {
-                                // C2C
-                                user_id = parsed.readUInt32BE(0)
-                                time = parsed.readUInt32BE(12)
-                            }
                             message.replyMessage = {
                                 _id: m.data.id,
                                 username: user_id === adapter.getUin() ? 'You' : String(user_id),
