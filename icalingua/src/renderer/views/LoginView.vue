@@ -28,11 +28,11 @@
             </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
                 <el-radio-group v-model="form.protocol" size="small">
-                    <el-radio-button label="1">Android</el-radio-button>
-                    <el-radio-button label="2">aPad</el-radio-button>
+                    <el-radio-button label="1">Android 8950</el-radio-button>
+                    <el-radio-button label="2">aPad 8950</el-radio-button>
                     <el-radio-button label="3">Android Watch</el-radio-button>
                     <el-radio-button label="4">MacOS</el-radio-button>
-                    <el-radio-button label="5">iPad</el-radio-button>
+                    <el-radio-button label="5">iPad 8950</el-radio-button>
                     <el-radio-button label="6">FIX</el-radio-button>
                     <el-radio-button label="7">Android 8933</el-radio-button>
                     <el-radio-button label="8">aPad 8933</el-radio-button>
@@ -181,11 +181,15 @@ export default {
                 case '(45)':
                     if (this.form.protocol === 3) break
                     if (String(msg).includes('你当前使用的QQ版本过低'))
-                        this.$alert('账号被限制使用内置的 QQ 版本登录，请等待更新，或使用 TIM 协议登录')
+                        this.$alert(
+                            '账号被限制使用内置的 QQ 版本登录，请' + this.form.protocol >= 13
+                                ? '等待更新'
+                                : '更换更高版本协议',
+                        )
                     else
                         this.$alert(
                             this.form.signAPIAddress
-                                ? '可能为非常用环境登录，建议使用 TIM 协议登录'
+                                ? '可能为非常用环境登录，也有可能是 API 配置有误或不支持此版本协议'
                                 : '账号被风控需要头部签名，请根据 README 配置头部签名 API 地址',
                         )
                     break
