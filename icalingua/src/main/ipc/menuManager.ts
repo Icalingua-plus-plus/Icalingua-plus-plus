@@ -1773,7 +1773,6 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
                         click: () => {
                             let messageType
                             if (getConfig().anonymous) messageType = 'anonymous'
-                            if (getConfig().sendRawMessage || !getConfig().debugmode) messageType = undefined
                             const msgToSend = {
                                 content: message.content,
                                 replyMessage: message.replyMessage,
