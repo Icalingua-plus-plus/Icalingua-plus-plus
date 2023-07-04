@@ -6,57 +6,66 @@
             :rules="rules"
             :hide-required-asterisk="true"
             :disabled="disabled"
-            label-position="top"
-            class="login-box"
+            label-position="left"
         >
-            <center>
-                <h5>Version {{ ver }}</h5>
-                <h4 v-if="$route.query.bridge === 'true'">正在配置 Bridge 服务器</h4>
-            </center>
+            <h1 class="title">
+                <span>
+                    {{ $route.query.bridge === 'true' ? '配置 Bridge 服务器' : '登录' }}
+                </span>
+                <span>Version {{ ver }}</span>
+            </h1>
             <el-form-item prop="username" v-if="$route.query.disableIdLogin === 'false'">
                 <el-input type="text" placeholder="QQ ID" v-model.number="form.username" />
             </el-form-item>
-            <el-form-item
-                prop="password"
-                :style="{ marginBottom: '15px' }"
-                v-if="$route.query.disableIdLogin === 'false'"
-            >
+            <el-form-item prop="password" v-if="$route.query.disableIdLogin === 'false'">
                 <el-input type="password" placeholder="Password" v-model="form.password" />
             </el-form-item>
             <el-form-item prop="signAPIAddress" v-if="$route.query.disableIdLogin === 'false'">
                 <el-input type="text" placeholder="Head Sign API Address" v-model="form.signAPIAddress" />
             </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
-                <el-radio-group v-model="form.protocol" size="small">
-                    <el-radio-button label="1">Android 8950</el-radio-button>
-                    <el-radio-button label="2">aPad 8950</el-radio-button>
-                    <el-radio-button label="3">Android Watch</el-radio-button>
-                    <el-radio-button label="4">MacOS</el-radio-button>
-                    <el-radio-button label="5">iPad 8950</el-radio-button>
-                    <el-radio-button label="6">FIX</el-radio-button>
-                    <el-radio-button label="7">Android 8933</el-radio-button>
-                    <el-radio-button label="8">aPad 8933</el-radio-button>
-                    <el-radio-button label="9">iPad 8933</el-radio-button>
-                    <el-radio-button label="10">TIM 3.5.1</el-radio-button>
-                    <el-radio-button label="11">Android 8958</el-radio-button>
-                    <el-radio-button label="12">aPad 8958</el-radio-button>
-                    <el-radio-button label="13">Android 8963</el-radio-button>
-                    <el-radio-button label="14">aPad 8963</el-radio-button>
-                </el-radio-group>
+                <div class="protocols">
+                    <span>Android Phone</span>
+                    <el-radio-group v-model="form.protocol" size="mini">
+                        <el-radio-button label="6">8.8.88</el-radio-button>
+                        <el-radio-button label="7">8.9.33</el-radio-button>
+                        <el-radio-button label="1">8.9.50</el-radio-button>
+                        <el-radio-button label="11">8.9.58</el-radio-button>
+                        <el-radio-button label="13">8.9.63</el-radio-button>
+                    </el-radio-group>
+                    <span>Android Pad</span>
+                    <el-radio-group v-model="form.protocol" size="mini">
+                        <el-radio-button label="8">8.9.33</el-radio-button>
+                        <el-radio-button label="2">8.9.50</el-radio-button>
+                        <el-radio-button label="12">8.9.58</el-radio-button>
+                        <el-radio-button label="14">8.9.63</el-radio-button>
+                    </el-radio-group>
+                    <span>iPad</span>
+                    <el-radio-group v-model="form.protocol" size="mini">
+                        <el-radio-button label="9">8.9.33</el-radio-button>
+                        <el-radio-button label="5">8.9.50</el-radio-button>
+                    </el-radio-group>
+                    <span>Other</span>
+                    <el-radio-group v-model="form.protocol" size="mini">
+                        <el-radio-button label="3">Android Watch 2.0.8</el-radio-button>
+                        <el-radio-button label="4">macOS 5.9.3</el-radio-button>
+                        <el-radio-button label="10">TIM 3.5.1</el-radio-button>
+                    </el-radio-group>
+                </div>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
                 <el-radio-group v-model="form.onlineStatus" size="small">
                     <el-radio-button label="11">Online</el-radio-button>
-                    <el-radio-button label="31">Away From Keyboard</el-radio-button>
+                    <el-radio-button label="31">Away</el-radio-button>
                     <el-radio-button label="41">Hide</el-radio-button>
                     <el-radio-button label="50">Busy</el-radio-button>
                     <el-radio-button label="60">Q Me</el-radio-button>
                     <el-radio-button label="70">Don't Disturb</el-radio-button>
                 </el-radio-group>
             </el-form-item>
-            <el-form-item prop="autologin" class="nobottmar">
+            <el-form-item prop="autologin">
                 <span class="el-form-item__label">Auto login</span>
-                <el-switch v-model="form.autologin" :style="{ marginLeft: '5px' }" />
+                <el-switch v-model="form.autologin" />
             </el-form-item>
             <el-form-item label="Storage engine">
                 <el-select v-model="form.storageType" size="small">
@@ -89,19 +98,20 @@
             <el-form-item prop="sqlDatabase" v-show="form.storageType === 'mysql' || form.storageType === 'pg'">
                 <el-input placeholder="database" v-model="form.sqlDatabase" />
             </el-form-item>
-            <p class="red">
+            <p v-if="errmsg" class="error">
                 {{ errmsg }}
             </p>
-            <el-form-item align="center">
+            <el-form-item class="buttons">
                 <el-button type="primary" v-on:click="onSubmit('loginForm')">
                     <span v-show="!form.password && $route.query.bridge !== 'true'">QR Code</span>
                     Login
                 </el-button>
-                <el-button type="warning" v-if="errmsg !== ''" v-on:click="cannotLogin"> 更换设备信息</el-button>
+                <el-button type="warning" v-if="errmsg" v-on:click="cannotLogin">更换设备信息</el-button>
             </el-form-item>
         </el-form>
         <QrcodeDrawer @login="onSubmit('loginForm')" />
         <el-drawer
+            class="sms-drawer"
             title="短信验证"
             :visible="shouldSubmitSmsCode"
             direction="btt"
@@ -117,14 +127,14 @@
                 @input="smsCode = smsCode.slice(0, 6)"
                 @keydown.enter.native="submitSmsCode"
             />
-            <center>
-                <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1"> 提交</el-button>
-                <el-button @click="sendSmsCode" v-if="sendTime === -1"> 发送验证码</el-button>
-                <el-button @click="sendSmsCode" v-if="sendTime !== -1" :disabled="sendTime !== 0">
-                    重发 ({{ sendTime }}s)
+            <div class="buttons">
+                <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1">提交</el-button>
+                <el-button @click="sendSmsCode" type="primary" v-if="sendTime === -1">发送验证码</el-button>
+                <el-button @click="sendSmsCode" :disabled="sendTime !== 0" v-else>
+                    重发{{ sendTime !== 0 ? ` (${sendTime}s)` : '' }}
                 </el-button>
-                <el-button v-if="verifyUrl" @click="QRCodeVerify"> 扫码验证</el-button>
-            </center>
+                <el-button v-if="verifyUrl" @click="QRCodeVerify">扫码验证</el-button>
+            </div>
         </el-drawer>
     </div>
 </template>
@@ -266,31 +276,69 @@ export default {
 </script>
 
 <style scoped>
-div#login {
-    height: 100%;
+#login {
+    padding: 15px;
+    font-family: 'CircularSpotifyTxT Light Web', sans-serif;
+}
+
+#login::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin: 0;
-    position: absolute;
+    height: 100%;
+    z-index: -1;
     background-position: bottom;
     background-repeat: no-repeat;
     background-size: contain;
     background-image: url('../assets/loginbg.jpg');
-    font-family: 'CircularSpotifyTxT Light Web', sans-serif;
 }
 
-.login-box {
-    margin: 15px;
+.title {
+    font-size: 16px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0 0 15px;
 }
 
-.red {
+.error {
     color: red;
+    margin: 0 0 22px;
 }
 
-.nobottmar {
+.protocols {
+    clear: left;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    gap: 4px;
+}
+
+.protocols span {
+    color: #606266;
+    font-size: 12px;
+    line-height: normal;
+}
+
+.buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     margin-bottom: 0;
 }
 
-.notopmar {
-    margin-top: 0;
+.sms-drawer {
+    text-align: center;
+}
+
+.sms-drawer :deep(.el-drawer__body) {
+    padding: 0 20px 20px;
+}
+
+.sms-drawer p,
+.sms-drawer .el-input {
+    margin: 0 0 15px;
 }
 </style>

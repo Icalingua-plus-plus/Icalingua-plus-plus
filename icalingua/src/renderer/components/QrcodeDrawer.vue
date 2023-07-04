@@ -1,6 +1,7 @@
 <template>
     <el-drawer
-        title="二维码登录 扫码设备需与登录设备同一个网络"
+        class="qrcode-drawer"
+        title="二维码登录"
         :visible="drawerVisible"
         direction="btt"
         :close-on-press-escape="false"
@@ -8,10 +9,9 @@
         :wrapper-closable="false"
         size="100%"
     >
+        <p>扫码设备需与登录设备同一个网络</p>
         <img :src="image" alt="" />
-        <center>
-            <el-button @click="$emit('login')" type="primary"> 已扫码 </el-button>
-        </center>
+        <el-button @click="$emit('login')" type="primary">已扫码</el-button>
     </el-drawer>
 </template>
 
@@ -36,3 +36,22 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+.qrcode-drawer {
+    text-align: center;
+}
+
+.qrcode-drawer :deep(.el-drawer__body) {
+    padding: 0 20px 20px;
+}
+
+.qrcode-drawer p {
+    margin: 0 0 15px;
+}
+
+.qrcode-drawer img {
+    display: block;
+    margin: 0 auto 15px;
+}
+</style>
