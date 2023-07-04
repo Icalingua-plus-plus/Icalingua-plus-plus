@@ -13,7 +13,6 @@ import fs from 'fs'
 import crypto from 'crypto'
 import ChildProcess from 'child_process'
 import errorHandler from '../utils/errorHandler'
-import fileType from 'file-type'
 import axios from 'axios'
 
 let aria: Aria2
@@ -114,24 +113,19 @@ const mime2Ext = (mime: string) => {
     switch (mime) {
         case 'image/jpeg':
             return 'jpg'
-        case 'image/png':
-            return 'png'
-        case 'image/gif':
-            return 'gif'
-        case 'image/webp':
-            return 'webp'
-        case 'image/bmp':
-            return 'bmp'
         case 'image/tiff':
             return 'tif'
         case 'image/x-icon':
             return 'ico'
         case 'image/svg+xml':
             return 'svg'
+        case 'image/png':
+        case 'image/gif':
+        case 'image/webp':
+        case 'image/bmp':
         case 'image/avif':
-            return 'avif'
         case 'image/apng':
-            return 'apng'
+            return mime.split('/')[1]
         default:
             return 'jpg'
     }
