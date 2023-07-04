@@ -110,17 +110,43 @@ export const download = (url: string, out: string, dir?: string, saveAs = false)
 
 loadConfig(getConfig().aria2)
 
+const mime2Ext = (mime: string) => {
+    switch (mime) {
+        case 'image/jpeg':
+            return 'jpg'
+        case 'image/png':
+            return 'png'
+        case 'image/gif':
+            return 'gif'
+        case 'image/webp':
+            return 'webp'
+        case 'image/bmp':
+            return 'bmp'
+        case 'image/tiff':
+            return 'tif'
+        case 'image/x-icon':
+            return 'ico'
+        case 'image/svg+xml':
+            return 'svg'
+        case 'image/avif':
+            return 'avif'
+        case 'image/apng':
+            return 'apng'
+        default:
+            return 'jpg'
+    }
+}
+
 const getImageExt = async (url: string) => {
     const request = await axios.get(url, {
         responseType: 'stream',
         headers: {
             'User-Agent':
                 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.199 Safari/537.36 ILPP/2',
-            Range: 'bytes=0-10',
+            Range: 'bytes=0-5',
         },
     })
-    const type = await fileType.fromStream(request.data)
-    return type ? type.ext : 'jpg'
+    return mime2Ext(request.headers['content-type'])
 }
 
 /**
