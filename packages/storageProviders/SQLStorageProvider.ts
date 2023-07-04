@@ -47,13 +47,20 @@ export default class SQLStorageProvider implements StorageProvider {
     id: string
     type: 'pg' | 'mysql' | 'sqlite3'
     db: Knex
+    errorHandle: Function
     private qid: string
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
-    constructor(id: string, type: 'pg' | 'mysql' | 'sqlite3', connectOpt: PgMyOpt | SQLiteOpt) {
+    constructor(
+        id: string,
+        type: 'pg' | 'mysql' | 'sqlite3',
+        connectOpt: PgMyOpt | SQLiteOpt,
+        errorHandle: Function = console.error,
+    ) {
         this.id = id
         this.qid = `eqq${id}`
         this.type = type
+        this.errorHandle = errorHandle
         let connectOption = { ...connectOpt }
         if (connectOption.host && connectOption.host.includes(':')) {
             const [host, port] = connectOption.host.split(':')
@@ -110,7 +117,7 @@ export default class SQLStorageProvider implements StorageProvider {
             }
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -129,7 +136,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 } as Room
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -150,7 +157,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 }
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -172,7 +179,7 @@ export default class SQLStorageProvider implements StorageProvider {
             }
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -186,7 +193,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 }
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -201,7 +208,7 @@ export default class SQLStorageProvider implements StorageProvider {
             }
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -244,7 +251,7 @@ export default class SQLStorageProvider implements StorageProvider {
             }
             return true
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -363,7 +370,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 await this.updateDB(dbVersion[0].dbVersion)
             }
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -376,7 +383,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             return await this.db(`rooms`).insert(this.roomConToDB(room))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -389,7 +396,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db(`rooms`).where('roomId', '=', roomId).update(this.roomConToDB(room))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -402,7 +409,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db(`rooms`).where('roomId', '=', roomId).delete()
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -416,7 +423,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const rooms = await this.db<Room>(`rooms`).select('*').orderBy('utime', 'desc')
             return rooms.map((room) => this.roomConFromDB(room))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -430,7 +437,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const room = await this.db<Room>(`rooms`).where('roomId', '=', roomId).select('*')
             return this.roomConFromDB(room[0])
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -443,7 +450,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             return await this.db(`chatGroups`).insert(this.chatGroupConToDB(chatGroup))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -456,7 +463,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db(`chatGroups`).where('name', '=', name).update(this.chatGroupConToDB(chatGroup))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -469,7 +476,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db(`chatGroups`).where('name', '=', name).delete()
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -483,7 +490,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const chatGroups = await this.db<Room>(`chatGroups`).select('*').orderBy('index', 'asc')
             return chatGroups.map((chatGroup) => this.chatGroupConFromDB(chatGroup))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -500,7 +507,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 .count('roomId')
             return Number(unreadRooms[0]['count(`roomId`)'] || unreadRooms[0]['count'] || 0)
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -519,7 +526,7 @@ export default class SQLStorageProvider implements StorageProvider {
             if (unreadRooms.length >= 1) return unreadRooms[0]
             return null
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -532,7 +539,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             return await this.db<IgnoreChatInfo>(`ignoredChats`).select('*')
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -546,7 +553,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const ignoredChats = await this.db<IgnoreChatInfo>(`ignoredChats`).where('id', '=', id)
             return ignoredChats.length !== 0
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -559,7 +566,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db<IgnoreChatInfo>(`ignoredChats`).insert(info)
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -572,7 +579,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db<IgnoreChatInfo>(`ignoredChats`).where('id', '=', roomId).delete()
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -585,7 +592,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db<Message>('messages').insert(this.msgConToDB(message, roomId)).onConflict().ignore()
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -598,7 +605,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -613,7 +620,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 .where('_id', '=', `${messageId}`)
                 .update(this.msgConToDB(message, roomId))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -632,7 +639,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 .select('*')
             return messages.reverse().map((message) => this.msgConFromDB(message))
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 
@@ -650,7 +657,7 @@ export default class SQLStorageProvider implements StorageProvider {
             if (message.length === 0) return null
             return this.msgConFromDB(message[0])
         } catch (e) {
-            throw e
+            this.errorHandle(e)
         }
     }
 

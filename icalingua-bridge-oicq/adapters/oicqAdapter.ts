@@ -1717,7 +1717,7 @@ const adapter = {
         clients.setAllChatGroups(await storage.getAllChatGroups())
     },
     async getRoamingStamp(no_cache: boolean | undefined, cb) {
-        const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data
+        const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data || []
         let stamps = []
 
         for (let index: number = roaming_stamp.length - 1; index >= 0; index--) {

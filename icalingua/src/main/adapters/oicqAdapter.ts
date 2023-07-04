@@ -997,25 +997,40 @@ const initStorage = async () => {
                 storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
                 break
             case 'sqlite':
-                storage = new SQLStorageProvider(`${loginForm.username}`, 'sqlite3', {
-                    dataPath: app.getPath('userData'),
-                })
+                storage = new SQLStorageProvider(
+                    `${loginForm.username}`,
+                    'sqlite3',
+                    {
+                        dataPath: app.getPath('userData'),
+                    },
+                    errorHandler,
+                )
                 break
             case 'mysql':
-                storage = new SQLStorageProvider(`${loginForm.username}`, 'mysql', {
-                    host: loginForm.sqlHost,
-                    user: loginForm.sqlUsername,
-                    password: loginForm.sqlPassword,
-                    database: loginForm.sqlDatabase,
-                })
+                storage = new SQLStorageProvider(
+                    `${loginForm.username}`,
+                    'mysql',
+                    {
+                        host: loginForm.sqlHost,
+                        user: loginForm.sqlUsername,
+                        password: loginForm.sqlPassword,
+                        database: loginForm.sqlDatabase,
+                    },
+                    errorHandler,
+                )
                 break
             case 'pg':
-                storage = new SQLStorageProvider(`${loginForm.username}`, 'pg', {
-                    host: loginForm.sqlHost,
-                    user: loginForm.sqlUsername,
-                    password: loginForm.sqlPassword,
-                    database: loginForm.sqlDatabase,
-                })
+                storage = new SQLStorageProvider(
+                    `${loginForm.username}`,
+                    'pg',
+                    {
+                        host: loginForm.sqlHost,
+                        user: loginForm.sqlUsername,
+                        password: loginForm.sqlPassword,
+                        database: loginForm.sqlDatabase,
+                    },
+                    errorHandler,
+                )
                 break
             default:
                 break
@@ -2025,7 +2040,7 @@ const adapter: OicqAdapter = {
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
-        const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data
+        const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data || []
         let stamps = []
 
         for (let index: number = roaming_stamp.length - 1; index >= 0; index--) {
