@@ -1,5 +1,5 @@
 <template>
-    <a @click="$emit('click')" @click.right="$emit('contextmenu')">
+    <a @click="$emit('click')" @click.right="$emit('contextmenu', $event)">
         <div class="root" :class="{ selected }">
             <div class="entry">
                 <div class="left">

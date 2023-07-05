@@ -33,7 +33,7 @@
                     input = ''
                     $emit('chroom', room)
                 "
-                @contextmenu="roomMenu(room)"
+                @contextmenu="roomMenu(room, $event)"
             />
         </div>
     </div>
@@ -78,8 +78,8 @@ export default {
         }
     },
     methods: {
-        roomMenu(room) {
-            ipc.popupRoomMenu(room.roomId)
+        roomMenu(room, e) {
+            ipc.popupRoomMenu(room.roomId, e)
         },
         async clearRooms() {
             console.log(this.allRooms)

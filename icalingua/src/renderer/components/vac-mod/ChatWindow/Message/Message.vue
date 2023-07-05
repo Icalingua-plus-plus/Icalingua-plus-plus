@@ -22,7 +22,7 @@
             <slot name="message" v-bind="{ message }">
                 <div
                     class="vac-message-sender-avatar"
-                    @click.right="$emit('avatar-ctx')"
+                    @click.right="$emit('avatar-ctx', $event)"
                     @dblclick="$emit('poke')"
                     v-if="roomUsers.length > 2 && message.senderId !== currentUserId"
                 >

@@ -105,6 +105,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
     const menu = Menu.buildFromTemplate([
         {
+            label: `${room.roomName} (${Math.abs(room.roomId)})`,
+            enabled: false,
+            visible: (await getSelectedRoom())?.roomId !== room.roomId,
+        },
+        {
             label: '优先级',
             submenu: [
                 {
@@ -1307,9 +1312,12 @@ export const updateAppMenu = async () => {
     }
     Menu.setApplicationMenu(menu)
 }
-ipcMain.on('popupRoomMenu', async (_, roomId: number) => {
+ipcMain.on('popupRoomMenu', async (_, roomId: number, e) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     ;(await buildRoomMenu(await getRoom(roomId))).popup({
         window: getMainWindow(),
+        ...pos,
     })
 })
 ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: string, history?: boolean) => {
@@ -1827,7 +1835,9 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
     }
     menu.popup({ window: getMainWindow() })
 })
-ipcMain.on('popupTextAreaMenu', () => {
+ipcMain.on('popupTextAreaMenu', (_, e) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     Menu.buildFromTemplate([
         {
             role: 'cut',
@@ -1838,7 +1848,7 @@ ipcMain.on('popupTextAreaMenu', () => {
         {
             role: 'paste',
         },
-    ]).popup({ window: getMainWindow() })
+    ]).popup({ window: getMainWindow(), ...pos })
 })
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
@@ -1952,7 +1962,9 @@ ipcMain.on('popupStickerDirMenu', (_, dirName: string) => {
 
     Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
 })
-ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
+ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: ev.x - bounds.x, y: ev.y - bounds.y }
     const menu = Menu.buildFromTemplate([
         {
             label: `复制 "${message.username}"`,
@@ -2102,7 +2114,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room) => {
             }),
         )
     }
-    menu.popup({ window: getMainWindow() })
+    menu.popup({ window: getMainWindow(), ...pos })
 })
 ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
     const menu = new Menu()

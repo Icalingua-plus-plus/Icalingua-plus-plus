@@ -113,7 +113,7 @@
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
-                                @avatar-ctx="avatarCtx(m)"
+                                @avatar-ctx="avatarCtx(m, $event)"
                                 @download-image="$emit('download-image', $event)"
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
@@ -1397,8 +1397,8 @@ export default {
             const sect = window.getSelection().toString()
             ipc.popupMessageMenu(this.room, message, sect, this.$route.name === 'history-page')
         },
-        avatarCtx(message) {
-            ipc.popupAvatarMenu(message, this.room)
+        avatarCtx(message, e) {
+            ipc.popupAvatarMenu(message, this.room, e)
         },
         containerScroll(e) {
             if (this.onScrolling) {
@@ -1486,8 +1486,8 @@ export default {
             )
         },
         textctx: ipc.popupTextAreaMenu,
-        roomMenu() {
-            ipc.popupRoomMenu(this.room.roomId)
+        roomMenu(e) {
+            ipc.popupRoomMenu(this.room.roomId, e)
         },
         async updateGroupMembers() {
             const { roomId } = this.room

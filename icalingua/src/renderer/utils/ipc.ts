@@ -112,14 +112,14 @@ const ipc = {
     updatePriority(level: 1 | 2 | 3 | 4 | 5) {
         ipcRenderer.send('updatePriority', level)
     },
-    popupRoomMenu(roomId: number) {
-        ipcRenderer.send('popupRoomMenu', roomId)
+    popupRoomMenu(roomId: number, e) {
+        ipcRenderer.send('popupRoomMenu', roomId, { x: e.screenX, y: e.screenY })
     },
-    popupAvatarMenu(message: Message, room: Room) {
-        ipcRenderer.send('popupAvatarMenu', message, room)
+    popupAvatarMenu(message: Message, room: Room, e) {
+        ipcRenderer.send('popupAvatarMenu', message, room, { x: e.screenX, y: e.screenY })
     },
-    popupTextAreaMenu() {
-        ipcRenderer.send('popupTextAreaMenu')
+    popupTextAreaMenu(e) {
+        ipcRenderer.send('popupTextAreaMenu', { x: e.screenX, y: e.screenY })
     },
     popupStickerMenu() {
         ipcRenderer.send('popupStickerMenu')
