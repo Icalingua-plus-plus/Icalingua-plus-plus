@@ -1,6 +1,6 @@
 const hashCode = (str : String) =>  {
     if (str.length === 0) {
-        return undefined;
+        return '';
     }
 
     let hashNumber = 0, result = new String();
