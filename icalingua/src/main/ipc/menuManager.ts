@@ -104,6 +104,7 @@ const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' |
 const buildRoomMenu = async (room: Room): Promise<Menu> => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
+    const avatarType = room.roomId < 0 ? '群头像' : '头像'
     const menu = Menu.buildFromTemplate([
         {
             label: `${room.roomName} (${Math.abs(room.roomId)})`,
@@ -177,15 +178,16 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             },
         },
         {
-            label: '查看头像',
+            label: `查看${avatarType}`,
             click: () => {
                 openImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false)
             },
         },
         {
-            label: '下载头像',
+            label: `下载${avatarType}`,
             click: () => {
-                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))
+                const basename = `${room.roomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
+                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false, basename)
             },
         },
         {
@@ -379,7 +381,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                                 : room.roomName
                             download(
                                 details.url,
-                                `${roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
+                                `${roomName}(${-room.roomId})的群相册_${new Date().getTime()}.zip`,
                                 undefined,
                                 true,
                             )
@@ -2027,8 +2029,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     )
     menu.append(
         new MenuItem({
-            label: `下载头像`,
-            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`),
+            label: '下载头像',
+            click: () => {
+                const basename = `${message.username}(${message.senderId})的头像_${new Date().getTime()}`
+                downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`, false, basename)
+            },
         }),
     )
     menu.append(
@@ -2155,9 +2160,10 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
         const avatarId = group ? -displayId : displayId
+        const avatarType = group ? '群头像' : '头像'
         menu.append(
             new MenuItem({
-                label: '查看头像',
+                label: `查看${avatarType}`,
                 click: () => {
                     openImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'), false)
                 },
@@ -2165,9 +2171,10 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
         )
         menu.append(
             new MenuItem({
-                label: '下载头像',
+                label: `下载${avatarType}`,
                 click: () => {
-                    downloadImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'))
+                    const basename = `${remark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
+                    downloadImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'), false, basename)
                 },
             }),
         )
@@ -2286,7 +2293,8 @@ ipcMain.on(
                 new MenuItem({
                     label: '下载头像',
                     click: () => {
-                        downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'))
+                        const basename = `${remark}(${displayId})的头像_${new Date().getTime()}`
+                        downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false, basename)
                     },
                 }),
             )

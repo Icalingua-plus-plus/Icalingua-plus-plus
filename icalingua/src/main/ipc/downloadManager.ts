@@ -146,8 +146,11 @@ const getImageExt = async (url: string) => {
 /**
  * 其实就是个只有 url 的下载方法，用来下图片
  */
-export const downloadImage = async (url: string, saveAs = false) => {
-    const out = 'QQ_Image_' + new Date().getTime() + '.' + (await getImageExt(url))
+export const downloadImage = async (url: string, saveAs = false, basename = '') => {
+    if (!basename) {
+        basename = 'QQ_Image_' + new Date().getTime()
+    }
+    const out = basename + '.' + (await getImageExt(url))
     const dir = app.getPath('downloads')
     download(url, out, aria ? null : dir, saveAs)
     if (!saveAs)
