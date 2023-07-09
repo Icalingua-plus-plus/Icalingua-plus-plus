@@ -53,6 +53,7 @@ import {
     sendPacket,
     sendGroupSign,
     getDisabledFeatures,
+    sendGroupPoke,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
@@ -211,6 +212,12 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     },
                 },
             ],
+        },
+        {
+            label: '戳自己',
+            click: () => {
+                sendGroupPoke(Math.abs(room.roomId), getUin())
+            },
         },
     ])
     const webApps = new Menu()
@@ -2147,6 +2154,23 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 },
             }),
         )
+        const avatarId = group ? -displayId : displayId
+        menu.append(
+            new MenuItem({
+                label: '查看头像',
+                click: () => {
+                    openImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'), false)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: '下载头像',
+                click: () => {
+                    downloadImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'))
+                },
+            }),
+        )
     }
     if (group) {
         menu.append(
@@ -2250,6 +2274,22 @@ ipcMain.on(
                     },
                 }),
             )
+            menu.append(
+                new MenuItem({
+                    label: '查看头像',
+                    click: () => {
+                        openImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '下载头像',
+                    click: () => {
+                        downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'))
+                    },
+                }),
+            )
         }
         if (group) {
             menu.append(
@@ -2261,6 +2301,15 @@ ipcMain.on(
                             id: displayId,
                         })
                         ui.addMessageText('@' + remark + ' ')
+                        ui.openGroupMemberPanel(false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '戳一戳',
+                    click: () => {
+                        sendGroupPoke(Number(group), displayId)
                         ui.openGroupMemberPanel(false)
                     },
                 }),
