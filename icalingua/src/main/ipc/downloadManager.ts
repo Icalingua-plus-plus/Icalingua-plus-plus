@@ -2,7 +2,7 @@ import Aria2Config from '@icalingua/types/Aria2Config'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import Aria2 from 'aria2'
-import { BrowserWindow, DownloadItem, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, DownloadItem, app, dialog, ipcMain, net } from 'electron'
 import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
@@ -13,7 +13,6 @@ import fs from 'fs'
 import crypto from 'crypto'
 import ChildProcess from 'child_process'
 import errorHandler from '../utils/errorHandler'
-import axios from 'axios'
 
 let aria: Aria2
 
@@ -132,15 +131,62 @@ const mime2Ext = (mime: string) => {
 }
 
 const getImageExt = async (url: string) => {
-    const request = await axios.get(url, {
-        responseType: 'stream',
-        headers: {
-            'User-Agent':
-                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.5249.199 Safari/537.36 ILPP/2',
-            Range: 'bytes=0-5',
-        },
+    let responsePromise = new Promise<Electron.IncomingMessage>((resolve, reject) => {
+        let request = net.request({
+            url: url,
+            method: 'GET',
+            host: 'gchat.qpic.cn',
+        })
+        // 此处headers从edge抓包
+        request.setHeader(
+            'User-Agent',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67',
+        )
+        request.setHeader('Range', 'bytes=0-5')
+        request.setHeader(
+            'Accept',
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        )
+        request.setHeader('Accept-Encoding', 'gzip, deflate, br')
+        request.setHeader('Cache-Control', 'max-age=0')
+        request.setHeader('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6')
+        request.setHeader('Sec-Fetch-Dest', 'document')
+        request.setHeader('Sec-Fetch-Mode', 'navigate')
+        request.setHeader('Sec-Fetch-Site', 'none')
+        request.setHeader('Sec-Fetch-User', '?1')
+        request.setHeader('sec-ch-ua', '"Not.A/Brand";v="8", "Chromium";v="114", "Microsoft Edge";v="114"')
+        request.setHeader('sec-ch-ua-mobile', '?0')
+        request.setHeader('sec-ch-ua-platform', '"Windows"')
+        request.setHeader('sec-gpc', '1')
+        request.setHeader('dnt', '1')
+        request.setHeader('Upgrade-Insecure-Requests', '1')
+        request.on('error', (err) => {
+            reject(err)
+        })
+        request.on('response', (response) => {
+            response.on('end', () => {
+                resolve(response)
+            })
+            // 必须设置handler，否则end不会触发
+            response.on('data', (_) => {})
+            response.on('error', (err) => {
+                reject(err)
+            })
+        })
+        request.end()
     })
-    return mime2Ext(request.headers['content-type'])
+    try {
+        let response = await responsePromise
+        return mime2Ext(response.headers['content-type'] as string)
+    } catch (e: any) {
+        // 如果出错则使用使用jpg
+        const err = e as Error
+        ui.notifyError({
+            title: 'Failed to get image extension',
+            message: err.message,
+        })
+        return 'jpg'
+    }
 }
 
 /**
