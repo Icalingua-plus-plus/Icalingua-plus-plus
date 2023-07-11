@@ -29,6 +29,7 @@
                 :selected="room.roomId === selected.roomId"
                 :priority="priority"
                 :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
+                :usePanguJs="usePanguJs"
                 @click="
                     input = ''
                     $emit('chroom', room)
@@ -70,6 +71,7 @@ export default {
         disableChatGroups: Boolean,
         roomPanelAvatarOnly: Boolean,
         removeGroupNameEmotes: Boolean,
+        usePanguJs: Boolean,
     },
     data() {
         return {

@@ -45,6 +45,7 @@
                 :linkify="linkify"
                 :showForwardPanel="showForwardPanel"
                 :forward-res-id="forwardResId"
+                :usePanguJs="usePanguJs"
                 @open-forward="$emit('open-forward', $event)"
             />
         </div>
@@ -69,6 +70,7 @@ export default {
         forwardResId: { type: String, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
+        usePanguJs: { type: Boolean, required: false, default: false },
     },
 
     computed: {

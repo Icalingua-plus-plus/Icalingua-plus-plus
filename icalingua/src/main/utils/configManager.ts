@@ -96,6 +96,8 @@ const defaultConfig: AllConfig = {
     useSinglePanel: false,
     disableAtAll: false,
     removeGroupNameEmotes: false,
+    usePanguJsSend: false,
+    usePanguJsRecv: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

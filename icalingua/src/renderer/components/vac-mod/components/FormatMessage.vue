@@ -85,6 +85,7 @@ import SvgIcon from './SvgIcon'
 const path = require('path')
 
 import formatString from '../utils/formatString'
+import { spacingLinkifiedMessage } from '../../../../utils/panguSpacing'
 
 export default {
     name: 'FormatMessage',
@@ -102,6 +103,7 @@ export default {
         forwardResId: { type: String, required: false },
         code: { type: String, required: false },
         disableQLottie: { type: Boolean, required: false },
+        usePanguJs: { type: Boolean, required: false, default: false },
     },
 
     data() {
@@ -146,6 +148,10 @@ export default {
                 m.spoiler = this.checkType(m, 'spoiler')
                 m.image = this.checkImageType(m)
             })
+
+            if (this.usePanguJs) {
+                spacingLinkifiedMessage(message)
+            }
 
             return message
         },
