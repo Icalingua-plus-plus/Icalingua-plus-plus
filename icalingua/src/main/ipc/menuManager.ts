@@ -2150,6 +2150,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
+    const roomId = group ? -displayId : displayId
     if (displayId) {
         menu.append(
             new MenuItem({
@@ -2159,13 +2160,12 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 },
             }),
         )
-        const avatarId = group ? -displayId : displayId
         const avatarType = group ? '群头像' : '头像'
         menu.append(
             new MenuItem({
                 label: `查看${avatarType}`,
                 click: () => {
-                    openImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'), false)
+                    openImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false)
                 },
             }),
         )
@@ -2174,11 +2174,22 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 label: `下载${avatarType}`,
                 click: () => {
                     const basename = `${remark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
-                    downloadImage(getAvatarUrl(avatarId).replace('&s=140', '&s=0'), false, basename)
+                    downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
                 },
             }),
         )
     }
+    menu.append(
+        new MenuItem({
+            label: group ? '屏蔽消息' : '屏蔽此人',
+            click: () => {
+                ui.confirmIgnoreChat({
+                    id: roomId,
+                    name: group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                })
+            },
+        }),
+    )
     if (group) {
         menu.append(
             new MenuItem({
@@ -2299,6 +2310,17 @@ ipcMain.on(
                 }),
             )
         }
+        menu.append(
+            new MenuItem({
+                label: '屏蔽此人',
+                click: () => {
+                    ui.confirmIgnoreChat({
+                        id: displayId,
+                        name: remark,
+                    })
+                },
+            }),
+        )
         if (group) {
             menu.append(
                 new MenuItem({
