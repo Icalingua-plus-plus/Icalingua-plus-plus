@@ -215,12 +215,6 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 },
             ],
         },
-        {
-            label: '戳自己',
-            click: () => {
-                sendGroupPoke(Math.abs(room.roomId), getUin())
-            },
-        },
     ])
     const webApps = new Menu()
     if (room.roomId < 0) {
@@ -1862,14 +1856,14 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
         {
-            label: 'Open stickers folder',
+            label: '打开 Stickers 目录',
             type: 'normal',
             click() {
                 shell.openPath(path.join(app.getPath('userData'), 'stickers'))
             },
         },
         {
-            label: 'Send rps',
+            label: '发送石头剪刀布',
             type: 'normal',
             click() {
                 ui.sendRps()
@@ -1877,7 +1871,7 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Send dice',
+            label: '发送骰子',
             type: 'normal',
             click() {
                 ui.sendDice()
@@ -1885,7 +1879,7 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Send shake',
+            label: '发送窗口抖动',
             type: 'normal',
             click() {
                 sendMessage({
@@ -1897,7 +1891,13 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Close panel',
+            label: '戳自己',
+            click: () => {
+                sendGroupPoke(Math.abs(ui.getSelectedRoomId()), getUin())
+            },
+        },
+        {
+            label: '关闭面板',
             type: 'normal',
             click: ui.closePanel,
         },
