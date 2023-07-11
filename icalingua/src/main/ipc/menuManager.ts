@@ -1863,7 +1863,7 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: '发送石头剪刀布',
+            label: '发送猜拳',
             type: 'normal',
             click() {
                 ui.sendRps()
