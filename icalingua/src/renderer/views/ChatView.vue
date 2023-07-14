@@ -560,7 +560,7 @@ export default {
             }
             this.messages = [...this.messages, message]
             if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
-            if (message.at) this.lastUnreadAt = true
+            if (message.at && message.senderId != this.account) this.lastUnreadAt = true
         })
         ipcRenderer.on('deleteMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
