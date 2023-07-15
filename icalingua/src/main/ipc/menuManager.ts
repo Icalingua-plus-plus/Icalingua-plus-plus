@@ -186,7 +186,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         {
             label: `下载${avatarType}`,
             click: () => {
-                const basename = `${room.roomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
+                const cleanRoomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                const basename = `${cleanRoomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
                 downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false, basename)
             },
         },
@@ -2173,7 +2177,9 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             new MenuItem({
                 label: `下载${avatarType}`,
                 click: () => {
-                    const basename = `${remark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
+                    const cleanRemark =
+                        group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
+                    const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
                     downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
                 },
             }),
