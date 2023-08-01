@@ -53,6 +53,7 @@ import {
     sendPacket,
     sendGroupSign,
     getDisabledFeatures,
+    sendGroupPoke,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
 import openImage from './openImage'
@@ -103,6 +104,7 @@ const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' |
 const buildRoomMenu = async (room: Room): Promise<Menu> => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
+    const avatarType = room.roomId < 0 ? '群头像' : '头像'
     const menu = Menu.buildFromTemplate([
         {
             label: `${room.roomName} (${Math.abs(room.roomId)})`,
@@ -176,15 +178,20 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             },
         },
         {
-            label: '查看头像',
+            label: `查看${avatarType}`,
             click: () => {
                 openImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false)
             },
         },
         {
-            label: '下载头像',
+            label: `下载${avatarType}`,
             click: () => {
-                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))
+                const cleanRoomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                const basename = `${cleanRoomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
+                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false, basename)
             },
         },
         {
@@ -372,7 +379,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                                 : room.roomName
                             download(
                                 details.url,
-                                `${roomName}(${-room.roomId})的群相册${new Date().getTime()}.zip`,
+                                `${roomName}(${-room.roomId})的群相册_${new Date().getTime()}.zip`,
                                 undefined,
                                 true,
                             )
@@ -1853,14 +1860,14 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
 ipcMain.on('popupStickerMenu', () => {
     Menu.buildFromTemplate([
         {
-            label: 'Open stickers folder',
+            label: '打开 Stickers 目录',
             type: 'normal',
             click() {
                 shell.openPath(path.join(app.getPath('userData'), 'stickers'))
             },
         },
         {
-            label: 'Send rps',
+            label: '发送猜拳',
             type: 'normal',
             click() {
                 ui.sendRps()
@@ -1868,7 +1875,7 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Send dice',
+            label: '发送骰子',
             type: 'normal',
             click() {
                 ui.sendDice()
@@ -1876,7 +1883,7 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Send shake',
+            label: '发送窗口抖动',
             type: 'normal',
             click() {
                 sendMessage({
@@ -1888,7 +1895,13 @@ ipcMain.on('popupStickerMenu', () => {
             },
         },
         {
-            label: 'Close panel',
+            label: '戳自己',
+            click: () => {
+                sendGroupPoke(Math.abs(ui.getSelectedRoomId()), getUin())
+            },
+        },
+        {
+            label: '关闭面板',
             type: 'normal',
             click: ui.closePanel,
         },
@@ -2020,8 +2033,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     )
     menu.append(
         new MenuItem({
-            label: `下载头像`,
-            click: () => downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`),
+            label: '下载头像',
+            click: () => {
+                const basename = `${message.username}(${message.senderId})的头像_${new Date().getTime()}`
+                downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`, false, basename)
+            },
         }),
     )
     menu.append(
@@ -2138,6 +2154,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
+    const roomId = group ? -displayId : displayId
     if (displayId) {
         menu.append(
             new MenuItem({
@@ -2147,7 +2164,38 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
                 },
             }),
         )
+        const avatarType = group ? '群头像' : '头像'
+        menu.append(
+            new MenuItem({
+                label: `查看${avatarType}`,
+                click: () => {
+                    openImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
+                label: `下载${avatarType}`,
+                click: () => {
+                    const cleanRemark =
+                        group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
+                    const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
+                    downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
+                },
+            }),
+        )
     }
+    menu.append(
+        new MenuItem({
+            label: group ? '屏蔽消息' : '屏蔽此人',
+            click: () => {
+                ui.confirmIgnoreChat({
+                    id: roomId,
+                    name: group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                })
+            },
+        }),
+    )
     if (group) {
         menu.append(
             new MenuItem({
@@ -2250,7 +2298,35 @@ ipcMain.on(
                     },
                 }),
             )
+            menu.append(
+                new MenuItem({
+                    label: '查看头像',
+                    click: () => {
+                        openImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '下载头像',
+                    click: () => {
+                        const basename = `${remark}(${displayId})的头像_${new Date().getTime()}`
+                        downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false, basename)
+                    },
+                }),
+            )
         }
+        menu.append(
+            new MenuItem({
+                label: '屏蔽此人',
+                click: () => {
+                    ui.confirmIgnoreChat({
+                        id: displayId,
+                        name: remark,
+                    })
+                },
+            }),
+        )
         if (group) {
             menu.append(
                 new MenuItem({
@@ -2261,6 +2337,15 @@ ipcMain.on(
                             id: displayId,
                         })
                         ui.addMessageText('@' + remark + ' ')
+                        ui.openGroupMemberPanel(false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '戳一戳',
+                    click: () => {
+                        sendGroupPoke(Number(group), displayId)
                         ui.openGroupMemberPanel(false)
                     },
                 }),

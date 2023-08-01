@@ -65,6 +65,7 @@ export const {
     sendPacket,
     sendGroupSign,
     getDisabledFeatures,
+    sendGroupPoke,
 } = adapter
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
