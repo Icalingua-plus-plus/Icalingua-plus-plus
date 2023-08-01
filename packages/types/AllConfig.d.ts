@@ -43,6 +43,8 @@ type AllConfig = {
     useSinglePanel: boolean
     disableAtAll: boolean
     removeGroupNameEmotes: boolean
+    usePanguJsSend: boolean
+    usePanguJsRecv: boolean
 }
 
 export default AllConfig

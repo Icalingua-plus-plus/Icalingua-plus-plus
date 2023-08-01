@@ -63,6 +63,7 @@
                     :disableChatGroups="disableChatGroups"
                     :roomPanelAvatarOnly="roomPanelAvatarOnly"
                     :removeGroupNameEmotes="removeGroupNameEmotes"
+                    :usePanguJs="usePanguJsRecv"
                     @chroom="chroom"
                     @show-contacts="contactsShown = true"
                     @update-sorted-rooms="(sortedRooms) => (this.sortedRooms = sortedRooms)"
@@ -109,6 +110,7 @@
                     :last-unread-at="lastUnreadAt"
                     :showSinglePanel="showSinglePanel"
                     :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
+                    :usePanguJsRecv="usePanguJsRecv"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
@@ -271,6 +273,7 @@ export default {
             useSinglePanel: false,
             showSinglePanel: false,
             removeGroupNameEmotes: false,
+            usePanguJsRecv: false,
             showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
             notifyProgresses: new Map(),
         }
@@ -279,14 +282,15 @@ export default {
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
-        this.linkify = await ipc.getlinkifySetting()
-        this.disableChatGroups = await ipc.getDisableChatGroupsSetting()
-        this.disableChatGroupsRedPoint = (await ipc.getSettings()).disableChatGroupsRedPoint
-        const roomPanelLastSetting = await ipc.getRoomPanelSetting()
-        this.roomPanelAvatarOnly = roomPanelLastSetting.roomPanelAvatarOnly
-        this.roomPanelWidth = roomPanelLastSetting.roomPanelWidth
-        this.useSinglePanel = (await ipc.getSettings()).useSinglePanel
-        this.removeGroupNameEmotes = (await ipc.getSettings()).removeGroupNameEmotes
+        const settings = await ipc.getSettings()
+        this.linkify = settings.linkify
+        this.disableChatGroups = settings.disableChatGroups
+        this.disableChatGroupsRedPoint = settings.disableChatGroupsRedPoint
+        this.roomPanelAvatarOnly = settings.roomPanelAvatarOnly
+        this.roomPanelWidth = settings.roomPanelWidth
+        this.useSinglePanel = settings.useSinglePanel
+        this.removeGroupNameEmotes = settings.removeGroupNameEmotes
+        this.usePanguJsRecv = settings.usePanguJsRecv
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {
@@ -648,6 +652,9 @@ Chromium ${process.versions.chrome}` : ''
         })
         ipcRenderer.on('setRemoveGroupNameEmotes', (_, b) => {
             this.removeGroupNameEmotes = b
+        })
+        ipcRenderer.on('setUsePanguJsRecv', (_, b) => {
+            this.usePanguJsRecv = b
         })
 
         ipc.setSelectedRoom(0, '')

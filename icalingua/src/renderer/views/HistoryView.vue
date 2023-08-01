@@ -29,6 +29,7 @@
         :style="[cssVars]"
         :linkify="linkify"
         :forward-res-id="resId"
+        :usePanguJsRecv="usePanguJsRecv"
         @download-image="downloadImage"
         @open-file="openImage"
         @open-forward="openForward"
@@ -57,11 +58,14 @@ export default {
             messages: [],
             linkify: true,
             resId: '',
+            usePanguJsRecv: false,
         }
     },
     async created() {
         document.title = '查看转发的消息记录'
-        this.linkify = await ipc.getlinkifySetting()
+        const settings = await ipc.getSettings()
+        this.linkify = settings.linkify
+        this.usePanguJsRecv = settings.usePanguJsRecv
         ipcRenderer.on('loadMessages', (event, args) => {
             let lastSeq = 0
             let fake = false

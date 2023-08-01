@@ -9,7 +9,7 @@
         </div>
 
         <div v-if="message.system" class="vac-card-info vac-card-system">
-            {{ message.content }}
+            {{ usePanguJs ? panguSpacing(message.content) : message.content }}
         </div>
 
         <div
@@ -95,6 +95,7 @@
                             :forward-res-id="forwardResId"
                             :hide-chat-image-by-default="hideChatImageByDefault"
                             :local-image-viewer-by-default="localImageViewerByDefault"
+                            :usePanguJs="usePanguJs"
                             @open-forward="$emit('open-forward', $event)"
                             @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
@@ -202,6 +203,7 @@
                             :forward-res-id="forwardResId"
                             :code="message.code"
                             :disableQLottie="disableQLottie"
+                            :usePanguJs="usePanguJs"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">
@@ -235,6 +237,7 @@ import LottieAnimation from '../../../LottieAnimation'
 import ipc from '../../../../utils/ipc'
 import getImageUrlByMd5 from '../../../../../utils/getImageUrlByMd5'
 import getAvatarUrl from '../../../../../utils/getAvatarUrl'
+import pangu from 'pangu'
 
 export default {
     name: 'Message',
@@ -270,6 +273,7 @@ export default {
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
         recordPath: { type: String, required: true },
+        usePanguJs: { type: Boolean, required: false, default: false },
     },
 
     data() {
@@ -405,6 +409,7 @@ export default {
             const { type } = file
             return type.toLowerCase().includes('audio/')
         },
+        panguSpacing: (text) => pangu.spacing(text),
     },
 }
 </script>

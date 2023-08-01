@@ -17,6 +17,7 @@ import errorHandler from '../utils/errorHandler'
 import getFriends from '../utils/getFriends'
 import * as themes from '../utils/themes'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import { spacingSendMessage } from '../../utils/panguSpacing'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -132,6 +133,9 @@ ipcMain.handle('getFriendsAndGroups', async () => {
 })
 ipcMain.on('sendMessage', (_, data) => {
     data.at = atCache.get()
+    if (getConfig().usePanguJsSend) {
+        data.content = spacingSendMessage(data.content, data.at)
+    }
     sendMessage(data)
     atCache.clear()
 })

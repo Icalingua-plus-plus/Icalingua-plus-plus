@@ -154,6 +154,9 @@ export default {
     addMessageText(text: string) {
         sendToMainWindow('addMessageText', text)
     },
+    setMessageText(text: string) {
+        sendToMainWindow('setMessageText', text)
+    },
     getSelectedRoomId: () => selectedRoomId,
     getSelectedRoomName: () => selectedRoomName,
     sendAddRequest(data: any) {
@@ -195,5 +198,8 @@ export default {
     },
     setRemoveGroupNameEmotes(enable: boolean) {
         sendToMainWindow('setRemoveGroupNameEmotes', enable)
+    },
+    setUsePanguJsRecv(enable: boolean) {
+        sendToMainWindow('setUsePanguJsRecv', enable)
     },
 }

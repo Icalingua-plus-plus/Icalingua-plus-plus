@@ -119,7 +119,7 @@ const ipc = {
         ipcRenderer.send('popupAvatarMenu', message, room, { x: e.screenX, y: e.screenY })
     },
     popupTextAreaMenu(e) {
-        ipcRenderer.send('popupTextAreaMenu', { x: e.screenX, y: e.screenY })
+        ipcRenderer.send('popupTextAreaMenu', { text: e.target.value, x: e.screenX, y: e.screenY })
     },
     popupStickerMenu() {
         ipcRenderer.send('popupStickerMenu')

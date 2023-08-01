@@ -60,6 +60,7 @@ import openImage from './openImage'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import sleep from '../../utils/sleep'
+import { spacingSendMessage } from '../../utils/panguSpacing'
 
 const requireFunc = eval('require')
 const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
@@ -1098,6 +1099,29 @@ export const updateAppMenu = async () => {
                             ui.setRemoveGroupNameEmotes(menuItem.checked)
                         },
                     },
+                    {
+                        label: '查看消息时使用 Pangu.js',
+                        sublabel: '在中英文间添加空格',
+                        type: 'checkbox',
+                        checked: getConfig().usePanguJsRecv,
+                        click: (menuItem) => {
+                            getConfig().usePanguJsRecv = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                            updateTrayMenu()
+                            ui.setUsePanguJsRecv(menuItem.checked)
+                        },
+                    },
+                    {
+                        label: '发送消息时使用 Pangu.js',
+                        sublabel: '不包括 +1',
+                        type: 'checkbox',
+                        checked: getConfig().usePanguJsSend,
+                        click: (menuItem) => {
+                            getConfig().usePanguJsSend = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
                 ],
             }),
             new MenuItem({
@@ -1854,6 +1878,12 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
         },
         {
             role: 'paste',
+        },
+        {
+            label: 'Pangu spacing',
+            click: () => {
+                ui.setMessageText(spacingSendMessage(e.text, atCache.get()))
+            },
         },
     ]).popup({ window: getMainWindow(), ...pos })
 })

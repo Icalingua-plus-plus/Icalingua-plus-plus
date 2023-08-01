@@ -45,6 +45,7 @@
 <script>
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import { spacingNotification } from '../../utils/panguSpacing'
 
 export default {
     name: 'RoomEntry',
@@ -53,6 +54,7 @@ export default {
         selected: Boolean,
         priority: Number,
         removeEmotes: Boolean,
+        usePanguJs: Boolean,
     },
     computed: {
         desc() {
@@ -60,7 +62,8 @@ export default {
             if (this.room.roomId < 0 && this.room.lastMessage.username) {
                 d += this.room.lastMessage.username + ': '
             }
-            d += this.room.lastMessage.content
+            const content = this.room.lastMessage.content
+            d += this.usePanguJs ? spacingNotification(content) : content
             return d
         },
         timestamp() {

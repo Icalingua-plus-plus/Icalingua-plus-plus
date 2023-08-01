@@ -20,6 +20,7 @@ import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
 import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
 import openImage from '../ipc/openImage'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import { spacingNotification } from '../../utils/panguSpacing'
 
 let tray: Tray
 
@@ -76,12 +77,12 @@ export const updateTrayMenu = async () => {
                         }),
                 }),
             )
+            const lastMessage = getConfig().usePanguJsRecv
+                ? spacingNotification(unreadRoom.lastMessage.content.slice(0, 25))
+                : unreadRoom.lastMessage.content
             menu.append(
                 new MenuItem({
-                    label:
-                        unreadRoom.lastMessage.content.length > 25
-                            ? `${unreadRoom.lastMessage.content.slice(0, 25)}...`
-                            : unreadRoom.lastMessage.content,
+                    label: lastMessage.length > 25 ? `${lastMessage.slice(0, 25)}...` : lastMessage,
                     enabled: false,
                     visible: !isAppLocked(),
                 }),

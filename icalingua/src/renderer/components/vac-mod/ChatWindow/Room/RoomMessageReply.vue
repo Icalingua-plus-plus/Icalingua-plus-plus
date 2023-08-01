@@ -15,6 +15,7 @@
                             :reply="true"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
+                            :usePanguJs="usePanguJs"
                         />
                     </div>
                 </div>
@@ -49,6 +50,7 @@ export default {
         messageReply: { type: Object, default: null },
         linkify: { type: Boolean, default: true },
         showForwardPanel: { type: Boolean, required: true },
+        usePanguJs: { type: Boolean, required: false, default: false },
     },
 
     computed: {

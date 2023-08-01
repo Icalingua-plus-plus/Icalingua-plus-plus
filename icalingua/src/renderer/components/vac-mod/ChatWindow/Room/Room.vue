@@ -110,6 +110,7 @@
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
                                 :msgsToForward="msgsToForward"
+                                :usePanguJs="usePanguJsRecv"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
                                 @ctx="msgctx(m)"
@@ -206,6 +207,7 @@
                 :message-reply="messageReply"
                 :linkify="linkify"
                 :showForwardPanel="showForwardPanel"
+                :usePanguJs="usePanguJsRecv"
                 @reset-message="resetMessage"
             >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
@@ -481,6 +483,7 @@ export default {
         lastUnreadAt: { type: Boolean, required: false, default: false },
         showSinglePanel: { type: Boolean, require: true, default: false },
         removeHeaderEmotes: { type: Boolean, required: false, default: false },
+        usePanguJsRecv: { type: Boolean, required: false, default: false },
     },
     data() {
         return {
@@ -797,6 +800,11 @@ export default {
         })
         ipcRenderer.on('addMessageText', (_, message) => {
             this.$refs.roomTextarea.message += message
+            this.focusTextarea()
+            this.$nextTick(() => this.resizeTextarea())
+        })
+        ipcRenderer.on('setMessageText', (_, message) => {
+            this.$refs.roomTextarea.message = message
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })

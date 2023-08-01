@@ -41,6 +41,7 @@ import {
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import { spacingNotification } from '../../utils/panguSpacing'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -176,6 +177,16 @@ const attachSocketEvents = () => {
                     data.roomId < 0 && getConfig().removeGroupNameEmotes
                         ? removeGroupNameEmotes(data.data.title)
                         : data.data.title
+                if (getConfig().usePanguJsRecv) {
+                    const index = data.data.body.indexOf(': ')
+                    if (index == -1) {
+                        data.data.body = spacingNotification(data.data.body)
+                    } else {
+                        const username = data.data.body.slice(0, index)
+                        const content = data.data.body.slice(index + 2)
+                        data.data.body = username + ': ' + spacingNotification(content)
+                    }
+                }
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
                     const notif = new ElectronNotification({
