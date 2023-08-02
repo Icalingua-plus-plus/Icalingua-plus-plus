@@ -41,6 +41,7 @@ const emptyLoginForm: LoginForm = {
 }
 const defaultAria2Config: Aria2Config = {
     enabled: false,
+    slient: false,
     host: '127.0.0.1',
     port: 6800,
     secure: false,

@@ -1787,7 +1787,7 @@ const adapter: OicqAdapter = {
         try {
             meta = bot.acquireGfs(gin).download(fid)
         } catch (e) {
-            errorHandler(e)
+            errorHandler(e, true)
             meta = {
                 name: e.message + '(' + e.code + ')',
                 url: 'error',

@@ -4,6 +4,9 @@
             <el-form-item label="启用">
                 <el-switch v-model="aria2.enabled" />
             </el-form-item>
+            <el-form-item label="静默">
+                <el-switch v-model="aria2.slient" />
+            </el-form-item>
             <el-form-item label="主机">
                 <el-input v-model="aria2.host" />
             </el-form-item>
