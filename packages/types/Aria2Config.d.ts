@@ -1,5 +1,6 @@
 type Aria2Config = {
     enabled: boolean
+    slient: boolean
     host: string
     port: number
     secure: boolean
