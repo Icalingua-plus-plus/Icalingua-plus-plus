@@ -106,7 +106,7 @@
                     <span v-show="!form.password && $route.query.bridge !== 'true'">QR Code</span>
                     Login
                 </el-button>
-                <el-button type="warning" v-if="errmsg" v-on:click="cannotLogin">更换设备信息</el-button>
+                <el-button type="warning" v-on:click="cannotLogin">更换设备信息</el-button>
             </el-form-item>
         </el-form>
         <QrcodeDrawer @login="onSubmit('loginForm')" />
@@ -192,9 +192,8 @@ export default {
                     if (this.form.protocol === 3) break
                     if (String(msg).includes('你当前使用的QQ版本过低'))
                         this.$alert(
-                            '账号被限制使用内置的 QQ 版本登录，请' + this.form.protocol >= 13
-                                ? '等待更新'
-                                : '更换更高版本协议',
+                            '账号被限制使用内置的 QQ 版本登录，请' +
+                                (this.form.protocol >= 13 ? '等待更新' : '更换更高版本协议'),
                         )
                     else
                         this.$alert(
