@@ -113,7 +113,7 @@
                                 :usePanguJs="usePanguJsRecv"
                                 @open-file="openFile"
                                 @add-new-message="addNewMessage"
-                                @ctx="msgctx(m)"
+                                @ctx="msgctx($event, m)"
                                 @avatar-ctx="avatarCtx(m, $event)"
                                 @download-image="$emit('download-image', $event)"
                                 @poke="$emit('pokegroup', m.senderId)"
@@ -1401,9 +1401,9 @@ export default {
         textareaActionHandler() {
             this.$emit('textarea-action-handler', this.$refs.roomTextarea.message)
         },
-        msgctx(message) {
+        msgctx(e, message) {
             const sect = window.getSelection().toString()
-            ipc.popupMessageMenu(this.room, message, sect, this.$route.name === 'history-page')
+            ipc.popupMessageMenu(e, this.room, message, sect, this.$route.name === 'history-page')
         },
         avatarCtx(message, e) {
             ipc.popupAvatarMenu(message, this.room, e)

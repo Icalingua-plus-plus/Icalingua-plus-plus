@@ -121,23 +121,23 @@ const ipc = {
     popupTextAreaMenu(e) {
         ipcRenderer.send('popupTextAreaMenu', { text: e.target.value, x: e.screenX, y: e.screenY })
     },
-    popupStickerMenu() {
-        ipcRenderer.send('popupStickerMenu')
+    popupStickerMenu(e) {
+        ipcRenderer.send('popupStickerMenu', { x: e.screenX, y: e.screenY })
     },
-    popupStickerItemMenu(itemName: string, itemList?: Array<string>, pathName?: string) {
-        ipcRenderer.send('popupStickerItemMenu', itemName, itemList, pathName)
+    popupStickerItemMenu(itemName: string, itemList: Array<string>, pathName: string, e) {
+        ipcRenderer.send('popupStickerItemMenu', itemName, itemList, pathName, { x: e.screenX, y: e.screenY })
     },
-    popupStickerDirMenu(dirName: string) {
-        ipcRenderer.send('popupStickerDirMenu', dirName)
+    popupStickerDirMenu(dirName: string, e) {
+        ipcRenderer.send('popupStickerDirMenu', dirName, { x: e.screenX, y: e.screenY })
     },
-    popupContactMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
-        ipcRenderer.send('popupContactMenu', remark, name, displayId, group)
+    popupContactMenu(e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
+        ipcRenderer.send('popupContactMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, group)
     },
-    popupGroupMemberMenu(remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
-        ipcRenderer.send('popupGroupMemberMenu', remark, name, displayId, group)
+    popupGroupMemberMenu(e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
+        ipcRenderer.send('popupGroupMemberMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, group)
     },
-    popupMessageMenu(room: Room, message: Message, sect?: string, history?: boolean) {
-        ipcRenderer.send('popupMessageMenu', room, message, sect, history)
+    popupMessageMenu(e, room: Room, message: Message, sect?: string, history?: boolean) {
+        ipcRenderer.send('popupMessageMenu', { x: e.screenX, y: e.screenY }, room, message, sect, history)
     },
     addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)

@@ -1351,7 +1351,9 @@ ipcMain.on('popupRoomMenu', async (_, roomId: number, e) => {
         ...pos,
     })
 })
-ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: string, history?: boolean) => {
+ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?: string, history?: boolean) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu = new Menu()
     if ((message.deleted || message.hide) && !message.reveal)
         menu.append(
@@ -1864,7 +1866,7 @@ ipcMain.on('popupMessageMenu', async (_, room: Room, message: Message, sect?: st
             )
         }
     }
-    menu.popup({ window: getMainWindow() })
+    menu.popup({ window: getMainWindow(), ...pos })
 })
 ipcMain.on('popupTextAreaMenu', (_, e) => {
     const bounds = getMainWindow().getContentBounds()
@@ -1887,7 +1889,9 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
         },
     ]).popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupStickerMenu', () => {
+ipcMain.on('popupStickerMenu', (_, e) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     Menu.buildFromTemplate([
         {
             label: '打开 Stickers 目录',
@@ -1935,10 +1939,12 @@ ipcMain.on('popupStickerMenu', () => {
             type: 'normal',
             click: ui.closePanel,
         },
-    ]).popup({ window: getMainWindow() })
+    ]).popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList?: Array<string>, pathName?: string) => {
-    if (pathName && itemList) {
+ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>, pathName: string, e) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
+    if (pathName && itemList && itemList.length) {
         itemList = itemList.map((item) => pathName + item)
     }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
@@ -1990,9 +1996,11 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList?: Array<string
             },
         })
     }
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupStickerDirMenu', (_, dirName: string) => {
+ipcMain.on('popupStickerDirMenu', (_, dirName: string, e) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
     menu.push({
         label: `删除分类 ${dirName}`,
@@ -2003,7 +2011,7 @@ ipcMain.on('popupStickerDirMenu', (_, dirName: string) => {
         },
     })
 
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow() })
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
 })
 ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     const bounds = getMainWindow().getContentBounds()
@@ -2162,7 +2170,9 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     }
     menu.popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+ipcMain.on('popupContactMenu', (_, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    const bounds = getMainWindow().getContentBounds()
+    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu = new Menu()
     if (remark) {
         menu.append(
@@ -2259,7 +2269,7 @@ ipcMain.on('popupContactMenu', (_, remark?: string, name?: string, displayId?: n
             }),
         )
     }
-    menu.popup({ window: getMainWindow() })
+    menu.popup({ window: getMainWindow(), ...pos })
 })
 
 const copyImage = async (url: string) => {
@@ -2297,7 +2307,9 @@ ipcMain.on('copyImage', (_, url: string) => copyImage(url))
 
 ipcMain.on(
     'popupGroupMemberMenu',
-    async (_, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    async (_, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+        const bounds = getMainWindow().getContentBounds()
+        const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
         const menu = new Menu()
         if (remark) {
             menu.append(
@@ -2454,6 +2466,6 @@ ipcMain.on(
                 }),
             )
         }
-        menu.popup({ window: getMainWindow() })
+        menu.popup({ window: getMainWindow(), ...pos })
     },
 )

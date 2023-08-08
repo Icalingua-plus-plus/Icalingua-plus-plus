@@ -44,7 +44,7 @@
                 <div
                     class="vac-message-container"
                     :class="{ 'vac-message-container-offset': messageOffset }"
-                    @click.right="$emit('ctx')"
+                    @click.right="$emit('ctx', $event)"
                 >
                     <div
                         class="vac-message-card"

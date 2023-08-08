@@ -33,6 +33,8 @@
                             itemMenu(
                                 i.url,
                                 remote_pics.map((img) => img.url),
+                                '',
+                                $event,
                             )
                         "
                     />
@@ -45,7 +47,7 @@
                 :key="i"
                 :name="i"
                 @click="changeCurrentDir(i)"
-                @click.right="dirMenu(i)"
+                @click.right="dirMenu(i, $event)"
                 :class="{ selected: current_dir === i || (i === 'Default' && dir === default_dir) }"
                 >{{ i }}</a
             >
@@ -68,6 +70,7 @@
                                 dir + i,
                                 pics.filter((i) => i[0] !== '.'),
                                 dir,
+                                $event,
                             )
                         "
                         @error="errorHandler"

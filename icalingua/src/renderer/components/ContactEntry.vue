@@ -37,11 +37,11 @@ export default {
         },
     },
     methods: {
-        ctx() {
+        ctx(e) {
             if (this.type === 'groupmember') {
-                ipc.popupGroupMemberMenu(this.remark, this.name, this.displayId, this.group)
+                ipc.popupGroupMemberMenu(e, this.remark, this.name, this.displayId, this.group)
             } else {
-                ipc.popupContactMenu(this.remark, this.name, this.displayId, this.group)
+                ipc.popupContactMenu(e, this.remark, this.name, this.displayId, this.group)
             }
         },
         getAvatarUrl,
