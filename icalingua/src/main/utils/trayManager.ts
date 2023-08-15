@@ -263,9 +263,9 @@ export const updateTrayIcon = async (force = false) => {
         selectedRoomName = removeGroupNameEmotes(selectedRoomName)
     }
     const title = selectedRoomName ? selectedRoomName + ' — Icalingua++' : 'Icalingua++'
-    const shouldUpdateIcon = currentIconUnread !== unread > 0
+    const previousIconUnread = currentIconUnread
     currentIconUnread = unread > 0
-    if (unread) {
+    if (currentIconUnread) {
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         let extra = ''
@@ -281,9 +281,11 @@ export const updateTrayIcon = async (force = false) => {
         p = getTrayIconColor() ? darkIcon : lightIcon
         getMainWindow().title = title
     }
-    tray.setTitle(unread === 0 ? '' : `${unread}`)
-    if (shouldUpdateIcon || force) process.platform !== 'darwin' && tray.setImage(p)
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
-    updateTrayMenu()
+    if (tray) {
+        tray.setTitle(unread === 0 ? '' : `${unread}`)
+        if (process.platform !== 'darwin' && (force || currentIconUnread !== previousIconUnread)) tray.setImage(p)
+        updateTrayMenu()
+    }
 }
