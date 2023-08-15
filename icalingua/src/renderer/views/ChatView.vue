@@ -822,8 +822,10 @@ Chromium ${process.versions.chrome}` : ''
             if (!room) return
             this.lastUnreadCount = room.unreadCount
             this.lastUnreadAt = !!room.at
-            this.selectedRoom.at = false
-            ipc.updateRoom(this.selectedRoom.roomId, { at: false })
+            if (this.selectedRoom.roomId != 0) {
+                this.selectedRoom.at = false
+                ipc.updateRoom(this.selectedRoom.roomId, { at: false })
+            }
             if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
