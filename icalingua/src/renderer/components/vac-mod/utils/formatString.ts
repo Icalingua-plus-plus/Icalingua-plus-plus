@@ -48,22 +48,20 @@ function compileToJSON(str, doLinkify) {
     let minIndexOf = -1
     let minIndexOfKey = null
 
-    let array; //接受正则表达式的返回值
+    let array //接受正则表达式的返回值
     const replacements = [] //存储替换数据的起始位置、结束位置、替换内容
     const regex = /\[Face: +\d{1,3}]/g
     const replaceCharacter = (string: string, index: number, lastIndex: number, replacement: string): string => {
-        return (
-            string.slice(0, index) +
-            replacement +
-            str.slice(lastIndex)
-        );
+        return string.slice(0, index) + replacement + str.slice(lastIndex)
     }
     while ((array = regex.exec(str)) !== null) {
         const index: number = array.index
         const lastIndex: number = regex.lastIndex
         const replacement: string = array[0]
         replacements.push({
-            index, lastIndex, replacement
+            index,
+            lastIndex,
+            replacement,
         })
         str = replaceCharacter(str, index, lastIndex, ' '.repeat(replacement.length))
     }
@@ -71,11 +69,12 @@ function compileToJSON(str, doLinkify) {
     let links = doLinkify ? linkify.find(str) : []
     let minIndexFromLink = false
 
-    for (const {index, lastIndex, replacement} of replacements) { //恢复被替换的数据
+    for (const { index, lastIndex, replacement } of replacements) {
+        //恢复被替换的数据
         str = replaceCharacter(str, index, lastIndex, replacement)
     }
 
-    for (const {index, lastIndex, replacement} of replacements) {
+    for (const { index, lastIndex, replacement } of replacements) {
         str = replaceCharacter(str, index, lastIndex, replacement)
     }
 
