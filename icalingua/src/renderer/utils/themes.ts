@@ -66,7 +66,7 @@ export function $$DON_CALL$$fetchThemes(STORE_PATH: string) {
             file = path.join(themesFolder, file)
 
             if (!file.endsWith('.json')) continue
-            let stat = fs.lstatSync(file)
+            let stat = fs.statSync(file)
             if (!stat.isFile()) continue
             let themeName = path.basename(file)
             themeName = themeName.substring(0, themeName.length - 5)
