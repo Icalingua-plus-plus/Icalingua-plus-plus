@@ -16,6 +16,17 @@ let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
 
+async function loadDevtools(window: BrowserWindow) {
+    try {
+        // require.resolve 会给出 vue-devtools/lib/index.js 的路径
+        const moduleFile = path.resolve(require.resolve('vue-devtools'))
+        const extensionDir = path.join(path.dirname(path.dirname(moduleFile)), 'vender')
+        await window.webContents.session.loadExtension(extensionDir)
+    } catch (e) {
+        console.error('Failed to load vue-devtools extension.', e)
+    }
+}
+
 export const isAppLocked = () => isLocked
 export const loadMainWindow = () => {
     //start main window
@@ -54,7 +65,7 @@ export const loadMainWindow = () => {
     })
 
     if (process.env.NODE_ENV === 'development') {
-        mainWindow.webContents.session.loadExtension(path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
+        loadDevtools(mainWindow)
     }
 
     setTimeout(
@@ -167,7 +178,7 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
         })
 
         if (process.env.NODE_ENV === 'development') {
-            loginWindow.webContents.session.loadExtension(path.join(process.cwd(), 'node_modules/vue-devtools/vender/'))
+            loadDevtools(loginWindow)
             loginWindow.minimize()
         }
 
@@ -193,9 +204,7 @@ export const showRequestWindow = () => {
         })
 
         if (process.env.NODE_ENV === 'development') {
-            requestWindow.webContents.session.loadExtension(
-                path.join(process.cwd(), 'node_modules/vue-devtools/vender/'),
-            )
+            loadDevtools(requestWindow)
         }
 
         requestWindow.loadURL(getWinUrl() + '#/friendRequest')
