@@ -829,8 +829,10 @@ Chromium ${process.versions.chrome}` : ''
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
             if (this.selectedRoomId < 0)
-                ipc.getGroup(-this.selectedRoomId).then(e =>
-                    this.membersCount = e.member_count)
+                ipc.getGroup(-this.selectedRoomId).then(e =>{
+                    // 退了的群获取不到 group
+                    if (e) this.membersCount = e.member_count
+                })
             else
                 this.membersCount = 0
         },
