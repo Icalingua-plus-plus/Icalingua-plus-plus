@@ -1621,7 +1621,7 @@ const adapter = {
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
                 console.log(history.error)
-                clients.messageError('错误：' + history.error.message)
+                if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
                 break
             }
             const newMsgs: Message[] = []
