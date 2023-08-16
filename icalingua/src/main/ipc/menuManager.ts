@@ -1501,6 +1501,25 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                     },
                 }),
             )
+            menu.append(
+                new MenuItem({
+                    label: `查看代码`,
+                    click: () => {
+                        const win = newIcalinguaWindow({
+                            autoHideMenuBar: true,
+                            parent: getMainWindow(),
+                            webPreferences: {
+                                contextIsolation: false,
+                                nodeIntegration: true,
+                            },
+                        })
+                        win.webContents.once('did-finish-load', () => {
+                            win.webContents.send('setCardSource', message.code)
+                        })
+                        win.loadURL(getWinUrl() + '#/cardSource')
+                    },
+                }),
+            )
         }
         if (message.replyMessage && !history) {
             menu.append(

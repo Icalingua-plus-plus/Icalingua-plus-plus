@@ -60,10 +60,12 @@ importers:
       electron-dl: ^3.5.0
       element-ui: ^2.15.13
       express: ^5.0.0-beta.1
+      fast-xml-parser: ^4.2.5
       file-loader: ^1.1.11
       file-type: ^16.5.4
       fluent-ffmpeg: ^2.1.2
       freedesktop-notifications: ^2.1.0
+      highlight.js: ^9.18.5
       html-webpack-plugin: ^3.2.0
       ioredis: ^4.28.5
       knex: ^2.4.2
@@ -121,7 +123,9 @@ importers:
       yaml: ^1.10.2
     dependencies:
       express: 5.0.0-beta.1
+      fast-xml-parser: 4.2.5
       fluent-ffmpeg: 2.1.2
+      highlight.js: 9.18.5
       knex: 2.4.2_isjn43otxm27lll6a4hzflz7be
       mongodb: 4.16.0
       mysql: 2.18.1
@@ -6008,7 +6012,6 @@ packages:
     dependencies:
       strnum: 1.0.5
     dev: false
-    optional: true
 
   /fastparse/1.1.2:
     resolution: {integrity: sha512-483XLLxTVIwWK3QTrMGRqUfUpoOs/0hbQrl2oz4J0pAcm3A3bu84wxTFqGqkJzewCLdME38xJLJAxBABfQT8sQ==}
@@ -6721,7 +6724,6 @@ packages:
     resolution: {integrity: sha512-a5bFyofd/BHCX52/8i8uJkjr9DYwXIPnM/plwI6W7ezItLGqzt7X2G2nXuYSfsIJdkwwj/g9DG1LkcGJI/dDoA==}
     deprecated: Support has ended for 9.x series. Upgrade to @latest
     requiresBuild: true
-    dev: true
 
   /hmac-drbg/1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
@@ -11213,7 +11215,6 @@ packages:
   /strnum/1.0.5:
     resolution: {integrity: sha512-J8bbNyKKXl5qYcR36TIO8W3mVGVHrmmxsd5PAItGkmyzwJvybiw2IVq5nqd0i4LSNSkB/sx9VHllbfFdr9k1JA==}
     dev: false
-    optional: true
 
   /strtok3/6.3.0:
     resolution: {integrity: sha512-fZtbhtvI9I48xDSywd/somNqgUHl2L2cstmXCCif0itOf96jeW18MBSyrLuNicYQVkvpOxkZtkzujiTJ9LW5Jw==}

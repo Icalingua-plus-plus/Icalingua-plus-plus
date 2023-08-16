@@ -13,6 +13,7 @@ import MuteUser from '../views/MuteUser.vue'
 import MakeForward from '../views/MakeForward.vue'
 import UnlockView from '../views/UnlockView.vue'
 import SetLockPasswordView from '../views/SetLockPasswordView.vue'
+import CardSourceView from '../views/CardSourceView.vue'
 
 Vue.use(Router)
 
@@ -82,6 +83,11 @@ export default new Router({
             path: '/setLockPassword',
             name: 'set-lock-password-page',
             component: SetLockPasswordView,
+        },
+        {
+            path: '/cardSource',
+            name: 'card-source-page',
+            component: CardSourceView,
         },
     ],
 })
