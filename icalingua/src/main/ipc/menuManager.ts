@@ -1514,7 +1514,7 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                             },
                         })
                         win.webContents.once('did-finish-load', () => {
-                            win.webContents.send('setCardSource', message.code)
+                            win.webContents.send('setCardSource', message.code, `卡片消息_${new Date().getTime()}`)
                         })
                         win.loadURL(getWinUrl() + '#/cardSource')
                     },

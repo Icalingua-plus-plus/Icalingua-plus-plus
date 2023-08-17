@@ -1,64 +1,96 @@
 <template>
     <div id="box">
-        <pre v-html="highlighted"></pre>
+        <pre v-html="highlighted" :style="{ tabSize: indentSize }"></pre>
         <div id="tools">
-            <el-checkbox v-model="isPretty">格式化</el-checkbox>
             <el-button type="primary" size="mini" @click="copy()">复制</el-button>
+            <el-button size="mini" @click="save()">保存</el-button>
+            <el-checkbox v-if="language != 'plaintext'" v-model="isPretty">格式化</el-checkbox>
+            <el-checkbox v-if="language != 'plaintext' && isPretty" v-model="tabIndent">Tab 缩进</el-checkbox>
+            <el-input-number
+                :min="1"
+                :max="8"
+                :precision="0"
+                size="mini"
+                v-if="language != 'plaintext' && isPretty"
+                v-model="indentSize"
+            ></el-input-number>
         </div>
     </div>
 </template>
 
 <script>
 import { ipcRenderer } from 'electron'
+import { XMLBuilder, XMLParser, XMLValidator } from 'fast-xml-parser'
 import highlightjs from 'highlight.js'
 import 'highlight.js/styles/a11y-dark.css'
-import { XMLParser, XMLBuilder } from 'fast-xml-parser'
 
 export default {
     name: 'CardSourceView',
     data() {
         return {
-            language: 'json',
+            language: 'plaintext',
             source: '',
-            prettySource: '',
+            parsed: {},
+            filename: '未命名',
             isPretty: true,
+            tabIndent: false,
+            indentSize: 4,
         }
     },
     async created() {
-        ipcRenderer.on('setCardSource', (_, source) => {
-            let isJSON = true
-            let prettySource = source
+        ipcRenderer.on('setCardSource', (_, source, filename) => {
+            console.log(source, filename)
+            this.source = source
+            this.filename = filename
             try {
-                prettySource = JSON.stringify(JSON.parse(source), null, '    ')
+                this.parsed = JSON.parse(source)
+                this.language = 'json'
+                document.title = `JSON 卡片源代码`
             } catch (jsonError) {
                 try {
-                    isJSON = false
-                    const options = {
-                        ignoreAttributes: false,
-                        attributeNamePrefix: '@@',
-                        format: true,
+                    const vaildateResult = XMLValidator.validate(source)
+                    if (vaildateResult != true) {
+                        throw vaildateResult.err
                     }
-                    const parser = new XMLParser(options)
-                    const builder = new XMLBuilder(options)
-                    prettySource = builder.build(parser.parse(source))
+                    this.parsed = new XMLParser({ ignoreAttributes: false }).parse(source)
+                    this.language = 'xml'
+                    document.title = `XML 卡片源代码`
                 } catch (xmlError) {
-                    console.error(`格式化失败`, jsonError, xmlError)
+                    console.error('解析卡片失败\n作为 JSON:', jsonError, '\n作为 XML:', xmlError)
+                    this.parsed = {}
+                    this.language = 'plaintext'
+                    document.title = `卡片源代码`
                 }
             }
-            document.title = `${isJSON ? 'JSON' : 'XML'} 卡片源代码`
-            this.language = isJSON ? 'json' : 'xml'
-            this.source = source
-            this.prettySource = prettySource
         })
     },
     computed: {
         highlighted() {
             return highlightjs.highlight(this.language, this.isPretty ? this.prettySource : this.source).value
         },
+        prettySource() {
+            if (this.language == 'plaintext') {
+                return this.source
+            }
+            const indent = this.tabIndent ? '\t' : ' '.repeat(this.indentSize)
+            if (this.language == 'json') {
+                return JSON.stringify(this.parsed, null, indent)
+            } else {
+                return new XMLBuilder({
+                    ignoreAttributes: false,
+                    format: true,
+                    indentBy: indent,
+                }).build(this.parsed)
+            }
+        },
     },
     methods: {
         copy() {
             navigator.clipboard.writeText(this.isPretty ? this.prettySource : this.source)
+        },
+        save() {
+            const ext = this.language == 'plaintext' ? 'txt' : this.language
+            ipcRenderer.send('saveTextAs', this.isPretty ? this.prettySource : this.source, this.filename + '.' + ext)
         },
     },
 }
@@ -93,5 +125,18 @@ pre * {
     margin: 0.5em;
     gap: 0.5em;
     align-items: center;
+}
+
+.el-checkbox {
+    margin-right: 0;
+    color: inherit;
+}
+
+.el-button + .el-button {
+    margin-left: 0;
+}
+
+.el-input-number {
+    width: 100px;
 }
 </style>

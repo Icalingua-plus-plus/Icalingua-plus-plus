@@ -81,12 +81,12 @@ const registerDownload = (item: DownloadItem, url: string, fileName: string) => 
 
 export const download = async (url: string, out: string, dir?: string, saveAs = false) => {
     if (saveAs) {
-        const result = dialog.showSaveDialogSync(BrowserWindow.getFocusedWindow() || getMainWindow(), {
+        const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() || getMainWindow(), {
             defaultPath: dir ? path.join(dir, out) : out,
         })
-        if (!result) return
-        out = path.basename(result)
-        dir = path.dirname(result)
+        if (result.canceled) return
+        out = path.basename(result.filePath)
+        dir = path.dirname(result.filePath)
     }
     const ext = path.extname(out)
     const base = path.basename(out, ext)
@@ -273,6 +273,15 @@ export const downloadFileByMessageData = async (
     }
 }
 
+export const saveTextAs = async (text: string, filename: string) => {
+    const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() || getMainWindow(), {
+        defaultPath: filename,
+    })
+    if (result.canceled) return
+    const f = await fs.promises.open(result.filePath, 'w')
+    await f.write(text)
+}
+
 ipcMain.on('download', (_, url, out, dir, saveAs) => download(url, out, dir, saveAs))
 ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Message; room: Room }) =>
     downloadFileByMessageData(data),
@@ -285,3 +294,4 @@ ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     loadConfig(config)
     saveConfigFile()
 })
+ipcMain.on('saveTextAs', (_, text, filename) => saveTextAs(text, filename))
