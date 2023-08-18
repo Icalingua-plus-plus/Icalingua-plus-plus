@@ -91,6 +91,7 @@ import { LoginErrorEventData } from 'oicq-icalingua-plus-plus'
 import { SliderEventData } from 'oicq-icalingua-plus-plus'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
+import formatDuration from '../../utils/formatDuration'
 
 let bot: Client
 let storage: StorageProvider
@@ -570,7 +571,7 @@ const eventHandlers = {
         if (muteAll && data.duration > 0) content += '开启了全员禁言'
         else if (muteAll) content += '关闭了全员禁言'
         else if (data.duration === 0) content += `将 ${mutedUserName} 解除禁言`
-        else content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        else content += `禁言 ${mutedUserName} ${formatDuration(data.duration)}`
         const message: Message = {
             _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,

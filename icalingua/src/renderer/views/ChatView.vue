@@ -822,15 +822,19 @@ Chromium ${process.versions.chrome}` : ''
             if (!room) return
             this.lastUnreadCount = room.unreadCount
             this.lastUnreadAt = !!room.at
-            this.selectedRoom.at = false
-            ipc.updateRoom(this.selectedRoom.roomId, { at: false })
+            if (this.selectedRoom.roomId != 0) {
+                this.selectedRoom.at = false
+                ipc.updateRoom(this.selectedRoom.roomId, { at: false })
+            }
             if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
             if (this.selectedRoomId < 0)
-                ipc.getGroup(-this.selectedRoomId).then(e =>
-                    this.membersCount = e.member_count)
+                ipc.getGroup(-this.selectedRoomId).then(e =>{
+                    // 退了的群获取不到 group
+                    if (e) this.membersCount = e.member_count
+                })
             else
                 this.membersCount = 0
         },

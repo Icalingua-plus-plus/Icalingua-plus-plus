@@ -66,6 +66,7 @@ import createProcessMessage from '../utils/processMessage'
 import sleep from '../utils/sleep'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
+import formatDuration from '../utils/formatDuration'
 
 let bot: Client
 let storage: StorageProvider
@@ -452,7 +453,7 @@ const eventHandlers = {
         if (muteAll && data.duration > 0) content += '开启了全员禁言'
         else if (muteAll) content += '关闭了全员禁言'
         else if (data.duration === 0) content += `将 ${mutedUserName} 解除禁言`
-        else content += `禁言 ${mutedUserName} ${data.duration / 60} 分钟`
+        else content += `禁言 ${mutedUserName} ${formatDuration(data.duration)}`
         const message: Message = {
             _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -1621,7 +1622,7 @@ const adapter = {
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
                 console.log(history.error)
-                clients.messageError('错误：' + history.error.message)
+                if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
                 break
             }
             const newMsgs: Message[] = []
