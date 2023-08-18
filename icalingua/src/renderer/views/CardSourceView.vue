@@ -96,7 +96,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 #box {
     background: #2b2b2b;
     color: #f8f8f2;
