@@ -23,6 +23,9 @@
             <el-form-item prop="signAPIAddress" v-if="$route.query.disableIdLogin === 'false'">
                 <el-input type="text" placeholder="Head Sign API Address" v-model="form.signAPIAddress" />
             </el-form-item>
+            <el-form-item prop="signAPIKey" v-if="$route.query.disableIdLogin === 'false'">
+                <el-input type="text" placeholder="Head Sign API Key" v-model="form.signAPIKey" />
+            </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
                 <div class="protocols">
                     <span>Android Phone</span>
@@ -32,6 +35,9 @@
                         <el-radio-button label="1">8.9.50</el-radio-button>
                         <el-radio-button label="11">8.9.58</el-radio-button>
                         <el-radio-button label="13">8.9.63</el-radio-button>
+                        <el-radio-button label="15">8.9.68</el-radio-button>
+                        <el-radio-button label="17">8.9.70</el-radio-button>
+                        <el-radio-button label="19">8.9.73</el-radio-button>
                     </el-radio-group>
                     <span>Android Pad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -39,6 +45,9 @@
                         <el-radio-button label="2">8.9.50</el-radio-button>
                         <el-radio-button label="12">8.9.58</el-radio-button>
                         <el-radio-button label="14">8.9.63</el-radio-button>
+                        <el-radio-button label="16">8.9.68</el-radio-button>
+                        <el-radio-button label="18">8.9.70</el-radio-button>
+                        <el-radio-button label="20">8.9.73</el-radio-button>
                     </el-radio-group>
                     <span>iPad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -66,6 +75,10 @@
             <el-form-item prop="autologin">
                 <span class="el-form-item__label">Auto login</span>
                 <el-switch v-model="form.autologin" />
+            </el-form-item>
+            <el-form-item prop="forceAlgoT544">
+                <span class="el-form-item__label">Use 8.9.50's Tlv544</span>
+                <el-switch v-model="form.forceAlgoT544" />
             </el-form-item>
             <el-form-item label="Storage engine">
                 <el-select v-model="form.storageType" size="small">

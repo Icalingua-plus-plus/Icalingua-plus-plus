@@ -201,7 +201,14 @@ ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
     adapter.handleRequest(type, flag, accept),
 )
-ipcMain.handle('getAccount', adapter.getAccount)
+ipcMain.handle('getAccount', () => {
+    const localAccount = getConfig().account
+    const adapterAccount = adapter.getAccount()
+    return {
+        ...localAccount,
+        ...adapterAccount,
+    }
+})
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))

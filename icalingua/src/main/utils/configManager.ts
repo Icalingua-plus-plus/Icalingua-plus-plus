@@ -38,6 +38,8 @@ const emptyLoginForm: LoginForm = {
     autologin: false,
     onlineStatus: OnlineStatusType.Online,
     signAPIAddress: '',
+    signAPIKey: '',
+    forceAlgoT544: false,
 }
 const defaultAria2Config: Aria2Config = {
     enabled: false,
