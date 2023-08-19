@@ -1803,7 +1803,7 @@ const adapter = {
         "model":        "ILPP ${randomString(4).toUpperCase()}",
         "wifi_ssid":    "Redmi-${randomString(7).toUpperCase()}",
         "bootloader":   "U-boot",
-        "android_ver":   "${randomString(4)}.${randomString(6, true)}.${randomString(4, true)}",
+        "android_ver":  "${randomString(4)}.${randomString(6, true)}.${randomString(4, true)}",
         "boot_id":      "${crypto.randomUUID()}",
         "proc_version": "Linux version 4.19.157-${randomString(13)} (android-build@xiaomi.com)",
         "mac_address":  "02:00:00:00:00:00",
