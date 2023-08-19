@@ -2111,8 +2111,11 @@ const adapter: OicqAdapter = {
             }
             return imei + calcSP(imei)
         }
+        const imei = _genIMEI()
+        const md5 = (data: string) => crypto.createHash('md5').update(data).digest()
         const device = `{
         "--begin--":    "该设备文件为尝试解决${username}的风控时随机生成。",
+        "--version--":  2,
         "product":      "M2012K11AC",
         "device":       "alioth",
         "board":        "alioth",
@@ -2120,14 +2123,13 @@ const adapter: OicqAdapter = {
         "model":        "ILPP ${randomString(4).toUpperCase()}",
         "wifi_ssid":    "Redmi-${randomString(7).toUpperCase()}",
         "bootloader":   "U-boot",
-        "android_id":   "${randomString(4)}.${randomString(6, true)}.${randomString(4, true)}",
+        "android_ver":   "${randomString(4)}.${randomString(6, true)}.${randomString(4, true)}",
         "boot_id":      "${crypto.randomUUID()}",
         "proc_version": "Linux version 4.19.157-${randomString(13)} (android-build@xiaomi.com)",
-        "mac_address":  "2B:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(
-            2,
-        ).toUpperCase()}:${randomString(2).toUpperCase()}:${randomString(2).toUpperCase()}",
+        "mac_address":  "02:00:00:00:00:00",
         "ip_address":   "192.168.${randomString(2, true)}.${randomString(2, true)}",
-        "imei":         "${_genIMEI()}",
+        "imei":         "${imei}",
+        "android_id":   "${md5(imei).toString('hex').slice(0, 16)}",
         "incremental":  "${randomString(10, true)}",
         "--end--":      "修改后可能需要重新验证设备。"
     }`
