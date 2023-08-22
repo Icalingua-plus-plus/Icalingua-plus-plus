@@ -1706,11 +1706,16 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
             new MenuItem({
                 label: history
                     ? String(message._id).split('|')[0] !== '-1'
-                        ? `复制转发来源 ID ${String(message._id).split('|')[0]}`
+                        ? String(message._id).split('|')[0] !== '284840486'
+                            ? `复制转发来源 ID ${String(message._id).split('|')[0]}`
+                            : '转发来源已被服务器屏蔽'
                         : '转发来源未知（可能来自私聊消息）'
                     : '复制消息 ID',
                 type: 'normal',
-                enabled: !(history && String(message._id).split('|')[0] === '-1'),
+                enabled: !(
+                    history &&
+                    (String(message._id).split('|')[0] === '-1' || String(message._id).split('|')[0] === '284840486')
+                ),
                 click: () => {
                     clipboard.writeText(String(message._id).split('|')[0])
                 },
