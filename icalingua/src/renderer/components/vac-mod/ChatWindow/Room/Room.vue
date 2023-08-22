@@ -358,12 +358,22 @@
                                 <svg-icon name="paperclip" />
                             </slot>
                         </div>
-                        <el-button type="text" @click="launchFilePicker(false)" style="text-align: center; width: 100%">
+                        <el-button
+                            type="text"
+                            icon="el-icon-picture-outline"
+                            @click="launchFilePicker(false)"
+                            style="text-align: center; width: 100%"
+                        >
                             识别类型发送 (图标左键)
                         </el-button>
                         <!-- 分割线-->
                         <div style="height: 1px; background-color: #ebebeb; margin: 0 5px"></div>
-                        <el-button type="text" @click="launchFilePicker(true)" style="text-align: center; width: 100%">
+                        <el-button
+                            type="text"
+                            icon="el-icon-paperclip"
+                            @click="launchFilePicker(true)"
+                            style="text-align: center; width: 100%"
+                        >
                             仅以文件发送 (图标右键)
                         </el-button>
                     </el-popover>
