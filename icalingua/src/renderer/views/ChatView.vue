@@ -833,7 +833,7 @@ Chromium ${process.versions.chrome}` : ''
             if (this.selectedRoomId < 0)
                 ipc.getGroup(-this.selectedRoomId).then(e =>{
                     // 退了的群获取不到 group
-                    if (e) this.membersCount = e.member_count
+                    this.membersCount = e ? e.member_count : 0
                 })
             else
                 this.membersCount = 0
