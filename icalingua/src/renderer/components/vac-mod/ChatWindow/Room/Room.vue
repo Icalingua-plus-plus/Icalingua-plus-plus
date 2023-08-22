@@ -495,7 +495,6 @@ export default {
         loadingRooms: { type: Boolean, required: true },
         roomInfo: { type: Function, default: null },
         textareaAction: { type: Function, default: null },
-        membersCount: { type: Number, default: 0 },
         linkify: { type: Boolean, default: true },
         account: { type: Number, required: true },
         username: { type: String, required: true },
@@ -559,6 +558,7 @@ export default {
             mouseSelectArea: null,
             mouseSelectIds: null,
             isMessageEmpty: true,
+            membersCount: 0,
         }
     },
     computed: {
@@ -1521,6 +1521,13 @@ export default {
         async updateGroupMembers() {
             const { roomId } = this.room
             if (roomId < 0) {
+                const group = await ipc.getGroup(-roomId)
+                if (!group) {
+                    // 退了的群获取不到成员数和成员列表
+                    this.membersCount = 0
+                    return
+                }
+                this.membersCount = group.member_count
                 const groupMembers = await ipc.getGroupMembers(-roomId)
                 if (roomId !== this.room.roomId) return
                 const self = groupMembers.find((member) => member.user_id === this.currentUserId)
@@ -1532,7 +1539,7 @@ export default {
                     })
                 }
                 this.groupMembers = groupMembers
-            }
+            } else this.membersCount = 0
         },
         updateMouseSelectAreaStyleImmediately() {
             const el = this.$refs.mouseSelectArea
