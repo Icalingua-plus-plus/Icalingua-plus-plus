@@ -346,16 +346,27 @@
                         <svg-icon name="emoji" />
                     </div>
 
-                    <div
-                        v-if="showFiles"
-                        class="vac-svg-button"
-                        @click="launchFilePicker(false)"
-                        @click.right="launchFilePicker(true)"
-                    >
-                        <slot name="paperclip-icon">
-                            <svg-icon name="paperclip" />
-                        </slot>
-                    </div>
+                    <el-popover placement="top" trigger="hover">
+                        <div
+                            slot="reference"
+                            v-if="showFiles"
+                            class="vac-svg-button"
+                            @click="launchFilePicker(false)"
+                            @click.right="launchFilePicker(true)"
+                        >
+                            <slot name="paperclip-icon">
+                                <svg-icon name="paperclip" />
+                            </slot>
+                        </div>
+                        <el-button type="text" @click="launchFilePicker(false)" style="text-align: center; width: 100%">
+                            识别类型发送 (图标左键)
+                        </el-button>
+                        <!-- 分割线-->
+                        <div style="height: 1px; background-color: #ebebeb; margin: 0 5px"></div>
+                        <el-button type="text" @click="launchFilePicker(true)" style="text-align: center; width: 100%">
+                            仅以文件发送 (图标右键)
+                        </el-button>
+                    </el-popover>
 
                     <div v-if="textareaAction" class="vac-svg-button" @click="textareaActionHandler">
                         <slot name="custom-action-icon">
