@@ -342,7 +342,7 @@
                         </slot>
                     </div>
 
-                    <div class="vac-svg-button" @click="$emit('stickers-panel')">
+                    <div class="vac-svg-button" @click="$emit('stickers-panel')" @click.right="stickersMenu($event)">
                         <svg-icon name="emoji" />
                     </div>
 
@@ -1517,6 +1517,9 @@ export default {
         textctx: ipc.popupTextAreaMenu,
         roomMenu(e) {
             ipc.popupRoomMenu(this.room.roomId, e)
+        },
+        stickersMenu(e) {
+            ipc.popupStickerMenu(e, false)
         },
         async updateGroupMembers() {
             const { roomId } = this.room

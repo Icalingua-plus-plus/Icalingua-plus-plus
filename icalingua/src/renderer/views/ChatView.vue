@@ -196,6 +196,31 @@
             />
         </el-dialog>
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
+        <el-dialog title="发送骰子" :visible.sync="sendDiceShown">
+            <div class="random-select">
+                <el-button @click="sendDice(1)">1</el-button>
+                <el-button @click="sendDice(2)">2</el-button>
+                <el-button @click="sendDice(3)">3</el-button>
+                <el-button @click="sendDice(4)">4</el-button>
+                <el-button @click="sendDice(5)">5</el-button>
+                <el-button @click="sendDice(6)">6</el-button>
+            </div>
+            <span slot="footer">
+                <el-button @click="sendDiceShown = false">取消</el-button>
+                <el-button type="primary" @click="sendDice(0)">随机</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog title="发送猜拳" :visible.sync="sendRpsShown">
+            <div class="random-select">
+                <el-button @click="sendRps(1)">石头</el-button>
+                <el-button @click="sendRps(2)">剪刀</el-button>
+                <el-button @click="sendRps(3)">布</el-button>
+            </div>
+            <span slot="footer">
+                <el-button @click="sendRpsShown = false">取消</el-button>
+                <el-button type="primary" @click="sendRps(0)">随机</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -276,6 +301,8 @@ export default {
             usePanguJsRecv: false,
             showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
             notifyProgresses: new Map(),
+            sendDiceShown: false,
+            sendRpsShown: false,
         }
     },
     async created() {
@@ -509,38 +536,10 @@ export default {
             })
         })
         ipcRenderer.on('sendDice', (_) => {
-            this.$prompt('请输入骰子点数，留空随机', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                inputType: 'number',
-                inputPattern: /^[1-6]$|^$/,
-            }).then(({ value }) => {
-                if (!value) {
-                    value = (Math.floor(Math.random() * 6) + 1).toString()
-                }
-                this.sendMessage({
-                    content: value,
-                    room: this.selectedRoom,
-                    messageType: 'dice',
-                })
-            })
+            this.sendDiceShown = true
         })
         ipcRenderer.on('sendRps', (_) => {
-            this.$prompt('请输入对应数字，1石头、2剪刀、3布、留空随机', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                inputType: 'number',
-                inputPattern: /^[1-3]$|^$/,
-            }).then(({ value }) => {
-                if (!value) {
-                    value = (Math.floor(Math.random() * 3) + 1).toString()
-                }
-                this.sendMessage({
-                    content: value,
-                    room: this.selectedRoom,
-                    messageType: 'rps',
-                })
-            })
+            this.sendRpsShown = true
         })
         ipcRenderer.on('updateRoom', (_, room) => {
             const oldRooms = this.rooms.filter(item => item.roomId !== room.roomId)
@@ -993,7 +992,29 @@ Chromium ${process.versions.chrome}` : ''
         },
         backContact() {
             this.showPanel = 'contact'
-        }
+        },
+        sendDice(value) {
+            if (!value) {
+                value = Math.floor(Math.random() * 6) + 1
+            }
+            this.sendDiceShown = false
+            this.sendMessage({
+                content: value.toString(),
+                room: this.selectedRoom,
+                messageType: 'dice',
+            })
+        },
+        sendRps(value) {
+            if (!value) {
+                value = Math.floor(Math.random() * 3) + 1
+            }
+            this.sendRpsShown = false
+            this.sendMessage({
+                content: value.toString(),
+                room: this.selectedRoom,
+                messageType: 'rps',
+            })
+        },
     },
     computed: {
         cssVars() {
@@ -1207,6 +1228,14 @@ main div {
     }
 
     &.is-single {
+        flex-grow: 1;
+    }
+}
+
+.random-select {
+    display: flex;
+
+    .el-button {
         flex-grow: 1;
     }
 }

@@ -1908,10 +1908,10 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
         },
     ]).popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupStickerMenu', (_, e) => {
+ipcMain.on('popupStickerMenu', (_, closePanel, e) => {
     const bounds = getMainWindow().getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
-    Menu.buildFromTemplate([
+    const menu: Electron.MenuItemConstructorOptions[] = [
         {
             label: '打开 Stickers 目录',
             type: 'normal',
@@ -1924,7 +1924,6 @@ ipcMain.on('popupStickerMenu', (_, e) => {
             type: 'normal',
             click() {
                 ui.sendRps()
-                ui.closePanel()
             },
         },
         {
@@ -1932,7 +1931,6 @@ ipcMain.on('popupStickerMenu', (_, e) => {
             type: 'normal',
             click() {
                 ui.sendDice()
-                ui.closePanel()
             },
         },
         {
@@ -1944,7 +1942,6 @@ ipcMain.on('popupStickerMenu', (_, e) => {
                     at: [],
                     messageType: 'shake',
                 })
-                ui.closePanel()
             },
         },
         {
@@ -1953,12 +1950,15 @@ ipcMain.on('popupStickerMenu', (_, e) => {
                 sendGroupPoke(Math.abs(ui.getSelectedRoomId()), getUin())
             },
         },
-        {
+    ]
+    if (closePanel) {
+        menu.push({
             label: '关闭面板',
             type: 'normal',
             click: ui.closePanel,
-        },
-    ]).popup({ window: getMainWindow(), ...pos })
+        })
+    }
+    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
 })
 ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>, pathName: string, e) => {
     const bounds = getMainWindow().getContentBounds()
