@@ -77,7 +77,7 @@ export default (msgText: string, time: number): string | undefined => {
             return getLottiePath(lottieId)
         }
     }
-    const nameMatch = msgText.match(/^\[([\u4e00-\u9FA5a-zA-Z]{2,5})\]请使用最新版手机QQ体验新功能$/)
+    const nameMatch = msgText.match(/^\[([\u4e00-\u9FA5a-zA-Z]{2,5})\](?:请使用最新版手机QQ体验新功能)?$/)
     if (nameMatch) {
         const lottieId = faceNameToLottie.get(nameMatch[1])
         if (lottieId) {
