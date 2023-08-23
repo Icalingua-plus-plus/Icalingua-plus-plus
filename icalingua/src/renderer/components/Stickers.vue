@@ -64,18 +64,12 @@
             </div>
         </div>
         <div class="stickers_dir" v-if="panel === 'stickers'" @wheel="wheelHandler" ref="stickers_dir">
-            <a
-                @click="changeCurrentDir('@recent')"
-                @click.right="dirMenu('@recent', $event)"
-                :class="{ selected: current_dir === '@recent' }"
-                >Recent</a
-            >
-            <a
-                @click="changeCurrentDir('@default')"
-                @click.right="dirMenu('@default', $event)"
-                :class="{ selected: current_dir === '@default' }"
-                >Default</a
-            >
+            <a @click="changeCurrentDir(RECENT_CATEGORY)" :class="{ selected: current_dir === RECENT_CATEGORY }">
+                Recent
+            </a>
+            <a @click="changeCurrentDir(DEFAULT_CATEGORY)" :class="{ selected: current_dir === DEFAULT_CATEGORY }">
+                Default
+            </a>
             <a
                 v-for="i in subdirs"
                 :key="i"
@@ -88,7 +82,7 @@
         <div v-if="panel === 'stickers'" class="panel">
             <div class="empty" v-show="!pics.length">
                 No stickers found
-                <el-button v-show="current_dir !== '@recent'" @click="folder">Open stickers folder</el-button>
+                <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
             </div>
             <div class="grid" v-show="pics.length">
                 <div v-for="i in pics" :key="i">
@@ -120,6 +114,8 @@ import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
 import { faceIdToLottie } from '../utils/getLottieFace'
 
+const DEFAULT_CATEGORY = Symbol('DEFAULT')
+const RECENT_CATEGORY = Symbol('RECENT')
 const MAX_RECENT_FACE = 18
 const MAX_RECENT_LOCAL_STICKER = 32
 const MAX_RECENT_REMOTE_STICKER = 8
@@ -144,7 +140,7 @@ export default {
             pics: [],
             panel: '',
             subdirs: [],
-            current_dir: '@default',
+            current_dir: DEFAULT_CATEGORY,
             supportRemote: false,
             recentFace: getRecent('recentFace'),
             recentRemoteSticker: getRecent('recentRemoteSticker'),
@@ -156,6 +152,8 @@ export default {
         this.generatingPath = new Set()
         this.panel = await ipc.getLastUsedStickerType()
         this.recentLocalSticker = getRecent('recentLocalSticker')
+        this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
+        this.RECENT_CATEGORY = RECENT_CATEGORY
 
         // Remote Stickers
         if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
@@ -193,14 +191,14 @@ export default {
                         .map(async (i) => [i, await fs.promises.stat(this.default_dir + i)]),
                 )
             } catch (err) {
-                console.error('Failed to update sticker dir @default', err)
+                console.error('Failed to update sticker dir', DEFAULT_CATEGORY, err)
                 return
             }
             this.subdirs = fileAndStats
                 .filter(([_, stat]) => stat.isDirectory())
                 .map(([i, _]) => i)
                 .sort()
-            if (this.current_dir != '@default') return
+            if (this.current_dir != DEFAULT_CATEGORY) return
             // 后添加的表情排在前面，类似于QQ
             this.pics = fileAndStats
                 .filter(([_, stat]) => stat.isFile())
@@ -208,7 +206,7 @@ export default {
                 .map(([i, _]) => i)
         }
         updateDefaultDir()
-        this.watchedPath['@default'] = fs.watch(this.default_dir, updateDefaultDir)
+        fs.watch(this.default_dir, updateDefaultDir)
     },
     methods: {
         getStickerPreview(relPath) {
@@ -256,11 +254,11 @@ export default {
         changeCurrentDir(dir) {
             console.log('Stickers directory changed:', dir)
             this.current_dir = dir
-            if (dir == '@recent') {
+            if (dir == RECENT_CATEGORY) {
                 this.pics = this.recentLocalSticker
                 return
             }
-            const subDir = dir == '@default' ? '' : dir + '/'
+            const subDir = dir == DEFAULT_CATEGORY ? '' : dir + '/'
             const fullDir = this.default_dir + subDir
             const updateDir = async () => {
                 /** @type {[string, fs.Stats][]} */
@@ -282,13 +280,13 @@ export default {
                     .map(([i, _]) => subDir + i)
             }
             updateDir()
-            if (dir == '@default' || dir in this.watchedPath) return
+            if (dir == DEFAULT_CATEGORY || dir in this.watchedPath) return
             this.watchedPath[dir] = fs.watch(fullDir, updateDir)
         },
         sendLocalSticker(img) {
             this.$emit('send', this.default_dir + img)
             this.pushRecent('recentLocalSticker', img, MAX_RECENT_LOCAL_STICKER)
-            if (this.current_dir == '@recent') {
+            if (this.current_dir == RECENT_CATEGORY) {
                 this.pics = this.recentLocalSticker
             }
         },
@@ -327,8 +325,9 @@ export default {
             })
         },
         folder() {
-            const subDir = this.current_dir == '@default' ? '' : this.current_dir + '/'
-            shell.openPath(path.join(this.default_dir, subDir))
+            shell.openPath(
+                this.current_dir == DEFAULT_CATEGORY ? this.default_dir : path.join(this.default_dir, this.current_dir),
+            )
         },
         menu: ipc.popupStickerMenu,
         localStickerMenu(relPath, e) {

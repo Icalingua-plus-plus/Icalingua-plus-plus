@@ -488,25 +488,36 @@ export default {
                 fs.rmdir(path.join(STORE_PATH, 'stickers', dirname), { recursive: true }, () => this.$message('删除成功'))
             })
         })
-        ipcRenderer.on('moveSticker', (_, filename) => {
-            this.$prompt('请输入 Sticker 分类目录名称，若目录不存在则会自动创建', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-            }).then(({ value }) => {
-                if (!value) {
-                    this.$message.error('请输入目录名称')
-                    return
+        ipcRenderer.on('moveSticker', async (_, filename) => {
+            /** @type {string} */
+            let value
+            try {
+                ({ value } = await this.$prompt('若目录不存在则会自动创建，留空则移动到默认分类', '输入 Sticker 分类目录名称', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                }))
+                value = value ? value.trim() : 'Default'
+            } catch (action) {
+                return
+            }
+            if (value == 'Recent') {
+                this.$message.error('请勿使用这个分类名称')
+                return
+            }
+            const defaultDir = path.join(STORE_PATH, 'stickers')
+            const newDir = value == 'Default' ? defaultDir : path.join(defaultDir, value)
+            try {
+                if (!fs.existsSync(newDir)) {
+                    await fs.promises.mkdir(newDir)
                 }
-                if (value !== 'Default'){
-                    const newPath = path.join(STORE_PATH, 'stickers', value)
-                    if (!fs.existsSync(newPath)) {
-                        fs.mkdirSync(newPath)
-                    }
-                    fs.rename(filename, path.join(newPath, path.basename(filename)), () => this.$message('移动成功'))
-                } else {
-                    fs.rename(filename, path.join(STORE_PATH, 'stickers', path.basename(filename)), () => this.$message('移动成功'))
-                }
-            })
+                await fs.promises.rename(filename, path.join(newDir, path.basename(filename)))
+            } catch (err) {
+                console.error('Failed to move sticker', filename, 'to', newDir)
+                console.error(err)
+                this.$message.error('移动失败')
+                return
+            }
+            this.$message.success('移动成功')
         })
         ipcRenderer.on('sendDice', (_) => {
             this.$prompt('请输入骰子点数，留空随机', '提示', {
