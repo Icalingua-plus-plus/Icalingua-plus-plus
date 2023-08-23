@@ -13,66 +13,90 @@
                 </div>
             </a>
         </div>
-        <div v-show="panel === 'face'" style="overflow: auto; height: 100vh">
-            <div class="face grid" v-show="face.length">
+        <div v-show="panel === 'face'" class="panel face-panel" ref="facePanel">
+            <div class="subheader" v-show="recentFace.length">最近使用</div>
+            <div class="grid" v-show="recentFace.length">
+                <div v-for="i in recentFace" :key="i">
+                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
+                </div>
+            </div>
+            <div class="subheader">
+                超级表情<br />
+                <small>右键作为超级表情发送</small>
+            </div>
+            <div class="grid">
+                <div v-for="i in faceIdToLottie.keys()" :key="i">
+                    <img
+                        :src="getFacePreview(i)"
+                        @click="pickFace(i, $event.target)"
+                        @click.right="pickLottie(i, $event.target)"
+                    />
+                </div>
+            </div>
+            <div class="subheader">全部表情</div>
+            <div class="grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
-                    <img :src="'file://' + dir_face + i" @click="pickFace(i)" @click.right="pickLottie(i)" />
+                    <img
+                        :src="getFacePreview(i)"
+                        @click="pickFace(i, $event.target)"
+                        @click.right="pickLottie(i, $event.target)"
+                    />
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'remote'" style="overflow: auto; height: 100vh">
-            <center v-show="!remote_pics.length">
-                <p>No remote stickers found</p>
-            </center>
+        <div v-show="panel === 'remote'" class="panel" ref="remotePanel">
+            <div class="subheader" v-show="recentRemoteSticker.length">最近使用</div>
+            <div class="grid" v-show="recentRemoteSticker.length">
+                <div v-for="i in recentRemoteSticker" :key="i">
+                    <img :src="i" @click="sendRemoteSticker(i)" @click.right="remoteStickerMenu(i, $event)" />
+                </div>
+            </div>
+            <div class="subheader" v-show="recentRemoteSticker.length">全部表情</div>
+            <div class="empty" v-show="!remote_pics.length">No remote stickers found</div>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
                     <img
                         :src="i.url"
-                        @click="picClick(i.url)"
-                        @click.right="
-                            itemMenu(
-                                i.url,
-                                remote_pics.map((img) => img.url),
-                                '',
-                                $event,
-                            )
-                        "
+                        @click="sendRemoteSticker(i.url, $event.target)"
+                        @click.right="remoteStickerMenu(i.url, $event)"
                     />
                 </div>
             </div>
         </div>
         <div class="stickers_dir" v-if="panel === 'stickers'" @wheel="wheelHandler" ref="stickers_dir">
             <a
-                v-for="i in subdirs.filter((i) => i[0] !== '.')"
+                @click="changeCurrentDir('@recent')"
+                @click.right="dirMenu('@recent', $event)"
+                :class="{ selected: current_dir === '@recent' }"
+                >Recent</a
+            >
+            <a
+                @click="changeCurrentDir('@default')"
+                @click.right="dirMenu('@default', $event)"
+                :class="{ selected: current_dir === '@default' }"
+                >Default</a
+            >
+            <a
+                v-for="i in subdirs"
                 :key="i"
-                :name="i"
                 @click="changeCurrentDir(i)"
                 @click.right="dirMenu(i, $event)"
-                :class="{ selected: current_dir === i || (i === 'Default' && dir === default_dir) }"
+                :class="{ selected: current_dir === i }"
                 >{{ i }}</a
             >
         </div>
-        <div v-if="panel === 'stickers'" style="overflow: auto; height: 100vh">
-            <center v-show="!pics.length">
-                <p>No stickers found</p>
-                <p>
-                    <el-button @click="folder">Open stickers folder</el-button>
-                </p>
-            </center>
+        <div v-if="panel === 'stickers'" class="panel">
+            <div class="empty" v-show="!pics.length">
+                No stickers found
+                <el-button v-show="current_dir !== '@recent'" @click="folder">Open stickers folder</el-button>
+            </div>
             <div class="grid" v-show="pics.length">
-                <div v-for="i in pics.filter((i) => i[0] !== '.')" :key="i">
+                <div v-for="i in pics" :key="i">
                     <img
-                        :src="getPreview(dir + i)"
-                        :origin-src="dir + i"
-                        @click="picClick(dir + i)"
-                        @click.right="
-                            itemMenu(
-                                dir + i,
-                                pics.filter((i) => i[0] !== '.'),
-                                dir,
-                                $event,
-                            )
-                        "
+                        :src="getStickerPreview(i)"
+                        :data-relative-path="i"
+                        @click="sendLocalSticker(i)"
+                        @click.right="localStickerMenu(i, $event)"
                         @error="errorHandler"
                         @mouseover="onmouseover"
                         @mouseout="onmouseout"
@@ -94,7 +118,21 @@ import fs from 'fs'
 import path from 'path'
 import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
-import getLottieFace from '../utils/getLottieFace'
+import { faceIdToLottie } from '../utils/getLottieFace'
+
+const MAX_RECENT_FACE = 18
+const MAX_RECENT_LOCAL_STICKER = 32
+const MAX_RECENT_REMOTE_STICKER = 8
+
+function getRecent(name) {
+    try {
+        const recentFace = JSON.parse(localStorage[name])
+        if (recentFace instanceof Array) {
+            return recentFace
+        }
+    } catch (e) {}
+    return []
+}
 
 export default {
     name: 'Stickers',
@@ -104,18 +142,20 @@ export default {
             remote_pics: [],
             face: [],
             pics: [],
-            dir: '',
-            dir_face: '',
             panel: '',
             subdirs: [],
-            default_dir: '',
-            current_dir: 'Default',
-            watchedPath: {},
+            current_dir: '@default',
             supportRemote: false,
+            recentFace: getRecent('recentFace'),
+            recentRemoteSticker: getRecent('recentRemoteSticker'),
         }
     },
     async created() {
+        this.faceIdToLottie = faceIdToLottie
+        this.watchedPath = {}
+        this.generatingPath = new Set()
         this.panel = await ipc.getLastUsedStickerType()
+        this.recentLocalSticker = getRecent('recentLocalSticker')
 
         // Remote Stickers
         if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
@@ -124,119 +164,187 @@ export default {
         }
 
         // Face
-        this.dir_face = path.join(getStaticPath(), 'face/')
-        if (!fs.existsSync(this.dir_face)) {
+        this.face_dir = path.join(getStaticPath(), 'face/')
+        if (!fs.existsSync(this.face_dir)) {
             this.$message.error('No face folder found!')
-            fs.mkdirSync(this.dir_face)
+            await fs.promises.mkdir(this.face_dir)
         }
-        fs.readdir(this.dir_face, (_err, files) => {
+        fs.readdir(this.face_dir, (_err, files) => {
             this.face = files
         })
 
         // Stickers
-        this.dir = path.join(await ipc.getStorePath(), 'stickers/')
-        this.default_dir = this.dir
-        if (!fs.existsSync(this.dir)) {
-            fs.mkdirSync(this.dir)
+        const store_dir = await ipc.getStorePath()
+        this.default_dir = path.join(store_dir, 'stickers/')
+        this.preview_dir = path.join(store_dir, 'stickers_preview/')
+        if (!fs.existsSync(this.default_dir)) {
+            await fs.promises.mkdir(this.default_dir)
         }
-        if (!fs.existsSync(path.join(await ipc.getStorePath(), 'stickers_preview/'))) {
-            fs.mkdirSync(path.join(await ipc.getStorePath(), 'stickers_preview/'))
+        if (!fs.existsSync(this.preview_dir)) {
+            await fs.promises.mkdir(this.preview_dir)
         }
-        fs.watch(this.dir, () => {
-            fs.readdir(this.dir, (_err, files) => {
-                if (this.current_dir != 'Default') return
-                this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
-            })
-        })
-        fs.watch(this.default_dir, () => {
-            //如果是文件夹则加入到subdirs数组中
-            fs.readdir(this.default_dir, (_err, files) => {
-                this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
-                this.subdirs = ['Default', ...this.subdirs]
-            })
-        })
-        fs.readdir(this.default_dir, (_err, files) => {
-            this.subdirs = files.filter((i) => fs.statSync(this.default_dir + i).isDirectory())
-            this.subdirs = ['Default', ...this.subdirs]
-        })
-        fs.readdir(this.dir, (_err, files) => {
-            if (this.current_dir != 'Default') return
-            this.pics = files.filter((i) => !fs.statSync(this.dir + i).isDirectory())
-        })
+        const updateDefaultDir = async () => {
+            /** @type {[string, fs.Stats][]} */
+            let fileAndStats
+            try {
+                fileAndStats = await Promise.all(
+                    (await fs.promises.readdir(this.default_dir))
+                        .filter((i) => !i.startsWith('.'))
+                        .map(async (i) => [i, await fs.promises.stat(this.default_dir + i)]),
+                )
+            } catch (err) {
+                console.error('Failed to update sticker dir @default', err)
+                return
+            }
+            this.subdirs = fileAndStats
+                .filter(([_, stat]) => stat.isDirectory())
+                .map(([i, _]) => i)
+                .sort()
+            if (this.current_dir != '@default') return
+            // 后添加的表情排在前面，类似于QQ
+            this.pics = fileAndStats
+                .filter(([_, stat]) => stat.isFile())
+                .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
+                .map(([i, _]) => i)
+        }
+        updateDefaultDir()
+        this.watchedPath['@default'] = fs.watch(this.default_dir, updateDefaultDir)
     },
     methods: {
-        getPreview(n) {
-            return 'file://' + this.default_dir.replace('stickers', 'stickers_preview') + md5(n)
+        getStickerPreview(relPath) {
+            return 'file://' + this.preview_dir + md5(relPath)
+        },
+        getFacePreview(i) {
+            let faceId = String(i)
+            if (faceId.length < 3) {
+                faceId = '0'.repeat(3 - faceId.length) + faceId
+            }
+            return 'file://' + this.face_dir + faceId
         },
         errorHandler(e) {
             // generate preview
-            const originSrc = e.target.getAttribute('origin-src')
-            const n = this.getPreview(originSrc).replace('file://', '')
-            if (!fs.existsSync(n)) {
-                let img = document.createElement('img')
-                let canvas = document.createElement('canvas')
-                img.src = originSrc.startsWith('http') ? '' : 'file://' + originSrc
-                img.onload = () => {
-                    canvas.width = img.width
-                    canvas.height = img.height
-                    let ctx = canvas.getContext('2d')
-                    ctx.drawImage(img, 0, 0, img.width, img.height)
-                    let dataURL = canvas.toDataURL('image/webp', 0.8)
-                    let base64Data = dataURL.replace(/^data:image\/webp;base64,/, '')
-                    fs.writeFile(n, base64Data, 'base64', (err) => {
-                        if (err) {
-                            console.error(err)
-                            return
-                        }
-                        console.log('Preview generated', originSrc)
-                        e.target.src = e.target.src
-                    })
+            const relPath = e.target.dataset.relativePath
+            const previewPath = this.getStickerPreview(relPath).replace(/^file:\/\//, '')
+            if (fs.existsSync(previewPath) || this.generatingPath.has(relPath)) {
+                return
+            }
+            console.log('Generating preview for', relPath)
+            this.generatingPath.add(relPath)
+            const img = document.createElement('img')
+            img.src = 'file://' + path.join(this.default_dir, relPath)
+            img.onload = async () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = img.width
+                canvas.height = img.height
+                const ctx = canvas.getContext('2d')
+                ctx.drawImage(img, 0, 0, img.width, img.height)
+                const dataURL = canvas.toDataURL('image/webp', 0.8)
+                const base64Data = dataURL.replace(/^data:image\/webp;base64,/, '')
+                try {
+                    await fs.promises.writeFile(previewPath, base64Data, 'base64')
+                } catch (err) {
+                    console.error('Failed to generate preview for', relPath, 'at', previewPath)
+                    console.error(err)
+                    return
+                } finally {
+                    this.generatingPath.delete(relPath)
                 }
+                console.log('Preview generated for', relPath)
+                e.target.src = e.target.src
             }
         },
         changeCurrentDir(dir) {
-            console.log("Stickers' directory changed: ", dir)
+            console.log('Stickers directory changed:', dir)
             this.current_dir = dir
-            let newDir = this.default_dir + this.current_dir + '/'
-            if (dir == 'Default') {
-                newDir = this.default_dir
+            if (dir == '@recent') {
+                this.pics = this.recentLocalSticker
+                return
             }
-            fs.readdir(newDir, (_err, files) => {
+            const subDir = dir == '@default' ? '' : dir + '/'
+            const fullDir = this.default_dir + subDir
+            const updateDir = async () => {
+                /** @type {[string, fs.Stats][]} */
+                let fileAndStats
+                try {
+                    fileAndStats = await Promise.all(
+                        (await fs.promises.readdir(fullDir))
+                            .filter((i) => !i.startsWith('.'))
+                            .map(async (i) => [i, await fs.promises.stat(fullDir + i)]),
+                    )
+                } catch (err) {
+                    console.error('Failed to update sticker dir', dir, err)
+                    return
+                }
                 if (this.current_dir != dir) return
-                this.dir = newDir
-                this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
-            })
-            if (this.watchedPath[dir] || dir == 'Default') return
-            this.watchedPath[dir] = fs.watch(newDir, () => {
-                fs.readdir(newDir, (_err, files) => {
-                    if (this.current_dir != dir) return
-                    this.dir = newDir
-                    this.pics = files.filter((i) => !fs.statSync(newDir + i).isDirectory())
-                })
-            })
+                this.pics = fileAndStats
+                    .filter(([_, stat]) => stat.isFile())
+                    .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
+                    .map(([i, _]) => subDir + i)
+            }
+            updateDir()
+            if (dir == '@default' || dir in this.watchedPath) return
+            this.watchedPath[dir] = fs.watch(fullDir, updateDir)
         },
-        picClick(pic) {
-            this.$emit('send', pic)
+        sendLocalSticker(img) {
+            this.$emit('send', this.default_dir + img)
+            this.pushRecent('recentLocalSticker', img, MAX_RECENT_LOCAL_STICKER)
+            if (this.current_dir == '@recent') {
+                this.pics = this.recentLocalSticker
+            }
         },
-        pickFace(face) {
+        sendRemoteSticker(img, elem) {
+            this.$emit('send', img)
+            this.pushRecent('recentRemoteSticker', img, MAX_RECENT_REMOTE_STICKER, elem, this.$refs.remotePanel)
+        },
+        pickFace(face, elem) {
             this.$emit('selectFace', face)
+            this.pushRecent('recentFace', parseInt(face), MAX_RECENT_FACE, elem, this.$refs.facePanel)
         },
-        pickLottie(face) {
+        pickLottie(face, elem) {
             const faceId = parseInt(face)
-            const lottiePath = getLottieFace(`[QLottie: 0,${face}]`, 1673877600100)
-            const qlottie = path.basename(lottiePath, '.json')
-
-            if (!qlottie || qlottie === '0') {
+            const qlottie = faceIdToLottie.get(face)
+            if (!qlottie) {
                 this.$message.error(`Face ${faceId} 没有对应的 Lottie 超级表情`)
                 return
             }
             this.$emit('sendLottie', { qlottie: qlottie, id: face })
+            this.pushRecent('recentFace', faceId, MAX_RECENT_FACE, elem, this.$refs.facePanel)
+        },
+        pushRecent(name, img, max, elem, container) {
+            const index = this[name].indexOf(img)
+            if (index != -1) {
+                this[name] = [img, ...this[name].slice(0, index), ...this[name].slice(index + 1)]
+            } else {
+                this[name] = [img, ...this[name].slice(0, max - 1)]
+            }
+            localStorage[name] = JSON.stringify(this[name])
+            if (!elem) return
+            // 保持当前点击的表情位置不变
+            const oldY = elem.getBoundingClientRect().y
+            this.$nextTick(() => {
+                const newY = elem.getBoundingClientRect().y
+                container.scrollTop += newY - oldY
+            })
         },
         folder() {
-            shell.openPath(this.dir)
+            const subDir = this.current_dir == '@default' ? '' : this.current_dir + '/'
+            shell.openPath(path.join(this.default_dir, subDir))
         },
         menu: ipc.popupStickerMenu,
-        itemMenu: ipc.popupStickerItemMenu,
+        localStickerMenu(relPath, e) {
+            ipc.popupStickerItemMenu(
+                this.default_dir + relPath,
+                this.pics.map((i) => this.default_dir + i),
+                e,
+            )
+        },
+        remoteStickerMenu(url, e) {
+            ipc.popupStickerItemMenu(
+                url,
+                this.remote_pics.map((i) => i.url),
+                e,
+            )
+        },
         dirMenu: ipc.popupStickerDirMenu,
         setPanel(type) {
             this.panel = type
@@ -250,18 +358,17 @@ export default {
             })
         },
         onmouseover(e) {
-            const originSrc = e.target.getAttribute('origin-src')
-            e.target.src = originSrc.startsWith('http') ? '' : 'file://' + originSrc
+            e.target.src = 'file://' + path.join(this.default_dir, e.target.dataset.relativePath)
         },
         onmouseout(e) {
-            e.target.src = this.getPreview(e.target.getAttribute('origin-src'))
+            e.target.src = this.getStickerPreview(e.target.dataset.relativePath)
         },
     },
 }
 </script>
 
 <style scoped lang="scss">
-div.stickers_dir {
+.stickers_dir {
     width: 100%;
     white-space: nowrap;
     overflow-x: auto;
@@ -277,16 +384,17 @@ div.stickers_dir {
         margin-right: 8px;
         color: var(--panel-color-sticker-type);
 
+        &:hover {
+            color: var(--panel-color-sticker-type-hover);
+        }
+
         &.selected {
             color: var(--panel-color-sticker-type-selected);
         }
-
-        &:hover:not(.selected) {
-            color: var(--panel-color-sticker-type-hover);
-        }
     }
 }
-div.head {
+
+.head {
     height: 64px;
     min-height: 64px;
     border-bottom: var(--chat-border-style);
@@ -304,12 +412,12 @@ div.head {
         margin-right: 8px;
         color: var(--panel-color-sticker-type);
 
-        &.selected {
-            color: var(--panel-color-sticker-type-selected);
+        &:hover {
+            color: var(--panel-color-sticker-type-hover);
         }
 
-        &:hover:not(.selected) {
-            color: var(--panel-color-sticker-type-hover);
+        &.selected {
+            color: var(--panel-color-sticker-type-selected);
         }
     }
 }
@@ -320,56 +428,73 @@ div.head {
     cursor: pointer;
     transition: all 0.2s;
     color: var(--chat-color);
+
+    &:hover {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
 }
 
-.opinion:hover {
-    transform: scale(1.1);
-    opacity: 0.7;
+.panel {
+    overflow: auto;
+    height: 100vh;
+}
+
+.subheader {
+    margin: 0.5em;
+    color: var(--chat-color-placeholder);
+}
+
+.empty {
+    padding: 1em;
+    text-align: center;
+    color: var(--chat-color-placeholder);
+
+    button {
+        margin-top: 1em;
+    }
 }
 
 .grid {
     display: grid;
-    width: 100%;
     overflow: hidden;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-}
-
-.grid.face {
-    grid-template-columns: repeat(9, 1fr);
 
     img {
-        left: 0;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        margin: auto;
-        width: 70%;
-        height: unset;
+        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        position: absolute;
+        border: 1px solid transparent;
+        transition: border-color 0.5s;
+
+        &:hover {
+            border-color: #999;
+        }
+    }
+
+    div {
+        width: 100%;
+        height: 0;
+        padding-bottom: 100%;
+        position: relative;
+        background-color: var(--panel-background);
     }
 }
 
-.grid img {
-    object-fit: contain;
-    width: 96%;
-    height: 96%;
-    position: absolute;
-    border-color: var(--panel-background);
-    border-width: 1px;
-    border-style: solid;
-    background-color: var(--panel-background);
-    transition: border-color 0.5s;
-}
+.face-panel {
+    padding: 0 0.5em;
 
-.grid > div {
-    width: 100%;
-    height: 0;
-    padding-bottom: 100%;
-    position: relative;
-    background-color: var(--panel-background);
-}
+    .subheader {
+        margin-left: 0;
+        margin-right: 0;
+    }
 
-.grid > div img:hover {
-    border-color: #999;
+    .grid {
+        margin: 0.5em 0;
+        grid-template-columns: repeat(9, 1fr);
+    }
 }
 
 .bg {
@@ -410,9 +535,7 @@ div.head {
 ::v-deep .container-emoji {
     height: auto !important;
 }
-</style>
 
-<style scoped>
 .emoji-picker {
     --ep-color-bg: auto !important;
     --ep-color-border: auto !important;

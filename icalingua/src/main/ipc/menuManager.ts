@@ -1960,12 +1960,9 @@ ipcMain.on('popupStickerMenu', (_, e) => {
         },
     ]).popup({ window: getMainWindow(), ...pos })
 })
-ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>, pathName: string, e) => {
+ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>, e) => {
     const bounds = getMainWindow().getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
-    if (pathName && itemList && itemList.length) {
-        itemList = itemList.map((item) => pathName + item)
-    }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
     menu.push({
         label: '以图片方式发送',
