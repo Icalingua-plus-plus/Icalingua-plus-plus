@@ -1,6 +1,6 @@
 import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
-import { getConfig } from './configManager'
+import { getConfig, saveConfigFile } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import { updateTrayIcon, updateTrayMenu } from './trayManager'
 import path from 'path'
@@ -9,6 +9,7 @@ import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
 import md5 from 'md5'
+import crypto from 'crypto'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -321,8 +322,17 @@ ipcMain.on('lock', () => {
 })
 ipcMain.on('unlock', (_, password: string) => {
     if (!unlockWindow) return
-    const hash = md5(password)
-    if (hash === getConfig().lockPassword || password === getConfig().lockPassword) {
+    let lockPassword = getConfig().lockPassword
+    if (!(lockPassword.includes('|') && lockPassword.length === 65)) {
+        // 升级锁定密码
+        const salt = crypto.randomBytes(16).toString('hex')
+        lockPassword = md5(lockPassword + salt) + '|' + salt
+        getConfig().lockPassword = lockPassword
+        saveConfigFile()
+    }
+    const [hash, salt] = lockPassword.split('|')
+    const hash2 = md5(password + salt)
+    if (hash === hash2) {
         unlockWindow.webContents.send('unlock-succeed')
 
         setTimeout(() => {
