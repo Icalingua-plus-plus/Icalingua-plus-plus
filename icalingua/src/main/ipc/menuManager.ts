@@ -552,18 +552,6 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 },
             }),
         )
-        menu.append(
-            new MenuItem({
-                label: '匿名发送群消息',
-                type: 'checkbox',
-                checked: getConfig().anonymous === true,
-                visible: getConfig().sendRawMessage === false,
-                click: (menuItem) => {
-                    getConfig().anonymous = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-        )
     } else {
         // menu.append(new MenuItem({
         //     label: 'ta 的线索',
@@ -727,22 +715,6 @@ export const updateAppMenu = async () => {
                         },
                     })
                     await win.loadURL(getWinUrl() + '#/openForward')
-                },
-            }),
-            new MenuItem({
-                label: '合并转发 DEBUG',
-                visible: getConfig().debugmode === true,
-                async click() {
-                    const win = newIcalinguaWindow({
-                        height: 520,
-                        width: 600,
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            contextIsolation: false,
-                            nodeIntegration: true,
-                        },
-                    })
-                    await win.loadURL(getWinUrl() + '#/makeForward')
                 },
             }),
             new MenuItem({
@@ -987,6 +959,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '匿名发送群消息',
+                type: 'checkbox',
+                checked: getConfig().anonymous === true,
+                visible: getConfig().sendRawMessage === false,
+                click: (menuItem) => {
+                    getConfig().anonymous = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '启用插件',
                 type: 'checkbox',
                 checked: getConfig().custom === true,
@@ -1137,6 +1119,22 @@ export const updateAppMenu = async () => {
                             getConfig().debugmode = menuItem.checked
                             saveConfigFile()
                             updateAppMenu()
+                        },
+                    },
+                    {
+                        label: '合并转发 DEBUG',
+                        visible: getConfig().debugmode === true,
+                        async click() {
+                            const win = newIcalinguaWindow({
+                                height: 520,
+                                width: 600,
+                                autoHideMenuBar: true,
+                                webPreferences: {
+                                    contextIsolation: false,
+                                    nodeIntegration: true,
+                                },
+                            })
+                            await win.loadURL(getWinUrl() + '#/makeForward')
                         },
                     },
                     {
