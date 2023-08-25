@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { app } from 'electron'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
+import hashCode from '../utils/hash'
 
 ipcMain.handle('getVersion', () => version.version)
 ipcMain.handle('getSettings', () => getConfig())
@@ -39,7 +40,10 @@ ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 
     saveConfigFile()
 })
 
-ipcMain.on('setLockPassword', (_, password: string) => {
-    getConfig().lockPassword = password
+ipcMain.on('setLockPassword', (_, password: string, hashLockPassword: boolean) => {
+    if (hashLockPassword) password = hashCode(password);
+
+    getConfig().lockPassword = password;
+    getConfig().hashLockPassword = hashLockPassword;
     saveConfigFile()
 })
