@@ -300,7 +300,7 @@ export default {
         },
         pickLottie(face, elem) {
             const faceId = parseInt(face)
-            const qlottie = faceIdToLottie.get(face)
+            const qlottie = faceIdToLottie.get(faceId)
             if (!qlottie) {
                 this.$message.error(`Face ${faceId} 没有对应的 Lottie 超级表情`)
                 return
