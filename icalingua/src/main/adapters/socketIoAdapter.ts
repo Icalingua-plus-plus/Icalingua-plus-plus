@@ -552,7 +552,8 @@ const adapter: Adapter = {
         socket.emit('pinRoom', roomId, pin)
     },
     reLogin(): void {
-        socket.emit('reLogin')
+        if (socket.disconnected) socket.connect()
+        else socket.emit('reLogin')
     },
     removeChat(roomId: number) {
         socket.emit('removeChat', roomId)
