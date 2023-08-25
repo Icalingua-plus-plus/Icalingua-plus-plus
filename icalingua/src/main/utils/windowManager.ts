@@ -8,6 +8,7 @@ import ui from './ui'
 import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
+import md5 from 'md5'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -320,7 +321,8 @@ ipcMain.on('lock', () => {
 })
 ipcMain.on('unlock', (_, password: string) => {
     if (!unlockWindow) return
-    if (password === getConfig().lockPassword) {
+    const hash = md5(password)
+    if (hash === getConfig().lockPassword || password === getConfig().lockPassword) {
         unlockWindow.webContents.send('unlock-succeed')
 
         setTimeout(() => {

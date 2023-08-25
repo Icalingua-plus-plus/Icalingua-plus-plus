@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import { app } from 'electron'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
+import md5 from 'md5'
 
 ipcMain.handle('getVersion', () => version.version)
 ipcMain.handle('getSettings', () => getConfig())
@@ -40,6 +41,6 @@ ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 
 })
 
 ipcMain.on('setLockPassword', (_, password: string) => {
-    getConfig().lockPassword = password
+    getConfig().lockPassword = md5(password)
     saveConfigFile()
 })
