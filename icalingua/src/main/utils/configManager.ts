@@ -12,7 +12,6 @@ import path from 'path'
 import YAML from 'yaml'
 import argv from './argv'
 import migrateData from './migrateData'
-import hashCode from './hash'
 
 const configFilePath = argv.config || path.join(app.getPath('userData'), 'config.yaml')
 const oldConfigFilePath = argv.config || path.join(app.getPath('userData'), '../electron-qq/config.yaml')
@@ -102,7 +101,6 @@ const defaultConfig: AllConfig = {
     removeGroupNameEmotes: false,
     usePanguJsSend: false,
     usePanguJsRecv: false,
-    hashLockPassword: true,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
@@ -113,11 +111,6 @@ if (fs.existsSync(configFilePath)) {
         //检查目前的配置文件是否完整，用于升级的情况
         if (!(i in config)) {
             config[i] = defaultConfig[i]
-
-            //升级时加密密码
-            if (i === 'hashLockPassword') {
-                config['lockPassword'] = hashCode(config['lockPassword']);
-            }
         }
     }
     for (const i in emptyLoginForm) {

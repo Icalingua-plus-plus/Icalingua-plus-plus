@@ -8,7 +8,6 @@ import ui from './ui'
 import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
-import hashCode from './hash'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -321,11 +320,6 @@ ipcMain.on('lock', () => {
 })
 ipcMain.on('unlock', (_, password: string) => {
     if (!unlockWindow) return
-
-    if (getConfig().hashLockPassword) {
-        password = hashCode(password);
-    }
-
     if (password === getConfig().lockPassword) {
         unlockWindow.webContents.send('unlock-succeed')
 
