@@ -102,7 +102,6 @@
                     :show-footer="!isShutUp"
                     :loading-rooms="false"
                     :text-formatting="true"
-                    :members-count="membersCount"
                     :linkify="linkify"
                     :account="account"
                     :username="username"
@@ -275,7 +274,6 @@ export default {
             sysInfo: '',
             historyCount: 0,
             dialogAskCheckUpdateVisible: false,
-            membersCount: 0,
             contactsShown: false,
             groupmemberShown: false,
             groupmemberPanelGin: 0,
@@ -840,13 +838,6 @@ Chromium ${process.versions.chrome}` : ''
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
-            if (this.selectedRoomId < 0)
-                ipc.getGroup(-this.selectedRoomId).then(e =>{
-                    // 退了的群获取不到 group
-                    if (e) this.membersCount = e.member_count
-                })
-            else
-                this.membersCount = 0
         },
         downloadImage: ipc.downloadImage,
         pokeGroup(uin) {
