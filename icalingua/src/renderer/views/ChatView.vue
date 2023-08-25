@@ -281,6 +281,7 @@ export default {
             roomPanelAvatarOnly: false,
             roomPanelWidth: undefined,
             forwardShown: false,
+            forwardMulti: false,
             lastUnreadCount: 0,
             lastUnreadCheck: 0,
             lastUnreadAt: false,
@@ -888,11 +889,12 @@ Chromium ${process.versions.chrome}` : ''
             ipc.setRoomPanelSetting(this.roomPanelAvatarOnly, width)
         },
         sendForward(id, name) {
-            this.$refs.room.sendForward(id, name)
+            this.$refs.room.sendForward(id, name, this.forwardMulti)
             this.forwardShown = false
         },
-        chooseForwardTarget() {
+        chooseForwardTarget(multi = true) {
             this.forwardShown = true
+            this.forwardMulti = multi
         },
         editChatGroups() {
             this.$prompt('请输入新聊天分组名字', '提示', {

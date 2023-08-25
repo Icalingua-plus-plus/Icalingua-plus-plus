@@ -2,11 +2,26 @@
     <transition name="vac-slide-up">
         <div v-if="showForwardPanel" class="vac-forward-container">
             <div class="vac-forward-box">
-                <el-button type="primary" @click="stopForward(true)" :disabled="msgsToForward.length === 0"
-                    >合并转发 {{ msgsToForward.length }} 条消息</el-button
+                <el-button
+                    type="primary"
+                    @click="stopForward(true, false)"
+                    :disabled="msgsToForward.length === 0"
+                    icon="el-icon-share"
+                    >逐条转发</el-button
                 >
-                <el-button type="primary" @click="recallMsgs" :disabled="msgsToForward.length === 0"
-                    >撤回 {{ msgsToForward.length }} 条消息</el-button
+                <el-button
+                    type="primary"
+                    @click="stopForward(true)"
+                    :disabled="msgsToForward.length === 0"
+                    icon="el-icon-share"
+                    >合并转发</el-button
+                >
+                <el-button
+                    type="primary"
+                    @click="recallMsgs"
+                    :disabled="msgsToForward.length === 0"
+                    icon="el-icon-delete"
+                    >批量撤回</el-button
                 >
             </div>
 
@@ -17,6 +32,7 @@
                     </slot>
                 </div>
             </div>
+            <div class="vac-selected-counter" v-if="showForwardPanel">已选 {{ msgsToForward.length }} 条消息</div>
         </div>
     </transition>
 </template>
@@ -39,8 +55,8 @@ export default {
         roomId: { type: [String, Number], required: true },
     },
     methods: {
-        stopForward(isCreate) {
-            if (isCreate) this.$emit('choose-forward-target')
+        stopForward(isCreate, multi = true) {
+            if (isCreate) this.$emit('choose-forward-target', multi)
             else this.$emit('close-forward-panel')
         },
         recallMsgs() {
@@ -111,5 +127,19 @@ export default {
         padding: 5px 8px;
         width: calc(100% - 16px);
     }
+}
+
+.vac-selected-counter {
+    position: absolute;
+    align-items: center;
+    bottom: 80px;
+    right: 20px;
+    padding: 8px;
+    background: var(--chat-footer-bg-color);
+    border-radius: 4px;
+    display: flex;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
 }
 </style>

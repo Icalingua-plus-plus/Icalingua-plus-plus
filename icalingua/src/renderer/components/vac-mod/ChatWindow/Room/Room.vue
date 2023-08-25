@@ -218,7 +218,7 @@
                 :messages="messages"
                 :showForwardPanel="showForwardPanel"
                 :msgsToForward="msgsToForward"
-                @choose-forward-target="$emit('choose-forward-target')"
+                @choose-forward-target="$emit('choose-forward-target', $event)"
                 @close-forward-panel="closeForwardPanel"
                 :account="account"
                 :username="username"
@@ -853,7 +853,7 @@ export default {
         }
     },
     methods: {
-        sendForward(target, name) {
+        sendForward(target, name, multi = true) {
             const isJSON = (str) => {
                 try {
                     if (typeof JSON.parse(str) == 'object') return true
@@ -986,10 +986,23 @@ export default {
             const origin = parseInt(String(this.roomId))
             this.$emit('start-chat', target, name)
 
-            if (origin < 0) {
-                ipc.makeForward(messagesToSend, dm, -origin, target)
+            if (!multi) {
+                messagesToSend.forEach((msg, index) => {
+                    console.log(msg.message)
+                    setTimeout(() => {
+                        this.$emit('send-message', {
+                            roomId: target,
+                            content: JSON.stringify(msg.message),
+                            messageType: 'raw',
+                        })
+                    }, (index + 1) * 1000)
+                })
             } else {
-                ipc.makeForward(messagesToSend, dm, undefined, target)
+                if (origin < 0) {
+                    ipc.makeForward(messagesToSend, dm, -origin, target)
+                } else {
+                    ipc.makeForward(messagesToSend, dm, undefined, target)
+                }
             }
             this.closeForwardPanel()
         },
