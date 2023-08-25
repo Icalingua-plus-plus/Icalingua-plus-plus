@@ -124,8 +124,8 @@ const ipc = {
     popupStickerMenu(e, closePanel: boolean = true) {
         ipcRenderer.send('popupStickerMenu', closePanel, { x: e.screenX, y: e.screenY })
     },
-    popupStickerItemMenu(itemName: string, itemList: Array<string>, pathName: string, e) {
-        ipcRenderer.send('popupStickerItemMenu', itemName, itemList, pathName, { x: e.screenX, y: e.screenY })
+    popupStickerItemMenu(itemName: string, itemList: Array<string>, e) {
+        ipcRenderer.send('popupStickerItemMenu', itemName, itemList, { x: e.screenX, y: e.screenY })
     },
     popupStickerDirMenu(dirName: string, e) {
         ipcRenderer.send('popupStickerDirMenu', dirName, { x: e.screenX, y: e.screenY })
