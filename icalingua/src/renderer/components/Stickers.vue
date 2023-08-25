@@ -147,6 +147,7 @@ export default {
         }
     },
     async created() {
+        this.face_dir = path.join(getStaticPath(), 'face/')
         this.faceIdToLottie = faceIdToLottie
         this.watchedPath = {}
         this.generatingPath = new Set()
@@ -162,7 +163,6 @@ export default {
         }
 
         // Face
-        this.face_dir = path.join(getStaticPath(), 'face/')
         if (!fs.existsSync(this.face_dir)) {
             this.$message.error('No face folder found!')
             await fs.promises.mkdir(this.face_dir)
