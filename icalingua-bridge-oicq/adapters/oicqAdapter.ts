@@ -918,6 +918,7 @@ const attachEventHandler = () => {
     bot.on('request.group.invite', eventHandlers.requestAdd)
     bot.on('request.group.add', eventHandlers.requestAdd)
     bot.on('sync.readed', eventHandlers.syncRead)
+    bot.on('sync.remark', eventHandlers.syncRemark)
 }
 const attachLoginHandler = () => {
     bot.on('system.online', loginHandlers.onSucceed)
