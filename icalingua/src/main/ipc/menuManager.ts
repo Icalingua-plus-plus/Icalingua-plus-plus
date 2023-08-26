@@ -30,6 +30,8 @@ import {
     deleteMessage,
     fetchHistory,
     fetchLatestHistory,
+    getFriend,
+    getGroup,
     getCookies,
     getGroupMemberInfo,
     getMsgNewURL,
@@ -219,6 +221,58 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     },
                 },
             ],
+        },
+        {
+            label: '设置备注名',
+            async click() {
+                const windowOptions = {
+                    height: 180,
+                    width: 600,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
+                }
+                if (room.roomId < 0) {
+                    const groupInfo = await getGroup(-room.roomId)
+                    if (!groupInfo) {
+                        ui.messageError('您不是本群成员，无法为本群添加备注')
+                        return
+                    }
+                    const groupName = getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(groupInfo.group_name)
+                        : groupInfo.group_name
+                    await newIcalinguaWindow(windowOptions).loadURL(
+                        getWinUrl() +
+                            '#/remarkNameEdit/' +
+                            0 +
+                            '/' +
+                            groupInfo.group_id +
+                            '/' +
+                            querystring.escape(groupName) +
+                            '/' +
+                            querystring.escape(groupInfo.group_remark || groupName),
+                    )
+                } else {
+                    const friendInfo = await getFriend(room.roomId)
+                    if (!friendInfo) {
+                        ui.messageError('该联系人还不是您的好友，无法为该联系人添加备注')
+                        return
+                    }
+                    await newIcalinguaWindow(windowOptions).loadURL(
+                        getWinUrl() +
+                            '#/remarkNameEdit/' +
+                            friendInfo.user_id +
+                            '/' +
+                            0 +
+                            '/' +
+                            querystring.escape(friendInfo.nickname) +
+                            '/' +
+                            querystring.escape(friendInfo.remark || friendInfo.nickname),
+                    )
+                }
+            },
         },
     ])
     const webApps = new Menu()

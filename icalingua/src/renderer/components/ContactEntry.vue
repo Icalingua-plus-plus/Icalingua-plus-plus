@@ -9,7 +9,9 @@
                     <div class="contact-entry-flex contact-entry-l1">
                         <div class="contact-entry-name">
                             {{ removeEmotes ? removeGroupNameEmotes(remark) : remark }}
-                            <span class="contact-entry-rawname" v-show="name && name !== remark"> ({{ name }}) </span>
+                            <span class="contact-entry-rawname" v-show="name && name !== remark">
+                                ({{ removeEmotes ? removeGroupNameEmotes(name) : name }})
+                            </span>
                         </div>
                     </div>
                     <div class="contact-entry-flex">
