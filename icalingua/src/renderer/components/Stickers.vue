@@ -185,14 +185,6 @@ export default {
         }
         const updateDefaultDir = async () => {
             if (this.current_dir != DEFAULT_CATEGORY) return
-            if (!this.descSortStickersByTime) {
-                try {
-                    this.pics = await fs.promises.readdir(this.default_dir)
-                } catch (err) {
-                    console.error('Failed to update sticker dir', DEFAULT_CATEGORY, err)
-                }
-                return
-            }
             /** @type {[string, fs.Stats][]} */
             let fileAndStats
             try {
@@ -209,11 +201,15 @@ export default {
                 .filter(([_, stat]) => stat.isDirectory())
                 .map(([i, _]) => i)
                 .sort()
-            // 后添加的表情排在前面，类似于QQ
-            this.pics = fileAndStats
-                .filter(([_, stat]) => stat.isFile())
-                .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
-                .map(([i, _]) => i)
+            if (!this.descSortStickersByTime) {
+                this.pics = fileAndStats.filter(([_, stat]) => stat.isFile()).map(([i, _]) => i)
+            } else {
+                // 后添加的表情排在前面，类似于QQ
+                this.pics = fileAndStats
+                    .filter(([_, stat]) => stat.isFile())
+                    .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
+                    .map(([i, _]) => i)
+            }
         }
         updateDefaultDir()
         fs.watch(this.default_dir, updateDefaultDir)
@@ -272,14 +268,6 @@ export default {
             const fullDir = this.default_dir + subDir
             const updateDir = async () => {
                 if (this.current_dir != dir) return
-                if (!this.descSortStickersByTime) {
-                    try {
-                        this.pics = await fs.promises.readdir(fullDir)
-                    } catch (err) {
-                        console.error('Failed to update sticker dir', dir, err)
-                    }
-                    return
-                }
                 /** @type {[string, fs.Stats][]} */
                 let fileAndStats
                 try {
@@ -292,10 +280,14 @@ export default {
                     console.error('Failed to update sticker dir', dir, err)
                     return
                 }
-                this.pics = fileAndStats
-                    .filter(([_, stat]) => stat.isFile())
-                    .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
-                    .map(([i, _]) => subDir + i)
+                if (!this.descSortStickersByTime) {
+                    this.pics = fileAndStats.filter(([_, stat]) => stat.isFile()).map(([i, _]) => subDir + i)
+                } else {
+                    this.pics = fileAndStats
+                        .filter(([_, stat]) => stat.isFile())
+                        .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)
+                        .map(([i, _]) => subDir + i)
+                }
             }
             updateDir()
             if (dir == DEFAULT_CATEGORY || dir in this.watchedPath) return
