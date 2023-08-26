@@ -144,6 +144,7 @@ export default {
             supportRemote: false,
             recentFace: getRecent('recentFace'),
             recentRemoteSticker: getRecent('recentRemoteSticker'),
+            descSortStickersByTime: true,
         }
     },
     async created() {
@@ -153,6 +154,7 @@ export default {
         this.generatingPath = new Set()
         this.panel = await ipc.getLastUsedStickerType()
         this.recentLocalSticker = getRecent('recentLocalSticker')
+        this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
         this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
         this.RECENT_CATEGORY = RECENT_CATEGORY
 
@@ -182,6 +184,15 @@ export default {
             await fs.promises.mkdir(this.preview_dir)
         }
         const updateDefaultDir = async () => {
+            if (this.current_dir != DEFAULT_CATEGORY) return
+            if (!this.descSortStickersByTime) {
+                try {
+                    this.pics = await fs.promises.readdir(this.default_dir)
+                } catch (err) {
+                    console.error('Failed to update sticker dir', DEFAULT_CATEGORY, err)
+                }
+                return
+            }
             /** @type {[string, fs.Stats][]} */
             let fileAndStats
             try {
@@ -198,7 +209,6 @@ export default {
                 .filter(([_, stat]) => stat.isDirectory())
                 .map(([i, _]) => i)
                 .sort()
-            if (this.current_dir != DEFAULT_CATEGORY) return
             // 后添加的表情排在前面，类似于QQ
             this.pics = fileAndStats
                 .filter(([_, stat]) => stat.isFile())
@@ -261,6 +271,15 @@ export default {
             const subDir = dir == DEFAULT_CATEGORY ? '' : dir + '/'
             const fullDir = this.default_dir + subDir
             const updateDir = async () => {
+                if (this.current_dir != dir) return
+                if (!this.descSortStickersByTime) {
+                    try {
+                        this.pics = await fs.promises.readdir(fullDir)
+                    } catch (err) {
+                        console.error('Failed to update sticker dir', dir, err)
+                    }
+                    return
+                }
                 /** @type {[string, fs.Stats][]} */
                 let fileAndStats
                 try {
@@ -273,7 +292,6 @@ export default {
                     console.error('Failed to update sticker dir', dir, err)
                     return
                 }
-                if (this.current_dir != dir) return
                 this.pics = fileAndStats
                     .filter(([_, stat]) => stat.isFile())
                     .sort(([_a, statA], [_b, statB]) => statB.mtime - statA.mtime)

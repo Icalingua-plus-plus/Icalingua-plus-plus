@@ -101,6 +101,7 @@ const defaultConfig: AllConfig = {
     removeGroupNameEmotes: false,
     usePanguJsSend: false,
     usePanguJsRecv: false,
+    descSortStickersByTime: true,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

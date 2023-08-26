@@ -45,6 +45,7 @@ type AllConfig = {
     removeGroupNameEmotes: boolean
     usePanguJsSend: boolean
     usePanguJsRecv: boolean
+    descSortStickersByTime: boolean
 }
 
 export default AllConfig

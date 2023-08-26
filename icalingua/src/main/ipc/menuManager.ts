@@ -982,6 +982,27 @@ export const updateAppMenu = async () => {
                 label: '定制聊天界面',
                 submenu: [
                     {
+                        label: '隐藏聊天图片',
+                        type: 'checkbox',
+                        checked: getConfig().hideChatImageByDefault,
+                        click: (menuItem) => {
+                            getConfig().hideChatImageByDefault = menuItem.checked
+                            saveConfigFile()
+                            ui.message('聊天图片已自动' + (menuItem.checked ? '隐藏' : '显示'))
+                            ui.setHideChatImageByDefault(menuItem.checked)
+                        },
+                    },
+                    {
+                        label: '禁用超级表情',
+                        type: 'checkbox',
+                        checked: getConfig().disableQLottie,
+                        click: (menuItem) => {
+                            getConfig().disableQLottie = menuItem.checked
+                            saveConfigFile()
+                            ui.setDisableQLottie(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '禁用同会话多图切换',
                         type: 'checkbox',
                         checked: getConfig().singleImageMode,
@@ -1018,27 +1039,6 @@ export const updateAppMenu = async () => {
                             getConfig().linkify = menuItem.checked
                             saveConfigFile()
                             ui.message('高亮 URL 功能已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效')
-                        },
-                    },
-                    {
-                        label: '隐藏聊天图片',
-                        type: 'checkbox',
-                        checked: getConfig().hideChatImageByDefault,
-                        click: (menuItem) => {
-                            getConfig().hideChatImageByDefault = menuItem.checked
-                            saveConfigFile()
-                            ui.message('隐藏聊天图片已' + (menuItem.checked ? '开启' : '关闭'))
-                            ui.setHideChatImageByDefault(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '禁用超级表情',
-                        type: 'checkbox',
-                        checked: getConfig().disableQLottie,
-                        click: (menuItem) => {
-                            getConfig().disableQLottie = menuItem.checked
-                            saveConfigFile()
-                            ui.setDisableQLottie(menuItem.checked)
                         },
                     },
                     {
@@ -1079,6 +1079,19 @@ export const updateAppMenu = async () => {
                             updateAppMenu()
                             updateTrayIcon()
                             ui.setRemoveGroupNameEmotes(menuItem.checked)
+                        },
+                    },
+                    {
+                        label: '时间倒序排列 Stickers',
+                        type: 'checkbox',
+                        checked: getConfig().descSortStickersByTime,
+                        click: (menuItem) => {
+                            getConfig().descSortStickersByTime = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                            ui.message(
+                                '时间倒序排列 Stickers 已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效',
+                            )
                         },
                     },
                     {
