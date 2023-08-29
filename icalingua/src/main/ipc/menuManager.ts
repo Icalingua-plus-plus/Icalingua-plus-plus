@@ -522,6 +522,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         autoHideMenuBar: true,
                         webPreferences: {
                             contextIsolation: false,
+                            preload: path.join(getStaticPath(), 'groupMemberPreload.js'),
                         },
                     })
                     win.maximize()
@@ -535,12 +536,9 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         })
                     }
                     win.webContents.on('dom-ready', () =>
-                        win.webContents.insertCSS(
-                            '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
-                                '.body{padding-top:0 !important;margin:0 !important}',
-                        ),
+                        win.webContents.insertCSS('.t-select__wrap{pointer-events: none;} '),
                     )
-                    await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
+                    await win.loadURL('https://qun.qq.com/#/member-manage/base-manage' + '?gc=' + -room.roomId)
                 },
             }),
         )
@@ -738,6 +736,28 @@ export const updateAppMenu = async () => {
                     fs.rmdirSync(path.join(app.getPath('userData'), 'stickers_preview'), { recursive: true })
                     ui.chroom(0)
                     getMainWindow().reload()
+                },
+            }),
+            new MenuItem({
+                label: 'QQ 群管理',
+                async click() {
+                    const win = newIcalinguaWindow({
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                        },
+                    })
+                    win.maximize()
+                    const cookies = await getCookies('qun.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://qun.qq.com',
+                            domain: '.qun.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://qun.qq.com/#/member-manage/base-manage')
                 },
             }),
             new MenuItem({
