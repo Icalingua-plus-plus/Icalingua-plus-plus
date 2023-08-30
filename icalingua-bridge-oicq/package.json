@@ -10,8 +10,8 @@
         "start": "node build",
         "compile": "tsc --build --verbose && cp -af ./static ./build/ && pnpm copy-packages",
         "compile:win": "tsc --build --verbose && xcopy /e .\\static\\ .\\build\\static\\ && pnpm copy-packages:win",
-        "copy-packages": "mkdir ./build/node_modules && mkdir ./build/node_modules/@icalingua && mkdir ./build/node_modules/@icalingua/storage-providers && mkdir ./build/node_modules/@icalingua/types && cp -a ../packages/storageProviders/build/* ./build/node_modules/@icalingua/storage-providers && cp -a ../packages/types/build/* ./build/node_modules/@icalingua/types",
-        "copy-packages:win": "mkdir .\\build\\node_modules && mkdir .\\build\\node_modules\\@icalingua && xcopy /e ..\\packages\\storageProviders\\build\\ .\\build\\node_modules\\@icalingua\\storage-providers\\ && xcopy /e ..\\packages\\types\\build\\ .\\build\\node_modules\\@icalingua\\types\\",
+        "copy-packages": "mkdir ./build/node_modules && mkdir ./build/node_modules/@icalingua && cp -a ../packages/storageProviders/build ./build/node_modules/@icalingua/storage-providers && cp -a ../packages/types/build ./build/node_modules/@icalingua/types && cp -a ./build/node_modules/@icalingua ./build/@icalingua",
+        "copy-packages:win": "mkdir .\\build\\node_modules && mkdir .\\build\\node_modules\\@icalingua && xcopy /e ..\\packages\\storageProviders\\build\\ .\\build\\node_modules\\@icalingua\\storage-providers\\ && xcopy /e ..\\packages\\types\\build\\ .\\build\\node_modules\\@icalingua\\types\\ && xcopy /e .\\build\\node_modules\\@icalingua\\ .\\build\\@icalingua\\",
         "detach-start": "screen -U pnpm start",
         "dev": "NODE_ENV=development ts-node ."
     },
