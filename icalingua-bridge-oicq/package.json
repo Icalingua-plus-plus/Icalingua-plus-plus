@@ -38,7 +38,7 @@
         "lodash": "^4.17.21",
         "md5": "^2.3.0",
         "minimist": "^1.2.8",
-        "mongodb": "^4.16.0",
+        "mongodb": "^4.17.0",
         "mysql": "^2.18.1",
         "nodejs-base64": "^2.0.0",
         "oicq-icalingua-plus-plus": "^1.23.67",
