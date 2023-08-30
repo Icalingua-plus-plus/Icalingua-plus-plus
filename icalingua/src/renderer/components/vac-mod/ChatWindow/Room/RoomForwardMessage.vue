@@ -61,9 +61,10 @@ export default {
         },
         recallMsgs() {
             this.msgsToForward.forEach((msg, index) => {
+                const waitTime = Math.floor(index / 5) * 1000
                 setTimeout(() => {
                     ipc.deleteMessage(this.roomId, msg)
-                }, index * 200)
+                }, index * 200 + waitTime)
             })
             this.stopForward(false)
         },
