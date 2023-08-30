@@ -715,6 +715,7 @@ const adapter: typeof oicqAdapter = {
         const groupsAll: Array<GroupInfo & { sc: string }> = groups.map((it) => ({
             group_id: it.group_id,
             group_name: it.group_name,
+            group_remark: '',
             shutup_time_me: 0,
             grade: it.group_level,
             create_time: it.group_create_time,
@@ -1118,17 +1119,29 @@ const adapter: typeof oicqAdapter = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },
+    setGroupRemark(gin: number, remark: string): any {
+        bot.setGroupRemark(gin, remark)
+    },
+    setFriendRemark(uin: number, remark: string): any {
+        bot.setFriendRemark(uin, remark)
+    },
     setGroupKick(gin: number, uin: number): any {
         bot.setGroupKick(gin, uin)
     },
     setGroupLeave(gin: number): any {
         bot.setGroupLeave(gin)
     },
+    async getFriend(uin: number, resolve: (friend: FriendInfo) => any) {
+        const list = await bot.getFriendList()
+        const friend = list.find((f) => f.user_id === uin)
+        resolve(friend && { ...friend, age: 0, sex: 'unknown' })
+    },
     async getGroup(gin: number, resolve: (group: GroupInfo) => any) {
         const it = await bot.getGroupInfo(gin)
         await resolve({
             group_id: it.group_id,
             group_name: it.group_name,
+            group_remark: '',
             shutup_time_me: 0,
             grade: it.group_level,
             create_time: it.group_create_time,

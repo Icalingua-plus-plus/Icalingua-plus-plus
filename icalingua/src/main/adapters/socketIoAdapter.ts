@@ -14,7 +14,7 @@ import fileType from 'file-type'
 import { Notification } from 'freedesktop-notifications'
 import fs from 'fs'
 import { sign } from '@noble/ed25519'
-import { DeviceEventData, FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
+import { DeviceEventData, FakeMessage, FileElem, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import { io, Socket } from 'socket.io-client'
 import formatDate from '../../utils/formatDate'
@@ -337,6 +337,11 @@ const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },
+    getFriend(uin: number): Promise<FriendInfo> {
+        return new Promise((resolve) => {
+            socket.emit('getFriend', uin, resolve)
+        })
+    },
     getGroup(gin: number): Promise<GroupInfo> {
         return new Promise((resolve) => {
             socket.emit('getGroup', gin, resolve)
@@ -359,6 +364,12 @@ const adapter: Adapter = {
     },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         socket.emit('setGroupAnonymousBan', gin, flag, duration)
+    },
+    setGroupRemark(gin: number, remark: string): any {
+        socket.emit('setGroupRemark', gin, remark)
+    },
+    setFriendRemark(uin: number, remark: string): any {
+        socket.emit('setFriendRemark', uin, remark)
     },
     makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number): any {
         socket.emit('makeForward', fakes, dm, origin, target)

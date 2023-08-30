@@ -37,6 +37,8 @@ export const {
     getGroupFileMeta,
     getUnreadCount,
     getFirstUnreadRoom,
+    getFriend,
+    getGroup,
     getGroups,
     getSelectedRoom,
     getRoom,
@@ -196,6 +198,8 @@ ipcMain.on('setGroupKick', (_, gin, uin) => adapter.setGroupKick(gin, uin))
 ipcMain.on('setGroupLeave', (_, gin) => adapter.setGroupLeave(gin))
 ipcMain.on('setGroupBan', (_, gin, uin, duration?) => adapter.setGroupBan(gin, uin, duration))
 ipcMain.on('setGroupAnonymousBan', (_, gin, flag, duration?) => adapter.setGroupAnonymousBan(gin, flag, duration))
+ipcMain.on('setGroupRemark', (_, gin, remark) => adapter.setGroupRemark(gin, remark))
+ipcMain.on('setFriendRemark', (_, uin, remark) => adapter.setFriendRemark(uin, remark))
 ipcMain.on('makeForward', (_, fakes, dm, origin, target) => adapter.makeForward(fakes, dm, origin, target))
 ipcMain.handle('getSystemMsg', async () => await adapter.getSystemMsg())
 ipcMain.on('handleRequest', (_, type: 'friend' | 'group', flag: string, accept: boolean = true) =>
@@ -209,6 +213,7 @@ ipcMain.handle('getAccount', () => {
         ...adapterAccount,
     }
 })
+ipcMain.handle('getFriend', (_, uin: number) => adapter.getFriend(uin))
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))

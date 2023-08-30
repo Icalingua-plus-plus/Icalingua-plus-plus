@@ -1,7 +1,7 @@
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
-import { FakeMessage, FileElem, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
+import { FakeMessage, FileElem, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import SearchableGroup from './SearchableGroup'
@@ -28,6 +28,8 @@ type CookiesDomain =
 
 export default interface Adapter {
     getMsgNewURL(id: string): Promise<string>
+
+    getFriend(gin: number): Promise<FriendInfo>
 
     getGroup(gin: number): Promise<GroupInfo>
 
@@ -156,6 +158,10 @@ export default interface Adapter {
     setGroupBan(gin: number, uin: number, duration?: number): any
 
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any
+
+    setGroupRemark(gin: number, remark: string): any
+
+    setFriendRemark(uin: number, remark: string): any
 
     requestGfsToken(gin: number): Promise<string>
 

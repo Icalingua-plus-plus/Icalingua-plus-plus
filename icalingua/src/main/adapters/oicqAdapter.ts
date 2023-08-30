@@ -54,6 +54,7 @@ import {
     Sendable,
     SyncMessageEventData,
     SyncReadedEventData,
+    SyncRemarkEventData,
 } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import createRoom from '../../utils/createRoom'
@@ -129,7 +130,7 @@ const eventHandlers = {
         else if (groupId && isSelfMsg) senderName = 'You'
         else if (groupId) senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
         else senderName = (data.sender as FriendInfo).remark || data.sender.nickname
-        let roomName = 'group_name' in data ? data.group_name : senderName
+        let roomName = 'group_name' in data ? data.group_remark || data.group_name : senderName
 
         const message: Message = {
             senderId: senderId,
@@ -155,7 +156,9 @@ const eventHandlers = {
         if (!room) {
             if (groupId) {
                 const group = bot.gl.get(groupId)
-                if (group && group.group_name !== roomName) roomName = group.group_name
+                if (group) {
+                    roomName = group.group_remark || group.group_name
+                }
             } else if (data.post_type === 'sync') {
                 const info = await adapter.getFriendInfo(data.user_id)
                 roomName = info.remark || info.nickname
@@ -483,8 +486,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(groupId)
             let roomName = groupId.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -535,8 +538,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(groupId)
             let roomName = groupId.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -587,8 +590,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(data.group_id)
             let roomName = data.group_id.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -647,8 +650,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(data.group_id)
             let roomName = data.group_id.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -690,8 +693,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(data.group_id)
             let roomName = data.group_id.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -732,8 +735,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(data.group_id)
             let roomName = data.group_id.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -775,8 +778,8 @@ const eventHandlers = {
         if (!room) {
             const group = bot.gl.get(data.group_id)
             let roomName = data.group_id.toString()
-            if (group && group.group_name) {
-                roomName = group.group_name
+            if (group && (group.group_remark || group.group_name)) {
+                roomName = group.group_remark || group.group_name
             }
             // create room
             room = createRoom(roomId, roomName)
@@ -828,6 +831,25 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         adapter.clearRoomUnread(roomId)
+    },
+    async syncRemark(data: SyncRemarkEventData) {
+        if (data.sub_type === 'group') {
+            const roomId = -data.group_id
+            const room = await storage.getRoom(roomId)
+            if (room) {
+                room.roomName = data.remark || bot.gl.get(data.group_id).group_name
+                ui.updateRoom(room)
+                storage.updateRoom(roomId, room)
+            }
+        } else {
+            const roomId = data.user_id
+            const room = await storage.getRoom(roomId)
+            if (room) {
+                room.roomName = data.remark || bot.fl.get(data.user_id).nickname
+                ui.updateRoom(room)
+                storage.updateRoom(roomId, room)
+            }
+        }
     },
     //TODO 这里应该有好多重复代码的说，应该可以合并一下
     async friendIncrease(data: FriendIncreaseEventData) {
@@ -1046,8 +1068,8 @@ const initStorage = async () => {
                 //更新群的名称
                 if (e.roomId > -1) return
                 const group = bot.gl.get(-e.roomId)
-                if (group && group.group_name !== e.roomName) {
-                    storage.updateRoom(e.roomId, { roomName: group.group_name })
+                if (group && (group.group_remark || group.group_name) !== e.roomName) {
+                    storage.updateRoom(e.roomId, { roomName: group.group_remark || group.group_name })
                 }
             })
         })
@@ -1086,6 +1108,7 @@ const attachEventHandler = () => {
     bot.on('request.group.invite', eventHandlers.requestAdd)
     bot.on('request.group.add', eventHandlers.requestAdd)
     bot.on('sync.readed', eventHandlers.syncRead)
+    bot.on('sync.remark', eventHandlers.syncRemark)
 }
 const attachLoginHandler = () => {
     bot.on('system.login.slider', loginHandlers.slider)
@@ -1143,6 +1166,9 @@ const adapter: OicqAdapter = {
         }
         return 'error'
     },
+    async getFriend(uin: number): Promise<FriendInfo> {
+        return bot.fl.get(uin)
+    },
     async getGroup(gin): Promise<GroupInfo> {
         return bot.gl.get(gin)
     },
@@ -1171,6 +1197,12 @@ const adapter: OicqAdapter = {
     },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
+    },
+    setGroupRemark(gin: number, remark: string): any {
+        bot.setGroupRemark(gin, remark)
+    },
+    setFriendRemark(uin: number, remark: string): any {
+        bot.setFriendRemark(uin, remark)
     },
     async makeForward(
         fakes: FakeMessage | Iterable<FakeMessage>,
@@ -1674,7 +1706,7 @@ const adapter: OicqAdapter = {
         const groupsAll = []
         while (!iterG.done) {
             const f = { ...iterG.value }
-            f.sc = (f.group_name + f.group_id).toUpperCase()
+            f.sc = (f.group_name + f.group_remark + f.group_id).toUpperCase()
             groupsAll.push(f)
             iterG = groups.next()
         }

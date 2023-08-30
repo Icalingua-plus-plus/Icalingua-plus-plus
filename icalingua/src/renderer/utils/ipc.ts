@@ -8,7 +8,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
-import { FakeMessage, MemberInfo } from 'oicq-icalingua-plus-plus'
+import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 
 const ipc = {
@@ -196,13 +196,22 @@ const ipc = {
     setGroupAnonymousBan(gin: number, flag: string, duration?: number) {
         ipcRenderer.send('setGroupAnonymousBan', gin, flag, duration)
     },
+    setGroupRemark(gin: number, remark: string) {
+        ipcRenderer.send('setGroupRemark', gin, remark)
+    },
+    setFriendRemark(uin: number, remark: string) {
+        ipcRenderer.send('setFriendRemark', uin, remark)
+    },
     setCheckUpdate(enabled: boolean) {
         ipcRenderer.send('setCheckUpdate', enabled)
     },
     deleteMessage(roomId: number, messageId: string) {
         ipcRenderer.send('deleteMessage', roomId, messageId)
     },
-    async getGroup(gin: number): Promise<SearchableGroup> {
+    async getFriend(uin: number): Promise<FriendInfo> {
+        return await ipcRenderer.invoke('getFriend', uin)
+    },
+    async getGroup(gin: number): Promise<GroupInfo> {
         return await ipcRenderer.invoke('getGroup', gin)
     },
     async getGroupMembers(gin: number): Promise<MemberInfo[]> {

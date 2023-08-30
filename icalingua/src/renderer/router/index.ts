@@ -6,6 +6,7 @@ import LoginView from '../views/LoginView.vue'
 import Aria2Settings from '../views/Aria2Settings.vue'
 import IgnoreManage from '../views/IgnoreManageView.vue'
 import GroupNickEdit from '../views/GroupNickEdit.vue'
+import RemarkNameEdit from '../views/RemarkNameEdit.vue'
 import FriendRequest from '../views/FriendRequest.vue'
 import KickAndExit from '../views/KickAndExit.vue'
 import OpenForward from '../views/OpenForward.vue'
@@ -28,6 +29,11 @@ export default new Router({
             path: '/groupNickEdit/:gin/:gn/:nick',
             name: 'group-nick-edit-page',
             component: GroupNickEdit,
+        },
+        {
+            path: '/remarkNameEdit/:uin/:gin/:name/:remark',
+            name: 'remark-name-edit-page',
+            component: RemarkNameEdit,
         },
         {
             path: '/kickAndExit/:action/:gin/:uin/:groupName/:userName',

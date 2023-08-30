@@ -366,4 +366,10 @@ export default class extends EventEmitter<{
         this.callApi<{
             messages: GroupMessage[]
         }>('get_group_msg_history', { group_id, message_seq })
+    public setGroupRemark = (group_id: number, remark: string) => {
+        // not implemented
+    }
+    public setFriendRemark = (user_id: number, remark: string) => {
+        // not implemented
+    }
 }
