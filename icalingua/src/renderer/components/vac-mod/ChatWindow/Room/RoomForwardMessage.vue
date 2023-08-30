@@ -63,7 +63,7 @@ export default {
             this.msgsToForward.forEach((msg, index) => {
                 setTimeout(() => {
                     ipc.deleteMessage(this.roomId, msg)
-                }, index * 50)
+                }, index * 200)
             })
             this.stopForward(false)
         },
