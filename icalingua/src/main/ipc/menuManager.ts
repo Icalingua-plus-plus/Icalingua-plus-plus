@@ -598,6 +598,36 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         )
         menu.append(
             new MenuItem({
+                label: '群成员管理 (旧版)',
+                async click() {
+                    const win = newIcalinguaWindow({
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                        },
+                    })
+                    win.maximize()
+                    const cookies = await getCookies('qun.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://qun.qq.com',
+                            domain: '.qun.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    win.webContents.on('dom-ready', () =>
+                        win.webContents.insertCSS(
+                            '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
+                                '.body{padding-top:0 !important;margin:0 !important}',
+                        ),
+                    )
+                    await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
                 label: '导出群成员',
                 click() {
                     exportGroupMembers(-room.roomId)
@@ -811,7 +841,7 @@ export const updateAppMenu = async () => {
                             value: cookies[i],
                         })
                     }
-                    await win.loadURL('https://qun.qq.com/#/member-manage/base-manage')
+                    await win.loadURL('https://qun.qq.com/member.html')
                 },
             }),
             new MenuItem({
