@@ -570,7 +570,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         )
         menu.append(
             new MenuItem({
-                label: '群成员管理',
+                label: '群成员管理 (新版)',
                 async click() {
                     const win = newIcalinguaWindow({
                         autoHideMenuBar: true,

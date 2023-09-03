@@ -151,6 +151,7 @@
                     <transition name="vac-fade-stickers">
                         <Stickers
                             v-show="panel === 'stickers'"
+                            :open="panel === 'stickers'"
                             @send="sendSticker"
                             @close="panel = ''"
                             @selectEmoji="

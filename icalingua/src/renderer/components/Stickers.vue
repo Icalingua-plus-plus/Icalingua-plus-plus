@@ -133,6 +133,17 @@ function getRecent(name) {
 export default {
     name: 'Stickers',
     components: { VEmojiPicker },
+    watch: {
+        panel() {
+            this.recentFace = getRecent('recentFace')
+        },
+        open() {
+            this.recentFace = getRecent('recentFace')
+        },
+    },
+    props: {
+        open: { type: Boolean, required: false, default: false },
+    },
     data() {
         return {
             remote_pics: [],
@@ -320,12 +331,15 @@ export default {
         },
         pushRecent(name, img, max, elem, container) {
             const index = this[name].indexOf(img)
+            let recent = this[name]
             if (index != -1) {
-                this[name] = [img, ...this[name].slice(0, index), ...this[name].slice(index + 1)]
+                recent = [img, ...recent.slice(0, index), ...recent.slice(index + 1)]
             } else {
-                this[name] = [img, ...this[name].slice(0, max - 1)]
+                recent = [img, ...recent.slice(0, max - 1)]
             }
-            localStorage[name] = JSON.stringify(this[name])
+            localStorage[name] = JSON.stringify(recent)
+            if (name === 'recentFace') return
+            this[name] = recent
             if (!elem) return
             // 保持当前点击的表情位置不变
             const oldY = elem.getBoundingClientRect().y
