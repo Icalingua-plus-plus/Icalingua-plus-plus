@@ -323,13 +323,13 @@ export default {
             )
         },
         avatar() {
-            if (this.$route.name === 'history-page' && this.message.head_img) return this.message.head_img
             if (this.message.mirai && this.message.mirai.eqq.avatarMd5) {
                 return getImageUrlByMd5(this.message.mirai.eqq.avatarMd5)
             }
             if (this.message.mirai && this.message.mirai.eqq.avatarUrl) {
                 return this.message.mirai.eqq.avatarUrl
             }
+            if (this.$route.name === 'history-page' && this.message.head_img) return this.message.head_img
             return getAvatarUrl(this.message.senderId)
         },
     },
