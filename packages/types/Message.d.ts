@@ -33,4 +33,5 @@ export default interface Message {
     hide?: boolean
     bubble_id?: number
     subid?: number
+    head_img?: string
 }

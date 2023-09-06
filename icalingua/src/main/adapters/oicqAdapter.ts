@@ -1797,6 +1797,7 @@ const adapter: OicqAdapter = {
                     time: data.time * 1000,
                     files: [],
                     bubble_id: data.bubble_id,
+                    head_img: data.head_img,
                 }
                 await processMessage(data.message, message, {}, ui.getSelectedRoomId())
             } catch (e) {
