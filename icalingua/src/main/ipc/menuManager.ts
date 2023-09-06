@@ -570,60 +570,68 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         )
         menu.append(
             new MenuItem({
-                label: '群成员管理 (新版)',
-                async click() {
-                    const win = newIcalinguaWindow({
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            contextIsolation: false,
-                            preload: path.join(getStaticPath(), 'groupMemberPreload.js'),
+                label: '群成员管理',
+                submenu: [
+                    {
+                        label: '新版',
+                        async click() {
+                            const win = newIcalinguaWindow({
+                                autoHideMenuBar: true,
+                                webPreferences: {
+                                    contextIsolation: false,
+                                    preload: path.join(getStaticPath(), 'groupMemberPreload.js'),
+                                },
+                            })
+                            win.maximize()
+                            const cookies = await getCookies('qun.qq.com')
+                            for (const i in cookies) {
+                                await win.webContents.session.cookies.set({
+                                    url: 'https://qun.qq.com',
+                                    domain: '.qun.qq.com',
+                                    name: i,
+                                    value: cookies[i],
+                                })
+                            }
+                            win.webContents.on('dom-ready', () =>
+                                win.webContents.insertCSS(
+                                    '.t-select__wrap{pointer-events: none;} ' +
+                                        '.t-default-menu{display: none !important;}',
+                                ),
+                            )
+                            await win.loadURL(
+                                'https://qun.qq.com/manage.html#/member-manage/base-manage' + '?gc=' + -room.roomId,
+                            )
                         },
-                    })
-                    win.maximize()
-                    const cookies = await getCookies('qun.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://qun.qq.com',
-                            domain: '.qun.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    win.webContents.on('dom-ready', () =>
-                        win.webContents.insertCSS('.t-select__wrap{pointer-events: none;} '),
-                    )
-                    await win.loadURL('https://qun.qq.com/#/member-manage/base-manage' + '?gc=' + -room.roomId)
-                },
-            }),
-        )
-        menu.append(
-            new MenuItem({
-                label: '群成员管理 (旧版)',
-                async click() {
-                    const win = newIcalinguaWindow({
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            contextIsolation: false,
+                    },
+                    {
+                        label: '旧版',
+                        async click() {
+                            const win = newIcalinguaWindow({
+                                autoHideMenuBar: true,
+                                webPreferences: {
+                                    contextIsolation: false,
+                                },
+                            })
+                            win.maximize()
+                            const cookies = await getCookies('qun.qq.com')
+                            for (const i in cookies) {
+                                await win.webContents.session.cookies.set({
+                                    url: 'https://qun.qq.com',
+                                    domain: '.qun.qq.com',
+                                    name: i,
+                                    value: cookies[i],
+                                })
+                            }
+                            win.webContents.on('dom-ready', () =>
+                                win.webContents.insertCSS(
+                                    '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
+                                        '.body{padding-top:0 !important;margin:0 !important}',
+                                ),
+                            )
+                            await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
                         },
-                    })
-                    win.maximize()
-                    const cookies = await getCookies('qun.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://qun.qq.com',
-                            domain: '.qun.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    win.webContents.on('dom-ready', () =>
-                        win.webContents.insertCSS(
-                            '.header,.footer>p:not(:last-child),#changeGroup{display:none} ' +
-                                '.body{padding-top:0 !important;margin:0 !important}',
-                        ),
-                    )
-                    await win.loadURL('https://qun.qq.com/member.html#gid=' + -room.roomId)
-                },
+                    },
+                ],
             }),
         )
         menu.append(
@@ -824,25 +832,52 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: 'QQ 群管理',
-                async click() {
-                    const win = newIcalinguaWindow({
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            contextIsolation: false,
+                submenu: [
+                    {
+                        label: '新版',
+                        async click() {
+                            const win = newIcalinguaWindow({
+                                autoHideMenuBar: true,
+                                webPreferences: {
+                                    contextIsolation: false,
+                                },
+                            })
+                            win.maximize()
+                            const cookies = await getCookies('qun.qq.com')
+                            for (const i in cookies) {
+                                await win.webContents.session.cookies.set({
+                                    url: 'https://qun.qq.com',
+                                    domain: '.qun.qq.com',
+                                    name: i,
+                                    value: cookies[i],
+                                })
+                            }
+                            await win.loadURL('https://qun.qq.com/manage.html#/member-manage/base-manage')
                         },
-                    })
-                    win.maximize()
-                    const cookies = await getCookies('qun.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://qun.qq.com',
-                            domain: '.qun.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    await win.loadURL('https://qun.qq.com/member.html')
-                },
+                    },
+                    {
+                        label: '旧版',
+                        async click() {
+                            const win = newIcalinguaWindow({
+                                autoHideMenuBar: true,
+                                webPreferences: {
+                                    contextIsolation: false,
+                                },
+                            })
+                            win.maximize()
+                            const cookies = await getCookies('qun.qq.com')
+                            for (const i in cookies) {
+                                await win.webContents.session.cookies.set({
+                                    url: 'https://qun.qq.com',
+                                    domain: '.qun.qq.com',
+                                    name: i,
+                                    value: cookies[i],
+                                })
+                            }
+                            await win.loadURL('https://qun.qq.com/member.html')
+                        },
+                    },
+                ],
             }),
             new MenuItem({
                 label: '开发者工具',
