@@ -2229,14 +2229,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
         new MenuItem({
             label: `查看头像`,
             click: () => {
-                if (message.head_img) {
-                    openImage(message.head_img)
-                } else if (message.mirai && message.mirai.eqq.avatarMd5) {
+                if (message.mirai && message.mirai.eqq.avatarMd5) {
                     openImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
                 } else if (message.mirai && message.mirai.eqq.avatarUrl) {
                     const QCLOUD_AVATAR_REGEX =
                         /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
                     if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl)) openImage(message.mirai.eqq.avatarUrl)
+                } else if (message.head_img) {
+                    openImage(message.head_img)
                 } else {
                     openImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`)
                 }
@@ -2248,15 +2248,15 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
             label: '下载头像',
             click: () => {
                 const basename = `${message.username}(${message.senderId})的头像_${new Date().getTime()}`
-                if (message.head_img) {
-                    downloadImage(message.head_img, false, basename)
-                } else if (message.mirai && message.mirai.eqq.avatarMd5) {
+                if (message.mirai && message.mirai.eqq.avatarMd5) {
                     downloadImage(getImageUrlByMd5(message.mirai.eqq.avatarMd5))
                 } else if (message.mirai && message.mirai.eqq.avatarUrl) {
                     const QCLOUD_AVATAR_REGEX =
                         /^https:\/\/[a-z0-9\-]+\.cos\.[a-z\-]+\.myqcloud\.com\/[0-9]+-[0-9]+\.jpg$/
                     if (QCLOUD_AVATAR_REGEX.test(message.mirai.eqq.avatarUrl))
                         downloadImage(message.mirai.eqq.avatarUrl)
+                } else if (message.head_img) {
+                    downloadImage(message.head_img, false, basename)
                 } else {
                     downloadImage(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`, false, basename)
                 }
