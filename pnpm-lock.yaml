@@ -50,7 +50,7 @@ importers:
       css-loader: ^5.2.7
       csv-writer: ^1.6.0
       del: ^3.0.0
-      electron: 22.3.3
+      electron: 22.3.23
       electron-builder: ^23.6.0
       electron-debug: ^3.2.0
       electron-devtools-installer: ^3.2.0
@@ -162,7 +162,7 @@ importers:
       css-loader: 5.2.7_webpack@4.47.0
       csv-writer: 1.6.0
       del: 3.0.0
-      electron: 22.3.3
+      electron: 22.3.23
       electron-builder: 23.6.0
       electron-debug: 3.2.0
       electron-devtools-installer: 3.2.0
@@ -3644,8 +3644,8 @@ packages:
     resolution: {integrity: sha512-WHVocJYavUwVgVViC0ORikPHQquXwVh939TaelZ4WDqpWgTX/FsGhl/+P4qBUAGcRvtOgDgC+xftNWWp2RUTAQ==}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001527
-      electron-to-chromium: 1.4.509
+      caniuse-lite: 1.0.30001528
+      electron-to-chromium: 1.4.510
     dev: true
 
   /browserslist/4.21.10:
@@ -3653,8 +3653,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001527
-      electron-to-chromium: 1.4.509
+      caniuse-lite: 1.0.30001528
+      electron-to-chromium: 1.4.510
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11_browserslist@4.21.10
     dev: true
@@ -3894,8 +3894,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /caniuse-lite/1.0.30001527:
-    resolution: {integrity: sha512-YkJi7RwPgWtXVSgK4lG9AHH57nSzvvOp9MesgXmw4Q7n0C3H04L0foHqfxcmSAm5AcWb8dW9AYj2tR7/5GnddQ==}
+  /caniuse-lite/1.0.30001528:
+    resolution: {integrity: sha512-0Db4yyjR9QMNlsxh+kKWzQtkyflkG/snYheSzkjmvdEtEXB1+jt7A2HmSEiO6XIJPIbo92lHNGNySvE5pZcs5Q==}
     dev: true
 
   /center-align/0.1.3:
@@ -5220,12 +5220,12 @@ packages:
       - supports-color
     dev: true
 
-  /electron-to-chromium/1.4.509:
-    resolution: {integrity: sha512-G5KlSWY0zzhANtX15tkikHl4WB7zil2Y65oT52EZUL194abjUXBZym12Ht7Bhuwm/G3LJFEqMADyv2Cks56dmg==}
+  /electron-to-chromium/1.4.510:
+    resolution: {integrity: sha512-xPfLIPFcN/WLXBpQ/K4UgE98oUBO5Tia6BD4rkSR0wE7ep/PwBVlgvPJQrIBpmJGVAmUzwPKuDbVt9XV6+uC2g==}
     dev: true
 
-  /electron/22.3.3:
-    resolution: {integrity: sha512-+ZJDVfyhw7J2A46/kGKscktIhzOisTeJKrUBJLXa7PTB+U+cwyoxCBIaIOnDsdicBCX4nAc1mo6YMQjQQdAmgw==}
+  /electron/22.3.23:
+    resolution: {integrity: sha512-2p6NsLFPfM2RmgATchjKZKBUP3O6NxQMWOrHt9W5U2GRtfI8qWlicUR1wnh5D1VLt4c1YsjvpF6dct+1JNRubA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
     requiresBuild: true
