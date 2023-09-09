@@ -849,7 +849,7 @@ export default {
         if (isAdapter) {
             this.recordPath = (await ipc.getSettings()).server + '/records'
         } else {
-            this.recordPath = 'file:///' + (await ipc.getStorePath()) + '/records'
+            this.recordPath = 'file://' + (await ipc.getStorePath()) + '/records'
         }
     },
     methods: {

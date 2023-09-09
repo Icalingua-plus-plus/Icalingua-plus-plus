@@ -199,6 +199,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         },
         {
             label: '自动下载',
+            visible: getConfig().adapter !== 'socketIo',
             submenu: [
                 {
                     type: 'checkbox',

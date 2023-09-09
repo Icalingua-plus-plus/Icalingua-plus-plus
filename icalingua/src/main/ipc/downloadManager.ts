@@ -252,19 +252,17 @@ export const downloadFileByMessageData = async (
     if (data.action === 'download') {
         if (data.message.file.type.includes('image')) {
             await downloadImage(data.message.file.url, saveAs)
-        } else if (data.message.file.type.toLowerCase().includes('audio/')) {
-            const file = data.message.file
-            if (file.url === file.name) {
-                let recordPath = ''
-                if (getConfig().adapter === 'socketIo') {
-                    recordPath = getConfig().server + '/records/' + file.url
-                } else {
-                    recordPath = path.join(app.getPath('userData'), 'records', file.url)
-                }
-                await download(recordPath, 'QQ_Record_' + file.url, undefined, saveAs)
+        } else if (
+            data.message.file.url === data.message.file.name &&
+            data.message.file.type.toLowerCase().includes('audio/')
+        ) {
+            let recordPath = ''
+            if (getConfig().adapter === 'socketIo') {
+                recordPath = getConfig().server + '/records/' + data.message.file.url
             } else {
-                await download(file.url, 'QQ_Record_' + new Date().getTime() + '.ogg', undefined, saveAs)
+                recordPath = 'file://' + path.join(app.getPath('userData'), 'records', data.message.file.url)
             }
+            await download(recordPath, 'QQ_Record_' + data.message.file.url, undefined, saveAs)
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
                 await downloadGroupFile(-data.room.roomId, data.message.file.fid, saveAs)

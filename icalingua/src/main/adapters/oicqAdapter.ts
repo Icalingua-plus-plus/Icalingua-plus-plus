@@ -321,7 +321,12 @@ const eventHandlers = {
         // 加上同一秒收到消息的id，防止消息乱序
         room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
-        if (message.file && message.file.name && room.autoDownload) {
+        if (
+            message.file &&
+            message.file.name &&
+            room.autoDownload &&
+            !(message.file.url === message.file.name && (message.file.type || '').toLowerCase().includes('audio/'))
+        ) {
             download(message.file.url, message.file.name, room.downloadPath)
         }
         message.time = data.time * 1000 + lastReceivedMessageInfo.id
