@@ -880,6 +880,28 @@ export const updateAppMenu = async () => {
                 ],
             }),
             new MenuItem({
+                label: 'QQ 空间',
+                async click() {
+                    const win = newIcalinguaWindow({
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                        },
+                    })
+                    win.maximize()
+                    const cookies = await getCookies('qzone.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://user.qzone.qq.com',
+                            domain: '.qzone.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://user.qzone.qq.com/' + getUin())
+                },
+            }),
+            new MenuItem({
                 label: '开发者工具',
                 role: 'toggleDevTools',
             }),
