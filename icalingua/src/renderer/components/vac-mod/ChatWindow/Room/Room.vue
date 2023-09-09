@@ -932,7 +932,7 @@ export default {
                     }
                     if (msg.files) {
                         msg.files.forEach((file) => {
-                            if (file.type.startsWith('image/'))
+                            if (file.type.startsWith('image/')) {
                                 singleMessage.message.push({
                                     type: 'image',
                                     data: {
@@ -942,6 +942,29 @@ export default {
                                         type: 'image',
                                     },
                                 })
+                            } else if (file.name === file.url && file.type.toLowerCase().includes('audio/')) {
+                                singleMessage.message.push({
+                                    type: 'record',
+                                    data: {
+                                        file: file.fid,
+                                    },
+                                })
+                                if (multi) {
+                                    singleMessage.message.push({
+                                        type: 'text',
+                                        data: {
+                                            text: '[语音] 语音无法合并转发',
+                                        },
+                                    })
+                                }
+                            } else {
+                                singleMessage.message.push({
+                                    type: 'text',
+                                    data: {
+                                        text: ' 该文件不支持转发',
+                                    },
+                                })
+                            }
                         })
                     }
                     if (msg.code) {
