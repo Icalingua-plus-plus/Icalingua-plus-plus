@@ -80,6 +80,7 @@ const registerDownload = (item: DownloadItem, url: string, fileName: string) => 
 }
 
 export const download = async (url: string, out: string, dir?: string, saveAs = false) => {
+    url = new URL(url).href
     if (saveAs) {
         const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() || getMainWindow(), {
             defaultPath: dir ? path.join(dir, out) : out,
