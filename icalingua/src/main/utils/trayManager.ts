@@ -242,6 +242,17 @@ export const updateTrayMenu = async () => {
         )
     menu.append(
         new MenuItem({
+            label: '注销',
+            sublabel: '删除记录的密码',
+            visible: getConfig().adapter === 'oicq',
+            click: () => {
+                getConfig().account.password = ''
+                exit()
+            },
+        }),
+    )
+    menu.append(
+        new MenuItem({
             label: '退出',
             type: 'normal',
             click: exit,

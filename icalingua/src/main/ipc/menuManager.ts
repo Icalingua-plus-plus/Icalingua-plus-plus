@@ -199,7 +199,8 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         },
         {
             label: '自动下载',
-            visible: getConfig().adapter !== 'socketIo',
+            enabled: getConfig().adapter === 'oicq',
+            sublabel: getConfig().adapter === 'oicq' ? undefined : 'bridge 暂不支持',
             submenu: [
                 {
                     type: 'checkbox',
@@ -907,6 +908,15 @@ export const updateAppMenu = async () => {
                 role: 'close',
                 visible: false,
                 accelerator: 'CommandOrControl+H',
+            }),
+            new MenuItem({
+                label: '注销',
+                sublabel: '删除记录的密码',
+                visible: getConfig().adapter === 'oicq',
+                click: () => {
+                    getConfig().account.password = ''
+                    exit()
+                },
             }),
             new MenuItem({
                 label: '退出',
