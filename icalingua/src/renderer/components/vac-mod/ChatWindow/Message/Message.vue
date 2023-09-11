@@ -160,10 +160,20 @@
                             </template>
                         </message-image>
 
-                        <div v-else-if="isVideo" class="vac-video-container">
-                            <video width="100%" height="100%" controls :src="message.file.url">
-                                <source :src="message.file.url" />
-                            </video>
+                        <div v-if="isVideo" class="vac-video-container">
+                            <div v-if="hideChatVideoByDefault">
+                                <details>
+                                    <summary>Hidden video</summary>
+                                    <video width="100%" height="100%" controls :src="message.file.url">
+                                        <source :src="message.file.url" />
+                                    </video>
+                                </details>
+                            </div>
+                            <div v-else="hideChatVideoByDefault">
+                                <video width="100%" height="100%" controls :src="message.file.url">
+                                    <source :src="message.file.url" />
+                                </video>
+                            </div>
                         </div>
 
                         <div v-else-if="isAudio" class="vac-audio-message">
@@ -270,6 +280,7 @@ export default {
         forwardResId: { type: String, required: false },
         msgsToForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
+        hideChatVideoByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
         recordPath: { type: String, required: true },

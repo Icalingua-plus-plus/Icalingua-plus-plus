@@ -89,6 +89,7 @@ const defaultConfig: AllConfig = {
     optimizeMethod: 'infinite-loading',
     silentFetchHistory: false,
     hideChatImageByDefault: false,
+    hideChatVideoByDefault: false,
     disableChatGroups: false,
     singleImageMode: false,
     disableChatGroupsRedPoint: false,

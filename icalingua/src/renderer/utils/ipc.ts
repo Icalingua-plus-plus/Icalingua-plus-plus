@@ -226,6 +226,9 @@ const ipc = {
     async getHideChatImageByDefault(): Promise<boolean> {
         return (await this.getSettings()).hideChatImageByDefault
     },
+    async getHideChatVideoByDefault(): Promise<boolean> {
+        return (await this.getSettings()).hideChatVideoByDefault
+    },
     lock() {
         ipcRenderer.send('lock')
     },

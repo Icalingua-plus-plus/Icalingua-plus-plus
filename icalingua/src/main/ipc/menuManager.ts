@@ -1132,6 +1132,17 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '隐藏聊天视频',
+                        type: 'checkbox',
+                        checked: getConfig().hideChatVideoByDefault,
+                        click: (menuItem) => {
+                            getConfig().hideChatVideoByDefault = menuItem.checked
+                            saveConfigFile()
+                            ui.message('聊天视频已自动' + (menuItem.checked ? '隐藏' : '显示'))
+                            ui.setHideChatVideoByDefault(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '禁用超级表情',
                         type: 'checkbox',
                         checked: getConfig().disableQLottie,

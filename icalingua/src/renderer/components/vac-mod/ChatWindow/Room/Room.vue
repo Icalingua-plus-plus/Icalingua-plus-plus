@@ -123,6 +123,7 @@
                                 @del-msg-to-forward="delmsgToForward"
                                 @scroll-to-message="scrollToMessage"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
+                                :hide-chat-video-by-default="hideChatVideoByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
                                 :disableQLottie="disableQLottie"
                                 :record-path="recordPath"
@@ -551,6 +552,7 @@ export default {
             optimizeMethod: 'infinite-loading',
             scrollingTolastMessage: 0,
             hideChatImageByDefault: false,
+            hideChatVideoByDefault: false,
             localImageViewerByDefault: false,
             disableQLottie: false,
             recordPath: '',
@@ -836,6 +838,10 @@ export default {
         this.hideChatImageByDefault = await ipc.getHideChatImageByDefault()
         ipcRenderer.on('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
             this.hideChatImageByDefault = hideChatImageByDefault
+        })
+        this.hideChatVideoByDefault = await ipc.getHideChatVideoByDefault()
+        ipcRenderer.on('setHideChatVideoByDefault', (_, hideChatVideoByDefault) => {
+            this.hideChatVideoByDefault = hideChatVideoByDefault
         })
         this.localImageViewerByDefault = (await ipc.getSettings()).localImageViewerByDefault
         ipcRenderer.on('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {
