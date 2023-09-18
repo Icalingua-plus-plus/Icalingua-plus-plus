@@ -235,7 +235,7 @@
         "css-loader": "^5.2.7",
         "csv-writer": "^1.6.0",
         "del": "^3.0.0",
-        "electron": "22.3.23",
+        "electron": "22.3.24",
         "electron-builder": "^23.6.0",
         "electron-debug": "^3.2.0",
         "electron-devtools-installer": "^3.2.0",
