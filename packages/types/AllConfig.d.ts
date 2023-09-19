@@ -33,6 +33,7 @@ type AllConfig = {
     optimizeMethod: string
     silentFetchHistory: boolean
     hideChatImageByDefault: boolean
+    hideChatVideoByDefault: boolean
     disableChatGroups: boolean
     singleImageMode: boolean
     disableChatGroupsRedPoint: boolean

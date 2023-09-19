@@ -178,6 +178,9 @@ export default {
     setHideChatImageByDefault(enabled: boolean) {
         sendToMainWindow('setHideChatImageByDefault', enabled)
     },
+    setHideChatVideoByDefault(enabled: boolean) {
+        sendToMainWindow('setHideChatVideoByDefault', enabled)
+    },
     setDisableChatGroupsSeeting(a: boolean) {
         sendToMainWindow('setDisableChatGroupsSeeting', a)
     },

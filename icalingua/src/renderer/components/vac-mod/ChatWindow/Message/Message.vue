@@ -160,11 +160,11 @@
                             </template>
                         </message-image>
 
-                        <div v-else-if="isVideo" class="vac-video-container">
-                            <video width="100%" height="100%" controls :src="message.file.url">
-                                <source :src="message.file.url" />
-                            </video>
-                        </div>
+                        <message-video
+                            v-if="isVideo"
+                            :isHidden="hideChatVideoByDefault"
+                            :url="message.file.url"
+                        ></message-video>
 
                         <div v-else-if="isAudio" class="vac-audio-message">
                             <div id="vac-audio-player">
@@ -227,6 +227,7 @@ import FormatMessage from '../../components/FormatMessage'
 
 import MessageReply from './MessageReply'
 import MessageImage from './MessageImage'
+import MessageVideo from './MessageVideo'
 
 import getLottieFace from '../../../../utils/getLottieFace'
 
@@ -246,6 +247,7 @@ export default {
         FormatMessage,
         MessageReply,
         MessageImage,
+        MessageVideo,
         LottieAnimation,
     },
 
@@ -270,6 +272,7 @@ export default {
         forwardResId: { type: String, required: false },
         msgsToForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
+        hideChatVideoByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
         recordPath: { type: String, required: true },
