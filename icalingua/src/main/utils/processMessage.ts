@@ -70,14 +70,6 @@ const processMessage = async (
                     const md5 = require('crypto').createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
                     url = getImageUrlByMd5(md5)
                 }
-                if (typeof m.data.file === 'string' && url.includes('https://gchat.qpic.cn/download')) {
-                    // 解决新 QQ 发送的图片链接短时间即失效的问题
-                    const success = await oicq.preloadImages([url])
-                    if (success) {
-                        const md5 = m.data.file.substr(0, 32)
-                        ;/^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
-                    }
-                }
                 if (typeof m.data.file === 'string' && url.includes('c2cpicdw.qpic.cn')) {
                     const md5 = m.data.file.substr(0, 32)
                     ;/^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
