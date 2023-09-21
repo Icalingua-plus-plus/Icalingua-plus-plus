@@ -337,6 +337,14 @@ const processMessage = async (
                     let qlottie = m.data.qlottie.replace(/\D/g, '')
                     if (!qlottie) qlottie = '0'
                     message.content = `[QLottie: ${qlottie},${m.data.id}]`
+                    if (m.data.extra) {
+                        try {
+                            const extra = JSON.parse(m.data.extra)
+                            if (extra.resultId) {
+                                message.content = `[QLottie: ${qlottie},${m.data.id},${extra.resultId}]`
+                            }
+                        } catch (e) {}
+                    }
                 }
                 break
             case 'video':

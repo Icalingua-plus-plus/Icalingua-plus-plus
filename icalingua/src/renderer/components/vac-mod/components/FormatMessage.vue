@@ -117,7 +117,8 @@ export default {
         linkifiedMessage() {
             let content = this.formatTags(String(this.content))
             if (this.disableQLottie) {
-                const idReg = content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+                const idReg =
+                    content.match(/\[QLottie: (\d+)\,(\d+)\]/) || content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
                 if (idReg && idReg[0] === content) {
                     content = `[Face: ${idReg[2]}]`
                 }

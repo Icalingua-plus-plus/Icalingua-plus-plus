@@ -206,6 +206,7 @@
                 <el-button @click="sendDice(6)">6</el-button>
             </div>
             <span slot="footer">
+                <el-checkbox v-model="sendDiceNew">新版</el-checkbox>
                 <el-button @click="sendDiceShown = false">取消</el-button>
                 <el-button type="primary" @click="sendDice(0)">随机</el-button>
             </span>
@@ -217,6 +218,7 @@
                 <el-button @click="sendRps(3)">布</el-button>
             </div>
             <span slot="footer">
+                <el-checkbox v-model="sendRpsNew">新版</el-checkbox>
                 <el-button @click="sendRpsShown = false">取消</el-button>
                 <el-button type="primary" @click="sendRps(0)">随机</el-button>
             </span>
@@ -303,6 +305,8 @@ export default {
             notifyProgresses: new Map(),
             sendDiceShown: false,
             sendRpsShown: false,
+            sendDiceNew: true,
+            sendRpsNew: true,
         }
     },
     async created() {
@@ -792,8 +796,19 @@ Chromium ${process.versions.chrome}` : ''
         },
         async sendLottie(lottie) {
             const messageType = await ipc.getMessgeTypeSetting()
+            let lottieCode = `[QLottie: ${lottie.qlottie},${lottie.id}]`
+            const randomList = {
+                114: 5,
+                358: 6,
+                359: 3,
+            }
+            const getRandomInt = (max) => {
+                return Math.floor(Math.random() * Math.floor(max)) + 1
+            }
+            if (Object.keys(randomList).includes(String(lottie.id)))
+                lottieCode = `[QLottie: ${lottie.qlottie},${lottie.id},${getRandomInt(randomList[lottie.id])}]`
             this.sendMessage({
-                content: `[QLottie: ${lottie.qlottie},${lottie.id}]`,
+                content: lottieCode,
                 room: this.selectedRoom,
                 messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
             })
@@ -998,27 +1013,47 @@ Chromium ${process.versions.chrome}` : ''
         backContact() {
             this.showPanel = 'contact'
         },
-        sendDice(value) {
+        async sendDice(value) {
             if (!value) {
                 value = Math.floor(Math.random() * 6) + 1
             }
             this.sendDiceShown = false
-            this.sendMessage({
-                content: value.toString(),
-                room: this.selectedRoom,
-                messageType: 'dice',
-            })
+            if (this.sendDiceNew) {
+                const messageType = await ipc.getMessgeTypeSetting()
+                this.sendMessage({
+                    content: `[QLottie: 33,358,${value}]`,
+                    room: this.selectedRoom,
+                    messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
+                })
+            } else {
+                this.sendMessage({
+                    content: value.toString(),
+                    room: this.selectedRoom,
+                    messageType: 'dice',
+                })
+            }
         },
-        sendRps(value) {
+        async sendRps(value) {
             if (!value) {
                 value = Math.floor(Math.random() * 3) + 1
             }
             this.sendRpsShown = false
-            this.sendMessage({
-                content: value.toString(),
-                room: this.selectedRoom,
-                messageType: 'rps',
-            })
+            if (this.sendRpsNew) {
+                if (value === 1) value = 3
+                else if (value === 3) value = 1
+                const messageType = await ipc.getMessgeTypeSetting()
+                this.sendMessage({
+                    content: `[QLottie: 34,359,${value}]`,
+                    room: this.selectedRoom,
+                    messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
+                })
+            } else {
+                this.sendMessage({
+                    content: value.toString(),
+                    room: this.selectedRoom,
+                    messageType: 'rps',
+                })
+            }
         },
     },
     computed: {

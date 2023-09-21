@@ -1308,16 +1308,23 @@ const adapter = {
             })
         }
         if (messageType === 'text') {
-            const idReg = content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+            const idReg =
+                content.match(/\[QLottie: (\d+)\,(\d+)\]/) || content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
             if (idReg && idReg.length >= 3 && content === idReg[0]) {
                 const qlottie = idReg[1]
                 const faceId = idReg[2]
+                const resultId = idReg[3]
+                let extra = {
+                    lottieType: 2,
+                    resultId: resultId,
+                }
                 chain.length = chain[0].type === 'anonymous' ? 1 : 0
                 chain.push({
                     type: 'face',
                     data: {
                         id: Number.parseInt(faceId, 10),
                         qlottie: qlottie,
+                        extra: resultId ? JSON.stringify(extra) : undefined,
                     },
                 })
             }

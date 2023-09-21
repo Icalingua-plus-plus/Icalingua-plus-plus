@@ -30,6 +30,11 @@ export const faceNameToLottie = new Map<string, number>([
     ['我方了', 27],
     ['大怨种', 28],
     ['红包多多', 29],
+    ['骰子', 33],
+    ['包剪锤', 34],
+    ['太阳', 35],
+    ['月亮', 36],
+    ['戳一戳', 37],
 ])
 
 export const faceIdToLottie = new Map([
@@ -62,19 +67,24 @@ export const faceIdToLottie = new Map([
     [343, 27],
     [344, 28],
     [345, 29],
+    [358, 33],
+    [359, 34],
+    [74, 35],
+    [75, 36],
+    [181, 37],
 ])
 
-export const getLottiePath = (id: number) => {
+export const getLottiePath = (id: number, resultId?: string) => {
     // @ts-ignore
-    return path.join(__static, 'qlottie', `${id}`, `${id}.json`)
+    return path.join(__static, 'qlottie', `${id}`, resultId ? `${id}_${resultId}.json` : `${id}.json`)
 }
 
-export default (msgText: string, time: number): string | undefined => {
-    const idMatch = msgText.match(/^\[QLottie: (\d+)\,(\d+)\]$/)
+export default (msgText: string, time: number, result?: boolean): string | undefined => {
+    const idMatch = msgText.match(/^\[QLottie: (\d+)\,(\d+)\]$/) || msgText.match(/^\[QLottie: (\d+)\,(\d+)\,(\d+)\]$/)
     if (idMatch) {
         const lottieId = faceIdToLottie.get(parseInt(idMatch[2])) || parseInt(idMatch[1])
         if (lottieId) {
-            return getLottiePath(lottieId)
+            return getLottiePath(lottieId, result ? idMatch[3] : undefined)
         }
     }
     const nameMatch = msgText.match(/^\[([\u4e00-\u9FA5a-zA-Z]{2,5})\](?:请使用最新版手机QQ体验新功能)?$/)

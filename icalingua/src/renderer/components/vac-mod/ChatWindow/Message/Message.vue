@@ -186,9 +186,10 @@
                         <LottieAnimation
                             v-else-if="lottie && !disableQLottie"
                             :path="lottie"
+                            :pathResult="lottieResult"
                             :height="250"
                             :width="250"
-                            :autoPlay="false"
+                            :autoPlay="true"
                         />
 
                         <format-message
@@ -289,6 +290,7 @@ export default {
             emojiOpened: false,
             newMessage: {},
             lottie: getLottieFace(this.message.content, this.message.time),
+            lottieResult: getLottieFace(this.message.content, this.message.time, true),
             tgLogo: `file://${__static}/tg.svg`,
             selected: false,
         }

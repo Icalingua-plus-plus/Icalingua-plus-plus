@@ -11,6 +11,10 @@ export default {
         path: {
             required: true,
         },
+        pathResult: {
+            required: false,
+            default: null,
+        },
         speed: {
             type: Number,
             required: false,
@@ -63,7 +67,7 @@ export default {
         window.addEventListener('scroll', this.scrollHandle, true)
     },
     destroyed() {
-        this.anim.destroy() // Releases resources. The DOM element will be emptied.
+        if (this.anim) this.anim.destroy() // Releases resources. The DOM element will be emptied.
         window.removeEventListener('scroll', this.scrollHandle, true)
         console.log('lottie animation destroyed.')
     },
@@ -78,8 +82,13 @@ export default {
                 overflow: 'hidden',
                 margin: '0 auto',
             }
-
+        },
+        async initAnimation() {
             let jsonData = await this.loadJsonData(this.path)
+            let jsonResultData = null
+            if (this.pathResult && this.pathResult !== this.path) {
+                jsonResultData = await this.loadJsonData(this.pathResult)
+            }
 
             if (this.anim) {
                 this.anim.destroy() // Releases resources. The DOM element will be emptied.
@@ -88,7 +97,7 @@ export default {
             this.anim = lottie.loadAnimation({
                 container: this.$refs.lavContainer,
                 renderer: 'svg',
-                loop: this.loop,
+                loop: this.pathResult === this.path ? this.loop : false,
                 autoplay: this.autoPlay,
                 animationData: jsonData,
                 rendererSettings: this.rendererSettings,
@@ -101,6 +110,21 @@ export default {
                 this.anim.loop = false
                 this.anim.autoplay = false
                 this.executeLoop()
+            }
+            //如果有第二个动画，就等第一个动画播放完毕后再播放第二个动画
+            if (jsonResultData) {
+                this.anim.addEventListener('complete', () => {
+                    this.anim.destroy() // Releases resources. The DOM element will be emptied.
+                    this.anim = lottie.loadAnimation({
+                        container: this.$refs.lavContainer,
+                        renderer: 'svg',
+                        loop: false,
+                        autoplay: true,
+                        animationData: jsonResultData,
+                        rendererSettings: this.rendererSettings,
+                    })
+                    this.anim.setSpeed(this.speed)
+                })
             }
         },
         getRandomInt(min, max) {
@@ -117,15 +141,21 @@ export default {
             }, this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax))
         },
         scrollHandle() {
-            const offset = this.$el.getBoundingClientRect()
+            const offset = this.$el.parentElement.getBoundingClientRect()
             const offsetTop = offset.top
             const offsetBottom = offset.bottom
             if (offsetTop <= window.innerHeight && offsetBottom >= 0) {
+                if (!this.anim && this.path) {
+                    this.initAnimation()
+                }
                 // console.log('进入可视区域');
-                this.anim.play() // Play the animation if it is in the viewport
+                if (this.anim) this.anim.play() // Play the animation if it is in the viewport
             } else {
                 // console.log('移出可视区域');
-                this.anim.stop() // Stop the animation if it is not in the viewport
+                if (this.anim) {
+                    this.anim.destroy() // Destroy the animation if it is not in the viewport
+                    this.anim = null
+                }
             }
         },
     },
