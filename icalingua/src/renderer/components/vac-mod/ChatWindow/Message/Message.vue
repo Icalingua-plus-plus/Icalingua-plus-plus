@@ -114,29 +114,30 @@
                             <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
 
-                        <message-image
-                            v-else-if="isImage && message.files"
-                            v-for="(file, i) in message.files"
-                            :key="i"
-                            :current-user-id="currentUserId"
-                            :file="file"
-                            :flash="message.flash"
-                            :content="message.content"
-                            :room-users="roomUsers"
-                            :text-formatting="textFormatting"
-                            :image-hover="imageHover"
-                            :showForwardPanel="showForwardPanel"
-                            :hide-chat-image-by-default="hideChatImageByDefault"
-                            :local-image-viewer-by-default="localImageViewerByDefault"
-                            :messages="messages"
-                            :message="message"
-                            :img_index="i"
-                            @open-file="openFile"
-                        >
-                            <template v-for="(i, name) in $scopedSlots" #[name]="data">
-                                <slot :name="name" v-bind="data" />
-                            </template>
-                        </message-image>
+                        <template v-else-if="isImage && message.files">
+                            <message-image
+                                v-for="(file, i) in message.files"
+                                :key="i"
+                                :current-user-id="currentUserId"
+                                :file="file"
+                                :flash="message.flash"
+                                :content="message.content"
+                                :room-users="roomUsers"
+                                :text-formatting="textFormatting"
+                                :image-hover="imageHover"
+                                :showForwardPanel="showForwardPanel"
+                                :hide-chat-image-by-default="hideChatImageByDefault"
+                                :local-image-viewer-by-default="localImageViewerByDefault"
+                                :messages="messages"
+                                :message="message"
+                                :img_index="i"
+                                @open-file="openFile"
+                            >
+                                <template v-for="(i, name) in $scopedSlots" #[name]="data">
+                                    <slot :name="name" v-bind="data" />
+                                </template>
+                            </message-image>
+                        </template>
 
                         <message-image
                             v-else-if="isImage"
@@ -161,7 +162,7 @@
                         </message-image>
 
                         <message-video
-                            v-if="isVideo"
+                            v-else-if="isVideo"
                             :isHidden="hideChatVideoByDefault"
                             :url="message.file.url"
                         ></message-video>
