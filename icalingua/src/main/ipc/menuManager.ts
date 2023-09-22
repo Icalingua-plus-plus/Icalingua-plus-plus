@@ -473,7 +473,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     }
 
                     await win.loadURL('https://qun.qq.com/homework/p/features#?gid=' + -room.roomId, {
-                        userAgent: 'QQ/8.9.13.9280',
+                        userAgent: 'QQ/8.9.63.11390',
                     })
                 },
             }),
@@ -683,7 +683,9 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                             value: cookies[i],
                         })
                     }
-                    await win.loadURL('https://ti.qq.com/interactive_new/index/?target_uin=' + room.roomId)
+                    await win.loadURL('https://ti.qq.com/interactive_new/index/?target_uin=' + room.roomId, {
+                        userAgent: 'QQ/8.9.63.11390',
+                    })
                 },
             }),
         )
