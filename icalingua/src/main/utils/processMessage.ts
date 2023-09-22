@@ -332,8 +332,8 @@ const processMessage = async (
                     if (m.data.extra) {
                         try {
                             const extra = JSON.parse(m.data.extra)
-                            if (extra.resultId) {
-                                message.content = `[QLottie: ${qlottie},${m.data.id},${extra.resultId}]`
+                            if (extra.resultId && Number(extra.resultId)) {
+                                message.content = `[QLottie: ${qlottie},${m.data.id},${Number(extra.resultId)}]`
                             }
                         } catch (e) {}
                     }
