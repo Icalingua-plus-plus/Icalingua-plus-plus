@@ -655,7 +655,7 @@ const adapter: Adapter = {
                 }
                 const progress = ui.notifyProgress(fileHash, '正在上传到 bridge: ' + fileName)
                 for (let i = 0; i < chunks.length; i++) {
-                    await uploadChunk(i, chunks[i])
+                    await uploadChunk(i * chunkSize, chunks[i])
                     uploadedChunks++
                     progress.value((uploadedChunks / totalChunks) * 100)
                 }
