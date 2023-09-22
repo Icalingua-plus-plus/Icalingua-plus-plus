@@ -1006,7 +1006,7 @@ export default {
                                 data: {
                                     id: parseInt(idReg[2]),
                                     qlottie: idReg[1],
-                                    extra: JSON.stringify({ lottieType: 2, resultId: idReg[3] }),
+                                    extra: idReg[3] ? JSON.stringify({ lottieType: 2, resultId: idReg[3] }) : undefined,
                                 },
                             },
                         ]
