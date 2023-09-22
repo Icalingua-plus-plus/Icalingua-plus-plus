@@ -8,7 +8,7 @@
                 </video>
             </details>
         </div>
-        <div v-else="isHidden">
+        <div v-else>
             <video width="100%" height="100%" controls :src="url">
                 <source :src="url" />
             </video>
@@ -20,14 +20,8 @@
 export default {
     name: 'MessageVideo',
     props: {
-        isHidden: { type: [Boolean], required: true },
-        url: { type: [String], required: true },
-    },
-    data() {
-        return {
-            isHidden: false,
-            url: '',
-        }
+        isHidden: { type: Boolean, required: true },
+        url: { type: String, required: true },
     },
 }
 </script>
