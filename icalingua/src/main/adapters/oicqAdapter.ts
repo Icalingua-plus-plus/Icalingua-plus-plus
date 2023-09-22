@@ -1345,9 +1345,13 @@ const adapter: OicqAdapter = {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && typeof file.type === 'string' && !file.type.includes('image') && !file.type.startsWith('audio')) {
+            const uiProgress = ui.notifyProgress(
+                file.path,
+                `正在上传文件 ${file.path.split('/').pop().split('\\').pop()}`,
+            )
             //群文件
             if (roomId > 0) {
-                bot.sendFile(roomId, file.path, undefined, ui.uploadProgress).then(async (data) => {
+                bot.sendFile(roomId, file.path, undefined, (v) => uiProgress.value(Number(v))).then(async (data) => {
                     if (data.error) {
                         ui.notifyError({ title: '文件上传失败', message: data.error.message })
                         ui.closeLoading()
@@ -1382,10 +1386,14 @@ const adapter: OicqAdapter = {
                     ui.addMessage(roomId, message)
                     storage.addMessage(roomId, message)
                     ui.closeLoading()
+                    uiProgress.close()
                 })
             } else {
                 const gfs = bot.acquireGfs(-roomId)
-                gfs.upload(file.path, undefined, undefined, ui.uploadProgress).then(ui.closeLoading)
+                gfs.upload(file.path, undefined, undefined, (v) => uiProgress.value(Number(v))).then(() => {
+                    ui.closeLoading()
+                    uiProgress.close()
+                })
             }
             ui.message('文件上传中')
             return

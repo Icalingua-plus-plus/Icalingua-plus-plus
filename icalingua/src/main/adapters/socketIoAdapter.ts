@@ -632,7 +632,7 @@ const adapter: Adapter = {
             return
         } else if (data.file) {
             const fileData = fs.readFileSync(data.file.path)
-            const fileName = data.file.path.split('\\').join('/').split('/').pop()
+            const fileName = data.file.path.split('\\').pop().split('/').pop()
             const fileHash = crypto.createHash('sha256').update(fileData).digest('hex')
             const chunkSize = 512 * 1024
             const chunks = []
@@ -653,11 +653,13 @@ const adapter: Adapter = {
                         socket.emit('uploadFile', fileHash, offset, chunk, resolve)
                     })
                 }
+                const progress = ui.notifyProgress(fileHash, '正在上传到 bridge: ' + fileName)
                 for (let i = 0; i < chunks.length; i++) {
                     await uploadChunk(i, chunks[i])
                     uploadedChunks++
-                    ui.message(`正在上传文件到 bridge 中... (${uploadedChunks}/${totalChunks})`)
+                    progress.value((uploadedChunks / totalChunks) * 100)
                 }
+                progress.close()
             }
             data.file.path = fileHash
         } else {
