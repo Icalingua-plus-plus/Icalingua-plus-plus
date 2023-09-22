@@ -452,11 +452,11 @@ const eventHandlers = {
             const mutedUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
             mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
         }
-        let content = `${operator.card || operator.nickname} `
+        let content = `${operator.card || operator.nickname}(${data.operator_id}) `
         if (muteAll && data.duration > 0) content += '开启了全员禁言'
         else if (muteAll) content += '关闭了全员禁言'
-        else if (data.duration === 0) content += `将 ${mutedUserName} 解除禁言`
-        else content += `禁言 ${mutedUserName} ${formatDuration(data.duration)}`
+        else if (data.duration === 0) content += `将 ${mutedUserName}(${data.user_id}) 解除禁言`
+        else content += `禁言 ${mutedUserName}(${data.user_id}) ${formatDuration(data.duration)}`
         const message: Message = {
             _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
@@ -509,6 +509,12 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const enableKeys = Object.keys(data).filter((key) => enableMap.has(key))
         let content = '管理员修改了群设置:'
+        if (data.user_id) {
+            try {
+                const operator = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
+                content = `${operator.card || operator.nickname}(${data.user_id}) 修改了群设置:`
+            } catch (e) {}
+        }
         let keys = ''
         for (const key of enableKeys) {
             content += ` ${data[key] ? '允许' : '禁止'}${enableMap.get(key)}`
@@ -642,9 +648,9 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname} 将群转让给了 ${
+        let content = `${operator.card || operator.nickname}(${data.operator_id}) 将群转让给了 ${
             transferredUser.card || transferredUser.nickname
-        }`
+        }(${data.user_id})`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
