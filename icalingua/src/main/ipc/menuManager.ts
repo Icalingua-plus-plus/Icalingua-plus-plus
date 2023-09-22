@@ -667,6 +667,81 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         // }))
         webApps.append(
             new MenuItem({
+                label: 'TA 的空间',
+                async click() {
+                    const win = newIcalinguaWindow({
+                        autoHideMenuBar: true,
+                        webPreferences: {
+                            contextIsolation: false,
+                        },
+                    })
+                    win.maximize()
+                    const cookies = await getCookies('qzone.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://user.qzone.qq.com',
+                            domain: '.qzone.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://user.qzone.qq.com/' + room.roomId)
+                },
+            }),
+        )
+        /*
+        webApps.append(
+            new MenuItem({
+                label: 'TA 的信息',
+                async click() {
+                    const size = screen.getPrimaryDisplay().size
+                    const win = newIcalinguaWindow({
+                        height: size.height - 200,
+                        width: 500,
+                        autoHideMenuBar: true,
+                    })
+                    const cookies = await getCookies('vip.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://club.vip.qq.com',
+                            name: i,
+                            value: cookies[i],
+                            domain: '.vip.qq.com',
+                        })
+                    }
+                    await win.loadURL('https://club.vip.qq.com/card/friend?qq=' + room.roomId, {
+                        userAgent: 'QQ/8.9.63.11390',
+                    })
+                },
+            }),
+        )
+        webApps.append(
+            new MenuItem({
+                label: '匿名提问',
+                async click() {
+                    const size = screen.getPrimaryDisplay().size
+                    const win = newIcalinguaWindow({
+                        height: size.height - 200,
+                        width: 500,
+                        autoHideMenuBar: true,
+                    })
+                    const cookies = await getCookies('ti.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://ti.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://ti.qq.com/v2/anonymous/answer?uin=' + room.roomId, {
+                        userAgent: 'QQ/8.9.63.11390',
+                    })
+                },
+            }),
+        )
+        */
+        webApps.append(
+            new MenuItem({
                 label: '建立关系',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
