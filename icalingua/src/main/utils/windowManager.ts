@@ -101,7 +101,7 @@ export const loadMainWindow = () => {
                     })
                 }
 
-                await win.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
+                await win.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
         } else if (new URL(details.url).hostname == 'docs.qq.com') {
             ;(async () => {
@@ -123,7 +123,32 @@ export const loadMainWindow = () => {
                     const parsedUrl = new URL(url)
                     parsedUrl.hostname !== 'docs.qq.com' && event.preventDefault()
                 })
-                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.13.9280' })
+                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
+            })()
+        } else if (new URL(details.url).hostname == 'ti.qq.com') {
+            ;(async () => {
+                const size = screen.getPrimaryDisplay().size
+                const win1 = newIcalinguaWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('ti.qq.com')
+                for (const i in cookies) {
+                    await win1.webContents.session.cookies.set({
+                        url: 'https://ti.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                win1.webContents.setWindowOpenHandler((details) => {
+                    return { action: 'deny' }
+                })
+                win1.webContents.on('will-navigate', (event, url) => {
+                    const parsedUrl = new URL(url)
+                    parsedUrl.hostname !== 'ti.qq.com' && event.preventDefault()
+                })
+                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
         } else {
             shell.openExternal(details.url)

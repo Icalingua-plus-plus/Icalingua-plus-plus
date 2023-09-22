@@ -667,6 +667,30 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         // }))
         webApps.append(
             new MenuItem({
+                label: '建立关系',
+                async click() {
+                    const size = screen.getPrimaryDisplay().size
+                    const win = newIcalinguaWindow({
+                        height: size.height - 200,
+                        width: 500,
+                        autoHideMenuBar: true,
+                    })
+                    const cookies = await getCookies('ti.qq.com')
+                    for (const i in cookies) {
+                        await win.webContents.session.cookies.set({
+                            url: 'https://ti.qq.com',
+                            name: i,
+                            value: cookies[i],
+                        })
+                    }
+                    await win.loadURL('https://ti.qq.com/hybrid-h5/intimate/launch_v3?uin=' + room.roomId, {
+                        userAgent: 'QQ/8.9.63.11390',
+                    })
+                },
+            }),
+        )
+        webApps.append(
+            new MenuItem({
                 label: '互动标识',
                 async click() {
                     const size = screen.getPrimaryDisplay().size
