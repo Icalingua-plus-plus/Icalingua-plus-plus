@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
+import { requestUpload, uploadFile } from '../utils/uploadFileManager'
 
 export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('addRoom', adapter.addRoom)
@@ -67,4 +68,6 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('getMsgNewURL', adapter.getMsgNewURL)
     socket.on('sendPacket', adapter.sendPacket)
     socket.on('getDisabledFeatures', (cb) => cb(adapter.disabledFeatures))
+    socket.on('requestUpload', requestUpload)
+    socket.on('uploadFile', uploadFile)
 }

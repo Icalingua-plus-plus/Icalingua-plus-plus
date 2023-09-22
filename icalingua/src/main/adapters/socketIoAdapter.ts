@@ -42,6 +42,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
+import crypto from 'crypto'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -613,22 +614,56 @@ const adapter: Adapter = {
             )
             return
         }
-        data.b64img
-            ? socket.emit('requestToken', (token: string) =>
-                  axios
-                      .post(getConfig().server + `/api/${token}/sendMessage`, data, {
-                          proxy: false,
-                      })
-                      .catch((e) => {
-                          errorHandler(e, true)
-                          if (e.response.status === 413) {
-                              ui.messageError('图片过大，无法发送')
-                          } else {
-                              ui.messageError('图片上传失败，请检查日志')
-                          }
-                      }),
-              )
-            : socket.emit('sendMessage', data)
+        if (data.b64img) {
+            socket.emit('requestToken', (token: string) =>
+                axios
+                    .post(getConfig().server + `/api/${token}/sendMessage`, data, {
+                        proxy: false,
+                    })
+                    .catch((e) => {
+                        errorHandler(e, true)
+                        if (e.response.status === 413) {
+                            ui.messageError('图片过大，无法发送')
+                        } else {
+                            ui.messageError('图片上传失败，请检查日志')
+                        }
+                    }),
+            )
+            return
+        } else if (data.file) {
+            const fileData = fs.readFileSync(data.file.path)
+            const fileName = data.file.path.split('\\').join('/').split('/').pop()
+            const fileHash = crypto.createHash('sha256').update(fileData).digest('hex')
+            const chunkSize = 512 * 1024
+            const chunks = []
+            for (let i = 0; i < fileData.length; i += chunkSize) {
+                chunks.push(fileData.slice(i, i + chunkSize))
+            }
+            const totalChunks = chunks.length
+            const requestUpload = (fileName: string, hash: string, fileSize: number): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    socket.emit('requestUpload', fileName, hash, fileSize, resolve)
+                })
+            }
+            const uploaded = await requestUpload(fileName, fileHash, fileData.length)
+            if (!uploaded) {
+                let uploadedChunks = 0
+                const uploadChunk = (offset: number, chunk: Buffer): Promise<string> => {
+                    return new Promise((resolve, reject) => {
+                        socket.emit('uploadFile', fileHash, offset, chunk, resolve)
+                    })
+                }
+                for (let i = 0; i < chunks.length; i++) {
+                    await uploadChunk(i, chunks[i])
+                    uploadedChunks++
+                    ui.message(`正在上传文件到 bridge 中... (${uploadedChunks}/${totalChunks})`)
+                }
+            }
+            data.file.path = fileHash
+        } else {
+        }
+        console.log(data.file)
+        socket.emit('sendMessage', data)
     },
     setOnlineStatus(status: number) {
         socket.emit('setOnlineStatus', status)
