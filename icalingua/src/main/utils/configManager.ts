@@ -103,6 +103,7 @@ const defaultConfig: AllConfig = {
     usePanguJsSend: false,
     usePanguJsRecv: false,
     descSortStickersByTime: true,
+    sortRoomsByPriority: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

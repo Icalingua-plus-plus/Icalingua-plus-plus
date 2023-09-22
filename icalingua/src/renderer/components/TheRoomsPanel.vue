@@ -58,7 +58,18 @@ export default {
                 tmpr = tmpr.filter(
                     (e) => PinyinMatch.match(e.roomName, this.input) || String(e.roomId).includes(this.input),
                 )
-            return tmpr.sort((a, b) => b.index - a.index)
+            tmpr = tmpr.sort((a, b) => b.index - a.index)
+            if (this.sortRoomsByPriority) {
+                tmpr = [
+                    ...tmpr.filter((e) => e.index),
+                    ...tmpr.filter((e) => !e.index && e.priority === 5),
+                    ...tmpr.filter((e) => !e.index && e.priority === 4),
+                    ...tmpr.filter((e) => !e.index && e.priority === 3),
+                    ...tmpr.filter((e) => !e.index && e.priority === 2),
+                    ...tmpr.filter((e) => !e.index && e.priority === 1),
+                ]
+            }
+            return tmpr
         },
     },
     props: {
@@ -77,6 +88,7 @@ export default {
         return {
             input: '',
             clearRoomsBehavior: '',
+            sortRoomsByPriority: false,
         }
     },
     methods: {
@@ -101,6 +113,10 @@ export default {
     },
     async created() {
         this.clearRoomsBehavior = await ipcRenderer.invoke('getClearRoomsBehavior')
+        this.sortRoomsByPriority = (await ipc.getSettings()).sortRoomsByPriority || false
+        ipcRenderer.on('setSortRoomsByPriority', (_, sortRoomsByPriority) => {
+            this.sortRoomsByPriority = sortRoomsByPriority
+        })
 
         ipcRenderer.on('setClearRoomsBehavior', (_, behavior) => {
             this.clearRoomsBehavior = behavior

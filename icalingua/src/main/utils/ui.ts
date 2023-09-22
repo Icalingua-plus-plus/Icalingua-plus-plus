@@ -205,4 +205,7 @@ export default {
     setUsePanguJsRecv(enable: boolean) {
         sendToMainWindow('setUsePanguJsRecv', enable)
     },
+    setSortRoomsByPriority(enable: boolean) {
+        sendToMainWindow('setSortRoomsByPriority', enable)
+    },
 }

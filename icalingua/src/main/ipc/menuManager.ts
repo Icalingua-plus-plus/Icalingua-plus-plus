@@ -1265,6 +1265,17 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '按通知优先级排序会话',
+                        type: 'checkbox',
+                        checked: getConfig().sortRoomsByPriority,
+                        click: (menuItem) => {
+                            getConfig().sortRoomsByPriority = menuItem.checked
+                            saveConfigFile()
+                            updateAppMenu()
+                            ui.setSortRoomsByPriority(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '时间倒序排列 Stickers',
                         type: 'checkbox',
                         checked: getConfig().descSortStickersByTime,
