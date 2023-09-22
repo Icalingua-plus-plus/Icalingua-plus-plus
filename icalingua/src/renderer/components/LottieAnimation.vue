@@ -87,17 +87,22 @@ export default {
             let jsonData = await this.loadJsonData(this.path)
             let jsonResultData = null
             if (this.pathResult && this.pathResult !== this.path) {
-                jsonResultData = await this.loadJsonData(this.pathResult)
+                try {
+                    jsonResultData = await this.loadJsonData(this.pathResult)
+                } catch (error) {
+                    console.error(error)
+                }
             }
 
             if (this.anim) {
                 this.anim.destroy() // Releases resources. The DOM element will be emptied.
             }
 
+            lottie.setQuality('medium')
             this.anim = lottie.loadAnimation({
                 container: this.$refs.lavContainer,
                 renderer: 'svg',
-                loop: this.pathResult === this.path ? this.loop : false,
+                loop: jsonResultData ? false : this.loop,
                 autoplay: this.autoPlay,
                 animationData: jsonData,
                 rendererSettings: this.rendererSettings,
