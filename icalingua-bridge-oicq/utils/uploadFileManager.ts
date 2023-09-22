@@ -5,6 +5,7 @@ type uploadFile = {
     buffer: Buffer
 }
 const fileMap = new Map<string, uploadFile>()
+const timerMap = new Map<string, NodeJS.Timeout>()
 
 export const requestUpload = (fileName: string, hash: string, fileSize: number, cb: (uploaded: boolean) => void) => {
     if (fileMap.has(hash)) {
@@ -31,7 +32,11 @@ export const getUploadedFile = (hash: string): uploadFile | undefined => {
 }
 
 export const deleteUploadedFile = (hash: string) => {
-    setTimeout(() => {
+    if (timerMap.has(hash)) {
+        clearTimeout(timerMap.get(hash))
+    }
+    const timer = setTimeout(() => {
         fileMap.delete(hash)
-    }, 1000 * 60 * 60 * 24)
+    }, 1000 * 60 * 60)
+    timerMap.set(hash, timer)
 }
