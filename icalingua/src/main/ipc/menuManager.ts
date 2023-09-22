@@ -683,7 +683,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                             value: cookies[i],
                         })
                     }
-                    await win.loadURL('https://ti.qq.com/hybrid-h5/interactive_logo/inter?target_uin=' + room.roomId)
+                    await win.loadURL('https://ti.qq.com/interactive_new/index/?target_uin=' + room.roomId)
                 },
             }),
         )

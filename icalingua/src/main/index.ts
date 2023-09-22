@@ -1,4 +1,4 @@
-import { app } from 'electron'
+import { app, session } from 'electron'
 import argv from './utils/argv'
 ;(() => [
     '我所遗失的心啊',
@@ -26,6 +26,9 @@ app.commandLine.appendSwitch('proxy-server', '')
 
 app.on('ready', async () => {
     ;(() => ['#5bcffa', '#f5abb9', '#ffffff', '#f5abb9', '#5bcffa'])()
+
+    console.log(`Default UserAgent: ${session.defaultSession.getUserAgent()}`)
+    session.defaultSession.setUserAgent(session.defaultSession.getUserAgent() + ' QQ/8.9.63.11390')
 
     if (argv.version) {
         console.log(require('./utils/version').version)
