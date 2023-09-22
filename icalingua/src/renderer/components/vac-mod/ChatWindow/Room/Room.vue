@@ -1209,6 +1209,11 @@ export default {
                         text: atText,
                         id: id,
                     })
+                } else if (id === 0 && name === '全体成员') {
+                    ipc.pushAtCache({
+                        id: 'all',
+                        text: '@全体成员',
+                    })
                 }
                 this.useMessageContent((this.useAtKey ? name : atText) + ' ')
             }
@@ -1375,14 +1380,15 @@ export default {
             }
             this.$emit('clear-last-unread-at')
         },
-        onChangeInput() {
+        onChangeInput(e) {
             this.keepKeyboardOpen = true
             this.resizeTextarea()
             this.$emit('typing-message', this.$refs.roomTextarea.message)
             const selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
             if (
                 this.room.roomId < 0 &&
-                this.$refs.roomTextarea.message.slice(selectionStart - 1, selectionStart) === '@'
+                this.$refs.roomTextarea.message.slice(selectionStart - 1, selectionStart) === '@' &&
+                !e.isComposing
             ) {
                 this.useAtKey = true
                 this.isQuickAtOn = true
@@ -1568,6 +1574,7 @@ export default {
             ipc.popupStickerMenu(e, false)
         },
         async updateGroupMembers() {
+            const debugmode = await ipc.getDebugSetting()
             const { roomId } = this.room
             if (roomId < 0) {
                 const group = await ipc.getGroup(-roomId)
@@ -1580,7 +1587,7 @@ export default {
                 const groupMembers = await ipc.getGroupMembers(-roomId)
                 if (roomId !== this.room.roomId) return
                 const self = groupMembers.find((member) => member.user_id === this.currentUserId)
-                if (self && (self.role === 'owner' || self.role === 'admin')) {
+                if ((self && (self.role === 'owner' || self.role === 'admin')) || debugmode) {
                     groupMembers.unshift({
                         card: '全体成员',
                         nickname: '全体成员',
