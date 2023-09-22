@@ -996,13 +996,17 @@ export default {
                             singleMessage.message = [{ type: 'xml', data: { data: msg.code } }]
                         }
                     }
-                    const idReg = msg.content.match(/\[QLottie: (\d+)\,(\d+)\]/)
+                    const idReg =
+                        msg.content.match(/\[QLottie: (\d+)\,(\d+)\]/) ||
+                        msg.content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
                     if (idReg && msg.content === idReg[0]) {
                         singleMessage.message = [
                             {
                                 type: 'face',
                                 data: {
                                     id: parseInt(idReg[2]),
+                                    qlottie: idReg[1],
+                                    extra: JSON.stringify({ lottieType: 2, resultId: idReg[3] }),
                                 },
                             },
                         ]
