@@ -9,8 +9,14 @@ const timerMap = new Map<string, NodeJS.Timeout>()
 
 export const requestUpload = (fileName: string, hash: string, fileSize: number, cb: (uploaded: boolean) => void) => {
     if (fileMap.has(hash)) {
-        cb(true)
-        return
+        const fileHash = crypto.createHash('sha256').update(fileMap.get(hash).buffer).digest('hex')
+        if (fileHash === hash) {
+            cb(true)
+            return
+        } else {
+            cb(false)
+            return
+        }
     }
     fileMap.set(hash, {
         fileName,
