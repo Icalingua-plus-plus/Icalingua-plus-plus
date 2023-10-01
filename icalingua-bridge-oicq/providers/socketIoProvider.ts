@@ -37,33 +37,39 @@ export const init = (adapter: typeof oicqAdapter) => {
             protocolVersion,
         })
         socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
-            switch (role) {
-                case 'main':
-                    if (await verify(sign, salt, config.pubKey)) {
-                        console.log('客户端验证成功')
-                        socket.emit('authSucceed')
-                        socket.join('authed')
-                        registerSocketHandlers(io, socket, adapter)
-                        if (adapter.loggedIn) adapter.sendOnlineData()
-                        else socket.emit('requestSetup', userConfig.account)
-                    } else {
-                        console.log('客户端验证失败')
-                        socket.emit('authFailed')
-                        socket.disconnect()
-                    }
-                    break
-                case 'fileMgr':
-                    const gin = gfsTokenManager.verify(sign)
-                    if (gin) {
-                        registerFileMgrHandler(io, socket, gin, adapter)
-                        console.log('客户端验证成功')
-                        adapter.getGroup(gin, (group) => socket.emit('authSucceed', gin, group))
-                    } else {
-                        console.log('客户端验证失败')
-                        socket.emit('authFailed')
-                        socket.disconnect()
-                    }
-                    break
+            try {
+                switch (role) {
+                    case 'main':
+                        if (await verify(sign, salt, config.pubKey)) {
+                            console.log('客户端验证成功')
+                            socket.emit('authSucceed')
+                            socket.join('authed')
+                            registerSocketHandlers(io, socket, adapter)
+                            if (adapter.loggedIn) adapter.sendOnlineData()
+                            else socket.emit('requestSetup', userConfig.account)
+                        } else {
+                            console.log('客户端验证失败')
+                            socket.emit('authFailed')
+                            socket.disconnect()
+                        }
+                        break
+                    case 'fileMgr':
+                        const gin = gfsTokenManager.verify(sign)
+                        if (gin) {
+                            registerFileMgrHandler(io, socket, gin, adapter)
+                            console.log('客户端验证成功')
+                            adapter.getGroup(gin, (group) => socket.emit('authSucceed', gin, group))
+                        } else {
+                            console.log('客户端验证失败')
+                            socket.emit('authFailed')
+                            socket.disconnect()
+                        }
+                        break
+                }
+            } catch (e) {
+                console.log(e)
+                socket.emit('authFailed')
+                socket.disconnect()
             }
         })
     })
