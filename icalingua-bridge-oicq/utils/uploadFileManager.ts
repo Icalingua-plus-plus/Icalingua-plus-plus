@@ -54,7 +54,7 @@ export const uploadFile = (
     cb: (success: boolean) => void,
 ) => {
     const buffer = fileMap.get(fileHash).buffer
-    const damaged = crypto.createHash('sha256').update(buffer).digest('hex') !== chunkHash
+    const damaged = crypto.createHash('sha256').update(chunk).digest('hex') !== chunkHash
     if (buffer && !damaged) {
         chunk.copy(buffer, offset)
         fileMap.get(fileHash).uploaded.push(offset)
