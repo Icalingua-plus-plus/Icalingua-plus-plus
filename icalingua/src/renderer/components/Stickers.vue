@@ -159,6 +159,8 @@ export default {
         }
     },
     async created() {
+        this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
+        this.RECENT_CATEGORY = RECENT_CATEGORY
         this.face_dir = path.join(getStaticPath(), 'face/')
         this.faceIdToLottie = faceIdToLottie
         this.watchedPath = {}
@@ -166,8 +168,6 @@ export default {
         this.panel = await ipc.getLastUsedStickerType()
         this.recentLocalSticker = getRecent('recentLocalSticker')
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
-        this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
-        this.RECENT_CATEGORY = RECENT_CATEGORY
 
         // Remote Stickers
         if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
