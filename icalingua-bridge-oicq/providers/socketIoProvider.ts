@@ -29,13 +29,14 @@ export const init = (adapter: typeof oicqAdapter) => {
     initExpress(adapter)
     io.on('connection', (socket) => {
         console.log('new client connected')
-        //客户端对这个服务器发来的时间用私钥签名给服务端验证
+        // 客户端对这个服务器发来的时间用私钥签名给服务端验证
         const salt = md5(new Date().getTime().toString())
-        //socket.onAny(console.log)
+        // socket.onAny(console.log)
         socket.emit('requireAuth', salt, {
             version,
             protocolVersion,
         })
+        // 发送给客户端做验证
         socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
             try {
                 switch (role) {

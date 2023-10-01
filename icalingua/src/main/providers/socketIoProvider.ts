@@ -26,9 +26,11 @@ io.on('connection', (socket) => {
         version: '',
         protocolVersion: '',
     })
+    // 从客户端先发一个验证请求
     socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
         switch (role) {
             case 'main':
+                // 忽略 main 的身份验证
             case 'fileMgr':
                 const gin = gfsTokenManager.verify(sign)
                 if (gin) {
