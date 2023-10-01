@@ -667,7 +667,10 @@ const adapter: Adapter = {
                     const chunkHash = crypto.createHash('sha256').update(chunks[i]).digest('hex')
                     let success = false
                     let retry = 0
-                    while (!success && retry < 3) success = await uploadChunk(i * chunkSize, chunks[i], chunkHash)
+                    while (!success && retry < 3) {
+                        success = await uploadChunk(i * chunkSize, chunks[i], chunkHash)
+                        retry++
+                    }
                     if (!success) {
                         ui.messageError('文件上传 bridge 失败')
                         return
