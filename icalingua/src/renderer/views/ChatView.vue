@@ -458,6 +458,7 @@ export default {
                 message: this.$createElement('div', [string, progressBar]),
                 customClass: 'el-notification-progress',
                 duration: 0,
+                showClose: !String(id).startsWith('uploadFile-'),
                 onClose: () => {
                     ipc.cancelDownload(id)
                     this.notifyProgresses.delete(id)

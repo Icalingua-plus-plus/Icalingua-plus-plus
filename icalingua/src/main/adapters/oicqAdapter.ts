@@ -1346,7 +1346,7 @@ const adapter: OicqAdapter = {
         if (!roomId) roomId = room.roomId
         if (file && typeof file.type === 'string' && !file.type.includes('image') && !file.type.startsWith('audio')) {
             const uiProgress = ui.notifyProgress(
-                file.path,
+                'uploadFile-' + file.path,
                 `正在上传文件 ${file.path.split('/').pop().split('\\').pop()}`,
             )
             //群文件

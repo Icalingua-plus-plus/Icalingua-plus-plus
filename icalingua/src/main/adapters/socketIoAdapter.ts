@@ -631,6 +631,10 @@ const adapter: Adapter = {
             )
             return
         } else if (data.file) {
+            type requestUploadResponse = {
+                allSuccess: boolean
+                uploaded: number[]
+            }
             const fileData = fs.readFileSync(data.file.path)
             const fileName = data.file.path.split('\\').pop().split('/').pop()
             const fileHash = crypto.createHash('sha256').update(fileData).digest('hex')
@@ -640,22 +644,34 @@ const adapter: Adapter = {
                 chunks.push(fileData.slice(i, i + chunkSize))
             }
             const totalChunks = chunks.length
-            const requestUpload = (fileName: string, hash: string, fileSize: number): Promise<string> => {
+            const requestUpload = (
+                fileName: string,
+                hash: string,
+                fileSize: number,
+            ): Promise<requestUploadResponse> => {
                 return new Promise((resolve, reject) => {
                     socket.emit('requestUpload', fileName, hash, fileSize, resolve)
                 })
             }
-            const uploaded = await requestUpload(fileName, fileHash, fileData.length)
-            if (!uploaded) {
-                let uploadedChunks = 0
-                const uploadChunk = (offset: number, chunk: Buffer): Promise<string> => {
+            const response = await requestUpload(fileName, fileHash, fileData.length)
+            if (!response.allSuccess) {
+                let uploadedChunks = response.uploaded.length
+                const uploadChunk = (offset: number, chunk: Buffer, chunkHash: string): Promise<boolean> => {
                     return new Promise((resolve, reject) => {
-                        socket.emit('uploadFile', fileHash, offset, chunk, resolve)
+                        socket.emit('uploadFile', fileHash, offset, chunk, chunkHash, resolve)
                     })
                 }
-                const progress = ui.notifyProgress(fileHash, '正在上传到 bridge: ' + fileName)
+                const progress = ui.notifyProgress('uploadFile-' + fileHash, '正在上传到 bridge: ' + fileName)
                 for (let i = 0; i < chunks.length; i++) {
-                    await uploadChunk(i * chunkSize, chunks[i])
+                    if (response.uploaded.includes(i * chunkSize)) continue
+                    const chunkHash = crypto.createHash('sha256').update(chunks[i]).digest('hex')
+                    let success = false
+                    let retry = 0
+                    while (!success && retry < 3) success = await uploadChunk(i * chunkSize, chunks[i], chunkHash)
+                    if (!success) {
+                        ui.messageError('文件上传 bridge 失败')
+                        return
+                    }
                     uploadedChunks++
                     progress.value((uploadedChunks / totalChunks) * 100)
                 }

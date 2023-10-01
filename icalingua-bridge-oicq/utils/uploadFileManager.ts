@@ -3,35 +3,63 @@ import crypto from 'crypto'
 type uploadFile = {
     fileName: string
     buffer: Buffer
+    uploaded: number[]
+}
+type requestUploadResponse = {
+    allSuccess: boolean
+    uploaded: number[]
 }
 const fileMap = new Map<string, uploadFile>()
 const timerMap = new Map<string, NodeJS.Timeout>()
 
-export const requestUpload = (fileName: string, hash: string, fileSize: number, cb: (uploaded: boolean) => void) => {
+export const requestUpload = (
+    fileName: string,
+    hash: string,
+    fileSize: number,
+    cb: (response: requestUploadResponse) => void,
+) => {
     if (fileMap.has(hash)) {
         fileMap.get(hash).fileName = fileName
         const fileHash = crypto.createHash('sha256').update(fileMap.get(hash).buffer).digest('hex')
         if (fileHash === hash) {
-            cb(true)
+            cb({
+                allSuccess: true,
+                uploaded: fileMap.get(hash).uploaded,
+            })
             return
         } else {
-            cb(false)
+            cb({
+                allSuccess: false,
+                uploaded: fileMap.get(hash).uploaded,
+            })
             return
         }
     }
     fileMap.set(hash, {
         fileName,
         buffer: Buffer.alloc(fileSize),
+        uploaded: [],
     })
-    cb(false)
+    cb({
+        allSuccess: false,
+        uploaded: [],
+    })
 }
 
-export const uploadFile = (hash: string, offset: number, data: Buffer, cb: (hash: string) => void) => {
-    const buffer = fileMap.get(hash).buffer
-    if (buffer) {
-        data.copy(buffer, offset)
+export const uploadFile = (
+    fileHash: string,
+    offset: number,
+    chunk: Buffer,
+    chunkHash: string,
+    cb: (success: boolean) => void,
+) => {
+    const buffer = fileMap.get(fileHash).buffer
+    const damaged = crypto.createHash('sha256').update(buffer).digest('hex') !== chunkHash
+    if (buffer && !damaged) {
+        chunk.copy(buffer, offset)
+        fileMap.get(fileHash).uploaded.push(offset)
     }
-    cb(hash)
+    cb(!damaged)
 }
 
 export const getUploadedFile = (hash: string): uploadFile | undefined => {
