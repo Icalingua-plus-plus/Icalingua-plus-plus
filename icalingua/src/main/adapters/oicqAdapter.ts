@@ -1390,10 +1390,15 @@ const adapter: OicqAdapter = {
                 })
             } else {
                 const gfs = bot.acquireGfs(-roomId)
-                gfs.upload(file.path, undefined, undefined, (v) => uiProgress.value(Number(v))).then(() => {
-                    ui.closeLoading()
-                    uiProgress.close()
-                })
+                gfs.upload(file.path, undefined, undefined, (v) => uiProgress.value(Number(v)))
+                    .then(() => {
+                        ui.closeLoading()
+                        uiProgress.close()
+                    })
+                    .catch((e) => {
+                        ui.messageError(e.message + '(' + e.code + ')')
+                        ui.closeLoading()
+                    })
             }
             ui.message('文件上传中')
             return

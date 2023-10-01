@@ -1142,16 +1142,17 @@ const adapter = {
                     deleteUploadedFile(file.path)
                 })
             } else {
-                try {
-                    const gfs = bot.acquireGfs(-roomId)
-                    gfs.upload(uploadedFile.buffer, undefined, uploadedFile.fileName).then((e) => {
+                const gfs = bot.acquireGfs(-roomId)
+                gfs.upload(uploadedFile.buffer, undefined, uploadedFile.fileName)
+                    .then((e) => {
                         deleteUploadedFile(file.path)
                         clients.closeLoading()
                     })
-                } catch (e) {
-                    console.error(e)
-                    clients.messageError(e.message + '(' + e.code + ')')
-                }
+                    .catch((e) => {
+                        console.error(e)
+                        clients.messageError(e.message + '(' + e.code + ')')
+                        clients.closeLoading()
+                    })
             }
             clients.message('文件上传中')
             //clients.messageError('Not implicated')
