@@ -111,6 +111,8 @@ let lastReceivedMessageInfo = {
     id: 0,
 }
 
+let isAutoFetching = false
+
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
@@ -1982,7 +1984,7 @@ const adapter: OicqAdapter = {
             let done = false
             let first_loop = true
             while (true) {
-                if (stopFetching) {
+                if (stopFetching && !isAutoFetching) {
                     stopFetching = false
                     done = true
                     break
@@ -2042,7 +2044,7 @@ const adapter: OicqAdapter = {
                     }
                 }
                 first_loop = false
-                ui.addHistoryCount(newMsgs.length)
+                if (!isAutoFetching) ui.addHistoryCount(newMsgs.length)
                 if (history.data.length < 2 || newMsgs.length === 0) {
                     done = true
                     break
@@ -2091,14 +2093,14 @@ const adapter: OicqAdapter = {
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
-            ui.clearHistoryCount()
+            if (!isAutoFetching) ui.clearHistoryCount()
         } else {
             ui.message(`${room.roomName}(${Math.abs(roomId)}) 后台拉取中，已拉取 ${messages.length} 条消息`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)
                 ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
-                ui.clearHistoryCount()
+                if (!isAutoFetching) ui.clearHistoryCount()
             }
         }
 
