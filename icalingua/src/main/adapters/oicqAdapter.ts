@@ -2030,7 +2030,7 @@ const adapter: OicqAdapter = {
                         if (await storage.isChatIgnored(message.senderId)) message.hide = true
                         messages.push(message)
                         newMsgs.push(message)
-                        if (first_loop) {
+                        if (first_loop && retData.message.time > lastMessageTime) {
                             lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
                                 username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
                                 timestamp: formatDate('hh:mm', new Date(retData.message.time)),
@@ -2108,6 +2108,10 @@ const adapter: OicqAdapter = {
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
         ui.updateRoom(room)
+        await storage.updateRoom(roomId, {
+            utime: room.utime,
+            lastMessage: room.lastMessage,
+        })
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {

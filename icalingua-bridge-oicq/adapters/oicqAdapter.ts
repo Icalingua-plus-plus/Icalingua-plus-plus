@@ -1713,6 +1713,8 @@ const adapter = {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
         const messages = []
+        let lastMessage = {}
+        let lastMessageTime = 0
         while (true) {
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
@@ -1756,6 +1758,13 @@ const adapter = {
                     if (await storage.isChatIgnored(message.senderId)) message.hide = true
                     messages.push(message)
                     newMsgs.push(message)
+                    if (message.time > lastMessageTime) {
+                        lastMessage = Object.assign(Object.assign({}, message), lastMessage, {
+                            username: message.username,
+                            timestamp: formatDate('hh:mm', new Date(message.time)),
+                        })
+                        lastMessageTime = message.time
+                    }
                 } catch (e) {
                     console.error(e)
                 }
@@ -1800,6 +1809,17 @@ const adapter = {
         storage
             .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
+
+        // 更新最近消息
+        if (!messages.length) return
+        if (room.utime > lastMessageTime) return
+        room.lastMessage = lastMessage
+        room.utime = lastMessageTime
+        clients.updateRoom(room)
+        await storage.updateRoom(roomId, {
+            utime: room.utime,
+            lastMessage: room.lastMessage,
+        })
     },
     async sendOnlineData() {
         clients.sendOnlineData({
