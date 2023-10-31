@@ -41,6 +41,10 @@
                         <el-radio-button label="19">8.9.73</el-radio-button>
                         <el-radio-button label="21">8.9.75</el-radio-button>
                         <el-radio-button label="25">8.9.76</el-radio-button>
+                        <el-radio-button label="27">8.9.78</el-radio-button>
+                        <el-radio-button label="29">8.9.80</el-radio-button>
+                        <el-radio-button label="31">8.9.83</el-radio-button>
+                        <el-radio-button label="33">8.9.85</el-radio-button>
                     </el-radio-group>
                     <span>Android Pad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -54,6 +58,10 @@
                         <el-radio-button label="20">8.9.73</el-radio-button>
                         <el-radio-button label="22">8.9.75</el-radio-button>
                         <el-radio-button label="26">8.9.76</el-radio-button>
+                        <el-radio-button label="28">8.9.78</el-radio-button>
+                        <el-radio-button label="30">8.9.80</el-radio-button>
+                        <el-radio-button label="32">8.9.83</el-radio-button>
+                        <el-radio-button label="34">8.9.85</el-radio-button>
                     </el-radio-group>
                     <span>iPad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -209,15 +217,12 @@ export default {
                     break
                 case '(45)':
                     if (this.form.protocol === 3) break
-                    if (String(msg).includes('你当前使用的QQ版本过低'))
-                        this.$alert(
-                            '账号被限制使用内置的 QQ 版本登录，请' +
-                                (this.form.protocol >= 13 ? '等待更新' : '更换更高版本协议'),
-                        )
+                    if (String(msg).includes('QQ版本过低'))
+                        this.$alert('账号被限制使用内置的 QQ 版本登录，请更换更高版本协议后重试')
                     else
                         this.$alert(
                             this.form.signAPIAddress
-                                ? '可能为非常用环境登录，也有可能是 API 配置有误或不支持此版本协议'
+                                ? '可能是 API 配置有误或版本不匹配，请检查 API 配置'
                                 : '账号被风控需要头部签名，请根据 README 配置头部签名 API 地址',
                         )
                     break
@@ -246,7 +251,7 @@ export default {
                     }
                     this.loginTimeout = setTimeout(() => {
                         this.$alert(
-                            '登录时间似乎过长了，请检查网络是否正常，如果安卓系/苹果系协议互相切换请先删除 token，若还不能登录请携带日志反馈',
+                            '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
                         )
                     }, 60 * 1000)
                     await ipcRenderer.send('createBot', this.form)
@@ -275,7 +280,7 @@ export default {
         },
         cannotLogin() {
             this.$confirm(
-                '无法登录有可能由风控造成，随机生成不同的设备消息或许可以解决，但也有可能造成更严重的风控，是否尝试随机生成?',
+                '无法登录/发送消息有可能由风控造成，随机生成不同的设备消息或许可以解决，但也有可能造成更严重的风控，是否尝试随机生成?',
                 '提示',
                 {
                     confirmButtonText: '确定',

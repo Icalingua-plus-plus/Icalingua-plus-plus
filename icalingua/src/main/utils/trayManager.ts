@@ -247,6 +247,7 @@ export const updateTrayMenu = async () => {
             visible: getConfig().adapter === 'oicq',
             click: () => {
                 getConfig().account.password = ''
+                getConfig().account.autologin = false
                 exit()
             },
         }),

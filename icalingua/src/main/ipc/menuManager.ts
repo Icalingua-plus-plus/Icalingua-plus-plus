@@ -1038,6 +1038,7 @@ export const updateAppMenu = async () => {
                 visible: getConfig().adapter === 'oicq',
                 click: () => {
                     getConfig().account.password = ''
+                    getConfig().account.autologin = false
                     exit()
                 },
             }),
