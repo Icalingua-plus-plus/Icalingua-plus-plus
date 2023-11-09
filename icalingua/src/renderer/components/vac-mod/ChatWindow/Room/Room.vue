@@ -1854,8 +1854,9 @@ export default {
 
 .vac-icon-textarea {
     display: flex;
-    margin: 12px 0 0 5px;
-
+    margin: 12px 0 10px 5px;
+    align-items: flex-end;
+    
     svg,
     .vac-wrapper {
         margin: 0 7px;
