@@ -409,9 +409,13 @@ const eventHandlers = {
         if (room) {
             room.utime = data.time * 1000
             const operatorObj = (await bot.getGroupMemberInfo(data.group_id, data.operator_id, false)).data
-            const operator = operatorObj.card ? operatorObj.card : operatorObj.nickname
+            const operator = operatorObj
+                ? operatorObj.card
+                    ? operatorObj.card
+                    : operatorObj.nickname
+                : data.operator_id
             const userObj = (await bot.getGroupMemberInfo(data.group_id, data.user_id, false)).data
-            const user = userObj.card ? userObj.card : userObj.nickname
+            const user = userObj ? (userObj.card ? userObj.card : userObj.nickname) : data.user_id
             let msg = ''
             if (data.operator_id !== bot.uin) msg += operator
             else msg += '你'
@@ -577,7 +581,7 @@ const eventHandlers = {
             const mutedUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
             mutedUserName = mutedUser ? mutedUser.card || mutedUser.nickname : data.user_id.toString()
         }
-        let content = `${operator.card || operator.nickname}(${data.operator_id}) `
+        let content = `${operator ? operator.card || operator.nickname : data.operator_id}(${data.operator_id}) `
         if (muteAll && data.duration > 0) content += '开启了全员禁言'
         else if (muteAll) content += '关闭了全员禁言'
         else if (data.duration === 0) content += `将 ${mutedUserName}(${data.user_id}) 解除禁言`
@@ -585,7 +589,7 @@ const eventHandlers = {
         const message: Message = {
             _id: `mute-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
-            username: operator.card || operator.nickname,
+            username: operator ? operator.card || operator.nickname : data.operator_id.toString(),
             senderId: data.operator_id,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm:ss', now),
@@ -637,7 +641,9 @@ const eventHandlers = {
         if (data.user_id) {
             try {
                 const operator = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-                content = `${operator.card || operator.nickname}(${data.user_id}) 修改了群设置:`
+                content = `${operator ? operator.card || operator.nickname : data.user_id}(${
+                    data.user_id
+                }) 修改了群设置:`
             } catch (e) {}
         }
         let keys = ''
@@ -731,8 +737,8 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const newAdmin = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
         let content = data.set
-            ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
-            : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
+            ? `群主设置 ${newAdmin ? newAdmin.card || newAdmin.nickname : data.user_id} 为管理员`
+            : `群主取消了 ${newAdmin ? newAdmin.card || newAdmin.nickname : data.user_id} 的管理员资格`
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
@@ -773,13 +779,15 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const transferredUser = (await bot.getGroupMemberInfo(data.group_id, data.user_id)).data
-        let content = `${operator.card || operator.nickname}(${data.operator_id}) 将群转让给了 ${
-            transferredUser.card || transferredUser.nickname
-        }(${data.user_id})`
+        let content = `${operator ? operator.card || operator.nickname : data.operator_id}(${
+            data.operator_id
+        }) 将群转让给了 ${transferredUser ? transferredUser.card || transferredUser.nickname : data.user_id}(${
+            data.user_id
+        })`
         const message: Message = {
             _id: `transfer-${now.getTime()}-${data.user_id}-${data.operator_id}`,
             content,
-            username: operator.card || operator.nickname,
+            username: operator ? operator.card || operator.nickname : data.operator_id.toString(),
             senderId: data.operator_id,
             time: data.time * 1000,
             timestamp: formatDate('hh:mm:ss', now),
