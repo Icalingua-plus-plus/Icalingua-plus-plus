@@ -1762,16 +1762,16 @@ const adapter = {
                     bubble_id: (<GroupMessageEventData>data).bubble_id,
                 }
                 try {
-                    await processMessage(data.message, message, {}, roomId)
+                    const retData = await processMessage(data.message, message, {}, roomId)
                     if (await storage.isChatIgnored(message.senderId)) message.hide = true
                     messages.push(message)
                     newMsgs.push(message)
                     if (message.time > lastMessageTime) {
-                        lastMessage = Object.assign(Object.assign({}, message), lastMessage, {
+                        lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
                             username: message.username,
                             timestamp: formatDate('hh:mm', new Date(message.time)),
                         })
-                        lastMessageTime = message.time
+                        lastMessageTime = retData.message.time
                     }
                 } catch (e) {
                     console.error(e)
