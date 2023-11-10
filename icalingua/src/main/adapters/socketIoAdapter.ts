@@ -673,6 +673,7 @@ const adapter: Adapter = {
                     }
                     if (!success) {
                         ui.messageError('文件上传 bridge 失败')
+                        progress.close()
                         return
                     }
                     uploadedChunks++

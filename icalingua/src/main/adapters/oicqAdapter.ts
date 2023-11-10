@@ -1365,6 +1365,7 @@ const adapter: OicqAdapter = {
                     if (data.error) {
                         ui.notifyError({ title: '文件上传失败', message: data.error.message })
                         ui.closeLoading()
+                        uiProgress.close()
                         return
                     }
                     ui.messageSuccess('文件上传成功')
