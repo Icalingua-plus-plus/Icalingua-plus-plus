@@ -778,6 +778,9 @@ jobs:
         with:
           node-version: "16"
 
+      - name: Install setuptools
+        run: python3 -m pip install setuptools
+
       - name: Install pnpm
         run: corepack enable
 
