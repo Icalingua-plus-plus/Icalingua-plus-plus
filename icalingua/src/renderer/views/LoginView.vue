@@ -253,6 +253,9 @@ export default {
                     if (!this.form.signAPIAddress) {
                         this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
                     }
+                    if (this.form.useNT) {
+                        this.$message('使用实验性 NT 上线，可能不支持部分功能')
+                    }
                     this.loginTimeout = setTimeout(() => {
                         this.$alert(
                             '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
