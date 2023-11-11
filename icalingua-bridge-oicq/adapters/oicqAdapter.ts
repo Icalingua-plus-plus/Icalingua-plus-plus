@@ -1768,7 +1768,7 @@ const adapter = {
                     newMsgs.push(message)
                     if (message.time > lastMessageTime) {
                         lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
-                            username: message.username,
+                            username: bot.uin == retData.message.senderId ? 'You' : retData.message.username,
                             timestamp: formatDate('hh:mm', new Date(message.time)),
                         })
                         lastMessageTime = retData.message.time
@@ -1820,7 +1820,7 @@ const adapter = {
 
         // 更新最近消息
         if (!messages.length) return
-        if (room.utime > lastMessageTime) return
+        if (room.utime >= lastMessageTime) return
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
         clients.updateRoom(room)

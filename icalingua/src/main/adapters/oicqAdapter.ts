@@ -1271,7 +1271,7 @@ const adapter: OicqAdapter = {
         return all
     },
     setGroupNick(group: number, nick: string): any {
-        return bot.setGroupCard(group, getUin(), nick)
+        return bot.setGroupCard(group, bot.uin, nick)
     },
     async getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
         return (await bot.getGroupMemberInfo(group, member, noCache)).data
@@ -2043,7 +2043,7 @@ const adapter: OicqAdapter = {
                         newMsgs.push(message)
                         if (first_loop && retData.message.time > lastMessageTime) {
                             lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
-                                username: getUin() == retData.message.senderId ? 'You' : retData.message.username,
+                                username: bot.uin == retData.message.senderId ? 'You' : retData.message.username,
                                 timestamp: formatDate('hh:mm', new Date(retData.message.time)),
                             })
                             lastMessageTime = retData.message.time
@@ -2115,7 +2115,7 @@ const adapter: OicqAdapter = {
 
         // 更新最近消息
         if (!messages.length) return
-        if (room.utime > lastMessageTime) return
+        if (room.utime >= lastMessageTime) return
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
         ui.updateRoom(room)
