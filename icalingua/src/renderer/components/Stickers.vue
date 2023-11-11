@@ -13,7 +13,7 @@
                 </div>
             </a>
         </div>
-        <div v-show="panel === 'face'" class="panel face-panel" ref="facePanel">
+        <div v-show="panel === 'face'" class="panel face-panel">
             <div class="subheader" v-show="recentFace.length">最近使用</div>
             <div class="grid" v-show="recentFace.length">
                 <div v-for="i in recentFace" :key="i">
@@ -26,25 +26,17 @@
             </div>
             <div class="grid">
                 <div v-for="i in faceIdToLottie.keys()" :key="i">
-                    <img
-                        :src="getFacePreview(i)"
-                        @click="pickFace(i, $event.target)"
-                        @click.right="pickLottie(i, $event.target)"
-                    />
+                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
                 </div>
             </div>
             <div class="subheader">全部表情</div>
             <div class="grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
-                    <img
-                        :src="getFacePreview(i)"
-                        @click="pickFace(i, $event.target)"
-                        @click.right="pickLottie(i, $event.target)"
-                    />
+                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'remote'" class="panel" ref="remotePanel">
+        <div v-show="panel === 'remote'" class="panel">
             <div class="subheader" v-show="recentRemoteSticker.length">最近使用</div>
             <div class="grid" v-show="recentRemoteSticker.length">
                 <div v-for="i in recentRemoteSticker" :key="i">
@@ -57,7 +49,7 @@
                 <div v-for="i in remote_pics" :key="i.id">
                     <img
                         :src="i.url"
-                        @click="sendRemoteSticker(i.url, $event.target)"
+                        @click="sendRemoteSticker(i.url)"
                         @click.right="remoteStickerMenu(i.url, $event)"
                     />
                 </div>
@@ -116,18 +108,37 @@ import { faceIdToLottie } from '../utils/getLottieFace'
 
 const DEFAULT_CATEGORY = Symbol('DEFAULT')
 const RECENT_CATEGORY = Symbol('RECENT')
-const MAX_RECENT_FACE = 18
-const MAX_RECENT_LOCAL_STICKER = 32
-const MAX_RECENT_REMOTE_STICKER = 8
 
-function getRecent(name) {
-    try {
-        const recentFace = JSON.parse(localStorage[name])
-        if (recentFace instanceof Array) {
-            return recentFace
+const RECENTS = {
+    max: {
+        recentLocalSticker: 32,
+        recentRemoteSticker: 8,
+        recentFace: 18,
+    },
+    recents: {},
+    get(name) {
+        if (!(name in this.recents)) {
+            this.recents[name] = []
+            try {
+                const recents = JSON.parse(localStorage[name])
+                if (recents instanceof Array) {
+                    this.recents[name] = recents
+                }
+            } catch (e) {}
         }
-    } catch (e) {}
-    return []
+        return this.recents[name]
+    },
+    push(name, img) {
+        let recents = this.get(name)
+        const index = recents.indexOf(img)
+        if (index !== -1) {
+            recents = [img, ...recents.slice(0, index), ...recents.slice(index + 1)]
+        } else {
+            recents = [img, ...recents.slice(0, this.max[name] - 1)]
+        }
+        localStorage[name] = JSON.stringify(recents)
+        this.recents[name] = recents
+    },
 }
 
 export default {
@@ -135,10 +146,12 @@ export default {
     components: { VEmojiPicker },
     watch: {
         panel() {
-            this.recentFace = getRecent('recentFace')
+            this.recentFace = RECENTS.get('recentFace')
+            this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
         },
         open() {
-            this.recentFace = getRecent('recentFace')
+            this.recentFace = RECENTS.get('recentFace')
+            this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
         },
     },
     props: {
@@ -153,8 +166,8 @@ export default {
             subdirs: [],
             current_dir: DEFAULT_CATEGORY,
             supportRemote: false,
-            recentFace: getRecent('recentFace'),
-            recentRemoteSticker: getRecent('recentRemoteSticker'),
+            recentFace: [],
+            recentRemoteSticker: [],
             descSortStickersByTime: true,
         }
     },
@@ -166,7 +179,6 @@ export default {
         this.watchedPath = {}
         this.generatingPath = new Set()
         this.panel = await ipc.getLastUsedStickerType()
-        this.recentLocalSticker = getRecent('recentLocalSticker')
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
 
         // Remote Stickers
@@ -272,7 +284,7 @@ export default {
             console.log('Stickers directory changed:', dir)
             this.current_dir = dir
             if (dir == RECENT_CATEGORY) {
-                this.pics = this.recentLocalSticker
+                this.pics = RECENTS.get('recentLocalSticker')
                 return
             }
             const subDir = dir == DEFAULT_CATEGORY ? '' : dir + '/'
@@ -306,20 +318,17 @@ export default {
         },
         sendLocalSticker(img) {
             this.$emit('send', this.default_dir + img)
-            this.pushRecent('recentLocalSticker', img, MAX_RECENT_LOCAL_STICKER)
-            if (this.current_dir == RECENT_CATEGORY) {
-                this.pics = this.recentLocalSticker
-            }
+            RECENTS.push('recentLocalSticker', img)
         },
-        sendRemoteSticker(img, elem) {
+        sendRemoteSticker(img) {
             this.$emit('send', img)
-            this.pushRecent('recentRemoteSticker', img, MAX_RECENT_REMOTE_STICKER, elem, this.$refs.remotePanel)
+            RECENTS.push('recentRemoteSticker', img)
         },
-        pickFace(face, elem) {
+        pickFace(face) {
             this.$emit('selectFace', face)
-            this.pushRecent('recentFace', parseInt(face), MAX_RECENT_FACE, elem, this.$refs.facePanel)
+            RECENTS.push('recentFace', parseInt(face))
         },
-        pickLottie(face, elem) {
+        pickLottie(face) {
             const faceId = parseInt(face)
             const qlottie = faceIdToLottie.get(faceId)
             if (!qlottie) {
@@ -327,26 +336,7 @@ export default {
                 return
             }
             this.$emit('sendLottie', { qlottie: qlottie, id: face })
-            this.pushRecent('recentFace', faceId, MAX_RECENT_FACE, elem, this.$refs.facePanel)
-        },
-        pushRecent(name, img, max, elem, container) {
-            const index = this[name].indexOf(img)
-            let recent = this[name]
-            if (index != -1) {
-                recent = [img, ...recent.slice(0, index), ...recent.slice(index + 1)]
-            } else {
-                recent = [img, ...recent.slice(0, max - 1)]
-            }
-            localStorage[name] = JSON.stringify(recent)
-            if (name === 'recentFace') return
-            this[name] = recent
-            if (!elem) return
-            // 保持当前点击的表情位置不变
-            const oldY = elem.getBoundingClientRect().y
-            this.$nextTick(() => {
-                const newY = elem.getBoundingClientRect().y
-                container.scrollTop += newY - oldY
-            })
+            RECENTS.push('recentFace', faceId)
         },
         folder() {
             shell.openPath(
