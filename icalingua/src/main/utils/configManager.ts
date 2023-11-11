@@ -40,6 +40,7 @@ const emptyLoginForm: LoginForm = {
     signAPIAddress: '',
     signAPIKey: '',
     forceAlgoT544: false,
+    useNT: false,
 }
 const defaultAria2Config: Aria2Config = {
     enabled: false,

@@ -16,6 +16,7 @@ type LoginForm = {
     signAPIAddress?: string
     signAPIKey?: string
     forceAlgoT544?: boolean
+    useNT?: boolean
 }
 
 export default LoginForm

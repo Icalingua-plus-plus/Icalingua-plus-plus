@@ -94,6 +94,10 @@
                 <span class="el-form-item__label">Use 8.9.50's Tlv544</span>
                 <el-switch v-model="form.forceAlgoT544" />
             </el-form-item>
+            <el-form-item prop="useNT">
+                <span class="el-form-item__label">Use NT's register</span>
+                <el-switch v-model="form.useNT" />
+            </el-form-item>
             <el-form-item label="Storage engine">
                 <el-select v-model="form.storageType" size="small">
                     <el-option label="MongoDB" value="mdb">MongoDB</el-option>
