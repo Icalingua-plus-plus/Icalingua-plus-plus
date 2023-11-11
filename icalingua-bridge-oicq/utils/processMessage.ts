@@ -12,6 +12,9 @@ import silkDecode from './silkDecode'
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
     const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
         if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]
+
+        lastMessage.content = lastMessage.content ?? '' // 初始化最近信息内容
+
         let lastType
         let lastReply = false
         let replyAnonymous = false
