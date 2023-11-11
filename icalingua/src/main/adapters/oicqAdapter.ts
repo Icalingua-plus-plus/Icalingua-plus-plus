@@ -990,6 +990,7 @@ const loginHandlers = {
         ui.message('正在获取历史消息')
         {
             const rooms = await storage.getAllRooms()
+            isAutoFetching = true
             // 先私聊后群聊
             for (const i of rooms) {
                 if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
@@ -1019,6 +1020,7 @@ const loginHandlers = {
                 adapter.fetchHistory(buffer.toString('base64'), roomId)
                 await sleep(500)
             }
+            isAutoFetching = false
         }
         ui.messageSuccess('历史消息获取完成')
     },
