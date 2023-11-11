@@ -83,6 +83,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     },
                     useNullAsDefault: true,
                 })
+                this.db.raw('pragma mmap_size = ?', [10 * 1024 * 1024])
+                // WIP 也许加个用户选项来指定 ?
                 break
             case 'mysql':
                 this.db = knex({
