@@ -17,6 +17,7 @@ type LoginForm = {
     signAPIKey?: string
     forceAlgoT544?: boolean
     useNT?: boolean
+    sqlMMapSize?: number
 }
 
 export default LoginForm

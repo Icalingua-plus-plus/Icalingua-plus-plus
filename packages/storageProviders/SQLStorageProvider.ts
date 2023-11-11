@@ -32,11 +32,13 @@ interface PgMyOpt {
     password: string
     database: string
     dataPath?: never
+    mmapSize?: never
 }
 
 /** SQLite 存放 DB 文件需要的信息的类型定义 */
 interface SQLiteOpt {
     dataPath: string
+    mmapSize: number
     host?: never
     user?: never
     password?: never
@@ -83,7 +85,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     },
                     useNullAsDefault: true,
                 })
-                this.db.raw('pragma mmap_size = ?', [10 * 1024 * 1024])
+                this.db.raw('pragma mmap_size = ?', [connectOpt.mmapSize])
                 // WIP 也许加个用户选项来指定 ?
                 break
             case 'mysql':

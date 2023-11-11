@@ -1432,6 +1432,7 @@ const adapter = {
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
                 useNT: form.useNT,
+                sql_mmap_size: form.sqlMMapSize,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {

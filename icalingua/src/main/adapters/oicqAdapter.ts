@@ -1052,6 +1052,7 @@ const initStorage = async () => {
                     'sqlite3',
                     {
                         dataPath: app.getPath('userData'),
+                        mmapSize: loginForm.sqlMMapSize,
                     },
                     errorHandler,
                 )
@@ -1684,6 +1685,8 @@ const adapter: OicqAdapter = {
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
                 useNT: form.useNT,
+                // 为啥他提示 useNT 不在 confBot 中?
+                sqlMMapSize: form.sqlMMapSize,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {

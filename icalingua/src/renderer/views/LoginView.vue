@@ -107,6 +107,9 @@
                     <el-option label="PostgreSQL" value="pg">PostgreSQL</el-option>
                 </el-select>
             </el-form-item>
+            <el-form-item prop="sqlMMapSize" v-show="form.storageType === 'sqlite'">
+                <el-input placeholder="sqlite mmap size" v-model="form.sqlMMapSize" />
+            </el-form-item>
             <el-form-item prop="connStr" v-show="form.storageType === 'mdb'">
                 <el-input
                     :show-password="form.mdbConnStr && form.mdbConnStr.split(':').length > 2"

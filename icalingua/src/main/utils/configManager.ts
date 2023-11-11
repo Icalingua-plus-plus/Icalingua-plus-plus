@@ -41,6 +41,9 @@ const emptyLoginForm: LoginForm = {
     signAPIKey: '',
     forceAlgoT544: false,
     useNT: false,
+    sqlMMapSize: 0,
+    // 默认为 0, 和之前一致
+    // 除非有我 (@shenjackyuanjie) 这种 sqlite3 数据库 5.3G 了还不迁移的人再去加吧
 }
 const defaultAria2Config: Aria2Config = {
     enabled: false,
