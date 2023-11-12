@@ -86,7 +86,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     useNullAsDefault: true,
                 })
                 this.db.raw('pragma mmap_size = ?', [connectOpt.mmapSize])
-                // WIP 也许加个用户选项来指定 ?
+                // WIP 也许加个用户选项来指定 ? (没事了,写好了)
                 break
             case 'mysql':
                 this.db = knex({
