@@ -237,7 +237,9 @@
                         </slot>
                     </div>
                     <div class="vac-media-file">
-                        <img ref="mediaFile" :src="imageFile" @load="onMediaLoad" />
+                        <img ref="mediaFile" :src="imageFile" @load="onMediaLoad" :style="{
+                            'max-height': `${mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : null}`
+                        }"/>
                     </div>
                 </div>
 
@@ -328,7 +330,7 @@
                         'vac-textarea-outline': editAndResend,
                     }"
                     :style="{
-                        'min-height': `${mediaDimensions ? mediaDimensions.height : 20}px`,
+                        'min-height': `${mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : '20px'}`,
                         'padding-left': `${mediaDimensions ? mediaDimensions.width - 10 : 12}px`,
                     }"
                     @input="onChangeInput"
