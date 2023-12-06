@@ -4,7 +4,15 @@
             <div class="entry">
                 <div class="left">
                     <el-badge value="@" :type="room.at === 'all' ? 'warning' : undefined" :hidden="!room.at">
-                        <el-avatar size="large" :src="roomAvatar" />
+                        <div class="avatar-container">
+                            <el-avatar size="large" :src="roomAvatar" />
+                            <el-avatar
+                                class="sub-avatar"
+                                :size="20"
+                                :src="roomSubAvatar"
+                                v-if="room.users.length > 2 && room.lastMessage && room.lastMessage.userId"
+                            />
+                        </div>
                         <el-badge
                             class="avatar-only-unread"
                             :value="room.unreadCount"
@@ -78,6 +86,9 @@ export default {
         },
         roomAvatar() {
             return getAvatarUrl(this.room.roomId)
+        },
+        roomSubAvatar() {
+            return getAvatarUrl(this.room.lastMessage.userId)
         },
         roomName() {
             return this.removeEmotes ? removeGroupNameEmotes(this.room.roomName) : this.room.roomName
@@ -202,5 +213,21 @@ a {
     position: absolute;
     top: 30px;
     left: 24px;
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.sub-avatar {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+}
+
+@container (max-width: 80px) {
+    .sub-avatar {
+        display: none;
+    }
 }
 </style>
