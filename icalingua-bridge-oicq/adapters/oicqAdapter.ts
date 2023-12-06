@@ -165,6 +165,7 @@ const eventHandlers = {
             content: '',
             timestamp: formatDate('hh:mm', now),
             username: senderName,
+            userId: senderId,
         }
         ////process message////
         await processMessage(data.message, message, lastMessage, roomId)
@@ -263,6 +264,7 @@ const eventHandlers = {
                 content: msg,
                 username: null,
                 timestamp: formatDate('hh:mm'),
+                userId: data.operator_id,
             }
             const message: Message = {
                 username: '',
@@ -306,6 +308,7 @@ const eventHandlers = {
                 content: msg,
                 username: null,
                 timestamp: formatDate('hh:mm'),
+                userId: data.operator_id,
             }
             const message: Message = {
                 username: '',
@@ -335,6 +338,7 @@ const eventHandlers = {
                 content: msg,
                 username: null,
                 timestamp: formatDate('hh:mm'),
+                userId: data.user_id,
             }
             const message: Message = {
                 username: '',
@@ -386,6 +390,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: senderId,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -437,6 +442,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: data.operator_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -489,6 +495,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', new Date(data.time)),
+            userId: data.operator_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -687,6 +694,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', new Date(data.time)),
+            userId: data.operator_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -749,6 +757,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: senderId,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -782,6 +791,7 @@ const eventHandlers = {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: senderId,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -1460,6 +1470,7 @@ const adapter = {
                     content: '',
                     timestamp: formatDate('hh:mm'),
                     username: 'You',
+                    userId: bot.uin,
                 }
                 try {
                     await processMessage(message, _message, lastMessage, user_id)
