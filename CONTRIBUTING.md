@@ -23,7 +23,7 @@
 
 ## Development Setup
 
-You will need [Node.js](http://nodejs.org) **version 16** and [pnpm](https://pnpm.io/).
+You will need [Node.js](http://nodejs.org) **version 18** and [pnpm](https://pnpm.io/).
 
 After cloning the repo, run:
 
