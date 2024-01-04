@@ -45,6 +45,9 @@
                         <el-radio-button label="29">8.9.80</el-radio-button>
                         <el-radio-button label="31">8.9.83</el-radio-button>
                         <el-radio-button label="33">8.9.85</el-radio-button>
+                        <el-radio-button label="35">8.9.88</el-radio-button>
+                        <el-radio-button label="37">8.9.93</el-radio-button>
+                        <el-radio-button label="39">9.0.0</el-radio-button>
                     </el-radio-group>
                     <span>Android Pad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -62,6 +65,9 @@
                         <el-radio-button label="30">8.9.80</el-radio-button>
                         <el-radio-button label="32">8.9.83</el-radio-button>
                         <el-radio-button label="34">8.9.85</el-radio-button>
+                        <el-radio-button label="36">8.9.88</el-radio-button>
+                        <el-radio-button label="38">8.9.93</el-radio-button>
+                        <el-radio-button label="40">9.0.0</el-radio-button>
                     </el-radio-group>
                     <span>iPad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
