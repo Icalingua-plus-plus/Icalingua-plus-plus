@@ -2,7 +2,8 @@
     <div class="root">
         <el-input type="password" placeholder="口令" v-model="password" />
         <p :class="state">{{ displayState }}</p>
-        <el-button @click="confirm" :disabled="!password">设置口令</el-button>
+        <el-button @click="close">关闭</el-button>
+        <el-button @click="confirm" :disabled="!password" type="primary">设置口令</el-button>
     </div>
 </template>
 
@@ -21,6 +22,9 @@ export default {
     methods: {
         confirm() {
             ipc.setLockPassword(this.password)
+            window.close()
+        },
+        close() {
             window.close()
         },
     },
