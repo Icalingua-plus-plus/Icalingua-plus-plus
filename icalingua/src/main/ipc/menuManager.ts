@@ -245,7 +245,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     const groupName = getConfig().removeGroupNameEmotes
                         ? removeGroupNameEmotes(groupInfo.group_name)
                         : groupInfo.group_name
-                    await newIcalinguaWindow(windowOptions).loadURL(
+                    await newIcalinguaWindow({
+                        ...windowOptions,
+                        modal: true,
+                        parent: getMainWindow(),
+                    }).loadURL(
                         getWinUrl() +
                             '#/remarkNameEdit/' +
                             0 +
@@ -262,7 +266,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         ui.messageError('该联系人还不是您的好友，无法为该联系人添加备注')
                         return
                     }
-                    await newIcalinguaWindow(windowOptions).loadURL(
+                    await newIcalinguaWindow({
+                        ...windowOptions,
+                        modal: true,
+                        parent: getMainWindow(),
+                    }).loadURL(
                         getWinUrl() +
                             '#/remarkNameEdit/' +
                             friendInfo.user_id +
@@ -510,6 +518,8 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         height: 190,
                         width: 600,
                         autoHideMenuBar: true,
+                        modal: true,
+                        parent: getMainWindow(),
                         webPreferences: {
                             contextIsolation: false,
                             nodeIntegration: true,
