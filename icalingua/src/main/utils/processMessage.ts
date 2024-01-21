@@ -27,7 +27,7 @@ const processMessage = async (
     let lastReply = false
     let replyAnonymous = false
     for (let i = 0; i < oicqMessage.length; i++) {
-        const m = oicqMessage[i]
+        const m = oicqMessage[i] || { type: 'unknown', data: {} }
         let appurl
         let url
         switch (m.type) {
