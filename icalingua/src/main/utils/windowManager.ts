@@ -10,6 +10,7 @@ import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
 import md5 from 'md5'
 import crypto from 'crypto'
+import atCache from './atCache'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -80,7 +81,8 @@ export const loadMainWindow = () => {
     )
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
-        if (new URL(details.url).hostname == 'qun.qq.com') {
+        const url1 = new URL(details.url)
+        if (url1.hostname == 'qun.qq.com') {
             ;(async () => {
                 const size = screen.getPrimaryDisplay().size
                 const win = newIcalinguaWindow({
@@ -103,7 +105,7 @@ export const loadMainWindow = () => {
 
                 await win.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
-        } else if (new URL(details.url).hostname == 'docs.qq.com') {
+        } else if (url1.hostname == 'docs.qq.com') {
             ;(async () => {
                 const win1 = newIcalinguaWindow({
                     autoHideMenuBar: true,
@@ -125,7 +127,7 @@ export const loadMainWindow = () => {
                 })
                 await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
-        } else if (new URL(details.url).hostname == 'ti.qq.com') {
+        } else if (url1.hostname == 'ti.qq.com') {
             ;(async () => {
                 const size = screen.getPrimaryDisplay().size
                 const win1 = newIcalinguaWindow({
@@ -150,6 +152,21 @@ export const loadMainWindow = () => {
                 })
                 await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
+        } else if (url1.protocol === 'icalingua:') {
+            try {
+                const qq = url1.search.match(/qq=(\d+)/)[1]
+                const name = decodeURIComponent(url1.search.match(/name=([^&]+)/)[1])
+                atCache.push({
+                    text: name,
+                    id: Number(qq),
+                })
+                ui.addMessageText(name + ' ')
+                return {
+                    action: 'deny',
+                }
+            } catch (e) {
+                console.error(e)
+            }
         } else {
             shell.openExternal(details.url)
         }

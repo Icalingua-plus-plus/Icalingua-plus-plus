@@ -20,6 +20,7 @@
                     }"
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
+                    :title="message.title"
                     @click="showSpoiler = true"
                     style="word-break: break-word"
                 >
@@ -145,6 +146,22 @@ export default {
                 m.face = this.checkType(m, 'face')
                 m.forward = this.checkType(m, 'forward')
                 m.nestedforward = this.checkType(m, 'nestedforward')
+                m.at = this.checkType(m, 'at')
+                if (m.at) {
+                    const qqReg = /qq=(\d+)/
+                    try {
+                        const qq = m.value.match(qqReg)[1]
+                        m.href = qq
+                            ? `icalingua://at?name=${String(m.value).split('>').slice(1).join('>')}&qq=${qq}`
+                            : ''
+                    } catch (e) {
+                        //m.value = `<IcalinguaAt${m.value}</IcalinguaAt>`
+                        console.error(e)
+                    }
+                    m.value = decodeURIComponent(String(m.value).split('>').slice(1).join('>'))
+                    if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
+                    m.url = true
+                }
                 m.breakLine = this.checkType(m, 'breakLine')
                 m.spoiler = this.checkType(m, 'spoiler')
                 m.image = this.checkImageType(m)

@@ -1472,6 +1472,29 @@ const adapter: OicqAdapter = {
                 )
         }
         if (content) {
+            // 转换新 @
+            const icalinguaAtRegex = /<IcalinguaAt[^>]*>([^<]*)<\/IcalinguaAt>/
+            let trans = []
+            while (icalinguaAtRegex.test(content)) {
+                const icalinguaAt = icalinguaAtRegex.exec(content)
+                try {
+                    const atQQ = Number(icalinguaAt[0].match(/qq=(\d+)/)[1])
+                    const name = decodeURIComponent(icalinguaAt[1])
+                    at.push({
+                        id: atQQ,
+                        text: name,
+                    })
+                    const temp = content.split(icalinguaAt[0])
+                    trans.push(temp[0] + name)
+                    content = temp[1] || ''
+                } catch (e) {
+                    console.error(e)
+                    const temp = content.split(icalinguaAt[0])
+                    trans.push(temp[0] + icalinguaAt[0])
+                    content = temp[1] || ''
+                }
+            }
+            content = trans.join('') + content
             //这里是处理@人和表情 markup 的逻辑
             const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]

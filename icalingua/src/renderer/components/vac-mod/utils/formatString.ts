@@ -38,6 +38,11 @@ const pseudoMarkdown = {
         allowed_chars: '.',
         type: 'nestedforward',
     },
+    '<IcalinguaAt': {
+        end: '</IcalinguaAt>',
+        allowed_chars: '.',
+        type: 'at',
+    },
     '\n': {
         type: 'breakLine',
     },

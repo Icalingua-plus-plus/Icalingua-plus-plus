@@ -47,12 +47,15 @@ const processMessage = async (
                     text = text.replace(/^ /, '')
                 }
                 lastMessage.content += text
-                message.content += text
                 if ((m as AtElem).data.qq === 'all' && message.senderId !== 2854196310) {
                     message.at = 'all'
                 } else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true
+                    text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
+                } else if ((m as AtElem).data.qq != oicq.getUin()) {
+                    text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
                 }
+                message.content += text
                 break
             case 'flash':
                 message.flash = true

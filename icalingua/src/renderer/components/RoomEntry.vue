@@ -21,9 +21,9 @@
                         />
                     </el-badge>
                 </div>
-                <div class="right" :title="desc">
+                <div class="right">
                     <div class="flex l1" :class="{ withoutdesc: !desc }">
-                        <div class="name">
+                        <div class="name" :title="roomName">
                             {{ roomName }}
                         </div>
                         <div class="icon" v-show="room.priority < priority">
@@ -37,7 +37,7 @@
                         </div>
                     </div>
                     <div class="flex">
-                        <div class="desc">
+                        <div class="desc" :title="desc">
                             {{ desc }}
                         </div>
                         <div v-show="room.unreadCount !== 0">
