@@ -237,9 +237,16 @@
                         </slot>
                     </div>
                     <div class="vac-media-file">
-                        <img ref="mediaFile" :src="imageFile" @load="onMediaLoad" :style="{
-                            'max-height': `${mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : null}`
-                        }"/>
+                        <img
+                            ref="mediaFile"
+                            :src="imageFile"
+                            @load="onMediaLoad"
+                            :style="{
+                                'max-height': `${
+                                    mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : null
+                                }`,
+                            }"
+                        />
                     </div>
                 </div>
 
@@ -330,7 +337,9 @@
                         'vac-textarea-outline': editAndResend,
                     }"
                     :style="{
-                        'min-height': `${mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : '20px'}`,
+                        'min-height': `${
+                            mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : '20px'
+                        }`,
                         'padding-left': `${mediaDimensions ? mediaDimensions.width - 10 : 12}px`,
                     }"
                     @input="onChangeInput"
@@ -905,6 +914,13 @@ export default {
                         })
                     }
                     if (msg.content) {
+                        const icalinguaAtRegex = /<IcalinguaAt[^>]*>([^<]*)<\/IcalinguaAt>/
+                        let trans = []
+                        while (icalinguaAtRegex.test(msg.content)) {
+                            const icalinguaAt = icalinguaAtRegex.exec(msg.content)
+                            msg.content = msg.content.replace(icalinguaAt[0], icalinguaAt[1])
+                        }
+
                         const FACE_REGEX = /\[Face: (\d+)]/
                         const Parts = []
                         let splitContent = msg.content
@@ -1858,7 +1874,7 @@ export default {
     display: flex;
     margin: 12px 0 10px 5px;
     align-items: flex-end;
-    
+
     svg,
     .vac-wrapper {
         margin: 0 7px;
