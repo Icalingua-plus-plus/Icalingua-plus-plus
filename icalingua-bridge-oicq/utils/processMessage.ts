@@ -458,6 +458,21 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     lastMessage.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
                     message.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
                     break
+                case 'markdown':
+                    try {
+                        const imageRegex = /!\[.*?\]\((.*?)\)/g
+                        const imageUrl = m.data.markdown.match(imageRegex)
+                        if (imageUrl) {
+                            for (const url of imageUrl) {
+                                const imgUrl = url.match(/\((.*?)\)/)[1]
+                                message.file = {
+                                    type: 'image/jpeg',
+                                    url: imgUrl,
+                                }
+                                message.files.push(message.file)
+                            }
+                        }
+                    } catch (e) {}
                 default:
                     console.log('[无法解析的消息]', m)
                     break
