@@ -918,7 +918,7 @@ export default {
                         let trans = []
                         while (icalinguaAtRegex.test(msg.content)) {
                             const icalinguaAt = icalinguaAtRegex.exec(msg.content)
-                            msg.content = msg.content.replace(icalinguaAt[0], icalinguaAt[1])
+                            msg.content = msg.content.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
                         }
 
                         const FACE_REGEX = /\[Face: (\d+)]/
