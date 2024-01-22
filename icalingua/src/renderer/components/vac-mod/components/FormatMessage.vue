@@ -155,8 +155,9 @@ export default {
                             ? `icalingua://at?name=${String(m.value).split('>').slice(1).join('>')}&qq=${qq}`
                             : ''
                     } catch (e) {
-                        //m.value = `<IcalinguaAt${m.value}</IcalinguaAt>`
+                        m.value = `<IcalinguaAt${m.value}</IcalinguaAt>`
                         console.error(e)
+                        return
                     }
                     m.value = decodeURIComponent(String(m.value).split('>').slice(1).join('>'))
                     if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
