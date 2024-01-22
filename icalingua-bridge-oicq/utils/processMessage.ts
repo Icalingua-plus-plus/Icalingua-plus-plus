@@ -44,7 +44,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     } else if ((m as AtElem).data.qq == adapter.getUin()) {
                         message.at = true
                         text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
-                    } else if ((m as AtElem).data.qq != adapter.getUin()) {
+                    } else if (m.type === 'at' && (m as AtElem).data.qq != adapter.getUin()) {
                         text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
                     }
                     message.content += text

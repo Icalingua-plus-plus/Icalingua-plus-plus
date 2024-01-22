@@ -52,7 +52,7 @@ const processMessage = async (
                 } else if ((m as AtElem).data.qq == oicq.getUin()) {
                     message.at = true
                     text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
-                } else if ((m as AtElem).data.qq != oicq.getUin()) {
+                } else if (m.type === 'at' && (m as AtElem).data.qq != oicq.getUin()) {
                     text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
                 }
                 message.content += text
