@@ -45,7 +45,7 @@
         "pg-query-stream": "^4.5.3",
         "silk-sdk": "^0.2.2",
         "socket.io": "^4.7.4",
-        "sqlite3": "^5.1.7",
+        "sqlite3": "5.1.6",
         "uuid": "^8.3.2",
         "winston": "^3.11.0",
         "winston-daily-rotate-file": "^4.7.1",

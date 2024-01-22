@@ -205,7 +205,7 @@
         "pinyin-match": "^1.2.5",
         "silk-sdk": "^0.2.2",
         "socket.io": "^4.7.4",
-        "sqlite3": "^5.1.7"
+        "sqlite3": "5.1.6"
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",
