@@ -278,6 +278,20 @@ const processMessage = async (
                 } else {
                     lastMessage.content = '[JSON]' + (jsonObj.prompt || '')
                     message.content = '[JSON]' + (jsonObj.prompt || '')
+                    try {
+                        const urlRegex = /"jumpUrl": *"([^"]+)"/
+                        const previewRegex = /"preview": *"([^"]+)"/
+                        const jumpUrl = json.match(urlRegex)[1]
+                        if (jumpUrl) message.content += jumpUrl
+                        const preview = json.match(previewRegex)[1]
+                        if (preview) {
+                            message.file = {
+                                type: 'image/jpeg',
+                                url: preview,
+                            }
+                            message.files.push(message.file)
+                        }
+                    } catch (e) {}
                 }
                 break
             case 'xml':
