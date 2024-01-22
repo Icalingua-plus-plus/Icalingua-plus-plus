@@ -47,6 +47,9 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     } else if ((m as AtElem).data.qq != adapter.getUin()) {
                         text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
                     }
+                    if (m.type === 'text') {
+                        text = `<Text>${encodeURIComponent(text)}</Text>`
+                    }
                     message.content += text
                     break
                 case 'flash':

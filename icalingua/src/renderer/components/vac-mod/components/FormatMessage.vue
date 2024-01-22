@@ -162,6 +162,7 @@ export default {
                     if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
                     m.url = true
                 }
+                m.text = this.checkType(m, 'text')
                 m.breakLine = this.checkType(m, 'breakLine')
                 m.spoiler = this.checkType(m, 'spoiler')
                 m.image = this.checkImageType(m)

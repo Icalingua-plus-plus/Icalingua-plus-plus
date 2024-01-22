@@ -43,6 +43,11 @@ const pseudoMarkdown = {
         allowed_chars: '.',
         type: 'at',
     },
+    '<Text>': {
+        end: '</Text>',
+        allowed_chars: '.',
+        type: 'text',
+    },
     '\n': {
         type: 'breakLine',
     },
@@ -262,6 +267,9 @@ function linkifyResult(array) {
     const result = []
 
     array.forEach((arr) => {
+        if (arr.types.includes('text')) {
+            arr.value = decodeURIComponent(arr.value)
+        }
         const links = linkify.find(arr.value)
 
         if (links.length) {

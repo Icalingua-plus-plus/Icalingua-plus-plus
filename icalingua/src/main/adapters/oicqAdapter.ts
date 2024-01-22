@@ -1495,6 +1495,12 @@ const adapter: OicqAdapter = {
                 }
             }
             content = trans.join('') + content
+            // 转换新文本
+            const textRegex = /<Text>([^<]*)<\/Text>/
+            while (textRegex.test(content)) {
+                const txt = textRegex.exec(content)
+                content = content.replace(txt[0], decodeURIComponent(txt[1]))
+            }
             //这里是处理@人和表情 markup 的逻辑
             const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]
