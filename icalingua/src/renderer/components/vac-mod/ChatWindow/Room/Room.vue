@@ -903,6 +903,7 @@ export default {
                     bubble_id: msg.bubble_id,
                 }
                 if (msg) {
+                    let content = msg.content
                     singleMessage.user_id = msg.senderId
                     if (msg.replyMessage) {
                         singleMessage.message.push({
@@ -913,17 +914,17 @@ export default {
                             },
                         })
                     }
-                    if (msg.content) {
+                    if (content) {
                         const icalinguaAtRegex = /<IcalinguaAt[^>]*>([^<]*)<\/IcalinguaAt>/
                         let trans = []
-                        while (icalinguaAtRegex.test(msg.content)) {
-                            const icalinguaAt = icalinguaAtRegex.exec(msg.content)
-                            msg.content = msg.content.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
+                        while (icalinguaAtRegex.test(content)) {
+                            const icalinguaAt = icalinguaAtRegex.exec(content)
+                            content = content.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
                         }
 
                         const FACE_REGEX = /\[Face: (\d+)]/
                         const Parts = []
-                        let splitContent = msg.content
+                        let splitContent = content
                         while (FACE_REGEX.test(splitContent)) {
                             const exec = FACE_REGEX.exec(splitContent)
                             const index = exec.index
@@ -1015,9 +1016,8 @@ export default {
                         }
                     }
                     const idReg =
-                        msg.content.match(/\[QLottie: (\d+)\,(\d+)\]/) ||
-                        msg.content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
-                    if (idReg && msg.content === idReg[0]) {
+                        content.match(/\[QLottie: (\d+)\,(\d+)\]/) || content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
+                    if (idReg && content === idReg[0]) {
                         singleMessage.message = [
                             {
                                 type: 'face',
