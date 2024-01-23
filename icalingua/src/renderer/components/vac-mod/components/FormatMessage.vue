@@ -22,6 +22,11 @@
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
                     :title="message.title"
+                    @dragstart="
+                        (a) => {
+                            if (message.at) a.preventDefault()
+                        }
+                    "
                     @click="showSpoiler = true"
                     style="word-break: break-word"
                 >
