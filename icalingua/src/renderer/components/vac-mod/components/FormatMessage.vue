@@ -17,6 +17,7 @@
                         'vac-text-tag': !singleLine && !reply && message.tag,
                         'vac-text-spoiler': !showSpoiler && message.spoiler,
                         'vac-text-spoiler-transition': message.spoiler,
+                        'vac-text-at': message.at,
                     }"
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
@@ -302,5 +303,9 @@ img.face {
 
 .vac-text-spoiler-transition {
     transition: all 0.5s;
+}
+
+.vac-text-at {
+    text-decoration: none;
 }
 </style>
