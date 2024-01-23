@@ -845,7 +845,10 @@ Chromium ${process.versions.chrome}` : ''
                 return this.startChat(this.account, this.username)
             if ((typeof room) === 'number')
                 room = this.rooms.find(e => e.roomId === room)
-            if (!room) return
+            if (!room) {
+                this.$message.error('该对话不存在，可能未曾对话过或未加好友')
+                return
+            }
             this.lastUnreadCount = room.unreadCount
             this.lastUnreadAt = !!room.at
             if (this.selectedRoom.roomId != 0) {

@@ -280,12 +280,12 @@ const processMessage = async (
                     message.content += '[群相册]' + jsonObj.prompt
                 } else {
                     lastMessage.content = '[JSON]' + (jsonObj.prompt || '')
-                    message.content = '[JSON]' + (jsonObj.prompt || '')
+                    message.content = '[JSON]' + (jsonObj.prompt || '') + '\n\n'
                     try {
                         const urlRegex = /"jumpUrl": *"([^"]+)"/
                         const previewRegex = /"preview": *"([^"]+)"/
                         const jumpUrl = json.match(urlRegex)[1]
-                        if (jumpUrl) message.content += jumpUrl
+                        if (jumpUrl) message.content += decodeURI(jumpUrl)
                         const preview = json.match(previewRegex)[1]
                         if (preview) {
                             message.file = {

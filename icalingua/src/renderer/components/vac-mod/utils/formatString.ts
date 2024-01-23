@@ -1,4 +1,9 @@
 import * as linkify from 'linkifyjs'
+
+linkify.registerCustomProtocol('mqqapi')
+linkify.registerCustomProtocol('qqapi')
+linkify.registerCustomProtocol('icalingua')
+
 export default (text, doLinkify) => {
     const json = compileToJSON(text, doLinkify)
 

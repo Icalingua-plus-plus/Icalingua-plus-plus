@@ -19,6 +19,8 @@ let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
 
+const PROTOCOL_UNSUPPORT = '暂不支持此功能'
+
 async function loadDevtools(window: BrowserWindow) {
     try {
         // require.resolve 会给出 vue-devtools/lib/index.js 的路径
@@ -82,6 +84,7 @@ export const loadMainWindow = () => {
 
     mainWindow.webContents.setWindowOpenHandler((details) => {
         const url1 = new URL(details.url)
+        const action = (url1.hostname + url1.pathname).replace(/^\/\//, '')
         if (url1.hostname == 'qun.qq.com') {
             ;(async () => {
                 const size = screen.getPrimaryDisplay().size
@@ -153,19 +156,33 @@ export const loadMainWindow = () => {
                 await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
         } else if (url1.protocol === 'icalingua:') {
-            try {
-                const qq = url1.search.match(/qq=(\d+)/)[1]
-                const name = decodeURIComponent(url1.search.match(/name=([^&]+)/)[1])
-                atCache.push({
-                    text: name,
-                    id: Number(qq),
-                })
-                ui.addMessageText(name + ' ')
-                return {
-                    action: 'deny',
+            if (action === 'at') {
+                const qq = url1.searchParams.get('qq')
+                const name = decodeURIComponent(url1.searchParams.get('name'))
+                if (qq) {
+                    atCache.push({
+                        text: name,
+                        id: Number(qq),
+                    })
+                    ui.addMessageText(name + ' ')
                 }
-            } catch (e) {
-                console.error(e)
+            } else {
+                ui.messageError(PROTOCOL_UNSUPPORT)
+            }
+        } else if (url1.protocol === 'mqqapi:') {
+            if (action === 'group/invite_join') {
+                showRequestWindow()
+            } else {
+                ui.messageError(PROTOCOL_UNSUPPORT)
+            }
+        } else if (url1.protocol === 'qqapi:') {
+            if (action === 'card/show_pslcard') {
+                const qq = url1.searchParams.get('uin')
+                if (qq) {
+                    ui.chroom(Number(qq))
+                }
+            } else {
+                ui.messageError(PROTOCOL_UNSUPPORT)
             }
         } else {
             shell.openExternal(details.url)
