@@ -844,7 +844,7 @@ export default {
         })
         ipcRenderer.on('pasteGif', (_, GifURL) => {
             this.onPasteGif(GifURL)
-            this.$emit('stickers-panel')
+            this.$emit('close-stickers-panel')
         })
         this.hideChatImageByDefault = await ipc.getHideChatImageByDefault()
         ipcRenderer.on('setHideChatImageByDefault', (_, hideChatImageByDefault) => {

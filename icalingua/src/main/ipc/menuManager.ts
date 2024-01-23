@@ -2192,6 +2192,17 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                             },
                         }),
                     )
+                menu.append(
+                    new MenuItem({
+                        label: '复制到编辑区',
+                        click: () => {
+                            ui.setMessageText(message.content)
+                            if (message.file) ui.pasteGif(message.file.url)
+                            console.log(message.replyMessage)
+                            ui.replyMessage(message.replyMessage)
+                        },
+                    }),
+                )
             }
             menu.append(
                 new MenuItem({

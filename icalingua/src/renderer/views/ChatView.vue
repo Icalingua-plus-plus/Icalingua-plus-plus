@@ -116,6 +116,7 @@
                     @open-file="openImage"
                     @pokefriend="pokeFriend"
                     @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
+                    @close-stickers-panel="panel = ''"
                     @download-image="downloadImage"
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
