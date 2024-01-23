@@ -146,26 +146,22 @@ export default {
                 m.face = this.checkType(m, 'face')
                 m.forward = this.checkType(m, 'forward')
                 m.nestedforward = this.checkType(m, 'nestedforward')
-                m.at = this.checkType(m, 'at')
-                if (m.at) {
-                    const qqReg = /qq=(\d+)/
-                    try {
-                        const qq = m.value.match(qqReg)[1]
-                        m.href = qq
-                            ? `icalingua://at?name=${String(m.value).split('>').slice(1).join('>')}&qq=${qq}`
-                            : ''
-                    } catch (e) {
-                        m.value = `<IcalinguaAt${m.value}</IcalinguaAt>`
-                        console.error(e)
-                        return
-                    }
-                    m.value = decodeURIComponent(String(m.value).split('>').slice(1).join('>'))
-                    if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
-                    m.url = true
-                }
                 m.breakLine = this.checkType(m, 'breakLine')
                 m.spoiler = this.checkType(m, 'spoiler')
                 m.image = this.checkImageType(m)
+                m.at = this.checkType(m, 'at')
+                if (m.at) {
+                    const value = String(m.value).split('>')
+                    const qq = Number(value.shift())
+                    if (!qq || isNaN(qq) || value.length === 0 || qq <= 0) {
+                        m.value = `<IcalinguaAt qq=${m.value}</IcalinguaAt>`
+                        return
+                    }
+                    m.href = qq ? `icalingua://at?name=${value.join('>')}&qq=${qq}` : ''
+                    m.value = decodeURIComponent(value.join('>'))
+                    if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
+                    m.url = true
+                }
             })
 
             if (this.usePanguJs) {

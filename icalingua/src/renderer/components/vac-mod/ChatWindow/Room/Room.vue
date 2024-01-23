@@ -915,8 +915,7 @@ export default {
                         })
                     }
                     if (content) {
-                        const icalinguaAtRegex = /<IcalinguaAt[^>]*>([^<]*)<\/IcalinguaAt>/
-                        let trans = []
+                        const icalinguaAtRegex = /<IcalinguaAt qq=\d+>([^<]*)<\/IcalinguaAt>/
                         while (icalinguaAtRegex.test(content)) {
                             const icalinguaAt = icalinguaAtRegex.exec(content)
                             content = content.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))

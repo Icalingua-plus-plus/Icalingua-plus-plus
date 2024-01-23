@@ -38,7 +38,7 @@ const pseudoMarkdown = {
         allowed_chars: '.',
         type: 'nestedforward',
     },
-    '<IcalinguaAt': {
+    '<IcalinguaAt qq=': {
         end: '</IcalinguaAt>',
         allowed_chars: '.',
         type: 'at',
