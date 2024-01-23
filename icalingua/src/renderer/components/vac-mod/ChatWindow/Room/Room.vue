@@ -33,7 +33,12 @@
 
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <loader :show="loadingMessages" />
-            <div ref="messagesContainer" class="vac-messages-container" @mousedown.left="startMouseSelect">
+            <div
+                ref="messagesContainer"
+                class="vac-messages-container"
+                @mousedown.left="startMouseSelect"
+                @dragstart="$event.stopPropagation()"
+            >
                 <div v-if="mouseSelecting" ref="mouseSelectArea" class="vac-mouse-select-area"></div>
                 <div :class="{ 'vac-messages-hidden': loadingMessages }">
                     <transition name="vac-fade-message">
@@ -810,9 +815,31 @@ export default {
             event.preventDefault()
             event.stopPropagation()
             console.log(event)
+            //纯文本
+            if (event.dataTransfer.getData('text')) {
+                if (event.target.className === 'vac-textarea') {
+                    this.$refs.roomTextarea.message += event.dataTransfer.getData('text')
+                    this.focusTextarea()
+                    this.$nextTick(() => this.resizeTextarea())
+                }
+            }
             if (event.dataTransfer.files.length) {
                 // Using the path attribute to get absolute file path
                 this.onFileChange(event.dataTransfer.files)
+            } else if (event.dataTransfer.getData('text/html')) {
+                //富文本中的图片
+                const imageHTML = event.dataTransfer.getData('text/html')
+                if (imageHTML.indexOf('<img ') !== -1) {
+                    try {
+                        const imageMatch = imageHTML.match(/<img [^>]*>/)[0]
+                        const imageURL = imageMatch.match(/src="(.*?)"/)
+                        if (imageURL) {
+                            this.onPasteGif(decodeURI(imageURL[1]))
+                        }
+                    } catch (e) {
+                        console.error(e)
+                    }
+                }
             }
         })
     },
