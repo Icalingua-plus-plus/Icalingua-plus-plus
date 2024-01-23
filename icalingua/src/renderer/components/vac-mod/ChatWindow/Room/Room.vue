@@ -805,7 +805,7 @@ export default {
                 const imageURL = imageHTML.match(/img src="(.*?)"/)
                 console.log(imageURL)
                 if (imageURL) {
-                    this.onPasteGif(imageURL[1])
+                    this.onPasteGif(decodeURI(imageURL[1]))
                 }
             }
         })
