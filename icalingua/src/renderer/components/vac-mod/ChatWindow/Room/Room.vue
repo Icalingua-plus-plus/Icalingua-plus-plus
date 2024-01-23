@@ -801,11 +801,15 @@ export default {
             if (event.clipboardData.files && event.clipboardData.files.length) {
                 // Using the path attribute to get absolute file path
                 this.onFileChange(event.clipboardData.files)
-            } else if (imageHTML.indexOf('<img src="') !== -1) {
-                const imageURL = imageHTML.match(/img src="(.*?)"/)
-                console.log(imageURL)
-                if (imageURL) {
-                    this.onPasteGif(decodeURI(imageURL[1]))
+            } else if (imageHTML.indexOf('<img ') !== -1) {
+                try {
+                    const imageMatch = imageHTML.match(/<img [^>]*>/)[0]
+                    const imageURL = imageMatch.match(/src="(.*?)"/)
+                    if (imageURL) {
+                        this.onPasteGif(decodeURI(imageURL[1]))
+                    }
+                } catch (e) {
+                    console.error(e)
                 }
             }
         })
