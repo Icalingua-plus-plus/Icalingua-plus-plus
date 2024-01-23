@@ -77,6 +77,10 @@ let rendererConfig = {
               sass: 'vue-style-loader!css-loader!sass-loader?indentedSyntax=1',
               scss: 'vue-style-loader!css-loader!sass-loader',
               less: 'vue-style-loader!css-loader!less-loader'
+            },
+            compilerOptions: {
+              preserveWhitespace: false,
+              whitespace: 'condense'
             }
           }
         }
