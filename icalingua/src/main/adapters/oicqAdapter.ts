@@ -1480,7 +1480,7 @@ const adapter: OicqAdapter = {
                     const atQQ = Number(icalinguaAt[1])
                     const name = decodeURIComponent(icalinguaAt[2])
                     at.push({
-                        id: atQQ,
+                        id: atQQ === 1 ? 'all' : atQQ,
                         text: name,
                     })
                     content = content.replace(icalinguaAt[0], name)

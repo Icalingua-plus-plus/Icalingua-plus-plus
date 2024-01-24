@@ -162,7 +162,7 @@ export const loadMainWindow = () => {
                 if (qq) {
                     atCache.push({
                         text: name,
-                        id: Number(qq),
+                        id: qq === '1' ? 'all' : Number(qq),
                     })
                     ui.addMessageText(name + ' ')
                 }

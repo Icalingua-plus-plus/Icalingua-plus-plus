@@ -165,7 +165,8 @@ export default {
                     }
                     m.href = qq ? `icalingua://at?name=${value.join('>')}&qq=${qq}` : ''
                     m.value = decodeURIComponent(value.join('>'))
-                    if (m.href) m.title = `${m.value}(${m.href.split('qq=')[1]})`
+                    if (m.href) m.title = `${m.value}(${qq})`
+                    if (qq === 1) m.title = m.value
                     m.url = true
                 }
             })
