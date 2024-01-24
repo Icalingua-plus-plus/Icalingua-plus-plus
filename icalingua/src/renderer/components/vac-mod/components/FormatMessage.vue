@@ -241,10 +241,25 @@ export default {
         },
         parseForwardPreview(code) {
             let preview = ''
+            try {
+                const json = JSON.parse(code)
+                const detail = json.meta.detail
+                preview += detail.source + '\n'
+                for (let i of detail.news) preview += i.text + '\n'
+                return preview
+            } catch (e) {}
             const parser = new DOMParser()
             const xmlDoc = parser.parseFromString(code, 'text/xml')
             const titles = xmlDoc.getElementsByTagName('title')
             for (let i of titles) preview += i.textContent + '\n'
+            const titleReg = /<title(.*?)<\/title>/g
+            if (titleReg.test(code) && !titles.length) {
+                const titleMatch = code.match(titleReg)
+                const titleXml = '<item>' + titleMatch.join('') + '</item>'
+                const doc = parser.parseFromString(titleXml, 'text/xml')
+                const titles2 = doc.getElementsByTagName('title')
+                for (let i of titles2) preview += i.textContent + '\n'
+            }
             return preview
         },
     },
