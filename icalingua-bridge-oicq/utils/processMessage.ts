@@ -284,7 +284,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             const urlRegex = /"jumpUrl": *"([^"]+)"/
                             const previewRegex = /"preview": *"([^"]+)"/
                             const jumpUrl = json.match(urlRegex)[1]
-                            if (jumpUrl) message.content += decodeURI(jumpUrl)
+                            if (jumpUrl) message.content += jumpUrl.replace(/\\\//g, '/').replace(/&amp;/g, '&')
                             const preview = json.match(previewRegex)[1]
                             if (preview) {
                                 message.file = {

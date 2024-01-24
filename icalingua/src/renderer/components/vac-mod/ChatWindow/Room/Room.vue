@@ -806,7 +806,7 @@ export default {
                     const imageMatch = imageHTML.match(/<img [^>]*>/)[0]
                     const imageURL = imageMatch.match(/src="(.*?)"/)
                     if (imageURL) {
-                        this.onPasteGif(decodeURI(imageURL[1]).replace(/&amp;/g, '&'))
+                        this.onPasteGif(imageURL[1].replace(/\\\//g, '/').replace(/&amp;/g, '&'))
                     }
                 } catch (e) {
                     console.error(e)
@@ -838,7 +838,7 @@ export default {
                         const imageMatch = imageHTML.match(/<img [^>]*>/)[0]
                         const imageURL = imageMatch.match(/src="(.*?)"/)
                         if (imageURL) {
-                            this.onPasteGif(decodeURI(imageURL[1]).replace(/&amp;/g, '&'))
+                            this.onPasteGif(imageURL[1].replace(/\\\//g, '/').replace(/&amp;/g, '&'))
                         }
                     } catch (e) {
                         console.error(e)
