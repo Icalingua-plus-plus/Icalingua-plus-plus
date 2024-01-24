@@ -1035,7 +1035,7 @@ const adapter = {
                 content: xmlret.data.data.data,
                 at: [],
                 roomId: target,
-                messageType: 'xml',
+                messageType: 'forward',
             })
         }
     },
@@ -1321,6 +1321,16 @@ const adapter = {
                         type: 'xml',
                         data: {
                             data: content,
+                        },
+                    })
+                    break
+                } else if (messageType === 'forward') {
+                    chain.length = 0
+                    chain.push({
+                        type: 'xml',
+                        data: {
+                            data: content,
+                            type: 35,
                         },
                     })
                     break
