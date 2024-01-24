@@ -283,13 +283,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         try {
                             const urlRegex = /"jumpUrl": *"([^"]+)"/
                             const previewRegex = /"preview": *"([^"]+)"/
-                            const jumpUrl = json.match(urlRegex)[1]
-                            if (jumpUrl) message.content += jumpUrl.replace(/\\\//g, '/').replace(/&amp;/g, '&')
-                            const preview = json.match(previewRegex)[1]
-                            if (preview) {
+                            const jumpUrl = json.match(urlRegex)
+                            if (jumpUrl && jumpUrl[1])
+                                message.content += jumpUrl[1].replace(/\\\//g, '/').replace(/&amp;/g, '&')
+                            const preview = json.match(previewRegex)
+                            if (preview && preview[1]) {
                                 message.file = {
                                     type: 'image/jpeg',
-                                    url: preview,
+                                    url: preview[1],
                                 }
                                 message.files.push(message.file)
                             }
