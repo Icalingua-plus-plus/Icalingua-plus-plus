@@ -8,16 +8,16 @@ RUN npm i pnpm -g
 RUN cd icalingua-bridge-oicq && \ 
     pnpm i && \
     pnpm compile
+ENV NODE_ENV=production
+RUN mv /app/icalingua-bridge-oicq/build /tmp/build && cd /tmp/build && pnpm i
 
 # Production image, copy all the files and run next
 FROM node:18-alpine as runner
 
 WORKDIR /app
-RUN apk add ffmpeg alpine-sdk python3 py3-pip curl
-COPY --from=builder /app/icalingua-bridge-oicq ./
-RUN npm i
-COPY --from=builder /app/node_modules/@icalingua ./node_modules/@icalingua
-RUN apk del alpine-sdk python3 py3-pip
+RUN apk add ffmpeg
+COPY --from=builder /tmp/build ./build
+COPY --from=builder /app/icalingua-bridge-oicq/config.yaml ./
 ENV TZ=Asia/Shanghai
 
 EXPOSE 6789
