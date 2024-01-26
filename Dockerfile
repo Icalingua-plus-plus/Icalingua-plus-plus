@@ -15,7 +15,7 @@ RUN mv /app/icalingua-bridge-oicq/build /tmp/build && cd /tmp/build && pnpm i
 FROM node:18-alpine as runner
 
 WORKDIR /app
-RUN apk add ffmpeg
+RUN apk add ffmpeg curl
 COPY --from=builder /tmp/build ./build
 COPY --from=builder /app/icalingua-bridge-oicq/config.yaml ./
 ENV TZ=Asia/Shanghai
