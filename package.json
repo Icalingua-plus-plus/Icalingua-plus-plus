@@ -15,7 +15,7 @@
   "packageManager": "pnpm@7.8.0",
   "devDependencies": {
     "husky": "^8.0.3",
-    "lint-staged": "^13.1.2"
+    "lint-staged": "^13.3.0"
   },
   "scripts": {
     "prepare": "husky install"
