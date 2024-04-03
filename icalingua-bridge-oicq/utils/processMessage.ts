@@ -43,9 +43,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         message.at = 'all'
                     } else if ((m as AtElem).data.qq == adapter.getUin()) {
                         message.at = true
-                        text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
-                    } else if (m.type === 'at' && (m as AtElem).data.qq != adapter.getUin()) {
-                        text = `<IcalinguaAt qq=${(m as AtElem).data.qq}>${encodeURIComponent(text)}</IcalinguaAt>`
+                    }
+                    if (m.type === 'at') {
+                        const atQQ = m.data.qq === 'all' ? 1 : m.data.qq
+                        text = `<IcalinguaAt qq=${atQQ}>${encodeURIComponent(text)}</IcalinguaAt>`
                     }
                     message.content += text
                     break
