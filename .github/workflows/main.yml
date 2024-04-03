@@ -188,7 +188,7 @@ jobs:
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
-            apt update && apt install python2 python -y
+            apt update && apt install python3 -y
             corepack enable
           run: |
             uname -a
@@ -259,7 +259,7 @@ jobs:
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
             curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
             apt-get install -y nodejs gcc g++ make
-            apt update && apt install python2 python -y
+            apt update && apt install python3 -y
             corepack enable
           run: |
             uname -a
