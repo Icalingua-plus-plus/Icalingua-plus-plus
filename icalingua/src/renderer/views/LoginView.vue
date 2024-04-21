@@ -27,6 +27,7 @@
                 <el-input type="text" placeholder="Head Sign API Key" v-model="form.signAPIKey" />
             </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
+                <!-- shit code -->
                 <div class="protocols">
                     <span>Android Phone</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -48,6 +49,10 @@
                         <el-radio-button label="35">8.9.88</el-radio-button>
                         <el-radio-button label="37">8.9.93</el-radio-button>
                         <el-radio-button label="39">9.0.0</el-radio-button>
+                        <el-radio-button label="41">9.0.8</el-radio-button>
+                        <el-radio-button label="43">9.0.17</el-radio-button>
+                        <el-radio-button label="45">9.0.25</el-radio-button>
+                        <el-radio-button label="47">9.0.35</el-radio-button>
                     </el-radio-group>
                     <span>Android Pad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
@@ -68,6 +73,10 @@
                         <el-radio-button label="36">8.9.88</el-radio-button>
                         <el-radio-button label="38">8.9.93</el-radio-button>
                         <el-radio-button label="40">9.0.0</el-radio-button>
+                        <el-radio-button label="42">9.0.8</el-radio-button>
+                        <el-radio-button label="44">9.0.17</el-radio-button>
+                        <el-radio-button label="46">9.0.25</el-radio-button>
+                        <el-radio-button label="48">9.0.35</el-radio-button>
                     </el-radio-group>
                     <span>iPad</span>
                     <el-radio-group v-model="form.protocol" size="mini">
