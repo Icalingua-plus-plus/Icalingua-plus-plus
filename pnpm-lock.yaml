@@ -77,7 +77,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.24.2
+      oicq-icalingua-plus-plus: ^1.24.3
       pangu: ^4.0.7
       pg: ^8.11.3
       pg-query-stream: ^4.5.3
@@ -126,7 +126,7 @@ importers:
       knex: 2.5.1_gudx3sgsbadgyuxmwa64sxddtq
       mongodb: 4.17.2
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.24.2
+      oicq-icalingua-plus-plus: 1.24.3
       pangu: 4.0.7
       pg: 8.11.3
       pg-query-stream: 4.5.3_pg@8.11.3
@@ -237,7 +237,7 @@ importers:
       mongodb: ^4.17.2
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.24.2
+      oicq-icalingua-plus-plus: ^1.24.3
       pg: ^8.11.3
       pg-query-stream: ^4.5.3
       prettier: ^2.8.8
@@ -266,7 +266,7 @@ importers:
       mongodb: 4.17.2
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.24.2
+      oicq-icalingua-plus-plus: 1.24.3
       pg: 8.11.3
       pg-query-stream: 4.5.3_pg@8.11.3
       silk-sdk: 0.2.2
@@ -8723,8 +8723,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.24.2:
-    resolution: {integrity: sha512-Ptlr5iCCRamf2GGOvUwgLdcYjsEFdHPzZ11MxqpsqCbdEh0Tiazk/GHS93v5ZYdze8m44Q8+3h0K+aokJAb4ZQ==}
+  /oicq-icalingua-plus-plus/1.24.3:
+    resolution: {integrity: sha512-PcRLRoD6jdu3NVw7VdcB1f9NCKoa29MaAsRycSBnzLNtZH7KhyjdpJY8v0GHyjhZabS0eF8r3HuPKq9OGykiGQ==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:

@@ -38,6 +38,10 @@ export const faceNameToLottie = new Map<string, number>([
     ['太阳', 35],
     ['月亮', 36],
     ['戳一戳', 37],
+    ['龙年快乐', 38],
+    ['新年中龙', 39],
+    ['新年大龙', 40],
+    ['略略略', 41],
 ])
 
 export const faceIdToLottie = new Map([
@@ -78,6 +82,10 @@ export const faceIdToLottie = new Map([
     [74, 35],
     [75, 36],
     [181, 37],
+    [392, 38],
+    [393, 39],
+    [394, 40],
+    [395, 41],
 ])
 
 export const getLottiePath = (id: number, resultId?: string) => {

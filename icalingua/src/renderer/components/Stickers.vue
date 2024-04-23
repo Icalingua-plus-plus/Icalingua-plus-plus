@@ -17,7 +17,12 @@
             <div class="subheader" v-show="recentFace.length">最近使用</div>
             <div class="grid" v-show="recentFace.length">
                 <div v-for="i in recentFace" :key="i">
-                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
+                    <img
+                        :src="getFacePreview(i)"
+                        @click="pickFace(i)"
+                        @click.right="pickLottie(i)"
+                        :title="getFaceName(i)"
+                    />
                 </div>
             </div>
             <div class="subheader">
@@ -26,13 +31,23 @@
             </div>
             <div class="grid">
                 <div v-for="i in faceIdToLottie.keys()" :key="i">
-                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
+                    <img
+                        :src="getFacePreview(i)"
+                        @click="pickFace(i)"
+                        @click.right="pickLottie(i)"
+                        :title="getFaceName(i)"
+                    />
                 </div>
             </div>
             <div class="subheader">全部表情</div>
             <div class="grid" v-show="face.length">
                 <div v-for="i in face" :key="i">
-                    <img :src="getFacePreview(i)" @click="pickFace(i)" @click.right="pickLottie(i)" />
+                    <img
+                        :src="getFacePreview(i)"
+                        @click="pickFace(i)"
+                        @click.right="pickLottie(i)"
+                        :title="getFaceName(i)"
+                    />
                 </div>
             </div>
         </div>
@@ -105,6 +120,8 @@ import path from 'path'
 import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
 import { faceIdToLottie } from '../utils/getLottieFace'
+
+const faceMap = require('oicq-icalingua-plus-plus/lib/message/face').map
 
 const DEFAULT_CATEGORY = Symbol('DEFAULT')
 const RECENT_CATEGORY = Symbol('RECENT')
@@ -247,6 +264,9 @@ export default {
                 faceId = '0'.repeat(3 - faceId.length) + faceId
             }
             return 'file://' + this.face_dir + faceId
+        },
+        getFaceName(i) {
+            return String(faceMap[parseInt(i)] || '').replace(/\//, '')
         },
         errorHandler(e) {
             // generate preview
