@@ -52,5 +52,5 @@
         "ws": "^8.16.0",
         "yaml": "^1.10.2"
     },
-    "packageManager": "pnpm@8.15.8"
+    "packageManager": "pnpm@7.8.0"
 }
