@@ -58,35 +58,12 @@ function compileToJSON(str, doLinkify) {
     let minIndexOf = -1
     let minIndexOfKey = null
 
-    let array //接受正则表达式的返回值
-    const replacements = [] //存储替换数据的起始位置、结束位置、替换内容
-    const regex = /\[Face: +\d{1,3}]/g
-    const replaceCharacter = (string: string, index: number, lastIndex: number, replacement: string): string => {
-        return string.slice(0, index) + replacement + str.slice(lastIndex)
-    }
-    while ((array = regex.exec(str)) !== null) {
-        const index: number = array.index
-        const lastIndex: number = regex.lastIndex
-        const replacement: string = array[0]
-        replacements.push({
-            index,
-            lastIndex,
-            replacement,
-        })
-        str = replaceCharacter(str, index, lastIndex, ' '.repeat(replacement.length))
-    }
+    str = replaceNoLinkifyCharacters(str)
 
     let links = doLinkify ? linkify.find(str) : []
     let minIndexFromLink = false
 
-    for (const { index, lastIndex, replacement } of replacements) {
-        //恢复被替换的数据
-        str = replaceCharacter(str, index, lastIndex, replacement)
-    }
-
-    for (const { index, lastIndex, replacement } of replacements) {
-        str = replaceCharacter(str, index, lastIndex, replacement)
-    }
+    str = recoverNoLinkifyCharacters(str)
 
     if (links.length > 0) {
         minIndexOf = str.indexOf(links[0].value)
@@ -267,7 +244,9 @@ function linkifyResult(array) {
     const result = []
 
     array.forEach((arr) => {
+        arr.value = replaceNoLinkifyCharacters(arr.value)
         const links = linkify.find(arr.value)
+        arr.value = recoverNoLinkifyCharacters(arr.value)
 
         if (links.length) {
             const spaces = arr.value.replace(links[0].value, '')
@@ -282,4 +261,43 @@ function linkifyResult(array) {
     })
 
     return result
+}
+
+const noLinkifyRegexs = [
+    /\[Face: +\d{1,3}]/g,
+    /<IcalinguaAt qq=\d+>[^<]+<\/IcalinguaAt>/g, //at 不要当作链接一部分
+    /[^\x00-\xff]+/g, //中文和全角符号不要当作链接一部分
+]
+const replacements = [] //存储替换数据的起始位置、结束位置、替换内容
+function replaceNoLinkifyCharacters(str) {
+    let array //接受正则表达式的返回值
+    const replaceCharacter = (string: string, index: number, lastIndex: number, replacement: string): string => {
+        return string.slice(0, index) + replacement + str.slice(lastIndex)
+    }
+    for (let regex of noLinkifyRegexs) {
+        while ((array = regex.exec(str)) !== null) {
+            const index: number = array.index
+            const lastIndex: number = regex.lastIndex
+            const replacement: string = array[0]
+            replacements.push({
+                index,
+                lastIndex,
+                replacement,
+            })
+            str = replaceCharacter(str, index, lastIndex, ' '.repeat(replacement.length))
+        }
+    }
+    return str
+}
+
+function recoverNoLinkifyCharacters(str) {
+    const replaceCharacter = (string: string, index: number, lastIndex: number, replacement: string): string => {
+        return string.slice(0, index) + replacement + str.slice(lastIndex)
+    }
+    for (const { index, lastIndex, replacement } of replacements) {
+        //恢复被替换的数据
+        str = replaceCharacter(str, index, lastIndex, replacement)
+    }
+    replacements.length = 0
+    return str
 }
