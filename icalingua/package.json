@@ -289,5 +289,5 @@
         "winston-daily-rotate-file": "^4.7.1",
         "yaml": "^1.10.2"
     },
-    "packageManager": "pnpm@7.8.0"
+    "packageManager": "pnpm@8.15.8"
 }
