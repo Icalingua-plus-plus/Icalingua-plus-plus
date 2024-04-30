@@ -1,5 +1,5 @@
 # Install dependencies only when needed
-FROM node:16-alpine as builder
+FROM node:18-alpine as builder
 
 RUN apk add make g++ alpine-sdk python3 py3-pip   
 WORKDIR  /app
@@ -10,7 +10,7 @@ RUN cd icalingua-bridge-oicq && \
     pnpm compile
 
 # Production image, copy all the files and run next
-FROM node:16-alpine as runner
+FROM node:18-alpine as runner
 
 WORKDIR /app
 RUN apk add ffmpeg alpine-sdk python3 py3-pip curl
