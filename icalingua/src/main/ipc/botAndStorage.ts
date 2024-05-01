@@ -158,7 +158,6 @@ ipcMain.on('sendGroupPoke', (_, gin, uin) => adapter.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => adapter.addRoom(room))
 ipcMain.on('addChatGroup', (_, chatGroup) => adapter.addChatGroup(chatGroup))
 ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
-    const messages = await adapter.getForwardMsg(resId, fileName)
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
@@ -172,6 +171,7 @@ ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
             contextIsolation: false,
         },
     })
+    const messages = await adapter.getForwardMsg(resId, fileName)
     win.loadURL(getWinUrl() + '#/history')
     win.webContents.on('did-finish-load', function () {
         win.webContents.send('loadMessages', messages)
