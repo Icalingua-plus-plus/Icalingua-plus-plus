@@ -1839,7 +1839,7 @@ const adapter = {
         let messagesLength = messages.length
         if (roomId > 0) {
             for (let i = 0; i < messagesLength; i++) {
-                if (messages[i].senderId != bot.uin) continue
+                //if (messages[i].senderId != bot.uin) continue
                 try {
                     let messageIdBuf = Buffer.from(messages[i]._id as string, 'base64')
                     if (messageIdBuf.length != 17) continue
