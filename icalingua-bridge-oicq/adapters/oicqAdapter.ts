@@ -1719,7 +1719,17 @@ const adapter = {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async renewMessage(roomId: number, messageId: string, message: Message) {
-        const res = await adapter.getMsg(messageId)
+        let res = await adapter.getMsg(messageId)
+        let messageIdBuf = Buffer.from(messageId, 'base64')
+        if (res.error && roomId > 0 && messageIdBuf.length === 17) {
+            const timestamp = messageIdBuf.readUInt32BE(12)
+            const timeDiff = [-1, 1]
+            for (let j of timeDiff) {
+                messageIdBuf.writeUInt32BE(timestamp + j, 12)
+                res = await adapter.getMsg(messageIdBuf.toString('base64'))
+                if (!res.error) break
+            }
+        }
         if (!res.error) {
             const data = res.data
             const newMessage: Message = {
