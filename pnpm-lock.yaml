@@ -29,13 +29,13 @@ importers:
       '@types/lowdb': ^1.0.15
       '@types/md5': ^2.3.5
       '@types/minimist': ^1.2.5
-      '@types/node': ^16.18.74
+      '@types/node': ^16.18.96
       '@types/pangu': ^4.0.2
       '@types/uuid': ^8.3.4
       '@types/webpack': ^5.28.5
       ajv: ^6.12.6
       aria2: ^4.1.2
-      axios: ^1.6.5
+      axios: ^1.6.8
       babel-core: ^6.26.3
       babel-loader: ^7.1.5
       babel-minify-webpack-plugin: ^0.3.1
@@ -54,10 +54,10 @@ importers:
       electron-builder: ^23.6.0
       electron-debug: ^3.2.0
       electron-devtools-installer: ^3.2.0
-      electron-dl: ^3.5.1
+      electron-dl: ^3.5.2
       element-ui: ^2.15.14
-      express: ^4.18.2
-      fast-xml-parser: ^4.3.3
+      express: ^4.19.2
+      fast-xml-parser: ^4.3.6
       file-loader: ^1.1.11
       file-type: ^16.5.4
       fluent-ffmpeg: ^2.1.2
@@ -79,15 +79,15 @@ importers:
       nodejs-base64: ^2.0.0
       oicq-icalingua-plus-plus: ^1.24.8
       pangu: ^4.0.7
-      pg: ^8.11.3
-      pg-query-stream: ^4.5.3
+      pg: ^8.11.5
+      pg-query-stream: ^4.5.5
       pinyin-match: ^1.2.5
       prettier: ^2.8.8
-      sass: ^1.70.0
+      sass: ^1.76.0
       sass-loader: ^10.5.2
       silk-sdk: ^0.2.2
-      socket.io: ^4.7.4
-      socket.io-client: ^4.7.4
+      socket.io: ^4.7.5
+      socket.io-client: ^4.7.5
       sqlite3: 5.1.6
       style-loader: ^0.21.0
       thread-loader: ^3.0.4
@@ -112,10 +112,10 @@ importers:
       webpack: ^4.47.0
       webpack-cli: ^3.3.12
       webpack-dev-server: ^3.11.3
-      webpack-hot-middleware: ^2.26.0
+      webpack-hot-middleware: ^2.26.1
       webpack-merge: ^4.2.2
       which: ^2.0.2
-      winston: ^3.11.0
+      winston: ^3.13.0
       winston-daily-rotate-file: ^4.7.1
       yaml: ^1.10.2
     dependencies:
@@ -222,12 +222,12 @@ importers:
       '@types/express': ^4.17.21
       '@types/fluent-ffmpeg': ^2.1.24
       '@types/md5': ^2.3.5
-      '@types/node': ^16.18.74
+      '@types/node': ^16.18.96
       '@types/ws': ^8.5.10
-      axios: ^1.6.5
+      axios: ^1.6.8
       body-parser: ^1.20.2
       eventemitter3: ^5.0.1
-      express: ^4.18.2
+      express: ^4.19.2
       fluent-ffmpeg: ^2.1.2
       ioredis: ^4.28.5
       knex: ^2.5.1
@@ -238,18 +238,18 @@ importers:
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
       oicq-icalingua-plus-plus: ^1.24.8
-      pg: ^8.11.3
-      pg-query-stream: ^4.5.3
+      pg: ^8.11.5
+      pg-query-stream: ^4.5.5
       prettier: ^2.8.8
       silk-sdk: ^0.2.2
-      socket.io: ^4.7.4
+      socket.io: ^4.7.5
       sqlite3: 5.1.6
       ts-node: ^10.9.2
       typescript: ^4.9.5
       uuid: ^8.3.2
-      winston: ^3.11.0
+      winston: ^3.13.0
       winston-daily-rotate-file: ^4.7.1
-      ws: ^8.16.0
+      ws: ^8.17.0
       yaml: ^1.10.2
     dependencies:
       '@noble/ed25519': 1.7.1
@@ -2516,7 +2516,7 @@ packages:
   /axios/1.6.8:
     resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
     dependencies:
-      follow-redirects: 1.15.6
+      follow-redirects: 1.15.6_debug@4.3.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -3679,7 +3679,7 @@ packages:
       caniuse-lite: 1.0.30001614
       electron-to-chromium: 1.4.752
       node-releases: 2.0.14
-      update-browserslist-db: 1.0.13_browserslist@4.23.0
+      update-browserslist-db: 1.0.14_browserslist@4.23.0
     dev: true
 
   /bson/4.7.2:
@@ -4870,7 +4870,6 @@ packages:
     dependencies:
       ms: 2.1.2
       supports-color: 6.1.0
-    dev: true
 
   /decamelize/1.2.0:
     resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
@@ -6107,15 +6106,6 @@ packages:
   /fn.name/1.1.0:
     resolution: {integrity: sha512-GRnmB5gPyJpAhTQdSZTSp9uaPSvl09KoYcMQtsB9rQoOmzs9dH6ffeccH+Z+cv6P68Hu5bC6JjRh4Ah/mHSNRw==}
 
-  /follow-redirects/1.15.6:
-    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-
   /follow-redirects/1.15.6_debug@4.3.4:
     resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
     engines: {node: '>=4.0'}
@@ -6126,7 +6116,6 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4_supports-color@6.1.0
-    dev: true
 
   /for-each/0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -6511,7 +6500,6 @@ packages:
   /has-flag/3.0.0:
     resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
     engines: {node: '>=4'}
-    dev: true
 
   /has-flag/4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -10787,7 +10775,6 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       has-flag: 3.0.0
-    dev: true
 
   /supports-color/7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
@@ -11335,8 +11322,8 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /update-browserslist-db/1.0.13_browserslist@4.23.0:
-    resolution: {integrity: sha512-xebP81SNcPuNpPP3uzeW1NYXxI3rxyJzF3pD6sH4jE7o/IX+WtSpwnVU+qIsDPyk0d3hmFQ7mjqc6AtV604hbg==}
+  /update-browserslist-db/1.0.14_browserslist@4.23.0:
+    resolution: {integrity: sha512-JixKH8GR2pWYshIPUg/NujK3JO7JiqEEUiNArE86NQyrgUuZeTlZQN3xuS/yiV5Kb48ev9K6RqNkaJjXsdg7Jw==}
     hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
