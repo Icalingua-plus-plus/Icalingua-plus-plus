@@ -9,7 +9,7 @@ RUN cd icalingua-bridge-oicq && \
     pnpm i && \
     pnpm compile
 ENV NODE_ENV=production
-RUN mv /app/icalingua-bridge-oicq/build /tmp/build && cd /tmp/build && pnpm i
+RUN mv /app/icalingua-bridge-oicq/build /tmp/build && cp -f .npmrc /tmp/build/ && cd /tmp/build && pnpm i && rm -f .npmrc
 
 # Production image, copy all the files and run next
 FROM node:18-alpine as runner
