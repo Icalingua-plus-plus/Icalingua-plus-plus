@@ -4,7 +4,7 @@ FROM node:18-alpine as builder
 RUN apk add make g++ alpine-sdk python3 py3-pip   
 WORKDIR  /app
 COPY . .
-RUN npm i pnpm -g 
+RUN corepack enable
 RUN cd icalingua-bridge-oicq && \ 
     pnpm i && \
     pnpm compile
