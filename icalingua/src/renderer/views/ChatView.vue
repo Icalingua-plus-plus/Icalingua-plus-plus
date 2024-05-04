@@ -581,6 +581,15 @@ export default {
             this.messages = [...this.messages, message]
             if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
             if (message.at && message.senderId != this.account) this.lastUnreadAt = true
+            if (message.system) {
+                const memberChangeText = ['加入了本群', '离开了本群', '踢了']
+                for (const text of memberChangeText) {
+                    if (message.content.includes(text)) {
+                        this.$refs.room.updateGroupMembers()
+                        break
+                    }
+                }
+            }
         })
         ipcRenderer.on('deleteMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
