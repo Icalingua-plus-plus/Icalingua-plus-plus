@@ -267,6 +267,7 @@ const noLinkifyRegexs = [
     /\[Face: +\d{1,3}]/g,
     /<IcalinguaAt qq=\d+>[^<]+<\/IcalinguaAt>/g, //at 不要当作链接一部分
     /[^\x00-\xff]+/g, //中文和全角符号不要当作链接一部分
+    /"/g, //引号不要当作链接一部分
 ]
 const replacements = [] //存储替换数据的起始位置、结束位置、替换内容
 function replaceNoLinkifyCharacters(str) {
