@@ -1106,26 +1106,41 @@ export default {
             console.log('delmsgToForward')
         },
         scrollToMessage(messageId) {
-            if (this.$route.name === 'history-page') {
-                this.$message.error('转发消息中不支持跳转')
-                return
+            let judgeSameMessage = () => false
+            const parsed = Buffer.from(String(messageId), 'base64')
+            let messageSeq = 0
+            if (messageId.length === 28) {
+                //group
+                messageSeq = parsed.readUInt32BE(8)
+            } else {
+                //c2c
+                messageSeq = parsed.readUInt32BE(4)
             }
-            const judgeSameMessage = (a, b) => {
-                if (a === b) return true
-                const parsedA = Buffer.from(a, 'base64')
-                const parsedB = Buffer.from(b, 'base64')
-                if (this.roomId < 0) {
-                    for (let i = 0; i <= 16; i += 4) {
-                        if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
-                    }
-                    if (parsedA.readUInt8(20) !== parsedB.readUInt8(20)) return false
-                } else {
-                    for (let i = 0; i <= 12; i += 4) {
-                        if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
-                    }
-                    if (parsedA.readUInt8(16) !== parsedB.readUInt8(16)) return false
+            if (this.$route.name === 'history-page') {
+                judgeSameMessage = (a, b) => {
+                    const seqA = Number(a.split('|')[1])
+                    if (seqA !== messageSeq) return false
+                    return true
                 }
-                return true
+            } else {
+                judgeSameMessage = (a, b) => {
+                    //shitcode?
+                    if (a === b) return true
+                    const parsedA = Buffer.from(a, 'base64')
+                    const parsedB = Buffer.from(b, 'base64')
+                    if (this.roomId < 0) {
+                        for (let i = 0; i <= 16; i += 4) {
+                            if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
+                        }
+                        if (parsedA.readUInt8(20) !== parsedB.readUInt8(20)) return false
+                    } else {
+                        for (let i = 0; i <= 12; i += 4) {
+                            if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
+                        }
+                        if (parsedA.readUInt8(16) !== parsedB.readUInt8(16)) return false
+                    }
+                    return true
+                }
             }
             const message = document.getElementById(messageId)
             if (message) {
