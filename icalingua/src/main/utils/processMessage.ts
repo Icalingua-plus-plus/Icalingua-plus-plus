@@ -26,6 +26,7 @@ const processMessage = async (
     let lastType
     let lastReply = false
     let replyAnonymous = false
+    let markdown = ''
     for (let i = 0; i < oicqMessage.length; i++) {
         const m = oicqMessage[i] || { type: 'unknown', data: {} }
         let appurl
@@ -465,20 +466,8 @@ const processMessage = async (
                 message.content += '[sFace: ' + m.data.text + '(' + m.data.id + ')]'
                 break
             case 'markdown':
-                try {
-                    const imageRegex = /!\[.*?\]\((.*?)\)/g
-                    const imageUrl = m.data.markdown.match(imageRegex)
-                    if (imageUrl) {
-                        for (const url of imageUrl) {
-                            const imgUrl = url.match(/\((.*?)\)/)[1]
-                            message.file = {
-                                type: 'image/jpeg',
-                                url: imgUrl,
-                            }
-                            message.files.push(message.file)
-                        }
-                    }
-                } catch (e) {}
+                markdown += m.data.markdown
+                break
             default:
                 console.log('[无法解析的消息]', m)
                 if (!getConfig().debugmode) break
@@ -488,6 +477,23 @@ const processMessage = async (
                 break
         }
         lastType = m.type
+    }
+    if (markdown) {
+        try {
+            const imageRegex = /!\[.*?\]\((.*?)\)/g
+            const imageUrl = markdown.match(imageRegex)
+            if (imageUrl) {
+                for (const url of imageUrl) {
+                    const imgUrl = url.match(/\((.*?)\)/)[1]
+                    message.file = {
+                        type: 'image/jpeg',
+                        url: imgUrl,
+                    }
+                    message.files.push(message.file)
+                }
+            }
+        } catch (e) {}
+        message.content += markdown
     }
     return { message, lastMessage }
 }
