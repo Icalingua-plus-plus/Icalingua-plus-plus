@@ -885,6 +885,7 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const senderId = data.user_id
         const roomId = senderId
+        if (!roomId) return
         const roomName = data.nickname
         const message: Message = {
             _id: `${now.getTime()}-${senderId}-friendIncrease`,
@@ -919,6 +920,7 @@ const eventHandlers = {
         const now = new Date(data.time * 1000)
         const senderId = data.user_id
         const roomId = senderId
+        if (!roomId) return
         const roomName = data.nickname
         const message: Message = {
             _id: `${now.getTime()}-${senderId}-friendIncrease`,
