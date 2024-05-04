@@ -156,7 +156,7 @@ const extFromMime = (mime: string) => {
             return null
     }
 }
-const extFromStream = async (stream: Readable) => {
+export const extFromStream = async (stream: Readable) => {
     const type = await fileType.fromStream(stream)
     if (!type) {
         return null
@@ -169,7 +169,7 @@ const extFromStream = async (stream: Readable) => {
     }
 }
 
-const getImageExt = async (url: string) => {
+export const getImageExt = async (url: string) => {
     try {
         const response = await axios.get(url, {
             responseType: 'stream',

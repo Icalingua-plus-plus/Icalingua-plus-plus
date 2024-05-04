@@ -57,7 +57,7 @@ import {
     getDisabledFeatures,
     sendGroupPoke,
 } from './botAndStorage'
-import { download, downloadFileByMessageData, downloadImage } from './downloadManager'
+import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
 import openImage from './openImage'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -1922,10 +1922,11 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                         new MenuItem({
                             label: '添加为默认表情',
                             type: 'normal',
-                            click: () => {
+                            click: async () => {
+                                const imgExt = await getImageExt(file.url)
                                 download(
                                     file.url,
-                                    String(new Date().getTime()),
+                                    String(new Date().getTime()) + '.' + imgExt,
                                     path.join(app.getPath('userData'), 'stickers'),
                                 )
                             },

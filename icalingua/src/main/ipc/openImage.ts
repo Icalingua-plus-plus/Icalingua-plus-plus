@@ -10,7 +10,7 @@ import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
 import { getConfig } from '../utils/configManager'
-import { download, downloadImage2Open } from './downloadManager'
+import { download, downloadImage2Open, getImageExt } from './downloadManager'
 
 let viewer = ''
 const VIEWERS = ['gwenview', 'eog', 'eom', 'ristretto', 'okular', 'gimp', 'xdg-open', 'open']
@@ -98,7 +98,8 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
 ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Array<string> = []) =>
     openImage(url, external, urlList),
 )
-ipcMain.on('saveSticker', (e, url: string) => {
-    download(url, String(new Date().getTime()), path.join(app.getPath('userData'), 'stickers'))
+ipcMain.on('saveSticker', async (e, url: string) => {
+    const imgExt = await getImageExt(url)
+    download(url, String(new Date().getTime()) + '.' + imgExt, path.join(app.getPath('userData'), 'stickers'))
 })
 export default openImage
