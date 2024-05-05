@@ -1725,7 +1725,7 @@ const adapter = {
         let messageIdBuf = Buffer.from(messageId, 'base64')
         if (res.error && roomId > 0 && messageIdBuf.length === 17) {
             const timestamp = messageIdBuf.readUInt32BE(12)
-            const timeDiff = [-1, 1]
+            const timeDiff = [-1, 1, -2, 2]
             for (let j of timeDiff) {
                 messageIdBuf.writeUInt32BE(timestamp + j, 12)
                 res = await adapter.getMsg(messageIdBuf.toString('base64'))
@@ -1846,7 +1846,7 @@ const adapter = {
                     let messageIdBuf = Buffer.from(messages[i]._id as string, 'base64')
                     if (messageIdBuf.length != 17) continue
                     let timestamp = messageIdBuf.readUInt32BE(12)
-                    const timeDiff = [0, -1, 1]
+                    const timeDiff = [0, -1, 1, -2, 2]
                     for (let j of timeDiff) {
                         messageIdBuf.writeUInt32BE(timestamp + j, 12)
                         if (await storage.getMessage(roomId, messageIdBuf.toString('base64'))) {
