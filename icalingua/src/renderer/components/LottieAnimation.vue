@@ -77,12 +77,10 @@ export default {
         },
         async init() {
             this.style = {
-                width: '100%',
-                height: '100%',
+                width: this.width !== -1 ? `${this.width}px` : '100%',
+                height: this.height !== -1 ? `${this.height}px` : '100%',
                 overflow: 'hidden',
                 margin: '0 auto',
-                maxWidth: this.width !== -1 ? `${this.width}px` : '100%',
-                maxHeight: this.height !== -1 ? `${this.height}px` : '100%',
             }
         },
         async initAnimation() {

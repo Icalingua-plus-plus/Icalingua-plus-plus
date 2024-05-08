@@ -16,7 +16,10 @@
             v-else
             :id="message._id"
             class="vac-message-box"
-            :class="{ 'vac-offset-current': message.senderId === currentUserId }"
+            :class="{
+                'vac-offset-current': message.senderId === currentUserId,
+                'vac-message-box-lottie': lottie && !disableQLottie,
+            }"
             @click="selectMessage"
         >
             <slot name="message" v-bind="{ message }">
@@ -487,6 +490,11 @@ export default {
     justify-content: flex-start;
     line-height: 1.4;
     align-items: flex-end;
+}
+
+.vac-message-box-lottie {
+    max-width: 100% !important;
+    margin-left: 0% !important;
 }
 
 .vac-message-sender-avatar {
