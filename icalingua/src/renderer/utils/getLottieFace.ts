@@ -88,9 +88,9 @@ export const faceIdToLottie = new Map([
     [395, 41],
 ])
 
-export const getLottiePath = (id: number, resultId?: string) => {
+export const getLottiePath = (id: number, resultId?: string, pathId = '1') => {
     // @ts-ignore
-    return path.join(__static, 'qlottie', `${id}`, resultId ? `${id}_${resultId}.json` : `${id}.json`)
+    return path.join(__static, 'qlottie', `${pathId}`, `${id}`, resultId ? `${id}_${resultId}.json` : `${id}.json`)
 }
 
 export default (msgText: string, time: number, result?: boolean): string | undefined => {
