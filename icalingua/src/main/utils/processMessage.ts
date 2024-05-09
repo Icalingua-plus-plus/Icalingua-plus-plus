@@ -90,7 +90,7 @@ const processMessage = async (
                 url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(0, 2)}/${m.data.file.substr(
                     0,
                     32,
-                )}/300x300.png`
+                )}/raw300.gif`
                 message.file = {
                     type: 'image/webp',
                     url,
