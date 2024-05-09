@@ -119,7 +119,7 @@ import fs from 'fs'
 import path from 'path'
 import md5 from 'md5'
 import getStaticPath from '../../utils/getStaticPath'
-import { faceIdToLottie } from '../utils/getLottieFace'
+import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
 
 const faceMap = require('oicq-icalingua-plus-plus/lib/message/face').map
 
@@ -355,7 +355,7 @@ export default {
                 this.$message.error(`Face ${faceId} 没有对应的 Lottie 超级表情`)
                 return
             }
-            this.$emit('sendLottie', { qlottie: qlottie, id: face })
+            this.$emit('sendLottie', { qlottie: qlottie.lottieId, id: face })
             RECENTS.push('recentFace', faceId)
         },
         folder() {
