@@ -11,6 +11,7 @@ import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
+import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
 import fs from 'fs'
 import crypto from 'crypto'
 import { base64decode } from 'nodejs-base64'
@@ -1414,9 +1415,15 @@ const adapter = {
                 const qlottie = idReg[1]
                 const faceId = idReg[2]
                 const resultId = idReg[3]
+                const packId = faceIdToLottie.get(Number.parseInt(faceId, 10)).packId
                 let extra = {
-                    lottieType: 2,
-                    resultId: resultId,
+                    lottieType: 1,
+                    packId: packId,
+                    resultId: '',
+                }
+                if (resultId) {
+                    extra.lottieType = 2
+                    extra.resultId = resultId
                 }
                 chain.length = chain[0].type === 'anonymous' ? 1 : 0
                 chain.push({
