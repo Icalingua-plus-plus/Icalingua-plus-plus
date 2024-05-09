@@ -352,7 +352,9 @@ export default {
             const faceId = parseInt(face)
             const qlottie = faceIdToLottie.get(faceId)
             if (!qlottie) {
-                this.$message.error(`Face ${faceId} 没有对应的 Lottie 超级表情`)
+                this.$message.error(
+                    `${String(faceMap[faceId] || 'Face').replace(/\//, '')}(${faceId}) 没有对应的 Lottie 超级表情`,
+                )
                 return
             }
             this.$emit('sendLottie', { qlottie: qlottie.lottieId, id: face })
