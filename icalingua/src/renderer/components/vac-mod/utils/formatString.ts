@@ -114,7 +114,7 @@ function compileToJSON(str, doLinkify) {
             }
             const object = {
                 start: char,
-                content: compileToJSON(match[1], doLinkify),
+                content: compileToJSON(match[1], false),
                 end: match[2],
                 type: pseudoMarkdown[char].type,
             }
@@ -248,7 +248,7 @@ function linkifyResult(array) {
         const links = linkify.find(arr.value)
         arr.value = recoverNoLinkifyCharacters(arr.value)
 
-        if (links.length) {
+        if (links.length && arr.types.length === 0) {
             const spaces = arr.value.replace(links[0].value, '')
             result.push({ types: arr.types, value: spaces })
 
