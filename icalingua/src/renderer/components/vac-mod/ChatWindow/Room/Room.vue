@@ -1187,7 +1187,7 @@ export default {
             if (height < 30) height = 30
 
             this.mediaDimensions = {
-                height: this.$refs.mediaFile.clientHeight - 10,
+                height: height - 10,
                 width: this.$refs.mediaFile.clientWidth + 26,
             }
         },
