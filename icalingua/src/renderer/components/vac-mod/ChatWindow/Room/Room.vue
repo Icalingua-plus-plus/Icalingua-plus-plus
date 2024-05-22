@@ -381,7 +381,7 @@
                             @click="launchFilePicker(false)"
                             style="text-align: center; width: 100%"
                         >
-                            识别类型发送 (图标左键)
+                            识别媒体发送 (图标左键)
                         </el-button>
                         <!-- 分割线-->
                         <div style="height: 1px; background-color: #ebebeb; margin: 0 5px"></div>
@@ -829,7 +829,12 @@ export default {
             }
             if (event.dataTransfer.files.length) {
                 // Using the path attribute to get absolute file path
-                this.onFileChange(event.dataTransfer.files)
+                if (!event.dataTransfer.files[0].path) {
+                    console.log('No file path found.')
+                    this.onFileChange(event.dataTransfer.files)
+                    return
+                }
+                this.$emit('open-choose-file-type', event.dataTransfer.files)
             } else if (event.dataTransfer.getData('text/html')) {
                 //富文本中的图片
                 const imageHTML = event.dataTransfer.getData('text/html')
@@ -1494,6 +1499,9 @@ export default {
                 extension: file.name.substring(typeIndex + 1),
                 localUrl: fileURL,
                 path: file.path,
+            }
+            if (this.file.path.endsWith('.slk') || this.file.path.endsWith('.silk')) {
+                this.file.type = 'audio/silk'
             }
             if (force) this.file.type = ''
             if (isImageFile(this.file)) {

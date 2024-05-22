@@ -125,6 +125,7 @@
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
                     @back-contact="backContact"
+                    @open-choose-file-type="openChooseFileType"
                 >
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
@@ -224,6 +225,12 @@
                 <el-button type="primary" @click="sendRps(0)">随机</el-button>
             </span>
         </el-dialog>
+        <el-dialog :title="tempFileName" :visible.sync="chooseFileTypeShown" :close-on-click-modal="false">
+            <div class="random-select">
+                <el-button @click="chooseFileType('file')" icon="el-icon-paperclip">普通文件</el-button>
+                <el-button @click="chooseFileType('media')" icon="el-icon-picture-outline">识别媒体</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -308,6 +315,9 @@ export default {
             sendRpsShown: false,
             sendDiceNew: true,
             sendRpsNew: true,
+            chooseFileTypeShown: false,
+            tempFile: null,
+            tempFileName: '',
         }
     },
     async created() {
@@ -1069,6 +1079,16 @@ Chromium ${process.versions.chrome}` : ''
                     messageType: 'rps',
                 })
             }
+        },
+        chooseFileType(type) {
+            this.chooseFileTypeShown = false
+            this.$refs.room.onFileChange(this.tempFile, type === 'file')
+            this.tempFile = null
+        },
+        openChooseFileType(file) {
+            this.chooseFileTypeShown = true
+            this.tempFile = file
+            this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'
         },
     },
     computed: {
