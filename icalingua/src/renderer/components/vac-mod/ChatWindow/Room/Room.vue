@@ -800,7 +800,12 @@ export default {
             console.log(imageHTML)
             if (event.clipboardData.files && event.clipboardData.files.length) {
                 // Using the path attribute to get absolute file path
-                this.onFileChange(event.clipboardData.files)
+                if (!event.clipboardData.files[0].path) {
+                    console.log('No file path found.')
+                    this.onFileChange(event.clipboardData.files)
+                    return
+                }
+                this.$emit('open-choose-file-type', event.clipboardData.files)
             } else if (imageHTML.indexOf('<img ') !== -1) {
                 try {
                     const imageMatch = imageHTML.match(/<img [^>]*>/)[0]
