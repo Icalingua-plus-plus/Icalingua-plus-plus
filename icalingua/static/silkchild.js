@@ -7,14 +7,17 @@ process.on('message', async (pathConfig) => {
     try {
         const silkBuf = fs.readFileSync(pathConfig.rawFilePath)
         const bufPcm = silk.decode(silkBuf)
+        fs.renameSync(pathConfig.rawFilePath, pathConfig.rawFilePath + '.slk')
         pathConfig.rawFilePath += '.pcm'
         fs.writeFileSync(pathConfig.rawFilePath, bufPcm)
     } catch (err) {
         // 可能是 amr 語音，嘗試直接轉換
         console.error(err)
         silkDecodeFailed = true
+        fs.renameSync(pathConfig.rawFilePath, pathConfig.rawFilePath + '.amr')
     } finally {
         const msg = await convertToOgg(pathConfig, !silkDecodeFailed)
+        if (!silkDecodeFailed) fs.unlinkSync(pathConfig.rawFilePath)
         process.send(msg)
         process.exit(0)
     }
