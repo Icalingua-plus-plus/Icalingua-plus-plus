@@ -1508,6 +1508,9 @@ export default {
             if (this.file.path.endsWith('.slk') || this.file.path.endsWith('.silk')) {
                 this.file.type = 'audio/silk'
             }
+            if (this.file.path.endsWith('.amr')) {
+                this.file.type = 'audio/amr'
+            }
             if (force) this.file.type = ''
             if (isImageFile(this.file)) {
                 this.imageFile = fileURL
