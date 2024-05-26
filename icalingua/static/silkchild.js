@@ -15,6 +15,7 @@ process.on('message', async (pathConfig) => {
         console.error(err)
         silkDecodeFailed = true
         fs.renameSync(pathConfig.rawFilePath, pathConfig.rawFilePath + '.amr')
+        pathConfig.rawFilePath += '.amr'
     } finally {
         const msg = await convertToOgg(pathConfig, !silkDecodeFailed)
         if (!silkDecodeFailed) fs.unlinkSync(pathConfig.rawFilePath)
