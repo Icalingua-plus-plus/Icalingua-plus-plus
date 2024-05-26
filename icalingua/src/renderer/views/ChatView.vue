@@ -633,7 +633,10 @@ export default {
         ipcRenderer.on('renewMessage', (_, {messageId, message}) => {
             const oldMessageIndex = this.messages.findIndex((e) => e._id === messageId)
             if (oldMessageIndex !== -1 && message) {
-                this.messages[oldMessageIndex] = message
+                this.messages[oldMessageIndex] = {
+                    ...this.messages[oldMessageIndex],
+                    ...message,
+                }
                 this.messages = [...this.messages]
             }
         })

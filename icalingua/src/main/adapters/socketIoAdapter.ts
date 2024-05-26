@@ -139,7 +139,7 @@ const attachSocketEvents = () => {
     socket.on('revealMessage', ui.revealMessage)
     socket.on(
         'renewMessage',
-        ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Message }) => {
+        ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Partial<Message> }) => {
             ui.renewMessage(roomId, messageId, message)
         },
     )

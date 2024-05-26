@@ -238,7 +238,12 @@ const eventHandlers = {
             time: Date.now(),
             operator_id: data.operator_id,
         }
-        clients.deleteMessage(data.message_id)
+        //clients.deleteMessage(data.message_id)
+        clients.renewMessage(data.user_id, data.message_id, {
+            deleted: true,
+            reveal: false,
+            recallInfo: JSON.stringify(recallInfo),
+        })
         storage.updateMessage(data.user_id, data.message_id, {
             deleted: true,
             reveal: false,
@@ -250,7 +255,12 @@ const eventHandlers = {
             time: Date.now(),
             operator_id: data.operator_id,
         }
-        clients.deleteMessage(data.message_id)
+        //clients.deleteMessage(data.message_id)
+        clients.renewMessage(-data.group_id, data.message_id, {
+            deleted: true,
+            reveal: false,
+            recallInfo: JSON.stringify(recallInfo),
+        })
         storage.updateMessage(-data.group_id, data.message_id, {
             deleted: true,
             reveal: false,
