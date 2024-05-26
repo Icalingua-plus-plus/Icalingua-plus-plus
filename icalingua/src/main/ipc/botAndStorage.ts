@@ -155,9 +155,10 @@ ipcMain.on('sendMessage', async (_, data) => {
                     data.file.path = silkFilePath
                     data.file.type = 'audio/silk'
                     data.b64img = `data:audio;base64,${buffer.toString('base64')}`
+                    ui.messageSuccess('高清语音编码成功，正在发送...')
                 } catch (e) {
                     console.error(e)
-                    ui.messageError('高清语音编码失败，使用普通语音发送')
+                    ui.messageError('高清语音编码失败，将发送普通语音')
                 }
             }
         }
