@@ -201,7 +201,8 @@ export default {
         // Remote Stickers
         if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
             this.supportRemote = true
-            setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp()), 10 * 1000)
+            setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp(true)), 10 * 1000)
+            setInterval(async () => (this.remote_pics = await ipc.getRoamingStamp(true)), 1000 * 60 * 60)
         }
 
         // Face
