@@ -225,7 +225,12 @@
                 <el-button type="primary" @click="sendRps(0)">随机</el-button>
             </span>
         </el-dialog>
-        <el-dialog :title="tempFileName" :visible.sync="chooseFileTypeShown" :close-on-click-modal="false">
+        <el-dialog
+            :title="tempFileName"
+            :visible.sync="chooseFileTypeShown"
+            :close-on-click-modal="false"
+            @close="tempFile = null"
+        >
             <div class="random-select">
                 <el-button @click="chooseFileType('file')" icon="el-icon-paperclip">普通文件</el-button>
                 <el-button @click="chooseFileType('media')" icon="el-icon-picture-outline">识别媒体</el-button>
@@ -1086,6 +1091,7 @@ Chromium ${process.versions.chrome}` : ''
             this.tempFile = null
         },
         openChooseFileType(file) {
+            if (!file) return
             this.chooseFileTypeShown = true
             this.tempFile = file
             this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'

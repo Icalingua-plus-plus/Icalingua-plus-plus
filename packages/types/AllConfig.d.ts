@@ -48,6 +48,7 @@ type AllConfig = {
     usePanguJsRecv: boolean
     descSortStickersByTime: boolean
     sortRoomsByPriority: boolean
+    sendSilkAudio: boolean
 }
 
 export default AllConfig

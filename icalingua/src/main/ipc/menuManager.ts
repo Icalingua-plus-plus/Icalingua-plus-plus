@@ -1253,6 +1253,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '发送高清语音',
+                type: 'checkbox',
+                checked: getConfig().sendSilkAudio === true,
+                visible: false,
+                click: (menuItem) => {
+                    getConfig().sendSilkAudio = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '启用插件',
                 type: 'checkbox',
                 checked: getConfig().custom === true,
@@ -1894,31 +1904,26 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
             )
         }
         const messageFiles = message.files || [message.file]
-        if (messageFiles) {
-            for (let i = 0; i < messageFiles.length; i++) {
-                const file = messageFiles[i]
-                if (menu.items.length && menu.items[menu.items.length - 1].type !== 'separator')
-                    //只有在上面有内容而且不是分隔符的时候加
-                    menu.append(
-                        new MenuItem({
-                            type: 'separator',
-                        }),
-                    )
+        if (messageFiles && messageFiles.length) {
+            if (menu.items.length && menu.items[menu.items.length - 1].type !== 'separator')
+                //只有在上面有内容而且不是分隔符的时候加
                 menu.append(
                     new MenuItem({
-                        enabled: false,
-                        label: `文件#${i}`,
+                        type: 'separator',
                     }),
                 )
+            for (let i = 0; i < messageFiles.length; i++) {
+                const file = messageFiles[i]
+                const fileMenu = new Menu()
                 if (file.type.startsWith('image/')) {
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '复制图片',
                             type: 'normal',
                             click: async () => copyImage(file.url),
                         }),
                     )
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '添加为默认表情',
                             type: 'normal',
@@ -1932,7 +1937,7 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                             },
                         }),
                     )
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '添加为分类表情',
                             type: 'normal',
@@ -1947,7 +1952,7 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                         }),
                     )
                 }
-                menu.append(
+                fileMenu.append(
                     new MenuItem({
                         label: '复制 URL',
                         type: 'normal',
@@ -1959,21 +1964,21 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                     }),
                 )
                 if (file.type.startsWith('image/') && !getConfig().localImageViewerByDefault)
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '使用本地查看器打开',
                             click: () => openImage(file.url, true),
                         }),
                     )
                 if (file.type.startsWith('video/') || file.type.startsWith('audio/'))
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '使用本地播放器打开',
                             click: () => openMedia(file.url),
                         }),
                     )
                 if (file.type.startsWith('video/'))
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '刷新视频地址',
                             click: async () => {
@@ -1987,38 +1992,63 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                         }),
                     )
                 if (file.type.startsWith('image/')) {
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '下载',
                             click: () => downloadImage(file.url),
                         }),
                     )
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '另存为',
                             click: () => downloadImage(file.url, true),
                         }),
                     )
                 } else {
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '下载',
                             click: () => downloadFileByMessageData({ action: 'download', message, room }),
                         }),
                     )
-                    menu.append(
+                    fileMenu.append(
                         new MenuItem({
                             label: '另存为',
                             click: () => downloadFileByMessageData({ action: 'download', message, room }, true),
                         }),
                     )
                 }
-                menu.append(
-                    new MenuItem({
-                        type: 'separator',
-                    }),
-                )
+                if (messageFiles.length > 1) {
+                    menu.append(
+                        new MenuItem({
+                            label: `文件#${i}`,
+                            submenu: fileMenu,
+                        }),
+                    )
+                } else {
+                    if (menu.items.length && menu.items[menu.items.length - 1].type !== 'separator')
+                        //只有在上面有内容而且不是分隔符的时候加
+                        menu.append(
+                            new MenuItem({
+                                type: 'separator',
+                            }),
+                        )
+                    menu.append(
+                        new MenuItem({
+                            enabled: false,
+                            label: `文件#${i}`,
+                        }),
+                    )
+                    for (const item of fileMenu.items) {
+                        menu.append(item)
+                    }
+                }
             }
+            menu.append(
+                new MenuItem({
+                    type: 'separator',
+                }),
+            )
         }
         menu.append(
             new MenuItem({
