@@ -2,6 +2,7 @@ import axios from 'axios'
 import { fork } from 'child_process'
 import { app } from 'electron'
 import fs from 'fs'
+import getStaticPath from '../../utils/getStaticPath'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
@@ -27,9 +28,7 @@ export default async (url: string) => {
 
 const conventSilk = (rawFilePath: string, filePath: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-        const childPath =
-            process.env.NODE_ENV === 'development' ? 'static/silkchild.js' : 'dist/electron/static/silkchild.js'
-        const child = fork(require('path').join(app.getAppPath(), childPath))
+        const child = fork(require('path').join(getStaticPath(), 'silkchild.js'))
         child.on('message', (msg: string) => {
             console.log('[silkDecode] Child success:', msg)
             resolve()

@@ -734,7 +734,7 @@ Chromium ${process.versions.chrome}` : ''
                     file = {
                         type: file.type,
                         size: file.size,
-                        path: file.path.substring(file.path.split('\\').join('/').lastIndexOf('/') + 1),
+                        path: file.path,
                     }
                 } else
                     file = {

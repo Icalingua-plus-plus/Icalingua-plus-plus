@@ -18,6 +18,9 @@ import getFriends from '../utils/getFriends'
 import * as themes from '../utils/themes'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { spacingSendMessage } from '../../utils/panguSpacing'
+import silkEncode from '../utils/silkEncode'
+import fs from 'fs'
+import ui from '../utils/ui'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -133,10 +136,31 @@ ipcMain.handle('getFriendsAndGroups', async () => {
     }
     return { groups, friends, friendsFallback }
 })
-ipcMain.on('sendMessage', (_, data) => {
+ipcMain.on('sendMessage', async (_, data) => {
     data.at = atCache.get()
     if (getConfig().usePanguJsSend) {
         data.content = spacingSendMessage(data.content, data.at)
+    }
+    if (getConfig().sendSilkAudio) {
+        if (data.file && data.file.type && data.file.type.startsWith('audio')) {
+            const filepath = data.file.path
+            const fd = await fs.promises.open(filepath, 'r')
+            const head = (await fd.read(Buffer.alloc(7), 0, 7, 0)).buffer
+            fd.close()
+            if (!head.includes('SILK') && !head.includes('AMR')) {
+                ui.message('正在尝试编码高清语音...')
+                try {
+                    const silkFilePath = await silkEncode(data.file.path)
+                    const buffer = fs.readFileSync(silkFilePath)
+                    data.file.path = silkFilePath
+                    data.file.type = 'audio/silk'
+                    data.b64img = `data:audio;base64,${buffer.toString('base64')}`
+                } catch (e) {
+                    console.error(e)
+                    ui.messageError('高清语音编码失败，使用普通语音发送')
+                }
+            }
+        }
     }
     sendMessage(data)
     atCache.clear()

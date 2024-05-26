@@ -1256,7 +1256,6 @@ export const updateAppMenu = async () => {
                 label: '发送高清语音',
                 type: 'checkbox',
                 checked: getConfig().sendSilkAudio === true,
-                visible: false,
                 click: (menuItem) => {
                     getConfig().sendSilkAudio = menuItem.checked
                     saveConfigFile()
