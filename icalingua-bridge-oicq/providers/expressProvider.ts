@@ -18,7 +18,7 @@ export const initExpress = (adapter: typeof oicqAdapter) => {
     })
 }
 
-app.use('/file-manager', express.static('static/file-manager'))
+app.use('/file-manager', express.static(path.join(__dirname, '../static/file-manager')))
 app.use('/records', express.static(path.join(require.main ? require.main.path : process.cwd(), 'data', 'records')))
 app.get('/ping', (req, res) => {
     res.json({
