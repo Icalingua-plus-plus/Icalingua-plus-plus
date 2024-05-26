@@ -353,12 +353,28 @@ const eventHandlers = {
         }
     },
     friendRecall(data: FriendRecallEventData) {
+        const recallInfo = {
+            time: Date.now(),
+            operator_id: data.operator_id,
+        }
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(data.user_id, data.message_id, { deleted: true, reveal: false })
+        storage.updateMessage(data.user_id, data.message_id, {
+            deleted: true,
+            reveal: false,
+            recallInfo: JSON.stringify(recallInfo),
+        })
     },
     groupRecall(data: GroupRecallEventData) {
+        const recallInfo = {
+            time: Date.now(),
+            operator_id: data.operator_id,
+        }
         ui.deleteMessage(data.message_id)
-        storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
+        storage.updateMessage(-data.group_id, data.message_id, {
+            deleted: true,
+            reveal: false,
+            recallInfo: JSON.stringify(recallInfo),
+        })
     },
     online() {
         ui.setOnline()

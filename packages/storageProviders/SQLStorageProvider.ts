@@ -22,8 +22,9 @@ import upg10to11 from './SQLUpgradeScript/10to11'
 import upg11to12 from './SQLUpgradeScript/11to12'
 import upg12to13 from './SQLUpgradeScript/12to13'
 import upg13to14 from './SQLUpgradeScript/13to14'
+import upg14to15 from './SQLUpgradeScript/14to15'
 
-const dbVersionLatest = 13
+const dbVersionLatest = 15
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -246,6 +247,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     if (dbVersion >= 7) await upg12to13(this.db)
                 case 13:
                     await upg13to14(this.db)
+                case 14:
+                    if (dbVersion >= 7) await upg14to15(this.db)
                 default:
                     break
             }
@@ -334,6 +337,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.boolean('hide').nullable()
                     table.bigInteger('bubble_id').nullable()
                     table.bigInteger('subid').nullable()
+                    table.string('recallInfo').nullable()
                     table.index(['roomId', 'time'])
                     table.index(['subid', 'time'])
                 })

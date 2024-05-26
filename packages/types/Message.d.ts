@@ -34,4 +34,5 @@ export default interface Message {
     bubble_id?: number
     subid?: number
     head_img?: string
+    recallInfo?: string
 }

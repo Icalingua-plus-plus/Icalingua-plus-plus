@@ -103,7 +103,7 @@
                             @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
 
-                        <div v-if="message.deleted && !message.reveal">
+                        <div v-if="message.deleted && !message.reveal" :title="recallInfoText">
                             <slot name="deleted-icon">
                                 <svg-icon name="deleted" class="vac-icon-deleted" />
                             </slot>
@@ -296,6 +296,7 @@ export default {
             lottieResult: getLottieFace(this.message.content, this.message.time, true),
             tgLogo: `file://${__static}/tg.svg`,
             selected: false,
+            recallInfoText: '消息被撤回',
         }
     },
 
@@ -370,6 +371,11 @@ export default {
                 _id: this.message._id,
                 index: this.index,
             })
+        }
+        if (this.message.deleted && this.message.recallInfo) {
+            const info = JSON.parse(this.message.recallInfo)
+            const date = new Date(info.time).toLocaleString()
+            this.recallInfoText = `消息于 ${date} 被 ${info.operator_id} 撤回`
         }
     },
 
