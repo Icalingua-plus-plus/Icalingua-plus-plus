@@ -1790,6 +1790,28 @@ const adapter = {
                 console.error(e)
             }
         } else {
+            if (message.files.length) {
+                let flag = false
+                for (let i in message.files) {
+                    if (message.files[i].type.startsWith('image') && message.files[i].url.includes('&rkey=')) {
+                        const fileId = message.files[i].url.match(/fileid=([^&]+)/)[1]
+                        const res = await bot.getNTPicURLbyFileid(fileId)
+                        if (!res.error) {
+                            message.files[i].url = res.data
+                            flag = true
+                        }
+                    }
+                }
+                if (flag) {
+                    message.file = message.files[message.files.length - 1]
+                    await storage.replaceMessage(roomId, messageId, message)
+                    clients.renewMessage(roomId, messageId, message)
+                    if (res.error.message !== 'msg not exists')
+                        clients.messageError('错误：' + res.error.message + '，但已尝试刷新图片链接。')
+                    else clients.messageError('错误：该消息不存在，但已尝试刷新图片链接。')
+                    return
+                }
+            }
             if (res.error.message !== 'msg not exists') clients.messageError('错误：' + res.error.message)
             else clients.messageError('错误：该消息不存在。')
         }

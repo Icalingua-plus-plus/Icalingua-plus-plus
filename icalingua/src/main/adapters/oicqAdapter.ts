@@ -2063,6 +2063,29 @@ const adapter: OicqAdapter = {
                 errorHandler(e, true)
             }
         } else {
+            if (message.files.length) {
+                let flag = false
+                for (let i in message.files) {
+                    if (message.files[i].type.startsWith('image') && message.files[i].url.includes('&rkey=')) {
+                        const fileId = message.files[i].url.match(/fileid=([^&]+)/)[1]
+                        const res = await bot.getNTPicURLbyFileid(fileId)
+                        if (!res.error) {
+                            message.files[i].url = res.data
+                            flag = true
+                        }
+                    }
+                }
+                if (flag) {
+                    message.file = message.files[message.files.length - 1]
+                    await storage.replaceMessage(roomId, messageId, message)
+                    if (roomId === ui.getSelectedRoomId()) ui.renewMessage(roomId, messageId, message)
+                    errorHandler(res.error, true)
+                    if (res.error.message !== 'msg not exists')
+                        ui.messageError('错误：' + res.error.message + '，但已尝试刷新图片链接。')
+                    else ui.messageError('错误：该消息不存在，但已尝试刷新图片链接。')
+                    return
+                }
+            }
             errorHandler(res.error, true)
             if (res.error.message !== 'msg not exists') ui.messageError('错误：' + res.error.message)
             else ui.messageError('错误：该消息不存在。')
