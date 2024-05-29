@@ -365,6 +365,7 @@ const processMessage = async (
                 message.file = {
                     type: 'video/mp4',
                     url: m.data.url || m.data.file,
+                    fid: m.data.file,
                 }
                 message.files.push(message.file)
                 break
