@@ -246,7 +246,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 12:
                     if (dbVersion >= 7) await upg12to13(this.db)
                 case 13:
-                    await upg13to14(this.db)
+                //await upg13to14(this.db)
                 case 14:
                     if (dbVersion >= 7) await upg14to15(this.db)
                 default:
@@ -339,7 +339,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('subid').nullable()
                     table.string('recallInfo').nullable()
                     table.index(['roomId', 'time'])
-                    table.index(['subid', 'time'])
+                    //table.index(['subid', 'time'])
                 })
             }
 

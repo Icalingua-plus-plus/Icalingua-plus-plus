@@ -3,11 +3,7 @@ import { DBVersion } from '@icalingua/types/SQLTableTypes'
 
 const upg14to15 = async (db: Knex) => {
     await db.schema.alterTable('messages', (table) => {
-        try {
-            table.string('recallInfo').nullable()
-        } catch (e) {
-            console.error(e)
-        }
+        table.string('recallInfo').nullable()
     })
     await db<DBVersion>('dbVersion').update({ dbVersion: 15 })
 }
