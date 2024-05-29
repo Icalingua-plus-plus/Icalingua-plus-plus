@@ -1,6 +1,7 @@
 import { execFileSync, execFile } from 'child_process'
 import which from 'which'
 import ui from '../utils/ui'
+import fs from 'fs'
 
 let viewer = ''
 const VIEWERS = ['vlc', 'mpv', 'xdg-open']
@@ -22,6 +23,29 @@ if (!viewer) {
             viewer = i
             break
         }
+    }
+}
+if (!viewer && process.platform === 'win32') {
+    try {
+        const assoc = execFileSync('cmd', ['/c', 'assoc', '.mp4']).toString()
+        const ext = assoc.split('=')[1].trim()
+        const ftype = execFileSync('cmd', ['/c', 'ftype', ext]).toString()
+        const viewerCmd = ftype.split('=')[1].trim()
+        if (viewerCmd[0] === '"') {
+            viewer = viewerCmd.slice(1, viewerCmd.indexOf('"', 1))
+        } else {
+            viewer = viewerCmd.split(' ')[0]
+        }
+        viewer = execFileSync('cmd', ['/c', 'echo', viewer]).toString()
+        if (viewer[0] === '"') {
+            viewer = viewer.slice(1, viewer.indexOf('"', 1))
+        }
+        if (!fs.existsSync(viewer)) {
+            console.log(viewer + ' not found')
+            viewer = ''
+        }
+    } catch (e) {
+        console.error(e)
     }
 }
 
