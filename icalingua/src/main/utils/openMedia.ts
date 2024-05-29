@@ -36,7 +36,7 @@ if (!viewer && process.platform === 'win32') {
         } else {
             viewer = viewerCmd.split(' ')[0]
         }
-        viewer = execFileSync('cmd', ['/c', 'echo', viewer]).toString()
+        viewer = execFileSync('cmd', ['/c', 'echo', viewer]).toString().trim()
         if (viewer[0] === '"') {
             viewer = viewer.slice(1, viewer.indexOf('"', 1))
         }
