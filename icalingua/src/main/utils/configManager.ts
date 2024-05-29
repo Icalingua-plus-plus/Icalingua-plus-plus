@@ -106,6 +106,7 @@ const defaultConfig: AllConfig = {
     descSortStickersByTime: true,
     sortRoomsByPriority: false,
     sendSilkAudio: true,
+    disableChooseFileType: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

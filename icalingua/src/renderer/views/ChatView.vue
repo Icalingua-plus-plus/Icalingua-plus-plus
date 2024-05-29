@@ -1093,8 +1093,9 @@ Chromium ${process.versions.chrome}` : ''
             this.$refs.room.onFileChange(this.tempFile, type === 'file')
             this.tempFile = null
         },
-        openChooseFileType(file) {
+        async openChooseFileType(file) {
             if (!file) return
+            if ((await ipc.getSettings()).disableChooseFileType) return this.$refs.room.onFileChange(file)
             this.chooseFileTypeShown = true
             this.tempFile = file
             this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'

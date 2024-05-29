@@ -1432,6 +1432,16 @@ export const updateAppMenu = async () => {
                             saveConfigFile()
                         },
                     },
+                    {
+                        label: '禁用文件类型选择框',
+                        sublabel: '拖拽复制默认识别媒体',
+                        type: 'checkbox',
+                        checked: getConfig().disableChooseFileType,
+                        click: (menuItem) => {
+                            getConfig().disableChooseFileType = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
                 ],
             }),
             new MenuItem({

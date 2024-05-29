@@ -49,6 +49,7 @@ type AllConfig = {
     descSortStickersByTime: boolean
     sortRoomsByPriority: boolean
     sendSilkAudio: boolean
+    disableChooseFileType: boolean
 }
 
 export default AllConfig
