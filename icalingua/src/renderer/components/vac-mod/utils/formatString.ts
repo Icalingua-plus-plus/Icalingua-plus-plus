@@ -114,7 +114,7 @@ function compileToJSON(str, doLinkify) {
             }
             const object = {
                 start: char,
-                content: compileToJSON(match[1], false),
+                content: compileToJSON(match[1], doLinkify),
                 end: match[2],
                 type: pseudoMarkdown[char].type,
             }

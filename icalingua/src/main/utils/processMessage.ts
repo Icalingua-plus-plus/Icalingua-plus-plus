@@ -55,7 +55,7 @@ const processMessage = async (
                 }
                 if (m.type === 'at') {
                     const atQQ = m.data.qq === 'all' ? 1 : m.data.qq
-                    text = `<IcalinguaAt qq=${atQQ}>${encodeURIComponent(text)}</IcalinguaAt>`
+                    text = `<IcalinguaAt qq=${atQQ}>${encodeURIComponent(text).replace(/\./g, '%2E')}</IcalinguaAt>`
                 }
                 message.content += text
                 break
