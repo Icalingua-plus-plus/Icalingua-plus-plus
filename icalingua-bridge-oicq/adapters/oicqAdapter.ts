@@ -1441,7 +1441,8 @@ const adapter = {
                 const qlottie = idReg[1]
                 const faceId = idReg[2]
                 const resultId = idReg[3]
-                const packId = faceIdToLottie.get(Number.parseInt(faceId, 10)).packId
+                const lottieFace = faceIdToLottie.get(Number.parseInt(faceId, 10)) || { packId: '1', lottieId: qlottie }
+                const packId = lottieFace.packId
                 let extra = {
                     lottieType: 1,
                     packId: packId,
@@ -1451,13 +1452,14 @@ const adapter = {
                     extra.lottieType = 2
                     extra.resultId = resultId
                 }
+                Object.assign(extra, lottieFace)
                 chain.length = chain[0].type === 'anonymous' ? 1 : 0
                 chain.push({
                     type: 'face',
                     data: {
                         id: Number.parseInt(faceId, 10),
                         qlottie: qlottie,
-                        extra: resultId ? JSON.stringify(extra) : undefined,
+                        extra: JSON.stringify(extra),
                     },
                 })
             }
