@@ -1702,6 +1702,7 @@ const adapter: OicqAdapter = {
                     extra.lottieType = 2
                     extra.resultId = resultId
                 }
+                lottieFace.lottieId = qlottie
                 Object.assign(extra, lottieFace)
                 chain.length = chain[0].type === 'anonymous' ? 1 : 0
                 chain.push({
