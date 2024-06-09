@@ -1,7 +1,7 @@
 import path from 'path'
 import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
 
-export const getLottiePath = (id: number, resultId?: string, packId = '1') => {
+export const getLottiePath = (id: string, resultId?: string, packId = '1') => {
     // @ts-ignore
     return path.join(__static, 'qlottie', `${packId}`, `${id}`, resultId ? `${id}_${resultId}.json` : `${id}.json`)
 }
@@ -16,7 +16,7 @@ export default (msgText: string, time: number, result?: boolean): string | undef
         if (lottie) {
             return getLottiePath(lottie.lottieId, result ? idMatch[3] : undefined, lottie.packId)
         } else {
-            return getLottiePath(parseInt(idMatch[2]), result ? idMatch[3] : undefined, '0')
+            return getLottiePath(idMatch[2], result ? idMatch[3] : undefined, '0')
         }
     }
 }
