@@ -56,7 +56,7 @@ export default {
         rendererSettings: {
             scaleMode: 'centerCrop',
             clearCanvas: true,
-            progressiveLoad: false,
+            progressiveLoad: true,
             hideOnTransparent: true,
         },
         anim: null,
