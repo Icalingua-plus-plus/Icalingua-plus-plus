@@ -587,6 +587,7 @@ export default {
             this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
         })
         ipcRenderer.on('addMessage', (_, {roomId, message}) => {
+            message.__v_skip = true
             if (roomId !== this.selectedRoomId) return
             const index = this.messages.findIndex((e) => e._id === message._id)
             if (index !== -1) {
@@ -664,6 +665,9 @@ export default {
         ipcRenderer.on('setAllRooms', (_, p) => this.rooms = p)
         ipcRenderer.on('setAllChatGroups', (_, p) => this.chatGroups = p || [])
         ipcRenderer.on('setMessages', (_, p) => {
+            for (const message of p) {
+                message.__v_skip = true
+            }
             this.messages = p
             this.messagesLoaded = false
         })
@@ -781,6 +785,9 @@ Chromium ${process.versions.chrome}` : ''
 
                 if (msgs2add.some(e => this.messages.find(e2 => e2._id === e._id))) return
                 if (msgs2add.length) {
+                    for (const msg of msgs2add) {
+                        msg.__v_skip = true
+                    }
                     this.messages = [...msgs2add, ...this.messages]
                 }
                 else this.messagesLoaded = true

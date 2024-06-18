@@ -359,16 +359,6 @@ export default {
             },
             immediate: true,
         },
-        'message.recallInfo': {
-            handler(newValue) {
-                if (newValue) {
-                    const info = JSON.parse(newValue)
-                    const date = new Date(info.time).toLocaleString()
-                    this.recallInfoText = `消息于 ${date} 被 ${info.operator_id} 撤回`
-                }
-            },
-            immediate: true,
-        },
     },
 
     mounted() {
