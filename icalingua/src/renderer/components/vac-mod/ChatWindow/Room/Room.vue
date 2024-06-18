@@ -246,10 +246,12 @@
                             ref="mediaFile"
                             :src="imageFile"
                             @load="onMediaLoad"
+                            @click="openImage(imageFile)"
                             :style="{
                                 'max-height': `${
                                     mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : null
                                 }`,
+                                cursor: 'pointer',
                             }"
                         />
                     </div>
@@ -1194,11 +1196,18 @@ export default {
         },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
-            if (height < 30) height = 30
+            let width = 0
+            if (height < 30) {
+                height = 30
+                width = this.$refs.mediaFile.clientWidth
+            }
+            height -= 10
+            width = width || Math.floor((height * this.$refs.mediaFile.clientWidth) / this.$refs.mediaFile.clientHeight)
+            if (width < 30) width = 30
 
             this.mediaDimensions = {
-                height: height - 10,
-                width: this.$refs.mediaFile.clientWidth + 26,
+                height: height,
+                width: width + 26,
             }
         },
         addNewMessage(message) {
@@ -1769,6 +1778,9 @@ export default {
             if (this.mouseSelectIds.length) {
                 this.showForwardPanel = true
             }
+        },
+        async openImage(src) {
+            ipcRenderer.send('openImage', src, this.localImageViewerByDefault)
         },
     },
 }
