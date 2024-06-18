@@ -2,7 +2,12 @@
     <div ondragstart="return false;" class="icalingua-theme-holder">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
-            <el-aside width="65px" style="display: flex; flex-direction: column; z-index: 3" v-if="!disableChatGroups">
+            <el-aside
+                width="65px"
+                class="chat-groups-container"
+                v-if="!disableChatGroups"
+                v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'contact')"
+            >
                 <div class="head">
                     <el-popover placement="right-end" :title="username" trigger="hover" :content="`${account}`">
                         <a slot="reference" @click="chroom(account)" style="cursor: pointer">
@@ -1323,6 +1328,12 @@ main div {
     &.is-single {
         flex-grow: 1;
     }
+}
+
+.chat-groups-container {
+    display: flex;
+    flex-direction: column;
+    z-index: 3;
 }
 
 .random-select {

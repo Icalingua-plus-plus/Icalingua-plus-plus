@@ -2088,7 +2088,7 @@ export default {
     }
 
     .vac-icon-textarea {
-        margin: 6px 0 0 5px;
+        margin: 6px 0 6px 5px;
 
         svg,
         .wrapper {
