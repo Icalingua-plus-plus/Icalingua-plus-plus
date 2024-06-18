@@ -58,6 +58,7 @@
                             'vac-message-clickable': showForwardPanel,
                             'vac-message-selected': selected,
                         }"
+                        :title="recallInfoText"
                         @mouseover="onHoverMessage"
                         @mouseleave="onLeaveMessage"
                     >
@@ -103,11 +104,11 @@
                             @scroll-to-message="$emit('scroll-to-message', $event)"
                         />
 
-                        <div v-if="message.deleted && !message.reveal" :title="recallInfoText">
+                        <div v-if="message.deleted && !message.reveal">
                             <slot name="deleted-icon">
                                 <svg-icon name="deleted" class="vac-icon-deleted" />
                             </slot>
-                            <span>{{ textMessages.MESSAGE_DELETED }}</span>
+                            <span>{{ recallInfoText || textMessages.MESSAGE_DELETED }}</span>
                         </div>
 
                         <div v-else-if="message.hide && !message.reveal && !message.deleted">
@@ -296,7 +297,7 @@ export default {
             lottieResult: getLottieFace(this.message.content, this.message.time, true),
             tgLogo: `file://${__static}/tg.svg`,
             selected: false,
-            recallInfoText: '消息被撤回',
+            recallInfoText: '',
         }
     },
 

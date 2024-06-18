@@ -355,7 +355,7 @@ const eventHandlers = {
     friendRecall(data: FriendRecallEventData) {
         const recallInfo = {
             time: Date.now(),
-            operator_id: data.operator_id,
+            operator_id: String(data.operator_id),
         }
         //ui.deleteMessage(data.message_id)
         ui.renewMessage(data.user_id, data.message_id, {
@@ -369,10 +369,14 @@ const eventHandlers = {
             recallInfo: JSON.stringify(recallInfo),
         })
     },
-    groupRecall(data: GroupRecallEventData) {
+    async groupRecall(data: GroupRecallEventData) {
+        const operator = (await bot.getGroupMemberInfo(data.group_id, data.operator_id)).data
         const recallInfo = {
             time: Date.now(),
-            operator_id: data.operator_id,
+            operator_id: String(data.operator_id),
+        }
+        if (operator) {
+            recallInfo.operator_id = `${operator.card || operator.nickname}(${data.operator_id})`
         }
         //ui.deleteMessage(data.message_id)
         ui.renewMessage(-data.group_id, data.message_id, {
