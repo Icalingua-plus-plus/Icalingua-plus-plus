@@ -1554,11 +1554,15 @@ export default {
             this.$emit('textarea-action-handler', this.$refs.roomTextarea.message)
         },
         msgctx(e, message) {
+            const _message = Object.assign({}, message)
+            delete _message.__v_skip
             const sect = window.getSelection().toString()
-            ipc.popupMessageMenu(e, this.room, message, sect, this.$route.name === 'history-page')
+            ipc.popupMessageMenu(e, this.room, _message, sect, this.$route.name === 'history-page')
         },
         avatarCtx(message, e) {
-            ipc.popupAvatarMenu(message, this.room, e)
+            const _message = Object.assign({}, message)
+            delete _message.__v_skip
+            ipc.popupAvatarMenu(_message, this.room, e)
         },
         containerScroll(e) {
             if (this.onScrolling) {
