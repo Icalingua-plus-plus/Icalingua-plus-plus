@@ -2073,7 +2073,7 @@ const adapter: OicqAdapter = {
             if (message.files.length) {
                 let flag = false
                 for (let i in message.files) {
-                    if (message.files[i].type.startsWith('image') && message.files[i].url.includes('&rkey=')) {
+                    if (message.files[i].type.startsWith('image') && message.files[i].url.includes('fileid=')) {
                         const fileId = message.files[i].url.match(/fileid=([^&]+)/)[1]
                         const res = await bot.getNTPicURLbyFileid(fileId)
                         if (!res.error) {
