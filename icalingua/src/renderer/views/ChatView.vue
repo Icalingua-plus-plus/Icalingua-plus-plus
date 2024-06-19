@@ -773,11 +773,13 @@ Chromium ${process.versions.chrome}` : ''
                 this.messages = []
             }
             const _roomId = this.selectedRoom.roomId
-            const messagesLength = this.messages.length
-            const msgs2add = await ipc.fetchMessage(_roomId, messagesLength)
+            const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            let nonSystemMessageCount = 0
             if (number) {
-                while (msgs2add.filter((e) => !e.system).length < number) {
-                    const msgs = await ipc.fetchMessage(_roomId, messagesLength + msgs2add.length)
+                while (nonSystemMessageCount < number) {
+                    if (_roomId !== this.selectedRoom.roomId) return
+                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
+                    nonSystemMessageCount += msgs.filter((e) => !e.system).length
                     msgs2add.unshift(...msgs)
                     if (!msgs.length) {
                         this.$message.error('Message not found')
@@ -788,7 +790,8 @@ Chromium ${process.versions.chrome}` : ''
             setTimeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
-                if (msgs2add.some(e => this.messages.find(e2 => e2._id === e._id))) return
+                const existingIds = new Set(this.messages.map(e => e._id))
+                if (msgs2add.some(e => existingIds.has(e._id))) return
                 if (msgs2add.length) {
                     for (const msg of msgs2add) {
                         msg.__v_skip = true

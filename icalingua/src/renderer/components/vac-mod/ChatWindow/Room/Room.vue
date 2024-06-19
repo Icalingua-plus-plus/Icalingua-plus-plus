@@ -579,6 +579,7 @@ export default {
             mouseSelectIds: null,
             isMessageEmpty: true,
             membersCount: 0,
+            checkCanScrollTimer: null,
         }
     },
     computed: {
@@ -683,21 +684,25 @@ export default {
                     this.loadingMessages = false
                 }, 0)
             }
+            if (this.checkCanScrollTimer) clearTimeout(this.checkCanScrollTimer)
             if (this.scrollingTolastMessage) {
-                const nonSystemMessages = newVal.filter((msg) => !msg.system)
-                if (nonSystemMessages.length >= this.scrollingTolastMessage) {
-                    const msgCount = this.scrollingTolastMessage
-                    this.scrollingTolastMessage = 0
-                    setTimeout(() => {
-                        const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
-                        if (!_id) {
-                            this.$message.error('Message not found')
-                            return
-                        }
-                        console.log('last unread message ID', _id)
-                        this.scrollToMessage(_id)
-                    }, 0)
-                }
+                this.checkCanScrollTimer = setTimeout(() => {
+                    this.checkCanScrollTimer = null
+                    const nonSystemMessages = this.messages.filter((msg) => !msg.system)
+                    if (nonSystemMessages.length >= this.scrollingTolastMessage) {
+                        const msgCount = this.scrollingTolastMessage
+                        this.scrollingTolastMessage = 0
+                        setTimeout(() => {
+                            const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
+                            if (!_id) {
+                                this.$message.error('Message not found')
+                                return
+                            }
+                            console.log('last unread message ID', _id)
+                            this.scrollToMessage(_id)
+                        }, 0)
+                    }
+                }, 1000)
             }
             setTimeout(() => (this.loadingHeadMessages = false), 0)
         },
@@ -1450,7 +1455,7 @@ export default {
             }
             const lastUnreadCount = this.lastUnreadCount
             if (lastUnreadCount === 0) return
-            const fetchNumber = Math.max(lastUnreadCount - this.messages.length, 0)
+            const fetchNumber = Math.max(lastUnreadCount - this.messages.filter((e) => !e.system).length, 0)
             console.log('Need fetch messages: ', fetchNumber)
             this.$emit('fetch-messages', false, fetchNumber)
             this.$emit('clear-last-unread-count')
