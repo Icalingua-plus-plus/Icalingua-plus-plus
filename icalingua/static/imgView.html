@@ -477,16 +477,22 @@
     }
 
     DRAG.onwheel = e => {
-        if (e.shiftKey) {
-            IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 10 + 'px'
-            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX / 10 + 'px'
+        const isTouchPad = Math.abs(event.deltaY) < 100
+        if (!e.ctrlKey && isTouchPad) {
+            IMG.style.top = IMG.offsetTop + e.wheelDeltaY + 'px'
+            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX + 'px'
             return
         }
-        if (e.wheelDeltaY > 0) {
-            zoomIn(e, e.wheelDeltaY / body.clientHeight)
+        if (e.shiftKey) {
+            IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 5 + 'px'
+            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX / 5 + 'px'
+            return
         }
-        else if (e.wheelDeltaY < 0) {
-            zoomOut(e, -e.wheelDeltaY / body.clientHeight)
+        if (e.deltaY < 0) {
+            zoomIn(e, -e.deltaY / body.clientHeight)
+        }
+        else if (e.deltaY > 0) {
+            zoomOut(e, e.deltaY / body.clientHeight)
         }
     }
 
