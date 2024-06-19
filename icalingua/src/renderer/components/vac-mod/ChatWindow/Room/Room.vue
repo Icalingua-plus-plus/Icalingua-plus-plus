@@ -1134,17 +1134,17 @@ export default {
                 messageSeq = parsed.readUInt32BE(4)
             }
             if (this.$route.name === 'history-page') {
-                judgeSameMessage = (a, b) => {
+                judgeSameMessage = (a) => {
                     const seqA = Number(a.split('|')[1])
                     if (seqA !== messageSeq) return false
                     return true
                 }
             } else {
-                judgeSameMessage = (a, b) => {
+                const parsedB = Buffer.from(messageId, 'base64')
+                judgeSameMessage = (a) => {
                     //shitcode?
-                    if (a === b) return true
+                    if (a === messageId) return true
                     const parsedA = Buffer.from(a, 'base64')
-                    const parsedB = Buffer.from(b, 'base64')
                     if (this.roomId < 0) {
                         for (let i = 0; i <= 16; i += 4) {
                             if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
@@ -1168,7 +1168,7 @@ export default {
                 }, 3000)
                 return
             } else {
-                const index = this.messages.findIndex((e) => judgeSameMessage(e._id, messageId))
+                const index = this.messages.findIndex((e) => judgeSameMessage(e._id))
                 if (index !== -1) {
                     let head = index - Math.floor(this.maxViewportLength / 2)
                     let tail = head + this.maxViewportLength
