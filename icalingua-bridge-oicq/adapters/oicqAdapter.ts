@@ -1262,6 +1262,7 @@ const adapter = {
                 try {
                     const atQQ = Number(icalinguaAt[1])
                     const name = decodeURIComponent(icalinguaAt[2])
+                    if (!name) continue
                     at.push({
                         id: atQQ === 1 ? 'all' : atQQ,
                         text: name,
@@ -1269,7 +1270,7 @@ const adapter = {
                     content = content.replace(icalinguaAt[0], name)
                 } catch (e) {
                     console.error(e)
-                    break
+                    continue
                 }
             }
             //这里是处理@人和表情 markup 的逻辑
@@ -1278,6 +1279,7 @@ const adapter = {
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
             for (const { text } of at) {
+                if (!text) continue
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
