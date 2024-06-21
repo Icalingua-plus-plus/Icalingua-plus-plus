@@ -1520,7 +1520,7 @@ const adapter: OicqAdapter = {
                     content = content.replace(icalinguaAt[0], name)
                 } catch (e) {
                     console.error(e)
-                    continue
+                    break
                 }
             }
             //这里是处理@人和表情 markup 的逻辑
