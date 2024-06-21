@@ -1512,7 +1512,7 @@ const adapter: OicqAdapter = {
                 try {
                     const atQQ = Number(icalinguaAt[1])
                     const name = decodeURIComponent(icalinguaAt[2])
-                    if (!name) continue
+                    if (!name) break
                     at.push({
                         id: atQQ === 1 ? 'all' : atQQ,
                         text: name,
