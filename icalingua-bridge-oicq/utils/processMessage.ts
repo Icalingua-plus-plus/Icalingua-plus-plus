@@ -344,7 +344,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                 case 'face':
                     message.content += `[Face: ${m.data.id}]`
                     lastMessage.content += `[${m.data.text ? m.data.text : '表情'}]`
-                    if (m.data.qlottie) {
+                    if (m.data.qlottie && oicqMessage.length === 1) {
                         let qlottie = m.data.qlottie.replace(/\D/g, '')
                         if (!qlottie) qlottie = '0'
                         message.content = `[QLottie: ${qlottie},${m.data.id}]`
