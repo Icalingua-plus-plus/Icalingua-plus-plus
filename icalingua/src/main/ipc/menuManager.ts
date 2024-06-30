@@ -480,7 +480,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         })
                     }
 
-                    await win.loadURL('https://qun.qq.com/homework/p/features#?gid=' + -room.roomId, {
+                    await win.loadURL('https://qun.qq.com/homework/p/features/#?gid=' + -room.roomId, {
                         userAgent: 'QQ/8.9.63.11390',
                     })
                 },
