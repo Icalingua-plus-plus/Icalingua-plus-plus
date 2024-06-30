@@ -21,6 +21,7 @@ import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from 
 import openImage from '../ipc/openImage'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
+import md5 from 'md5'
 
 let tray: Tray
 
@@ -266,7 +267,10 @@ const getTrayIconColor = () => {
     else return getConfig().darkTaskIcon === 'true'
 }
 let currentIconUnread = false
+let isUpdating = false
 export const updateTrayIcon = async (force = false) => {
+    while (isUpdating) await new Promise((resolve) => setTimeout(resolve, 100))
+    isUpdating = true
     let p: Electron.NativeImage
     const unread = await getUnreadCount()
     let selectedRoomId = ui.getSelectedRoomId()
@@ -300,4 +304,5 @@ export const updateTrayIcon = async (force = false) => {
         if (process.platform !== 'darwin' && (force || currentIconUnread !== previousIconUnread)) tray.setImage(p)
         updateTrayMenu()
     }
+    isUpdating = false
 }
