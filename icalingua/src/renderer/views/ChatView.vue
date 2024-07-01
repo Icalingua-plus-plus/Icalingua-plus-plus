@@ -1,5 +1,5 @@
 <template>
-    <div ondragstart="return false;" class="icalingua-theme-holder">
+    <div ondragstart="return false;">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
             <el-aside
@@ -1390,12 +1390,13 @@ main div {
     }
 }
 
-.dialog .el-dialog__body,
-.el-dialog__header {
+.el-dialog__wrapper .el-dialog .el-dialog__body,
+.el-dialog__header,
+.el-dialog__footer {
     background-color: var(--panel-background);
 }
 
-.dialog .el-dialog__title {
+.el-dialog__wrapper .el-dialog .el-dialog__title {
     color: var(--panel-color-name);
 }
 
