@@ -1410,6 +1410,15 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '禁用图片查看器触摸板新手势',
+                        type: 'checkbox',
+                        checked: getConfig().disableImgViewTouchPad,
+                        click: (menuItem) => {
+                            getConfig().disableImgViewTouchPad = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
                         label: '查看消息时使用 Pangu.js',
                         sublabel: '在中英文间添加空格',
                         type: 'checkbox',

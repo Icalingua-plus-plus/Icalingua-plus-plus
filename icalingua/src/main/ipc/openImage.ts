@@ -72,6 +72,9 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             if (urlList.length > 1 && !getConfig().singleImageMode) {
                 viewerWindow.webContents.on('did-finish-load', () => {
                     viewerWindow.webContents.executeJavaScript(`window.imgs = ${JSON.stringify(urlList)};`)
+                    viewerWindow.webContents.executeJavaScript(
+                        `window.disableTouchPad = ${getConfig().disableImgViewTouchPad};`,
+                    )
                 })
             } else {
                 viewerWindow.on('closed', () => builtinViewers.delete(urlMd5))
@@ -83,6 +86,9 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                             `document.getElementById('BAR_TABLE').style['min-width'] = '360px';` +
                             `document.getElementById('prev').parentElement.style['display'] = 'none';` +
                             `document.getElementById('next').parentElement.style['display'] = 'none';`,
+                    )
+                    viewerWindow.webContents.executeJavaScript(
+                        `window.disableTouchPad = ${getConfig().disableImgViewTouchPad};`,
                     )
                 })
             }

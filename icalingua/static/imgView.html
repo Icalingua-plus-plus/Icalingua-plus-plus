@@ -477,7 +477,7 @@
     }
 
     DRAG.onwheel = e => {
-        const isTouchPad = Math.abs(event.deltaY) < 100
+        const isTouchPad = (Math.abs(event.deltaY) < 100) && !window.disableTouchPad
         if (!e.ctrlKey && isTouchPad) {
             IMG.style.top = IMG.offsetTop + e.wheelDeltaY + 'px'
             IMG.style.left = IMG.offsetLeft + e.wheelDeltaX + 'px'
@@ -488,11 +488,12 @@
             IMG.style.left = IMG.offsetLeft + e.wheelDeltaX / 5 + 'px'
             return
         }
-        if (e.deltaY < 0) {
-            zoomIn(e, -e.deltaY / body.clientHeight)
+        const deltaY = (isTouchPad && Math.abs(e.deltaY) < 30) ? e.deltaY * 10 : e.deltaY
+        if (deltaY < 0) {
+            zoomIn(e, -deltaY / body.clientHeight)
         }
-        else if (e.deltaY > 0) {
-            zoomOut(e, e.deltaY / body.clientHeight)
+        else if (deltaY > 0) {
+            zoomOut(e, deltaY / body.clientHeight)
         }
     }
 

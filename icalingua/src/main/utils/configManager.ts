@@ -107,6 +107,7 @@ const defaultConfig: AllConfig = {
     sortRoomsByPriority: false,
     sendSilkAudio: true,
     disableChooseFileType: false,
+    disableImgViewTouchPad: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

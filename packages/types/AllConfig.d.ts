@@ -50,6 +50,7 @@ type AllConfig = {
     sortRoomsByPriority: boolean
     sendSilkAudio: boolean
     disableChooseFileType: boolean
+    disableImgViewTouchPad: boolean
 }
 
 export default AllConfig
