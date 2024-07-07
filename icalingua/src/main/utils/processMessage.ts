@@ -285,10 +285,14 @@ const processMessage = async (
                     lastMessage.content = '[JSON]' + (jsonObj.prompt || '')
                     message.content = '[JSON]' + (jsonObj.prompt || '') + '\n\n'
                     try {
-                        const urlRegex = /"jumpUrl": *"([^"]+)"/
-                        const previewRegex = /"preview": *"([^"]+)"/
+                        const urlRegex = /"jumpUrl": *"([^"]+)"/i
+                        const previewRegex = /"preview": *"([^"]+)"/i
+                        const pcUrlRegex = /"pcJumpUrl": *"([^"]+)"/i
                         const jumpUrl = json.match(urlRegex)
-                        if (jumpUrl && jumpUrl[1])
+                        const pcJumpUrl = json.match(pcUrlRegex)
+                        if (pcJumpUrl && pcJumpUrl[1])
+                            message.content += pcJumpUrl[1].replace(/\\\//g, '/').replace(/&amp;/g, '&')
+                        else if (jumpUrl && jumpUrl[1])
                             message.content += jumpUrl[1].replace(/\\\//g, '/').replace(/&amp;/g, '&')
                         const preview = json.match(previewRegex)
                         if (preview && preview[1]) {
