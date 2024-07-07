@@ -189,10 +189,11 @@ const processMessage = async (
                 }
                 break
             case 'json':
-                const json: string = m.data.data
+                let json: string = m.data.data
                 message.code = json
                 if (!json) break
                 const jsonObj = JSON.parse(json)
+                json = JSON.stringify(jsonObj)
                 if (jsonObj.app === 'com.tencent.mannounce') {
                     try {
                         const title = base64decode(jsonObj.meta.mannounce.title)
@@ -293,7 +294,7 @@ const processMessage = async (
                         if (preview && preview[1]) {
                             message.file = {
                                 type: 'image/jpeg',
-                                url: preview[1],
+                                url: preview[1].replace(/\\\//g, '/').replace(/&amp;/g, '&'),
                             }
                             message.files.push(message.file)
                         }
