@@ -2442,7 +2442,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     if (e.sender === getMainWindow().webContents)
         menu.append(
             new MenuItem({
-                label: 'at',
+                label: '@ TA',
                 click() {
                     atCache.push({
                         text: '@' + message.username,
@@ -2784,7 +2784,7 @@ ipcMain.on(
         if (group) {
             menu.append(
                 new MenuItem({
-                    label: 'at',
+                    label: '@ TA',
                     click: async () => {
                         atCache.push({
                             text: '@' + remark,
