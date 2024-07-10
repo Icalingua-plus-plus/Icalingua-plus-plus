@@ -2,6 +2,7 @@ import { execFileSync, execFile } from 'child_process'
 import which from 'which'
 import ui from '../utils/ui'
 import fs from 'fs'
+import path = require('path')
 
 let viewer = ''
 const VIEWERS = ['vlc', 'mpv', 'xdg-open']
@@ -26,17 +27,55 @@ if (!viewer) {
     }
 }
 if (!viewer && process.platform === 'win32') {
+    const queryRegistry = (key: string, name: string) => {
+        try {
+            const stdout = execFileSync(path.join(process.env.windir, 'system32', 'reg.exe'), [
+                'query',
+                key,
+                '/v',
+                name,
+            ]).toString()
+            const match = stdout.match(/REG_SZ\s+([^\r\n]+)/)
+            if (match && !match[1].startsWith('AppX')) {
+                // Windows Store Apps are not supported
+                return match[1]
+            }
+        } catch (e) {
+            console.error(e)
+        }
+        return ''
+    }
     try {
-        const assoc = execFileSync('cmd', ['/c', 'assoc', '.mp4']).toString()
-        const ext = assoc.split('=')[1].trim()
-        const ftype = execFileSync('cmd', ['/c', 'ftype', ext]).toString()
+        let ext: string
+        //用户设置
+        ext = queryRegistry(
+            'HKEY_CURRENT_USER\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.mp4\\UserChoice',
+            'Progid',
+        )
+        ext = ext || queryRegistry('HKEY_CURRENT_USER\\SOFTWARE\\Classes\\.mp4', '')
+        ext = ext || queryRegistry('HKEY_CLASSES_ROOT\\.mp4', '')
+        if (!ext) {
+            const assoc = execFileSync(path.join(process.env.windir, 'system32', 'cmd.exe'), [
+                '/c',
+                'assoc',
+                '.mp4',
+            ]).toString()
+            ext = assoc.split('=')[1].trim()
+        }
+        const ftype = execFileSync(path.join(process.env.windir, 'system32', 'cmd.exe'), [
+            '/c',
+            'ftype',
+            ext,
+        ]).toString()
         const viewerCmd = ftype.split('=')[1].trim()
         if (viewerCmd[0] === '"') {
             viewer = viewerCmd.slice(1, viewerCmd.indexOf('"', 1))
         } else {
             viewer = viewerCmd.split(' ')[0]
         }
-        viewer = execFileSync('cmd', ['/c', 'echo', viewer]).toString().trim()
+        viewer = execFileSync(path.join(process.env.windir, 'system32', 'cmd.exe'), ['/c', 'echo', viewer])
+            .toString()
+            .trim()
         if (viewer[0] === '"') {
             viewer = viewer.slice(1, viewer.indexOf('"', 1))
         }
