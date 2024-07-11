@@ -83,9 +83,13 @@ const initStorage = async () => {
             e.forEach(async (e) => {
                 //更新群的名称
                 if (e.roomId > -1) return
-                const group = await bot.getGroupInfo(-e.roomId)
-                if (group && group.group_name !== e.roomName) {
-                    await storage.updateRoom(e.roomId, { roomName: group.group_name })
+                try {
+                    const group = await bot.getGroupInfo(-e.roomId)
+                    if (group && group.group_name !== e.roomName) {
+                        await storage.updateRoom(e.roomId, { roomName: group.group_name })
+                    }
+                } catch (e) {
+                    console.error(e)
                 }
             })
         })
