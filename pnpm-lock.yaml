@@ -77,7 +77,7 @@ importers:
       mysql: ^2.18.1
       node-loader: ^0.6.0
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.24.30
+      oicq-icalingua-plus-plus: ^1.24.32
       pangu: ^4.0.7
       pg: ^8.12.0
       pg-query-stream: ^4.6.0
@@ -126,7 +126,7 @@ importers:
       knex: 2.5.1_gjfopqpl3uv5zjm3vq4p3e7jsq
       mongodb: 4.17.2
       mysql: 2.18.1
-      oicq-icalingua-plus-plus: 1.24.30
+      oicq-icalingua-plus-plus: 1.24.32
       pangu: 4.0.7
       pg: 8.12.0
       pg-query-stream: 4.6.0_pg@8.12.0
@@ -237,7 +237,7 @@ importers:
       mongodb: ^4.17.2
       mysql: ^2.18.1
       nodejs-base64: ^2.0.0
-      oicq-icalingua-plus-plus: ^1.24.30
+      oicq-icalingua-plus-plus: ^1.24.32
       pg: ^8.12.0
       pg-query-stream: ^4.6.0
       prettier: ^2.8.8
@@ -266,7 +266,7 @@ importers:
       mongodb: 4.17.2
       mysql: 2.18.1
       nodejs-base64: 2.0.0
-      oicq-icalingua-plus-plus: 1.24.30
+      oicq-icalingua-plus-plus: 1.24.32
       pg: 8.12.0
       pg-query-stream: 4.6.0_pg@8.12.0
       silk-sdk: 0.2.2
@@ -758,8 +758,8 @@ packages:
     dev: false
     optional: true
 
-  /@aws-sdk/credential-providers/3.616.0:
-    resolution: {integrity: sha512-uyscpYV21lr24FNFu8ZkIKzOCD/xoysRci9HmShtKBY/FixwZRlLv7aUpqH7xcLd7sgsQwa2UD/7s9PKj/DXSg==}
+  /@aws-sdk/credential-providers/3.617.0:
+    resolution: {integrity: sha512-ZXzdnHI7Tfsk7Y2hezlhxFHlG2VM5tTWQPZ0qZ/cYCzZxyZfsmSFr/rMi6wJGB2J6ZDbbAohEoOWrEblHVq7Cw==}
     engines: {node: '>=16.0.0'}
     requiresBuild: true
     dependencies:
@@ -1676,7 +1676,7 @@ packages:
   /@types/keyv/3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 16.18.101
+      '@types/node': 16.18.104
     dev: true
 
   /@types/lodash/4.17.6:
@@ -1712,10 +1712,9 @@ packages:
   /@types/node/16.18.101:
     resolution: {integrity: sha512-AAsx9Rgz2IzG8KJ6tXd6ndNkVcu+GYB6U/SnFAaokSPNx2N7dcIIfnighYUNumvj6YS2q39Dejz5tT0NCV7CWA==}
 
-  /@types/node/16.18.103:
-    resolution: {integrity: sha512-gOAcUSik1nR/CRC3BsK8kr6tbmNIOTpvb1sT+v5Nmmys+Ho8YtnIHP90wEsVK4hTcHndOqPVIlehEGEA5y31bA==}
+  /@types/node/16.18.104:
+    resolution: {integrity: sha512-OF3keVCbfPlkzxnnDBUZJn1RiCJzKeadjiW0xTEb0G1SUJ5gDVb3qnzZr2T4uIFvsbKJbXy1v2DN7e2zaEY7jQ==}
     dev: true
-    optional: true
 
   /@types/pangu/4.0.2:
     resolution: {integrity: sha512-rVwVCkOFTWpmBjZuxTiVhLE8cwIKff3jWEKjs+DDg6bMkQwjp9Bp03pNanHQTtTzP53SDHJutb/kfGFHNhOJaQ==}
@@ -1725,7 +1724,7 @@ packages:
     resolution: {integrity: sha512-E6OCaRmAe4WDmWNsL/9RMqdkkzDCY1etutkflWk4c+AcjDU07Pcz1fQwTX0TQz+Pxqn9i4L1TU3UFpjnrcDgxA==}
     requiresBuild: true
     dependencies:
-      '@types/node': 16.18.103
+      '@types/node': 16.18.104
       xmlbuilder: 15.1.1
     dev: true
     optional: true
@@ -8357,7 +8356,7 @@ packages:
       mongodb-connection-string-url: 2.6.0
       socks: 2.8.3
     optionalDependencies:
-      '@aws-sdk/credential-providers': 3.616.0
+      '@aws-sdk/credential-providers': 3.617.0
       '@mongodb-js/saslprep': 1.1.8
     transitivePeerDependencies:
       - '@aws-sdk/client-sso-oidc'
@@ -8734,8 +8733,8 @@ packages:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
     dev: true
 
-  /oicq-icalingua-plus-plus/1.24.30:
-    resolution: {integrity: sha512-rnR8RB+zRQr8h78KHUm5me61quK6p/6Upe7iebY+LNLkvmx10L5JhYML6J6OKjwU/3/Kxgh80xxyUub0hW95AQ==}
+  /oicq-icalingua-plus-plus/1.24.32:
+    resolution: {integrity: sha512-OFLS8ZoyP4reGwP2jV63CIFTbyPch8g3/7wlAkxs5dg1oXI4vUnytQzKVXMwBb3gZ0jk5WnoVjiyIGQQEQLvqw==}
     engines: {node: '>= v12.16'}
     hasBin: true
     dependencies:
