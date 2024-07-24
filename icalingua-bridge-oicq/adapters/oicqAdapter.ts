@@ -276,6 +276,12 @@ const eventHandlers = {
     },
     onOffline(data: OfflineEventData) {
         clients.setOffline(data.message)
+        const onlineInterval = setInterval(() => {
+            if (bot.isOnline()) {
+                clients.setOnline()
+                clearInterval(onlineInterval)
+            }
+        }, 1000 * 10)
     },
     async friendPoke(data: FriendPokeEventData) {
         const roomId = data.operator_id == bot.uin ? data.user_id : data.operator_id

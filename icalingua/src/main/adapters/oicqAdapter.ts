@@ -396,6 +396,12 @@ const eventHandlers = {
     onOffline(data: OfflineEventData) {
         console.log(data)
         ui.setOffline(data.message)
+        const onlineInterval = setInterval(() => {
+            if (bot.isOnline()) {
+                ui.setOnline()
+                clearInterval(onlineInterval)
+            }
+        }, 1000 * 10)
     },
     async friendPoke(data: FriendPokeEventData) {
         console.log(data)
