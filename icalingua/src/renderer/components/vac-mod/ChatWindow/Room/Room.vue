@@ -678,7 +678,7 @@ export default {
 
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
-            } else if (newVal.length && !this.scrollIcon && newVal.length !== oldVal.length) {
+            } else if (newVal.length && !this.scrollIcon && !(newVal && oldVal && newVal.length === oldVal.length)) {
                 setTimeout(() => {
                     element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
