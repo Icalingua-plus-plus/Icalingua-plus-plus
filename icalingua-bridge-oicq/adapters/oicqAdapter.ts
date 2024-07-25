@@ -28,6 +28,7 @@ import {
     FriendRecallEventData,
     GroupAddEventData,
     GroupAdminEventData,
+    GroupEssenceEventData,
     GroupInfo,
     GroupInviteEventData,
     GroupMessageEventData,
@@ -384,6 +385,38 @@ const eventHandlers = {
                 timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
                 _id: `sign-${data.time * 1000}-${data.group_id}-${data.user_id}`,
+                system: true,
+                time: data.time * 1000,
+                files: [],
+            }
+            clients.addMessage(room.roomId, message)
+            clients.updateRoom(room)
+            storage.updateRoom(room.roomId, room)
+            storage.addMessage(room.roomId, message)
+        }
+    },
+    async groupEssence(data: GroupEssenceEventData) {
+        console.log(data)
+        if (await storage.isChatIgnored(-data.group_id)) return
+        const room = await storage.getRoom(-data.group_id)
+        if (room) {
+            room.utime = data.time * 1000
+            let msg = `${data.user_name} (${data.user_id}) 的消息被 ${data.operator_name} (${data.operator_id}) ${
+                data.add ? '设为' : '移出'
+            }精华消息`
+            room.lastMessage = {
+                content: msg,
+                username: null,
+                timestamp: formatDate('hh:mm'),
+                userId: data.user_id,
+            }
+            const message: Message = {
+                username: '',
+                content: msg,
+                senderId: 10000,
+                timestamp: formatDate('hh:mm:ss'),
+                date: formatDate('yyyy/MM/dd'),
+                _id: `essence-${data.time * 1000}-${data.group_id}-${data.user_id}-${data.seq}`,
                 system: true,
                 time: data.time * 1000,
                 files: [],
@@ -969,6 +1002,7 @@ const attachEventHandler = () => {
     bot.on('notice.friend.poke', eventHandlers.friendPoke)
     bot.on('notice.group.poke', eventHandlers.groupPoke)
     bot.on('notice.group.sign', eventHandlers.groupSign)
+    bot.on('notice.group.essence', eventHandlers.groupEssence)
     bot.on('notice.group.increase', eventHandlers.groupMemberIncrease)
     bot.on('notice.group.decrease', eventHandlers.groupMemberDecrease)
     bot.on('notice.group.ban', eventHandlers.groupMute)
