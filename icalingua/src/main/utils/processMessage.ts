@@ -499,7 +499,7 @@ const processMessage = async (
                 }
             }
         } catch (e) {}
-        message.content += markdown
+        message.content += '\n\n[markdown]\n' + markdown
     }
     return { message, lastMessage }
 }
