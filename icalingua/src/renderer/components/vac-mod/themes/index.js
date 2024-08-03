@@ -133,6 +133,7 @@ export const defaultThemeStyles = {
         panel: {
             background: '#ffffff',
             colorName: '#303133',
+            colorUsername: '#1976d2',
             colorIcon: '#909399',
             colorDesc: '#606266',
             colorTimestamp: '#606266',
@@ -280,6 +281,7 @@ export const defaultThemeStyles = {
         panel: {
             background: '#0D0E0F',
             colorName: '#F2F6FC',
+            colorUsername: '#52a3e8',
             colorIcon: '#C0C4CC',
             colorDesc: '#b3bac9',
             colorTimestamp: '#b3bac9',
@@ -432,6 +434,7 @@ export const cssThemeVars = ({
         //panel
         '--panel-background': panel.background,
         '--panel-color-name': panel.colorName,
+        '--panel-color-username': panel.colorUsername,
         '--panel-color-icon': panel.colorIcon,
         '--panel-color-desc': panel.colorDesc,
         '--panel-color-timestamp': panel.colorTimestamp,

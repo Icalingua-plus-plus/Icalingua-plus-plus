@@ -37,7 +37,8 @@
                         </div>
                     </div>
                     <div class="flex">
-                        <div class="desc" :title="desc">
+                        <div class="desc" :title="lastSender ? lastSender + ': ' + desc : desc">
+                            <span v-if="lastSender" style="color: var(--panel-color-username)">{{ lastSender }}: </span>
                             {{ desc }}
                         </div>
                         <div v-show="room.unreadCount !== 0">
@@ -66,13 +67,11 @@ export default {
     },
     computed: {
         desc() {
-            let d = ''
-            if (this.room.roomId < 0 && this.room.lastMessage.username) {
-                d += this.room.lastMessage.username + ': '
-            }
             const content = this.room.lastMessage.content
-            d += this.usePanguJs ? spacingNotification(content) : content
-            return d
+            return this.usePanguJs ? spacingNotification(content) : content
+        },
+        lastSender() {
+            return this.room.roomId < 0 && this.room.lastMessage.username ? this.room.lastMessage.username : ''
         },
         timestamp() {
             const now = new Date()
