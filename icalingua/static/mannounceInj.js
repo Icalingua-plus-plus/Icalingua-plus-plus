@@ -1,5 +1,6 @@
 let file, b64File, fileData
 
+window.mqq.device.getNetworkType = (f) => f(1)
 window.mqq.media.showPicture=({imageIDs, index})=>window.eqqShowImage(imageIDs[index])
 window.mqq.ui.showDialog = (a, b) => {
     const button = confirm(String(a.text) + '\n是否' + String(a.okBtnText)) ? 0 : 1
