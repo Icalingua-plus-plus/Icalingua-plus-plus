@@ -203,12 +203,13 @@
             </transition>
         </div>
         <div
-            v-show="Object.keys(room).length && showFooter"
+            v-show="Object.keys(room).length"
             ref="roomFooter"
             class="vac-room-footer"
-            :class="{ 'vac-app-box-shadow': messageReply || showForwardPanel || editAndResend }"
+            :class="{ 'vac-app-box-shadow': (showFooter && (messageReply || editAndResend)) || showForwardPanel }"
         >
             <room-message-reply
+                v-show="showFooter"
                 :room="room"
                 :message-reply="messageReply"
                 :linkify="linkify"
@@ -230,11 +231,15 @@
                 :username="username"
                 :roomId="roomId"
             />
-            <div style="padding-top: 10px; padding-left: 10px; color: var(--panel-color-desc)" v-if="editAndResend">
+            <div
+                style="padding-top: 10px; padding-left: 10px; color: var(--panel-color-desc)"
+                v-if="editAndResend"
+                v-show="showFooter"
+            >
                 编辑重发
             </div>
 
-            <div class="vac-box-footer">
+            <div class="vac-box-footer" v-show="showFooter">
                 <div v-if="imageFile" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
