@@ -266,10 +266,7 @@ const getTrayIconColor = () => {
     else return getConfig().darkTaskIcon === 'true'
 }
 let currentIconUnread = false
-let isUpdating = false
 export const updateTrayIcon = async (force = false) => {
-    while (isUpdating) await new Promise((resolve) => setTimeout(resolve, 100))
-    isUpdating = true
     let p: Electron.NativeImage
     const unread = await getUnreadCount()
     let selectedRoomId = ui.getSelectedRoomId()
@@ -279,8 +276,7 @@ export const updateTrayIcon = async (force = false) => {
     }
     const title = selectedRoomName ? selectedRoomName + ' — Icalingua++' : 'Icalingua++'
     const previousIconUnread = currentIconUnread
-    currentIconUnread = unread > 0
-    if (currentIconUnread) {
+    if (unread > 0) {
         p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
         const newMsgRoom = await getFirstUnreadRoom()
         let extra = ''
@@ -300,8 +296,10 @@ export const updateTrayIcon = async (force = false) => {
     pushUnreadCount(unread)
     if (tray) {
         tray.setTitle(unread === 0 ? '' : `${unread}`)
-        if (process.platform !== 'darwin' && (force || currentIconUnread !== previousIconUnread)) tray.setImage(p)
+        if (process.platform !== 'darwin' && (force || unread > 0 !== previousIconUnread)) {
+            currentIconUnread = unread > 0
+            tray.setImage(p)
+        }
         updateTrayMenu()
     }
-    isUpdating = false
 }
