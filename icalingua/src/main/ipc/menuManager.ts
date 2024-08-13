@@ -2060,6 +2060,21 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                     }
                 }
             }
+            if (messageFiles.length > 1) {
+                menu.append(
+                    new MenuItem({
+                        label: '批量存图',
+                        click: async () => {
+                            for (const file of messageFiles) {
+                                if (file.type.startsWith('image/')) {
+                                    downloadImage(file.url)
+                                    await sleep(1000)
+                                }
+                            }
+                        },
+                    }),
+                )
+            }
             menu.append(
                 new MenuItem({
                     type: 'separator',
