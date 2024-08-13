@@ -1089,7 +1089,7 @@ const loginHandlers = {
         {
             const rooms = await storage.getAllRooms()
             const msgIds2Fetch: { id: string; roomId: number }[] = []
-            isAutoFetching = true
+            //isAutoFetching = true
             // 先私聊后群聊
             const now = Date.now() - 3000
             for (const i of rooms) {
@@ -1125,7 +1125,7 @@ const loginHandlers = {
                 await adapter.fetchHistory(i.id, i.roomId)
                 await sleep(500)
             }
-            isAutoFetching = false
+            //isAutoFetching = false
         }
         ui.messageSuccess('历史消息获取完成')
     },
