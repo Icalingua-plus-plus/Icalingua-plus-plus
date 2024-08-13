@@ -2331,7 +2331,7 @@ const adapter: OicqAdapter = {
         const randomString = (length: number, num: boolean = false) => {
             let result = ''
             const map = num ? '0123456789' : '0123456789abcdef'
-            for (let i = length; i > 0; --i) result += map[Math.floor(Math.random() * map.length)]
+            for (let i = length; i > 0; --i) result += map[crypto.randomInt(0, map.length)]
             return result
         }
         const _genIMEI = () => {
