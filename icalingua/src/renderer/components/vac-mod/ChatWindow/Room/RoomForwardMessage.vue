@@ -23,6 +23,13 @@
                     icon="el-icon-delete"
                     >批量撤回</el-button
                 >
+                <el-button
+                    type="primary"
+                    @click="downloadImages"
+                    :disabled="msgsToForward.length === 0"
+                    icon="el-icon-download"
+                    >批量存图</el-button
+                >
             </div>
 
             <div class="vac-icon-forward">
@@ -67,6 +74,22 @@ export default {
                 }, index * 200 + waitTime)
             })
             this.stopForward(false)
+        },
+        async downloadImages() {
+            const msgsToForward = this.msgsToForward
+            this.stopForward(false)
+            for (const msg of this.messages) {
+                if (msgsToForward.includes(msg._id)) {
+                    if (msg.files && msg.files.length > 0) {
+                        for (const file of msg.files) {
+                            if (String(file.type).startsWith('image')) {
+                                ipc.downloadImage(file.url)
+                                await new Promise((resolve) => setTimeout(resolve, 1000))
+                            }
+                        }
+                    }
+                }
+            }
         },
     },
 }
