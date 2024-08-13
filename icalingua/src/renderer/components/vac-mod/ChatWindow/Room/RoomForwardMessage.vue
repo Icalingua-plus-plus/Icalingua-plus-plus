@@ -78,17 +78,24 @@ export default {
         async downloadImages() {
             const msgsToForward = this.msgsToForward
             this.stopForward(false)
+            let count = 0
             for (const msg of this.messages) {
                 if (msgsToForward.includes(msg._id)) {
                     if (msg.files && msg.files.length > 0) {
                         for (const file of msg.files) {
                             if (String(file.type).startsWith('image')) {
+                                count++
                                 ipc.downloadImage(file.url)
                                 await new Promise((resolve) => setTimeout(resolve, 1000))
                             }
                         }
                     }
                 }
+            }
+            if (count > 0) {
+                this.$message.success(`已下载 ${count} 张图片`)
+            } else {
+                this.$message.warning('选择的消息中没有图片')
             }
         },
     },
