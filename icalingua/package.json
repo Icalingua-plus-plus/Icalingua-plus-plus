@@ -198,7 +198,7 @@
         "knex": "^2.5.1",
         "mongodb": "^4.17.2",
         "mysql": "^2.18.1",
-        "oicq-icalingua-plus-plus": "^1.24.42",
+        "oicq-icalingua-plus-plus": "^1.24.43",
         "pangu": "^4.0.7",
         "pg": "^8.12.0",
         "pg-query-stream": "^4.6.0",

@@ -63,9 +63,7 @@ import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import sleep from '../../utils/sleep'
 import { spacingSendMessage } from '../../utils/panguSpacing'
-
-const requireFunc = eval('require')
-const pb = requireFunc(path.join(getStaticPath(), 'pb.js'))
+import { pb } from 'oicq-icalingua-plus-plus'
 
 export const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)

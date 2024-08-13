@@ -50,6 +50,7 @@ import {
     MessageElem,
     MessageEventData,
     OfflineEventData,
+    pb,
     PrivateMessageEventData,
     QrcodeEventData,
     Ret,
@@ -1070,36 +1071,58 @@ const loginHandlers = {
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
         ui.message('正在获取历史消息')
+        const getLastSeq = async (group_id: number) => {
+            const body = pb.encode({
+                1: this.apk.subid,
+                2: {
+                    1: group_id,
+                    2: {
+                        22: 0,
+                    },
+                },
+            })
+            const blob = await this.sendOidb('OidbSvc.0x88d_0', body)
+            const o = pb.decode(blob)[4][1][3]
+            if (!o) return -1
+            return parseInt(o[22])
+        }
         {
             const rooms = await storage.getAllRooms()
+            const msgIds2Fetch: { id: string; roomId: number }[] = []
             isAutoFetching = true
             // 先私聊后群聊
+            const now = Date.now() - 3000
             for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
-                if (i.roomId < 0) continue
+                if (now - i.utime > 1000 * 60 * 60 * 24 * 2) continue
+                if (i.roomId <= 0) continue
                 const roomId = i.roomId
-                let buffer: Buffer
-                let uid = roomId
-                if (roomId < 0) {
-                    buffer = Buffer.alloc(21)
-                    uid = -uid
-                } else buffer = Buffer.alloc(17)
-                buffer.writeUInt32BE(uid, 0)
-                adapter.fetchHistory(buffer.toString('base64'), roomId)
-                await sleep(500)
+                const buffer = Buffer.alloc(17)
+                const uin = roomId
+                buffer.writeUInt32BE(uin, 0)
+                buffer.writeUInt32BE(Math.floor(now / 1000), 12)
+                msgIds2Fetch.push({
+                    id: buffer.toString('base64'),
+                    roomId,
+                })
             }
             for (const i of rooms) {
-                if (new Date().getTime() - i.utime > 1000 * 60 * 60 * 24 * 2) break
-                if (i.roomId > 0) continue
+                if (now - i.utime > 1000 * 60 * 60 * 24 * 2) continue
+                if (i.roomId >= 0) continue
                 const roomId = i.roomId
-                let buffer: Buffer
-                let uid = roomId
-                if (roomId < 0) {
-                    buffer = Buffer.alloc(21)
-                    uid = -uid
-                } else buffer = Buffer.alloc(17)
-                buffer.writeUInt32BE(uid, 0)
-                adapter.fetchHistory(buffer.toString('base64'), roomId)
+                const buffer = Buffer.alloc(21)
+                const gid = -roomId
+                buffer.writeUInt32BE(gid, 0)
+                const lastSeq = await getLastSeq.call(bot, gid)
+                if (lastSeq < 0) continue
+                buffer.writeUInt32BE(lastSeq, 8)
+                msgIds2Fetch.push({
+                    id: buffer.toString('base64'),
+                    roomId,
+                })
+                await sleep(100)
+            }
+            for (const i of msgIds2Fetch) {
+                await adapter.fetchHistory(i.id, i.roomId)
                 await sleep(500)
             }
             isAutoFetching = false
@@ -2275,6 +2298,7 @@ const adapter: OicqAdapter = {
 
         // 更新最近消息
         if (!messages.length) return
+        room = await storage.getRoom(roomId)
         if (room.utime >= lastMessageTime) return
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
@@ -2379,8 +2403,8 @@ const adapter: OicqAdapter = {
         fs.writeFileSync(devicepath, device, { mode: 0o600 })
     },
     async sendPacket(type: string, cmd: string, body: any): Promise<Buffer> {
-        if (type === 'Uni') return await bot.sendUni(cmd, body)
-        else return await bot.sendOidb(cmd, body)
+        if (type === 'Uni') return await bot.sendUni(cmd, pb.encode(body))
+        else return await bot.sendOidb(cmd, pb.encode(body))
     },
     async preloadImages(urls: string[]) {
         const ret = await bot.preloadImages(urls)
