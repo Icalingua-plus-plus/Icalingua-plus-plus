@@ -1119,11 +1119,11 @@ const loginHandlers = {
                     id: buffer.toString('base64'),
                     roomId,
                 })
-                await sleep(100)
+                await sleep(50)
             }
             for (const i of msgIds2Fetch) {
                 await adapter.fetchHistory(i.id, i.roomId)
-                await sleep(500)
+                await sleep(100)
             }
             //isAutoFetching = false
         }
