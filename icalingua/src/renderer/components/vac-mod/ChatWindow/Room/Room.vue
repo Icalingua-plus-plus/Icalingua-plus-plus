@@ -446,7 +446,7 @@
 
 <script>
 import path from 'path'
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, webUtils } from 'electron'
 import _ from 'lodash'
 
 import InfiniteLoading from 'vue-infinite-loading'
@@ -1511,7 +1511,16 @@ export default {
             this.resetMediaFile()
 
             const file = files[0]
-            const fileURL = file.path ? file.path : URL.createObjectURL(file)
+            let filePath = file.path
+            if (!filePath && webUtils && webUtils.getPathForFile) {
+                console.log('Electron >= 32.0.0')
+                try {
+                    filePath = webUtils.getPathForFile(file)
+                } catch (e) {
+                    console.error(e)
+                }
+            }
+            const fileURL = filePath ? filePath : URL.createObjectURL(file)
             const blobFile = await fetch(fileURL).then((res) => res.blob())
             const typeIndex = file.name.lastIndexOf('.')
 
@@ -1522,12 +1531,13 @@ export default {
                 type: file.type,
                 extension: file.name.substring(typeIndex + 1),
                 localUrl: fileURL,
-                path: file.path,
+                path: filePath,
             }
-            if (this.file.path.endsWith('.slk') || this.file.path.endsWith('.silk')) {
+            const extension = this.file.extension.toLowerCase()
+            if (['slk', 'silk'].includes(extension)) {
                 this.file.type = 'audio/silk'
             }
-            if (this.file.path.endsWith('.amr')) {
+            if (['amr'].includes(extension)) {
                 this.file.type = 'audio/amr'
             }
             if (force) this.file.type = ''
