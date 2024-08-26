@@ -36,7 +36,7 @@ if (!viewer && process.platform === 'win32') {
                 name,
             ]).toString()
             const match = stdout.match(/REG_SZ\s+([^\r\n]+)/)
-            if (match && !match[1].startsWith('AppX')) {
+            if (match && !match[1].startsWith('AppX') && !match[1].startsWith('(')) {
                 // Windows Store Apps are not supported
                 return match[1]
             }
@@ -73,6 +73,7 @@ if (!viewer && process.platform === 'win32') {
         } else {
             viewer = viewerCmd.split(' ')[0]
         }
+        viewer = viewer || '%ProgramFiles(x86)%\\Windows Media Player\\wmplayer.exe'
         viewer = execFileSync(path.join(process.env.windir, 'system32', 'cmd.exe'), ['/c', 'echo', viewer])
             .toString()
             .trim()
