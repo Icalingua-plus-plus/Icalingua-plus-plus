@@ -1156,7 +1156,7 @@ const initStorage = async () => {
                     `${loginForm.username}`,
                     'sqlite3',
                     {
-                        dataPath: app.getPath('userData'),
+                        dataPath: path.join(app.getPath('userData'), 'data'),
                     },
                     errorHandler,
                 )

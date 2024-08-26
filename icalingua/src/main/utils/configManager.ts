@@ -112,6 +112,27 @@ const defaultConfig: AllConfig = {
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
 }
+
+const oldDatabasesPath = path.join(app.getPath('userData'), 'databases')
+const newDatabasesPath = path.join(app.getPath('userData'), 'data', 'databases')
+if (fs.existsSync(oldDatabasesPath)) {
+    // Chromium 128 (Electron 32) 起弃用 databases 目录并且会直接删除导致数据丢失
+    // 所以这里需要迁移数据
+    if (!fs.existsSync(newDatabasesPath)) {
+        fs.mkdirSync(newDatabasesPath, { recursive: true })
+    }
+    for (const file of fs.readdirSync(oldDatabasesPath)) {
+        if (file.startsWith('eqq')) {
+            const oldDatabaseFilePath = path.join(oldDatabasesPath, file)
+            const newDatabaseFilePath = path.join(newDatabasesPath, file)
+            if (fs.existsSync(newDatabaseFilePath)) {
+                fs.renameSync(newDatabaseFilePath, newDatabaseFilePath + '.' + Date.now() + '.bak')
+            }
+            fs.renameSync(oldDatabaseFilePath, newDatabaseFilePath)
+        }
+    }
+}
+
 if (fs.existsSync(configFilePath)) {
     config = YAML.parse(fs.readFileSync(configFilePath, 'utf8'))
     for (const i in defaultConfig) {
