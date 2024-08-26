@@ -91,7 +91,7 @@
                     </el-radio-group>
                     <span>Other</span>
                     <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="3">Android Watch 2.0.8</el-radio-button>
+                        <el-radio-button label="3">Android Watch 9.0.1</el-radio-button>
                         <el-radio-button label="4">macOS 5.9.3</el-radio-button>
                         <el-radio-button label="10">TIM 3.5.1</el-radio-button>
                     </el-radio-group>
