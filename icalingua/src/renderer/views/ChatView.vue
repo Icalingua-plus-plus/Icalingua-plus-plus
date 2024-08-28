@@ -129,7 +129,7 @@
                     @open-group-member-panel=";(groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId)"
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
-                    @back-contact="backContact"
+                    @back-contact="closeRoom"
                     @open-choose-file-type="openChooseFileType"
                 >
                     <template v-slot:menu-icon>
@@ -1058,9 +1058,6 @@ Chromium ${process.versions.chrome}` : ''
             if (this.showSinglePanel) this.roomPanelResize(this.$refs.roomPanel, null, '300px')
             if (this.showSinglePanel && this.selectedRoomId === 0) this.showPanel = 'contact'
             if (oldValue && !this.showSinglePanel) this.$refs.roomPanel.style.width = '300px'
-        },
-        backContact() {
-            this.showPanel = 'contact'
         },
         async sendDice(value) {
             if (!value) {
