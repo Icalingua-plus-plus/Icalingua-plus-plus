@@ -1980,11 +1980,7 @@ const adapter = {
             if (history.data.length < 2 || newMsgs.length === 0) break
             messageId = newMsgs[0]._id as string
             //todo 所有消息都过一遍，数据库里面都有才能结束
-            const firstOwnMsg =
-                roomId < 0
-                    ? newMsgs[0] //群的话只要第一条消息就行
-                    : newMsgs.find((e) => e.senderId == bot.uin)
-            if (firstOwnMsg && (await storage.getMessage(roomId, firstOwnMsg._id as string))) break
+            if (await storage.getMessage(roomId, messageId)) break
         }
         // 私聊消息去重
         let messagesLength = messages.length

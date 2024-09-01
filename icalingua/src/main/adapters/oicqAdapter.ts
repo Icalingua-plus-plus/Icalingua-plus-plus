@@ -2262,11 +2262,7 @@ const adapter: OicqAdapter = {
                     break
                 }
                 messageId = newMsgs[0]._id as string
-                const firstOwnMsg =
-                    roomId < 0
-                        ? newMsgs[0] //群的话只要第一条消息就行
-                        : newMsgs.find((e) => e.senderId == bot.uin)
-                if (firstOwnMsg && (await storage.getMessage(roomId, firstOwnMsg._id as string))) {
+                if (await storage.getMessage(roomId, messageId)) {
                     done = true
                     break
                 }
