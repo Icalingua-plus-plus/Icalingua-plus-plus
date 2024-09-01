@@ -1071,24 +1071,28 @@ const loginHandlers = {
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
         ui.message('正在获取历史消息')
-        const getLastSeq = async (group_id: number) => {
+        const getSeqInfo = async (group_id: number) => {
             const body = pb.encode({
                 1: this.apk.subid,
                 2: {
                     1: group_id,
                     2: {
                         22: 0,
+                        53: 0,
                     },
                 },
             })
             const blob = await this.sendOidb('OidbSvc.0x88d_0', body)
             const o = pb.decode(blob)[4][1][3]
-            if (!o) return -1
-            return parseInt(o[22])
+            if (!o) return { lastSeq: -1, unread: 0 }
+            return {
+                lastSeq: parseInt(o[22]),
+                unread: parseInt(o[22]) - parseInt(o[53]),
+            }
         }
         {
             const rooms = await storage.getAllRooms()
-            const msgIds2Fetch: { id: string; roomId: number }[] = []
+            const msgIds2Fetch: { id: string; roomId: number; unread?: number }[] = []
             //isAutoFetching = true
             // 先私聊后群聊
             const now = Date.now() - 3000
@@ -1112,17 +1116,33 @@ const loginHandlers = {
                 const buffer = Buffer.alloc(21)
                 const gid = -roomId
                 buffer.writeUInt32BE(gid, 0)
-                const lastSeq = await getLastSeq.call(bot, gid)
+                const seqInfo = await getSeqInfo(gid)
+                const lastSeq = seqInfo.lastSeq
                 if (lastSeq < 0) continue
                 buffer.writeUInt32BE(lastSeq, 8)
                 msgIds2Fetch.push({
                     id: buffer.toString('base64'),
                     roomId,
+                    unread: seqInfo.unread,
                 })
                 await sleep(50)
             }
             for (const i of msgIds2Fetch) {
                 await adapter.fetchHistory(i.id, i.roomId)
+                if (i.unread) {
+                    try {
+                        const room = await storage.getRoom(i.roomId)
+                        const unread_change_local =
+                            room.unreadCount - rooms.find((e) => e.roomId === i.roomId).unreadCount
+                        if (unread_change_local >= 0) {
+                            room.unreadCount = i.unread + unread_change_local
+                            ui.updateRoom(room)
+                            storage.updateRoom(i.roomId, room)
+                        }
+                    } catch (e) {
+                        errorHandler(e, true)
+                    }
+                }
                 await sleep(100)
             }
             //isAutoFetching = false
