@@ -2266,6 +2266,11 @@ const adapter: OicqAdapter = {
                     done = true
                     break
                 }
+                if (roomId > 0) {
+                    const mid_buffer = Buffer.from(messageId, 'base64')
+                    mid_buffer.writeUInt32BE(0, 8)
+                    messageId = mid_buffer.toString('base64')
+                }
                 if (limit && messages.length > limit) break
             }
             // 私聊消息去重
