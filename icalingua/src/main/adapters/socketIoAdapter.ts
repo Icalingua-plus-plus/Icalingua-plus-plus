@@ -31,6 +31,7 @@ import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import {
+    getLoginWindow,
     getMainWindow,
     isAppLocked,
     loadMainWindow,
@@ -105,6 +106,7 @@ const attachSocketEvents = () => {
                 await createTray()
                 loggedIn = true
             }
+            if (getLoginWindow()) getLoginWindow().close()
             uin = data.uin
             bkn = data.bkn
             nickname = data.nick
