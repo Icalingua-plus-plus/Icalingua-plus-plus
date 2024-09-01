@@ -33,6 +33,10 @@ export default {
             this.image = url
             this.drawerVisible = true
         })
+        ipcRenderer.on('error', async (_, msg) => {
+            this.image = ''
+            this.drawerVisible = false
+        })
     },
 }
 </script>
