@@ -155,7 +155,7 @@
             </p>
             <el-form-item class="buttons">
                 <el-button type="primary" v-on:click="onSubmit('loginForm')">
-                    <span v-show="!form.password && $route.query.bridge !== 'true'">QR Code</span>
+                    <span v-show="!form.password">QR Code</span>
                     Login
                 </el-button>
                 <el-button type="warning" v-on:click="cannotLogin">更换设备信息</el-button>
