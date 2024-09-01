@@ -2125,7 +2125,7 @@ const adapter: OicqAdapter = {
         let messageIdBuf = Buffer.from(messageId, 'base64')
         if (res.error && roomId > 0 && messageIdBuf.length === 17) {
             const timestamp = messageIdBuf.readUInt32BE(12)
-            const timeDiff = [-1, 1, -2, 2]
+            const timeDiff = [2, 1, -1, -2]
             for (let j of timeDiff) {
                 messageIdBuf.writeUInt32BE(timestamp + j, 12)
                 res = await adapter.getMsg(messageIdBuf.toString('base64'))
