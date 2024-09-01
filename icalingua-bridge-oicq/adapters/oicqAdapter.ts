@@ -1983,7 +1983,8 @@ const adapter = {
             if (await storage.getMessage(roomId, messageId)) break
             if (roomId > 0) {
                 const mid_buffer = Buffer.from(messageId, 'base64')
-                mid_buffer.writeUInt32BE(0, 8)
+                const mid_time = mid_buffer.readUInt32BE(12)
+                mid_buffer.writeUInt32BE(mid_time + 1, 12)
                 messageId = mid_buffer.toString('base64')
             }
         }
