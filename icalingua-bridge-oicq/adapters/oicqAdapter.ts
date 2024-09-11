@@ -1981,12 +1981,6 @@ const adapter = {
             messageId = newMsgs[0]._id as string
             //todo 所有消息都过一遍，数据库里面都有才能结束
             if (await storage.getMessage(roomId, messageId)) break
-            if (roomId > 0) {
-                const mid_buffer = Buffer.from(messageId, 'base64')
-                const mid_time = mid_buffer.readUInt32BE(12)
-                mid_buffer.writeUInt32BE(mid_time + 1, 12)
-                messageId = mid_buffer.toString('base64')
-            }
         }
         // 私聊消息去重
         let messagesLength = messages.length
