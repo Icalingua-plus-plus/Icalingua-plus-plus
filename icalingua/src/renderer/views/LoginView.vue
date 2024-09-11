@@ -197,6 +197,9 @@ import ipc from '../utils/ipc'
 import md5 from 'md5'
 import QrcodeDrawer from '../components/QrcodeDrawer'
 
+let loginTimeout = null
+let qrLoginInterval = null
+
 export default {
     name: 'LoginView',
     components: { QrcodeDrawer },
@@ -217,7 +220,6 @@ export default {
             verifyUrl: '',
             phone: '',
             sendTime: -1,
-            loginTimeout: null,
         }
     },
     async created() {
@@ -226,7 +228,8 @@ export default {
         if (!_form.signAPIAddress) _form.signAPIAddress = ''
         this.form = _form
         ipcRenderer.on('error', (_, msg) => {
-            if (this.loginTimeout) clearTimeout(this.loginTimeout)
+            if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
+            if (qrLoginInterval) clearInterval(qrLoginInterval) && (qrLoginInterval = null)
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
@@ -256,7 +259,7 @@ export default {
             }
         })
         ipcRenderer.on('smsCodeVerify', (_, data) => {
-            if (this.loginTimeout) clearTimeout(this.loginTimeout)
+            if (loginTimeout) clearTimeout(loginTimeout)
             const parsed = JSON.parse(data)
             console.log(parsed.url)
             this.shouldSubmitSmsCode = true
@@ -277,11 +280,19 @@ export default {
                     if (this.form.useNT) {
                         this.$message('使用实验性 NT 上线，可能不支持部分功能')
                     }
-                    this.loginTimeout = setTimeout(() => {
-                        this.$alert(
-                            '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
-                        )
-                    }, 60 * 1000)
+                    if (this.form.password) {
+                        if (loginTimeout) clearTimeout(loginTimeout)
+                        loginTimeout = setTimeout(() => {
+                            this.$alert(
+                                '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
+                            )
+                        }, 60 * 1000)
+                    } else {
+                        if (qrLoginInterval) clearInterval(qrLoginInterval)
+                        qrLoginInterval = setInterval(() => {
+                            ipcRenderer.send('createBot', this.form)
+                        }, 5 * 1000)
+                    }
                     await ipcRenderer.send('createBot', this.form)
                 } else {
                     return false
@@ -303,7 +314,7 @@ export default {
             }, 1000)
         },
         QRCodeVerify() {
-            if (this.loginTimeout) clearTimeout(this.loginTimeout)
+            if (loginTimeout) clearTimeout(loginTimeout)
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
         cannotLogin() {
