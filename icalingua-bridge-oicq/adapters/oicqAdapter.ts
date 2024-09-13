@@ -891,22 +891,27 @@ const loginHandlers = {
         await sleep(3000)
         console.log('正在获取历史消息')
         const getSeqInfo = async (group_id: number) => {
-            const body = pb.encode({
-                1: this.apk.subid,
-                2: {
-                    1: group_id,
+            try {
+                const body = pb.encode({
+                    1: this.apk.subid,
                     2: {
-                        22: 0,
-                        53: 0,
+                        1: group_id,
+                        2: {
+                            22: 0,
+                            53: 0,
+                        },
                     },
-                },
-            })
-            const blob = await this.sendOidb('OidbSvc.0x88d_0', body)
-            const o = pb.decode(blob)[4][1][3]
-            if (!o) return { lastSeq: -1, unread: 0 }
-            return {
-                lastSeq: parseInt(o[22]),
-                unread: parseInt(o[22]) - parseInt(o[53]),
+                })
+                const blob = await this.sendOidb('OidbSvc.0x88d_0', body)
+                const o = pb.decode(blob)[4][1][3]
+                if (!o) return { lastSeq: -1, unread: 0 }
+                return {
+                    lastSeq: parseInt(o[22]),
+                    unread: parseInt(o[22]) - parseInt(o[53]),
+                }
+            } catch (e) {
+                console.error(e)
+                return { lastSeq: -1, unread: 0 }
             }
         }
         {
