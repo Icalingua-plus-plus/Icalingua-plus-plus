@@ -1071,34 +1071,37 @@ const loginHandlers = {
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
         ui.message('正在获取历史消息')
-        const getSeqInfo = async (group_id: number) => {
+        const getSeqInfos = async (group_ids: number[]) => {
             try {
+                const gids = group_ids.map((e) => ({ 1: e, 2: { 22: 0, 53: 0 } }))
                 const body = pb.encode({
-                    1: this.apk.subid,
-                    2: {
-                        1: group_id,
-                        2: {
-                            22: 0,
-                            53: 0,
-                        },
-                    },
+                    1: bot['apk'].subid,
+                    2: gids,
                 })
-                const blob = await this.sendOidb('OidbSvc.0x88d_0', body)
-                const o = pb.decode(blob)[4][1][3]
-                if (!o) return { lastSeq: -1, unread: 0 }
-                return {
-                    lastSeq: parseInt(o[22]),
-                    unread: parseInt(o[22]) - parseInt(o[53]),
+                const blob = await bot.sendOidb('OidbSvc.0x88d_0', body)
+                let gInfos = pb.decode(blob)[4][1]
+                const ret = []
+                if (!Array.isArray(gInfos)) gInfos = [gInfos]
+                for (const gInfo of gInfos) {
+                    const gid = gInfo[1]
+                    const o = gInfo[3]
+                    if (!o) continue
+                    ret.push({
+                        groupId: gid,
+                        lastSeq: parseInt(o[22]),
+                        unread: parseInt(o[22]) - parseInt(o[53]),
+                    })
                 }
+                return ret
             } catch (e) {
                 errorHandler(e, true)
-                return { lastSeq: -1, unread: 0 }
+                return []
             }
         }
         {
             const rooms = await storage.getAllRooms()
             const msgIds2Fetch: { id: string; roomId: number; unread?: number }[] = []
-            //isAutoFetching = true
+            isAutoFetching = true
             // 先私聊后群聊
             const now = Date.now() - 3000
             for (const i of rooms) {
@@ -1114,22 +1117,22 @@ const loginHandlers = {
                     roomId,
                 })
             }
-            for (const i of rooms) {
-                if (now - i.utime > 1000 * 60 * 60 * 24 * 2) continue
-                if (i.roomId >= 0) continue
-                const roomId = i.roomId
-                const buffer = Buffer.alloc(21)
-                const gid = -roomId
-                buffer.writeUInt32BE(gid, 0)
-                const seqInfo = await getSeqInfo(gid)
-                const lastSeq = seqInfo.lastSeq
-                if (lastSeq < 0) continue
-                buffer.writeUInt32BE(lastSeq, 8)
-                msgIds2Fetch.push({
-                    id: buffer.toString('base64'),
-                    roomId,
-                    unread: seqInfo.unread,
-                })
+            const gRooms = rooms
+                .filter((e) => e.roomId < 0 && now - e.utime <= 1000 * 60 * 60 * 24 * 2)
+                .map((e) => -e.roomId)
+            // 每次取30个群的seq信息
+            for (let i = 0; i < gRooms.length; i += 30) {
+                const seqInfos = await getSeqInfos(gRooms.slice(i, i + 30))
+                for (const j of seqInfos) {
+                    const buffer = Buffer.alloc(21)
+                    buffer.writeUInt32BE(j.groupId, 0)
+                    buffer.writeUInt32BE(j.lastSeq, 8)
+                    msgIds2Fetch.push({
+                        id: buffer.toString('base64'),
+                        roomId: j.groupId,
+                        unread: j.unread,
+                    })
+                }
                 await sleep(50)
             }
             for (const i of msgIds2Fetch) {
@@ -1150,7 +1153,7 @@ const loginHandlers = {
                 }
                 await sleep(100)
             }
-            //isAutoFetching = false
+            isAutoFetching = false
         }
         ui.messageSuccess('历史消息获取完成')
     },
@@ -2261,7 +2264,7 @@ const adapter: OicqAdapter = {
                     }
                 }
                 first_loop = false
-                if (!isAutoFetching) ui.addHistoryCount(newMsgs.length)
+                ui.addHistoryCount(newMsgs.length)
                 if (history.data.length < 2 || newMsgs.length === 0) {
                     done = true
                     break
@@ -2311,14 +2314,14 @@ const adapter: OicqAdapter = {
             storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
-            if (!isAutoFetching) ui.clearHistoryCount()
+            ui.clearHistoryCount()
         } else {
             ui.message(`${room.roomName}(${Math.abs(roomId)}) 后台拉取中，已拉取 ${messages.length} 条消息`)
             {
                 const { messages } = await fetchLoop()
                 await storage.addMessages(roomId, messages)
                 ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
-                if (!isAutoFetching) ui.clearHistoryCount()
+                ui.clearHistoryCount()
             }
         }
 
