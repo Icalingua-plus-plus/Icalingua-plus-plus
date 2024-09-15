@@ -135,6 +135,8 @@ export default interface Adapter {
 
     fetchHistory(messageId: string, roomId?: number): any
 
+    fetch7DaysHistory(): any
+
     stopFetchingHistory(): any
 
     getCookies(domain: CookiesDomain): Promise<string>

@@ -63,6 +63,7 @@ export const {
     renewMessage,
     renewMessageURL,
     fetchHistory,
+    fetch7DaysHistory,
     stopFetchingHistory,
     makeForward,
     submitSmsCode,

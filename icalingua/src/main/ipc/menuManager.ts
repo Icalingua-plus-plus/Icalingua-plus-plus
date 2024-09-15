@@ -30,6 +30,7 @@ import {
     deleteMessage,
     fetchHistory,
     fetchLatestHistory,
+    fetch7DaysHistory,
     getFriend,
     getGroup,
     getCookies,
@@ -917,6 +918,11 @@ export const updateAppMenu = async () => {
                     })
                     await win.loadURL(getWinUrl() + '#/openForward')
                 },
+            }),
+            new MenuItem({
+                label: '获取会话历史消息',
+                sublabel: '一周内有消息的会话',
+                click: () => fetch7DaysHistory(),
             }),
             new MenuItem({
                 label: '重新加载',

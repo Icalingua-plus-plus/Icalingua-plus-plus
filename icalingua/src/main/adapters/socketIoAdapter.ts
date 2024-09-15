@@ -517,6 +517,9 @@ const adapter: Adapter = {
     stopFetchingHistory() {
         socket.emit('stopFetchingHistory')
     },
+    fetch7DaysHistory() {
+        socket.emit('fetch7DaysHistory')
+    },
     fetchMessages(roomId: number, offset: number): Promise<Message[]> {
         if (!offset) adapter.clearCurrentRoomUnread()
         updateTrayIcon()

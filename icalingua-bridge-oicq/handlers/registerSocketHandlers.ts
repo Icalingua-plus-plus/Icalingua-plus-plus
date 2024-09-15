@@ -12,6 +12,7 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('deleteMessage', adapter.deleteMessage)
     socket.on('hideMessage', adapter.hideMessage)
     socket.on('fetchHistory', adapter.fetchHistory)
+    socket.on('fetch7DaysHistory', adapter.fetch7DaysHistory)
     socket.on(
         'fetchMessages',
         (roomId: number, offset: number, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
