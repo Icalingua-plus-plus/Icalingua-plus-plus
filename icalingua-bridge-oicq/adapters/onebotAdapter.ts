@@ -1276,6 +1276,10 @@ const adapter: typeof oicqAdapter = {
             .then((messages) => clients.setMessages(roomId, messages))
     },
 
+    async fetch7DaysHistory() {
+        clients.messageError('暂不支持该操作')
+    },
+
     // 存储动作
     async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
         if (!offset) {
