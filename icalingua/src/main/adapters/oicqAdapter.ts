@@ -2325,6 +2325,28 @@ const adapter: OicqAdapter = {
             }
         }
 
+        //刷新未读数量
+        if (!isAutoFetching && roomId < 0) {
+            try {
+                const body = pb.encode({
+                    1: bot['apk'].subid,
+                    2: {
+                        1: -roomId,
+                        2: {
+                            22: 0,
+                            53: 0,
+                        },
+                    },
+                })
+                const blob = await bot.sendOidb('OidbSvc.0x88d_0', body)
+                const o = pb.decode(blob)[4][1][3]
+                const unread = parseInt(o[22]) - parseInt(o[53])
+                await storage.updateRoom(roomId, { unreadCount: unread })
+            } catch (e) {
+                errorHandler(e, true)
+            }
+        }
+
         // 更新最近消息
         if (!messages.length) return
         room = await storage.getRoom(roomId)

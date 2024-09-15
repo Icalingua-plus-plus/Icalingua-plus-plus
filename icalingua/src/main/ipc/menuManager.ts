@@ -2269,7 +2269,7 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
             menu.append(
                 new MenuItem({
                     label: '获取历史消息',
-                    click: () => fetchHistory(message._id as string),
+                    click: () => fetchHistory(message._id as string, room.roomId),
                 }),
             )
             menu.append(
