@@ -1070,9 +1070,7 @@ const loginHandlers = {
         await updateTrayIcon(true)
         if (!getConfig().fetchHistoryOnStart) return
         await sleep(3000)
-        ui.message('正在获取历史消息')
         await adapter.fetch7DaysHistory()
-        ui.messageSuccess('历史消息获取完成')
     },
     verify(data: DeviceEventData) {
         console.log(data)
@@ -2279,6 +2277,7 @@ const adapter: OicqAdapter = {
     },
 
     async fetch7DaysHistory() {
+        ui.message('正在获取历史消息')
         const getSeqInfos = async (group_ids: number[]) => {
             try {
                 const gids = group_ids.map((e) => ({ 1: e, 2: { 22: 0, 53: 0 } }))
@@ -2311,10 +2310,10 @@ const adapter: OicqAdapter = {
         isAutoFetching = true
         // 先私聊后群聊
         const now = Date.now() - 3000
-        for (const i of rooms) {
-            if (now - i.utime > 1000 * 60 * 60 * 24 * 2) continue
-            if (i.roomId <= 0) continue
-            const roomId = i.roomId
+        const dmRooms = rooms
+            .filter((e) => e.roomId > 0 && now - e.utime <= 1000 * 60 * 60 * 24 * 7)
+            .map((e) => e.roomId)
+        for (const roomId of dmRooms) {
             const buffer = Buffer.alloc(17)
             const uin = roomId
             buffer.writeUInt32BE(uin, 0)
@@ -2360,6 +2359,7 @@ const adapter: OicqAdapter = {
             await sleep(100)
         }
         isAutoFetching = false
+        ui.messageSuccess('历史消息获取完成')
     },
 
     async getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {

@@ -373,6 +373,9 @@ export default class SQLStorageProvider implements StorageProvider {
             if (dbVersion[0].dbVersion < dbVersionLatest) {
                 await this.updateDB(dbVersion[0].dbVersion)
             }
+
+            // 删除异常的聊天房间
+            this.db(`rooms`).whereNull('roomId').delete()
         } catch (e) {
             this.errorHandle(e)
         }
