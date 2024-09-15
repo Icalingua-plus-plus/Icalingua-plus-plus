@@ -1982,6 +1982,7 @@ const adapter = {
         })
     },
     async fetch7DaysHistory() {
+        if (isAutoFetching) return
         console.log('正在获取历史消息')
         const getSeqInfos = async (group_ids: number[]) => {
             try {
