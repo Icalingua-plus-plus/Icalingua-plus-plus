@@ -950,7 +950,7 @@ const loginHandlers = {
                     buffer.writeUInt32BE(j.lastSeq, 8)
                     msgIds2Fetch.push({
                         id: buffer.toString('base64'),
-                        roomId: j.groupId,
+                        roomId: -j.groupId,
                         unread: j.unread,
                     })
                 }
