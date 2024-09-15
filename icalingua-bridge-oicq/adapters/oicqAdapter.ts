@@ -1910,6 +1910,7 @@ const adapter = {
             messageId = newMsgs[0]._id as string
             //todo 所有消息都过一遍，数据库里面都有才能结束
             if (await storage.getMessage(roomId, messageId)) break
+            await sleep(100)
         }
         // 私聊消息去重
         let messagesLength = messages.length

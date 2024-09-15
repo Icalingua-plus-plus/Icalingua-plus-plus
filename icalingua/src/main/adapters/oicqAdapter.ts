@@ -2192,6 +2192,7 @@ const adapter: OicqAdapter = {
                     break
                 }
                 if (limit && messages.length > limit) break
+                await sleep(100)
             }
             // 私聊消息去重
             let messagesLength = messages.length
