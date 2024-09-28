@@ -144,7 +144,7 @@
                 >
                 <div class="getting-history" v-if="historyCount">
                     <div class="pace-activity" />
-                    <span> 正在获取历史消息... {{ historyCount }} </span>
+                    <span> {{ historyFetchingName }} 正在获取历史消息... {{ historyCount }} </span>
                     <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
                 </div>
             </div>
@@ -294,6 +294,7 @@ export default {
             isShutUp: false,
             sysInfo: '',
             historyCount: 0,
+            historyFetchingName: '',
             dialogAskCheckUpdateVisible: false,
             contactsShown: false,
             groupmemberShown: false,
@@ -469,7 +470,10 @@ export default {
             this.uploadProgress = '0'
         })
         ipcRenderer.on('notify', (_, p) => this.$notify(p))
-        ipcRenderer.on('addHistoryCount', (_, p) => this.historyCount += p)
+        ipcRenderer.on('addHistoryCount', (_, p) => {
+            this.historyCount += p.count
+            this.historyFetchingName = (p.roomId < 0 ? '群聊' : '私聊') + Math.abs(p.roomId)
+        })
         ipcRenderer.on('clearHistoryCount', () => this.historyCount = 0)
         ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
         ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))

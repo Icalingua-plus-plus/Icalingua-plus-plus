@@ -2119,7 +2119,7 @@ const adapter: OicqAdapter = {
             let done = false
             let first_loop = true
             while (true) {
-                if (stopFetching && !isAutoFetching) {
+                if (stopFetching) {
                     stopFetching = false
                     done = true
                     break
@@ -2179,7 +2179,7 @@ const adapter: OicqAdapter = {
                     }
                 }
                 first_loop = false
-                ui.addHistoryCount(newMsgs.length)
+                ui.addHistoryCount(newMsgs.length, roomId)
                 if (history.data.length < 2 || newMsgs.length === 0) {
                     done = true
                     break

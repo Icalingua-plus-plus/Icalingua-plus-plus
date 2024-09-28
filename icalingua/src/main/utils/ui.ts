@@ -139,8 +139,8 @@ export default {
     updatePriority(lev: 1 | 2 | 3 | 4 | 5) {
         sendToMainWindow('updatePriority', lev)
     },
-    addHistoryCount(count: number) {
-        sendToMainWindow('addHistoryCount', count)
+    addHistoryCount(count: number, roomId: number) {
+        sendToMainWindow('addHistoryCount', { count, roomId })
     },
     clearHistoryCount() {
         sendToMainWindow('clearHistoryCount')
