@@ -1,4 +1,4 @@
-import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain } from 'electron'
+import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, Menu, MenuItem } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig, saveConfigFile } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
@@ -126,7 +126,9 @@ export const loadMainWindow = () => {
                 })
                 win1.webContents.on('will-navigate', (event, url) => {
                     const parsedUrl = new URL(url)
-                    parsedUrl.hostname !== 'docs.qq.com' && event.preventDefault()
+                    parsedUrl.hostname !== 'docs.qq.com' &&
+                        !parsedUrl.hostname.endsWith('.myqcloud.com') &&
+                        event.preventDefault()
                 })
                 await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
             })()
