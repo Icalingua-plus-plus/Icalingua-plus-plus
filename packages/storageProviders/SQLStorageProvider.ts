@@ -431,6 +431,7 @@ export default class SQLStorageProvider implements StorageProvider {
             return rooms.map((room) => this.roomConFromDB(room))
         } catch (e) {
             this.errorHandle(e)
+            return []
         }
     }
 
@@ -498,6 +499,7 @@ export default class SQLStorageProvider implements StorageProvider {
             return chatGroups.map((chatGroup) => this.chatGroupConFromDB(chatGroup))
         } catch (e) {
             this.errorHandle(e)
+            return []
         }
     }
 

@@ -127,11 +127,11 @@ const attachSocketEvents = () => {
     socket.on('messageSuccess', ui.messageSuccess)
     socket.on('addMessageText', ui.addMessageText)
     socket.on('notifyMessage', ui.notify)
-    socket.on('setAllRooms', (serverRooms: Room[]) => {
+    socket.on('setAllRooms', (serverRooms: Room[] = []) => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
     })
-    socket.on('setAllChatGroups', (serverChatGroups: ChatGroup[]) => {
+    socket.on('setAllChatGroups', (serverChatGroups: ChatGroup[] = []) => {
         chatGroups = serverChatGroups
         ui.setAllChatGroups(chatGroups)
     })
