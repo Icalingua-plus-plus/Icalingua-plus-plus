@@ -102,9 +102,9 @@ const attachSocketEvents = () => {
         'onlineData',
         async (data: { online: boolean; nick: string; uin: number; sysInfo: string; bkn: number }) => {
             if (!loggedIn) {
+                loggedIn = true
                 await loadMainWindow()
                 await createTray()
-                loggedIn = true
             }
             if (getLoginWindow()) getLoginWindow().close()
             uin = data.uin
