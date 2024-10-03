@@ -270,6 +270,12 @@ export default {
             this.verifyUrl = parsed.url
             this.phone = parsed.phone
         })
+        ipcRenderer.on('qrcodeLogin', async (_, url) => {
+            if (qrLoginInterval) clearInterval(qrLoginInterval)
+            qrLoginInterval = setInterval(() => {
+                ipcRenderer.send('createBot', this.form)
+            }, 5 * 1000)
+        })
     },
     methods: {
         onSubmit(formName) {
@@ -291,11 +297,6 @@ export default {
                                 '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
                             )
                         }, 60 * 1000)
-                    } else {
-                        if (qrLoginInterval) clearInterval(qrLoginInterval)
-                        qrLoginInterval = setInterval(() => {
-                            ipcRenderer.send('createBot', this.form)
-                        }, 5 * 1000)
                     }
                     await ipcRenderer.send('createBot', this.form)
                 } else {
