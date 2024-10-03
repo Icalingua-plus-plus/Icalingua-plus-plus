@@ -1525,6 +1525,7 @@ export const updateAppMenu = async () => {
                     },
                     {
                         label: '静默获取历史消息',
+                        sublabel: '隐藏刷屏的提示',
                         type: 'checkbox',
                         checked: getConfig().silentFetchHistory,
                         click: (menuItem) => {
