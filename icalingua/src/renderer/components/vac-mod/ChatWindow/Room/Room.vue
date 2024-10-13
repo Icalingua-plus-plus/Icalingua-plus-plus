@@ -1696,14 +1696,16 @@ export default {
                     return
                 }
                 this.membersCount = group.member_count
-                const groupMembers = await ipc.getGroupMembers(-roomId)
-                groupMembers.sort((a, b) => {
-                    if (a.role === 'owner') return -1
-                    if (b.role === 'owner') return 1
-                    if (a.role === 'admin') return -1
-                    if (b.role === 'admin') return 1
-                    return 0
-                })
+                const gms = await ipc.getGroupMembers(-roomId)
+                const ownerMembers = []
+                const adminMembers = []
+                const normalMembers = []
+                for (const member of gms) {
+                    if (member.role === 'owner') ownerMembers.push(member)
+                    else if (member.role === 'admin') adminMembers.push(member)
+                    else normalMembers.push(member)
+                }
+                const groupMembers = [...ownerMembers, ...adminMembers, ...normalMembers]
                 if (roomId !== this.room.roomId) return
                 const self = groupMembers.find((member) => member.user_id === this.currentUserId)
                 if ((self && (self.role === 'owner' || self.role === 'admin')) || debugmode) {

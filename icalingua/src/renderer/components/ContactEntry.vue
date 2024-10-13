@@ -18,6 +18,9 @@
                         <div class="contact-entry-desc">
                             {{ displayId }}
                         </div>
+                        <div class="contact-entry-role">
+                            {{ roleName }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -32,10 +35,19 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 export default {
     name: 'ContactEntry',
-    props: ['id', 'name', 'remark', 'group', 'type', 'removeEmotes'],
+    props: ['id', 'name', 'remark', 'group', 'type', 'removeEmotes', 'role'],
     computed: {
         displayId() {
             return Math.abs(this.id)
+        },
+        roleName() {
+            if (this.role === 'owner') {
+                return '群主'
+            } else if (this.role === 'admin') {
+                return '管理员'
+            } else {
+                return ''
+            }
         },
     },
     methods: {
@@ -90,6 +102,14 @@ div.contact-entry-entry {
     white-space: nowrap;
     width: 0;
     flex: 1;
+}
+
+.contact-entry-role {
+    color: var(--panel-color-desc);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .contact-entry-name {

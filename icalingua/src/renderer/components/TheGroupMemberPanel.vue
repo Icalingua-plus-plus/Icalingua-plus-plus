@@ -14,6 +14,7 @@
                 :id="i.user_id"
                 :remark="i.card"
                 :group="i.group_id"
+                :role="i.role"
                 type="groupmember"
                 :name="i.name"
                 v-show="PinyinMatch(i.sc, searchContext) || !searchContext"
@@ -51,36 +52,50 @@ export default {
         },
     },
     async created() {
+        const ownerMembers = []
+        const adminMembers = []
+        const normalMembers = []
         const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
         console.log(memberinfo)
         if (memberinfo) {
-            memberinfo.forEach((element) => {
+            for (const element of memberinfo) {
                 const member = {
                     user_id: element.user_id,
                     group_id: element.group_id,
                     name: element.nickname,
                     card: element.card || element.nickname,
                     sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
+                    role: element.role,
                 }
-                this.groupmembers.push(member)
-            })
+                if (member.role === 'owner') ownerMembers.push(member)
+                else if (member.role === 'admin') adminMembers.push(member)
+                else normalMembers.push(member)
+            }
+            this.groupmembers = [...ownerMembers, ...adminMembers, ...normalMembers]
         }
     },
     methods: {
         async refresh() {
             this.groupmembers = []
+            const ownerMembers = []
+            const adminMembers = []
+            const normalMembers = []
             const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
             if (memberinfo) {
-                memberinfo.forEach((element) => {
+                for (const element of memberinfo) {
                     const member = {
                         user_id: element.user_id,
                         group_id: element.group_id,
                         name: element.nickname,
                         card: element.card || element.nickname,
                         sc: (element.card + element.nickname + element.user_id.toString()).toUpperCase(),
+                        role: element.role,
                     }
-                    this.groupmembers.push(member)
-                })
+                    if (member.role === 'owner') ownerMembers.push(member)
+                    else if (member.role === 'admin') adminMembers.push(member)
+                    else normalMembers.push(member)
+                }
+                this.groupmembers = [...ownerMembers, ...adminMembers, ...normalMembers]
             }
             this.$message.success('已刷新')
         },
