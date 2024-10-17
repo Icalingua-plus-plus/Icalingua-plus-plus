@@ -2187,6 +2187,18 @@ const adapter = {
         if (ret.error) return false
         else return true
     },
+
+    async getLoginDevices(cb) {
+        const devices = await bot.getDevLoginInfo()
+        if (devices.error) {
+            console.error(devices.error)
+            cb([])
+        }
+        cb(devices.data)
+    },
+    async deleteLoginDevice(flag: string) {
+        return await bot.delDevLoginInfo(flag)
+    },
 }
 
 const processMessage = createProcessMessage(adapter)

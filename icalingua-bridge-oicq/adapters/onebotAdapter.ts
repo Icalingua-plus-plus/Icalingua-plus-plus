@@ -1398,6 +1398,12 @@ const adapter: typeof oicqAdapter = {
         return null
     },
     async sendGroupPoke(gin: number, uin: number) {},
+    async getLoginDevices(cb) {
+        cb([])
+    },
+    async deleteLoginDevice(flag: string) {
+        return null
+    },
 
     // 没必要实现的动作
     logOut() {},

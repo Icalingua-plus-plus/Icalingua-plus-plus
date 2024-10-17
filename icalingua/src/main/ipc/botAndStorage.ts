@@ -245,3 +245,5 @@ ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gi
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
 ipcMain.on('requestOnlineData', adapter.sendOnlineData)
+ipcMain.handle('getLoginDevices', async () => await adapter.getLoginDevices())
+ipcMain.on('deleteLoginDevice', async (_, flag) => await adapter.deleteLoginDevice(flag))

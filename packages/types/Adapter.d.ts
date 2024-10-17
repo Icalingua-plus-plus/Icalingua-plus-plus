@@ -168,4 +168,8 @@ export default interface Adapter {
     requestGfsToken(gin: number): Promise<string>
 
     getDisabledFeatures(): Promise<SpecialFeature[]>
+
+    getLoginDevices(): any
+
+    deleteLoginDevice(flag: string): any
 }

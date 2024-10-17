@@ -15,6 +15,7 @@ import MakeForward from '../views/MakeForward.vue'
 import UnlockView from '../views/UnlockView.vue'
 import SetLockPasswordView from '../views/SetLockPasswordView.vue'
 import CardSourceView from '../views/CardSourceView.vue'
+import DeviceManager from '../views/DeviceManager.vue'
 
 Vue.use(Router)
 
@@ -94,6 +95,11 @@ export default new Router({
             path: '/cardSource',
             name: 'card-source-page',
             component: CardSourceView,
+        },
+        {
+            path: '/deviceManager',
+            name: 'device-manager-page',
+            component: DeviceManager,
         },
     ],
 })

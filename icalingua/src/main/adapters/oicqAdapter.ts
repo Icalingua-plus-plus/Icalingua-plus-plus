@@ -2465,6 +2465,18 @@ const adapter: OicqAdapter = {
         if (ret.error) return false
         else return true
     },
+
+    async getLoginDevices() {
+        const devices = await bot.getDevLoginInfo()
+        if (devices.error) {
+            errorHandler(devices.error, true)
+            return []
+        }
+        return devices.data
+    },
+    async deleteLoginDevice(flag: string) {
+        return await bot.delDevLoginInfo(flag)
+    },
 }
 
 export default adapter

@@ -15,6 +15,7 @@ import atCache from './atCache'
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
 let requestWindow: BrowserWindow
+let deviceManagerWindow: BrowserWindow
 let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
@@ -358,6 +359,9 @@ export const tryToShowAllWindows = () => {
         } else if (requestWindow && !requestWindow.isDestroyed()) {
             requestWindow.show()
             requestWindow.focus()
+        } else if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) {
+            deviceManagerWindow.show()
+            deviceManagerWindow.focus()
         }
     })
 }
@@ -365,6 +369,7 @@ export const destroyWindow = () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
     if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
+    if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) deviceManagerWindow.destroy()
 }
 export const getLoginWindow = () => loginWindow
 export const getMainWindowScreen = () => {
@@ -404,3 +409,32 @@ ipcMain.on('unlock', (_, password: string) => {
         unlockWindow.webContents.send('unlock-fail')
     }
 })
+
+export const showDeviceManagerWindow = () => {
+    if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) {
+        deviceManagerWindow.show()
+        deviceManagerWindow.focus()
+    } else {
+        deviceManagerWindow = newIcalinguaWindow({
+            width: 750,
+            height: 600,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
+            autoHideMenuBar: true,
+        })
+
+        if (process.env.NODE_ENV === 'development') {
+            loadDevtools(deviceManagerWindow)
+        }
+
+        deviceManagerWindow.loadURL(getWinUrl() + '#/deviceManager')
+    }
+}
+
+export const sendToDeviceManagerWindow = (channel: string, payload?: any) => {
+    if (deviceManagerWindow && !deviceManagerWindow.isDestroyed())
+        deviceManagerWindow.webContents.send(channel, payload)
+}

@@ -71,4 +71,6 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('getDisabledFeatures', (cb) => cb(adapter.disabledFeatures))
     socket.on('requestUpload', requestUpload)
     socket.on('uploadFile', uploadFile)
+    socket.on('getLoginDevices', adapter.getLoginDevices)
+    socket.on('deleteLoginDevice', adapter.deleteLoginDevice)
 }

@@ -760,6 +760,14 @@ const adapter: Adapter = {
             })
         })
     },
+    getLoginDevices(): any {
+        return new Promise((resolve, reject) => {
+            socket.emit('getLoginDevices', resolve)
+        })
+    },
+    deleteLoginDevice(flag: string): any {
+        socket.emit('deleteLoginDevice', flag)
+    },
 }
 
 export default adapter

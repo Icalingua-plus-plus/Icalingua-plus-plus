@@ -25,7 +25,13 @@ import setPriority from '../utils/setPriority'
 import * as themes from '../utils/themes'
 import ui from '../utils/ui'
 import version from '../utils/version'
-import { getMainWindow, lockMainWindow, showRequestWindow, showSetLockPasswordWindow } from '../utils/windowManager'
+import {
+    getMainWindow,
+    lockMainWindow,
+    showDeviceManagerWindow,
+    showRequestWindow,
+    showSetLockPasswordWindow,
+} from '../utils/windowManager'
 import {
     deleteMessage,
     fetchHistory,
@@ -905,6 +911,10 @@ export const updateAppMenu = async () => {
                 ],
             }),
             new MenuItem({
+                label: '登录设备管理',
+                click: () => showDeviceManagerWindow(),
+            }),
+            new MenuItem({
                 label: '查看合并转发消息',
                 async click() {
                     const win = newIcalinguaWindow({
@@ -920,32 +930,37 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
-                label: '获取会话历史消息',
+                label: '获取最近会话的历史消息',
                 sublabel: '一周内有消息的会话',
                 click: () => fetch7DaysHistory(),
             }),
             new MenuItem({
                 label: '重新加载',
-                click: () => {
-                    ui.chroom(0)
-                    getMainWindow().reload()
-                },
-            }),
-            new MenuItem({
-                label: '清除网页缓存并重载',
-                click: () => {
-                    ui.chroom(0)
-                    getMainWindow().webContents.session.clearCache()
-                    getMainWindow().reload()
-                },
-            }),
-            new MenuItem({
-                label: '清除表情缓存并重载',
-                click: () => {
-                    fs.rmdirSync(path.join(app.getPath('userData'), 'stickers_preview'), { recursive: true })
-                    ui.chroom(0)
-                    getMainWindow().reload()
-                },
+                submenu: [
+                    {
+                        label: '重新加载',
+                        click: () => {
+                            ui.chroom(0)
+                            getMainWindow().reload()
+                        },
+                    },
+                    {
+                        label: '清除网页缓存并重载',
+                        click: () => {
+                            ui.chroom(0)
+                            getMainWindow().webContents.session.clearCache()
+                            getMainWindow().reload()
+                        },
+                    },
+                    {
+                        label: '清除表情缓存并重载',
+                        click: () => {
+                            fs.rmdirSync(path.join(app.getPath('userData'), 'stickers_preview'), { recursive: true })
+                            ui.chroom(0)
+                            getMainWindow().reload()
+                        },
+                    },
+                ],
             }),
             new MenuItem({
                 label: 'QQ 群管理',

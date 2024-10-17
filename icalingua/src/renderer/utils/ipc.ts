@@ -241,5 +241,11 @@ const ipc = {
     requestOnlineData() {
         ipcRenderer.send('requestOnlineData')
     },
+    async getLoginDevices() {
+        return await ipcRenderer.invoke('getLoginDevices')
+    },
+    deleteLoginDevice(flag: string): any {
+        return ipcRenderer.send('deleteLoginDevice', flag)
+    },
 }
 export default ipc
