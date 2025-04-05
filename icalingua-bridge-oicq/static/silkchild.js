@@ -1,4 +1,4 @@
-const silk = require('silk-sdk')
+const silk = require('./silk')
 const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
 
@@ -6,10 +6,10 @@ process.on('message', async (pathConfig) => {
     let silkDecodeFailed = false
     try {
         let silkBuf = fs.readFileSync(pathConfig.rawFilePath)
-        const head = String(silkBuf.slice(0, 7));
-        if (!head.includes("SILK")) throw new Error('Not a silk file');
-        if (silkBuf[0] !== 0x23) silkBuf = silkBuf.slice(1);
-        const bufPcm = silk.decode(silkBuf)
+        const head = String(silkBuf.slice(0, 7))
+        if (!head.includes("SILK")) throw new Error('Not a silk file')
+        if (silkBuf[0] !== 0x23) silkBuf = silkBuf.slice(1)
+        const bufPcm = Buffer.from((await silk.decode(silkBuf, 24000)).data)
         fs.renameSync(pathConfig.rawFilePath, pathConfig.rawFilePath + '.slk')
         pathConfig.rawFilePath += '.pcm'
         fs.writeFileSync(pathConfig.rawFilePath, bufPcm)

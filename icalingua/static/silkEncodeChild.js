@@ -1,11 +1,12 @@
-const silk = require('silk-sdk')
+const silk = require('./silk')
 const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
 
 process.on('message', async (path) => {
     await convertToPcm(path)
     if (fs.existsSync(path + '.pcm')) {
-        silk.encode(path + '.pcm', path + '.slk', { tencent: true })
+        const result = await silk.encode(fs.readFileSync(path + '.pcm'), 24000)
+        fs.writeFileSync(path + '.slk', Buffer.from(result.data))
         fs.unlinkSync(path + '.pcm')
         process.send('silk convert success!')
         process.exit(0)
