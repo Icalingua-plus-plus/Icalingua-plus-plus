@@ -8,6 +8,8 @@
 -   在多个地点同时使用一个帐号
 -   通过创建不同实例同时登录多个账号
 
+**警告⚠：若需在公网或不可信网络中连接 Bridge，请务必使用 HTTPS 反向代理！！请务必使用 HTTPS 反向代理！！请务必使用 HTTPS 反向代理！！否则流量将以未加密的方式传输，可能导致密码/聊天记录泄露！！**
+
 ## 安装方法
 
 **注意：**
@@ -39,6 +41,8 @@ nrm use npm
 
     **该密钥仅适用于本地环境及测试环境，暴露在公网中是非常危险的。**
 
+    **注意该密钥仅用于客户端认证，并非用于数据加密！！**
+
     当然，如果你不信任在线服务，可以使用本地工具生成对应的密钥对。
 
 5. 修改 `config.yaml`，内容如下：
@@ -50,7 +54,7 @@ nrm use npm
     port: 6789 # 如果需要运行多个实例，可以设置不同端口
     ```
 
-6. 执行 `node build`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 Caddy , Nginx 等）将端口绑定到域名（虚拟主机）上，并安装 SSL 证书；或者直接暴露 HTTP 端口（不建议，因为这样的话流量将以未加密的方式传输）， 关于反向代理的配置文件示例，可以参考仓库当前目录下的 [nginx.example.conf](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/develop/icalingua-bridge-oicq/nginx.example.conf)。
+6. 执行 `node build`，然后软件将监听在你设置的端口（默认 `6789`）。可以通过 HTTP(S) 反向代理的软件（如 Caddy , Nginx 等）将端口绑定到域名（虚拟主机）上，并安装 SSL 证书；或者直接暴露 HTTP 端口（不建议，**因为这样的话流量将以未加密的方式传输**）， 关于反向代理的配置文件示例，可以参考仓库当前目录下的 [nginx.example.conf](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/develop/icalingua-bridge-oicq/nginx.example.conf)。
 
 ### 安装预打包的 bridge
 
@@ -139,3 +143,5 @@ privateKey: # 安装的步骤中生成的私钥
 ## 登录握手细节
 
 客户端与服务器建立连接后，服务器将当前时间戳的 MD5 发送给客户端。客户端使用私钥签名发送给服务端验证，服务端验证成功后开放通信
+
+注意这是个弱安全性的认证，如在不可信信道（如公网）中使用，**请务必使用 HTTPS 反向代理以建立可信传输信道！**
