@@ -201,6 +201,7 @@
         "pg": "^8.13.1",
         "pg-query-stream": "^4.7.1",
         "pinyin-match": "^1.2.6",
+        "silk-ilpp": "^1.0.0",
         "socket.io": "^4.8.1",
         "sqlite3": "5.1.6"
     },

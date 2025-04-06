@@ -1,4 +1,4 @@
-const silk = require('./silk')
+const silk = require('silk-ilpp')
 const ffmpeg = require('fluent-ffmpeg')
 const fs = require('fs')
 

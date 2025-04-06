@@ -43,6 +43,7 @@
         "oicq-icalingua-plus-plus": "^1.25.1",
         "pg": "^8.13.1",
         "pg-query-stream": "^4.7.1",
+        "silk-ilpp": "^1.0.0",
         "socket.io": "^4.8.1",
         "sqlite3": "5.1.6",
         "uuid": "^8.3.2",

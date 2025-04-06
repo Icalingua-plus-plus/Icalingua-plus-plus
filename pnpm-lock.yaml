@@ -85,6 +85,7 @@ importers:
       prettier: ^2.8.8
       sass: 1.77.6
       sass-loader: ^10.5.2
+      silk-ilpp: ^1.0.0
       socket.io: ^4.8.1
       socket.io-client: ^4.8.1
       sqlite3: 5.1.6
@@ -130,6 +131,7 @@ importers:
       pg: 8.13.1
       pg-query-stream: 4.7.1_pg@8.13.1
       pinyin-match: 1.2.6
+      silk-ilpp: 1.0.0
       socket.io: 4.8.1
       sqlite3: 5.1.6
     devDependencies:
@@ -239,6 +241,7 @@ importers:
       pg: ^8.13.1
       pg-query-stream: ^4.7.1
       prettier: ^2.8.8
+      silk-ilpp: ^1.0.0
       socket.io: ^4.8.1
       sqlite3: 5.1.6
       ts-node: ^10.9.2
@@ -266,6 +269,7 @@ importers:
       oicq-icalingua-plus-plus: 1.25.1
       pg: 8.13.1
       pg-query-stream: 4.7.1_pg@8.13.1
+      silk-ilpp: 1.0.0
       socket.io: 4.8.1
       sqlite3: 5.1.6
       uuid: 8.3.2
@@ -10289,6 +10293,11 @@ packages:
 
   /signal-exit/3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
+
+  /silk-ilpp/1.0.0:
+    resolution: {integrity: sha512-t3qch96qP19OZHegIgbrr9BlCrd+b10mNeyIGbMgW1ZIJ0UT4AYvpgPzsJ9bjPSQGbGe3W2YEIXZKgjLlONpDA==}
+    engines: {node: '>=16.14.0'}
+    dev: false
 
   /simple-swizzle/0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
