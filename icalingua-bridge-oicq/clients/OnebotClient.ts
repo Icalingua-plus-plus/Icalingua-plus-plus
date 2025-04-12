@@ -375,4 +375,6 @@ export default class extends EventEmitter<{
     public setFriendRemark = (user_id: number, remark: string) => {
         // not implemented
     }
+    public sendFriendPoke = (user_id: number) => this.callApi('send_poke', { user_id })
+    public sendGroupPoke = (group_id: number, user_id: number) => this.callApi('send_poke', { user_id, group_id })
 }

@@ -1379,6 +1379,13 @@ const adapter: typeof oicqAdapter = {
     acquireGfs(gin: number) {
         return null
     },
+    async sendGroupPoke(gin: number, uin: number) {
+        if (gin == uin) {
+            await bot.sendFriendPoke(uin)
+            return
+        }
+        await bot.sendGroupPoke(gin, uin)
+    },
 
     // 未支持动作
     disabledFeatures: ['IdLogin', 'WebApps', 'RemoteStickers', 'GroupFiles', 'OnlineStatus'],
@@ -1401,7 +1408,6 @@ const adapter: typeof oicqAdapter = {
     setOnlineStatus(status: number) {
         return null
     },
-    async sendGroupPoke(gin: number, uin: number) {},
     async getLoginDevices(cb) {
         cb([])
     },
