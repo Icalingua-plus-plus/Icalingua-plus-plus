@@ -229,20 +229,21 @@ const attachEventHandler = () => {
         storage.updateMessage(-data.group_id, data.message_id, { deleted: true, reveal: false })
     })
     bot.on('friendPoke', async (data) => {
-        const roomId = data.sender_id == uin ? data.user_id : data.sender_id
+        const roomId = data.user_id == uin ? data.target_id : data.user_id
         if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
+        const operator = data.sender_id || data.user_id
+        const nors: any[] = data.raw_info?.filter((it) => (it.type as any) === 'nor') || []
         if (room) {
             room.utime = data.time * 1000
             let msg = ''
-            if (data.sender_id != uin) msg += room.roomName
+            if (operator != uin) msg += room.roomName
             else msg += '你'
-            msg += '戳了戳'
-            // msg += data.action
-            if (data.sender_id == data.target_id) msg += '自己'
+            msg += nors[0]?.txt || '戳了戳'
+            if (operator == data.target_id) msg += '自己'
             else if (data.target_id != uin) msg += room.roomName
             else msg += '你'
-            // if (data.suffix) msg += data.suffix
+            if (nors[1]?.txt) msg += nors[1]?.txt
             room.lastMessage = {
                 content: msg,
                 username: null,
@@ -270,19 +271,20 @@ const attachEventHandler = () => {
         const room = await storage.getRoom(-data.group_id)
         if (room) {
             room.utime = data.time * 1000
-            const operatorObj = await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
+            const operatorId = 'sender_id' in data ? (data.sender_id as number) : data.user_id
+            const operatorObj = await bot.getGroupMemberInfo(data.group_id, operatorId, false)
             const operator = operatorObj.card ? operatorObj.card : operatorObj.nickname
-            const userObj = await bot.getGroupMemberInfo(data.group_id, data.user_id, false)
+            const userObj = await bot.getGroupMemberInfo(data.group_id, data.target_id, false)
             const user = userObj.card ? userObj.card : userObj.nickname
+            const nors: any[] = data.raw_info?.filter((it) => (it.type as any) === 'nor') || []
             let msg = ''
-            if (data.user_id !== uin) msg += operator
+            if (operatorId !== uin) msg += operator
             else msg += '你'
-            msg += '戳了戳'
-            // msg += data.action
-            if (data.user_id !== uin) msg += user
-            else if (data.user_id === uin) msg += '自己'
+            msg += nors[0]?.txt || '戳了戳'
+            if (data.target_id !== uin) msg += user
+            else if (data.target_id === uin) msg += '自己'
             else msg += '你'
-            // if (data.suffix) msg += data.suffix
+            if (nors[1]?.txt) msg += nors[1]?.txt
             room.lastMessage = {
                 content: msg,
                 username: null,
@@ -291,7 +293,7 @@ const attachEventHandler = () => {
             const message: Message = {
                 username: '',
                 content: msg,
-                senderId: data.user_id,
+                senderId: operatorId,
                 timestamp: formatDate('hh:mm:ss'),
                 date: formatDate('yyyy/MM/dd'),
                 _id: data.time,
@@ -589,8 +591,10 @@ const adapter: typeof oicqAdapter = {
             sysInfo:
                 getSysInfo() +
                 '\n\n' +
-                `OneBot Backend: ${versionInfo.app_name} ${versionInfo.app_version}\n` +
-                `${versionInfo.runtime_os} ${versionInfo.runtime_version}`,
+                `OneBot Backend: ${versionInfo.app_name} ${versionInfo.app_version}` +
+                (versionInfo.runtime_os && versionInfo.runtime_version
+                    ? `\n${versionInfo.runtime_os} ${versionInfo.runtime_version}`
+                    : ''),
             bkn: 0,
         })
         clients.setAllRooms(await storage.getAllRooms())

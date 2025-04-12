@@ -68,6 +68,7 @@ export default class extends EventEmitter<{
             sender_id: number
             user_id: number
             target_id: number
+            raw_info: any
         },
     ]
     groupPoke: [
@@ -78,6 +79,7 @@ export default class extends EventEmitter<{
             group_id: number
             user_id: number
             target_id: number
+            raw_info: any
         },
     ]
     groupIncrease: [
