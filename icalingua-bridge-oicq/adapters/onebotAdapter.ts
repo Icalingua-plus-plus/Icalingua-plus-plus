@@ -942,7 +942,6 @@ const adapter: typeof oicqAdapter = {
                 data: {
                     file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
                     type: sticker ? 'face' : 'image',
-                    url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
                 },
             })
         } else if (imgpath) {
