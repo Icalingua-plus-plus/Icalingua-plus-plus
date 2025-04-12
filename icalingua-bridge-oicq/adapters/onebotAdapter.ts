@@ -108,8 +108,9 @@ const attachEventHandler = () => {
         }
         const now = new Date(data.time * 1000)
         const groupId = (data as GroupMessage).group_id
+        const nonSelfId = data.user_id === uin ? data.target_id : data.user_id
         const senderId = data.sender.user_id
-        let roomId = groupId ? -groupId : data.user_id
+        let roomId = groupId ? -groupId : nonSelfId
         if (await storage.isChatIgnored(roomId)) return
         const isSelfMsg = uin === senderId
         let senderName: string

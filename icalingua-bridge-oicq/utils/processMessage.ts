@@ -115,7 +115,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         // Group
                         user_id = parsed.readUInt32BE(4)
                         time = parsed.readUInt32BE(16)
-                    } else {
+                    } else if (m.data.id.length > 20) {
                         // C2C
                         user_id = parsed.readUInt32BE(0)
                         time = parsed.readUInt32BE(12)

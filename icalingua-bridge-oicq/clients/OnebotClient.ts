@@ -11,6 +11,7 @@ type BaseEvent = {
 type BaseMessage = BaseEvent & {
     message_id: number
     user_id: number
+    target_id: number
     message: MessageElem[]
     raw_message: string
     font: number
