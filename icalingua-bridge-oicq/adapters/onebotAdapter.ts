@@ -39,6 +39,7 @@ let bot: OnebotClient
 let loginForm: LoginForm
 let storage: StorageProvider
 let uin: number
+let bkn: number = 0
 let nickname: string
 let lastReceivedMessageInfo = {
     timestamp: 0,
@@ -1368,6 +1369,12 @@ const adapter: typeof oicqAdapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
+    getBkn: () => bkn,
+    async getCookies(domain: any, resolve) {
+        const res = await bot.getCookies(domain)
+        bkn = Number(res.bkn)
+        resolve(res.cookies)
+    },
 
     // 本地动作
     getUin: () => uin,
@@ -1388,11 +1395,7 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 未支持动作
-    disabledFeatures: ['IdLogin', 'WebApps', 'RemoteStickers', 'GroupFiles', 'OnlineStatus'],
-    getBkn: () => 0,
-    async getCookies(domain: any, resolve) {
-        resolve()
-    },
+    disabledFeatures: ['IdLogin', 'RemoteStickers', 'GroupFiles', 'OnlineStatus'],
     async sendPacket(type: string, cmd: string, body: any, cb) {
         cb()
     },

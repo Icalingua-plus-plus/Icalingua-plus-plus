@@ -378,4 +378,9 @@ export default class extends EventEmitter<{
     }
     public sendFriendPoke = (user_id: number) => this.callApi('send_poke', { user_id })
     public sendGroupPoke = (group_id: number, user_id: number) => this.callApi('send_poke', { user_id, group_id })
+    public getCookies = (domain: string) =>
+        this.callApi<{
+            cookies: string
+            bkn: string
+        }>('get_cookies', { domain })
 }
