@@ -388,4 +388,91 @@ export default class extends EventEmitter<{
             bkn: string
         }>('get_cookies', { domain })
     public getCustomStickers = () => this.callApi<string[]>('fetch_custom_face', { count: 1145141919 })
+    public gfsMove = (
+        group_id: number,
+        file_id: string,
+        current_parent_directory: string,
+        target_parent_directory: string,
+    ) => this.callApi('move_group_file', { group_id, file_id, current_parent_directory, target_parent_directory })
+    public gfsRename = (group_id: number, file_id: string, current_parent_directory: string, new_name: string) =>
+        this.callApi('rename_group_file', { group_id, file_id, current_parent_directory, new_name })
+    public gfsUpload = (group_id: number, file: string, name: string, folder_id: string) =>
+        this.callApi('upload_group_file', { group_id, file, name, folder_id })
+    public gfsMkdir = (group_id: number, folder_name: string) =>
+        this.callApi('create_group_file_folder', { group_id, folder_name })
+    public gfsDeleteFile = (group_id: number, file_id: string) =>
+        this.callApi('delete_group_file', { group_id, file_id })
+    public gfsDeleteFolder = (group_id: number, folder_id: string) =>
+        this.callApi('delete_group_folder', { group_id, folder_id })
+    public gfsDf = (group_id: number) =>
+        this.callApi<{
+            file_count: 0
+            limit_count: 0
+            used_space: 0
+            total_space: 0
+        }>('get_group_file_system_info', { group_id })
+    public gfsListRoot = (group_id: number) =>
+        this.callApi<{
+            files: [
+                {
+                    group_id: 0
+                    file_id: 'string'
+                    file_name: 'string'
+                    busid: 0
+                    size: 0
+                    upload_time: 0
+                    dead_time: 0
+                    modify_time: 0
+                    download_times: 0
+                    uploader: 0
+                    uploader_name: 'string'
+                },
+            ]
+            folders: [
+                {
+                    group_id: 0
+                    folder_id: 'string'
+                    folder: 'string'
+                    folder_name: 'string'
+                    create_time: 'string'
+                    creator: 'string'
+                    creator_name: 'string'
+                    total_file_count: 'string'
+                },
+            ]
+        }>('get_group_root_files', { group_id })
+    public gfsListDir = (group_id: number, folder_id: string) =>
+        this.callApi<{
+            files: [
+                {
+                    group_id: 0
+                    file_id: 'string'
+                    file_name: 'string'
+                    busid: 0
+                    size: 0
+                    upload_time: 0
+                    dead_time: 0
+                    modify_time: 0
+                    download_times: 0
+                    uploader: 0
+                    uploader_name: 'string'
+                },
+            ]
+            folders: [
+                {
+                    group_id: 0
+                    folder_id: 'string'
+                    folder: 'string'
+                    folder_name: 'string'
+                    create_time: 'string'
+                    creator: 'string'
+                    creator_name: 'string'
+                    total_file_count: 'string'
+                },
+            ]
+        }>('get_group_files_by_folder', { group_id, folder_id, file_count: 11451419 })
+    public gfsDownloadUrl = (group_id: number, file_id: string) =>
+        this.callApi<{
+            url: 'string'
+        }>('get_group_file_url', { group_id, file_id })
 }

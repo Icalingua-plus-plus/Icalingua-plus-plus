@@ -234,7 +234,7 @@ export const downloadImage2Open = async (url: string) => {
     })
 }
 
-export const downloadGroupFile = async (gin: number, fid: string, saveAs = false) => {
+export const downloadGroupFile = async (gin: number, fid: string, name?: string, saveAs = false) => {
     const meta = await getGroupFileMeta(gin, fid)
     if (meta.url === 'error') {
         ui.notifyError({
@@ -243,7 +243,7 @@ export const downloadGroupFile = async (gin: number, fid: string, saveAs = false
         })
         return
     }
-    await download(meta.url, meta.name, undefined, saveAs)
+    await download(meta.url, meta.name || name, undefined, saveAs)
 }
 
 export const downloadFileByMessageData = async (
@@ -266,7 +266,7 @@ export const downloadFileByMessageData = async (
             await download(recordPath, 'QQ_Record_' + data.message.file.url, undefined, saveAs)
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
-                await downloadGroupFile(-data.room.roomId, data.message.file.fid, saveAs)
+                await downloadGroupFile(-data.room.roomId, data.message.file.fid, data.message.file.name, saveAs)
             else await download(data.message.file.url, data.message.content, undefined, saveAs)
         }
     }

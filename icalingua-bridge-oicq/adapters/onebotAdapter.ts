@@ -16,9 +16,12 @@ import {
     FakeMessage,
     FriendInfo,
     Gender,
+    GfsDirStat,
+    GfsFileStat,
     GroupInfo,
     GroupMessageEventData,
     GroupRole,
+    MediaFile,
     MemberBaseInfo,
     MemberInfo,
     MessageElem,
@@ -34,6 +37,9 @@ import crypto from 'crypto'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { isArrayLike } from 'lodash'
 import createRoom from '../utils/createRoom'
+import md5 from 'md5'
+import path from 'path'
+import fsP from 'fs/promises'
 
 let bot: OnebotClient
 let loginForm: LoginForm
@@ -1405,13 +1411,73 @@ const adapter: typeof oicqAdapter = {
     },
     getBkn: () => bkn,
 
-    // 可以做但是还没做的动作
-    acquireGfs(gin: number) {
-        return null
+    acquireGfs(gid: number) {
+        const ls = async (fid?: string) => {
+            let res: Awaited<ReturnType<typeof bot.gfsListDir>>
+            if (!fid || fid === '/') {
+                res = await bot.gfsListRoot(gid)
+            } else {
+                res = await bot.gfsListDir(gid, fid)
+            }
+            return [
+                ...res.folders.map(
+                    (it) =>
+                        ({
+                            fid: it.folder_id,
+                            pid: fid || '/',
+                            name: it.folder_name,
+                            user_id: Number(it.creator),
+                            create_time: Number(it.create_time),
+                            file_count: Number(it.total_file_count),
+                            is_dir: true,
+                        } satisfies GfsDirStat),
+                ),
+                ...res.files.map(
+                    (it) =>
+                        ({
+                            fid: it.file_id,
+                            pid: fid || '/',
+                            name: it.file_name,
+                            user_id: Number(it.uploader),
+                            create_time: Number(it.modify_time),
+                            size: Number(it.size),
+                            duration: it.dead_time,
+                            busid: it.busid,
+                            md5: '',
+                            sha1: '',
+                            download_times: it.download_times,
+                        } satisfies GfsFileStat),
+                ),
+            ]
+        }
+        const download = (fid) => {
+            return bot.gfsDownloadUrl(gid, fid)
+        }
+        return {
+            gid,
+            ls,
+            dir: ls,
+            stat: download,
+            mkdir: (name) => {
+                return bot.gfsMkdir(gid, name)
+            },
+            upload: async (file: MediaFile, pid?: string, name?: string) => {
+                if (typeof file === 'object') {
+                    const p = path.join('/app/.config/QQ/NapCat/temp', md5(file as Uint8Array))
+                    await fsP.writeFile(p, file as any)
+                    file = p
+                }
+                await bot.gfsUpload(gid, file, pid, name)
+                if (file.startsWith('/app/.config/QQ/NapCat/temp')) {
+                    await fsP.unlink(file)
+                }
+            },
+            download,
+        } as any
     },
 
     // 未支持动作
-    disabledFeatures: ['IdLogin', 'GroupFiles', 'OnlineStatus'],
+    disabledFeatures: ['IdLogin', 'OnlineStatus'],
     async sendPacket(type: string, cmd: string, body: any, cb) {
         cb()
     },
