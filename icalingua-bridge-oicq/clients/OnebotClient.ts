@@ -369,7 +369,11 @@ export default class extends EventEmitter<{
     public getGroupMessageHistory = (group_id: number, message_seq?: number) =>
         this.callApi<{
             messages: GroupMessage[]
-        }>('get_group_msg_history', { group_id, message_seq })
+        }>('get_group_msg_history', { group_id, message_seq, reverseOrder: true })
+    public getPrivateMessageHistory = (user_id: number, message_seq?: number) =>
+        this.callApi<{
+            messages: PrivateMessage[]
+        }>('get_friend_msg_history', { user_id, message_seq, reverseOrder: true })
     public setGroupRemark = (group_id: number, remark: string) => {
         // not implemented
     }
@@ -383,4 +387,5 @@ export default class extends EventEmitter<{
             cookies: string
             bkn: string
         }>('get_cookies', { domain })
+    public getCustomStickers = () => this.callApi<string[]>('fetch_custom_face', { count: 1145141919 })
 }

@@ -1197,33 +1197,46 @@ const adapter: typeof oicqAdapter = {
         return
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
-        if (roomId > 0) return // 不支持
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
         const messages = []
         while (true) {
             try {
-                const history = await bot.getGroupMessageHistory(-roomId, Number(messageId))
+                const history = await (roomId > 0
+                    ? bot.getPrivateMessageHistory(roomId, Number(messageId))
+                    : bot.getGroupMessageHistory(-roomId, Number(messageId)))
                 const newMsgs: Message[] = []
                 for (let i = 0; i < history.messages.length; i++) {
                     const data = history.messages[i]
                     const message: Message = {
                         senderId: data.sender.user_id,
-                        username: data.group_id
-                            ? data.anonymous
-                                ? data.anonymous.name
-                                : data.sender.nickname
-                            : data.sender.nickname,
+                        username:
+                            'group_id' in data
+                                ? data.group_id
+                                    ? data.anonymous
+                                        ? data.anonymous.name
+                                        : data.sender.nickname
+                                    : data.sender.nickname
+                                : data.sender.nickname,
                         content: '',
                         timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                         date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                         _id: data.message_id,
                         time: data.time * 1000,
                         role: (data.sender as MemberBaseInfo).role,
-                        title: data.group_id && data.anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
+                        title:
+                            (data as GroupMessage).group_id && (data as GroupMessage).anonymous
+                                ? '匿名'
+                                : (data.sender as MemberBaseInfo).title,
                         files: [],
-                        anonymousId: data.group_id && data.anonymous ? data.anonymous.id : null,
-                        anonymousflag: data.group_id && data.anonymous ? data.anonymous.flag : null,
+                        anonymousId:
+                            (data as GroupMessage).group_id && (data as GroupMessage).anonymous
+                                ? (data as GroupMessage).anonymous.id
+                                : null,
+                        anonymousflag:
+                            (data as GroupMessage).group_id && (data as GroupMessage).anonymous
+                                ? (data as GroupMessage).anonymous.flag
+                                : null,
                         bubble_id: 0,
                     }
                     try {
@@ -1283,6 +1296,14 @@ const adapter: typeof oicqAdapter = {
 
     async fetch7DaysHistory() {
         clients.messageError('暂不支持该操作')
+    },
+    async getCookies(domain: any, resolve) {
+        const res = await bot.getCookies(domain)
+        bkn = Number(res.bkn)
+        resolve(res.cookies)
+    },
+    async getRoamingStamp(no_cache: boolean | undefined, cb) {
+        cb((await bot.getCustomStickers()).map((url, id) => ({ url, id })))
     },
 
     // 存储动作
@@ -1369,23 +1390,6 @@ const adapter: typeof oicqAdapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
-    getBkn: () => bkn,
-    async getCookies(domain: any, resolve) {
-        const res = await bot.getCookies(domain)
-        bkn = Number(res.bkn)
-        resolve(res.cookies)
-    },
-
-    // 本地动作
-    getUin: () => uin,
-    async renewMessageURL(roomId: number, messageId: string | number, URL) {
-        clients.renewMessageURL(messageId, URL)
-    },
-
-    // 可以做但是还没做的动作
-    acquireGfs(gin: number) {
-        return null
-    },
     async sendGroupPoke(gin: number, uin: number) {
         if (gin == uin) {
             await bot.sendFriendPoke(uin)
@@ -1394,8 +1398,20 @@ const adapter: typeof oicqAdapter = {
         await bot.sendGroupPoke(gin, uin)
     },
 
+    // 本地动作
+    getUin: () => uin,
+    async renewMessageURL(roomId: number, messageId: string | number, URL) {
+        clients.renewMessageURL(messageId, URL)
+    },
+    getBkn: () => bkn,
+
+    // 可以做但是还没做的动作
+    acquireGfs(gin: number) {
+        return null
+    },
+
     // 未支持动作
-    disabledFeatures: ['IdLogin', 'RemoteStickers', 'GroupFiles', 'OnlineStatus'],
+    disabledFeatures: ['IdLogin', 'GroupFiles', 'OnlineStatus'],
     async sendPacket(type: string, cmd: string, body: any, cb) {
         cb()
     },
@@ -1404,9 +1420,6 @@ const adapter: typeof oicqAdapter = {
     },
     async getSystemMsg(cb) {
         cb({})
-    },
-    async getRoamingStamp(no_cache: boolean | undefined, cb) {
-        cb([])
     },
     setOnlineStatus(status: number) {
         return null
