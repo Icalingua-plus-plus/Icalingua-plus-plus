@@ -1167,58 +1167,59 @@ const adapter = {
             const uploadedFile = getUploadedFile(file.path)
             //群文件
             if (roomId > 0) {
-                bot.sendFile(roomId, uploadedFile.buffer, uploadedFile.fileName).then(async (data) => {
-                    if (data.error) {
-                        clients.notifyError({ title: '文件上传失败', message: data.error.message })
+                bot.sendFile(roomId, uploadedFile.buffer, uploadedFile.fileName)
+                    .then(async (data) => {
+                        if (data.error) {
+                            clients.notifyError({ title: '文件上传失败', message: data.error.message })
+                            clients.closeLoading()
+                            return
+                        }
+                        clients.messageSuccess('文件上传成功')
+                        const message: Message = {
+                            _id: data.data.message_id,
+                            senderId: bot.uin,
+                            username: 'You',
+                            content,
+                            timestamp: formatDate('hh:mm:ss'),
+                            date: formatDate('yyyy/MM/dd'),
+                            files: [],
+                        }
+                        message.file = {
+                            type: file.type,
+                            size: file.size,
+                            url: '',
+                            name: uploadedFile.fileName,
+                        }
+                        message.files.push(message.file)
+                        const parsed = Buffer.from(data.data.message_id, 'base64')
+                        const _time = parsed.readUInt32BE(12)
+                        if (_time !== lastReceivedMessageInfo.timestamp) {
+                            lastReceivedMessageInfo.timestamp = _time
+                            lastReceivedMessageInfo.id = 0
+                        }
+                        message.time = _time * 1000 + lastReceivedMessageInfo.id
+                        message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
+                        lastReceivedMessageInfo.id++
+                        clients.addMessage(roomId, message)
+                        storage.addMessage(roomId, message)
+                    })
+                    .finally(() => {
                         clients.closeLoading()
-                        return
-                    }
-                    clients.messageSuccess('文件上传成功')
-                    const message: Message = {
-                        _id: data.data.message_id,
-                        senderId: bot.uin,
-                        username: 'You',
-                        content,
-                        timestamp: formatDate('hh:mm:ss'),
-                        date: formatDate('yyyy/MM/dd'),
-                        files: [],
-                    }
-                    message.file = {
-                        type: file.type,
-                        size: file.size,
-                        url: '',
-                        name: uploadedFile.fileName,
-                    }
-                    message.files.push(message.file)
-                    const parsed = Buffer.from(data.data.message_id, 'base64')
-                    const _time = parsed.readUInt32BE(12)
-                    if (_time !== lastReceivedMessageInfo.timestamp) {
-                        lastReceivedMessageInfo.timestamp = _time
-                        lastReceivedMessageInfo.id = 0
-                    }
-                    message.time = _time * 1000 + lastReceivedMessageInfo.id
-                    message.timestamp = formatDate('hh:mm:ss', new Date(_time * 1000))
-                    lastReceivedMessageInfo.id++
-                    clients.addMessage(roomId, message)
-                    storage.addMessage(roomId, message)
-                    clients.closeLoading()
-                    deleteUploadedFile(file.path)
-                })
+                        deleteUploadedFile(file.path)
+                    })
             } else {
                 const gfs = bot.acquireGfs(-roomId)
                 gfs.upload(uploadedFile.buffer, undefined, uploadedFile.fileName)
-                    .then((e) => {
-                        deleteUploadedFile(file.path)
-                        clients.closeLoading()
-                    })
                     .catch((e) => {
                         console.error(e)
                         clients.messageError(e.message + '(' + e.code + ')')
+                    })
+                    .finally(() => {
                         clients.closeLoading()
+                        deleteUploadedFile(file.path)
                     })
             }
             clients.message('文件上传中')
-            //clients.messageError('Not implicated')
             return
         }
 

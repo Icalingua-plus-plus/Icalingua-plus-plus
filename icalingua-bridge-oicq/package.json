@@ -43,6 +43,7 @@
         "oicq-icalingua-plus-plus": "^1.25.1",
         "pg": "^8.13.1",
         "pg-query-stream": "^4.7.1",
+        "reconnecting-websocket": "^4.4.0",
         "silk-ilpp": "^1.0.1",
         "socket.io": "^4.8.1",
         "sqlite3": "5.1.6",
@@ -51,6 +52,5 @@
         "winston-daily-rotate-file": "^4.7.1",
         "ws": "^8.18.0",
         "yaml": "^1.10.2"
-    },
-    "packageManager": "pnpm@7.8.0"
+    }
 }

@@ -2,6 +2,7 @@ import { random } from 'lodash'
 import { EventEmitter } from 'eventemitter3'
 import { Gender, MessageElem, Sendable } from 'oicq-icalingua-plus-plus'
 import WebSocket from 'ws'
+import ReconnectingWebSocket from 'reconnecting-websocket'
 
 type BaseEvent = {
     self_id: number
@@ -141,7 +142,7 @@ export default class extends EventEmitter<{
         },
     ]
 }> {
-    private socket: WebSocket
+    private socket: ReconnectingWebSocket
     private readonly echoMap: { [key: string]: { resolve: (result: any) => void; reject: (result: any) => void } } = {}
 
     public constructor(private readonly url: string) {
@@ -150,9 +151,11 @@ export default class extends EventEmitter<{
 
     public connect() {
         return new Promise((resolve) => {
-            this.socket = new WebSocket(this.url)
-            this.socket.on('open', resolve)
-            this.socket.on('message', (event) => this.handleWebSocketMessage(event.toString()))
+            this.socket = new ReconnectingWebSocket(this.url, [], {
+                WebSocket,
+            })
+            this.socket.onopen = resolve
+            this.socket.onmessage = (event) => this.handleWebSocketMessage(event.data.toString())
         })
     }
 
@@ -388,6 +391,8 @@ export default class extends EventEmitter<{
             bkn: string
         }>('get_cookies', { domain })
     public getCustomStickers = () => this.callApi<string[]>('fetch_custom_face', { count: 1145141919 })
+    public sendPrivateFile = (user_id: number, file: string, name: string) =>
+        this.callApi('upload_private_file', { user_id, file, name })
     public gfsMove = (
         group_id: number,
         file_id: string,

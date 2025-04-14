@@ -5,7 +5,10 @@ RUN apk add make g++ alpine-sdk python3 py3-pip
 WORKDIR  /app
 COPY . .
 RUN corepack enable
-RUN cd icalingua-bridge-oicq && \ 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store,sharing=locked \
+    cd icalingua-bridge-oicq && \
     pnpm i && \
     pnpm compile && \
     mv /app/icalingua-bridge-oicq/build /tmp/build && \
