@@ -29,6 +29,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         lastReply = true
                         break
                     }
+                    if (!m.data.text) {
+                        const info = await adapter._getGroupMemberInfo(-roomId, message.senderId, false)
+                        m.data.text = '@' + (info.card || info.nickname)
+                    }
                 // noinspection FallThroughInSwitchStatementJS 确信
                 case 'text':
                     // PCQQ 发送的消息的换行符是 \r，统一转成 \n
@@ -93,14 +97,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     message.files.push(message.file)
                     break
                 case 'file':
-                    lastMessage.content += '[File]' + m.data.name
-                    message.content += m.data.name
+                    lastMessage.content += '[File]' + (m.data.name || (m.data as any).file)
+                    message.content += m.data.name || (m.data as any).file
                     message.file = {
-                        type: mime(path.extname(m.data.name)),
-                        size: m.data.size,
+                        type: mime(path.extname(m.data.name || (m.data as any).file)),
+                        size: m.data.size || (m.data as any).file_size,
                         url: m.data.url,
-                        name: m.data.name,
-                        fid: m.data.fid,
+                        name: m.data.name || (m.data as any).file,
+                        fid: m.data.fid || (m.data as any).file_id,
                     }
                     message.files.push(message.file)
                     break
@@ -471,6 +475,11 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     break
                 case 'markdown':
                     markdown += m.data.markdown
+                    break
+                // @ts-ignore
+                case 'forward':
+                    lastMessage.content += '[Forward multiple messages]'
+                    message.content = `[Forward: ${(m as any).data.id}]`
                     break
                 default:
                     console.log('[无法解析的消息]', m)

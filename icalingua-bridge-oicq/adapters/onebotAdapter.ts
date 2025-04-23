@@ -115,7 +115,7 @@ const attachEventHandler = () => {
             lastReceivedMessageInfo.id = 0
         }
         const now = new Date(data.time * 1000)
-        const groupId = (data as GroupMessage).group_id
+        const groupId = data.message_type === 'group' ? data.group_id : undefined
         const nonSelfId = data.user_id === uin ? data.target_id : data.user_id
         const senderId = data.sender.user_id
         let roomId = groupId ? -groupId : nonSelfId
@@ -290,9 +290,9 @@ const attachEventHandler = () => {
             if (operatorId !== uin) msg += operator
             else msg += '你'
             msg += nors[0]?.txt || '戳了戳'
-            if (data.target_id !== uin) msg += user
-            else if (data.target_id === uin) msg += '自己'
-            else msg += '你'
+            if (data.target_id === operatorId) msg += '自己'
+            else if (data.target_id === uin) msg += '你'
+            else msg += user
             if (nors[1]?.txt) msg += nors[1]?.txt
             room.lastMessage = {
                 content: msg,
@@ -704,7 +704,7 @@ const adapter: typeof oicqAdapter = {
                     files: [],
                     bubble_id: 0,
                 }
-                await processMessage(data.content, message, {})
+                await processMessage(data.content || (data as any).message, message, {})
                 messages.push(message)
             }
             resolve(messages)
