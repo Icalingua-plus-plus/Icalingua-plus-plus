@@ -29,8 +29,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         lastReply = true
                         break
                     }
-                    if (!m.data.text) {
-                        const info = await adapter._getGroupMemberInfo(-roomId, message.senderId, false)
+                    if (!m.data.text && (m.data.qq == 0 || m.data.qq == 'all')) {
+                        m.data.text = '@全体成员'
+                    } else if (!m.data.text) {
+                        const info = await adapter._getGroupMemberInfo(-roomId, m.data.qq as any, false)
                         m.data.text = '@' + (info.card || info.nickname)
                     }
                 // noinspection FallThroughInSwitchStatementJS 确信
