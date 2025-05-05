@@ -2,9 +2,9 @@
     <div class="bg" ondragstart="return false;">
         <div class="head">
             <div class="title">
-                <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">Stickers</a>
-                <a @click="setPanel('face')" :class="{ selected: panel === 'face' }">Face</a>
-                <a @click="setPanel('remote')" :class="{ selected: panel === 'remote' }" v-if="supportRemote">Remote</a>
+                <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">自定义表情</a>
+                <a @click="setPanel('face')" :class="{ selected: panel === 'face' }">小黄脸</a>
+                <a @click="setPanel('remote')" :class="{ selected: panel === 'remote' }" v-if="supportRemote">云端</a>
                 <a @click="setPanel('emojis')" :class="{ selected: panel === 'emojis' }">Emojis</a>
             </div>
             <a @click="menu">
@@ -59,7 +59,7 @@
                 </div>
             </div>
             <div class="subheader" v-show="recentRemoteSticker.length">全部表情</div>
-            <div class="empty" v-show="!remote_pics.length">No remote stickers found</div>
+            <div class="empty" v-show="!remote_pics.length">云端没有任何表情</div>
             <div class="grid" v-show="remote_pics.length">
                 <div v-for="i in remote_pics" :key="i.id">
                     <img
@@ -72,10 +72,10 @@
         </div>
         <div class="stickers_dir" v-if="panel === 'stickers'" @wheel="wheelHandler" ref="stickers_dir">
             <a @click="changeCurrentDir(RECENT_CATEGORY)" :class="{ selected: current_dir === RECENT_CATEGORY }">
-                Recent
+                最近
             </a>
             <a @click="changeCurrentDir(DEFAULT_CATEGORY)" :class="{ selected: current_dir === DEFAULT_CATEGORY }">
-                Default
+                默认
             </a>
             <a
                 v-for="i in subdirs"
@@ -88,7 +88,7 @@
         </div>
         <div v-if="panel === 'stickers'" class="panel">
             <div class="empty" v-show="!pics.length">
-                No stickers found
+                找不到表情
                 <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
             </div>
             <div class="grid" v-show="pics.length">

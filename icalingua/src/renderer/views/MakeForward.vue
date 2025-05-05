@@ -1,6 +1,6 @@
 <template>
     <div class="settings">
-        <p>合并转发 DEBUG</p>
+        <p>合并转发（DEBUG）</p>
         <p style="font-weight: bold; color: red">警告：本页面功能只用于 DEBUG，使用本页面功能造成的后果自行承担</p>
         <el-input v-model="uid" placeholder="uid" @input="uid = uid.replace(/[^\d]/g, '')" />
         <el-input v-model="nickname" placeholder="nickname" />
@@ -38,7 +38,7 @@ export default {
         }
     },
     created() {
-        document.title = '合并转发 DEBUG'
+        document.title = '合并转发（DEBUG）'
     },
     methods: {
         addMessage() {

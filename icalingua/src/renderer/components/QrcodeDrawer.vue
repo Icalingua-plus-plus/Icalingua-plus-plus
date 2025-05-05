@@ -9,7 +9,7 @@
         :wrapper-closable="false"
         size="100%"
     >
-        <p>扫码设备需与登录设备同一个网络</p>
+        <p>扫码设备需与登录设备处于同一个网络</p>
         <img :src="image" alt="" />
         <el-button @click="$emit('login')" type="primary">已扫码</el-button>
     </el-drawer>

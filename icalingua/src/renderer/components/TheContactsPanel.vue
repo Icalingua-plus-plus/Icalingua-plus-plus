@@ -2,14 +2,14 @@
     <div class="contacts-root">
         <div class="contacts-head-container">
             <div class="contacts-head">
-                <el-input v-model="searchContext" placeholder="Search" prefix-icon="el-icon-search" clearable />
+                <el-input v-model="searchContext" placeholder="搜索" prefix-icon="el-icon-search" clearable />
                 <span class="el-icon-refresh-right icon-button" @click="refresh" />
             </div>
         </div>
 
         <div class="contacts-content">
             <el-tabs v-model="activeName" :stretch="true">
-                <el-tab-pane label="Friends" name="friends">
+                <el-tab-pane label="好友" name="friends">
                     <el-collapse v-model="activeFriendGroup">
                         <el-collapse-item
                             v-for="(v, i) in friendsAll"
@@ -42,7 +42,7 @@
                         />
                     </el-collapse>
                 </el-tab-pane>
-                <el-tab-pane label="Groups" name="groups">
+                <el-tab-pane label="群聊" name="groups">
                     <ContactEntry
                         v-for="i in groupsAll"
                         :key="i.group_id"
@@ -194,6 +194,7 @@ export default {
 .el-collapse {
     border: none;
 }
+
 .el-collapse-item__header {
     padding-left: 12px;
     border-bottom: var(--chat-border-style);

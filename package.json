@@ -1,5 +1,6 @@
 {
   "name": "icalingua-plus-plus",
+  "version": "2.12.26",
   "workspaces": [
     "icalingua",
     "icalingua-bridge-oicq",

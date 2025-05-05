@@ -19,7 +19,7 @@
                 <div class="chat-group" style="overflow: overlay" @mousedown="handleMouseDown">
                     <SideBarIcon
                         icon="el-icon-chat-square"
-                        name="All Chats"
+                        name="所有聊天"
                         :selected="selectedChatGroup === 'chats'"
                         :redPoint="chatGroupsUnreadCount['chats']"
                         @click="selectedChatGroup = 'chats'"
@@ -37,15 +37,15 @@
                     />
                     <SideBarIcon
                         icon="el-icon-edit-outline"
-                        name="Edit"
+                        name="编辑"
                         @click="
                             $message({
                                 type: 'info',
-                                message: '懒得写了（目前中键删除对应分组，右键增加/删除当前聊天到分组',
+                                message: '懒得写了（目前中键删除对应分组，右键增加/删除当前聊天到分组）',
                             })
                         "
                     />
-                    <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
+                    <SideBarIcon icon="el-icon-plus" name="添加" @click="editChatGroups" />
                     <div style="height: 10px"></div>
                 </div>
             </el-aside>
@@ -140,7 +140,7 @@
                     v-show="selectedRoomId === 0 && sysInfo"
                     style="position: absolute; right: 13px; top: 0; font-family: monospace; color: rgb(156, 166, 175)"
                 >
- {{ sysInfo }} </pre
+    {{ sysInfo }} </pre
                 >
                 <div class="getting-history" v-if="historyCount">
                     <div class="pace-activity" />
@@ -185,7 +185,7 @@
         >
             <span>{{ offlineReason }}</span>
             <span slot="footer" class="dialog-footer">
-                <el-button type="primary" @click="reconnect" :loading="reconnecting"> Reconnect now </el-button>
+                <el-button type="primary" @click="reconnect" :loading="reconnecting"> 重新连接 </el-button>
             </span>
         </el-dialog>
         <el-dialog title="联系人" :visible.sync="contactsShown" top="5vh" class="dialog">
@@ -252,9 +252,9 @@
 import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
 import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate.vue'
-import {Multipane, MultipaneResizer} from '../components/multipane'
+import { Multipane, MultipaneResizer } from '../components/multipane'
 import path from 'path'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
@@ -515,7 +515,7 @@ export default {
         ipcRenderer.on('chroom', (_, p) => this.chroom(p))
         ipcRenderer.on('confirmIgnoreChat', (_, data) => {
             const message = ['屏蔽群聊将不再接受该群的消息。', '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。']
-            this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${ data.name }(${ Math.abs(data.id) }) 的消息?`, {
+            this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${data.name}(${Math.abs(data.id)}) 的消息?`, {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning',
@@ -523,7 +523,7 @@ export default {
                 ipc.ignoreChat(data)
             })
         })
-        ipcRenderer.on('confirmDeleteMessage', (_, {roomId, messageId}) => {
+        ipcRenderer.on('confirmDeleteMessage', (_, { roomId, messageId }) => {
             this.$confirm('确定撤回群成员消息?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -600,7 +600,7 @@ export default {
             }
             this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
         })
-        ipcRenderer.on('addMessage', (_, {roomId, message}) => {
+        ipcRenderer.on('addMessage', (_, { roomId, message }) => {
             message.__v_skip = true
             if (roomId !== this.selectedRoomId) return
             const index = this.messages.findIndex((e) => e._id === message._id)
@@ -645,7 +645,7 @@ export default {
                 this.messages = [...this.messages]
             }
         })
-        ipcRenderer.on('renewMessage', (_, {messageId, message}) => {
+        ipcRenderer.on('renewMessage', (_, { messageId, message }) => {
             const oldMessageIndex = this.messages.findIndex((e) => e._id === messageId)
             if (oldMessageIndex !== -1 && message) {
                 this.messages[oldMessageIndex] = {
@@ -655,7 +655,7 @@ export default {
                 this.messages = [...this.messages]
             }
         })
-        ipcRenderer.on('renewMessageURL', (_, {messageId, URL}) => {
+        ipcRenderer.on('renewMessageURL', (_, { messageId, URL }) => {
             const message = this.messages.find((e) => e._id === messageId)
             if (message && URL !== 'error') {
                 message.file.url = URL
@@ -685,9 +685,9 @@ export default {
             this.messages = p
             this.messagesLoaded = false
         })
-        ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
+        ipcRenderer.on('startChat', (_, { id, name }) => this.startChat(id, name))
         ipcRenderer.on('closePanel', () => this.panel = '')
-        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo, updateCheck}) => {
+        ipcRenderer.on('gotOnlineData', (_, { online, nick, uin, priority, sysInfo, updateCheck }) => {
             this.offline = !online
             this.account = uin
             this.priority = priority
@@ -705,7 +705,7 @@ Chromium ${process.versions.chrome}` : ''
             }
         })
         ipcRenderer.on('useSinglePanel', (_, b) => {
-            if (this.useSinglePanel && window.innerWidth > 720 ) {
+            if (this.useSinglePanel && window.innerWidth > 720) {
                 this.$refs.roomPanel.style.width = '360px'
             }
             this.useSinglePanel = b
@@ -769,7 +769,7 @@ Chromium ${process.versions.chrome}` : ''
             }
             if (resend)
                 ipc.deleteMessage(roomId, resend)
-            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType})
+            ipc.sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType })
         },
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
@@ -1000,8 +1000,8 @@ Chromium ${process.versions.chrome}` : ''
                     })
                     return
                 }
-                ipc.addChatGroup({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
-                this.chatGroups.push({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
+                ipc.addChatGroup({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
+                this.chatGroups.push({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
             })
         },
         removeChatGroup(group) {
@@ -1134,7 +1134,7 @@ Chromium ${process.versions.chrome}` : ''
             return themes.recalcTheme()
         },
         selectedRoom() {
-            return this.rooms.find(e => e.roomId === this.selectedRoomId) || {roomId: 0}
+            return this.rooms.find(e => e.roomId === this.selectedRoomId) || { roomId: 0 }
         },
         forwardTitle() {
             return (this.forwardAnonymous ? '隐藏发送者后' : '') + (this.forwardMulti ? '合并' : '逐条') + '转发到...'
@@ -1272,6 +1272,7 @@ main div {
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
@@ -1336,9 +1337,11 @@ main div {
     @media (max-width: 900px) {
         width: 200px;
     }
+
     @media (min-width: 1500px) {
         width: 350px;
     }
+
     @media (min-width: 2000px) {
         width: 400px;
     }
@@ -1423,6 +1426,7 @@ main div {
 .el-message-box__wrapper .el-message-box .el-message-box__title {
     color: var(--panel-color-name, #303133);
 }
+
 .el-message-box__wrapper .el-message-box .el-message-box__content {
     color: var(--panel-color-desc, #606266);
 }
@@ -1435,6 +1439,7 @@ main div {
 .el-notification .el-notification__group .el-notification__title {
     color: var(--panel-color-name);
 }
+
 .el-notification .el-notification__group .el-notification__content {
     color: var(--panel-color-desc);
 }
@@ -1442,6 +1447,7 @@ main div {
 .el-notification-progress .el-notification__group {
     width: 100%;
 }
+
 .el-notification-progress .el-progress-bar {
     margin-top: 8px;
 }

@@ -18,15 +18,15 @@
                 <el-input type="text" placeholder="QQ ID" v-model.number="form.username" />
             </el-form-item>
             <el-form-item prop="password" v-if="$route.query.disableIdLogin === 'false'">
-                <el-input type="password" placeholder="Password" v-model="form.password" />
+                <el-input type="password" placeholder="密码" v-model="form.password" />
             </el-form-item>
             <el-form-item prop="signAPIAddress" v-if="$route.query.disableIdLogin === 'false'">
-                <el-input type="text" placeholder="Head Sign API Address" v-model="form.signAPIAddress" />
+                <el-input type="text" placeholder="头部签名API地址" v-model="form.signAPIAddress" />
             </el-form-item>
             <el-form-item prop="signAPIKey" v-if="$route.query.disableIdLogin === 'false'">
-                <el-input type="text" placeholder="Head Sign API Key" v-model="form.signAPIKey" />
+                <el-input type="text" placeholder="头部签名 API Key" v-model="form.signAPIKey" />
             </el-form-item>
-            <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
+            <el-form-item prop="protocol" label="协议" v-if="$route.query.disableIdLogin === 'false'">
                 <!-- shit code -->
                 <div class="protocols">
                     <span>Android Phone</span>
@@ -110,29 +110,29 @@
                     </el-radio-group>
                 </div>
             </el-form-item>
-            <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
+            <el-form-item label="状态" v-if="$route.query.disableIdLogin === 'false'">
                 <el-radio-group v-model="form.onlineStatus" size="small">
-                    <el-radio-button label="11">Online</el-radio-button>
-                    <el-radio-button label="31">Away</el-radio-button>
-                    <el-radio-button label="41">Hide</el-radio-button>
-                    <el-radio-button label="50">Busy</el-radio-button>
-                    <el-radio-button label="60">Q Me</el-radio-button>
-                    <el-radio-button label="70">Don't Disturb</el-radio-button>
+                    <el-radio-button label="11">在线</el-radio-button>
+                    <el-radio-button label="31">离开</el-radio-button>
+                    <el-radio-button label="41">隐身</el-radio-button>
+                    <el-radio-button label="50">忙碌</el-radio-button>
+                    <el-radio-button label="60">Q我吧</el-radio-button>
+                    <el-radio-button label="70">请勿打扰</el-radio-button>
                 </el-radio-group>
             </el-form-item>
             <el-form-item prop="autologin">
-                <span class="el-form-item__label">Auto login</span>
+                <span class="el-form-item__label">自动登录</span>
                 <el-switch v-model="form.autologin" />
             </el-form-item>
             <el-form-item prop="forceAlgoT544">
-                <span class="el-form-item__label">Use 8.9.50's Tlv544</span>
+                <span class="el-form-item__label">使用8.9.50的Tlv544算法</span>
                 <el-switch v-model="form.forceAlgoT544" />
             </el-form-item>
             <el-form-item prop="useNT">
                 <span class="el-form-item__label">Use NT's register</span>
                 <el-switch v-model="form.useNT" />
             </el-form-item>
-            <el-form-item label="Storage engine">
+            <el-form-item label="存储引擎">
                 <el-select v-model="form.storageType" size="small">
                     <el-option label="MongoDB" value="mdb">MongoDB</el-option>
                     <el-option label="Redis" value="redis">Redis</el-option>
@@ -168,8 +168,8 @@
             </p>
             <el-form-item class="buttons">
                 <el-button type="primary" v-on:click="onSubmit('loginForm')">
-                    <span v-show="!form.password">QR Code</span>
-                    Login
+                    <span v-show="!form.password">二维码</span>
+                    登录
                 </el-button>
                 <el-button type="warning" v-on:click="cannotLogin">更换设备信息</el-button>
             </el-form-item>

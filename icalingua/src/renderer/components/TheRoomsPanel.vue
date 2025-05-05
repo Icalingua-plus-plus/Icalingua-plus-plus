@@ -12,7 +12,7 @@
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
             </el-popover>
-            <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
+            <el-input class="more input" v-model="input" placeholder="搜索" prefix-icon="el-icon-search" clearable />
             <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
             <span
                 class="more el-icon-delete icon-button"
