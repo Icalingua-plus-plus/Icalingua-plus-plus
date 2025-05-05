@@ -8,7 +8,7 @@ import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import ui from '../utils/ui'
 import { getMainWindow } from '../utils/windowManager'
-import { getGroupFileMeta } from './botAndStorage'
+import { getGroupFileMeta, getPrivateFileUrl } from './botAndStorage'
 import fs from 'fs'
 import crypto from 'crypto'
 import ChildProcess from 'child_process'
@@ -246,6 +246,11 @@ export const downloadGroupFile = async (gin: number, fid: string, name?: string,
     await download(meta.url, meta.name || name, undefined, saveAs)
 }
 
+export const downloadPrivateFileWithoutUrl = async (fid: string, name: string, saveAs = false) => {
+    const url = await getPrivateFileUrl(fid)
+    await download(url, name, undefined, saveAs)
+}
+
 export const downloadFileByMessageData = async (
     data: { action: string; message: Message; room: Room },
     saveAs = false,
@@ -267,7 +272,9 @@ export const downloadFileByMessageData = async (
         } else {
             if (data.room.roomId < 0 && data.message.file.fid)
                 await downloadGroupFile(-data.room.roomId, data.message.file.fid, data.message.file.name, saveAs)
-            else await download(data.message.file.url, data.message.content, undefined, saveAs)
+            else if (data.message.file.url)
+                await download(data.message.file.url, data.message.content, undefined, saveAs)
+            else await downloadPrivateFileWithoutUrl(data.message.file.fid, data.message.file.name, saveAs)
         }
     }
 }

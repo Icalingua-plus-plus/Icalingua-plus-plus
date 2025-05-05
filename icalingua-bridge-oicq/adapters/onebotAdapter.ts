@@ -1501,6 +1501,10 @@ const adapter: typeof oicqAdapter = {
             download,
         } as any
     },
+    getPrivateFileUrl: async (fileId: string, cb) => {
+        const { url } = await bot.getPrivateFileUrl(fileId)
+        cb(url)
+    },
 
     // 未支持动作
     disabledFeatures: ['IdLogin', 'OnlineStatus'],

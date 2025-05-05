@@ -2428,6 +2428,7 @@ const adapter: OicqAdapter = {
         }
         const _genIMEI = () => {
             const imei = `86${randomString(12, true)}`
+
             function calcSP(imei: string) {
                 let sum = 0
                 for (let i = 0; i < imei.length; ++i) {
@@ -2440,6 +2441,7 @@ const adapter: OicqAdapter = {
                 }
                 return (100 - sum) % 10
             }
+
             return imei + calcSP(imei)
         }
         const imei = _genIMEI()
@@ -2490,6 +2492,9 @@ const adapter: OicqAdapter = {
     },
     async deleteLoginDevice(flag: string) {
         return await bot.delDevLoginInfo(flag)
+    },
+    getPrivateFileUrl: function (fileId: string): Promise<string> {
+        throw new Error('Function not implemented.')
     },
 }
 

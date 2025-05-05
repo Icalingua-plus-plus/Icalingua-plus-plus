@@ -767,6 +767,11 @@ const adapter: Adapter = {
     deleteLoginDevice(flag: string): any {
         socket.emit('deleteLoginDevice', flag)
     },
+    getPrivateFileUrl(fileId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            socket.emit('getPrivateFileUrl', fileId, resolve)
+        })
+    },
 }
 
 export default adapter

@@ -172,4 +172,6 @@ export default interface Adapter {
     getLoginDevices(): any
 
     deleteLoginDevice(flag: string): any
+
+    getPrivateFileUrl(fileId: string): Promise<string>
 }

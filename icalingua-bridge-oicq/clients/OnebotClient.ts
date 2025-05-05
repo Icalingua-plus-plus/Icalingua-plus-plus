@@ -278,6 +278,10 @@ export default class extends EventEmitter<{
         this.callApi<{
             url: string
         }>('get_group_file_url', { group_id, file_id, busid })
+    public getPrivateFileUrl = (file_id: string) =>
+        this.callApi<{
+            url: string
+        }>('get_private_file_url', { file_id })
     public getForwardMessage = (message_id: string) =>
         this.callApi<{
             messages: [

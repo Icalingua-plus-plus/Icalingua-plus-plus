@@ -2208,6 +2208,10 @@ const adapter = {
     async deleteLoginDevice(flag: string) {
         return await bot.delDevLoginInfo(flag)
     },
+
+    getPrivateFileUrl(fileId: string, cb): any {
+        throw new Error('Not implemented')
+    },
 }
 
 const processMessage = createProcessMessage(adapter)
