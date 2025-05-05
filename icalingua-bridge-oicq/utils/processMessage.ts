@@ -32,6 +32,9 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
             let url
             switch (m.type) {
                 case 'at':
+                    if (!isNaN(m.data.qq as number)) {
+                        m.data.qq = Number(m.data.qq) >>> 0
+                    }
                     if (lastType === 'reply' && !replyAnonymous) {
                         lastReply = true
                         break
