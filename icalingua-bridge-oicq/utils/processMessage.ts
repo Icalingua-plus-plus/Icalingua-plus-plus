@@ -2,7 +2,14 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import Message from '@icalingua/types/Message'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { base64decode } from 'nodejs-base64'
-import { AtElem, FriendInfo, GroupMessageEventData, MemberBaseInfo, MessageElem } from 'oicq-icalingua-plus-plus'
+import {
+    AtElem,
+    FileElem,
+    FriendInfo,
+    GroupMessageEventData,
+    MemberBaseInfo,
+    MessageElem,
+} from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import getImageUrlByMd5 from './getImageUrlByMd5'
@@ -101,10 +108,25 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                 case 'file':
                     lastMessage.content += '[File]' + (m.data.name || (m.data as any).file)
                     message.content += m.data.name || (m.data as any).file
+                    url = m.data.url
+                    if (!url) {
+                        if (roomId < 0) {
+                            const meta = await new Promise<FileElem['data']>((resolve, reject) => {
+                                adapter.getGroupFileMeta(-roomId, m.data.fid || (m.data as any).file_id, resolve)
+                            })
+                            url = meta.url
+                        } else {
+                            url = await new Promise<string>((resolve, reject) => {
+                                // 貌似会和 downloadPrivateFileWithoutUrl 冲突，downloadPrivateFileWithoutUrl 写了等于没写
+                                // 不知道 nt 的私聊文件 url 有效期多久，不行的话写个判断 adapter 吧
+                                adapter.getPrivateFileUrl(m.data.fid || (m.data as any).file_id, resolve)
+                            })
+                        }
+                    }
                     message.file = {
                         type: mime(path.extname(m.data.name || (m.data as any).file)),
                         size: m.data.size || (m.data as any).file_size,
-                        url: m.data.url,
+                        url,
                         name: m.data.name || (m.data as any).file,
                         fid: m.data.fid || (m.data as any).file_id,
                     }
