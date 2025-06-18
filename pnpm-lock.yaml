@@ -177,7 +177,7 @@ importers:
         version: 3.5.2
       element-ui:
         specifier: ^2.15.14
-        version: 2.15.14(vue@2.7.16)
+        version: 2.15.14(vue@3.0.0)
       file-loader:
         specifier: ^1.1.11
         version: 1.1.11(webpack@4.47.0)
@@ -264,10 +264,10 @@ importers:
         version: 3.2.0
       v-emoji-picker:
         specifier: ^2.3.3
-        version: 2.3.3(vue@2.7.16)
+        version: 2.3.3(vue@3.0.0)
       vue:
-        specifier: ^2.7.16
-        version: 2.7.16
+        specifier: ^3.0.0
+        version: 3.0.0
       vue-devtools:
         specifier: ^5.1.4
         version: 5.1.4
@@ -282,13 +282,13 @@ importers:
         version: 1.2.4
       vue-infinite-loading:
         specifier: ^2.4.5
-        version: 2.4.5(vue@2.7.16)
+        version: 2.4.5(vue@3.0.0)
       vue-loader:
         specifier: ^15.11.1
         version: 15.11.1(babel-core@6.26.3)(css-loader@5.2.7(webpack@4.47.0))(ejs@3.1.10)(lodash@4.17.21)(prettier@2.8.8)(vue-template-compiler@2.7.16)(webpack@4.47.0)
       vue-router:
         specifier: ^3.6.5
-        version: 3.6.5(vue@2.7.16)
+        version: 3.6.5(vue@3.0.0)
       vue-style-loader:
         specifier: ^4.1.3
         version: 4.1.3
@@ -984,11 +984,26 @@ packages:
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
 
-  '@vue/compiler-sfc@2.7.16':
-    resolution: {integrity: sha512-KWhJ9k5nXuNtygPU7+t1rX6baZeqOYLEforUPjgNDBnLicfHCoi48H87Q8XyLZOrNNsmhuwKqtpDQWjEFe6Ekg==}
+  '@vue/compiler-core@3.0.0':
+    resolution: {integrity: sha512-XqPC7vdv4rFE77S71oCHmT1K4Ks3WE2Gi6Lr4B5wn0Idmp+NyQQBUHsCNieMDRiEpgtJrw+yOHslrsV0AfAsfQ==}
+
+  '@vue/compiler-dom@3.0.0':
+    resolution: {integrity: sha512-ukDEGOP8P7lCPyStuM3F2iD5w2QPgUu2xwCW2XNeqPjFKIlR2xMsWjy4raI/cLjN6W16GtlMFaZdK8tLj5PRog==}
 
   '@vue/component-compiler-utils@3.3.0':
     resolution: {integrity: sha512-97sfH2mYNU+2PzGrmK2haqffDpVASuib9/w2/noxiFi31Z54hW+q3izKQXXQZSNhtiUpAI36uSuYepeBe4wpHQ==}
+
+  '@vue/reactivity@3.0.0':
+    resolution: {integrity: sha512-mEGkztGQrAPZRhV7C6PorrpT3+NtuA4dY2QjMzzrW31noKhssWTajRZTwpLF39NBRrF5UU6cp9+1I0FfavMgEQ==}
+
+  '@vue/runtime-core@3.0.0':
+    resolution: {integrity: sha512-3ABMLeA0ZbeVNLbGGLXr+pNUwqXILOqz8WCVGfDWwQb+jW114Cm8djOHVVDoqdvRETQvDf8yHSUmpKHZpQuTkA==}
+
+  '@vue/runtime-dom@3.0.0':
+    resolution: {integrity: sha512-f312n5w9gK6mVvkDSj6/Xnot1XjlKXzFBYybmoy6ahAVC8ExbQ+LOWti1IZM/adU8VMNdKaw7Q53Hxz3y5jX8g==}
+
+  '@vue/shared@3.0.0':
+    resolution: {integrity: sha512-4XWL/avABGxU2E2ZF1eZq3Tj7fvksCMssDZUHOykBIMmh5d+KcAnQMC5XHMhtnA0NAvktYsA2YpdsVwVmhWzvA==}
 
   '@webassemblyjs/ast@1.9.0':
     resolution: {integrity: sha512-C6wW5L+b7ogSDVqymbkkvuW9kruN//YisMED04xzeBBqjHa2FYnmvOlS6Xj68xWQRgWvI9cIglsjFowH/RJyEA==}
@@ -2355,8 +2370,8 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  csstype@3.1.3:
-    resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+  csstype@2.6.21:
+    resolution: {integrity: sha512-Z1PhmomIfypOpoMjRQB70jfvy/wxT50qW08YXO5lMIJkrdq4yOTR+AW7FqutScmB9NkLwxo+jU+kZLbofZZq/w==}
 
   csv-writer@1.6.0:
     resolution: {integrity: sha512-NOx7YDFWEsM/fTRAJjRpPp8t+MKRVvniAg9wQlUKx20MFrPs73WLJhFf5iteqrxNYnsy924K3Iroh3yNHeYd2g==}
@@ -2799,6 +2814,9 @@ packages:
   estraverse@5.3.0:
     resolution: {integrity: sha512-MMdARuVEQziNTeJD8DgMqmhwR11BRQ/cBP+pLtYdSTnf3MIO8fFeiINEbX36ZdNlfU/7A9f3gUw49B3oQsvwBA==}
     engines: {node: '>=4.0'}
+
+  estree-walker@2.0.2:
+    resolution: {integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==}
 
   esutils@2.0.3:
     resolution: {integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==}
@@ -6018,9 +6036,8 @@ packages:
   vue-template-es2015-compiler@1.9.1:
     resolution: {integrity: sha512-4gDntzrifFnCEvyoO8PqyJDmguXgVPxKiIxrBKjIowvL9l+N66196+72XVYR8BBf1Uv1Fgt3bGevJ+sEmxfZzw==}
 
-  vue@2.7.16:
-    resolution: {integrity: sha512-4gCtFXaAA3zYZdTp5s4Hl2sozuySsgz4jy1EnpBHNfpMa9dK1ZCG7viqBPCwXtmgc8nHqUsAu3G4gtmXkkY3Sw==}
-    deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
+  vue@3.0.0:
+    resolution: {integrity: sha512-ZMrAARZ32sGIaYKr7Fk2GZEBh/VhulSrGxcGBiAvbN4fhjl3tuJyNFbbbLFqGjndbLoBW66I2ECq8ICdvkKdJw==}
 
   watchpack-chokidar2@2.0.1:
     resolution: {integrity: sha512-nCFfBIPKr5Sh61s4LPpy1Wtfi0HE8isJ3d2Yb5/Ppw2P2B/3eVSEBjKfN0fmHJSK14+31KwMKmcrzs2GM4P0Ww==}
@@ -7349,13 +7366,18 @@ snapshots:
       '@types/node': 16.18.126
     optional: true
 
-  '@vue/compiler-sfc@2.7.16':
+  '@vue/compiler-core@3.0.0':
     dependencies:
       '@babel/parser': 7.27.5
-      postcss: 8.5.6
+      '@babel/types': 7.27.6
+      '@vue/shared': 3.0.0
+      estree-walker: 2.0.2
       source-map: 0.6.1
-    optionalDependencies:
-      prettier: 2.8.8
+
+  '@vue/compiler-dom@3.0.0':
+    dependencies:
+      '@vue/compiler-core': 3.0.0
+      '@vue/shared': 3.0.0
 
   '@vue/component-compiler-utils@3.3.0(babel-core@6.26.3)(ejs@3.1.10)(lodash@4.17.21)':
     dependencies:
@@ -7423,6 +7445,23 @@ snapshots:
       - velocityjs
       - walrus
       - whiskers
+
+  '@vue/reactivity@3.0.0':
+    dependencies:
+      '@vue/shared': 3.0.0
+
+  '@vue/runtime-core@3.0.0':
+    dependencies:
+      '@vue/reactivity': 3.0.0
+      '@vue/shared': 3.0.0
+
+  '@vue/runtime-dom@3.0.0':
+    dependencies:
+      '@vue/runtime-core': 3.0.0
+      '@vue/shared': 3.0.0
+      csstype: 2.6.21
+
+  '@vue/shared@3.0.0': {}
 
   '@webassemblyjs/ast@1.9.0':
     dependencies:
@@ -9210,7 +9249,7 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  csstype@3.1.3: {}
+  csstype@2.6.21: {}
 
   csv-writer@1.6.0: {}
 
@@ -9566,7 +9605,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  element-ui@2.15.14(vue@2.7.16):
+  element-ui@2.15.14(vue@3.0.0):
     dependencies:
       async-validator: 1.8.5
       babel-helper-vue-jsx-merge-props: 2.0.3
@@ -9574,7 +9613,7 @@ snapshots:
       normalize-wheel: 1.0.1
       resize-observer-polyfill: 1.5.1
       throttle-debounce: 1.1.0
-      vue: 2.7.16
+      vue: 3.0.0
 
   elliptic@6.6.1:
     dependencies:
@@ -9773,6 +9812,8 @@ snapshots:
   estraverse@4.3.0: {}
 
   estraverse@5.3.0: {}
+
+  estree-walker@2.0.2: {}
 
   esutils@2.0.3: {}
 
@@ -13326,11 +13367,11 @@ snapshots:
 
   v-click-outside@3.2.0: {}
 
-  v-emoji-picker@2.3.3(vue@2.7.16):
+  v-emoji-picker@2.3.3(vue@3.0.0):
     dependencies:
-      vue: 2.7.16
-      vue-class-component: 7.2.6(vue@2.7.16)
-      vue-property-decorator: 9.1.2(vue-class-component@7.2.6(vue@2.7.16))(vue@2.7.16)
+      vue: 3.0.0
+      vue-class-component: 7.2.6(vue@3.0.0)
+      vue-property-decorator: 9.1.2(vue-class-component@7.2.6(vue@3.0.0))(vue@3.0.0)
 
   v8-compile-cache-lib@3.0.1: {}
 
@@ -13347,9 +13388,9 @@ snapshots:
 
   vm-browserify@1.1.2: {}
 
-  vue-class-component@7.2.6(vue@2.7.16):
+  vue-class-component@7.2.6(vue@3.0.0):
     dependencies:
-      vue: 2.7.16
+      vue: 3.0.0
 
   vue-devtools@5.1.4: {}
 
@@ -13367,9 +13408,9 @@ snapshots:
       loader-utils: 1.4.2
       object-assign: 4.1.1
 
-  vue-infinite-loading@2.4.5(vue@2.7.16):
+  vue-infinite-loading@2.4.5(vue@3.0.0):
     dependencies:
-      vue: 2.7.16
+      vue: 3.0.0
 
   vue-loader@15.11.1(babel-core@6.26.3)(css-loader@5.2.7(webpack@4.47.0))(ejs@3.1.10)(lodash@4.17.21)(prettier@2.8.8)(vue-template-compiler@2.7.16)(webpack@4.47.0):
     dependencies:
@@ -13438,14 +13479,14 @@ snapshots:
       - walrus
       - whiskers
 
-  vue-property-decorator@9.1.2(vue-class-component@7.2.6(vue@2.7.16))(vue@2.7.16):
+  vue-property-decorator@9.1.2(vue-class-component@7.2.6(vue@3.0.0))(vue@3.0.0):
     dependencies:
-      vue: 2.7.16
-      vue-class-component: 7.2.6(vue@2.7.16)
+      vue: 3.0.0
+      vue-class-component: 7.2.6(vue@3.0.0)
 
-  vue-router@3.6.5(vue@2.7.16):
+  vue-router@3.6.5(vue@3.0.0):
     dependencies:
-      vue: 2.7.16
+      vue: 3.0.0
 
   vue-style-loader@4.1.3:
     dependencies:
@@ -13459,10 +13500,11 @@ snapshots:
 
   vue-template-es2015-compiler@1.9.1: {}
 
-  vue@2.7.16:
+  vue@3.0.0:
     dependencies:
-      '@vue/compiler-sfc': 2.7.16
-      csstype: 3.1.3
+      '@vue/compiler-dom': 3.0.0
+      '@vue/runtime-dom': 3.0.0
+      '@vue/shared': 3.0.0
 
   watchpack-chokidar2@2.0.1:
     dependencies:
