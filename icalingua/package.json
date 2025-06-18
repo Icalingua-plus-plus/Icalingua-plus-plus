@@ -258,6 +258,7 @@
         "sass-loader": "^10.5.2",
         "socket.io-client": "^4.8.1",
         "style-loader": "^0.21.0",
+        "systeminformation": "^5.27.3",
         "thread-loader": "^3.0.4",
         "ts-loader": "^8.4.0",
         "ts-node": "^10.9.2",
@@ -287,5 +288,5 @@
         "winston-daily-rotate-file": "^4.7.1",
         "yaml": "^1.10.2"
     },
-    "packageManager": "pnpm@7.8.0"
+    "packageManager": "pnpm@10.11.0"
 }

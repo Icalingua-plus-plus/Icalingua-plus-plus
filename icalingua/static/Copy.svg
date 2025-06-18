@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 61">
+  <defs>
+    <style>.b{fill:#1976d2;}</style>
+  </defs>
+  <path
+    class="b"
+    d="M48,61H15c-2.2,0-4-1.8-4-4V15c0-2.2,1.8-4,4-4h33c2.2,0,4,1.8,4,4v42c0,2.2-1.8,4-4,4ZM19,53h25V19h-25v34Z"
+  />
+  <path
+    class="b"
+    d="M8,8h33v-4c0-2.2-1.8-4-4-4H4C1.8,0,0,1.8,0,4v38c0,2.2,1.8,4,4,4h4V8Z"
+  />
+</svg>

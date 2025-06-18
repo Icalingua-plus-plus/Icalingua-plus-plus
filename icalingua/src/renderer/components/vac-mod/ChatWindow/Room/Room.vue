@@ -132,6 +132,7 @@
                                 :local-image-viewer-by-default="localImageViewerByDefault"
                                 :disableQLottie="disableQLottie"
                                 :record-path="recordPath"
+                                :isSteamVrRunning="isSteamVrRunning"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                                     <slot :name="name" v-bind="data" />
@@ -360,10 +361,19 @@
                 />
 
                 <div class="vac-icon-textarea">
-                    <div v-if="editAndResend" class="vac-svg-button" @click="resetMessage">
+                    <div v-if="editAndResend || isSteamVrRunning" class="vac-svg-button" @click="resetMessage">
                         <slot name="edit-close-icon">
-                            <svg-icon name="close-outline" />
+                            <svg-icon name="close-outline" class="icon-fill" />
                         </slot>
+                    </div>
+
+                    <div
+                        v-if="isSteamVrRunning"
+                        class="vac-svg-button"
+                        @click="paste"
+                        style="width: 38px; height: 24px; display: flex; justify-content: center; align-items: center"
+                    >
+                        <img :src="pasteIcon" alt="" style="height: 20px; width: 20px" />
                     </div>
 
                     <div class="vac-svg-button" @click="$emit('stickers-panel')" @click.right="stickersMenu($event)">
@@ -528,6 +538,7 @@ export default {
         showSinglePanel: { type: Boolean, require: true, default: false },
         removeHeaderEmotes: { type: Boolean, required: false, default: false },
         usePanguJsRecv: { type: Boolean, required: false, default: false },
+        isSteamVrRunning: { type: Boolean, required: false, default: false },
     },
     data() {
         return {
@@ -585,6 +596,7 @@ export default {
             isMessageEmpty: true,
             membersCount: 0,
             checkCanScrollTimer: null,
+            pasteIcon: `file://${__static}/Clipboard.svg`,
         }
     },
     computed: {
@@ -1255,6 +1267,23 @@ export default {
             this.editAndResend = false
             this.preventKeyboardFromClosing()
             setTimeout(() => this.focusTextarea(disableMobileFocus), 0)
+        },
+        async paste() {
+            this.$refs.roomTextarea.message += await navigator.clipboard.readText()
+            const read = await navigator.clipboard.read()
+            console.log(read)
+            if (!read[0]) return
+            const type = read[0].types.find((it) => it.startsWith('image/'))
+            if (!type) return
+
+            const blob = await read[0].getType(type)
+            this.imageFile = URL.createObjectURL(blob)
+            this.file = {
+                name: '粘贴的图片',
+                type: type,
+                url: this.imageFile,
+                blob,
+            }
         },
         resetMediaFile() {
             this.mediaDimensions = null
@@ -2168,5 +2197,9 @@ export default {
     .vac-icon-scroll {
         bottom: 70px;
     }
+}
+
+.icon-fill * {
+    fill: #1976d2 !important;
 }
 </style>

@@ -148,7 +148,7 @@ export default {
     stopGettingHistory() {
         sendToMainWindow('stopGettingHistory')
     },
-    sendOnlineData(data: OnlineData) {
+    sendOnlineData(data: OnlineData & { isSteamVrRunning?: boolean }) {
         sendToMainWindow('gotOnlineData', data)
     },
     addMessageText(text: string) {

@@ -44,6 +44,7 @@ import SpecialFeature from '@icalingua/types/SpecialFeature'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
 import crypto from 'crypto'
+import si from 'systeminformation'
 
 // 这是所对应服务端协议的版本号，如果协议有变动比如说调整了 API 才会更改。
 // 如果只是功能上的变动的话就不会改这个版本号，混用协议版本相同的服务端完全没有问题
@@ -391,7 +392,7 @@ const adapter: Adapter = {
     _getGroupMemberInfo(group: number, member: number, noCache = true): Promise<MemberInfo> {
         return new Promise((resolve) => socket.emit('getGroupMemberInfo', group, member, noCache, resolve))
     },
-    sendOnlineData() {
+    async sendOnlineData() {
         if (!cachedOnlineData) return
         let sysInfo = getBuildInfo()
         const updateInfo = getCachedUpdate()
@@ -406,7 +407,11 @@ const adapter: Adapter = {
         if (sysInfo) sysInfo += '\n\n'
         sysInfo += cachedOnlineData.serverInfo
         cachedOnlineData.sysInfo = sysInfo
-        ui.sendOnlineData(cachedOnlineData)
+        const processes = await si.processes()
+        ui.sendOnlineData({
+            ...cachedOnlineData,
+            isSteamVrRunning: processes.list.some((e) => e.name.toLowerCase() === 'vrserver.exe'),
+        })
         ui.setAllRooms(rooms)
         ui.setAllChatGroups(chatGroups)
         if (!updateInfo) {

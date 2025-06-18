@@ -1,4 +1,8 @@
 packages:
-  - "packages/*"
-  - "icalingua"
-  - "icalingua-bridge-oicq"
+  - packages/*
+  - icalingua
+  - icalingua-bridge-oicq
+onlyBuiltDependencies:
+  - core-js
+  - electron
+  - sqlite3

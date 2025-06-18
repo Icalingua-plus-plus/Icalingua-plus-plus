@@ -115,6 +115,7 @@
                     :showSinglePanel="showSinglePanel"
                     :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
                     :usePanguJsRecv="usePanguJsRecv"
+                    :isSteamVrRunning="isSteamVrRunning"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
@@ -293,6 +294,7 @@ export default {
             reconnecting: false,
             username: '',
             priority: 3,
+            isSteamVrRunning: false,
             theme: 'default',
             loading: false,
             isShutUp: false,
@@ -687,7 +689,7 @@ export default {
         })
         ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
         ipcRenderer.on('closePanel', () => this.panel = '')
-        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo, updateCheck}) => {
+        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo, updateCheck, isSteamVrRunning}) => {
             this.offline = !online
             this.account = uin
             this.priority = priority
@@ -696,6 +698,7 @@ export default {
 Electron ${process.versions.electron}
 Node ${process.versions.node}
 Chromium ${process.versions.chrome}` : ''
+            this.isSteamVrRunning = isSteamVrRunning
             if (updateCheck === 'ask')
                 this.dialogAskCheckUpdateVisible = true
         })

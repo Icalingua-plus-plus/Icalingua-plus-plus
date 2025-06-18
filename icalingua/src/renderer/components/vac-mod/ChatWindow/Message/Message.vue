@@ -221,6 +221,20 @@
                             <span>{{ message.timestamp }}</span>
                         </div>
                     </div>
+                    <div :class="{ vrButtons: true, self: message.senderId === currentUserId }" v-if="isSteamVrRunning">
+                        <div v-if="message.content" @click="copy">
+                            <img
+                                :src="copyButton"
+                                alt=""
+                                class="vac-svg-button"
+                                style="width: 20px; height: 20px"
+                                @click="openFile('copy')"
+                            />
+                        </div>
+                        <div v-if="isImage" @click="copyLink">
+                            <img :src="copyLinkButton" alt="" class="vac-svg-button" />
+                        </div>
+                    </div>
                 </div>
             </slot>
         </div>
@@ -283,6 +297,7 @@ export default {
         disableQLottie: { type: Boolean, required: true },
         recordPath: { type: String, required: true },
         usePanguJs: { type: Boolean, required: false, default: false },
+        isSteamVrRunning: { type: Boolean, required: false, default: false },
     },
 
     data() {
@@ -296,6 +311,8 @@ export default {
             lottie: getLottieFace(this.message.content, this.message.time),
             lottieResult: getLottieFace(this.message.content, this.message.time, true),
             tgLogo: `file://${__static}/tg.svg`,
+            copyButton: `file://${__static}/Copy.svg`,
+            copyLinkButton: `file://${__static}/bx--link.svg`,
             selected: false,
             recallInfoText: '',
         }
@@ -437,6 +454,14 @@ export default {
             return type.toLowerCase().includes('audio/')
         },
         panguSpacing: (text) => pangu.spacing(text),
+        copy() {
+            navigator.clipboard.writeText(this.message.content)
+            new Audio(`file://${__static}/action_menu_select.wav`).play()
+        },
+        copyLink() {
+            navigator.clipboard.writeText(this.message.files[0].url)
+            new Audio(`file://${__static}/action_menu_select.wav`).play()
+        },
     },
 }
 </script>
@@ -711,6 +736,38 @@ export default {
 
     .vac-offset-current {
         margin-left: 20%;
+    }
+}
+
+.vrButtons {
+    display: flex;
+    gap: 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.03);
+    position: absolute;
+    bottom: 0;
+    left: 100%;
+    padding: 6px;
+
+    &.self {
+        right: 100%;
+        left: unset;
+    }
+
+    div {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 4px;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
     }
 }
 </style>
