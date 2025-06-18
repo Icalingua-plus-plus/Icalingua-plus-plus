@@ -604,6 +604,7 @@ const replaceRkey = (url: string) => {
             return url
     }
     if (!r) return url
+    if (r.startsWith('&rkey=')) r = r.slice('&rkey='.length)
     u.searchParams.set('rkey', r)
     return u.toString()
 }
@@ -625,6 +626,7 @@ const adapter: typeof oicqAdapter = {
         userConfig.account = loginForm
         saveUserConfig()
         adapter.sendOnlineData()
+        refreshRkey()
         setInterval(refreshRkey, 1000 * 60 * 10)
     },
     async sendOnlineData() {

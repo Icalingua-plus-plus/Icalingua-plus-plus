@@ -58,7 +58,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -104,7 +104,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -155,7 +155,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -226,7 +226,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -449,7 +449,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -503,7 +503,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -557,7 +557,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -631,7 +631,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -669,7 +669,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -717,7 +717,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16.20.0"
+          node-version: "22"
 
       - name: Install pnpm
         run: corepack enable
@@ -726,7 +726,7 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=16.20.0
+          set node_version=22.9.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
           pnpm install
@@ -746,7 +746,7 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=16.13.0
+          set node_version=22.9.0
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
@@ -776,7 +776,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "22"
 
       - name: Install setuptools
         run: python3 -m pip install setuptools
