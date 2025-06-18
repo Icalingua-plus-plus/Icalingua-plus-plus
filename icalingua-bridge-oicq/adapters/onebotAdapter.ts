@@ -992,7 +992,7 @@ const adapter: typeof oicqAdapter = {
                     file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
                     type: sticker ? 'face' : 'image',
                     // @ts-ignore
-                    subtype: sticker ? 1 : 0,
+                    sub_type: sticker ? 1 : 0,
                 },
             })
         } else if (imgpath) {
@@ -1002,7 +1002,7 @@ const adapter: typeof oicqAdapter = {
                     file: imgpath,
                     type: sticker ? 'face' : 'image',
                     // @ts-ignore
-                    subtype: sticker ? 1 : 0,
+                    sub_type: sticker ? 1 : 0,
                     url: imgpath.replace(/\\/g, '/'),
                 },
             })
@@ -1013,7 +1013,7 @@ const adapter: typeof oicqAdapter = {
                     file: file.path,
                     type: sticker ? 'face' : 'image',
                     // @ts-ignore
-                    subtype: sticker ? 1 : 0,
+                    sub_type: sticker ? 1 : 0,
                     url: file.path,
                 },
             })
