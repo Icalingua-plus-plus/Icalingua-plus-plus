@@ -1369,6 +1369,9 @@ const adapter: typeof oicqAdapter = {
                     }
                 }
             }
+            if (message.replyMessage?.file?.url) {
+                message.replyMessage.file.url = replaceRkey(message.replyMessage.file?.url)
+            }
         }
         callback(messages)
     },
