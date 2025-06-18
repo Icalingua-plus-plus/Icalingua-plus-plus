@@ -46,6 +46,12 @@
                         "
                     />
                     <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
+                    <SideBarIcon
+                        icon="el-icon-s-unfold"
+                        name="Next"
+                        @click="switchUnreadRoom"
+                        v-if="isSteamVrRunning"
+                    />
                     <div style="height: 10px"></div>
                 </div>
             </el-aside>
@@ -1131,6 +1137,14 @@ Chromium ${process.versions.chrome}` : ''
             this.tempFile = file
             this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'
         },
+        switchUnreadRoom() {
+            let unreadRoom
+            for (let i = 5; i > 0; i--) {
+                unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
+                if (unreadRoom) break
+            }
+            if (unreadRoom) this.chroom(unreadRoom)
+        }
     },
     computed: {
         cssVars() {

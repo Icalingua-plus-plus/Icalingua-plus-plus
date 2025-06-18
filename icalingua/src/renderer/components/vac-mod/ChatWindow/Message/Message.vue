@@ -231,7 +231,7 @@
                                 @click="openFile('copy')"
                             />
                         </div>
-                        <div v-if="isImage" @click="copyLink">
+                        <div v-if="message.file" @click="copyLink">
                             <img :src="copyLinkButton" alt="" class="vac-svg-button" />
                         </div>
                     </div>
