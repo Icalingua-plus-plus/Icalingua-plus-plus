@@ -28,6 +28,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
   arch-artifacts:
     runs-on: ubuntu-24.04
     defaults:
@@ -71,6 +74,9 @@ jobs:
 
       - name: pnpm install
         run: pnpm install
+
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
@@ -124,6 +130,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: build native modules
         run: pnpm build:electron install-app-deps
         working-directory: icalingua
@@ -169,6 +178,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: get dist
         uses: actions/download-artifact@v4
         with:
@@ -196,6 +208,7 @@ jobs:
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
             pnpm install
+            pnpm approve-builds
             cd icalingua
             pnpm build:electron install-app-deps
 
@@ -240,6 +253,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: get dist
         uses: actions/download-artifact@v4
         with:
@@ -267,6 +283,7 @@ jobs:
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
             pnpm install
+            pnpm approve-builds
             cd icalingua
             pnpm build:electron install-app-deps
 
@@ -463,6 +480,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: get built files
         uses: actions/download-artifact@v4
         with:
@@ -517,6 +537,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: get built files
         uses: actions/download-artifact@v4
         with:
@@ -570,6 +593,9 @@ jobs:
 
       - name: pnpm install
         run: pnpm install
+
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
 
       - name: get built files
         uses: actions/download-artifact@v4
@@ -645,6 +671,9 @@ jobs:
       - name: pnpm install
         run: pnpm install
 
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
+
       - name: Compile
         run: pnpm compile
 
@@ -676,6 +705,9 @@ jobs:
 
       - name: pnpm install
         run: pnpm install
+
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
@@ -730,6 +762,7 @@ jobs:
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
           pnpm install
+          pnpm approve-builds
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
@@ -792,6 +825,9 @@ jobs:
 
       - name: pnpm install
         run: pnpm install
+
+      - name: pnpm approve-builds
+        run: pnpm approve-builds
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
