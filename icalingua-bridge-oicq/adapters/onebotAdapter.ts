@@ -52,6 +52,12 @@ let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
 }
+let rkey: {
+    type: 'private' | 'group'
+    rkey: string
+    created_at: number
+    ttl: string
+}[] = []
 
 const initStorage = async () => {
     try {
@@ -573,6 +579,35 @@ const attachEventHandler = () => {
     })
 }
 
+const refreshRkey = async () => {
+    const rkeyy = await bot.getRkey()
+    if (isArrayLike(rkeyy)) {
+        rkey = rkeyy
+    }
+    console.log('Rkey 已刷新', rkeyy)
+}
+
+const replaceRkey = (url: string) => {
+    if (!rkey.length) return url
+    if (!url) return url
+    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+    const u = new URL(url)
+    let r = ''
+    switch (u.searchParams.get('appid')) {
+        case '1406':
+            r = rkey.find((it) => it.type === 'private')?.rkey
+            break
+        case '1407':
+            r = rkey.find((it) => it.type === 'group')?.rkey
+            break
+        default:
+            return url
+    }
+    if (!r) return url
+    u.searchParams.set('rkey', r)
+    return u.toString()
+}
+
 const adapter: typeof oicqAdapter = {
     loggedIn: false,
     async createBot(form: LoginForm) {
@@ -590,6 +625,7 @@ const adapter: typeof oicqAdapter = {
         userConfig.account = loginForm
         saveUserConfig()
         adapter.sendOnlineData()
+        setInterval(refreshRkey, 1000 * 60 * 10)
     },
     async sendOnlineData() {
         const versionInfo = await bot.getVersionInfo()
@@ -1320,6 +1356,18 @@ const adapter: typeof oicqAdapter = {
         const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
         if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
+        for (const message of messages) {
+            if (message.file?.url) {
+                message.file.url = replaceRkey(message.file?.url)
+            }
+            if (Array.isArray(message.files)) {
+                for (const file of message.files) {
+                    if (file.url) {
+                        file.url = replaceRkey(file.url)
+                    }
+                }
+            }
+        }
         callback(messages)
     },
     addRoom(room: Room) {

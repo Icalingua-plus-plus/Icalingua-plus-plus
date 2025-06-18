@@ -397,6 +397,15 @@ export default class extends EventEmitter<{
     public getCustomStickers = () => this.callApi<string[]>('fetch_custom_face', { count: 1145141919 })
     public sendPrivateFile = (user_id: number, file: string, name: string) =>
         this.callApi('upload_private_file', { user_id, file, name })
+    public getRkey = () =>
+        this.callApi<
+            {
+                type: 'private' | 'group'
+                rkey: string
+                created_at: number
+                ttl: string
+            }[]
+        >('get_rkey')
     public gfsMove = (
         group_id: number,
         file_id: string,
