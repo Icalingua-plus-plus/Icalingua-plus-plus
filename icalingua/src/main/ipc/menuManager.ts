@@ -192,6 +192,12 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             },
         },
         {
+            label: `复制${avatarType} URL`,
+            click: () => {
+                clipboard.writeText(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))
+            },
+        },
+        {
             label: `下载${avatarType}`,
             click: () => {
                 const cleanRoomName =
@@ -2516,6 +2522,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     )
     menu.append(
         new MenuItem({
+            label: `复制头像 URL`,
+            click: () => {
+                clipboard.writeText(`https://q1.qlogo.cn/g?b=qq&nk=${message.senderId}&s=0`)
+            },
+        }),
+    )
+    menu.append(
+        new MenuItem({
             label: '下载头像',
             click: () => {
                 const basename = `${message.username}(${message.senderId})的头像_${new Date().getTime()}`
@@ -2801,6 +2815,14 @@ ipcMain.on(
                     label: '查看头像',
                     click: () => {
                         openImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '复制头像 URL',
+                    click: () => {
+                        clipboard.writeText(getAvatarUrl(displayId).replace('&s=140', '&s=0'))
                     },
                 }),
             )
