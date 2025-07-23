@@ -218,7 +218,7 @@
         "@types/webpack": "^4.41.40",
         "ajv": "^6.12.6",
         "aria2": "^4.1.2",
-        "axios": "^1.7.9",
+        "axios": "^1.11.0",
         "babel-core": "^6.26.3",
         "babel-loader": "^7.1.5",
         "babel-minify-webpack-plugin": "^0.3.1",

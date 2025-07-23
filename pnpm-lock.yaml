@@ -47,7 +47,7 @@ importers:
         version: 11.11.1
       knex:
         specifier: ^2.5.1
-        version: 2.5.1(mysql@2.18.1)(pg@8.16.0)(sqlite3@5.1.6(encoding@0.1.13))
+        version: 2.5.1(mysql@2.18.1)(pg@8.16.3)(sqlite3@5.1.6(encoding@0.1.13))
       mongodb:
         specifier: ^4.17.2
         version: 4.17.2
@@ -62,10 +62,10 @@ importers:
         version: 4.0.7
       pg:
         specifier: ^8.13.1
-        version: 8.16.0
+        version: 8.16.3
       pg-query-stream:
         specifier: ^4.7.1
-        version: 4.10.0(pg@8.16.0)
+        version: 4.10.3(pg@8.16.3)
       pinyin-match:
         specifier: ^1.2.6
         version: 1.2.8
@@ -116,8 +116,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(encoding@0.1.13)
       axios:
-        specifier: ^1.7.9
-        version: 1.10.0
+        specifier: ^1.11.0
+        version: 1.11.0
       babel-core:
         specifier: ^6.26.3
         version: 6.26.3
@@ -237,7 +237,7 @@ importers:
         version: 0.21.0
       systeminformation:
         specifier: ^5.27.3
-        version: 5.27.3
+        version: 5.27.7
       thread-loader:
         specifier: ^3.0.4
         version: 3.0.4(webpack@4.47.0)
@@ -329,8 +329,8 @@ importers:
         specifier: 1.7.1
         version: 1.7.1
       axios:
-        specifier: ^1.7.9
-        version: 1.10.0
+        specifier: ^1.11.0
+        version: 1.11.0
       body-parser:
         specifier: ^1.20.3
         version: 1.20.3(supports-color@6.1.0)
@@ -348,7 +348,7 @@ importers:
         version: 4.30.0
       knex:
         specifier: ^2.5.1
-        version: 2.5.1(mysql@2.18.1)(pg@8.16.0)(sqlite3@5.1.6(encoding@0.1.13))
+        version: 2.5.1(mysql@2.18.1)(pg@8.16.3)(sqlite3@5.1.6(encoding@0.1.13))
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -372,10 +372,10 @@ importers:
         version: 1.25.1
       pg:
         specifier: ^8.13.1
-        version: 8.16.0
+        version: 8.16.3
       pg-query-stream:
         specifier: ^4.7.1
-        version: 4.10.0(pg@8.16.0)
+        version: 4.10.3(pg@8.16.3)
       reconnecting-websocket:
         specifier: ^4.4.0
         version: 4.4.0
@@ -399,7 +399,7 @@ importers:
         version: 4.7.1(winston@3.17.0)
       ws:
         specifier: ^8.18.0
-        version: 8.18.2
+        version: 8.18.3
       yaml:
         specifier: ^1.10.2
         version: 1.10.2
@@ -1316,8 +1316,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  axios@1.10.0:
-    resolution: {integrity: sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==}
+  axios@1.11.0:
+    resolution: {integrity: sha512-1Lx3WLFQWm3ooKDYZD1eXmoGO9fxYQjrycfHFC8P0sCfQVXyROp0p9PFWBehewBOdCwHc+f/b8I0fMto5eSfwA==}
 
   babel-code-frame@6.26.0:
     resolution: {integrity: sha512-XqYMR2dfdGMW+hd0IUZ2PwK+fGeFkOxZJ0wY+JaQAHzt1Zx8LcvpiZD2NiGkEG8qx0CfkAOr5xt76d1e8vG90g==}
@@ -3002,8 +3002,8 @@ packages:
     resolution: {integrity: sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ==}
     engines: {node: '>=0.10.0'}
 
-  form-data@4.0.3:
-    resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
+  form-data@4.0.4:
+    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
     engines: {node: '>= 6'}
 
   forwarded@0.2.0:
@@ -4639,17 +4639,17 @@ packages:
   pend@1.2.0:
     resolution: {integrity: sha512-F3asv42UuXchdzt+xXqfW1OGlVBe+mxa2mqI0pg5yAHZPvFmY3Y6drSf/GQ1A86WgWEN9Kzh/WrgKa6iGcHXLg==}
 
-  pg-cloudflare@1.2.5:
-    resolution: {integrity: sha512-OOX22Vt0vOSRrdoUPKJ8Wi2OpE/o/h9T8X1s4qSkCedbNah9ei2W2765be8iMVxQUsvgT7zIAT2eIa9fs5+vtg==}
+  pg-cloudflare@1.2.7:
+    resolution: {integrity: sha512-YgCtzMH0ptvZJslLM1ffsY4EuGaU0cx4XSdXLRFae8bPP4dS5xL1tNB3k2o/N64cHJpwU7dxKli/nZ2lUa5fLg==}
 
   pg-connection-string@2.6.1:
     resolution: {integrity: sha512-w6ZzNu6oMmIzEAYVw+RLK0+nqHPt8K3ZnknKi+g48Ak2pr3dtljJW3o+D/n2zzCG07Zoe9VOX3aiKpj+BN0pjg==}
 
-  pg-connection-string@2.9.0:
-    resolution: {integrity: sha512-P2DEBKuvh5RClafLngkAuGe9OUlFV7ebu8w1kmaaOgPcpJd1RIFh7otETfI6hAR8YupOLFTY7nuvvIn7PLciUQ==}
+  pg-connection-string@2.9.1:
+    resolution: {integrity: sha512-nkc6NpDcvPVpZXxrreI/FOtX3XemeLl8E0qFr6F2Lrm/I8WOnaWNhIPK2Z7OHpw7gh5XJThi6j6ppgNoaT1w4w==}
 
-  pg-cursor@2.15.0:
-    resolution: {integrity: sha512-sO3SQP9seXoaV7sddeKrPQk3zhnrMchCr71cYjkyNHCC6n3mA5AAyhK5foxy+yBtnBZuPqxzoiVxz3jKyV7D3g==}
+  pg-cursor@2.15.3:
+    resolution: {integrity: sha512-eHw63TsiGtFEfAd7tOTZ+TLy+i/2ePKS20H84qCQ+aQ60pve05Okon9tKMC+YN3j6XyeFoHnaim7Lt9WVafQsA==}
     peerDependencies:
       pg: ^8
 
@@ -4657,16 +4657,16 @@ packages:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
 
-  pg-pool@3.10.0:
-    resolution: {integrity: sha512-DzZ26On4sQ0KmqnO34muPcmKbhrjmyiO4lCCR0VwEd7MjmiKf5NTg/6+apUEu0NF7ESa37CGzFxH513CoUmWnA==}
+  pg-pool@3.10.1:
+    resolution: {integrity: sha512-Tu8jMlcX+9d8+QVzKIvM/uJtp07PKr82IUOYEphaWcoBhIYkoHpLXN3qO59nAI11ripznDsEzEv8nUxBVWajGg==}
     peerDependencies:
       pg: '>=8.0'
 
-  pg-protocol@1.10.0:
-    resolution: {integrity: sha512-IpdytjudNuLv8nhlHs/UrVBhU0e78J0oIS/0AVdTbWxSOkFUVdsHC/NrorO6nXsQNDTT1kzDSOMJubBQviX18Q==}
+  pg-protocol@1.10.3:
+    resolution: {integrity: sha512-6DIBgBQaTKDJyxnXaLiLR8wBpQQcGWuAESkRBX/t6OwA8YsqP+iVSiond2EDy6Y/dsGk8rh/jtax3js5NeV7JQ==}
 
-  pg-query-stream@4.10.0:
-    resolution: {integrity: sha512-w4h/zgnjI5mIEkK9Bufeo+V4EsHp4lTt9HD8f4Zqt3kYMb30bn/2iLq/UyZb4MMxhZO78Lr6kBLyfGsqq4H7Fw==}
+  pg-query-stream@4.10.3:
+    resolution: {integrity: sha512-h2utrzpOIzeT9JfaqfvBbVuvCfBjH86jNfVrGGTbyepKAIOyTfDew0lAt8bbJjs9n/I5bGDl7S2sx6h5hPyJxw==}
     peerDependencies:
       pg: ^8
 
@@ -4674,9 +4674,9 @@ packages:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
     engines: {node: '>=4'}
 
-  pg@8.16.0:
-    resolution: {integrity: sha512-7SKfdvP8CTNXjMUzfcVTaI+TDzBEeaUnVwiVGZQD1Hh33Kpev7liQba9uLd4CfN8r9mCVsD0JIpq03+Unpz+kg==}
-    engines: {node: '>= 8.0.0'}
+  pg@8.16.3:
+    resolution: {integrity: sha512-enxc1h0jA/aq5oSDMvqyW3q89ra6XIIDZgCX9vkMrnz5DFTw/Ny3Li2lFQ+pt3L6MCgm/5o2o8HW9hiJji+xvw==}
+    engines: {node: '>= 16.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
     peerDependenciesMeta:
@@ -5610,8 +5610,8 @@ packages:
   swap-case@1.1.2:
     resolution: {integrity: sha512-BAmWG6/bx8syfc6qXPprof3Mn5vQgf5dwdUNJhsNqU9WdPt5P+ES/wQ5bxfijy8zwZgZZHslC3iAsxsuQMCzJQ==}
 
-  systeminformation@5.27.3:
-    resolution: {integrity: sha512-SFgXCnmO/z0Nvln3aQ3fQRjbVVP5ybUPifyInJU6pIs6PpCjm/HuMGl3UenEd03tpeZLk44nxEikT/LON4UDrA==}
+  systeminformation@5.27.7:
+    resolution: {integrity: sha512-saaqOoVEEFaux4v0K8Q7caiauRwjXC4XbD2eH60dxHXbpKxQ8kH9Rf7Jh+nryKpOUSEFxtCdBlSUx0/lO6rwRg==}
     engines: {node: '>=8.0.0'}
     os: [darwin, linux, win32, freebsd, openbsd, netbsd, sunos, android]
     hasBin: true
@@ -6218,8 +6218,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.18.2:
-    resolution: {integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==}
+  ws@8.18.3:
+    resolution: {integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -7645,7 +7645,7 @@ snapshots:
       ejs: 3.1.10
       electron-osx-sign: 0.6.0
       electron-publish: 23.6.0
-      form-data: 4.0.3
+      form-data: 4.0.4
       fs-extra: 10.1.0
       hosted-git-info: 4.1.0
       is-ci: 3.0.1
@@ -7789,10 +7789,10 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  axios@1.10.0:
+  axios@1.11.0:
     dependencies:
       follow-redirects: 1.15.9(debug@4.4.1(supports-color@6.1.0))
-      form-data: 4.0.3
+      form-data: 4.0.4
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
@@ -10054,7 +10054,7 @@ snapshots:
 
   for-in@1.0.2: {}
 
-  form-data@4.0.3:
+  form-data@4.0.4:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -10936,7 +10936,7 @@ snapshots:
 
   klona@2.0.6: {}
 
-  knex@2.5.1(mysql@2.18.1)(pg@8.16.0)(sqlite3@5.1.6(encoding@0.1.13)):
+  knex@2.5.1(mysql@2.18.1)(pg@8.16.3)(sqlite3@5.1.6(encoding@0.1.13)):
     dependencies:
       colorette: 2.0.19
       commander: 10.0.1
@@ -10954,7 +10954,7 @@ snapshots:
       tildify: 2.0.0
     optionalDependencies:
       mysql: 2.18.1
-      pg: 8.16.0
+      pg: 8.16.3
       sqlite3: 5.1.6(encoding@0.1.13)
     transitivePeerDependencies:
       - supports-color
@@ -11691,7 +11691,7 @@ snapshots:
 
   oicq-icalingua-plus-plus@1.25.1:
     dependencies:
-      axios: 1.10.0
+      axios: 1.11.0
       jsqr: 1.4.0
       log4js: 6.9.1
       long: 4.0.0
@@ -11867,29 +11867,29 @@ snapshots:
 
   pend@1.2.0: {}
 
-  pg-cloudflare@1.2.5:
+  pg-cloudflare@1.2.7:
     optional: true
 
   pg-connection-string@2.6.1: {}
 
-  pg-connection-string@2.9.0: {}
+  pg-connection-string@2.9.1: {}
 
-  pg-cursor@2.15.0(pg@8.16.0):
+  pg-cursor@2.15.3(pg@8.16.3):
     dependencies:
-      pg: 8.16.0
+      pg: 8.16.3
 
   pg-int8@1.0.1: {}
 
-  pg-pool@3.10.0(pg@8.16.0):
+  pg-pool@3.10.1(pg@8.16.3):
     dependencies:
-      pg: 8.16.0
+      pg: 8.16.3
 
-  pg-protocol@1.10.0: {}
+  pg-protocol@1.10.3: {}
 
-  pg-query-stream@4.10.0(pg@8.16.0):
+  pg-query-stream@4.10.3(pg@8.16.3):
     dependencies:
-      pg: 8.16.0
-      pg-cursor: 2.15.0(pg@8.16.0)
+      pg: 8.16.3
+      pg-cursor: 2.15.3(pg@8.16.3)
 
   pg-types@2.2.0:
     dependencies:
@@ -11899,15 +11899,15 @@ snapshots:
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
 
-  pg@8.16.0:
+  pg@8.16.3:
     dependencies:
-      pg-connection-string: 2.9.0
-      pg-pool: 3.10.0(pg@8.16.0)
-      pg-protocol: 1.10.0
+      pg-connection-string: 2.9.1
+      pg-pool: 3.10.1(pg@8.16.3)
+      pg-protocol: 1.10.3
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
-      pg-cloudflare: 1.2.5
+      pg-cloudflare: 1.2.7
 
   pgpass@1.0.5:
     dependencies:
@@ -12987,7 +12987,7 @@ snapshots:
       lower-case: 1.1.4
       upper-case: 1.1.3
 
-  systeminformation@5.27.3: {}
+  systeminformation@5.27.7: {}
 
   tapable@1.1.3: {}
 
@@ -13749,7 +13749,7 @@ snapshots:
 
   ws@8.17.1: {}
 
-  ws@8.18.2: {}
+  ws@8.18.3: {}
 
   xml-char-classes@1.0.0: {}
 
