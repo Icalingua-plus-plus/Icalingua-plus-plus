@@ -157,6 +157,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Install pnpm
         run: corepack enable
 
@@ -227,6 +230,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "22"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Install pnpm
         run: corepack enable
