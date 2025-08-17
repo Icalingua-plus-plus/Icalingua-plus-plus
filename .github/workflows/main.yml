@@ -26,10 +26,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
   arch-artifacts:
     runs-on: ubuntu-24.04
@@ -73,10 +70,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT
@@ -128,10 +122,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: build native modules
         run: pnpm build:electron install-app-deps
@@ -176,10 +167,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -207,8 +195,7 @@ jobs:
             chmod -R 777 /build
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
-            pnpm install
-            pnpm approve-builds
+            pnpm install --frozen-lockfile
             cd icalingua
             pnpm build:electron install-app-deps
 
@@ -251,10 +238,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -282,8 +266,7 @@ jobs:
             chmod -R 777 /build
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
-            pnpm install
-            pnpm approve-builds
+            pnpm install --frozen-lockfile
             cd icalingua
             pnpm build:electron install-app-deps
 
@@ -478,10 +461,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: get built files
         uses: actions/download-artifact@v4
@@ -535,10 +515,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: get built files
         uses: actions/download-artifact@v4
@@ -592,10 +569,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: get built files
         uses: actions/download-artifact@v4
@@ -669,10 +643,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - name: Compile
         run: pnpm compile
@@ -685,7 +656,7 @@ jobs:
           if-no-files-found: error
 
   build-windows64:
-    runs-on: windows-2019
+    runs-on: windows-2025
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
@@ -704,10 +675,7 @@ jobs:
         run: corepack enable
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
@@ -736,7 +704,7 @@ jobs:
           if-no-files-found: error
 
   build-windows-arm64:
-    runs-on: windows-2019
+    runs-on: windows-2025
     outputs:
       version: ${{ steps.git-ver.outputs.version }}
       arch-version: ${{ steps.version.outputs.arch-version }}
@@ -761,8 +729,7 @@ jobs:
           set node_version=22.9.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
-          pnpm install
-          pnpm approve-builds
+          pnpm install --frozen-lockfile
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
@@ -824,10 +791,7 @@ jobs:
           package-manager: pnpm
 
       - name: pnpm install
-        run: pnpm install
-
-      - name: pnpm approve-builds
-        run: pnpm approve-builds
+        run: pnpm install --frozen-lockfile
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed "s/v//")" >> $GITHUB_OUTPUT

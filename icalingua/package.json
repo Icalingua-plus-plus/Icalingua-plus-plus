@@ -288,5 +288,8 @@
         "winston-daily-rotate-file": "^4.7.1",
         "yaml": "^1.10.2"
     },
-    "packageManager": "pnpm@10.11.0"
+    "packageManager": "pnpm@10.11.0",
+    "pnpm": {
+        "neverBuiltDependencies": []
+    }
 }

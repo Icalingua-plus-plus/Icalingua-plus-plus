@@ -52,5 +52,8 @@
         "winston-daily-rotate-file": "^4.7.1",
         "ws": "^8.18.0",
         "yaml": "^1.10.2"
+    },
+    "pnpm": {
+        "neverBuiltDependencies": []
     }
 }
