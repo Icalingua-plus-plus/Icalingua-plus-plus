@@ -315,6 +315,7 @@ export default class extends EventEmitter<{
             qid: string
             level: number
             login_days: number
+            remark?: string
         }>('get_stranger_info', { no_cache, user_id })
     public getFriendList = () =>
         this.callApi<

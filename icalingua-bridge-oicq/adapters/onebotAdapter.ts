@@ -131,7 +131,15 @@ const attachEventHandler = () => {
         if (groupId && (<GroupMessage>data).anonymous) senderName = (<GroupMessage>data).anonymous.name
         else if (groupId && isSelfMsg) senderName = 'You'
         else if (groupId) senderName = (data.sender as MemberBaseInfo).card || data.sender.nickname
-        else senderName = (data.sender as FriendInfo).remark || data.sender.nickname
+        else {
+            let info: Awaited<ReturnType<typeof bot.getStrangerInfo>>
+            try {
+                info = await bot.getStrangerInfo(senderId)
+            } catch (e) {
+                console.log('无法 getStrangerInfo', e)
+            }
+            senderName = info.remark || (data.sender as FriendInfo).remark || info.nickname || data.sender.nickname
+        }
         const group = groupId ? await bot.getGroupInfo(groupId) : null
         let roomName = groupId ? group.group_name : senderName
 
