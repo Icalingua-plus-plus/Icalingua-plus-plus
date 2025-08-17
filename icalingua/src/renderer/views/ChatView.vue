@@ -25,9 +25,16 @@
                         @click="selectedChatGroup = 'chats'"
                     />
                     <SideBarIcon
+                        icon="el-icon-user"
+                        name="Private"
+                        :selected="selectedChatGroup === 'private'"
+                        :redPoint="chatGroupsUnreadCount['private']"
+                        @click="selectedChatGroup = 'private'"
+                    />
+                    <SideBarIcon
                         v-for="chatGroup in chatGroups"
                         :key="chatGroup.name"
-                        icon="el-icon-chat-square"
+                        icon="el-icon-folder"
                         :name="chatGroup.name"
                         :selected="selectedChatGroup === chatGroup.name"
                         :redPoint="chatGroupsUnreadCount[chatGroup.name]"
@@ -64,7 +71,7 @@
             >
                 <TheRoomsPanel
                     ref="roomsPanel"
-                    :rooms="selectedChatGroup !== 'chats' ? visibleRooms : rooms"
+                    :rooms="visibleRooms"
                     :selected="selectedRoom"
                     :priority="priority"
                     :account="account"
@@ -323,7 +330,6 @@ export default {
             lastUnreadCheck2: 0,
             selectedChatGroup: 'chats',
             chatGroups: [],
-            visibleRooms: [],
             sortedRooms: [],
             disableChatGroups: false,
             uploadProgress: '0',
@@ -422,6 +428,8 @@ export default {
                         this.selectedChatGroup = 'chats'
                         break
                     case '2':
+                        this.selectedChatGroup = 'private'
+                        break
                     case '3':
                     case '4':
                     case '5':
@@ -430,8 +438,8 @@ export default {
                     case '8':
                     case '9':
                         const n = Number(e.key)
-                        if (this.chatGroups[n - 2]) {
-                            this.selectedChatGroup = this.chatGroups[n - 2].name
+                        if (this.chatGroups[n - 3]) {
+                            this.selectedChatGroup = this.chatGroups[n - 3].name
                         }
                         break
                     default:
@@ -467,6 +475,7 @@ export default {
                     const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
+                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
                         groups.forEach(g => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
@@ -1053,11 +1062,6 @@ Chromium ${process.versions.chrome}` : ''
                 })
             }
 
-            // 如果当前选中的 chat group 被更改，要刷新显示的 room
-            if (this.selectedChatGroup === groupName) {
-                this.visibleRooms = this.rooms.filter(e => chatGroup.rooms.includes(e.roomId))
-            }
-
             // 保存更改到数据库
             const { rooms } = chatGroup // 解构防止响应式对象破坏存储
             ipc.updateChatGroup(groupName, { rooms })
@@ -1155,7 +1159,19 @@ Chromium ${process.versions.chrome}` : ''
         },
         forwardTitle() {
             return (this.forwardAnonymous ? '隐藏发送者后' : '') + (this.forwardMulti ? '合并' : '逐条') + '转发到...'
-        }
+        },
+        visibleRooms() {
+            switch (this.selectedChatGroup) {
+                case 'chats':
+                    return this.rooms
+                case 'private':
+                    return this.rooms.filter(e => e.roomId > 0)
+                default:
+                    const group = this.chatGroups.find(g => g.name === this.selectedChatGroup)
+                    if (!group) return []
+                    return this.rooms.filter(e => group.rooms.includes(e.roomId))
+            }
+        },
     },
     watch: {
         lastUnreadCount(n, o) {
@@ -1182,28 +1198,7 @@ Chromium ${process.versions.chrome}` : ''
                 }, 30000)
             }
         },
-        selectedChatGroup(n, o) {
-            if (n === 'chats') {
-                this.visibleRooms = []
-            } else {
-                console.log('selectedChatGroup', n)
-                const group = this.chatGroups.find(g => g.name === n)
-                this.visibleRooms = this.rooms.filter(e => {
-                    if (!group) return false
-                    return group.rooms.includes(e.roomId)
-                })
-            }
-        },
         rooms(n) {
-            if (this.selectedChatGroup === 'chats') {
-                this.visibleRooms = []
-            }
-            const group = this.chatGroups.find(g => g.name === this.selectedChatGroup)
-            this.visibleRooms = n.filter(e => {
-                if (!group) return false
-                return group.rooms.includes(e.roomId)
-            })
-
             if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
             this.chatGroupsUnreadCount = {}
             n.forEach(e => {
@@ -1211,6 +1206,8 @@ Chromium ${process.versions.chrome}` : ''
                     const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
+                        // 屎山还在堆
+                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
                         groups.forEach(g => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
@@ -1227,6 +1224,7 @@ Chromium ${process.versions.chrome}` : ''
                     const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
+                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
                         groups.forEach(g => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
