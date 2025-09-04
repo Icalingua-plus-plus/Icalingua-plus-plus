@@ -152,6 +152,7 @@ const attachSocketEvents = () => {
     socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
     })
+    let notif: ElectronNotification
     socket.on(
         'notify',
         async (data: {
@@ -192,7 +193,10 @@ const attachSocketEvents = () => {
                 }
                 if (process.platform === 'darwin' || process.platform === 'win32') {
                     if (!ElectronNotification.isSupported()) return
-                    const notif = new ElectronNotification({
+                    if (notif) {
+                        notif.close()
+                    }
+                    notif = new ElectronNotification({
                         title: notifRoomName,
                         body: data.data.body,
                         hasReply: data.data.hasReply,
