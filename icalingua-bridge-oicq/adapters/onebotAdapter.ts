@@ -177,6 +177,7 @@ const attachEventHandler = () => {
             content: '',
             timestamp: formatDate('hh:mm', now),
             username: senderName,
+            userId: senderId,
         }
         ////process message////
         await processMessage(data.message, message, lastMessage, roomId)
@@ -271,6 +272,7 @@ const attachEventHandler = () => {
                 content: msg,
                 username: null,
                 timestamp: formatDate('hh:mm'),
+                userId: operator,
             }
             const message: Message = {
                 username: '',
@@ -312,6 +314,7 @@ const attachEventHandler = () => {
                 content: msg,
                 username: null,
                 timestamp: formatDate('hh:mm'),
+                userId: operatorId,
             }
             const message: Message = {
                 username: '',
@@ -364,6 +367,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: senderId,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -380,10 +384,22 @@ const attachEventHandler = () => {
         } catch {}
         let roomId = -groupId
         if (await storage.isChatIgnored(roomId)) return
+        let userDisplay = senderId.toString()
+        try {
+            const userInfo = await bot.getGroupMemberInfo(groupId, senderId)
+            userDisplay = `${userInfo.card || userInfo.nickname}(${senderId})`
+        } catch (e) {
+            try {
+                const userInfo = await bot.getStrangerInfo(senderId)
+                userDisplay = `${userInfo.remark || userInfo.nickname}(${senderId})`
+            } catch (e2) {
+                console.log(e, e2)
+            }
+        }
         const message: Message = {
             _id: `${now.getTime()}-${groupId}-${senderId}`,
             content:
-                data.user_id +
+                userDisplay +
                 (data.sub_type === 'leave'
                     ? ' 离开了本群'
                     : ` 被 ${operator?.card ? operator?.card : operator?.nickname} 踢了`),
@@ -411,6 +427,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: senderId,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -462,6 +479,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', new Date(data.time)),
+            userId: data.operator_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -476,8 +494,8 @@ const attachEventHandler = () => {
         const newAdmin = await bot.getGroupMemberInfo(data.group_id, data.user_id)
         let content =
             data.sub_type === 'set'
-                ? `群主设置 ${newAdmin.card || newAdmin.nickname} 为管理员`
-                : `群主取消了 ${newAdmin.card || newAdmin.nickname} 的管理员资格`
+                ? `群主设置 ${newAdmin.card || newAdmin.nickname}(${data.user_id}) 为管理员`
+                : `群主取消了 ${newAdmin.card || newAdmin.nickname}(${data.user_id}) 的管理员资格`
         const message: Message = {
             _id: `admin-${now.getTime()}-${data.group_id}-${data.user_id}`,
             content,
@@ -505,6 +523,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', new Date(data.time)),
+            userId: data.user_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -545,6 +564,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: data.user_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
@@ -579,6 +599,7 @@ const attachEventHandler = () => {
             content: message.content,
             username: '',
             timestamp: formatDate('hh:mm', now),
+            userId: data.user_id,
         }
         clients.addMessage(roomId, message)
         clients.updateRoom(room)
