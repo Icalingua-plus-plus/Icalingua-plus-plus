@@ -529,7 +529,7 @@ export default class SQLStorageProvider implements StorageProvider {
         try {
             const unreadRooms = await this.db<Room>(`rooms`)
                 .where('unreadCount', '>', 0)
-                .where('priority', '=', priority)
+                .where('priority', '>=', priority)
                 .orderBy('utime', 'desc')
                 .select('*')
             if (unreadRooms.length >= 1) return unreadRooms[0]
