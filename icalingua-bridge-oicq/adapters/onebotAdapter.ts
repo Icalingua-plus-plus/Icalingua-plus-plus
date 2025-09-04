@@ -257,13 +257,18 @@ const attachEventHandler = () => {
         if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
         const operator = data.sender_id || data.user_id
-        const nors: any[] = data.raw_info?.filter((it) => (it.type as any) === 'nor') || []
+        const nors: any[] =
+            data.raw_info?.filter((it) => (it.type as any) === 'nor' || (it.type as any) === 'img') || []
         if (room) {
             room.utime = data.time * 1000
             let msg = ''
             if (operator != uin) msg += room.roomName
             else msg += '你'
-            msg += nors[0]?.txt || '戳了戳'
+            if (nors[0].type === 'img') {
+                msg += '<ica:img>'
+            } else {
+                msg += nors[0]?.txt || '戳了戳'
+            }
             if (operator == data.target_id) msg += '自己'
             else if (data.target_id != uin) msg += room.roomName
             else msg += '你'
@@ -283,7 +288,12 @@ const attachEventHandler = () => {
                 _id: data.time,
                 system: true,
                 time: data.time * 1000,
-                files: [],
+                files: nors
+                    .filter((it) => it.type === 'img')
+                    .map((it) => ({
+                        url: it.src,
+                        type: 'image/gif',
+                    })),
             }
             clients.addMessage(roomId, message)
             clients.updateRoom(room)

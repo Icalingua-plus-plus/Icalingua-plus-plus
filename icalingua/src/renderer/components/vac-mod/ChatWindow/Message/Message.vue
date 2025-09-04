@@ -9,7 +9,17 @@
         </div>
 
         <div v-if="message.system" class="vac-card-info vac-card-system">
-            {{ usePanguJs ? panguSpacing(message.content) : message.content }}
+            <template v-for="(part, index) in msgSystemParts">
+                <span v-if="part.type === 'text'" :key="index">{{
+                    usePanguJs ? panguSpacing(part.content) : part.content
+                }}</span>
+                <img
+                    v-else-if="part.type === 'image'"
+                    :key="index"
+                    :src="message.files && message.files[part.content] ? message.files[part.content].url : ''"
+                    style="max-width: 100%; max-height: 1.2em; transform: translateY(0.25em)"
+                />
+            </template>
         </div>
 
         <div
@@ -359,6 +369,24 @@ export default {
             }
             if (this.$route.name === 'history-page' && this.message.head_img) return this.message.head_img
             return getAvatarUrl(this.message.senderId)
+        },
+        msgSystemParts() {
+            if (!this.message.system) return []
+            if (this.message.content.includes('<ica:img>')) {
+                const res = []
+                const parts = this.message.content.split('<ica:img>')
+                let imgCount = 0
+                for (let i = 0; i < parts.length; i++) {
+                    res.push({ type: 'text', content: parts[i] })
+                    if (i < parts.length - 1) {
+                        res.push({ type: 'image', content: imgCount })
+                        imgCount++
+                    }
+                }
+                return res
+            } else {
+                return [this.message.content]
+            }
         },
     },
 
