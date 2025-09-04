@@ -153,6 +153,11 @@ const attachSocketEvents = () => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
     })
     let notif: ElectronNotification
+    let isSteamVrRunning = false
+    setInterval(async () => {
+        const processes = await si.processes()
+        isSteamVrRunning = processes.list.some((e) => e.name.toLowerCase() === 'vrserver.exe')
+    })
     socket.on(
         'notify',
         async (data: {
@@ -167,7 +172,8 @@ const attachSocketEvents = () => {
                 !isAppLocked() &&
                 (!getMainWindow().isFocused() ||
                     !getMainWindow().isVisible() ||
-                    data.roomId !== ui.getSelectedRoomId()) &&
+                    data.roomId !== ui.getSelectedRoomId() ||
+                    isSteamVrRunning) &&
                 (data.priority >= getConfig().priority || data.at === true || (data.at && !getConfig().disableAtAll)) &&
                 !data.isSelfMsg &&
                 !getConfig().disableNotification
