@@ -157,7 +157,7 @@ const attachSocketEvents = () => {
     setInterval(async () => {
         const processes = await si.processes()
         isSteamVrRunning = processes.list.some((e) => e.name.toLowerCase() === 'vrserver.exe')
-    })
+    }, 60 * 1000)
     socket.on(
         'notify',
         async (data: {

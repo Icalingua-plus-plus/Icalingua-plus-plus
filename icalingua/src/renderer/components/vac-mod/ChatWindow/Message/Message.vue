@@ -385,7 +385,12 @@ export default {
                 }
                 return res
             } else {
-                return [this.message.content]
+                return [
+                    {
+                        type: 'text',
+                        content: this.message.content,
+                    },
+                ]
             }
         },
     },
