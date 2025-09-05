@@ -257,24 +257,37 @@ const attachEventHandler = () => {
         if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
         const operator = data.sender_id || data.user_id
-        const nors: any[] =
-            data.raw_info?.filter((it) => (it.type as any) === 'nor' || (it.type as any) === 'img') || []
+        const nors: any[] = data.raw_info || []
         if (room) {
             room.utime = data.time * 1000
             let msg = ''
-            if (operator != uin) msg += room.roomName
-            else msg += '你'
-            if (nors[0].type === 'img') {
-                msg += '<ica:img>'
-            } else {
-                msg += nors[0]?.txt || '戳了戳'
+            let qqCount = 0
+            for (const nor of nors) {
+                switch (nor.type) {
+                    case 'qq':
+                        qqCount++
+                        if (qqCount === 1) {
+                            if (operator != uin) msg += room.roomName
+                            else msg += '你'
+                            break
+                        }
+                        if (qqCount === 2) {
+                            if (operator == data.target_id) msg += '自己'
+                            else if (data.target_id != uin) msg += room.roomName
+                            else msg += '你'
+                            break
+                        }
+                        break
+                    case 'img':
+                        msg += '<ica:img>'
+                        break
+                    case 'nor':
+                        msg += nor.txt
+                        break
+                }
             }
-            if (operator == data.target_id) msg += '自己'
-            else if (data.target_id != uin) msg += room.roomName
-            else msg += '你'
-            if (nors[1]?.txt) msg += nors[1]?.txt
             room.lastMessage = {
-                content: msg,
+                content: msg.replace(/<ica:img>/g, ''),
                 username: null,
                 timestamp: formatDate('hh:mm'),
                 userId: operator,
