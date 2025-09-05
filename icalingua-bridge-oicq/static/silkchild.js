@@ -31,9 +31,12 @@ console.log('[silkDecode][Child] Child process start! Start to convert record to
 
 const convertToOgg = (pathConfig, isPcm = true) => {
     return new Promise((resolve, reject) => {
-        ffmpeg(pathConfig.rawFilePath, { timeout: 60 })
+        let ff = ffmpeg(pathConfig.rawFilePath, {timeout: 60})
             .inputOption(isPcm ? ['-f', 's16le', '-ar', '24000', '-ac', '1'] : [])
-            .outputFormat('ogg')
+        if (process.env.FFMPEG_AUDIO_FILTER) {
+            ff = ff.audioFilter(process.env.FFMPEG_AUDIO_FILTER)
+        }
+        ff.outputFormat('ogg')
             .on('error', (err) => {
                 console.error(err)
                 reject(err)
