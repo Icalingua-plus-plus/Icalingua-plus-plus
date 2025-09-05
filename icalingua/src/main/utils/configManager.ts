@@ -108,6 +108,7 @@ const defaultConfig: AllConfig = {
     sendSilkAudio: true,
     disableChooseFileType: false,
     disableImgViewTouchPad: false,
+    externalGfsBrowser: '',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

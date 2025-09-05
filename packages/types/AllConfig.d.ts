@@ -51,6 +51,7 @@ type AllConfig = {
     sendSilkAudio: boolean
     disableChooseFileType: boolean
     disableImgViewTouchPad: boolean
+    externalGfsBrowser: string
 }
 
 export default AllConfig

@@ -376,8 +376,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             new MenuItem({
                 label: '群文件',
                 async click() {
+                    const external = getConfig().externalGfsBrowser
                     let url
-                    if (getConfig().adapter === 'socketIo') {
+                    if (external) {
+                        url = external.replace('{groupId}', String(-room.roomId))
+                    } else if (getConfig().adapter === 'socketIo') {
                         const token = await requestGfsToken(-room.roomId)
                         url = `${getConfig().server}/file-manager/?${token}`
                     } else {
