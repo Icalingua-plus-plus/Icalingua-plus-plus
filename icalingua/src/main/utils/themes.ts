@@ -41,6 +41,6 @@ export const autoSetTheme = () => {
     useTheme(nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
 }
 
-nativeTheme.on('updated', (e) => {
+nativeTheme.on('updated', () => {
     if (configMgr.getConfig().theme === 'auto') autoSetTheme()
 })
