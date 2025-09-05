@@ -127,6 +127,7 @@
                                 @add-msg-to-forward="addmsgToForward"
                                 @del-msg-to-forward="delmsgToForward"
                                 @scroll-to-message="scrollToMessage"
+                                @reply="replyMessage(m, $event)"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :hide-chat-video-by-default="hideChatVideoByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"

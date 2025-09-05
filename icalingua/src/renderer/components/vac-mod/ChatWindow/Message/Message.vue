@@ -244,6 +244,9 @@
                         <div v-if="message.file" @click="copyLink">
                             <img :src="copyLinkButton" alt="" class="vac-svg-button" />
                         </div>
+                        <div @click="$emit('reply', $event)">
+                            <img :src="replyButton" alt="" class="vac-svg-button" />
+                        </div>
                     </div>
                 </div>
             </slot>
@@ -323,6 +326,7 @@ export default {
             tgLogo: `file://${__static}/tg.svg`,
             copyButton: `file://${__static}/Copy.svg`,
             copyLinkButton: `file://${__static}/bx--link.svg`,
+            replyButton: `file://${__static}/reply.svg`,
             selected: false,
             recallInfoText: '',
         }
