@@ -223,6 +223,16 @@ export default {
         openForward(message) {
             if (this.showForwardPanel) return
             if (!message.forward) return
+            if (this.code) {
+                try {
+                    const json = JSON.parse(this.code)
+                    if (Array.isArray(json)) {
+                        this.$emit('open-forward', { resId: json })
+                        return
+                    }
+                } catch (e) {}
+            }
+
             this.$emit('open-forward', { resId: message.value })
         },
         openNested(message) {
@@ -248,19 +258,21 @@ export default {
                 for (let i of detail.news) preview += i.text + '\n'
                 return preview
             } catch (e) {}
-            const parser = new DOMParser()
-            const xmlDoc = parser.parseFromString(code, 'text/xml')
-            const titles = xmlDoc.getElementsByTagName('title')
-            for (let i of titles) preview += i.textContent + '\n'
-            const titleReg = /<title(.*?)<\/title>/g
-            if (titleReg.test(code) && !titles.length) {
-                const titleMatch = code.match(titleReg)
-                const titleXml = '<item>' + titleMatch.join('') + '</item>'
-                const doc = parser.parseFromString(titleXml, 'text/xml')
-                const titles2 = doc.getElementsByTagName('title')
-                for (let i of titles2) preview += i.textContent + '\n'
-            }
-            return preview
+            try {
+                const parser = new DOMParser()
+                const xmlDoc = parser.parseFromString(code, 'text/xml')
+                const titles = xmlDoc.getElementsByTagName('title')
+                for (let i of titles) preview += i.textContent + '\n'
+                const titleReg = /<title(.*?)<\/title>/g
+                if (titleReg.test(code) && !titles.length) {
+                    const titleMatch = code.match(titleReg)
+                    const titleXml = '<item>' + titleMatch.join('') + '</item>'
+                    const doc = parser.parseFromString(titleXml, 'text/xml')
+                    const titles2 = doc.getElementsByTagName('title')
+                    for (let i of titles2) preview += i.textContent + '\n'
+                }
+                return preview
+            } catch (e) {}
         },
     },
 }

@@ -812,6 +812,7 @@ const adapter: typeof oicqAdapter = {
                     files: [],
                 },
             ]
+            resolve(res)
         }
     },
     async sendGroupSign(gin: number) {

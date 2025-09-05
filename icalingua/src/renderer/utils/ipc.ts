@@ -145,7 +145,7 @@ const ipc = {
     addChatGroup(chatGroup: ChatGroup) {
         ipcRenderer.send('addChatGroup', chatGroup)
     },
-    openForward(resId: string, fileName?: string) {
+    openForward(resId: string | any[], fileName?: string) {
         ipcRenderer.send('openForward', resId, fileName)
     },
     makeForward(fakes: FakeMessage | Iterable<FakeMessage>, dm?: boolean, origin?: number, target?: number) {

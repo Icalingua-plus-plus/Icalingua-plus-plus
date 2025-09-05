@@ -160,7 +160,7 @@ export default class extends EventEmitter<{
     }
 
     private async handleWebSocketMessage(message: string) {
-        console.log('receive', message)
+        // console.log('receive', message)
         const data = JSON.parse(message)
         if (data.echo) {
             const promise = this.echoMap[data.echo]
@@ -200,7 +200,7 @@ export default class extends EventEmitter<{
             const echo = `${new Date().getTime()}${random(100000, 999999)}`
             this.echoMap[echo] = { resolve, reject }
             this.socket.send(JSON.stringify({ action, params, echo }))
-            console.log('send', JSON.stringify({ action, params, echo }))
+            // console.log('send', JSON.stringify({ action, params, echo }))
         })
     }
 

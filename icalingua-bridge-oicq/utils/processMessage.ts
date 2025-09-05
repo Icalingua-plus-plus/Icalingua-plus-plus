@@ -15,6 +15,7 @@ import type oicqAdapter from '../adapters/oicqAdapter'
 import getImageUrlByMd5 from './getImageUrlByMd5'
 import mime from './mime'
 import silkDecode from './silkDecode'
+import formatDate from './formatDate'
 
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
     const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
@@ -506,6 +507,30 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                 case 'forward':
                     lastMessage.content += '[Forward multiple messages]'
                     message.content = `[Forward: ${(m as any).data.id}]`
+                    if (Array.isArray((m as any).data.content)) {
+                        try {
+                            const messages = []
+                            for (let i = 0; i < (m as any).data.content.length; i++) {
+                                const data = (m as any).data.content[i]
+                                const message: Message = {
+                                    senderId: data.sender.user_id,
+                                    username: data.sender.nickname,
+                                    content: '',
+                                    timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
+                                    date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
+                                    _id: i.toString(),
+                                    time: data.time * 1000,
+                                    files: [],
+                                    bubble_id: 0,
+                                }
+                                await processMessage(data.content || (data as any).message, message, {})
+                                messages.push(message)
+                            }
+                            message.code = JSON.stringify(messages)
+                        } catch (e) {
+                            message.content += `\n[内层消息解析失败: ${e.message}]`
+                        }
+                    }
                     break
                 default:
                     console.log('[无法解析的消息]', m)

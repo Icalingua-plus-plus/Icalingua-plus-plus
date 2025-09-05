@@ -176,7 +176,7 @@ ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: obje
 ipcMain.on('sendGroupPoke', (_, gin, uin) => adapter.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => adapter.addRoom(room))
 ipcMain.on('addChatGroup', (_, chatGroup) => adapter.addChatGroup(chatGroup))
-ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
+ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) => {
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
@@ -191,7 +191,12 @@ ipcMain.on('openForward', async (_, resId: string, fileName?: string) => {
         },
     })
     win.loadURL(getWinUrl() + '#/history')
-    let messages: Promise<Message[]> | Message[] = adapter.getForwardMsg(resId, fileName)
+    let messages: Promise<Message[]> | Message[]
+    if (Array.isArray(resId)) {
+        messages = resId
+    } else {
+        messages = adapter.getForwardMsg(resId, fileName)
+    }
     win.webContents.on('did-finish-load', async function () {
         // theme
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
