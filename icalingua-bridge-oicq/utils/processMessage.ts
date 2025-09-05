@@ -35,7 +35,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     if (!isNaN(m.data.qq as number)) {
                         m.data.qq = Number(m.data.qq) >>> 0
                     }
-                    if (lastType === 'reply' && !replyAnonymous) {
+                    if (lastType === 'reply' && !replyAnonymous && message.replyMessage?.senderId === m.data.qq) {
                         lastReply = true
                         break
                     }
@@ -185,10 +185,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     }
                     if (replyMessage) {
                         message.replyMessage = {
+                            ...replyMessage,
                             _id: m.data.id,
-                            username: replyMessage.username,
-                            content: replyMessage.content,
-                            files: [],
                         }
                         if (replyMessage.file) {
                             //兼容旧版本
@@ -205,6 +203,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 username: user_id === adapter.getUin() ? 'You' : String(user_id),
                                 content: `无法找到原消息(${m.data.id})(${time})`,
                                 files: [],
+                                senderId: user_id,
                             }
                             if (m.data.text) {
                                 message.replyMessage.content = m.data.text
