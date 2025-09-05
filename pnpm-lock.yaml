@@ -167,8 +167,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       electron:
-        specifier: 24.8.8
-        version: 24.8.8
+        specifier: 30.5.1
+        version: 30.5.1
       electron-builder:
         specifier: ^23.6.0
         version: 23.6.0
@@ -927,8 +927,8 @@ packages:
   '@types/node@16.18.126':
     resolution: {integrity: sha512-OTcgaiwfGFBKacvfwuHzzn1KLxH/er8mluiy8/uM3sGXHaRe73RrSIj01jow9t4kJEW633Ov+cOexXeiApTyAw==}
 
-  '@types/node@18.19.124':
-    resolution: {integrity: sha512-hY4YWZFLs3ku6D2Gqo3RchTd9VRCcrjqp/I0mmohYeUVA5Y8eCXKJEasHxLAJVZRJuQogfd1GiJ9lgogBgKeuQ==}
+  '@types/node@20.19.13':
+    resolution: {integrity: sha512-yCAeZl7a0DxgNVteXFHt9+uyFbqXGy/ShC4BlcHkoE0AfGXYv/BUiplV72DjMYXHDBXFjhvr6DD1NiRVfB4j8g==}
 
   '@types/pangu@4.0.2':
     resolution: {integrity: sha512-rVwVCkOFTWpmBjZuxTiVhLE8cwIKff3jWEKjs+DDg6bMkQwjp9Bp03pNanHQTtTzP53SDHJutb/kfGFHNhOJaQ==}
@@ -2656,8 +2656,8 @@ packages:
   electron-to-chromium@1.5.169:
     resolution: {integrity: sha512-q7SQx6mkLy0GTJK9K9OiWeaBMV4XQtBSdf6MJUzDB/H/5tFXfIiX38Lci1Kl6SsgiEhz1SQI1ejEOU5asWEhwQ==}
 
-  electron@24.8.8:
-    resolution: {integrity: sha512-0A2tGwG/0hxnD32Lil9wgSydQ0HCP5AdkgcH+qee3QgaC2jVq55YIbrj/0ZAq4L7yiZvQTzYIrc6kie7OahJKQ==}
+  electron@30.5.1:
+    resolution: {integrity: sha512-AhL7+mZ8Lg14iaNfoYTkXQ2qee8mmsQyllKdqxlpv/zrKgfxz6jNVtcRRbQtLxtF8yzcImWdfTQROpYiPumdbw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -5830,8 +5830,8 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
-  undici-types@5.26.5:
-    resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
   undici@5.29.0:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
@@ -7282,9 +7282,9 @@ snapshots:
 
   '@types/node@16.18.126': {}
 
-  '@types/node@18.19.124':
+  '@types/node@20.19.13':
     dependencies:
-      undici-types: 5.26.5
+      undici-types: 6.21.0
 
   '@types/pangu@4.0.2': {}
 
@@ -9573,10 +9573,10 @@ snapshots:
 
   electron-to-chromium@1.5.169: {}
 
-  electron@24.8.8:
+  electron@30.5.1:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 18.19.124
+      '@types/node': 20.19.13
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -13235,7 +13235,7 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@5.26.5: {}
+  undici-types@6.21.0: {}
 
   undici@5.29.0:
     dependencies:
