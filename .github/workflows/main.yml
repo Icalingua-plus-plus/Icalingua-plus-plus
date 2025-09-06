@@ -189,7 +189,7 @@ jobs:
             --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+            curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python3 -y
             corepack enable
@@ -263,7 +263,7 @@ jobs:
             --volume "/home/runner:/home/runner"
           install: |
             apt-get update && apt-get install -y gnupg2 && apt-get install curl -y
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+            curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
             apt-get install -y nodejs gcc g++ make
             apt update && apt install python3 -y
             corepack enable
