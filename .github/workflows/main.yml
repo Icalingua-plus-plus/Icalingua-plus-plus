@@ -271,6 +271,7 @@ jobs:
             uname -a
             chmod -R 777 /build
             cd /build
+            export CXXFLAGS="--std=gnu++2a"
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
             pnpm install --frozen-lockfile
             cd icalingua
