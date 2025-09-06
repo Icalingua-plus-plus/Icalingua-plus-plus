@@ -273,7 +273,7 @@ jobs:
             cd /build
             export CXXFLAGS="--std=gnu++2a"
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
-            pnpm install --frozen-lockfile
+            CXXFLAGS="--std=gnu++2a" pnpm install --frozen-lockfile --verbose
             cd icalingua
             pnpm build:electron install-app-deps
 
