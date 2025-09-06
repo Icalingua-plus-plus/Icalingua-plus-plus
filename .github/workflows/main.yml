@@ -732,9 +732,9 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=22.9.0
+          set node_version=22.19.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
-          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://unofficial-builds.nodejs.org/download/release/v%node_version%/win-arm64/node.lib
+          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://nodejs.org/download/release/v%node_version%/win-arm64/node.lib
           pnpm install --frozen-lockfile
 
       - id: git-ver
