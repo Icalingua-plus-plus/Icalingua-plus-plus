@@ -126,7 +126,7 @@
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
                                 @add-msg-to-forward="addmsgToForward"
                                 @del-msg-to-forward="delmsgToForward"
-                                @scroll-to-message="scrollToMessage"
+                                @scroll-to-message="(id) => scrollToMessage(id, true)"
                                 @reply="replyMessage(m, $event)"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :hide-chat-video-by-default="hideChatVideoByDefault"
@@ -586,6 +586,8 @@ export default {
             },
             optimizeMethod: 'infinite-loading',
             scrollingTolastMessage: 0,
+            scrollingToReplyMessage: null,
+            scrollingToReplyMessageRetryCount: 0,
             hideChatImageByDefault: false,
             hideChatVideoByDefault: false,
             localImageViewerByDefault: false,
@@ -631,6 +633,8 @@ export default {
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
                 this.scrollingTolastMessage = 0
+                this.scrollingToReplyMessage = null
+                this.scrollingToReplyMessageRetryCount = 0
                 //this.resetMessage(true)
 
                 this.editAndResend = false
@@ -641,6 +645,8 @@ export default {
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
                 this.scrollingTolastMessage = 0
+                this.scrollingToReplyMessage = null
+                this.scrollingToReplyMessageRetryCount = 0
             }
         },
         messages(newVal, oldVal) {
@@ -720,6 +726,17 @@ export default {
                             console.log('last unread message ID', _id)
                             this.scrollToMessage(_id)
                         }, 0)
+                    }
+                }, 1000)
+            }
+            // 处理回复消息的定位
+            if (this.scrollingToReplyMessage) {
+                setTimeout(() => {
+                    const result = this.scrollToMessage(this.scrollingToReplyMessage, false, true)
+                    if (result) {
+                        // 成功定位，清除状态
+                        this.scrollingToReplyMessage = null
+                        this.scrollingToReplyMessageRetryCount = 0
                     }
                 }, 1000)
             }
@@ -1209,7 +1226,7 @@ export default {
                 }, 200)
             }
         },
-        scrollToMessage(messageId) {
+        scrollToMessage(messageId, autoLoad = false, isRetry = false) {
             let judgeSameMessage = () => false
             const parsed = Buffer.from(String(messageId), 'base64')
             let messageSeq = 0
@@ -1257,7 +1274,7 @@ export default {
                 setTimeout(() => {
                     message.parentElement.style = ''
                 }, 3000)
-                return
+                return true
             } else {
                 const index = this.messages.findIndex((e) => judgeSameMessage(e._id))
                 if (index !== -1) {
@@ -1285,10 +1302,36 @@ export default {
                             }, 3000)
                         }
                     })
-                    return
+                    return true
                 }
             }
-            this.$message.error('被回复的消息太远啦')
+
+            // 消息未找到，尝试自动加载
+            if (autoLoad && !isRetry) {
+                const maxRetries = 10
+                if (this.scrollingToReplyMessageRetryCount < maxRetries) {
+                    this.scrollingToReplyMessageRetryCount++
+                    const loadCount = 200 // 每次加载200条消息
+                    console.log(
+                        `被回复的消息不在当前列表中，正在加载历史消息 (${this.scrollingToReplyMessageRetryCount}/${maxRetries})...`,
+                    )
+                    this.$message.info('尝试加载历史消息...')
+                    this.$emit('fetch-messages', false, loadCount)
+                    this.scrollingToReplyMessage = messageId
+                    return false
+                } else {
+                    // 达到最大重试次数
+                    this.scrollingToReplyMessage = null
+                    this.scrollingToReplyMessageRetryCount = 0
+                    this.$message.error('被回复的消息太远啦')
+                    return false
+                }
+            }
+
+            if (!isRetry) {
+                this.$message.error('被回复的消息太远啦')
+            }
+            return false
         },
         onMediaLoad() {
             let height = this.$refs.mediaFile.clientHeight
