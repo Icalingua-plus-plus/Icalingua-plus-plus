@@ -1461,7 +1461,7 @@ export default {
         },
         replyMessage(message, e) {
             if (this.showForwardPanel && e) return
-            if (e && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
+            if (e && e.path && e.path[1].classList.contains('el-avatar')) return // prevent avatar dblclick
             if (message.system || message.flash) return
             this.messageReply = message
             this.focusTextarea()
