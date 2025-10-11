@@ -9,7 +9,7 @@ import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
-import { getConfig } from '../utils/configManager'
+import { getConfig, saveConfigFile } from '../utils/configManager'
 import { download, downloadImage2Open, getImageExt } from './downloadManager'
 
 let viewer = ''
@@ -47,7 +47,11 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             const viewerWindow = builtinViewers.get(urlMd5)
             viewerWindow.focus()
         } else {
+            // 获取保存的窗口大小
+            const imageViewerSize = getConfig().imageViewerSize
             const viewerWindow = newIcalinguaWindow({
+                width: imageViewerSize.width,
+                height: imageViewerSize.height,
                 autoHideMenuBar: true,
                 webPreferences: {
                     contextIsolation: false,
@@ -63,12 +67,29 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                 viewerWindow.setBounds({
                     x: alignX,
                     y: alignY,
+                    width: imageViewerSize.width,
+                    height: imageViewerSize.height,
                 })
+            }
+            // 如果上次是最大化的，则最大化窗口
+            if (imageViewerSize.max) {
+                viewerWindow.maximize()
             }
             viewerWindow.loadURL(
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
             //viewerWindow.maximize()
+            // 监听窗口关闭事件，保存窗口大小
+            viewerWindow.on('close', () => {
+                const size = viewerWindow.getSize()
+                const isMaximized = viewerWindow.isMaximized()
+                getConfig().imageViewerSize = {
+                    width: isMaximized ? imageViewerSize.width : size[0],
+                    height: isMaximized ? imageViewerSize.height : size[1],
+                    max: isMaximized,
+                }
+                saveConfigFile()
+            })
             if (urlList.length > 1 && !getConfig().singleImageMode) {
                 viewerWindow.webContents.on('did-finish-load', () => {
                     viewerWindow.webContents.executeJavaScript(`window.imgs = ${JSON.stringify(urlList)};`)

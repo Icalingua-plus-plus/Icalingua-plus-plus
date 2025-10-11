@@ -58,6 +58,11 @@ const defaultWinSize: WinSize = {
     max: false,
 }
 if (defaultWinSize.width > 1440) defaultWinSize.width = 1440
+const defaultImageViewerSize: WinSize = {
+    width: 800,
+    height: 600,
+    max: false,
+}
 const defaultConfig: AllConfig = {
     privateKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
     server: '',
@@ -109,6 +114,7 @@ const defaultConfig: AllConfig = {
     disableChooseFileType: false,
     disableImgViewTouchPad: false,
     externalGfsBrowser: '',
+    imageViewerSize: defaultImageViewerSize,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
@@ -155,6 +161,15 @@ if (fs.existsSync(configFilePath)) {
     for (const i in defaultWinSize) {
         if (!(i in config['winSize'])) {
             config['winSize'][i] = defaultWinSize[i]
+        }
+    }
+    if (!config['imageViewerSize']) {
+        config['imageViewerSize'] = defaultImageViewerSize
+    } else {
+        for (const i in defaultImageViewerSize) {
+            if (!(i in config['imageViewerSize'])) {
+                config['imageViewerSize'][i] = defaultImageViewerSize[i]
+            }
         }
     }
 
