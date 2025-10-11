@@ -220,6 +220,7 @@
                 v-if="groupmemberShown"
             />
         </el-dialog>
+        <CommonGroupsDialog @chroom="chroom" />
         <DialogAskCheckUpdate :show.sync="dialogAskCheckUpdateVisible" />
         <el-dialog title="发送骰子" :visible.sync="sendDiceShown">
             <div class="random-select">
@@ -266,6 +267,7 @@
 import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
 import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate.vue'
+import CommonGroupsDialog from '../components/CommonGroupsDialog.vue'
 import {Multipane, MultipaneResizer} from '../components/multipane'
 import path from 'path'
 import {ipcRenderer} from 'electron'
@@ -278,12 +280,14 @@ import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import groupMemberCache from '../utils/groupMemberCache'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
 export default {
     components: {
         DialogAskCheckUpdate,
+        CommonGroupsDialog,
         Room,
         Stickers,
         SideBarIcon,
@@ -716,6 +720,16 @@ Chromium ${process.versions.chrome}` : ''
             this.isSteamVrRunning = isSteamVrRunning
             if (updateCheck === 'ask')
                 this.dialogAskCheckUpdateVisible = true
+
+            // 预加载所有群的成员列表（用于查找共同群聊功能）
+            setTimeout(() => {
+                const groupIds = this.rooms.filter(r => r.roomId < 0).map(r => -r.roomId)
+                if (groupIds.length > 0) {
+                    groupMemberCache.preloadAllGroups(groupIds).catch(err => {
+                        console.error('Failed to preload group members:', err)
+                    })
+                }
+            }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
         })
         ipcRenderer.on('uploadProgress', (_, p) => {
             if (p > this.uploadProgress) {
@@ -935,6 +949,13 @@ Chromium ${process.versions.chrome}` : ''
             this.selectedRoomId = room.roomId
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
+
+            // 如果是群聊，更新群成员缓存
+            if (room.roomId < 0) {
+                groupMemberCache.updateGroupCache(-room.roomId).catch(err => {
+                    console.error('Failed to update group member cache:', err)
+                })
+            }
         },
         downloadImage: ipc.downloadImage,
         pokeGroup(uin) {

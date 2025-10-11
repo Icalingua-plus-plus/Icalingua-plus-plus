@@ -689,6 +689,15 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         //         await win.loadURL('https://ti.qq.com/friends/recall?uin=' + room.roomId)
         //     },
         // }))
+        // 添加"查看共同群聊"选项（仅对好友显示）
+        menu.append(
+            new MenuItem({
+                label: '查看共同群聊',
+                click: () => {
+                    getMainWindow().webContents.send('showCommonGroups', room.roomId, room.roomName)
+                },
+            }),
+        )
         webApps.append(
             new MenuItem({
                 label: 'TA 的空间',
@@ -2559,6 +2568,14 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     )
     menu.append(
         new MenuItem({
+            label: `查看共同群聊`,
+            click: () => {
+                getMainWindow().webContents.send('showCommonGroups', message.senderId, message.username)
+            },
+        }),
+    )
+    menu.append(
+        new MenuItem({
             label: `屏蔽此人`,
             click: () => ui.confirmIgnoreChat({ id: message.senderId, name: message.username }),
         }),
@@ -2697,6 +2714,21 @@ ipcMain.on('popupContactMenu', (_, e, remark?: string, name?: string, displayId?
                 },
             }),
         )
+        // 添加"查看共同群聊"选项（仅对好友显示）
+        if (!group) {
+            menu.append(
+                new MenuItem({
+                    label: '查看共同群聊',
+                    click: () => {
+                        getMainWindow().webContents.send(
+                            'showCommonGroups',
+                            displayId,
+                            remark || name || String(displayId),
+                        )
+                    },
+                }),
+            )
+        }
     }
     menu.append(
         new MenuItem({
@@ -2835,6 +2867,19 @@ ipcMain.on(
                     click: () => {
                         const basename = `${remark}(${displayId})的头像_${new Date().getTime()}`
                         downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false, basename)
+                    },
+                }),
+            )
+            // 添加"查看共同群聊"选项
+            menu.append(
+                new MenuItem({
+                    label: '查看共同群聊',
+                    click: () => {
+                        getMainWindow().webContents.send(
+                            'showCommonGroups',
+                            displayId,
+                            remark || name || String(displayId),
+                        )
                     },
                 }),
             )
