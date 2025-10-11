@@ -634,6 +634,7 @@ export default {
                 //this.resetMessage(true)
 
                 this.editAndResend = false
+                this.messageReply = null
                 this.closeForwardPanel()
                 await this.updateGroupMembers()
             } else if (newVal.roomId === 0) {
@@ -785,6 +786,30 @@ export default {
                         console.log('qwq')
                 }
             } else if (e.key === 'ArrowUp') {
+                if (e.ctrlKey) {
+                    // Ctrl + ↑ 选择上一条消息进行回复
+                    e.preventDefault()
+                    const nonSystemMessages = this.messages.filter((msg) => !msg.system && !msg.flash)
+                    if (!nonSystemMessages.length) return
+
+                    if (this.messageReply === null) {
+                        // 如果当前没有回复消息，选择最后一条消息
+                        this.messageReply = nonSystemMessages[nonSystemMessages.length - 1]
+                    } else {
+                        // 如果已经有回复消息，找到当前消息的位置，向前切换
+                        const currentIndex = nonSystemMessages.findIndex((msg) => msg._id === this.messageReply._id)
+                        if (currentIndex > 0) {
+                            this.messageReply = nonSystemMessages[currentIndex - 1]
+                        }
+                    }
+                    // 高亮选中的消息
+                    if (this.messageReply) {
+                        this.$nextTick(() => this.highlightMessage(this.messageReply._id))
+                    }
+                    this.focusTextarea()
+                    return
+                }
+
                 if (this.$refs.roomTextarea.message) return
                 //编辑重发上一条消息
                 e.preventDefault()
@@ -808,6 +833,28 @@ export default {
                                 this.$refs.roomTextarea.message.length),
                 )
                 this.editAndResend = lastMessage._id
+            } else if (e.key === 'ArrowDown' && e.ctrlKey) {
+                // Ctrl + ↓ 选择下一条消息进行回复
+                e.preventDefault()
+                if (this.messageReply === null) return
+
+                const nonSystemMessages = this.messages.filter((msg) => !msg.system && !msg.flash)
+                if (!nonSystemMessages.length) return
+
+                // 找到当前消息的位置，向后切换
+                const currentIndex = nonSystemMessages.findIndex((msg) => msg._id === this.messageReply._id)
+                if (currentIndex !== -1) {
+                    if (currentIndex < nonSystemMessages.length - 1) {
+                        // 不是最后一条，切换到下一条
+                        this.messageReply = nonSystemMessages[currentIndex + 1]
+                        // 高亮选中的消息
+                        this.$nextTick(() => this.highlightMessage(this.messageReply._id))
+                    } else {
+                        // 已经是最后一条消息，取消回复
+                        this.messageReply = null
+                    }
+                }
+                this.focusTextarea()
             } else if (e.key === 'e' && e.ctrlKey) {
                 // 快捷表情选择
                 this.isQuickFaceOn = true
@@ -1150,6 +1197,17 @@ export default {
                 this.closeForwardPanel()
             }
             console.log('delmsgToForward')
+        },
+        highlightMessage(messageId) {
+            // 高亮指定的消息
+            const message = document.getElementById(messageId)
+            if (message) {
+                message.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
+                setTimeout(() => {
+                    message.parentElement.style = ''
+                }, 200)
+            }
         },
         scrollToMessage(messageId) {
             let judgeSameMessage = () => false
