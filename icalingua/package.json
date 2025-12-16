@@ -260,7 +260,7 @@
         "sass-loader": "^10.5.2",
         "socket.io-client": "^4.8.1",
         "style-loader": "^0.21.0",
-        "systeminformation": "^5.27.3",
+        "systeminformation": "^5.27.14",
         "thread-loader": "^3.0.4",
         "ts-loader": "^8.4.0",
         "ts-node": "^10.9.2",
