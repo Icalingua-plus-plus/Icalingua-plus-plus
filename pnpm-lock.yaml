@@ -334,6 +334,12 @@ importers:
       '@noble/ed25519':
         specifier: 1.7.1
         version: 1.7.1
+      '@saltify/milky-node-sdk':
+        specifier: ^1.0.0
+        version: 1.0.0
+      '@saltify/milky-types':
+        specifier: ^1.0.0
+        version: 1.0.0
       axios:
         specifier: ^1.12.0
         version: 1.12.0
@@ -652,6 +658,12 @@ packages:
     resolution: {integrity: sha512-1SUf/Cg2GzGDyaf15aR9St9TWlb+XvbZXWpDx8YKs7MLzMH/BCeopv+y9vzrzgkfykCGuWOlSu3mZhj2+FQcrg==}
     engines: {node: '>=10'}
     deprecated: This functionality has been moved to @npmcli/fs
+
+  '@saltify/milky-node-sdk@1.0.0':
+    resolution: {integrity: sha512-wc4+QnRHGbLU9ICLQevub+gzvxANe217qvRnR64lFQxnuNRxej1SWVVUT8+TtbqPc3XI4MsAzGWDyxjMou2qFg==}
+
+  '@saltify/milky-types@1.0.0':
+    resolution: {integrity: sha512-2xaPdHUM/gdqyZXkmv26/NIXZn1Snlsb/50zto8zXp3soNKlUQCfoRZRpQdD3auEqs686ol7TIqIemlxxDgySA==}
 
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
@@ -2833,6 +2845,14 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
+
+  eventsource-client@1.2.0:
+    resolution: {integrity: sha512-kDI75RSzO3TwyG/K9w1ap8XwqSPcwi6jaMkNulfVeZmSeUM49U8kUzk1s+vKNt0tGrXgK47i+620Yasn1ccFiw==}
+    engines: {node: '>=18.0.0'}
+
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
 
   eventsource@2.0.2:
     resolution: {integrity: sha512-IzUmBGPR3+oUG9dUeXynyNmf91/3zUSJg1lCktzKw47OXuhco54U3r9B7O4XX+Rb1Itm9OZ2b0RkTs10bICOxA==}
@@ -6317,6 +6337,9 @@ packages:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
 
+  zod@4.3.5:
+    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
+
 snapshots:
 
   7zip-bin@5.1.1: {}
@@ -6862,6 +6885,16 @@ snapshots:
       mkdirp: 1.0.4
       rimraf: 3.0.2
     optional: true
+
+  '@saltify/milky-node-sdk@1.0.0':
+    dependencies:
+      '@saltify/milky-types': 1.0.0
+      eventsource-client: 1.2.0
+      zod: 4.3.5
+
+  '@saltify/milky-types@1.0.0':
+    dependencies:
+      zod: 4.3.5
 
   '@sindresorhus/is@4.6.0': {}
 
@@ -9810,6 +9843,12 @@ snapshots:
   eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
+
+  eventsource-client@1.2.0:
+    dependencies:
+      eventsource-parser: 3.0.6
+
+  eventsource-parser@3.0.6: {}
 
   eventsource@2.0.2: {}
 
@@ -13840,3 +13879,5 @@ snapshots:
       fd-slicer: 1.1.0
 
   yn@3.1.1: {}
+
+  zod@4.3.5: {}

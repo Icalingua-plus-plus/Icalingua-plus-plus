@@ -27,6 +27,8 @@
     },
     "dependencies": {
         "@noble/ed25519": "1.7.1",
+        "@saltify/milky-node-sdk": "^1.0.0",
+        "@saltify/milky-types": "^1.0.0",
         "axios": "^1.12.0",
         "body-parser": "^1.20.3",
         "eventemitter3": "^5.0.1",

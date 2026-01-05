@@ -11,6 +11,7 @@ type Config = {
     host: string
     unix?: string
     onebot?: string
+    milky?: string | { url: string; accessToken?: string }
 }
 
 type UserConfig = {
