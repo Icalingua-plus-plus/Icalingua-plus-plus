@@ -11,6 +11,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import oicqAdapter from '../adapters/oicqAdapter'
 import socketIoAdapter from '../adapters/socketIoAdapter'
+import readOnlyAdapter from '../adapters/readOnlyAdapter'
 import atCache from '../utils/atCache'
 import { getConfig } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
@@ -28,6 +29,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
 else if (getConfig().adapter === 'socketIo') adapter = socketIoAdapter
+else if (getConfig().adapter === 'readOnly') adapter = readOnlyAdapter
 
 export const {
     sendMessage,

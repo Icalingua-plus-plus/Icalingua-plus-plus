@@ -9,7 +9,7 @@ type AllConfig = {
     darkTaskIcon: 'auto' | 'true' | 'false'
     winSize: WinSize
     socketIo: string
-    adapter: 'oicq' | 'socketIo'
+    adapter: 'oicq' | 'socketIo' | 'readOnly'
     server: string
     privateKey: string
     fetchHistoryOnChatOpen: boolean
