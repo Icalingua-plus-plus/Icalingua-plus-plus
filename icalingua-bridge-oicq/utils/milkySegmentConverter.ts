@@ -47,7 +47,7 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
 
         case 'image':
             return {
-                type: segment.data.sub_type === 'sticker' ? 'face' : 'image',
+                type: 'image',
                 data: {
                     file: segment.data.resource_id,
                     url: segment.data.temp_url,

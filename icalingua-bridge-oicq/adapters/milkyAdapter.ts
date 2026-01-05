@@ -48,6 +48,7 @@ let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
 }
+const debug = process.env.MILKY_DEBUG === 'true' ? console.log : () => {}
 
 const initStorage = async () => {
     try {
@@ -137,7 +138,7 @@ const attachEventHandler = () => {
         let roomName: string
         if (isGroup && data.group) {
             roomName = data.group.group_name
-        } else {
+        } else if (!isGroup && data.sender_id === roomId) {
             roomName = senderName
         }
 
@@ -164,7 +165,9 @@ const attachEventHandler = () => {
         }
 
         // 转换消息段并处理
+        debug('segments', data.segments)
         const oicqMessage = milkySegmentsToOicq(data.segments)
+        debug('oicqMessage', oicqMessage)
 
         // 处理 reply 消息段中的 message_seq 转换为完整的 messageId
         for (let i = 0; i < oicqMessage.length; i++) {
@@ -890,16 +893,22 @@ const adapter: typeof oicqAdapter = {
                 startSeq = decoded.messageSeq
             }
         }
+        debug('startSeq', startSeq)
         try {
             while (true) {
                 const history = await bot.getHistoryMessages(scene as any, peerId, startSeq, 30)
-                if (!history.messages || history.messages.length === 0) break
+                debug('history', history.messages.length, history.next_message_seq)
+                if (!history.messages || history.messages.length === 0) {
+                    debug('no messages')
+                    break
+                }
                 for (const msg of history.messages) {
                     const senderId = Number(msg.sender_id)
                     const isSelfMsg = senderId === uin
                     const msgId = isGroup
                         ? encodeGroupMessageId(peerId, senderId, Number(msg.message_seq), msg.time)
                         : encodePrivateMessageId(peerId, Number(msg.message_seq), msg.time, isSelfMsg)
+                    debug('msgId', msgId)
                     let senderName: string
                     if (isGroup && msg.group_member) {
                         senderName = msg.group_member.card || msg.group_member.nickname
@@ -908,6 +917,7 @@ const adapter: typeof oicqAdapter = {
                     } else {
                         senderName = String(senderId)
                     }
+                    debug('senderName', senderName)
                     const message: Message = {
                         senderId,
                         username: senderName,
@@ -921,18 +931,26 @@ const adapter: typeof oicqAdapter = {
                         files: [],
                     }
                     const oicqMessage = milkySegmentsToOicq(msg.segments)
+                    debug('oicqMessage.length', oicqMessage.length)
                     try {
                         await processMessage(oicqMessage, message, {}, roomId)
+                        debug('processMessage done')
                         if (await storage.isChatIgnored(senderId)) message.hide = true
                         messages.push(message)
                     } catch (e) {
                         console.error(e)
                     }
                 }
-                if (!history.next_message_seq) break
+                if (!history.next_message_seq) {
+                    debug('no next message seq break')
+                    break
+                }
                 startSeq = Number(history.next_message_seq)
                 const firstMsg = messages[0]
-                if (firstMsg && (await storage.getMessage(roomId, firstMsg._id as string))) break
+                if (firstMsg && (await storage.getMessage(roomId, firstMsg._id as string))) {
+                    debug('firstMsg exists break', firstMsg._id)
+                    break
+                }
             }
         } catch (e) {
             console.error(e)
@@ -1282,8 +1300,10 @@ const adapter: typeof oicqAdapter = {
         } as any
     },
     async getPrivateFileUrl(fileId: string, cb) {
+        debug('getPrivateFileUrl', fileId)
         clients.messageError('Milky 适配器暂不支持私聊文件下载')
         cb('')
+        debug('getPrivateFileUrl done')
     },
 
     async sendOnlineData() {
@@ -1314,8 +1334,16 @@ const adapter: typeof oicqAdapter = {
         return null
     },
     async getGroupFileMeta(gin, fid, resolve) {
-        const res = await bot.getGroupFileDownloadUrl(gin, fid)
-        resolve({ url: res.download_url })
+        debug('getGroupFileMeta', gin, fid)
+        try {
+            const res = await bot.getGroupFileDownloadUrl(gin, fid)
+            debug('getGroupFileMeta res', res)
+            resolve({ url: res.download_url })
+        } catch (e) {
+            console.error(e)
+            clients.messageError('获取群文件元数据失败')
+            resolve({ url: '' })
+        }
     },
     async sendGroupSign(gin) {
         clients.messageError('Milky 适配器不支持群签到')
