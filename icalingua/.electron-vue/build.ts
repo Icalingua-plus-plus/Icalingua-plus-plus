@@ -4,10 +4,10 @@ import { say } from 'cfonts'
 import chalk from 'chalk'
 import del from 'del'
 
+process.env.NODE_ENV = 'production'
+
 import mainConfig from './rspack.main.config'
 import rendererConfig from './rspack.renderer.config'
-
-process.env.NODE_ENV = 'production'
 
 const doneLog = chalk.bgGreen.white(' DONE ') + ' '
 const errorLog = chalk.bgRed.white(' ERROR ') + ' '

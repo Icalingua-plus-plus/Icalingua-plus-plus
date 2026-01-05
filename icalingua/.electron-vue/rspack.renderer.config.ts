@@ -108,8 +108,8 @@ const rendererConfig: Configuration = {
         ]
     },
     node: {
-        __dirname: !isProduction,
-        __filename: !isProduction
+        __dirname: false,
+        __filename: false
     },
     plugins: [
         new VueLoaderPlugin() as any,
@@ -128,10 +128,7 @@ const rendererConfig: Configuration = {
                 patterns: [
                     {
                         from: path.join(__dirname, '../static'),
-                        to: path.join(__dirname, '../dist/electron/static'),
-                        globOptions: {
-                            ignore: ['.*']
-                        }
+                        to: 'static'
                     }
                 ]
             }),

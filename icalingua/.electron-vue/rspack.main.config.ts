@@ -48,8 +48,8 @@ const mainConfig: Configuration = {
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? false : 'source-map',
     node: {
-        __dirname: !isProduction,
-        __filename: !isProduction
+        __dirname: false,
+        __filename: false
     }
 }
 
