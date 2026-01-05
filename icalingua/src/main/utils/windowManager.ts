@@ -11,6 +11,7 @@ import getStaticPath from '../../utils/getStaticPath'
 import md5 from 'md5'
 import crypto from 'crypto'
 import atCache from './atCache'
+import * as themes from './themes'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -19,6 +20,9 @@ let deviceManagerWindow: BrowserWindow
 let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
+
+// 独立聊天窗口映射表 (roomId -> BrowserWindow)
+const chatWindows: Map<number, BrowserWindow> = new Map()
 
 const PROTOCOL_UNSUPPORT = '暂不支持此功能'
 
@@ -437,4 +441,125 @@ export const showDeviceManagerWindow = () => {
 export const sendToDeviceManagerWindow = (channel: string, payload?: any) => {
     if (deviceManagerWindow && !deviceManagerWindow.isDestroyed())
         deviceManagerWindow.webContents.send(channel, payload)
+}
+
+// ==================== 独立聊天窗口管理 ====================
+
+/** 检查会话是否已在独立窗口打开 */
+export const isRoomInChatWindow = (roomId: number): boolean => {
+    const win = chatWindows.get(roomId)
+    return win && !win.isDestroyed()
+}
+
+/** 获取独立聊天窗口 */
+export const getChatWindow = (roomId: number): BrowserWindow | undefined => {
+    const win = chatWindows.get(roomId)
+    if (win && !win.isDestroyed()) return win
+    return undefined
+}
+
+/** 获取所有独立聊天窗口的 roomId 列表 */
+export const getAllChatWindowRoomIds = (): number[] => {
+    const roomIds: number[] = []
+    chatWindows.forEach((win, roomId) => {
+        if (!win.isDestroyed()) roomIds.push(roomId)
+    })
+    return roomIds
+}
+
+/** 发送消息到独立聊天窗口 */
+export const sendToChatWindow = (roomId: number, channel: string, payload?: any) => {
+    const win = chatWindows.get(roomId)
+    if (win && !win.isDestroyed()) {
+        win.webContents.send(channel, payload)
+    }
+}
+
+/** 发送消息到所有独立聊天窗口 */
+export const sendToAllChatWindows = (channel: string, payload?: any) => {
+    chatWindows.forEach((win) => {
+        if (!win.isDestroyed()) {
+            win.webContents.send(channel, payload)
+        }
+    })
+}
+
+/** 聚焦独立聊天窗口 */
+export const focusChatWindow = (roomId: number): boolean => {
+    const win = chatWindows.get(roomId)
+    if (win && !win.isDestroyed()) {
+        win.show()
+        win.focus()
+        return true
+    }
+    return false
+}
+
+/** 打开独立聊天窗口 */
+export const openChatWindow = async (roomId: number, roomName: string) => {
+    // 如果已经打开，聚焦并返回
+    if (isRoomInChatWindow(roomId)) {
+        focusChatWindow(roomId)
+        return
+    }
+
+    const size = screen.getPrimaryDisplay().size
+    const theme = getConfig().theme
+    const themeColor =
+        theme === 'auto'
+            ? nativeTheme.shouldUseDarkColors
+                ? '#131415'
+                : '#FFFFFF'
+            : theme === 'dark'
+            ? '#131415'
+            : '#FFFFFF'
+
+    const win = newIcalinguaWindow({
+        height: size.height - 200,
+        width: 900,
+        title: roomName,
+        backgroundColor: themeColor,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
+        },
+    })
+
+    chatWindows.set(roomId, win)
+
+    win.on('closed', () => {
+        chatWindows.delete(roomId)
+    })
+
+    // 窗口聚焦时清除未读
+    win.on('focus', () => {
+        win.webContents.send('clearUnread')
+    })
+
+    if (process.env.NODE_ENV === 'development') {
+        loadDevtools(win)
+    }
+
+    win.webContents.on('did-finish-load', () => {
+        win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+    })
+
+    await win.loadURL(getWinUrl() + '#/chatWindow/' + roomId)
+
+    // 处理窗口内链接打开
+    win.webContents.setWindowOpenHandler((details) => {
+        shell.openExternal(details.url)
+        return { action: 'deny' }
+    })
+}
+
+/** 关闭独立聊天窗口 */
+export const closeChatWindow = (roomId: number) => {
+    const win = chatWindows.get(roomId)
+    if (win && !win.isDestroyed()) {
+        win.close()
+    }
 }

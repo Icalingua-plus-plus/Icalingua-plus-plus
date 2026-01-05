@@ -22,6 +22,8 @@ import { spacingSendMessage } from '../../utils/panguSpacing'
 import silkEncode from '../utils/silkEncode'
 import fs from 'fs'
 import ui from '../utils/ui'
+import { openChatWindow, isRoomInChatWindow, focusChatWindow } from '../utils/windowManager'
+import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -93,6 +95,8 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 }
 
 ipcMain.handle('getDisabledFeatures', () => getDisabledFeatures())
+ipcMain.handle('getUin', () => getUin())
+ipcMain.handle('getNick', () => getNickname())
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.on('randomDevice', (event, username: number) => {
     randomDevice(username)
@@ -247,3 +251,39 @@ ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
 ipcMain.on('requestOnlineData', adapter.sendOnlineData)
 ipcMain.handle('getLoginDevices', async () => await adapter.getLoginDevices())
 ipcMain.on('deleteLoginDevice', async (_, flag) => await adapter.deleteLoginDevice(flag))
+
+// ==================== 独立聊天窗口相关 IPC ====================
+
+/** 打开独立聊天窗口 */
+ipcMain.on('openRoomInNewWindow', async (_, roomId: number) => {
+    const room = await adapter.getRoom(roomId)
+    if (room) {
+        const roomName =
+            room.roomId < 0 && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(room.roomName) : room.roomName
+        await openChatWindow(roomId, roomName)
+        // 如果主窗口当前选中的是这个会话，取消选中
+        if (ui.getSelectedRoomId() === roomId) {
+            ui.chroom(0)
+        }
+    }
+})
+
+/** 检查会话是否在独立窗口打开 */
+ipcMain.handle('isRoomInChatWindow', (_, roomId: number) => {
+    return isRoomInChatWindow(roomId)
+})
+
+/** 聚焦独立聊天窗口 */
+ipcMain.on('focusChatWindow', (_, roomId: number) => {
+    focusChatWindow(roomId)
+})
+
+/** 获取房间信息（供独立窗口使用） */
+ipcMain.handle('getRoomInfo', async (_, roomId: number) => {
+    return await adapter.getRoom(roomId)
+})
+
+/** 独立窗口清除未读 */
+ipcMain.on('clearChatWindowUnread', async (_, roomId: number) => {
+    await clearRoomUnread(roomId)
+})

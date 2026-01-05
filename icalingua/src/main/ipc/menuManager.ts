@@ -120,6 +120,22 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             visible: (await getSelectedRoom())?.roomId !== room.roomId,
         },
         {
+            label: '在新窗口中打开',
+            click: async () => {
+                const { openChatWindow } = await import('../utils/windowManager')
+                const roomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                await openChatWindow(room.roomId, roomName)
+                // 如果主窗口当前选中的是这个会话，取消选中
+                if (ui.getSelectedRoomId() === room.roomId) {
+                    ui.chroom(0)
+                }
+            },
+        },
+        { type: 'separator' },
+        {
             label: '优先级',
             submenu: [
                 {

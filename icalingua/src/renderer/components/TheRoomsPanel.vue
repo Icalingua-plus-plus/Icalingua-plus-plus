@@ -34,6 +34,7 @@
                     input = ''
                     $emit('chroom', room)
                 "
+                @dblclick="openInNewWindow(room)"
                 @contextmenu="roomMenu(room, $event)"
             />
         </div>
@@ -94,6 +95,9 @@ export default {
     methods: {
         roomMenu(room, e) {
             ipc.popupRoomMenu(room.roomId, e)
+        },
+        openInNewWindow(room) {
+            ipc.openRoomInNewWindow(room.roomId)
         },
         async clearRooms() {
             console.log(this.allRooms)

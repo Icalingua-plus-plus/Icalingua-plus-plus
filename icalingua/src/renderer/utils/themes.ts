@@ -101,13 +101,16 @@ export function recalcTheme() {
 }
 
 ipcRenderer.on('theme:sync-theme-data', (_, msg) => {
+    console.log('sync theme data', msg)
     setupThemeStyles(msg)
 })
 
 ipcRenderer.on('theme:refresh', (_, msg) => {
+    console.log('refresh theme', msg)
     updateThemes()
 })
 
 ipcRenderer.on('theme:use', (_, msg) => {
+    console.log('use theme', msg)
     useTheme(msg)
 })

@@ -939,6 +939,11 @@ Chromium ${process.versions.chrome}` : ''
                 this.$message.error('该对话不存在，可能未曾对话过或未加好友')
                 return
             }
+            // 检查是否已在独立窗口打开，如果是则聚焦到独立窗口
+            if (await ipc.isRoomInChatWindow(room.roomId)) {
+                ipc.focusChatWindow(room.roomId)
+                return
+            }
             this.lastUnreadCount = room.unreadCount
             this.lastUnreadAt = !!room.at
             if (this.selectedRoom.roomId != 0) {

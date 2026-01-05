@@ -38,7 +38,7 @@
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import { ipcRenderer, remote } from 'electron'
 import ipc from '../utils/ipc'
-import * as themes from '../utils/themes'
+import '../utils/themes'
 
 export default {
     name: 'HistoryView',

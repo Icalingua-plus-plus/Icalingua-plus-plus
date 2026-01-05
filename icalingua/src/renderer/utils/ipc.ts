@@ -247,5 +247,32 @@ const ipc = {
     deleteLoginDevice(flag: string): any {
         return ipcRenderer.send('deleteLoginDevice', flag)
     },
+
+    // ==================== 独立聊天窗口相关 ====================
+
+    /** 在新窗口中打开会话 */
+    openRoomInNewWindow(roomId: number) {
+        ipcRenderer.send('openRoomInNewWindow', roomId)
+    },
+
+    /** 检查会话是否在独立窗口打开 */
+    async isRoomInChatWindow(roomId: number): Promise<boolean> {
+        return await ipcRenderer.invoke('isRoomInChatWindow', roomId)
+    },
+
+    /** 聚焦独立聊天窗口 */
+    focusChatWindow(roomId: number) {
+        ipcRenderer.send('focusChatWindow', roomId)
+    },
+
+    /** 获取房间信息 */
+    async getRoomInfo(roomId: number): Promise<Room> {
+        return await ipcRenderer.invoke('getRoomInfo', roomId)
+    },
+
+    /** 独立窗口清除未读 */
+    clearChatWindowUnread(roomId: number) {
+        ipcRenderer.send('clearChatWindowUnread', roomId)
+    },
 }
 export default ipc

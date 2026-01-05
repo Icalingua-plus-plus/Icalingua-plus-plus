@@ -7,7 +7,7 @@ import { ipcMain } from 'electron'
 import { updateAppMenu } from '../ipc/menuManager'
 import { getConfig } from './configManager'
 import { updateTrayIcon } from './trayManager'
-import { sendToMainWindow, sendToRequestWindow } from './windowManager'
+import { sendToMainWindow, sendToRequestWindow, sendToChatWindow, isRoomInChatWindow } from './windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let selectedRoomId = 0
@@ -81,27 +81,51 @@ export default {
     updateRoom(room: Room) {
         sendToMainWindow('updateRoom', room)
     },
-    setShutUp(isShutUp: boolean) {
+    setShutUp(isShutUp: boolean, roomId?: number) {
         sendToMainWindow('setShutUp', isShutUp)
+        // 如果提供了 roomId，也发送到对应的独立窗口
+        if (roomId && isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'setShutUp', isShutUp)
+        }
     },
     addMessage(roomId: number, message: Message) {
-        if (roomId != selectedRoomId) return
-        sendToMainWindow('addMessage', { roomId, message })
+        // 发送到独立聊天窗口（如果存在）
+        if (isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'addMessage', { roomId, message })
+        }
+        // 发送到主窗口（如果是当前选中的会话）
+        if (roomId === selectedRoomId) {
+            sendToMainWindow('addMessage', { roomId, message })
+        }
     },
     chroom(roomId: number) {
         sendToMainWindow('chroom', roomId)
     },
-    deleteMessage(messageId: string | number) {
+    deleteMessage(messageId: string | number, roomId?: number) {
         sendToMainWindow('deleteMessage', messageId)
+        // 如果提供了 roomId，也发送到对应的独立窗口
+        if (roomId && isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'deleteMessage', messageId)
+        }
     },
-    hideMessage(messageId: string | number) {
+    hideMessage(messageId: string | number, roomId?: number) {
         sendToMainWindow('hideMessage', messageId)
+        if (roomId && isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'hideMessage', messageId)
+        }
     },
-    revealMessage(messageId: string | number) {
+    revealMessage(messageId: string | number, roomId?: number) {
         sendToMainWindow('revealMessage', messageId)
+        if (roomId && isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'revealMessage', messageId)
+        }
     },
     renewMessage(roomId: number, messageId: string, message: Partial<Message>) {
         sendToMainWindow('renewMessage', { roomId, messageId, message })
+        // 也发送到独立窗口
+        if (isRoomInChatWindow(roomId)) {
+            sendToChatWindow(roomId, 'renewMessage', { roomId, messageId, message })
+        }
     },
     renewMessageURL(messageId: string | number, URL: string) {
         sendToMainWindow('renewMessageURL', { messageId, URL })
