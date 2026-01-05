@@ -247,6 +247,12 @@
                         <div @click="$emit('reply', $event)">
                             <img :src="replyButton" alt="" class="vac-svg-button" />
                         </div>
+                        <div v-if="canPlusOne" @click="plusOne" title="+1">
+                            <svg-icon name="plus-one" class="vac-svg-button" />
+                        </div>
+                        <div @click="$emit('ctx', $event)" title="更多">
+                            <svg-icon name="more" class="vac-svg-button" />
+                        </div>
                     </div>
                 </div>
             </slot>
@@ -397,6 +403,10 @@ export default {
                 ]
             }
         },
+        canPlusOne() {
+            // +1 功能只在消息没有文件或文件是图片时可用
+            return !this.message.flash && (!this.message.file || this.message.file.type.startsWith('image/'))
+        },
     },
 
     watch: {
@@ -497,6 +507,19 @@ export default {
         },
         copyLink() {
             navigator.clipboard.writeText(this.message.files[0].url)
+            new Audio(`file://${__static}/action_menu_select.wav`).play()
+        },
+        plusOne() {
+            const msgToSend = {
+                content: this.message.content,
+                replyMessage: this.message.replyMessage,
+                imgpath: undefined,
+                at: [],
+            }
+            if (this.message.file) {
+                msgToSend.imgpath = this.message.file.url
+            }
+            ipc.sendMessage(msgToSend)
             new Audio(`file://${__static}/action_menu_select.wav`).play()
         },
     },
@@ -805,6 +828,10 @@ export default {
             height: 24px;
             object-fit: contain;
         }
+    }
+
+    svg {
+        fill: #1976d2;
     }
 }
 </style>
