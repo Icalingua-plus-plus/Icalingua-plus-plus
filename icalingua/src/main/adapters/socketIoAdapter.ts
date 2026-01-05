@@ -542,6 +542,11 @@ const adapter: Adapter = {
             socket.emit('fetchMessages', roomId, offset, resolve)
         })
     },
+    fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
+        return new Promise((resolve, reject) => {
+            socket.emit('fetchImageMessages', roomId, offset, endTime, resolve)
+        })
+    },
     getFirstUnreadRoom(): Promise<Room> {
         return new Promise((resolve, reject) => {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)

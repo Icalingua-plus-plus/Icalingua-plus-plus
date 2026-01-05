@@ -20,6 +20,8 @@ export default interface StorageProvider {
 
     fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
 
+    fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]>
+
     getMessage(roomId: number, messageId: string): Promise<Message>
 
     addMessages(roomId: number, messages: Message[]): Promise<any>

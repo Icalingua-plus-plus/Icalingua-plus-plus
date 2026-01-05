@@ -208,6 +208,31 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
             },
         },
         {
+            label: '浏览聊天图片',
+            click: async () => {
+                const size = screen.getPrimaryDisplay().size
+                const win = newIcalinguaWindow({
+                    height: size.height - 200,
+                    width: 800,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        nodeIntegration: true,
+                        webSecurity: false,
+                        contextIsolation: false,
+                    },
+                })
+                const roomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                await win.loadURL(getWinUrl() + '#/imageGallery/' + room.roomId + '/' + encodeURIComponent(roomName))
+                win.webContents.on('did-finish-load', function () {
+                    win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+                    win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+                })
+            },
+        },
+        {
             label: `复制${avatarType} URL`,
             click: () => {
                 clipboard.writeText(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))

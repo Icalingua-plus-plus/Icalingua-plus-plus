@@ -208,7 +208,7 @@ export default class RedisStorageProvider implements StorageProvider {
     }
 
     /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
-     * 是对 `msg${roomId}` 的“查多个”操作。
+     * 是对 `msg${roomId}` 的"查多个"操作。
      *
      * 在进入房间时，该方法被调用。
      */
@@ -221,6 +221,38 @@ export default class RedisStorageProvider implements StorageProvider {
         const messages = (await Promise.all(messagesPAry)) as Message[]
         messages.sort((a, b) => a.time - b.time)
         return messages
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，
+     * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
+     *
+     * 在浏览聊天图片时，该方法被调用。
+     * @param endTime 可选，只返回时间小于等于此值的消息（用于从指定月份开始加载）
+     */
+    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+        const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${roomId}:msgIdList`, 0, -1)
+        const imageMessages: Message[] = []
+        let skipped = 0
+
+        for (const key of allMsgKeys) {
+            if (imageMessages.length >= limit) break
+            const msg = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, key)
+            const message = JSON.parse(msg) as Message
+            // 如果指定了 endTime，跳过时间大于 endTime 的消息
+            if (endTime && message.time > endTime) continue
+            // 检查 files 数组中是否有图片类型
+            const hasImage = message.files?.some((file) => file.type?.startsWith('image/'))
+            if (hasImage) {
+                if (skipped < skip) {
+                    skipped++
+                } else {
+                    imageMessages.push(message)
+                }
+            }
+        }
+
+        imageMessages.sort((a, b) => a.time - b.time)
+        return imageMessages
     }
 
     /** 实现 {@link StorageProvider} 类的 `getMessage` 方法，

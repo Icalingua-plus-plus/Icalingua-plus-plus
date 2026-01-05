@@ -652,8 +652,29 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，
+     * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
+     *
+     * 在浏览聊天图片时，该方法被调用。
+     * @param endTime 可选，只返回时间小于等于此值的消息（用于从指定月份开始加载）
+     */
+    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+        try {
+            let query = this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where('files', 'like', '%"type":"image/%')
+            if (endTime) {
+                query = query.where('time', '<=', endTime)
+            }
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            return messages.reverse().map((message) => this.msgConFromDB(message))
+        } catch (e) {
+            this.errorHandle(e)
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `getMessage` 方法，
-     * 是对 `msg${roomId}` 的“查”操作。
+     * 是对 `msg${roomId}` 的"查"操作。
      *
      * 在获取聊天历史消息时，该方法被调用。
      */

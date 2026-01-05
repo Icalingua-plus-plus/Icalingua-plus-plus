@@ -17,6 +17,7 @@ import SetLockPasswordView from '../views/SetLockPasswordView.vue'
 import CardSourceView from '../views/CardSourceView.vue'
 import DeviceManager from '../views/DeviceManager.vue'
 import ChatWindowView from '../views/ChatWindowView.vue'
+import ImageGalleryView from '../views/ImageGalleryView.vue'
 
 Vue.use(Router)
 
@@ -106,6 +107,11 @@ export default new Router({
             path: '/chatWindow/:roomId',
             name: 'chat-window-page',
             component: ChatWindowView,
+        },
+        {
+            path: '/imageGallery/:roomId/:roomName',
+            name: 'image-gallery-page',
+            component: ImageGalleryView,
         },
     ],
 })

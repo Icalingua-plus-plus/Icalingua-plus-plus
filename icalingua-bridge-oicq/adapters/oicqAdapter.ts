@@ -1632,6 +1632,16 @@ const adapter = {
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
+    async fetchImageMessages(
+        roomId: number,
+        offset: number,
+        endTime: number | undefined,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        callback(messages)
+    },
     reLogin() {
         bot.login()
     },

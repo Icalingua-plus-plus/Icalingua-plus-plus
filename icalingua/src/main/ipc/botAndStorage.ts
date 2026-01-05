@@ -172,6 +172,12 @@ ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset:
     offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
     return adapter.fetchMessages(roomId, offset)
 })
+ipcMain.handle(
+    'fetchImageMessages',
+    (_, { roomId, offset, endTime }: { roomId: number; offset: number; endTime?: number }) => {
+        return adapter.fetchImageMessages(roomId, offset, endTime)
+    },
+)
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
 ipcMain.on('reLogin', adapter.reLogin)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => adapter.updateRoom(roomId, room))

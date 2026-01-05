@@ -116,6 +116,24 @@ export default class MongoStorageProvider implements StorageProvider {
         return arr.reverse()
     }
 
+    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+        const query: any = {
+            'files.type': { $regex: /^image\// },
+        }
+        if (endTime) {
+            query.time = { $lte: endTime }
+        }
+        const arr = await this.mdb
+            .collection<any>('msg' + roomId)
+            .find(query, {
+                sort: [['time', -1]],
+                skip,
+                limit,
+            })
+            .toArray()
+        return arr.reverse()
+    }
+
     async removeRoom(roomId: number): Promise<any> {
         try {
             return await this.mdb.collection('rooms').findOneAndDelete({ roomId: roomId })

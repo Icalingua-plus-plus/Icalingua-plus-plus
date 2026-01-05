@@ -1428,6 +1428,28 @@ const adapter: typeof oicqAdapter = {
         }
         callback(messages)
     },
+    async fetchImageMessages(
+        roomId: number,
+        offset: number,
+        endTime: number | undefined,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        for (const message of messages) {
+            if (message.file?.url) {
+                message.file.url = replaceRkey(message.file?.url)
+            }
+            if (Array.isArray(message.files)) {
+                for (const file of message.files) {
+                    if (file.url) {
+                        file.url = replaceRkey(file.url)
+                    }
+                }
+            }
+        }
+        callback(messages)
+    },
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
@@ -1522,7 +1544,7 @@ const adapter: typeof oicqAdapter = {
                             create_time: Number(it.create_time),
                             file_count: Number(it.total_file_count),
                             is_dir: true,
-                        } satisfies GfsDirStat),
+                        }) satisfies GfsDirStat,
                 ),
                 ...res.files.map(
                     (it) =>
@@ -1538,7 +1560,7 @@ const adapter: typeof oicqAdapter = {
                             md5: '',
                             sha1: '',
                             download_times: it.download_times,
-                        } satisfies GfsFileStat),
+                        }) satisfies GfsFileStat,
                 ),
             ]
         }
