@@ -14,6 +14,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import { app, dialog } from 'electron'
 import path from 'path'
+import axios from 'axios'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo, FileElem } from 'oicq-icalingua-plus-plus'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
@@ -32,6 +33,110 @@ let loggedIn = false
  * 只读模式 Adapter
  * 仅连接数据库，以只读方式浏览历史聊天记录
  */
+
+// ==================== Rkey 管理 ====================
+
+const RKEY_SERVICES = ['https://ss.xingzhige.com/music_card/rkey', 'https://secret-service.bietiaop.com/rkeys']
+
+interface RkeyResponse {
+    private_rkey: string
+    group_rkey: string
+    expired_time: number
+    name?: string
+}
+
+let rkeyData: RkeyResponse | null = null
+
+/**
+ * 从多个服务并行获取 rkey，取最快返回的结果
+ */
+const fetchRkey = async (): Promise<RkeyResponse | null> => {
+    try {
+        // 使用 Promise.race 配合错误处理来模拟 Promise.any 的行为
+        const result = await new Promise<RkeyResponse>((resolve, reject) => {
+            let rejected = 0
+            const errors: Error[] = []
+            RKEY_SERVICES.forEach((url) => {
+                axios
+                    .get<RkeyResponse>(url, { timeout: 5000 })
+                    .then((res) => resolve(res.data))
+                    .catch((e) => {
+                        errors.push(e)
+                        rejected++
+                        if (rejected === RKEY_SERVICES.length) {
+                            reject(new Error('All rkey services failed'))
+                        }
+                    })
+            })
+        })
+        console.log('Rkey 已获取:', result.name || 'unknown')
+        return result
+    } catch (e) {
+        console.error('获取 Rkey 失败:', e)
+        return null
+    }
+}
+
+/**
+ * 刷新 rkey（如果快过期或未获取）
+ */
+const refreshRkeyIfNeeded = async () => {
+    const now = Math.floor(Date.now() / 1000)
+    // 如果没有 rkey 或者距离过期不足 10 分钟，则刷新
+    if (!rkeyData || rkeyData.expired_time - now < 600) {
+        rkeyData = await fetchRkey()
+    }
+}
+
+/**
+ * 替换 URL 中的 rkey
+ */
+const replaceRkey = (url: string): string => {
+    if (!url) return url
+    if (!rkeyData) return url
+    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+
+    try {
+        const u = new URL(url)
+        let r = ''
+        switch (u.searchParams.get('appid')) {
+            case '1406': // private
+                r = rkeyData.private_rkey
+                break
+            case '1407': // group
+                r = rkeyData.group_rkey
+                break
+            default:
+                return url
+        }
+        if (!r) return url
+        // rkey 可能带有 &rkey= 前缀，需要去掉
+        if (r.startsWith('&rkey=')) r = r.slice('&rkey='.length)
+        u.searchParams.set('rkey', r)
+        return u.toString()
+    } catch (e) {
+        return url
+    }
+}
+
+/**
+ * 处理消息中的所有图片 URL，替换 rkey
+ */
+const processMessageRkey = (message: Message): void => {
+    if (message.file?.url) {
+        message.file.url = replaceRkey(message.file.url)
+    }
+    if (Array.isArray(message.files)) {
+        for (const file of message.files) {
+            if (file.url) {
+                file.url = replaceRkey(file.url)
+            }
+        }
+    }
+    if (message.replyMessage?.file?.url) {
+        message.replyMessage.file.url = replaceRkey(message.replyMessage.file.url)
+    }
+}
 
 const initStorage = async () => {
     try {
@@ -108,6 +213,9 @@ const adapter: Adapter = {
             await createTray()
         }
 
+        // 初始化 rkey
+        await refreshRkeyIfNeeded()
+
         // 发送在线数据
         adapter.sendOnlineData()
         await updateTrayIcon(true)
@@ -150,7 +258,17 @@ const adapter: Adapter = {
         if (!offset) {
             ui.setShutUp(true)
         }
+
+        // 刷新 rkey（如果需要）
+        await refreshRkeyIfNeeded()
+
         const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
+
         return messages
     },
 
