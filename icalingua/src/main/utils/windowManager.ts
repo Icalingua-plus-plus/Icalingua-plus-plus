@@ -48,8 +48,8 @@ export const loadMainWindow = () => {
                 ? '#131415'
                 : '#FFFFFF'
             : theme === 'dark'
-            ? '#131415'
-            : '#FFFFFF'
+              ? '#131415'
+              : '#FFFFFF'
     mainWindow = newIcalinguaWindow({
         height: winSize.height,
         width: winSize.width,
@@ -219,8 +219,8 @@ export const refreshMainWindowColor = () => {
                 ? '#131415'
                 : '#FFFFFF'
             : getConfig().theme === 'dark'
-            ? '#131415'
-            : '#FFFFFF'
+              ? '#131415'
+              : '#FFFFFF'
     if (mainWindow.getBackgroundColor() === color) return
     mainWindow.setBackgroundColor(color)
     updateTrayIcon()
@@ -496,10 +496,17 @@ export const focusChatWindow = (roomId: number): boolean => {
 }
 
 /** 打开独立聊天窗口 */
-export const openChatWindow = async (roomId: number, roomName: string) => {
+export const openChatWindow = async (roomId: number, roomName: string, gotoMessageId?: string) => {
     // 如果已经打开，聚焦并返回
     if (isRoomInChatWindow(roomId)) {
         focusChatWindow(roomId)
+        if (gotoMessageId) {
+            // 发送定位消息的事件
+            const win = chatWindows.get(roomId)
+            if (win) {
+                win.webContents.send('gotoMessage', gotoMessageId)
+            }
+        }
         return
     }
 
@@ -511,8 +518,8 @@ export const openChatWindow = async (roomId: number, roomName: string) => {
                 ? '#131415'
                 : '#FFFFFF'
             : theme === 'dark'
-            ? '#131415'
-            : '#FFFFFF'
+              ? '#131415'
+              : '#FFFFFF'
 
     const win = newIcalinguaWindow({
         height: size.height - 200,
@@ -545,6 +552,10 @@ export const openChatWindow = async (roomId: number, roomName: string) => {
     win.webContents.on('did-finish-load', () => {
         win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+        // 如果需要定位到指定消息
+        if (gotoMessageId) {
+            win.webContents.send('gotoMessage', gotoMessageId)
+        }
     })
 
     await win.loadURL(getWinUrl() + '#/chatWindow/' + roomId)

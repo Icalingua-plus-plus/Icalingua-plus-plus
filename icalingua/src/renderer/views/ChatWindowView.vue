@@ -1,5 +1,5 @@
 <template>
-    <div class="vac-card-window icalingua-theme-holder chat-window-root" ondragstart="return false;">
+    <div class="vac-card-window icalingua-theme-holder chat-window-root" ondragstart="return false">
         <div class="loading-container" v-if="!ready">
             <div class="pace-activity" />
         </div>
@@ -38,6 +38,7 @@
             :removeHeaderEmotes="roomId < 0 && removeGroupNameEmotes"
             :usePanguJsRecv="usePanguJsRecv"
             :isSteamVrRunning="false"
+            :canLoadAfter="isInMiddle"
             @send-message="sendMessage"
             @open-file="openImage"
             @pokefriend="pokeFriend"
@@ -45,6 +46,7 @@
             @pokegroup="pokeGroup"
             @open-forward="openForward"
             @fetch-messages="fetchMessage"
+            @fetch-messages-after="fetchMessageAfter"
         >
             <template v-slot:menu-icon>
                 <i class="el-icon-more"></i>
@@ -84,6 +86,8 @@ export default {
             isShutUp: false,
             removeGroupNameEmotes: false,
             usePanguJsRecv: false,
+            isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
+            targetMessageId: null, // 定位的目标消息 ID
         }
     },
     async created() {
@@ -136,6 +140,7 @@ export default {
         ipcRenderer.removeAllListeners('renewMessage')
         ipcRenderer.removeAllListeners('setShutUp')
         ipcRenderer.removeAllListeners('clearUnread')
+        ipcRenderer.removeAllListeners('gotoMessage')
     },
     methods: {
         setupIpcListeners() {
@@ -192,6 +197,11 @@ export default {
             // 窗口聚焦时清除未读
             ipcRenderer.on('clearUnread', () => {
                 ipc.clearChatWindowUnread(this.roomId)
+            })
+
+            // 定位到指定消息
+            ipcRenderer.on('gotoMessage', async (_, messageId) => {
+                await this.gotoMessage(messageId)
             })
         },
 
@@ -252,6 +262,76 @@ export default {
         removeGroupNameEmotesFunc(name) {
             if (!name) return name
             return name.replace(/\[.*?\]/g, '').trim() || name
+        },
+
+        async gotoMessage(messageId) {
+            // 先尝试在当前消息列表中查找
+            const existingIndex = this.messages.findIndex((m) => m._id === messageId)
+            if (existingIndex !== -1) {
+                // 消息已存在，直接滚动并高亮
+                this.$nextTick(() => {
+                    if (this.$refs.room) {
+                        this.$refs.room.scrollToMessage(messageId)
+                    }
+                })
+                return
+            }
+
+            // 消息不在当前列表中，需要加载指定消息前后的消息
+            this.loading = true
+            try {
+                const msgs = await ipc.fetchMessagesAround(this.roomId, messageId, 20, 20)
+                if (msgs && msgs.length > 0) {
+                    this.messages = msgs
+                    this.messagesLoaded = false // 允许继续向上加载
+                    this.isInMiddle = true // 标记从中间加载
+                    this.targetMessageId = messageId
+                    this.$nextTick(() => {
+                        if (this.$refs.room) {
+                            this.$refs.room.scrollToMessage(messageId)
+                        }
+                    })
+                } else {
+                    this.$message.error('找不到该消息')
+                }
+            } catch (e) {
+                console.error('Failed to goto message:', e)
+                this.$message.error('定位消息失败')
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async fetchMessageAfter() {
+            console.log('fetchMessageAfter called, isInMiddle:', this.isInMiddle, 'loading:', this.loading)
+            if (!this.isInMiddle || this.loading) return
+            const lastMessage = this.messages[this.messages.length - 1]
+            if (!lastMessage) return
+
+            this.loading = true
+            try {
+                // 使用 fetchMessagesAround，before=0 表示只获取之后的消息
+                console.log('Fetching messages after:', lastMessage._id)
+                const msgs = await ipc.fetchMessagesAround(this.roomId, lastMessage._id, 0, 20)
+                console.log('Got messages:', msgs?.length)
+                if (msgs && msgs.length > 1) {
+                    // 去掉第一条（就是 lastMessage 本身）
+                    const newMsgs = msgs.slice(1)
+                    if (newMsgs.length > 0) {
+                        this.messages = [...this.messages, ...newMsgs]
+                    } else {
+                        // 没有更多新消息了，退出中间模式
+                        this.isInMiddle = false
+                    }
+                } else {
+                    // 没有更多新消息了，退出中间模式
+                    this.isInMiddle = false
+                }
+            } catch (e) {
+                console.error('Failed to fetch messages after:', e)
+            } finally {
+                this.loading = false
+            }
         },
     },
 }

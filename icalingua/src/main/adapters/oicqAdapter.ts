@@ -1886,6 +1886,10 @@ const adapter: OicqAdapter = {
         const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
         return messages
     },
+    async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number) {
+        const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+        return messages
+    },
     sliderLogin(ticket: string) {
         bot.sliderLogin(ticket)
     },

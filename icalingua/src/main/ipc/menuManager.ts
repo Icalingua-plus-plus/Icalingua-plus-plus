@@ -3,7 +3,7 @@ import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import Room from '@icalingua/types/Room'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
 import axios from 'axios'
-import { app, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell } from 'electron'
+import { app, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell, BrowserWindow } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import querystring from 'querystring'
@@ -3034,5 +3034,88 @@ ipcMain.on(
             )
         }
         menu.popup({ window: getMainWindow(), ...pos })
+    },
+)
+
+// 定位到指定消息
+ipcMain.on('gotoMessage', async (_, roomId: number, messageId: string) => {
+    const selectedRoom = await getSelectedRoom()
+
+    if (selectedRoom && selectedRoom.roomId === roomId) {
+        // 当前房间已打开，直接在主窗口定位
+        ui.gotoMessage(roomId, messageId)
+    } else {
+        // 打开新窗口并定位到消息
+        const { openChatWindow } = await import('../utils/windowManager')
+        const room = await getRoom(roomId)
+        const roomName = room
+            ? roomId < 0 && getConfig().removeGroupNameEmotes
+                ? removeGroupNameEmotes(room.roomName)
+                : room.roomName
+            : String(Math.abs(roomId))
+        await openChatWindow(roomId, roomName, messageId)
+    }
+})
+
+// 图片浏览界面的右键菜单
+ipcMain.on(
+    'popupImageGalleryMenu',
+    async (
+        event,
+        {
+            x,
+            y,
+            roomId,
+            messageId,
+            imageUrl,
+        }: { x: number; y: number; roomId: number; messageId: string; imageUrl: string },
+    ) => {
+        const menu = new Menu()
+
+        menu.append(
+            new MenuItem({
+                label: '保存图片',
+                click: () => {
+                    downloadImage(imageUrl, true)
+                },
+            }),
+        )
+
+        menu.append(
+            new MenuItem({
+                label: '在聊天中定位',
+                click: async () => {
+                    // 定位到消息
+                    const selectedRoom = await getSelectedRoom()
+                    if (selectedRoom && selectedRoom.roomId === roomId) {
+                        // 当前房间已打开，定位并聚焦主窗口
+                        ui.gotoMessage(roomId, messageId)
+                        getMainWindow().focus()
+                    } else {
+                        // 检查是否已在独立窗口打开
+                        const { openChatWindow, isRoomInChatWindow, focusChatWindow } =
+                            await import('../utils/windowManager')
+                        if (isRoomInChatWindow(roomId)) {
+                            // 已在独立窗口打开，聚焦并定位
+                            focusChatWindow(roomId)
+                            // 发送定位消息的事件
+                            const { sendToChatWindow } = await import('../utils/windowManager')
+                            sendToChatWindow(roomId, 'gotoMessage', messageId)
+                        } else {
+                            // 打开新窗口并定位到消息
+                            const room = await getRoom(roomId)
+                            const roomName = room
+                                ? roomId < 0 && getConfig().removeGroupNameEmotes
+                                    ? removeGroupNameEmotes(room.roomName)
+                                    : room.roomName
+                                : String(Math.abs(roomId))
+                            await openChatWindow(roomId, roomName, messageId)
+                        }
+                    }
+                },
+            }),
+        )
+
+        menu.popup({ window: BrowserWindow.fromWebContents(event.sender) })
     },
 )

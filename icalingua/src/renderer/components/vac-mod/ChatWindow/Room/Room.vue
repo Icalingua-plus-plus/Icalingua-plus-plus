@@ -143,8 +143,14 @@
                     </transition-group>
                     <transition name="vac-fade-message">
                         <infinite-loading
-                            v-if="visibleViewport.tail !== messages.length && optimizeMethod === 'infinite-loading'"
-                            :class="{ 'vac-infinite-loading-bottom': visibleViewport.tail !== messages.length }"
+                            v-if="
+                                (visibleViewport.tail !== messages.length || canLoadAfter) &&
+                                optimizeMethod === 'infinite-loading'
+                            "
+                            :key="'tail-' + canLoadAfter"
+                            :class="{
+                                'vac-infinite-loading-bottom': visibleViewport.tail !== messages.length || canLoadAfter,
+                            }"
                             spinner="spiral"
                             direction="bottom"
                             :distance="100"
@@ -540,6 +546,7 @@ export default {
         removeHeaderEmotes: { type: Boolean, required: false, default: false },
         usePanguJsRecv: { type: Boolean, required: false, default: false },
         isSteamVrRunning: { type: Boolean, required: false, default: false },
+        canLoadAfter: { type: Boolean, required: false, default: false },
     },
     data() {
         return {
@@ -548,6 +555,7 @@ export default {
             messageReply: null,
             loadingMessages: false,
             loadingHeadMessages: false,
+            loadingTailMessages: false,
             file: null,
             imageFile: null,
             videoFile: null,
@@ -623,6 +631,20 @@ export default {
         },
     },
     watch: {
+        canLoadAfter(val) {
+            console.log('canLoadAfter changed to:', val)
+            console.log('visibleViewport.tail:', this.visibleViewport.tail)
+            console.log('messages.length:', this.messages.length)
+            console.log('optimizeMethod:', this.optimizeMethod)
+            console.log('tail !== length:', this.visibleViewport.tail !== this.messages.length)
+            console.log('condition part 1:', this.visibleViewport.tail !== this.messages.length || val)
+            console.log('condition part 2:', this.optimizeMethod === 'infinite-loading')
+            console.log(
+                'full condition:',
+                (this.visibleViewport.tail !== this.messages.length || val) &&
+                    this.optimizeMethod === 'infinite-loading',
+            )
+        },
         loadingMessages(val) {
             if (val) this.infiniteState.head = null
             else if (!val) this.focusTextarea(true)
@@ -703,11 +725,33 @@ export default {
 
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
-            } else if (newVal && newVal.length && !this.scrollIcon && !(oldVal && newVal.length === oldVal.length)) {
+            } else if (
+                newVal &&
+                newVal.length &&
+                !this.scrollIcon &&
+                !(oldVal && newVal.length === oldVal.length) &&
+                !this.canLoadAfter
+            ) {
+                // 不在 gotoMessage 模式时才自动滚动到底部
                 setTimeout(() => {
                     element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
                 }, 0)
+            }
+            // 处理向下加载完成
+            if (this.loadingTailMessages) {
+                this.loadingTailMessages = false
+                if (this.infiniteState.tail) {
+                    if (newVal.length > oldVal.length) {
+                        // 有新消息加载，继续允许加载
+                        this.visibleViewport.tail = newVal.length
+                        this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
+                        this.infiniteState.tail.loaded()
+                    } else {
+                        // 没有新消息了，完成加载
+                        this.infiniteState.tail.complete()
+                    }
+                }
             }
             if (this.checkCanScrollTimer) clearTimeout(this.checkCanScrollTimer)
             if (this.scrollingTolastMessage) {
@@ -754,6 +798,7 @@ export default {
         },
     },
     async mounted() {
+        console.log('Room mounted, canLoadAfter:', this.canLoadAfter, 'optimizeMethod:', this.optimizeMethod)
         this.newMessages = []
         this.$refs.roomTextarea.$refs.roomTextarea.addEventListener('keydown', (e) => {
             if (e.isComposing) return
@@ -1180,13 +1225,16 @@ export default {
             if (!multi) {
                 messagesToSend.forEach((msg, index) => {
                     console.log(msg.message)
-                    setTimeout(() => {
-                        this.$emit('send-message', {
-                            roomId: target,
-                            content: JSON.stringify(msg.message),
-                            messageType: 'raw',
-                        })
-                    }, (index + 1) * 1000)
+                    setTimeout(
+                        () => {
+                            this.$emit('send-message', {
+                                roomId: target,
+                                content: JSON.stringify(msg.message),
+                                messageType: 'raw',
+                            })
+                        },
+                        (index + 1) * 1000,
+                    )
                 })
             } else {
                 if (origin < 0) {
@@ -1771,6 +1819,10 @@ export default {
                 if (bottomScroll < scrollOffset && scrollDirection >= 0) {
                     this.visibleViewport.tail = Math.min(this.visibleViewport.tail + 10, this.messages.length)
                     this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
+                    // 如果已经到达消息列表末尾且可以向后加载，触发加载更多
+                    if (this.visibleViewport.tail >= this.messages.length && this.canLoadAfter) {
+                        this.$emit('fetch-messages-after')
+                    }
                 }
                 if (this.getTopScroll(e.target) <= 0) e.target.scrollTo({ top: 1 })
                 if (this.getBottomScroll(e.target) <= 0 && this.visibleViewport.tail !== this.messages.length)
@@ -1804,10 +1856,26 @@ export default {
         },
         loadTailMessages(infiniteState) {
             if (this.optimizeMethod !== 'infinite-loading') return
+            if (this.loadingTailMessages) return
             this.visibleViewport.tail = Math.min(this.visibleViewport.tail + 10, this.messages.length)
             this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
             this.infiniteState.tail = infiniteState
-            infiniteState.loaded()
+            console.log('loadTailMessages:', {
+                tail: this.visibleViewport.tail,
+                messagesLength: this.messages.length,
+                canLoadAfter: this.canLoadAfter,
+            })
+            // 如果已经到达消息列表末尾且可以向后加载，触发加载更多
+            if (this.visibleViewport.tail >= this.messages.length && this.canLoadAfter) {
+                console.log('Emitting fetch-messages-after')
+                this.loadingTailMessages = true
+                this.$emit('fetch-messages-after')
+            } else if (this.visibleViewport.tail >= this.messages.length && !this.canLoadAfter) {
+                // 真正到底了，没有更多可加载
+                infiniteState.complete()
+            } else {
+                infiniteState.loaded()
+            }
         },
         _loadMoreMessages(infiniteState) {
             setTimeout(
@@ -2022,7 +2090,10 @@ export default {
     padding: 8px;
     background: var(--chat-bg-scroll-icon);
     border-radius: 50%;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    box-shadow:
+        0 1px 1px -1px rgba(0, 0, 0, 0.2),
+        0 1px 1px 0 rgba(0, 0, 0, 0.14),
+        0 1px 2px 0 rgba(0, 0, 0, 0.12);
     display: flex;
     cursor: pointer;
     z-index: 10;
@@ -2040,7 +2111,10 @@ export default {
     padding: 8px;
     background: var(--chat-bg-scroll-icon);
     border-radius: 50%;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    box-shadow:
+        0 1px 1px -1px rgba(0, 0, 0, 0.2),
+        0 1px 1px 0 rgba(0, 0, 0, 0.14),
+        0 1px 2px 0 rgba(0, 0, 0, 0.12);
     display: flex;
     cursor: pointer;
     z-index: 20;
@@ -2058,7 +2132,10 @@ export default {
     padding: 8px;
     background: var(--chat-bg-scroll-icon);
     border-radius: 50%;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    box-shadow:
+        0 1px 1px -1px rgba(0, 0, 0, 0.2),
+        0 1px 1px 0 rgba(0, 0, 0, 0.14),
+        0 1px 2px 0 rgba(0, 0, 0, 0.12);
     display: flex;
     cursor: pointer;
     z-index: 10;

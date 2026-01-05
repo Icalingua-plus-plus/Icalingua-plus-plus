@@ -162,6 +162,29 @@ export default class MongoStorageProvider implements StorageProvider {
         return this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
     }
 
+    async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
+        // 先获取目标消息的时间
+        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
+        if (!targetMsg) return []
+
+        const targetTime = targetMsg.time
+
+        // 获取目标消息之前的消息
+        const beforeMessages = await this.mdb
+            .collection<any>('msg' + roomId)
+            .find({ time: { $lt: targetTime } }, { sort: [['time', -1]], limit: before })
+            .toArray()
+
+        // 获取目标消息及之后的消息
+        const afterMessages = await this.mdb
+            .collection<any>('msg' + roomId)
+            .find({ time: { $gte: targetTime } }, { sort: [['time', 1]], limit: after + 1 })
+            .toArray()
+
+        // 合并并按时间排序
+        return [...beforeMessages.reverse(), ...afterMessages]
+    }
+
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
             return await this.mdb.collection('msg' + roomId).insertMany(messages as object[], { ordered: false }) //确信

@@ -691,6 +691,47 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    /** 实现 {@link StorageProvider} 类的 `fetchMessagesAround` 方法，
+     * 获取指定消息前后的消息。
+     *
+     * 在定位到指定消息时，该方法被调用。
+     */
+    async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
+        try {
+            // 先获取目标消息的时间
+            const targetMsg = await this.db<MessageInSQLDB>('messages')
+                .where('_id', messageId)
+                .where('roomId', roomId)
+                .select('time')
+                .first()
+            if (!targetMsg) return []
+
+            const targetTime = targetMsg.time
+
+            // 获取目标消息之前的消息（时间小于等于目标时间，按时间倒序取 before 条）
+            const beforeMessages = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where('time', '<', targetTime)
+                .orderBy('time', 'desc')
+                .limit(before)
+                .select('*')
+
+            // 获取目标消息及之后的消息（时间大于等于目标时间，按时间正序取 after + 1 条）
+            const afterMessages = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where('time', '>=', targetTime)
+                .orderBy('time', 'asc')
+                .limit(after + 1)
+                .select('*')
+
+            // 合并并按时间排序
+            const allMessages = [...beforeMessages.reverse(), ...afterMessages]
+            return allMessages.map((message) => this.msgConFromDB(message))
+        } catch (e) {
+            this.errorHandle(e)
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `addMessages` 方法，
      * 是对 `msg${roomId}` 的自定义增操作。用于向数据库内增加多条消息。
      *

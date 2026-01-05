@@ -235,4 +235,7 @@ export default {
     forwardSingleMessage(_id: string) {
         sendToMainWindow('forwardSingleMessage', _id)
     },
+    gotoMessage(roomId: number, messageId: string) {
+        sendToMainWindow('gotoMessage', { roomId, messageId })
+    },
 }

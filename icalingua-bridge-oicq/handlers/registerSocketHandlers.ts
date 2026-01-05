@@ -27,6 +27,16 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
         ) => adapter.fetchImageMessages(roomId, offset, endTime, socket, resolve),
     )
+    socket.on(
+        'fetchMessagesAround',
+        (
+            roomId: number,
+            messageId: string,
+            before: number,
+            after: number,
+            resolve: (value: Message[] | PromiseLike<Message[]>) => void,
+        ) => adapter.fetchMessagesAround(roomId, messageId, before, after, socket, resolve),
+    )
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)
     socket.on('getForwardMsg', adapter.getForwardMsg)
     socket.on('getGroups', adapter.getGroups)

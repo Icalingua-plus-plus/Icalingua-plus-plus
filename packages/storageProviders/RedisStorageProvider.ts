@@ -256,13 +256,49 @@ export default class RedisStorageProvider implements StorageProvider {
     }
 
     /** 实现 {@link StorageProvider} 类的 `getMessage` 方法，
-     * 是对 `msg${roomId}` 的“查”操作。
+     * 是对 `msg${roomId}` 的"查"操作。
      *
      * 在获取聊天历史消息时，该方法被调用。
      */
     async getMessage(roomId: number, messageId: string): Promise<Message> {
         const msgString = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
         return JSON.parse(msgString)
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `fetchMessagesAround` 方法，
+     * 获取指定消息前后的消息。
+     *
+     * 在定位到指定消息时，该方法被调用。
+     */
+    async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
+        // 先获取目标消息
+        const targetMsgStr = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
+        if (!targetMsgStr) return []
+        const targetMsg = JSON.parse(targetMsgStr) as Message
+        const targetTime = targetMsg.time
+
+        // 获取所有消息 ID（按时间排序）
+        const allMsgKeys = await this.redis.zrangebyscore(`${this.qid}:msg${roomId}:msgIdList`, '-inf', '+inf')
+
+        // 找到目标消息的位置
+        const targetIndex = allMsgKeys.findIndex((key) => key === messageId)
+        if (targetIndex === -1) return []
+
+        // 计算范围
+        const startIndex = Math.max(0, targetIndex - before)
+        const endIndex = Math.min(allMsgKeys.length - 1, targetIndex + after)
+
+        // 获取范围内的消息
+        const messages: Message[] = []
+        for (let i = startIndex; i <= endIndex; i++) {
+            const msgStr = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, allMsgKeys[i])
+            if (msgStr) {
+                messages.push(JSON.parse(msgStr) as Message)
+            }
+        }
+
+        messages.sort((a, b) => a.time - b.time)
+        return messages
     }
 
     /** 实现 {@link StorageProvider} 类的 `addMessages` 方法，

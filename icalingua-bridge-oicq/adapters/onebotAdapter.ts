@@ -1450,6 +1450,29 @@ const adapter: typeof oicqAdapter = {
         }
         callback(messages)
     },
+    async fetchMessagesAround(
+        roomId: number,
+        messageId: string,
+        before: number,
+        after: number,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+        for (const message of messages) {
+            if (message.file?.url) {
+                message.file.url = replaceRkey(message.file?.url)
+            }
+            if (Array.isArray(message.files)) {
+                for (const file of message.files) {
+                    if (file.url) {
+                        file.url = replaceRkey(file.url)
+                    }
+                }
+            }
+        }
+        callback(messages)
+    },
     addRoom(room: Room) {
         return storage.addRoom(room)
     },

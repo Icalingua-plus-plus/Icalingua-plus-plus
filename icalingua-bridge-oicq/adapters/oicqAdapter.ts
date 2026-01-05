@@ -1642,6 +1642,17 @@ const adapter = {
         const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
         callback(messages)
     },
+    async fetchMessagesAround(
+        roomId: number,
+        messageId: string,
+        before: number,
+        after: number,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+        callback(messages)
+    },
     reLogin() {
         bot.login()
     },

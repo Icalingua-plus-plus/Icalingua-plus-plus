@@ -286,6 +286,20 @@ const adapter: Adapter = {
         return messages
     },
 
+    async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
+        // 刷新 rkey（如果需要）
+        await refreshRkeyIfNeeded()
+
+        const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
+
+        return messages
+    },
+
     async getRoom(roomId: number): Promise<Room> {
         return await storage.getRoom(roomId)
     },

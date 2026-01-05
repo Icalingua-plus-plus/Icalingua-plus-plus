@@ -178,6 +178,12 @@ ipcMain.handle(
         return adapter.fetchImageMessages(roomId, offset, endTime)
     },
 )
+ipcMain.handle(
+    'fetchMessagesAround',
+    (_, { roomId, messageId, before, after }: { roomId: number; messageId: string; before: number; after: number }) => {
+        return adapter.fetchMessagesAround(roomId, messageId, before, after)
+    },
+)
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
 ipcMain.on('reLogin', adapter.reLogin)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => adapter.updateRoom(roomId, room))

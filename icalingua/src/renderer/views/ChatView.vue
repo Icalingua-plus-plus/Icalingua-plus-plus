@@ -1,5 +1,5 @@
 <template>
-    <div ondragstart="return false;">
+    <div ondragstart="return false">
         <Multipane class="el-main" @paneResize="roomPanelResize" @paneResizeStop="roomPanelResizeStop">
             <!-- main chat view -->
             <el-aside
@@ -129,6 +129,7 @@
                     :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
                     :usePanguJsRecv="usePanguJsRecv"
                     :isSteamVrRunning="isSteamVrRunning"
+                    :canLoadAfter="isInMiddle"
                     @clear-last-unread-count="clearLastUnreadCount"
                     @clear-last-unread-at="clearLastUnreadAt"
                     @send-message="sendMessage"
@@ -140,7 +141,10 @@
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
                     @fetch-messages="fetchMessage"
-                    @open-group-member-panel=";(groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId)"
+                    @fetch-messages-after="fetchMessageAfter"
+                    @open-group-member-panel="
+                        ;((groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId))
+                    "
                     @choose-forward-target="chooseForwardTarget"
                     @start-chat="startChat"
                     @back-contact="closeRoom"
@@ -268,9 +272,9 @@ import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
 import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate.vue'
 import CommonGroupsDialog from '../components/CommonGroupsDialog.vue'
-import {Multipane, MultipaneResizer} from '../components/multipane'
+import { Multipane, MultipaneResizer } from '../components/multipane'
 import path from 'path'
-import {ipcRenderer} from 'electron'
+import { ipcRenderer } from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
@@ -296,7 +300,7 @@ export default {
         TheGroupMemberPanel,
         Multipane,
         MultipaneResizer,
-        ProgressBar
+        ProgressBar,
     },
     data() {
         return {
@@ -352,6 +356,7 @@ export default {
             chooseFileTypeShown: false,
             tempFile: null,
             tempFileName: '',
+            isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
         }
     },
     async created() {
@@ -376,7 +381,12 @@ export default {
         document.addEventListener('click', (e) => {
             const stickers_panel = document.getElementsByClassName('panel panel-right')
             const vac_room_footer = document.getElementsByClassName('vac-room-footer')
-            if (stickers_panel.length > 0 && !stickers_panel[0].contains(e.target) && !vac_room_footer[0].contains(e.target) && getComputedStyle(stickers_panel[0]).right === '15px') {
+            if (
+                stickers_panel.length > 0 &&
+                !stickers_panel[0].contains(e.target) &&
+                !vac_room_footer[0].contains(e.target) &&
+                getComputedStyle(stickers_panel[0]).right === '15px'
+            ) {
                 this.panel = ''
             }
         })
@@ -386,17 +396,13 @@ export default {
             if (e.repeat) {
                 return
             } else if (e.key === 'F1') {
-                if (this.selectedRoomId)
-                    this.panel = this.panel === 'stickers' ? '' : 'stickers'
+                if (this.selectedRoomId) this.panel = this.panel === 'stickers' ? '' : 'stickers'
             } else if (e.key === 'Escape') {
-                if (document.webkitIsFullScreen)
-                    return
+                if (document.webkitIsFullScreen) return
                 if (this.$refs.room.messageReply || this.$refs.room.editAndResend || this.$refs.room.message)
                     this.$refs.room.resetMessage()
-                else if (this.$refs.room.file)
-                    this.$refs.room.resetMediaFile()
-                else if (this.$refs.room.showForwardPanel)
-                    this.$refs.room.closeForwardPanel()
+                else if (this.$refs.room.file) this.$refs.room.resetMediaFile()
+                else if (this.$refs.room.showForwardPanel) this.$refs.room.closeForwardPanel()
                 else {
                     this.closeRoom()
                 }
@@ -408,11 +414,12 @@ export default {
                     const selectedRoomIndex = rooms.indexOf(this.selectedRoom)
                     let newIndex
                     if (!this.selectedRoom) newIndex = 0
-                    else if (e.shiftKey) { // prev room
+                    else if (e.shiftKey) {
+                        // prev room
                         newIndex = selectedRoomIndex - 1
                         if (newIndex === -1) newIndex = rooms.length - 1
-                    }
-                    else { // next room
+                    } else {
+                        // next room
                         newIndex = selectedRoomIndex + 1
                         if (newIndex === rooms.length) newIndex = 0
                     }
@@ -421,7 +428,9 @@ export default {
                 } else {
                     let unreadRoom
                     for (let i = 5; i > 0; i--) {
-                        unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
+                        unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find(
+                            (e) => e.unreadCount && e.priority === i,
+                        )
                         if (unreadRoom) break
                     }
                     if (unreadRoom) this.chroom(unreadRoom)
@@ -454,11 +463,7 @@ export default {
         //endregion
 
         if (fs.existsSync(path.join(STORE_PATH, 'font.ttf'))) {
-            const myFonts = new FontFace(
-                'font',
-                `url(${path.join(STORE_PATH, 'font.ttf')})`,
-                {},
-            )
+            const myFonts = new FontFace('font', `url(${path.join(STORE_PATH, 'font.ttf')})`, {})
             myFonts.load().then(function (loadFace) {
                 document.fonts.add(loadFace)
             })
@@ -474,13 +479,13 @@ export default {
             this.disableChatGroupsRedPoint = p
             this.chatGroupsUnreadCount = {}
             if (p) return
-            this.rooms.forEach(e => {
+            this.rooms.forEach((e) => {
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach(g => {
+                        groups.forEach((g) => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
                     }
@@ -500,7 +505,7 @@ export default {
             this.historyCount += p.count
             this.historyFetchingName = (p.roomId < 0 ? '群聊' : '私聊') + Math.abs(p.roomId)
         })
-        ipcRenderer.on('clearHistoryCount', () => this.historyCount = 0)
+        ipcRenderer.on('clearHistoryCount', () => (this.historyCount = 0))
         ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
         ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))
         ipcRenderer.on('notifyProgress', (_, { id, string }) => {
@@ -513,7 +518,7 @@ export default {
                 onClose: () => {
                     ipc.cancelDownload(id)
                     this.notifyProgresses.delete(id)
-                }
+                },
             })
             this.notifyProgresses.set(id, { progressBar, notification })
         })
@@ -532,11 +537,14 @@ export default {
         ipcRenderer.on('message', (_, p) => this.$message(p))
         ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
         ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
-        ipcRenderer.on('setShutUp', (_, p) => this.isShutUp = p)
+        ipcRenderer.on('setShutUp', (_, p) => (this.isShutUp = p))
         ipcRenderer.on('chroom', (_, p) => this.chroom(p))
         ipcRenderer.on('confirmIgnoreChat', (_, data) => {
-            const message = ['屏蔽群聊将不再接受该群的消息。', '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。']
-            this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${ data.name }(${ Math.abs(data.id) }) 的消息?`, {
+            const message = [
+                '屏蔽群聊将不再接受该群的消息。',
+                '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。',
+            ]
+            this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${data.name}(${Math.abs(data.id)}) 的消息?`, {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning',
@@ -544,7 +552,7 @@ export default {
                 ipc.ignoreChat(data)
             })
         })
-        ipcRenderer.on('confirmDeleteMessage', (_, {roomId, messageId}) => {
+        ipcRenderer.on('confirmDeleteMessage', (_, { roomId, messageId }) => {
             this.$confirm('确定撤回群成员消息?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -568,17 +576,23 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning',
             }).then(() => {
-                fs.rmdir(path.join(STORE_PATH, 'stickers', dirname), { recursive: true }, () => this.$message('删除成功'))
+                fs.rmdir(path.join(STORE_PATH, 'stickers', dirname), { recursive: true }, () =>
+                    this.$message('删除成功'),
+                )
             })
         })
         ipcRenderer.on('moveSticker', async (_, filename) => {
             /** @type {string} */
             let value
             try {
-                ({ value } = await this.$prompt('若目录不存在则会自动创建，留空则移动到默认分类', '输入 Sticker 分类目录名称', {
-                    confirmButtonText: '确定',
-                    cancelButtonText: '取消',
-                }))
+                ;({ value } = await this.$prompt(
+                    '若目录不存在则会自动创建，留空则移动到默认分类',
+                    '输入 Sticker 分类目录名称',
+                    {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                    },
+                ))
                 value = value ? value.trim() : 'Default'
             } catch (action) {
                 return
@@ -609,8 +623,10 @@ export default {
             this.sendRpsShown = true
         })
         ipcRenderer.on('updateRoom', (_, room) => {
-            const oldRooms = this.rooms.filter(item => item.roomId !== room.roomId)
-            let left = 0, right = oldRooms.length - 1, mid = 0
+            const oldRooms = this.rooms.filter((item) => item.roomId !== room.roomId)
+            let left = 0,
+                right = oldRooms.length - 1,
+                mid = 0
             while (left <= right) {
                 mid = Math.floor((left + right) / 2)
                 if (room.utime > oldRooms[mid].utime) {
@@ -621,7 +637,7 @@ export default {
             }
             this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
         })
-        ipcRenderer.on('addMessage', (_, {roomId, message}) => {
+        ipcRenderer.on('addMessage', (_, { roomId, message }) => {
             message.__v_skip = true
             if (roomId !== this.selectedRoomId) return
             const index = this.messages.findIndex((e) => e._id === message._id)
@@ -666,7 +682,7 @@ export default {
                 this.messages = [...this.messages]
             }
         })
-        ipcRenderer.on('renewMessage', (_, {messageId, message}) => {
+        ipcRenderer.on('renewMessage', (_, { messageId, message }) => {
             const oldMessageIndex = this.messages.findIndex((e) => e._id === messageId)
             if (oldMessageIndex !== -1 && message) {
                 this.messages[oldMessageIndex] = {
@@ -676,28 +692,28 @@ export default {
                 this.messages = [...this.messages]
             }
         })
-        ipcRenderer.on('renewMessageURL', (_, {messageId, URL}) => {
+        ipcRenderer.on('renewMessageURL', (_, { messageId, URL }) => {
             const message = this.messages.find((e) => e._id === messageId)
             if (message && URL !== 'error') {
                 message.file.url = URL
                 this.messages = [...this.messages]
             }
         })
-        ipcRenderer.on('setOnline', () => this.reconnecting = this.offline = false)
+        ipcRenderer.on('setOnline', () => (this.reconnecting = this.offline = false))
         ipcRenderer.on('setOffline', (_, msg) => {
             this.offlineReason = msg
             this.offline = true
         })
-        ipcRenderer.on('clearCurrentRoomUnread', () => this.selectedRoom.unreadCount = 0)
+        ipcRenderer.on('clearCurrentRoomUnread', () => (this.selectedRoom.unreadCount = 0))
         ipcRenderer.on('clearRoomUnread', (_, roomId) => {
-            const room = this.rooms.find(e => e.roomId === roomId)
+            const room = this.rooms.find((e) => e.roomId === roomId)
             if (room) {
                 room.unreadCount = 0
                 room.at = false
             }
         })
-        ipcRenderer.on('updatePriority', (_, p) => this.priority = p)
-        ipcRenderer.on('setAllRooms', (_, p) => this.rooms = p)
+        ipcRenderer.on('updatePriority', (_, p) => (this.priority = p))
+        ipcRenderer.on('setAllRooms', (_, p) => (this.rooms = p))
         ipcRenderer.on('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
         ipcRenderer.on('setMessages', (_, p) => {
             for (const message of p) {
@@ -706,38 +722,43 @@ export default {
             this.messages = p
             this.messagesLoaded = false
         })
-        ipcRenderer.on('startChat', (_, {id, name}) => this.startChat(id, name))
-        ipcRenderer.on('closePanel', () => this.panel = '')
-        ipcRenderer.on('gotOnlineData', (_, {online, nick, uin, priority, sysInfo, updateCheck, isSteamVrRunning}) => {
-            this.offline = !online
-            this.account = uin
-            this.priority = priority
-            this.username = nick
-            this.sysInfo = sysInfo ? sysInfo + `\n\nClient ${ver}
+        ipcRenderer.on('startChat', (_, { id, name }) => this.startChat(id, name))
+        ipcRenderer.on('closePanel', () => (this.panel = ''))
+        ipcRenderer.on(
+            'gotOnlineData',
+            (_, { online, nick, uin, priority, sysInfo, updateCheck, isSteamVrRunning }) => {
+                this.offline = !online
+                this.account = uin
+                this.priority = priority
+                this.username = nick
+                this.sysInfo = sysInfo
+                    ? sysInfo +
+                      `\n\nClient ${ver}
 Electron ${process.versions.electron}
 Node ${process.versions.node}
-Chromium ${process.versions.chrome}` : ''
-            this.isSteamVrRunning = isSteamVrRunning
-            if (updateCheck === 'ask')
-                this.dialogAskCheckUpdateVisible = true
+Chromium ${process.versions.chrome}`
+                    : ''
+                this.isSteamVrRunning = isSteamVrRunning
+                if (updateCheck === 'ask') this.dialogAskCheckUpdateVisible = true
 
-            // 预加载所有群的成员列表（用于查找共同群聊功能）
-            setTimeout(() => {
-                const groupIds = this.rooms.filter(r => r.roomId < 0).map(r => -r.roomId)
-                if (groupIds.length > 0) {
-                    groupMemberCache.preloadAllGroups(groupIds).catch(err => {
-                        console.error('Failed to preload group members:', err)
-                    })
-                }
-            }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
-        })
+                // 预加载所有群的成员列表（用于查找共同群聊功能）
+                setTimeout(() => {
+                    const groupIds = this.rooms.filter((r) => r.roomId < 0).map((r) => -r.roomId)
+                    if (groupIds.length > 0) {
+                        groupMemberCache.preloadAllGroups(groupIds).catch((err) => {
+                            console.error('Failed to preload group members:', err)
+                        })
+                    }
+                }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
+            },
+        )
         ipcRenderer.on('uploadProgress', (_, p) => {
             if (p > this.uploadProgress) {
                 this.uploadProgress = p
             }
         })
         ipcRenderer.on('useSinglePanel', (_, b) => {
-            if (this.useSinglePanel && window.innerWidth > 720 ) {
+            if (this.useSinglePanel && window.innerWidth > 720) {
                 this.$refs.roomPanel.style.width = '360px'
             }
             this.useSinglePanel = b
@@ -752,15 +773,29 @@ Chromium ${process.versions.chrome}` : ''
         ipcRenderer.on('forwardSingleMessage', (_, message_id) => {
             this.chooseForwardTarget(false, false)
         })
+        ipcRenderer.on('gotoMessage', async (_, { roomId, messageId }) => {
+            await this.gotoMessage(roomId, messageId)
+        })
         ipc.setSelectedRoom(0, '')
         ipc.requestOnlineData()
 
-        window.addEventListener("resize", this.handleResize)
+        window.addEventListener('resize', this.handleResize)
         this.handleResize({ target: { innerWidth: window.innerWidth } })
         console.log('加载完成')
     },
     methods: {
-        async sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, resend, sticker, messageType }) {
+        async sendMessage({
+            content,
+            roomId,
+            file,
+            replyMessage,
+            room,
+            b64img,
+            imgpath,
+            resend,
+            sticker,
+            messageType,
+        }) {
             this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
@@ -797,11 +832,9 @@ Chromium ${process.versions.chrome}` : ''
                         size: file.size,
                         path: file.path,
                     }
-
             }
-            if (resend)
-                ipc.deleteMessage(roomId, resend)
-            ipc.sendMessage({content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType})
+            if (resend) ipc.deleteMessage(roomId, resend)
+            ipc.sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType })
         },
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
@@ -833,18 +866,17 @@ Chromium ${process.versions.chrome}` : ''
             setTimeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
-                const existingIds = new Set(this.messages.map(e => e._id))
-                if (msgs2add.some(e => existingIds.has(e._id))) return
+                const existingIds = new Set(this.messages.map((e) => e._id))
+                if (msgs2add.some((e) => existingIds.has(e._id))) return
                 if (msgs2add.length) {
                     for (const msg of msgs2add) {
                         msg.__v_skip = true
                     }
                     this.messages = [...msgs2add, ...this.messages]
-                }
-                else this.messagesLoaded = true
+                } else this.messagesLoaded = true
 
                 if (at) {
-                    const atMessages = this.messages.filter(e => e.at)
+                    const atMessages = this.messages.filter((e) => e.at)
                     if (atMessages.length) {
                         setTimeout(() => {
                             const _id = atMessages[atMessages.length - 1]._id
@@ -931,10 +963,8 @@ Chromium ${process.versions.chrome}` : ''
                 return
             }
             this.showPanel = 'chat'
-            if (room === this.account)
-                return this.startChat(this.account, this.username)
-            if ((typeof room) === 'number')
-                room = this.rooms.find(e => e.roomId === room)
+            if (room === this.account) return this.startChat(this.account, this.username)
+            if (typeof room === 'number') room = this.rooms.find((e) => e.roomId === room)
             if (!room) {
                 this.$message.error('该对话不存在，可能未曾对话过或未加好友')
                 return
@@ -952,25 +982,99 @@ Chromium ${process.versions.chrome}` : ''
             }
             if (this.selectedRoom.roomId === room.roomId) return
             this.selectedRoomId = room.roomId
+            this.isInMiddle = false // 切换房间时重置中间加载状态
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
 
             // 如果是群聊，更新群成员缓存
             if (room.roomId < 0) {
-                groupMemberCache.updateGroupCache(-room.roomId).catch(err => {
+                groupMemberCache.updateGroupCache(-room.roomId).catch((err) => {
                     console.error('Failed to update group member cache:', err)
                 })
             }
         },
         downloadImage: ipc.downloadImage,
+        async gotoMessage(roomId, messageId) {
+            // 如果不是当前房间，先切换房间
+            if (this.selectedRoom.roomId !== roomId) {
+                const room = this.rooms.find((e) => e.roomId === roomId)
+                if (!room) {
+                    this.$message.error('该对话不存在')
+                    return
+                }
+                await this.chroom(room)
+            }
+
+            // 先尝试在当前消息列表中查找
+            const existingIndex = this.messages.findIndex((m) => m._id === messageId)
+            if (existingIndex !== -1) {
+                // 消息已存在，直接滚动并高亮
+                this.$nextTick(() => {
+                    if (this.$refs.room) {
+                        this.$refs.room.scrollToMessage(messageId)
+                    }
+                })
+                return
+            }
+
+            // 消息不在当前列表中，需要加载指定消息前后的消息
+            this.loading = true
+            try {
+                const msgs = await ipc.fetchMessagesAround(roomId, messageId, 20, 20)
+                if (msgs && msgs.length > 0) {
+                    this.messages = msgs
+                    this.messagesLoaded = false // 允许继续向上加载
+                    this.isInMiddle = true // 标记从中间加载
+                    this.$nextTick(() => {
+                        if (this.$refs.room) {
+                            this.$refs.room.scrollToMessage(messageId)
+                        }
+                    })
+                } else {
+                    this.$message.error('找不到该消息')
+                }
+            } catch (e) {
+                console.error('Failed to goto message:', e)
+                this.$message.error('定位消息失败')
+            } finally {
+                this.loading = false
+            }
+        },
+        async fetchMessageAfter() {
+            if (!this.isInMiddle || this.loading) return
+            const lastMessage = this.messages[this.messages.length - 1]
+            if (!lastMessage) return
+
+            this.loading = true
+            try {
+                // 使用 fetchMessagesAround，before=0 表示只获取之后的消息
+                const msgs = await ipc.fetchMessagesAround(this.selectedRoom.roomId, lastMessage._id, 0, 20)
+                if (msgs && msgs.length > 1) {
+                    // 去掉第一条（就是 lastMessage 本身）
+                    const newMsgs = msgs.slice(1)
+                    if (newMsgs.length > 0) {
+                        this.messages = [...this.messages, ...newMsgs]
+                    } else {
+                        // 没有更多新消息了，退出中间模式
+                        this.isInMiddle = false
+                    }
+                } else {
+                    // 没有更多新消息了，退出中间模式
+                    this.isInMiddle = false
+                }
+            } catch (e) {
+                console.error('Failed to fetch messages after:', e)
+            } finally {
+                this.loading = false
+            }
+        },
         pokeGroup(uin) {
             const group = -this.selectedRoom.roomId
             ipc.sendGroupPoke(group, uin)
             this.$refs.room.focusTextarea()
         },
         pokeFriend() {
-            if (this.selectedRoom.roomId > 0)
-                ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
+            if (this.selectedRoom.roomId > 0) ipc.sendGroupPoke(this.selectedRoom.roomId, this.selectedRoom.roomId)
             this.$refs.room.focusTextarea()
         },
         openForward(e) {
@@ -985,13 +1089,14 @@ Chromium ${process.versions.chrome}` : ''
             this.panel = ''
             this.lastUnreadCount = 0
             this.lastUnreadAt = false
+            this.isInMiddle = false // 关闭房间时重置中间加载状态
             this.showPanel = 'contact'
             ipc.setSelectedRoom(0, '')
             document.title = 'Icalingua++'
         },
         roomPanelResize(pane, resizer, size) {
             if (!pane.className.includes('panel rooms-panel')) return // 表情面板调整大小也会触发这个事件
-            size = + size.slice(0, -2)
+            size = +size.slice(0, -2)
             // 140px: Min width with avatars
             // 80px: Width without avatars
             if (!this.roomPanelAvatarOnly && size <= 140) {
@@ -1037,15 +1142,15 @@ Chromium ${process.versions.chrome}` : ''
                     })
                     return
                 }
-                if (this.chatGroups.find(e => e.name === value) || value === 'chats') {
+                if (this.chatGroups.find((e) => e.name === value) || value === 'chats') {
                     this.$message({
                         type: 'error',
                         message: '聊天分组名字重复',
                     })
                     return
                 }
-                ipc.addChatGroup({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
-                this.chatGroups.push({ name: value, index: this.chatGroups.length+1, rooms: [-1] })
+                ipc.addChatGroup({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
+                this.chatGroups.push({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
             })
         },
         removeChatGroup(group) {
@@ -1053,27 +1158,29 @@ Chromium ${process.versions.chrome}` : ''
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning',
-            }).then(() => {
-                ipc.removeChatGroup(group)
-                this.chatGroups = this.chatGroups.filter(e => e.name !== group)
-                if (this.selectedChatGroup === group) this.selectedChatGroup = 'chats'
-            }).catch()
+            })
+                .then(() => {
+                    ipc.removeChatGroup(group)
+                    this.chatGroups = this.chatGroups.filter((e) => e.name !== group)
+                    if (this.selectedChatGroup === group) this.selectedChatGroup = 'chats'
+                })
+                .catch()
         },
         updateChatGroup(groupName) {
             // 所有会话分组不能被更新
             if (this.selectedRoomId === 0) return
 
             // 找到要更改的 chat group
-            const index = Object.values(this.chatGroups)
-                .findIndex(({ name }) => name === groupName)
+            const index = Object.values(this.chatGroups).findIndex(({ name }) => name === groupName)
             const chatGroup = this.chatGroups[index]
 
-            const roomName = this.selectedRoomId < 0 && this.removeGroupNameEmotes
-                ? removeGroupNameEmotes(this.selectedRoom.roomName)
-                : this.selectedRoom.roomName
+            const roomName =
+                this.selectedRoomId < 0 && this.removeGroupNameEmotes
+                    ? removeGroupNameEmotes(this.selectedRoom.roomName)
+                    : this.selectedRoom.roomName
             // 移除 room
             if (chatGroup.rooms.includes(this.selectedRoomId)) {
-                chatGroup.rooms = chatGroup.rooms.filter(e => e !== this.selectedRoomId)
+                chatGroup.rooms = chatGroup.rooms.filter((e) => e !== this.selectedRoomId)
                 this.$message({
                     type: 'success',
                     message: `已将 ${roomName} 移出分组 ${groupName}`,
@@ -1170,18 +1277,20 @@ Chromium ${process.versions.chrome}` : ''
         switchUnreadRoom() {
             let unreadRoom
             for (let i = 5; i > 0; i--) {
-                unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find((e) => e.unreadCount && e.priority === i)
+                unreadRoom = (this.visibleRooms.length ? this.visibleRooms : this.rooms).find(
+                    (e) => e.unreadCount && e.priority === i,
+                )
                 if (unreadRoom) break
             }
             if (unreadRoom) this.chroom(unreadRoom)
-        }
+        },
     },
     computed: {
         cssVars() {
             return themes.recalcTheme()
         },
         selectedRoom() {
-            return this.rooms.find(e => e.roomId === this.selectedRoomId) || {roomId: 0}
+            return this.rooms.find((e) => e.roomId === this.selectedRoomId) || { roomId: 0 }
         },
         forwardTitle() {
             return (this.forwardAnonymous ? '隐藏发送者后' : '') + (this.forwardMulti ? '合并' : '逐条') + '转发到...'
@@ -1191,11 +1300,11 @@ Chromium ${process.versions.chrome}` : ''
                 case 'chats':
                     return this.rooms
                 case 'private':
-                    return this.rooms.filter(e => e.roomId > 0)
+                    return this.rooms.filter((e) => e.roomId > 0)
                 default:
-                    const group = this.chatGroups.find(g => g.name === this.selectedChatGroup)
+                    const group = this.chatGroups.find((g) => g.name === this.selectedChatGroup)
                     if (!group) return []
-                    return this.rooms.filter(e => group.rooms.includes(e.roomId))
+                    return this.rooms.filter((e) => group.rooms.includes(e.roomId))
             }
         },
     },
@@ -1227,14 +1336,14 @@ Chromium ${process.versions.chrome}` : ''
         rooms(n) {
             if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
             this.chatGroupsUnreadCount = {}
-            n.forEach(e => {
+            n.forEach((e) => {
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         // 屎山还在堆
                         if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach(g => {
+                        groups.forEach((g) => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
                     }
@@ -1244,21 +1353,21 @@ Chromium ${process.versions.chrome}` : ''
         selectedRoomId(n) {
             if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
             this.chatGroupsUnreadCount = {}
-            this.rooms.forEach(e => {
+            this.rooms.forEach((e) => {
                 if (e.roomId === n) return
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(g => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach(g => {
+                        groups.forEach((g) => {
                             this.chatGroupsUnreadCount[g.name] = true
                         })
                     }
                 }
             })
-        }
-    }
+        },
+    },
 }
 </script>
 

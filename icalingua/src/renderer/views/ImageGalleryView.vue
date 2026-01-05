@@ -20,7 +20,13 @@
                         <span class="month-label">{{ group.label }}</span>
                     </div>
                     <div class="image-grid">
-                        <div v-for="img in group.images" :key="img.id" class="image-item" @click="openImage(img)">
+                        <div
+                            v-for="img in group.images"
+                            :key="img.id"
+                            class="image-item"
+                            @click="openImage(img)"
+                            @contextmenu.prevent="showContextMenu($event, img)"
+                        >
                             <img
                                 :src="img.url"
                                 loading="lazy"
@@ -184,6 +190,15 @@ export default {
         handleImageError(e) {
             e.target.src =
                 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ddd" width="100" height="100"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="12">加载失败</text></svg>'
+        },
+        showContextMenu(event, img) {
+            ipcRenderer.send('popupImageGalleryMenu', {
+                x: event.screenX,
+                y: event.screenY,
+                roomId: this.roomId,
+                messageId: img.message._id,
+                imageUrl: img.url,
+            })
         },
     },
 }
