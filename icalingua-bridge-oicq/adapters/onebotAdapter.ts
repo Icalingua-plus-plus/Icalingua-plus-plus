@@ -1226,7 +1226,7 @@ const adapter: typeof oicqAdapter = {
         if (dm) {
             await bot.sendPrivateForwardMessage(target, nodes)
         } else {
-            await bot.sendGroupForwardMessage(target, nodes)
+            await bot.sendGroupForwardMessage(-target, nodes)
         }
     },
     setGroupBan(gin: number, uin: number, duration?: number): any {
