@@ -1,14 +1,18 @@
 {
     "compilerOptions": {
         "module": "CommonJS",
-        "target": "ES2017",
+        "target": "ES2022",
+        "lib": ["ES2022"],
         "esModuleInterop": true,
         "sourceMap": false,
         "moduleResolution": "Node",
         "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "strict": false,
         "outDir": "build"
     },
-    "exclude": ["node_modules"],
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "build"],
     "references": [
         {
             "path": "../packages/storageProviders"

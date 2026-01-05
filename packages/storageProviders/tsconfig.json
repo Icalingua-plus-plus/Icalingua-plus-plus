@@ -1,12 +1,16 @@
 {
     "compilerOptions": {
         "module": "CommonJS",
-        "target": "ES2017",
+        "target": "ES2022",
+        "lib": ["ES2022"],
         "esModuleInterop": true,
         "sourceMap": false,
         "moduleResolution": "Node",
         "resolveJsonModule": true,
+        "skipLibCheck": true,
         "outDir": "build",
         "composite": true
     },
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "build"]
 }

@@ -1,10 +1,19 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "es5",
+        "module": "CommonJS",
+        "target": "ES2022",
+        "lib": ["ES2022", "DOM"],
         "esModuleInterop": true,
         "sourceMap": false,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "moduleResolution": "Node",
+        "skipLibCheck": true,
+        "strict": false,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/renderer/*"]
+        }
     },
-    "exclude": ["node_modules"]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "build"]
 }
