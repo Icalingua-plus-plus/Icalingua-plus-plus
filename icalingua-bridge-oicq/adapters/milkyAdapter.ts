@@ -163,7 +163,7 @@ const attachEventHandler = () => {
             room = createRoom(roomId, roomName)
             await storage.addRoom(room)
         } else {
-            if (!room.roomName.startsWith(roomName)) {
+            if (roomName && !room.roomName.startsWith(roomName)) {
                 room.roomName = roomName
             }
         }
@@ -246,6 +246,7 @@ const attachEventHandler = () => {
     })
 
     bot.on('friendNudge', async (data) => {
+        debug('friendNudge', data)
         const roomId = data.user_id
         if (await storage.isChatIgnored(roomId)) return
         const room = await storage.getRoom(roomId)
@@ -255,9 +256,9 @@ const attachEventHandler = () => {
             if (data.is_self_send) msg += '你'
             else msg += room.roomName
             msg += data.display_action
-            if (data.is_self_receive) msg += '你'
+            if (data.is_self_receive === data.is_self_send) msg += '自己'
+            else if (data.is_self_receive) msg += '你'
             else if (data.is_self_send) msg += room.roomName
-            else msg += '自己'
             msg += data.display_suffix
             room.lastMessage = {
                 content: msg,
@@ -1054,7 +1055,7 @@ const adapter: typeof oicqAdapter = {
     },
     async getGroupMembers(group: number, resolve) {
         try {
-            const data = await bot.getGroupMemberList(group, true)
+            const data = await bot.getGroupMemberList(group)
             const all: MemberInfo[] = data.members.map((m) => ({
                 group_id: m.group_id,
                 user_id: m.user_id,

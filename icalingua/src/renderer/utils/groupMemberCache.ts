@@ -10,8 +10,8 @@ class GroupMemberCache {
     private cache: Map<number, MemberInfo[]> = new Map()
     // 记录每个群的最后更新时间
     private lastUpdate: Map<number, number> = new Map()
-    // 缓存有效期（5分钟）
-    private readonly CACHE_EXPIRY = 5 * 60 * 1000
+    // 缓存有效期（30分钟）
+    private readonly CACHE_EXPIRY = 30 * 60 * 1000
 
     /**
      * 获取指定群的成员列表（带缓存）
