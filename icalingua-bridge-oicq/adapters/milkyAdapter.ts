@@ -36,7 +36,7 @@ import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { isArrayLike } from 'lodash'
 import createRoom from '../utils/createRoom'
 import { encodeGroupMessageId, encodePrivateMessageId, decodeMessageId } from '../utils/milkyMessageId'
-import { milkySegmentsToOicq, oicqSegmentsToMilky } from '../utils/milkySegmentConverter'
+import { milkySegmentsToOicq, oicqSegmentsToMilky, oicqToMilkySegment } from '../utils/milkySegmentConverter'
 import { OutgoingSegment } from '@saltify/milky-types'
 
 let bot: MilkyClient
@@ -1568,7 +1568,58 @@ const adapter: typeof oicqAdapter = {
         cb([])
     },
     async makeForward(fakes, dm, origin, target) {
-        clients.messageError('Milky 适配器暂不支持转发消息')
+        if (!target) {
+            clients.messageError('Milky 适配器需要指定目标才能发送转发消息')
+            return
+        }
+        if (!isArrayLike(fakes)) {
+            fakes = [fakes as FakeMessage]
+        }
+        if (!Array.isArray(fakes)) {
+            fakes = Array.from(fakes as Iterable<FakeMessage>)
+        }
+
+        // 将 FakeMessage 转换为 Milky OutgoingForwardedMessage 格式
+        const messages = (fakes as FakeMessage[]).map((fake) => {
+            // 转换消息内容为 Milky segments
+            const segments: OutgoingSegment[] = []
+            if (Array.isArray(fake.message)) {
+                for (const elem of fake.message) {
+                    const converted = oicqToMilkySegment(elem as any)
+                    if (converted) {
+                        segments.push(converted)
+                    }
+                }
+            } else if (typeof fake.message === 'string') {
+                segments.push({ type: 'text', data: { text: fake.message } })
+            }
+
+            return {
+                user_id: fake.user_id,
+                sender_name: fake.nickname,
+                segments,
+            }
+        })
+
+        // 构造 forward 消息段
+        const forwardSegment: OutgoingSegment = {
+            type: 'forward',
+            data: {
+                messages,
+            },
+        } as OutgoingSegment
+
+        try {
+            if (dm) {
+                await bot.sendPrivateMessage(target, [forwardSegment])
+            } else {
+                await bot.sendGroupMessage(-target, [forwardSegment])
+            }
+            clients.messageSuccess('转发消息发送成功')
+        } catch (e) {
+            console.error('发送转发消息失败:', e)
+            clients.messageError('发送转发消息失败: ' + e.message)
+        }
     },
     setGroupAnonymousBan(gin, flag, duration) {
         clients.messageError('Milky 适配器不支持匿名禁言')
