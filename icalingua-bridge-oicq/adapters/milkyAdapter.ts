@@ -1537,26 +1537,24 @@ const adapter: typeof oicqAdapter = {
         }
     },
     async getMsgNewURL(id, resolve): Promise<string> {
-        const history = await adapter.getMsg(id)
-        if (history.error || !history.data) {
+        // 从存储中获取消息，找到 resource_id
+        const decoded = decodeMessageId(id)
+        if (!decoded) {
             resolve('error')
             return 'error'
         }
-        const message: Message = {
-            senderId: history.data.sender.user_id,
-            username: history.data.sender.nickname,
-            content: '',
-            timestamp: '',
-            date: '',
-            _id: id,
-            time: 0,
-            files: [],
+        const roomId = decoded.type === 'group' ? -decoded.groupId : decoded.peerId
+        const message = await storage.getMessage(roomId, id)
+        if (!message || !message.file?.fid) {
+            resolve('error')
+            return 'error'
         }
-        await processMessage(history.data.message, message, {})
-        if (message.file) {
-            resolve(message.file.url || 'error')
-            return message.file.url || 'error'
-        } else {
+        try {
+            const result = await bot.getResourceTempUrl(message.file.fid)
+            resolve(result.url)
+            return result.url
+        } catch (e) {
+            console.error('获取资源临时 URL 失败:', e)
             resolve('error')
             return 'error'
         }
