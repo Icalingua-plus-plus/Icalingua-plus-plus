@@ -18,7 +18,13 @@ import silkDecode from './silkDecode'
 import formatDate from './formatDate'
 
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
-    const processMessage = async (oicqMessage: MessageElem[], message: Message, lastMessage, roomId = null) => {
+    const processMessage = async (
+        oicqMessage: MessageElem[],
+        message: Message,
+        lastMessage,
+        roomId = null,
+        isHistory = false,
+    ) => {
         if (!Array.isArray(oicqMessage)) oicqMessage = [oicqMessage]
 
         lastMessage.content = lastMessage.content ?? '' // 初始化最近信息内容
@@ -113,7 +119,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     lastMessage.content += '[File]' + (m.data.name || (m.data as any).file)
                     message.content += m.data.name || (m.data as any).file
                     url = m.data.url
-                    if (!url) {
+                    if (!url && !isHistory) {
                         if (roomId < 0) {
                             const meta = await new Promise<FileElem['data']>((resolve, reject) => {
                                 adapter.getGroupFileMeta(-roomId, m.data.fid || (m.data as any).file_id, resolve)
@@ -169,8 +175,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                     ? (data as GroupMessageEventData).anonymous
                                         ? (data as GroupMessageEventData).anonymous.name
                                         : adapter.getUin() === data.sender.user_id
-                                        ? 'You'
-                                        : (data.sender as MemberBaseInfo).card || data.sender.nickname
+                                          ? 'You'
+                                          : (data.sender as MemberBaseInfo).card || data.sender.nickname
                                     : (data.sender as FriendInfo).remark || data.sender.nickname
                             replyMessage = {
                                 _id: '',

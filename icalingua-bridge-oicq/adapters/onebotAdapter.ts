@@ -48,6 +48,10 @@ let storage: StorageProvider
 let uin: number
 let bkn: number = 0
 let nickname: string
+
+// 群成员信息缓存
+const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
+const memberInfoCache = new Map<string, { info: MemberInfo; timestamp: number }>()
 let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
@@ -1162,8 +1166,15 @@ const adapter: typeof oicqAdapter = {
         cb(list)
     },
     async _getGroupMemberInfo(group: number, member: number, noCache: boolean) {
+        const cacheKey = `${group}:${member}`
+        if (!noCache) {
+            const cached = memberInfoCache.get(cacheKey)
+            if (cached && Date.now() - cached.timestamp < MEMBER_CACHE_TTL) {
+                return cached.info
+            }
+        }
         const data = await bot.getGroupMemberInfo(group, member, noCache)
-        return {
+        const info = {
             ...data,
             rank: '',
             shutup_time: 0,
@@ -1172,6 +1183,8 @@ const adapter: typeof oicqAdapter = {
             level: Number(data.level),
             role: data.role as GroupRole,
         }
+        memberInfoCache.set(cacheKey, { info, timestamp: Date.now() })
+        return info
     },
     async getGroupMemberInfo(group: number, member: number, noCache: boolean, resolve) {
         resolve(await adapter._getGroupMemberInfo(group, member, noCache))
@@ -1306,15 +1319,22 @@ const adapter: typeof oicqAdapter = {
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
-        const messages = []
+        let totalCount = 0
+        const minDate = config.fetchHistoryMinDate ? new Date(config.fetchHistoryMinDate).getTime() : null
+        let reachedMinDate = false
         while (true) {
             try {
                 const history = await (roomId > 0
                     ? bot.getPrivateMessageHistory(roomId, Number(messageId))
                     : bot.getGroupMessageHistory(-roomId, Number(messageId)))
-                const newMsgs: Message[] = []
+                const batchMessages: Message[] = []
                 for (let i = 0; i < history.messages.length; i++) {
                     const data = history.messages[i]
+                    // 检查日期限制
+                    if (minDate && data.time * 1000 < minDate) {
+                        reachedMinDate = true
+                        break
+                    }
                     const message: Message = {
                         senderId: data.sender.user_id,
                         username:
@@ -1347,31 +1367,37 @@ const adapter: typeof oicqAdapter = {
                         bubble_id: 0,
                     }
                     try {
-                        await processMessage(data.message, message, {}, roomId)
+                        await processMessage(data.message, message, {}, roomId, true)
                         if (await storage.isChatIgnored(message.senderId)) message.hide = true
-                        messages.push(message)
-                        newMsgs.push(message)
+                        batchMessages.push(message)
                     } catch (e) {
                         console.error(e)
                     }
                 }
-                if (history.messages.length < 2 || newMsgs.length === 0) break
-                messageId = newMsgs[0]._id as string
-                //todo 所有消息都过一遍，数据库里面都有才能结束
+                // 检查第一条消息是否已存在（在存储之前检查）
                 const firstOwnMsg =
                     roomId < 0
-                        ? newMsgs[0] //群的话只要第一条消息就行
-                        : newMsgs.find((e) => e.senderId == uin)
-                if (!firstOwnMsg || (await storage.getMessage(roomId, firstOwnMsg._id as string))) break
+                        ? batchMessages[0] //群的话只要第一条消息就行
+                        : batchMessages.find((e) => e.senderId == uin)
+                const firstMsgExists = firstOwnMsg && (await storage.getMessage(roomId, firstOwnMsg._id as string))
+                // 边拉边存：每批消息立即存入数据库
+                if (batchMessages.length > 0) {
+                    await storage.addMessages(roomId, batchMessages)
+                    totalCount += batchMessages.length
+                }
+                if (reachedMinDate) break
+                if (history.messages.length < 2 || batchMessages.length === 0) break
+                messageId = batchMessages[0]._id as string
+                //todo 所有消息都过一遍，数据库里面都有才能结束
+                if (!firstOwnMsg || firstMsgExists) break
             } catch (e) {
                 console.log(e)
                 clients.messageError('错误：' + e.message)
                 break
             }
         }
-        console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
-        clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
-        await storage.addMessages(roomId, messages)
+        console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
+        clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
         storage
             .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))

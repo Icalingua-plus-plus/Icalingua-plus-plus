@@ -88,6 +88,10 @@ let lastReceivedMessageInfo = {
 
 let isAutoFetching = false
 
+// 群成员信息缓存
+const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
+const memberInfoCache = new Map<string, { info: MemberInfo; timestamp: number }>()
+
 type CookiesDomain =
     | 'tenpay.com'
     | 'docs.qq.com'
@@ -1108,9 +1112,20 @@ const adapter = {
         resolve((await bot.getGroupMemberInfo(group, member, noCache)).data)
     },
     async _getGroupMemberInfo(group: number, member: number, noCache: boolean) {
+        const cacheKey = `${group}:${member}`
+        if (!noCache) {
+            const cached = memberInfoCache.get(cacheKey)
+            if (cached && Date.now() - cached.timestamp < MEMBER_CACHE_TTL) {
+                return cached.info
+            }
+        }
         const data = (await bot.getGroupMemberList(group, noCache)).data
         if (!data) return
-        return data.get(member)
+        const info = data.get(member)
+        if (info) {
+            memberInfoCache.set(cacheKey, { info, timestamp: Date.now() })
+        }
+        return info
     },
     async getFriendsFallback(cb) {
         const friends = bot.fl.values()
@@ -1879,6 +1894,8 @@ const adapter = {
         const messages = []
         let lastMessage = {}
         let lastMessageTime = 0
+        const minDate = config.fetchHistoryMinDate ? new Date(config.fetchHistoryMinDate).getTime() : null
+        let reachedMinDate = false
         while (true) {
             const history = await bot.getChatHistory(messageId)
             if (history.error) {
@@ -1886,9 +1903,14 @@ const adapter = {
                 if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
                 break
             }
-            const newMsgs: Message[] = []
+            const batchMessages: Message[] = []
             for (let i = 0; i < history.data.length; i++) {
                 const data = history.data[i]
+                // 检查日期限制
+                if (minDate && data.time * 1000 < minDate) {
+                    reachedMinDate = true
+                    break
+                }
                 const message: Message = {
                     senderId: data.sender.user_id,
                     username: (<GroupMessageEventData>data).group_id
@@ -1918,10 +1940,10 @@ const adapter = {
                     bubble_id: (<GroupMessageEventData>data).bubble_id,
                 }
                 try {
-                    const retData = await processMessage(data.message, message, {}, roomId)
+                    const retData = await processMessage(data.message, message, {}, roomId, true)
                     if (await storage.isChatIgnored(message.senderId)) message.hide = true
                     messages.push(message)
-                    newMsgs.push(message)
+                    batchMessages.push(message)
                     if (message.time > lastMessageTime) {
                         lastMessage = Object.assign(Object.assign({}, retData.message), retData.lastMessage, {
                             username: bot.uin == retData.message.senderId ? 'You' : retData.message.username,
@@ -1933,10 +1955,18 @@ const adapter = {
                     console.error(e)
                 }
             }
-            if (history.data.length < 2 || newMsgs.length === 0) break
-            messageId = newMsgs[0]._id as string
+            // 检查第一条消息是否已存在（在存储之前检查）
+            const firstMsgId = batchMessages[0]?._id as string
+            const firstMsgExists = firstMsgId && (await storage.getMessage(roomId, firstMsgId))
+            // 边拉边存：每批消息立即存入数据库
+            if (batchMessages.length > 0) {
+                await storage.addMessages(roomId, batchMessages)
+            }
+            if (reachedMinDate) break
+            if (history.data.length < 2 || batchMessages.length === 0) break
+            messageId = firstMsgId
             //todo 所有消息都过一遍，数据库里面都有才能结束
-            if (await storage.getMessage(roomId, messageId)) break
+            if (firstMsgExists) break
             await sleep(100)
         }
         // 私聊消息去重
@@ -1971,7 +2001,6 @@ const adapter = {
         console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
         let room = await storage.getRoom(roomId)
         clients.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
-        await storage.addMessages(roomId, messages)
         storage
             .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))

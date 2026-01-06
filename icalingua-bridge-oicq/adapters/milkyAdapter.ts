@@ -48,6 +48,10 @@ let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
 }
+
+// 群成员信息缓存
+const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
+const memberInfoCache = new Map<string, { info: MemberInfo; timestamp: number }>()
 const debug = process.env.MILKY_DEBUG === 'true' ? console.log : () => {}
 
 const initStorage = async () => {
@@ -882,7 +886,7 @@ const adapter: typeof oicqAdapter = {
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
-        const messages: Message[] = []
+        let totalCount = 0
         const isGroup = roomId < 0
         const peerId = isGroup ? -roomId : roomId
         const scene = isGroup ? 'group' : 'friend'
@@ -894,21 +898,28 @@ const adapter: typeof oicqAdapter = {
             }
         }
         debug('startSeq', startSeq)
+        const minDate = config.fetchHistoryMinDate ? new Date(config.fetchHistoryMinDate).getTime() : null
+        let reachedMinDate = false
         try {
             while (true) {
                 const history = await bot.getHistoryMessages(scene as any, peerId, startSeq, 30)
-                debug('history', history.messages.length, history.next_message_seq)
+                console.log('history', history.messages.length, history.next_message_seq)
                 if (!history.messages || history.messages.length === 0) {
-                    debug('no messages')
+                    console.log('no messages')
                     break
                 }
+                const batchMessages: Message[] = []
                 for (const msg of history.messages) {
+                    // 检查日期限制
+                    if (minDate && msg.time * 1000 < minDate) {
+                        console.log('reached minDate, stopping')
+                        reachedMinDate = true
+                    }
                     const senderId = Number(msg.sender_id)
                     const isSelfMsg = senderId === uin
                     const msgId = isGroup
                         ? encodeGroupMessageId(peerId, senderId, Number(msg.message_seq), msg.time)
                         : encodePrivateMessageId(peerId, Number(msg.message_seq), msg.time, isSelfMsg)
-                    debug('msgId', msgId)
                     let senderName: string
                     if (isGroup && msg.group_member) {
                         senderName = msg.group_member.card || msg.group_member.nickname
@@ -917,7 +928,6 @@ const adapter: typeof oicqAdapter = {
                     } else {
                         senderName = String(senderId)
                     }
-                    debug('senderName', senderName)
                     const message: Message = {
                         senderId,
                         username: senderName,
@@ -931,24 +941,33 @@ const adapter: typeof oicqAdapter = {
                         files: [],
                     }
                     const oicqMessage = milkySegmentsToOicq(msg.segments)
-                    debug('oicqMessage.length', oicqMessage.length)
                     try {
-                        await processMessage(oicqMessage, message, {}, roomId)
-                        debug('processMessage done')
+                        await processMessage(oicqMessage, message, {}, roomId, true)
                         if (await storage.isChatIgnored(senderId)) message.hide = true
-                        messages.push(message)
+                        batchMessages.push(message)
                     } catch (e) {
                         console.error(e)
                     }
                 }
+                // 检查第一条消息是否已存在（在存储之前检查）
+                const firstMsg = batchMessages[0]
+                const firstMsgExists = firstMsg && (await storage.getMessage(roomId, firstMsg._id as string))
+                // 边拉边存：每批消息立即存入数据库
+                if (batchMessages.length > 0) {
+                    await storage.addMessages(roomId, batchMessages)
+                    totalCount += batchMessages.length
+                }
+                if (reachedMinDate) {
+                    console.log('reachedMinDate break')
+                    break
+                }
                 if (!history.next_message_seq) {
-                    debug('no next message seq break')
+                    console.log('no next message seq break')
                     break
                 }
                 startSeq = Number(history.next_message_seq)
-                const firstMsg = messages[0]
-                if (firstMsg && (await storage.getMessage(roomId, firstMsg._id as string))) {
-                    debug('firstMsg exists break', firstMsg._id)
+                if (firstMsgExists) {
+                    console.log('firstMsg exists break', firstMsg._id)
                     break
                 }
             }
@@ -956,9 +975,8 @@ const adapter: typeof oicqAdapter = {
             console.error(e)
             clients.messageError('拉取消息失败: ' + e.message)
         }
-        console.log(`${roomId} 已拉取 ${messages.length} 条消息`)
-        clients.messageSuccess(`已拉取 ${messages.length} 条消息`)
-        await storage.addMessages(roomId, messages)
+        console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
+        clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
         storage
             .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
@@ -998,9 +1016,16 @@ const adapter: typeof oicqAdapter = {
         }
     },
     async _getGroupMemberInfo(group: number, member: number, noCache: boolean) {
+        const cacheKey = `${group}:${member}`
+        if (!noCache) {
+            const cached = memberInfoCache.get(cacheKey)
+            if (cached && Date.now() - cached.timestamp < MEMBER_CACHE_TTL) {
+                return cached.info
+            }
+        }
         const data = await bot.getGroupMemberInfo(group, member, noCache)
         const m = data.member
-        return {
+        const info = {
             group_id: m.group_id,
             user_id: m.user_id,
             nickname: m.nickname,
@@ -1021,6 +1046,8 @@ const adapter: typeof oicqAdapter = {
             update_time: 0,
             subid: 0,
         }
+        memberInfoCache.set(cacheKey, { info, timestamp: Date.now() })
+        return info
     },
     async getGroupMemberInfo(group: number, member: number, noCache: boolean, resolve) {
         resolve(await adapter._getGroupMemberInfo(group, member, noCache))
