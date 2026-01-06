@@ -8,6 +8,7 @@ import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
 import { broadcast } from '../providers/socketIoProvider'
 import MilkyClient, { IncomingMessage } from '../clients/MilkyClient'
 import Room from '@icalingua/types/Room'
+import axios from 'axios'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import clients from '../utils/clients'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
@@ -53,6 +54,94 @@ let lastReceivedMessageInfo = {
 const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
 const memberInfoCache = new Map<string, { info: MemberInfo; timestamp: number }>()
 const debug = process.env.MILKY_DEBUG === 'true' ? console.log : () => {}
+
+// ==================== Rkey 管理 ====================
+const RKEY_SERVICES = ['https://ss.xingzhige.com/music_card/rkey', 'https://secret-service.bietiaop.com/rkeys']
+
+interface RkeyResponse {
+    private_rkey: string
+    group_rkey: string
+    expired_time: number
+    name?: string
+}
+
+let rkeyData: RkeyResponse | null = null
+
+const fetchRkey = async (): Promise<RkeyResponse | null> => {
+    try {
+        const result = await new Promise<RkeyResponse>((resolve, reject) => {
+            let rejected = 0
+            const errors: Error[] = []
+            RKEY_SERVICES.forEach((url) => {
+                axios
+                    .get<RkeyResponse>(url, { timeout: 5000 })
+                    .then((res) => resolve(res.data))
+                    .catch((e) => {
+                        errors.push(e)
+                        rejected++
+                        if (rejected === RKEY_SERVICES.length) {
+                            reject(new Error('All rkey services failed'))
+                        }
+                    })
+            })
+        })
+        console.log('Rkey 已获取:', result.name || 'unknown')
+        return result
+    } catch (e) {
+        console.error('获取 Rkey 失败:', e)
+        return null
+    }
+}
+
+const refreshRkeyIfNeeded = async () => {
+    const now = Math.floor(Date.now() / 1000)
+    if (!rkeyData || rkeyData.expired_time - now < 600) {
+        rkeyData = await fetchRkey()
+    }
+}
+
+const replaceRkey = (url: string): string => {
+    if (!url) return url
+    if (!rkeyData) return url
+    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+
+    try {
+        const u = new URL(url)
+        let r = ''
+        switch (u.searchParams.get('appid')) {
+            case '1406': // private
+                r = rkeyData.private_rkey
+                break
+            case '1407': // group
+                r = rkeyData.group_rkey
+                break
+            default:
+                return url
+        }
+        if (!r) return url
+        if (r.startsWith('&rkey=')) r = r.slice('&rkey='.length)
+        u.searchParams.set('rkey', r)
+        return u.toString()
+    } catch (e) {
+        return url
+    }
+}
+
+const processMessageRkey = (message: Message): void => {
+    if (message.file?.url) {
+        message.file.url = replaceRkey(message.file.url)
+    }
+    if (Array.isArray(message.files)) {
+        for (const file of message.files) {
+            if (file.url) {
+                file.url = replaceRkey(file.url)
+            }
+        }
+    }
+    if (message.replyMessage?.file?.url) {
+        message.replyMessage.file.url = replaceRkey(message.replyMessage.file.url)
+    }
+}
 
 const initStorage = async () => {
     try {
@@ -195,6 +284,7 @@ const attachEventHandler = () => {
         }
 
         await processMessage(oicqMessage, message, lastMessage, roomId)
+        processMessageRkey(message)
 
         const at = message.at
         if (at) room.at = at
@@ -635,6 +725,25 @@ const attachEventHandler = () => {
         storage.updateRoom(roomId, room)
         storage.addMessage(roomId, message)
     })
+
+    bot.on('botOffline', async (data) => {
+        console.log('Milky 断线:', data.reason)
+        clients.setOffline(data.reason)
+        // 尝试重连
+        const reconnect = async () => {
+            try {
+                console.log('尝试重新连接 Milky...')
+                await bot.connect()
+                console.log('Milky 重连成功')
+                clients.setOnline()
+            } catch (e) {
+                console.error('Milky 重连失败:', e.message)
+                // 10秒后重试
+                setTimeout(reconnect, 10000)
+            }
+        }
+        setTimeout(reconnect, 5000)
+    })
 }
 
 const adapter: typeof oicqAdapter = {
@@ -666,6 +775,9 @@ const adapter: typeof oicqAdapter = {
         clients.setAllRooms(await storage.getAllRooms())
         clients.setAllChatGroups(await storage.getAllChatGroups())
         adapter.sendOnlineData()
+        // 初始化 rkey 并定时刷新
+        refreshRkeyIfNeeded()
+        setInterval(refreshRkeyIfNeeded, 1000 * 60 * 10)
         broadcast('login', { uin, nick: nickname, sysInfo: getSysInfo() })
     },
     async getGroups(resolve) {
@@ -944,6 +1056,7 @@ const adapter: typeof oicqAdapter = {
                     const oicqMessage = milkySegmentsToOicq(msg.segments)
                     try {
                         await processMessage(oicqMessage, message, {}, roomId, true)
+                        processMessageRkey(message)
                         if (await storage.isChatIgnored(senderId)) message.hide = true
                         batchMessages.push(message)
                     } catch (e) {

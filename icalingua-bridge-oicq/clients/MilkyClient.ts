@@ -177,7 +177,10 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     private _uin: number = 0
     private _nickname: string = ''
 
-    constructor(private readonly url: string, private readonly accessToken?: string) {
+    constructor(
+        private readonly url: string,
+        private readonly accessToken?: string,
+    ) {
         super()
     }
 
@@ -190,6 +193,11 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async connect(): Promise<void> {
+        // 如果已有连接，先清理
+        if (this.client) {
+            this.client.dispose()
+        }
+
         // 解析 URL
         const urlObj = new URL(this.url)
         const useTLS = urlObj.protocol === 'https:' || urlObj.protocol === 'wss:'
