@@ -1,7 +1,7 @@
 # Install dependencies only when needed
-FROM node:18-alpine as builder
+FROM node:24-alpine as builder
 
-RUN apk add make g++ alpine-sdk python3 py3-pip   
+RUN apk add make g++ alpine-sdk python3 py3-pip
 WORKDIR  /app
 COPY . .
 RUN corepack enable
@@ -10,13 +10,12 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store,sharing=locked \
     cd icalingua-bridge-oicq && \
     pnpm i && \
-    pnpm compile && \
+    pnpm build && \
     mv /app/icalingua-bridge-oicq/build /tmp/build && \
-    cd /tmp/build && npm i && \
-    mv /tmp/build/@icalingua /tmp/build/node_modules/
+    cd /tmp/build && npm i
 
 # Production image, copy all the files and run next
-FROM node:18-alpine as runner
+FROM node:24-alpine as runner
 
 WORKDIR /app
 RUN apk add ffmpeg curl

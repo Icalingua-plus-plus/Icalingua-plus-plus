@@ -8,6 +8,7 @@
     "license": "AGPL-3.0",
     "scripts": {
         "start": "node build",
+        "build": "node build.mjs",
         "compile": "tsc --build --verbose && cp -af ./static ./build/ && pnpm copy-packages",
         "compile:win": "tsc --build --verbose && xcopy /e .\\static\\ .\\build\\static\\ && pnpm copy-packages:win",
         "copy-packages": "mkdir ./build/node_modules && mkdir ./build/node_modules/@icalingua && cp -a ../packages/storageProviders/build ./build/node_modules/@icalingua/storage-providers && cp -a ../packages/types/build ./build/node_modules/@icalingua/types && cp -a ./build/node_modules/@icalingua ./build/@icalingua",
@@ -21,6 +22,7 @@
         "@types/md5": "^2.3.5",
         "@types/node": "^22.15.21",
         "@types/ws": "^8.5.13",
+        "esbuild": "^0.25.0",
         "prettier": "^3.5.3",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3"
