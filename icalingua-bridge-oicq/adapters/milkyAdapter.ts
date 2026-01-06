@@ -263,6 +263,7 @@ const attachEventHandler = () => {
         debug('oicqMessage', oicqMessage)
 
         // 处理 reply 消息段中的 message_seq 转换为完整的 messageId
+        // 以及私聊文件消息段补充 user_id
         for (let i = 0; i < oicqMessage.length; i++) {
             const seg = oicqMessage[i]
             if (seg.type === 'reply') {
@@ -273,6 +274,9 @@ const attachEventHandler = () => {
                 } else {
                     seg.data.id = encodePrivateMessageId(Number(data.peer_id), replySeq, 0, false)
                 }
+            } else if (seg.type === 'file' && !isGroup && seg.data.fid) {
+                // 私聊文件：在 fid 前面加上 user_id，格式变为 user_id|file_id|file_hash
+                seg.data.fid = `${roomId}|${seg.data.fid}`
             }
         }
 
@@ -1463,8 +1467,23 @@ const adapter: typeof oicqAdapter = {
     },
     async getPrivateFileUrl(fileId: string, cb) {
         debug('getPrivateFileUrl', fileId)
-        clients.messageError('Milky 适配器暂不支持私聊文件下载')
-        cb('')
+        // fileId 格式: user_id|file_id|file_hash (由 milkyAdapter 和 milkySegmentConverter 序列化)
+        const parts = fileId.split('|')
+        if (parts.length < 2) {
+            clients.messageError('私聊文件 ID 格式错误')
+            cb('')
+            return
+        }
+        const [userId, fid, fileHash] = parts
+        try {
+            // LLBot 没有 fileHash
+            const result = await bot.getPrivateFileDownloadUrl(Number(userId), fid, fileHash || '')
+            cb(result.download_url)
+        } catch (e) {
+            console.error('获取私聊文件下载链接失败:', e)
+            clients.messageError('获取私聊文件下载链接失败: ' + e.message)
+            cb('')
+        }
         debug('getPrivateFileUrl done')
     },
 

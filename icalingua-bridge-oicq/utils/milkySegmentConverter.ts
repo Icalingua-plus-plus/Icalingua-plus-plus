@@ -73,18 +73,22 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
             }
 
         case 'file':
+            // 私聊文件需要 file_hash，序列化到 fid 中: file_id|file_hash
+            const fileId = segment.data.file_id
+            const fileHash = segment.data.file_hash
+            const fid = fileHash ? `${fileId}|${fileHash}` : fileId
             return {
                 type: 'file',
                 data: {
                     name: segment.data.file_name,
-                    fid: segment.data.file_id,
-                    file_id: segment.data.file_id,
+                    fid: fid,
+                    file_id: fileId,
                     size: Number(segment.data.file_size),
                     url: '',
                     md5: '',
                     duration: 0,
                     busid: 0,
-                    fileid: segment.data.file_id,
+                    fileid: fileId,
                 },
             } as MessageElem
 
