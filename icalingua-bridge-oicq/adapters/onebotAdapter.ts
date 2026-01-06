@@ -40,7 +40,7 @@ import createRoom from '../utils/createRoom'
 import md5 from 'md5'
 import path from 'path'
 import fsP from 'fs/promises'
-import { deleteUploadedFile, getUploadedFile } from '../utils/uploadFileManager'
+import { deleteUploadedFile, getUploadedFilePath, getUploadedFileName } from '../utils/uploadFileManager'
 
 let bot: OnebotClient
 let loginForm: LoginForm
@@ -863,12 +863,15 @@ const adapter: typeof oicqAdapter = {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && ((file.type && !file.type.includes('image')) || !file.type)) {
-            const uploadedFile = getUploadedFile(file.path)
-            //群文件
-            const p = path.join('/app/.config/QQ/NapCat/temp', md5(uploadedFile.buffer))
-            await fsP.writeFile(p, uploadedFile.buffer)
+            const filePath = getUploadedFilePath(file.path)
+            const fileName = getUploadedFileName(file.path)
+            if (!filePath || !fileName) {
+                clients.messageError('文件上传失败：找不到已上传的文件')
+                clients.closeLoading()
+                return
+            }
             if (roomId > 0) {
-                bot.sendPrivateFile(roomId, p, uploadedFile.fileName)
+                bot.sendPrivateFile(roomId, filePath, fileName)
                     .then(() => {
                         clients.messageSuccess('文件上传成功')
                     })
@@ -879,10 +882,9 @@ const adapter: typeof oicqAdapter = {
                     .finally(() => {
                         clients.closeLoading()
                         deleteUploadedFile(file.path)
-                        fsP.unlink(p)
                     })
             } else {
-                bot.gfsUpload(-roomId, p, uploadedFile.fileName, '/')
+                bot.gfsUpload(-roomId, filePath, fileName, '/')
                     .then(() => {
                         clients.messageSuccess('文件上传成功')
                     })
@@ -893,7 +895,6 @@ const adapter: typeof oicqAdapter = {
                     .finally(() => {
                         clients.closeLoading()
                         deleteUploadedFile(file.path)
-                        fsP.unlink(p)
                     })
             }
             clients.message('文件上传中')

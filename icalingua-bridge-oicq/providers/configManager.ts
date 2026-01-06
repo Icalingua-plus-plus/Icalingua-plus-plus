@@ -13,6 +13,7 @@ type Config = {
     onebot?: string
     milky?: string | { url: string; accessToken?: string }
     fetchHistoryMinDate?: string
+    tempDir?: string
 }
 
 type UserConfig = {

@@ -38,6 +38,7 @@ import createRoom from '../utils/createRoom'
 import { encodeGroupMessageId, encodePrivateMessageId, decodeMessageId } from '../utils/milkyMessageId'
 import { milkySegmentsToOicq, oicqSegmentsToMilky, oicqToMilkySegment } from '../utils/milkySegmentConverter'
 import { OutgoingSegment } from '@saltify/milky-types'
+import { deleteUploadedFile, getUploadedFileUri, getUploadedFileName } from '../utils/uploadFileManager'
 
 let bot: MilkyClient
 let loginForm: LoginForm
@@ -826,8 +827,43 @@ const adapter: typeof oicqAdapter = {
 
         // 文件上传
         if (file && ((file.type && !file.type.includes('image')) || !file.type)) {
-            clients.messageError('Milky 适配器暂不支持文件上传')
-            clients.closeLoading()
+            const fileUri = getUploadedFileUri(file.path)
+            const fileName = getUploadedFileName(file.path)
+            if (!fileUri || !fileName) {
+                clients.messageError('文件上传失败：找不到已上传的文件')
+                clients.closeLoading()
+                return
+            }
+            if (roomId > 0) {
+                // 私聊文件
+                bot.uploadPrivateFile(roomId, fileUri, fileName)
+                    .then(() => {
+                        clients.messageSuccess('文件上传成功')
+                    })
+                    .catch((e) => {
+                        clients.messageError('文件上传失败 ' + e.message)
+                        console.error(e)
+                    })
+                    .finally(() => {
+                        clients.closeLoading()
+                        deleteUploadedFile(file.path)
+                    })
+            } else {
+                // 群文件
+                bot.uploadGroupFile(-roomId, fileUri, fileName)
+                    .then(() => {
+                        clients.messageSuccess('文件上传成功')
+                    })
+                    .catch((e) => {
+                        clients.messageError('文件上传失败 ' + e.message)
+                        console.error(e)
+                    })
+                    .finally(() => {
+                        clients.closeLoading()
+                        deleteUploadedFile(file.path)
+                    })
+            }
+            clients.message('文件上传中')
             return
         }
 
@@ -1459,8 +1495,11 @@ const adapter: typeof oicqAdapter = {
             dir: ls,
             stat: download,
             mkdir: (name: string) => bot.createGroupFolder(gid, name),
-            upload: async () => {
-                clients.messageError('Milky 适配器暂不支持群文件上传')
+            upload: async (fileUri: string, pid?: string, fileName?: string) => {
+                // fileUri 可能是本地路径或 file:// URI
+                const uri = fileUri.startsWith('file://') ? fileUri : `file://${fileUri}`
+                const name = fileName || fileUri.split('/').pop() || 'file'
+                await bot.uploadGroupFile(gid, uri, name, pid || '/')
             },
             download,
         } as any
