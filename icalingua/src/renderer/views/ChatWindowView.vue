@@ -88,6 +88,7 @@ export default {
             usePanguJsRecv: false,
             isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
             targetMessageId: null, // 定位的目标消息 ID
+            pendingGotoMessageId: null, // 等待定位的消息 ID（窗口初始化时使用）
         }
     },
     async created() {
@@ -122,14 +123,25 @@ export default {
         // 标记数据准备好了
         this.ready = true
 
-        // 加载历史消息
-        await this.fetchMessage(true)
+        // 先设置 IPC 监听器，确保能接收到 gotoMessage 事件
+        this.setupIpcListeners()
+
+        console.log('ChatWindowView created, pendingGotoMessageId:', this.pendingGotoMessageId)
+
+        // 如果有待定位的消息，直接用 gotoMessage 加载，否则加载最新消息
+        if (this.pendingGotoMessageId) {
+            const messageId = this.pendingGotoMessageId
+            this.pendingGotoMessageId = null
+            console.log('Using gotoMessage to load:', messageId)
+            await this.gotoMessage(messageId)
+        } else {
+            // 加载历史消息
+            console.log('Loading latest messages')
+            await this.fetchMessage(true)
+        }
 
         // 清除未读
         ipc.clearChatWindowUnread(this.roomId)
-
-        // 监听 IPC 事件
-        this.setupIpcListeners()
     },
     beforeDestroy() {
         // 移除 IPC 监听器
@@ -201,7 +213,15 @@ export default {
 
             // 定位到指定消息
             ipcRenderer.on('gotoMessage', async (_, messageId) => {
-                await this.gotoMessage(messageId)
+                console.log('gotoMessage event received:', messageId, 'ready:', this.ready, 'loading:', this.loading)
+                // 如果消息还没加载完，保存待定位的 ID
+                if (!this.ready || this.loading) {
+                    console.log('Saving pendingGotoMessageId:', messageId)
+                    this.pendingGotoMessageId = messageId
+                } else {
+                    console.log('Calling gotoMessage directly')
+                    await this.gotoMessage(messageId)
+                }
             })
         },
 

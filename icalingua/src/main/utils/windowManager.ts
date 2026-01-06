@@ -552,9 +552,11 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
     win.webContents.on('did-finish-load', () => {
         win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
-        // 如果需要定位到指定消息
+        // 如果需要定位到指定消息，延迟发送以确保 Vue 组件已初始化
         if (gotoMessageId) {
-            win.webContents.send('gotoMessage', gotoMessageId)
+            setTimeout(() => {
+                win.webContents.send('gotoMessage', gotoMessageId)
+            }, 500)
         }
     })
 
