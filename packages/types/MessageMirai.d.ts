@@ -1,6 +1,6 @@
 type MiraiTg = {
-    type: 'tg'
-    tgUid: number
+    type?: 'tg'
+    tgUid?: number
     avatarMd5?: string
     avatarUrl?: string
     noSplitSender?: boolean

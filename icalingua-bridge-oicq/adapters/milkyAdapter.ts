@@ -1278,7 +1278,8 @@ const adapter: typeof oicqAdapter = {
                 const data = history.messages[i]
                 const oicqMessage = milkySegmentsToOicq(data.segments)
                 const message: Message = {
-                    senderId: 0,
+                    senderId: data.avatar_url as any,
+                    mirai: { eqq: { avatarUrl: data.avatar_url } },
                     username: data.sender_name,
                     content: '',
                     timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
