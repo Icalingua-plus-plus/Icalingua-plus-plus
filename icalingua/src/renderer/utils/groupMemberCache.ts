@@ -18,6 +18,7 @@ class GroupMemberCache {
      */
     async getGroupMembers(groupId: number, forceRefresh: boolean = false): Promise<MemberInfo[]> {
         const now = Date.now()
+        groupId = Math.abs(groupId)
         const lastUpdateTime = this.lastUpdate.get(groupId) || 0
         const isExpired = now - lastUpdateTime > this.CACHE_EXPIRY
 
@@ -42,7 +43,7 @@ class GroupMemberCache {
      */
     async preloadAllGroups(groupIds: number[]): Promise<void> {
         for (const groupId of groupIds) {
-            await this.getGroupMembers(groupId).catch(() => [])
+            await this.getGroupMembers(Math.abs(groupId)).catch(() => [])
         }
         console.log(`Preloaded ${groupIds.length} groups' member lists`)
     }
@@ -94,7 +95,7 @@ class GroupMemberCache {
      * 更新指定群的成员缓存
      */
     async updateGroupCache(groupId: number): Promise<void> {
-        await this.getGroupMembers(groupId, true)
+        await this.getGroupMembers(Math.abs(groupId), true)
     }
 
     /**
