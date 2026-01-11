@@ -38,11 +38,12 @@ class GroupMemberCache {
     }
 
     /**
-     * 批量预加载所有群的成员列表
+     * 批量预加载所有群的成员列表（串行执行，避免并发请求过多）
      */
     async preloadAllGroups(groupIds: number[]): Promise<void> {
-        const promises = groupIds.map((groupId) => this.getGroupMembers(groupId).catch(() => []))
-        await Promise.all(promises)
+        for (const groupId of groupIds) {
+            await this.getGroupMembers(groupId).catch(() => [])
+        }
         console.log(`Preloaded ${groupIds.length} groups' member lists`)
     }
 
