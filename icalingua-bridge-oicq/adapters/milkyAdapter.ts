@@ -1359,7 +1359,13 @@ const adapter: typeof oicqAdapter = {
                 client.emit('setShutUp', false)
             }
         }
+        // 刷新 rkey（如果需要）
+        await refreshRkeyIfNeeded()
         const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
         if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string') {
             adapter.reportRead(messages[messages.length - 1]._id as string)
         }
@@ -1372,7 +1378,13 @@ const adapter: typeof oicqAdapter = {
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
+        // 刷新 rkey（如果需要）
+        await refreshRkeyIfNeeded()
         const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
         callback(messages)
     },
     async fetchMessagesAround(
@@ -1383,7 +1395,13 @@ const adapter: typeof oicqAdapter = {
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
+        // 刷新 rkey（如果需要）
+        await refreshRkeyIfNeeded()
         const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
         callback(messages)
     },
     addRoom(room: Room) {
