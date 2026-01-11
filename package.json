@@ -14,11 +14,7 @@
   },
   "packageManager": "pnpm@10.11.0",
   "devDependencies": {
-    "husky": "^9.1.7",
     "lint-staged": "^15.5.1"
-  },
-  "scripts": {
-    "prepare": "husky install"
   },
   "lint-staged": {
     "icalingua/**/*": [
