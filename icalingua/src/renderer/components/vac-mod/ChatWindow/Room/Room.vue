@@ -1301,13 +1301,25 @@ export default {
                     try {
                         const parsedA = Buffer.from(a, 'base64')
                         if (this.roomId < 0) {
+                            // 群消息 ID 格式: | groupId(0) | senderId(4) | seq(8) | random(12) | time(16) | pktnum(20) |
+                            // 如果 senderId 或 time 为 0（milky 适配器），则跳过这些字段的比较
+                            const senderIdIsZero = parsedB.readUInt32BE(4) === 0
+                            const timeIsZero = parsedB.readUInt32BE(16) === 0
                             for (let i = 0; i <= 16; i += 4) {
-                                if (i !== 12 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
+                                if (i === 12) continue // 跳过 random 字段
+                                if (i === 4 && senderIdIsZero) continue // senderId 为 0 时跳过
+                                if (i === 16 && timeIsZero) continue // time 为 0 时跳过
+                                if (parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
                             }
                             if (parsedA.readUInt8(20) !== parsedB.readUInt8(20)) return false
                         } else {
+                            // 私聊消息 ID 格式: | peerId(0) | seq(4) | random(8) | time(12) | flag(16) |
+                            // 如果 time 为 0（milky 适配器），则跳过 time 字段的比较
+                            const timeIsZero = parsedB.readUInt32BE(12) === 0
                             for (let i = 0; i <= 12; i += 4) {
-                                if (i !== 8 && parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
+                                if (i === 8) continue // 跳过 random 字段
+                                if (i === 12 && timeIsZero) continue // time 为 0 时跳过
+                                if (parsedA.readUInt32BE(i) !== parsedB.readUInt32BE(i)) return false
                             }
                             if (parsedA.readUInt8(16) !== parsedB.readUInt8(16)) return false
                         }
