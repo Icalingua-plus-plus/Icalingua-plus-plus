@@ -12,6 +12,6 @@
         "composite": true,
         "types": ["node"]
     },
-    "include": ["**/*.ts"],
+    "include": ["**/*.ts", "../../icalingua-bridge-oicq/types/MessageElemPlus.d.ts"],
     "exclude": ["node_modules", "build"]
 }

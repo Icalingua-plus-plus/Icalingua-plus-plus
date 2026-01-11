@@ -6,6 +6,9 @@ interface MessageFile {
     size?: number
     name?: string
     fid?: string
+    isFace?: boolean // 或者说是 sticker
+    height?: number
+    width?: number
 }
 
 export default interface Message {

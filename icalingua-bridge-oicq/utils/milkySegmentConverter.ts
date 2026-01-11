@@ -4,6 +4,7 @@
 
 import { IncomingSegment, OutgoingSegment } from '@saltify/milky-types'
 import type { MessageElem } from 'oicq-icalingua-plus-plus'
+import { MessageElemPlus } from '../types/MessageElemPlus'
 
 /**
  * 将 Milky IncomingSegment 转换为 oicq MessageElem
@@ -51,8 +52,12 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
                 data: {
                     file: segment.data.resource_id,
                     url: segment.data.temp_url,
+                    type: segment.data.sub_type === 'sticker' ? 'face' : 'image',
+                    prompt: segment.data.summary,
+                    height: segment.data.height,
+                    width: segment.data.width,
                 },
-            } as MessageElem
+            } as MessageElemPlus
 
         case 'record':
             return {

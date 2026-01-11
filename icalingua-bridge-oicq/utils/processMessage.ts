@@ -16,10 +16,11 @@ import getImageUrlByMd5 from './getImageUrlByMd5'
 import mime from './mime'
 import silkDecode from './silkDecode'
 import formatDate from './formatDate'
+import { ImgPttElemPlus, MessageElemPlus } from '../types/MessageElemPlus'
 
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
     const processMessage = async (
-        oicqMessage: MessageElem[],
+        oicqMessage: MessageElemPlus[],
         message: Message,
         lastMessage,
         roomId = null,
@@ -78,7 +79,12 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     message.flash = true
                 // noinspection FallThroughInSwitchStatementJS 确信
                 case 'image':
-                    lastMessage.content += '[Image]'
+                    const data = m.data as ImgPttElemPlus['data']
+                    if (data.prompt) {
+                        lastMessage.content += data.prompt
+                    } else {
+                        lastMessage.content += '[Image]'
+                    }
                     url = m.data.url || ''
                     if (typeof m.data.file !== 'string' && !url) {
                         const md5 = require('crypto').createHash('md5').update(m.data.file).digest('hex')
@@ -100,6 +106,9 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     message.file = {
                         type: 'image/jpeg',
                         url,
+                        isFace: m.data.type === 'face',
+                        height: data.height,
+                        width: data.width,
                     }
                     message.files.push(message.file)
                     break
@@ -112,6 +121,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                     message.file = {
                         type: 'image/webp',
                         url,
+                        isFace: true,
                     }
                     message.files.push(message.file)
                     break
