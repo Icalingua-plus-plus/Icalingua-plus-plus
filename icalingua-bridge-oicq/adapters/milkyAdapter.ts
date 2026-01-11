@@ -1105,8 +1105,29 @@ const adapter: typeof oicqAdapter = {
                     }
                 }
                 // 检查第一条消息是否已存在（在存储之前检查）
+                // 同时用 time=0 和 time=实际时间 两种格式查，兼容新旧消息
                 const firstMsg = batchMessages[0]
-                const firstMsgExists = firstMsg && (await storage.getMessage(roomId, firstMsg._id as string))
+                const firstRawMsg = history.messages[0]
+                let firstMsgExists = false
+                if (firstMsg && firstRawMsg) {
+                    const msgIdWithTime = isGroup
+                        ? encodeGroupMessageId(
+                              peerId,
+                              Number(firstRawMsg.sender_id),
+                              Number(firstRawMsg.message_seq),
+                              firstRawMsg.time,
+                          )
+                        : encodePrivateMessageId(
+                              peerId,
+                              Number(firstRawMsg.message_seq),
+                              firstRawMsg.time,
+                              Number(firstRawMsg.sender_id) === uin,
+                          )
+                    firstMsgExists = !!(
+                        (await storage.getMessage(roomId, firstMsg._id as string)) ||
+                        (await storage.getMessage(roomId, msgIdWithTime))
+                    )
+                }
                 // 边拉边存：每批消息立即存入数据库
                 if (batchMessages.length > 0) {
                     await storage.addMessages(roomId, batchMessages)
