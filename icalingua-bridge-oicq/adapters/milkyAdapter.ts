@@ -1295,6 +1295,8 @@ const adapter: typeof oicqAdapter = {
     async getForwardMsg(resId: string, fileName: string, resolve) {
         try {
             const history = await bot.getForwardedMessages(resId)
+            debug('history', history.messages)
+            debug('history.messages[0].segments', history.messages[0].segments)
             const messages: Message[] = []
             for (let i = 0; i < history.messages.length; i++) {
                 const data = history.messages[i]
