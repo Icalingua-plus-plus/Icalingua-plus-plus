@@ -197,7 +197,7 @@ const attachSocketEvents = () => {
                         data.data.body = username + ': ' + spacingNotification(content)
                     }
                 }
-                if (process.platform === 'darwin' || process.platform === 'win32') {
+                if (process.platform === 'darwin') {
                     if (!ElectronNotification.isSupported()) return
                     if (notif) {
                         notif.close()
@@ -229,12 +229,22 @@ const attachSocketEvents = () => {
                             at: [],
                         })
                     })
-                    if (process.platform === 'win32') {
-                        notif.on('close', () => {
-                            notif.close()
-                        })
-                    }
                     notif.show()
+                } else if (process.platform === 'win32') {
+                    if (!ElectronNotification.isSupported()) return
+                    if (notif) {
+                        notif.close()
+                    }
+                    const { showWinToast } = await import('../utils/winToast')
+                    notif = showWinToast({
+                        title: notifRoomName,
+                        body: data.data.body,
+                        icon: await avatarCache(getAvatarUrl(data.roomId, true)),
+                        image: data.image ? await avatarCache(data.image) : undefined,
+                        roomId: data.roomId,
+                        hasReply: data.data.hasReply,
+                        replyPlaceholder: data.data.replyPlaceholder,
+                    })
                 } else {
                     const actions = {
                         default: '',

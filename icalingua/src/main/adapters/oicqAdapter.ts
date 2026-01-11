@@ -229,7 +229,7 @@ const eventHandlers = {
                 ui.chroom(room.roomId)
             }
             try {
-                if (process.platform === 'darwin' || process.platform === 'win32') {
+                if (process.platform === 'darwin') {
                     if (ElectronNotification.isSupported()) {
                         const notif = new ElectronNotification({
                             title: notifRoomName,
@@ -258,12 +258,22 @@ const eventHandlers = {
                                 at: [],
                             })
                         })
-                        if (process.platform === 'win32') {
-                            notif.on('close', () => {
-                                notif.close()
-                            })
-                        }
                         notif.show()
+                    }
+                } else if (process.platform === 'win32') {
+                    if (ElectronNotification.isSupported()) {
+                        const { showWinToast } = await import('../utils/winToast')
+                        const imageUrl =
+                            message.file && message.file.type.startsWith('image/') ? message.file.url : undefined
+                        showWinToast({
+                            title: notifRoomName,
+                            body: (groupId ? senderName + ': ' : '') + notifMessageContent,
+                            icon: await avatarCache(getAvatarUrl(roomId, true)),
+                            image: imageUrl ? await avatarCache(imageUrl) : undefined,
+                            roomId: room.roomId,
+                            hasReply: true,
+                            replyPlaceholder: 'Reply to ' + notifRoomName,
+                        })
                     }
                 } else {
                     const actions = {

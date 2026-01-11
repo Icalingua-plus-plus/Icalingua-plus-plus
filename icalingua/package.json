@@ -25,6 +25,10 @@
     "build": {
         "productName": "Icalingua++",
         "appId": "Icalingua++",
+        "protocols": {
+            "name": "Icalingua++ URL",
+            "schemes": ["icalingua"]
+        },
         "directories": {
             "output": "build",
             "buildResources": "static"
@@ -202,7 +206,8 @@
         "pinyin-match": "^1.2.6",
         "silk-ilpp": "^1.0.1",
         "socket.io": "^4.8.1",
-        "sqlite3": "5.1.6"
+        "sqlite3": "5.1.6",
+        "xmlbuilder2": "^3.1.1"
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",

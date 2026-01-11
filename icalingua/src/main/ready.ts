@@ -31,7 +31,16 @@ app.on('window-all-closed', () => {
     }, 1000)
 })
 
-app.on('second-instance', tryToShowAllWindows)
+app.on('second-instance', (_event, argv) => {
+    tryToShowAllWindows()
+    // 处理协议 URL
+    const protocolUrl = argv.find((arg) => arg.startsWith('icalingua:'))
+    if (protocolUrl) {
+        import('./utils/protocolHandler').then(({ handleProtocolUrl }) => {
+            handleProtocolUrl(protocolUrl)
+        })
+    }
+})
 
 app.on('before-quit', () => {
     logOut()
