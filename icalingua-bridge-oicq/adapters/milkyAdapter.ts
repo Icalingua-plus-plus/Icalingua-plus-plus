@@ -213,10 +213,10 @@ const attachEventHandler = () => {
         let roomId = groupId ? -groupId : Number(data.peer_id)
         if (await storage.isChatIgnored(roomId)) return
 
-        // 构造消息 ID
+        // 构造消息 ID（time 固定为 0，确保撤回事件能匹配）
         const messageId = isGroup
-            ? encodeGroupMessageId(groupId, senderId, Number(data.message_seq), data.time)
-            : encodePrivateMessageId(Number(data.peer_id), Number(data.message_seq), data.time, isSelfMsg)
+            ? encodeGroupMessageId(groupId, senderId, Number(data.message_seq), 0)
+            : encodePrivateMessageId(Number(data.peer_id), Number(data.message_seq), 0, isSelfMsg)
 
         let senderName: string
         if (isGroup && isSelfMsg) {
@@ -333,9 +333,10 @@ const attachEventHandler = () => {
     bot.on('messageRecall', async (data) => {
         const isGroup = data.message_scene === 'group'
         const roomId = isGroup ? -Number(data.peer_id) : Number(data.peer_id)
+        const isSelf = Number(data.sender_id) === uin
         const messageId = isGroup
             ? encodeGroupMessageId(Number(data.peer_id), Number(data.sender_id), Number(data.message_seq), 0)
-            : encodePrivateMessageId(Number(data.peer_id), Number(data.message_seq), 0, false)
+            : encodePrivateMessageId(Number(data.peer_id), Number(data.message_seq), 0, isSelf)
         clients.deleteMessage(messageId)
         storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
     })
@@ -1071,8 +1072,8 @@ const adapter: typeof oicqAdapter = {
                     const senderId = Number(msg.sender_id)
                     const isSelfMsg = senderId === uin
                     const msgId = isGroup
-                        ? encodeGroupMessageId(peerId, senderId, Number(msg.message_seq), msg.time)
-                        : encodePrivateMessageId(peerId, Number(msg.message_seq), msg.time, isSelfMsg)
+                        ? encodeGroupMessageId(peerId, senderId, Number(msg.message_seq), 0)
+                        : encodePrivateMessageId(peerId, Number(msg.message_seq), 0, isSelfMsg)
                     let senderName: string
                     if (isGroup && msg.group_member) {
                         senderName = msg.group_member.card || msg.group_member.nickname
