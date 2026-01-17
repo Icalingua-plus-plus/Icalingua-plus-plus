@@ -1,6 +1,18 @@
 import axios from 'axios'
 import { fork } from 'child_process'
 import fs from 'fs'
+import path from 'path'
+
+// 获取 silkchild.js 的路径，兼容开发环境和 esbuild 打包后的环境
+const getSilkChildPath = (): string => {
+    // esbuild 打包后: build/static/silkchild.js
+    const bundledPath = path.join(__dirname, 'static/silkchild.js')
+    if (fs.existsSync(bundledPath)) {
+        return bundledPath
+    }
+    // 开发环境 (ts-node): utils/../static/silkchild.js
+    return path.join(__dirname, '../static/silkchild.js')
+}
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
@@ -32,7 +44,7 @@ export default async (url: string) => {
 
 const conventSilk = (rawFilePath: string, filePath: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-        const child = fork(require('path').join(__dirname, '../static/silkchild.js'))
+        const child = fork(getSilkChildPath())
         child.on('message', (msg: string) => {
             console.log('[silkDecode] Child success:', msg)
             resolve()
