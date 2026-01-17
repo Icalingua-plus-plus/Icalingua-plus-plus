@@ -284,7 +284,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getFriendInfo(userId: number, noCache = false) {
-        return this.client.callApi('get_friend_info', { user_id: userId, no_cache: noCache }) as Promise<{
+        return this.client.callApi('get_friend_info', { user_id: Math.abs(userId), no_cache: noCache }) as Promise<{
             friend: FriendEntity
         }>
     }
@@ -294,21 +294,24 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getGroupInfo(groupId: number, noCache = false) {
-        return this.client.callApi('get_group_info', { group_id: groupId, no_cache: noCache }) as Promise<{
+        return this.client.callApi('get_group_info', { group_id: Math.abs(groupId), no_cache: noCache }) as Promise<{
             group: GroupEntity
         }>
     }
 
     async getGroupMemberList(groupId: number, noCache = false) {
-        return this.client.callApi('get_group_member_list', { group_id: groupId, no_cache: noCache }) as Promise<{
+        return this.client.callApi('get_group_member_list', {
+            group_id: Math.abs(groupId),
+            no_cache: noCache,
+        }) as Promise<{
             members: GroupMemberEntity[]
         }>
     }
 
     async getGroupMemberInfo(groupId: number, userId: number, noCache = false) {
         return this.client.callApi('get_group_member_info', {
-            group_id: groupId,
-            user_id: userId,
+            group_id: Math.abs(groupId),
+            user_id: Math.abs(userId),
             no_cache: noCache,
         }) as Promise<{ member: GroupMemberEntity }>
     }
@@ -329,31 +332,31 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async sendPrivateMessage(userId: number, message: OutgoingSegment[]) {
-        return this.client.callApi('send_private_message', { user_id: userId, message }) as Promise<{
+        return this.client.callApi('send_private_message', { user_id: Math.abs(userId), message }) as Promise<{
             message_seq: number
             time: number
         }>
     }
 
     async sendGroupMessage(groupId: number, message: OutgoingSegment[]) {
-        return this.client.callApi('send_group_message', { group_id: groupId, message }) as Promise<{
+        return this.client.callApi('send_group_message', { group_id: Math.abs(groupId), message }) as Promise<{
             message_seq: number
             time: number
         }>
     }
 
     async recallPrivateMessage(userId: number, messageSeq: number) {
-        return this.client.callApi('recall_private_message', { user_id: userId, message_seq: messageSeq })
+        return this.client.callApi('recall_private_message', { user_id: Math.abs(userId), message_seq: messageSeq })
     }
 
     async recallGroupMessage(groupId: number, messageSeq: number) {
-        return this.client.callApi('recall_group_message', { group_id: groupId, message_seq: messageSeq })
+        return this.client.callApi('recall_group_message', { group_id: Math.abs(groupId), message_seq: messageSeq })
     }
 
     async getMessage(messageScene: 'friend' | 'group' | 'temp', peerId: number, messageSeq: number) {
         return this.client.callApi('get_message', {
             message_scene: messageScene,
-            peer_id: peerId,
+            peer_id: Math.abs(peerId),
             message_seq: messageSeq,
         }) as Promise<{ message: IncomingMessage }>
     }
@@ -366,7 +369,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     ) {
         return this.client.callApi('get_history_messages', {
             message_scene: messageScene,
-            peer_id: peerId,
+            peer_id: Math.abs(peerId),
             start_message_seq: startMessageSeq,
             limit,
         }) as Promise<{ messages: IncomingMessage[]; next_message_seq?: number }>
@@ -386,41 +389,49 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     async markMessageAsRead(messageScene: 'friend' | 'group' | 'temp', peerId: number, messageSeq: number) {
         return this.client.callApi('mark_message_as_read', {
             message_scene: messageScene,
-            peer_id: peerId,
+            peer_id: Math.abs(peerId),
             message_seq: messageSeq,
         })
     }
 
     async setGroupMemberCard(groupId: number, userId: number, card: string) {
-        return this.client.callApi('set_group_member_card', { group_id: groupId, user_id: userId, card })
+        return this.client.callApi('set_group_member_card', {
+            group_id: Math.abs(groupId),
+            user_id: Math.abs(userId),
+            card,
+        })
     }
 
     async setGroupMemberMute(groupId: number, userId: number, duration: number) {
-        return this.client.callApi('set_group_member_mute', { group_id: groupId, user_id: userId, duration })
+        return this.client.callApi('set_group_member_mute', {
+            group_id: Math.abs(groupId),
+            user_id: Math.abs(userId),
+            duration,
+        })
     }
 
     async setGroupWholeMute(groupId: number, isMute: boolean) {
-        return this.client.callApi('set_group_whole_mute', { group_id: groupId, is_mute: isMute })
+        return this.client.callApi('set_group_whole_mute', { group_id: Math.abs(groupId), is_mute: isMute })
     }
 
     async kickGroupMember(groupId: number, userId: number, rejectAddRequest = false) {
         return this.client.callApi('kick_group_member', {
-            group_id: groupId,
+            group_id: Math.abs(groupId),
             user_id: userId,
             reject_add_request: rejectAddRequest,
         })
     }
 
     async quitGroup(groupId: number) {
-        return this.client.callApi('quit_group', { group_id: groupId })
+        return this.client.callApi('quit_group', { group_id: Math.abs(groupId) })
     }
 
     async sendFriendNudge(userId: number, isSelf = false) {
-        return this.client.callApi('send_friend_nudge', { user_id: userId, is_self: isSelf })
+        return this.client.callApi('send_friend_nudge', { user_id: Math.abs(userId), is_self: isSelf })
     }
 
     async sendGroupNudge(groupId: number, userId: number) {
-        return this.client.callApi('send_group_nudge', { group_id: groupId, user_id: userId })
+        return this.client.callApi('send_group_nudge', { group_id: Math.abs(groupId), user_id: Math.abs(userId) })
     }
 
     async getCookies(domain: string) {
@@ -433,7 +444,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
 
     async getGroupFiles(groupId: number, parentFolderId = '/') {
         return this.client.callApi('get_group_files', {
-            group_id: groupId,
+            group_id: Math.abs(groupId),
             parent_folder_id: parentFolderId,
         }) as Promise<{
             files: Array<{
@@ -461,14 +472,17 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getGroupFileDownloadUrl(groupId: number, fileId: string) {
-        return this.client.callApi('get_group_file_download_url', { group_id: groupId, file_id: fileId }) as Promise<{
+        return this.client.callApi('get_group_file_download_url', {
+            group_id: Math.abs(groupId),
+            file_id: fileId,
+        }) as Promise<{
             download_url: string
         }>
     }
 
     async getPrivateFileDownloadUrl(userId: number, fileId: string, fileHash: string) {
         return this.client.callApi('get_private_file_download_url', {
-            user_id: userId,
+            user_id: Math.abs(userId),
             file_id: fileId,
             file_hash: fileHash,
         }) as Promise<{ download_url: string }>
@@ -476,7 +490,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
 
     async uploadGroupFile(groupId: number, fileUri: string, fileName: string, parentFolderId = '/') {
         return this.client.callApi('upload_group_file', {
-            group_id: groupId,
+            group_id: Math.abs(groupId),
             file_uri: fileUri,
             file_name: fileName,
             parent_folder_id: parentFolderId,
@@ -485,29 +499,32 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
 
     async uploadPrivateFile(userId: number, fileUri: string, fileName: string) {
         return this.client.callApi('upload_private_file', {
-            user_id: userId,
+            user_id: Math.abs(userId),
             file_uri: fileUri,
             file_name: fileName,
         }) as Promise<{ file_id: string }>
     }
 
     async createGroupFolder(groupId: number, folderName: string) {
-        return this.client.callApi('create_group_folder', { group_id: groupId, folder_name: folderName }) as Promise<{
+        return this.client.callApi('create_group_folder', {
+            group_id: Math.abs(groupId),
+            folder_name: folderName,
+        }) as Promise<{
             folder_id: string
         }>
     }
 
     async deleteGroupFile(groupId: number, fileId: string) {
-        return this.client.callApi('delete_group_file', { group_id: groupId, file_id: fileId })
+        return this.client.callApi('delete_group_file', { group_id: Math.abs(groupId), file_id: fileId })
     }
 
     async deleteGroupFolder(groupId: number, folderId: string) {
-        return this.client.callApi('delete_group_folder', { group_id: groupId, folder_id: folderId })
+        return this.client.callApi('delete_group_folder', { group_id: Math.abs(groupId), folder_id: folderId })
     }
 
     async moveGroupFile(groupId: number, fileId: string, parentFolderId: string, targetFolderId: string) {
         return this.client.callApi('move_group_file', {
-            group_id: groupId,
+            group_id: Math.abs(groupId),
             file_id: fileId,
             parent_folder_id: parentFolderId,
             target_folder_id: targetFolderId,
@@ -516,7 +533,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
 
     async renameGroupFile(groupId: number, fileId: string, parentFolderId: string, newFileName: string) {
         return this.client.callApi('rename_group_file', {
-            group_id: groupId,
+            group_id: Math.abs(groupId),
             file_id: fileId,
             parent_folder_id: parentFolderId,
             new_file_name: newFileName,
