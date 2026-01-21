@@ -38,7 +38,10 @@ import createRoom from '../utils/createRoom'
 import { encodeGroupMessageId, encodePrivateMessageId, decodeMessageId } from '../utils/milkyMessageId'
 import { milkySegmentsToOicq, oicqSegmentsToMilky, oicqToMilkySegment } from '../utils/milkySegmentConverter'
 import { OutgoingSegment } from '@saltify/milky-types'
-import { deleteUploadedFile, getUploadedFileUri, getUploadedFileName } from '../utils/uploadFileManager'
+import { deleteUploadedFile, getUploadedFileUri, getUploadedFileName, getTempDir } from '../utils/uploadFileManager'
+import fs from 'fs'
+import path from 'path'
+import crypto from 'crypto'
 
 let bot: MilkyClient
 let loginForm: LoginForm
@@ -825,6 +828,67 @@ const adapter: typeof oicqAdapter = {
         }
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
+
+        // 语音消息处理
+        if (file && file.type && file.type.startsWith('audio')) {
+            try {
+                let audioUri: string
+                let tempFilePath: string | null = null
+
+                if (b64img) {
+                    // 从 base64 数据创建临时文件
+                    const base64Data = b64img.replace(/^data:.+;base64,/, '')
+                    const buffer = Buffer.from(base64Data, 'base64')
+
+                    // 生成临时文件名
+                    const hash = crypto.createHash('md5').update(buffer).digest('hex')
+                    const ext = file.type === 'audio/silk' ? 'slk' : 'audio'
+                    tempFilePath = path.join(getTempDir(), `voice-${hash}.${ext}`)
+
+                    // 写入临时文件
+                    fs.writeFileSync(tempFilePath, buffer)
+                    audioUri = `file://${tempFilePath}`
+                } else if (file.path) {
+                    // 直接使用文件路径
+                    audioUri = file.path.startsWith('http') ? file.path : `file://${file.path}`
+                } else {
+                    throw new Error('语音消息缺少数据')
+                }
+
+                // 构造语音消息段
+                const chain: OutgoingSegment[] = []
+                chain.push({
+                    type: 'record',
+                    data: { uri: audioUri },
+                })
+
+                // 发送消息
+                if (roomId > 0) {
+                    await bot.sendPrivateMessage(roomId, chain)
+                } else {
+                    await bot.sendGroupMessage(-roomId, chain)
+                }
+
+                // 清理临时文件
+                if (tempFilePath && fs.existsSync(tempFilePath)) {
+                    try {
+                        fs.unlinkSync(tempFilePath)
+                    } catch (e) {
+                        console.error('清理临时语音文件失败:', e)
+                    }
+                }
+
+                clients.closeLoading()
+                return
+            } catch (e) {
+                clients.notifyError({
+                    title: '语音发送失败',
+                    message: e.message,
+                })
+                clients.closeLoading()
+                return
+            }
+        }
 
         // 文件上传
         if (file && ((file.type && !file.type.includes('image')) || !file.type)) {
