@@ -352,20 +352,28 @@ export const tryToShowMainWindow = (callback?: () => void) => {
         callback?.()
     })
 }
+/** 强制将窗口带到前台（绕过 Windows 焦点保护） */
+const bringWindowToFront = (win: BrowserWindow) => {
+    if (win.isMinimized()) {
+        win.restore()
+    }
+    win.show()
+    // Windows 上需要临时设置 alwaysOnTop 才能真正获取焦点
+    win.setAlwaysOnTop(true)
+    win.focus()
+    win.setAlwaysOnTop(false)
+}
+
 export const tryToShowAllWindows = () => {
     judgeLocked(() => {
         if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.show()
-            mainWindow.focus()
+            bringWindowToFront(mainWindow)
         } else if (loginWindow && !loginWindow.isDestroyed()) {
-            loginWindow.show()
-            loginWindow.focus()
+            bringWindowToFront(loginWindow)
         } else if (requestWindow && !requestWindow.isDestroyed()) {
-            requestWindow.show()
-            requestWindow.focus()
+            bringWindowToFront(requestWindow)
         } else if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) {
-            deviceManagerWindow.show()
-            deviceManagerWindow.focus()
+            bringWindowToFront(deviceManagerWindow)
         }
     })
 }

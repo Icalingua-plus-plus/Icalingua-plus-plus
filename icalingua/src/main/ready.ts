@@ -32,13 +32,15 @@ app.on('window-all-closed', () => {
 })
 
 app.on('second-instance', (_event, argv) => {
-    tryToShowAllWindows()
     // 处理协议 URL
     const protocolUrl = argv.find((arg) => arg.startsWith('icalingua:'))
     if (protocolUrl) {
         import('./utils/protocolHandler').then(({ handleProtocolUrl }) => {
             handleProtocolUrl(protocolUrl)
         })
+    } else {
+        // 没有协议 URL 时才弹出窗口（双开时的行为）
+        tryToShowAllWindows()
     }
 })
 
