@@ -9,6 +9,7 @@ require('./ipc/system')
 require('./ipc/botAndStorage')
 require('./ipc/openImage')
 app.setAppUserModelId('Icalingua++')
+app.setAsDefaultProtocolClient('icalingua')
 protocol.registerBufferProtocol('jsbridge', () => {})
 if (process.env.NODE_ENV === 'development')
     protocol.registerFileProtocol('file', (request, cb) => {
