@@ -160,6 +160,29 @@ export default class MongoStorageProvider implements StorageProvider {
         }
     }
 
+    /** 按关键字搜索消息记录。
+     * @param roomId 房间 ID
+     * @param keyword 搜索关键字
+     */
+    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+        try {
+            const arr = await this.mdb
+                .collection<any>('msg' + roomId)
+                .find(
+                    { content: { $regex: keyword, $options: 'i' } },
+                    {
+                        sort: [['time', -1]],
+                        skip,
+                        limit,
+                    },
+                )
+                .toArray()
+            return arr
+        } catch (e) {
+            return []
+        }
+    }
+
     async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
         const query: any = {
             'files.type': { $regex: /^image\// },

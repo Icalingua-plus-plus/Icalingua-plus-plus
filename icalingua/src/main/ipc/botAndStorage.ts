@@ -208,6 +208,13 @@ ipcMain.handle(
         return messages
     },
 )
+ipcMain.handle(
+    'searchMessages',
+    async (_, { roomId, keyword, offset }: { roomId: number; keyword: string; offset: number }) => {
+        const messages = await adapter.searchMessages(roomId, keyword, offset)
+        return messages
+    },
+)
 ipcMain.on('openMemberHistory', async (_, senderId: number, roomId: number, senderName: string) => {
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300

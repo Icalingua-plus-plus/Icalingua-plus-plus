@@ -19,6 +19,7 @@ import DeviceManager from '../views/DeviceManager.vue'
 import ChatWindowView from '../views/ChatWindowView.vue'
 import ImageGalleryView from '../views/ImageGalleryView.vue'
 import MemberHistoryView from '../views/MemberHistoryView.vue'
+import MessageSearchView from '../views/MessageSearchView.vue'
 
 Vue.use(Router)
 
@@ -118,6 +119,11 @@ export default new Router({
             path: '/memberHistory',
             name: 'member-history-page',
             component: MemberHistoryView,
+        },
+        {
+            path: '/messageSearch',
+            name: 'message-search-page',
+            component: MessageSearchView,
         },
     ],
 })

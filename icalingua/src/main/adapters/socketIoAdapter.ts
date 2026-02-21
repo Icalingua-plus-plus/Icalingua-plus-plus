@@ -571,6 +571,15 @@ const adapter: Adapter = {
             }
         })
     },
+    searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
+        return new Promise((resolve, reject) => {
+            if (socket.hasListeners('searchMessages')) {
+                socket.emit('searchMessages', roomId, keyword, offset, resolve)
+            } else {
+                resolve([])
+            }
+        })
+    },
     getFirstUnreadRoom(): Promise<Room> {
         return new Promise((resolve, reject) => {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)

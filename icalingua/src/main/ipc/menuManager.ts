@@ -119,6 +119,32 @@ const openMemberHistoryWindow = (senderId: number, roomId: number, senderName: s
     })
 }
 
+const openMessageSearchWindow = (roomId: number, roomName: string) => {
+    const size = screen.getPrimaryDisplay().size
+    let width = size.width - 300
+    if (width > 1440) width = 900
+    const win = newIcalinguaWindow({
+        height: size.height - 200,
+        width,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
+        },
+    })
+    win.loadURL(getWinUrl() + '#/messageSearch')
+    win.webContents.on('did-finish-load', function () {
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+        win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        win.webContents.setWindowOpenHandler((details) => {
+            shell.openExternal(details.url)
+            return { action: 'deny' }
+        })
+        win.webContents.send('initMessageSearch', { roomId, roomName })
+    })
+}
+
 {
     const initMenu = Menu.buildFromTemplate([
         {
@@ -256,6 +282,16 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     win.webContents.send('theme:sync-theme-data', themes.getThemeData())
                     win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
                 })
+            },
+        },
+        {
+            label: '搜索聊天记录',
+            click: () => {
+                const roomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                openMessageSearchWindow(room.roomId, roomName)
             },
         },
         {

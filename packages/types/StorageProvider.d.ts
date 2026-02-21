@@ -53,4 +53,6 @@ export default interface StorageProvider {
     getAllChatGroups(): Promise<ChatGroup[]>
 
     fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]>
+
+    searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]>
 }

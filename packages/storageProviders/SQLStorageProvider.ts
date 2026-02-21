@@ -688,6 +688,29 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    /** 实现 {@link StorageProvider} 类的 `searchMessages` 方法，
+     * 按关键字搜索消息记录。
+     *
+     * @param roomId 房间 ID
+     * @param keyword 搜索关键字
+     * @param skip 跳过条数
+     * @param limit 返回条数
+     */
+    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+        try {
+            const messages = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where('content', 'like', `%${keyword}%`)
+                .orderBy('time', 'desc')
+                .limit(limit)
+                .offset(skip)
+                .select('*')
+            return messages.map((message) => this.msgConFromDB(message))
+        } catch (e) {
+            this.errorHandle(e)
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，
      * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
      *

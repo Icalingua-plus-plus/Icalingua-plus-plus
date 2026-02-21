@@ -264,6 +264,28 @@ export default class RedisStorageProvider implements StorageProvider {
         }
     }
 
+    /** 按关键字搜索消息记录。
+     * @param roomId 房间 ID
+     * @param keyword 搜索关键字
+     */
+    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+        const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${roomId}:msgIdList`, 0, -1)
+        const matched: Message[] = []
+        const lowerKeyword = keyword.toLowerCase()
+
+        for (const key of allMsgKeys) {
+            const msg = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, key)
+            if (!msg) continue
+            const message = JSON.parse(msg) as Message
+            if (message.content && message.content.toLowerCase().includes(lowerKeyword)) {
+                matched.push(message)
+            }
+        }
+
+        matched.sort((a, b) => b.time - a.time)
+        return matched.slice(skip, skip + limit)
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，
      * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
      *
