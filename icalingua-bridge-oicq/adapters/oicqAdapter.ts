@@ -1668,6 +1668,26 @@ const adapter = {
         const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
         callback(messages)
     },
+    async fetchMessagesBySender(
+        roomId: number,
+        senderId: number,
+        offset: number,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        callback(messages)
+    },
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        offset: number,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        callback(messages)
+    },
     reLogin() {
         bot.login()
     },

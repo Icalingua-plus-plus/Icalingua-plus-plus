@@ -564,20 +564,12 @@ const adapter: Adapter = {
     },
     fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            if (socket.hasListeners('fetchMessagesBySender')) {
-                socket.emit('fetchMessagesBySender', roomId, senderId, offset, resolve)
-            } else {
-                resolve([])
-            }
+            socket.emit('fetchMessagesBySender', roomId, senderId, offset, resolve)
         })
     },
     searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            if (socket.hasListeners('searchMessages')) {
-                socket.emit('searchMessages', roomId, keyword, offset, resolve)
-            } else {
-                resolve([])
-            }
+            socket.emit('searchMessages', roomId, keyword, offset, resolve)
         })
     },
     getFirstUnreadRoom(): Promise<Room> {
