@@ -1900,6 +1900,10 @@ const adapter: OicqAdapter = {
         const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
         return messages
     },
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number) {
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        return messages
+    },
     sliderLogin(ticket: string) {
         bot.sliderLogin(ticket)
     },

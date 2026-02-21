@@ -562,6 +562,15 @@ const adapter: Adapter = {
             socket.emit('fetchMessagesAround', roomId, messageId, before, after, resolve)
         })
     },
+    fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+        return new Promise((resolve, reject) => {
+            if (socket.hasListeners('fetchMessagesBySender')) {
+                socket.emit('fetchMessagesBySender', roomId, senderId, offset, resolve)
+            } else {
+                resolve([])
+            }
+        })
+    },
     getFirstUnreadRoom(): Promise<Room> {
         return new Promise((resolve, reject) => {
             socket.emit('getFirstUnreadRoom', getConfig().priority, resolve)

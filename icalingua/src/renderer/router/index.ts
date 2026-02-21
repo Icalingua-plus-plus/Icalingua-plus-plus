@@ -18,6 +18,7 @@ import CardSourceView from '../views/CardSourceView.vue'
 import DeviceManager from '../views/DeviceManager.vue'
 import ChatWindowView from '../views/ChatWindowView.vue'
 import ImageGalleryView from '../views/ImageGalleryView.vue'
+import MemberHistoryView from '../views/MemberHistoryView.vue'
 
 Vue.use(Router)
 
@@ -112,6 +113,11 @@ export default new Router({
             path: '/imageGallery/:roomId/:roomName',
             name: 'image-gallery-page',
             component: ImageGalleryView,
+        },
+        {
+            path: '/memberHistory',
+            name: 'member-history-page',
+            component: MemberHistoryView,
         },
     ],
 })

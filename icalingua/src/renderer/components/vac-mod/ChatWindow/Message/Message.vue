@@ -377,7 +377,11 @@ export default {
             if (this.message.mirai && this.message.mirai.eqq.avatarUrl) {
                 return this.message.mirai.eqq.avatarUrl
             }
-            if (this.$route.name === 'history-page' && this.message.head_img) return this.message.head_img
+            if (
+                (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') &&
+                this.message.head_img
+            )
+                return this.message.head_img
             return getAvatarUrl(this.message.senderId)
         },
         msgSystemParts() {
@@ -542,7 +546,9 @@ export default {
     overflow-wrap: break-word;
     position: relative;
     white-space: normal;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1), 0 1px 1px -1px rgba(0, 0, 0, 0.11),
+    box-shadow:
+        0 1px 1px -1px rgba(0, 0, 0, 0.1),
+        0 1px 1px -1px rgba(0, 0, 0, 0.11),
         0 1px 2px -1px rgba(0, 0, 0, 0.11);
 }
 
@@ -633,13 +639,17 @@ export default {
     transition-property: box-shadow, opacity;
     transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
     will-change: box-shadow;
-    box-shadow: 0 1px 1px -1px rgba(0, 0, 0, 0.1), 0 1px 1px -1px rgba(0, 0, 0, 0.11),
+    box-shadow:
+        0 1px 1px -1px rgba(0, 0, 0, 0.1),
+        0 1px 1px -1px rgba(0, 0, 0, 0.11),
         0 1px 2px -1px rgba(0, 0, 0, 0.11);
     -webkit-user-select: text;
 }
 
 .vac-message-highlight {
-    box-shadow: 0 1px 2px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.11),
+    box-shadow:
+        0 1px 2px -1px rgba(0, 0, 0, 0.1),
+        0 1px 2px -1px rgba(0, 0, 0, 0.11),
         0 1px 5px -1px rgba(0, 0, 0, 0.11);
 }
 

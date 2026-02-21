@@ -69,6 +69,8 @@ export default interface Adapter {
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
+    fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]>
+
     sliderLogin(ticket: string): void
 
     reLogin(): void

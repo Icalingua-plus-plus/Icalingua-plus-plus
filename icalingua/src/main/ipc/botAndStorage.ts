@@ -184,6 +184,55 @@ ipcMain.handle(
         return adapter.fetchMessagesAround(roomId, messageId, before, after)
     },
 )
+ipcMain.handle(
+    'fetchMessagesBySender',
+    async (_, { roomId, senderId, offset }: { roomId: number; senderId: number; offset: number }) => {
+        const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset)
+        if (roomId === 0) {
+            // 所有群模式：为每条消息附加群头像和群名
+            for (const msg of messages) {
+                const msgRoomId = (msg as any).roomId
+                if (msgRoomId && msgRoomId < 0) {
+                    try {
+                        const room = await adapter.getRoom(msgRoomId)
+                        if (room) {
+                            ;(msg as any)._roomName = getConfig().removeGroupNameEmotes
+                                ? removeGroupNameEmotes(room.roomName)
+                                : room.roomName
+                        }
+                    } catch (e) {}
+                    ;(msg as any)._roomAvatar = `https://p.qlogo.cn/gh/${-msgRoomId}/${-msgRoomId}/0`
+                }
+            }
+        }
+        return messages
+    },
+)
+ipcMain.on('openMemberHistory', async (_, senderId: number, roomId: number, senderName: string) => {
+    const size = screen.getPrimaryDisplay().size
+    let width = size.width - 300
+    if (width > 1440) width = 900
+    const win = newIcalinguaWindow({
+        height: size.height - 200,
+        width,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
+        },
+    })
+    win.loadURL(getWinUrl() + '#/memberHistory')
+    win.webContents.on('did-finish-load', function () {
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+        win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        win.webContents.setWindowOpenHandler((details) => {
+            shell.openExternal(details.url)
+            return { action: 'deny' }
+        })
+        win.webContents.send('initMemberHistory', { senderId, roomId, senderName })
+    })
+})
 ipcMain.on('sliderLogin', (_, ticket: string) => adapter.sliderLogin(ticket))
 ipcMain.on('reLogin', adapter.reLogin)
 ipcMain.on('updateRoom', (_, roomId: number, room: object) => adapter.updateRoom(roomId, room))

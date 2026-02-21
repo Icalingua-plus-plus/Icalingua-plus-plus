@@ -93,6 +93,32 @@ const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' |
     updateAppMenu()
 }
 
+const openMemberHistoryWindow = (senderId: number, roomId: number, senderName: string) => {
+    const size = screen.getPrimaryDisplay().size
+    let width = size.width - 300
+    if (width > 1440) width = 900
+    const win = newIcalinguaWindow({
+        height: size.height - 200,
+        width,
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
+        },
+    })
+    win.loadURL(getWinUrl() + '#/memberHistory')
+    win.webContents.on('did-finish-load', function () {
+        win.webContents.send('theme:sync-theme-data', themes.getThemeData())
+        win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        win.webContents.setWindowOpenHandler((details) => {
+            shell.openExternal(details.url)
+            return { action: 'deny' }
+        })
+        win.webContents.send('initMemberHistory', { senderId, roomId, senderName })
+    })
+}
+
 {
     const initMenu = Menu.buildFromTemplate([
         {
@@ -2617,6 +2643,29 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
     )
     menu.append(
         new MenuItem({
+            label: '查看发言记录',
+            submenu: Menu.buildFromTemplate([
+                ...(room.roomId < 0
+                    ? [
+                          {
+                              label: '当前群',
+                              click: () => {
+                                  openMemberHistoryWindow(message.senderId, room.roomId, message.username)
+                              },
+                          },
+                      ]
+                    : []),
+                {
+                    label: '所有群',
+                    click: () => {
+                        openMemberHistoryWindow(message.senderId, 0, message.username)
+                    },
+                },
+            ]),
+        }),
+    )
+    menu.append(
+        new MenuItem({
             label: `屏蔽此人`,
             click: () => ui.confirmIgnoreChat({ id: message.senderId, name: message.username }),
         }),
@@ -2922,6 +2971,33 @@ ipcMain.on(
                             remark || name || String(displayId),
                         )
                     },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: '查看发言记录',
+                    submenu: Menu.buildFromTemplate([
+                        ...(group
+                            ? [
+                                  {
+                                      label: '当前群',
+                                      click: () => {
+                                          openMemberHistoryWindow(
+                                              displayId,
+                                              -Number(group),
+                                              remark || name || String(displayId),
+                                          )
+                                      },
+                                  },
+                              ]
+                            : []),
+                        {
+                            label: '所有群',
+                            click: () => {
+                                openMemberHistoryWindow(displayId, 0, remark || name || String(displayId))
+                            },
+                        },
+                    ]),
                 }),
             )
         }

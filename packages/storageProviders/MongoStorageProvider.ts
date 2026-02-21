@@ -116,6 +116,50 @@ export default class MongoStorageProvider implements StorageProvider {
         return arr.reverse()
     }
 
+    /** 按发送者查询消息记录。
+     * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
+     * @param senderId 发送者 ID（字符串）
+     */
+    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+        try {
+            if (roomId === 0) {
+                // 所有群模式：遍历所有群集合
+                const rooms = await this.getAllRooms()
+                const groupRooms = rooms.filter((r) => r.roomId < 0)
+                const allMessages: Message[] = []
+                await Promise.all(
+                    groupRooms.map(async (room) => {
+                        const msgs = await this.mdb
+                            .collection<any>('msg' + room.roomId)
+                            .find({ senderId: Number(senderId) })
+                            .toArray()
+                        for (const msg of msgs) {
+                            msg.roomId = room.roomId
+                        }
+                        allMessages.push(...msgs)
+                    }),
+                )
+                allMessages.sort((a, b) => b.time - a.time)
+                return allMessages.slice(skip, skip + limit).reverse()
+            } else {
+                const arr = await this.mdb
+                    .collection<any>('msg' + roomId)
+                    .find(
+                        { senderId: Number(senderId) },
+                        {
+                            sort: [['time', -1]],
+                            skip,
+                            limit,
+                        },
+                    )
+                    .toArray()
+                return arr.reverse()
+            }
+        } catch (e) {
+            return []
+        }
+    }
+
     async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
         const query: any = {
             'files.type': { $regex: /^image\// },

@@ -993,7 +993,8 @@ export default {
     },
     async created() {
         this.optimizeMethod = await ipc.getOptimizeMethodSetting()
-        if (this.$route.name === 'history-page') this.optimizeMethod = 'none'
+        if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page')
+            this.optimizeMethod = 'none'
         keyToSendMessage = await ipc.getKeyToSendMessage()
         ipcRenderer.on('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
         ipcRenderer.on('startForward', (_, _id) => {
@@ -1287,7 +1288,7 @@ export default {
                     messageSeq = parsed.readUInt32BE(4)
                 }
             } catch (e) {}
-            if (this.$route.name === 'history-page') {
+            if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') {
                 judgeSameMessage = (a) => {
                     const seqA = Number(a.split('|')[1])
                     if (seqA !== messageSeq) return false
@@ -1792,7 +1793,13 @@ export default {
             const _message = Object.assign({}, message)
             delete _message.__v_skip
             const sect = window.getSelection().toString()
-            ipc.popupMessageMenu(e, this.room, _message, sect, this.$route.name === 'history-page')
+            ipc.popupMessageMenu(
+                e,
+                this.room,
+                _message,
+                sect,
+                this.$route.name === 'history-page' || this.$route.name === 'member-history-page',
+            )
         },
         avatarCtx(message, e) {
             const _message = Object.assign({}, message)
@@ -1980,7 +1987,7 @@ export default {
             }
         },
         startMouseSelect(e) {
-            if (this.$route.name === 'history-page') return
+            if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') return
             if (this.mouseSelecting) return
 
             for (let el = e.target; el.className !== 'vac-messages-container'; el = el.parentElement) {

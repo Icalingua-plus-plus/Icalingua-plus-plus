@@ -51,4 +51,6 @@ export default interface StorageProvider {
     updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any>
 
     getAllChatGroups(): Promise<ChatGroup[]>
+
+    fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]>
 }

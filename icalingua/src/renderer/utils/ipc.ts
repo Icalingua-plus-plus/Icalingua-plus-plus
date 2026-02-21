@@ -77,6 +77,12 @@ const ipc = {
     ): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessagesAround', { roomId, messageId, before, after })
     },
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, offset })
+    },
+    openMemberHistory(senderId: number, roomId: number, senderName: string) {
+        ipcRenderer.send('openMemberHistory', senderId, roomId, senderName)
+    },
     gotoMessage(roomId: number, messageId: string) {
         ipcRenderer.send('gotoMessage', roomId, messageId)
     },

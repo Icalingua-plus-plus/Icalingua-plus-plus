@@ -223,6 +223,47 @@ export default class RedisStorageProvider implements StorageProvider {
         return messages
     }
 
+    /** 按发送者查询消息记录。
+     * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
+     * @param senderId 发送者 ID（字符串）
+     */
+    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+        const senderIdNum = Number(senderId)
+        const scanRoom = async (rid: number): Promise<Message[]> => {
+            const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${rid}:msgIdList`, 0, -1)
+            const matched: Message[] = []
+            for (const key of allMsgKeys) {
+                const msg = await this.redis.hget(`${this.qid}:msg${rid}:messages`, key)
+                if (!msg) continue
+                const message = JSON.parse(msg) as Message
+                if (message.senderId === senderIdNum) {
+                    if (roomId === 0) (message as any).roomId = rid
+                    matched.push(message)
+                }
+            }
+            return matched
+        }
+
+        if (roomId === 0) {
+            // 所有群模式
+            const rooms = await this.getAllRooms()
+            const groupRooms = rooms.filter((r) => r.roomId < 0)
+            const allMessages: Message[] = []
+            await Promise.all(
+                groupRooms.map(async (room) => {
+                    const msgs = await scanRoom(room.roomId)
+                    allMessages.push(...msgs)
+                }),
+            )
+            allMessages.sort((a, b) => b.time - a.time)
+            return allMessages.slice(skip, skip + limit).reverse()
+        } else {
+            const allMatched = await scanRoom(roomId)
+            allMatched.sort((a, b) => b.time - a.time)
+            return allMatched.slice(skip, skip + limit).reverse()
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，
      * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
      *

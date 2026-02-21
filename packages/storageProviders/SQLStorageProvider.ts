@@ -23,8 +23,9 @@ import upg11to12 from './SQLUpgradeScript/11to12'
 import upg12to13 from './SQLUpgradeScript/12to13'
 import upg13to14 from './SQLUpgradeScript/13to14'
 import upg14to15 from './SQLUpgradeScript/14to15'
+import upg15to16 from './SQLUpgradeScript/15to16'
 
-const dbVersionLatest = 15
+const dbVersionLatest = 16
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -249,6 +250,8 @@ export default class SQLStorageProvider implements StorageProvider {
                 //await upg13to14(this.db)
                 case 14:
                     if (dbVersion >= 7) await upg14to15(this.db)
+                case 15:
+                    if (dbVersion >= 7) await upg15to16(this.db)
                 default:
                     break
             }
@@ -646,6 +649,39 @@ export default class SQLStorageProvider implements StorageProvider {
                 .limit(limit)
                 .offset(skip)
                 .select('*')
+            return messages.reverse().map((message) => this.msgConFromDB(message))
+        } catch (e) {
+            this.errorHandle(e)
+        }
+    }
+
+    /** 实现 {@link StorageProvider} 类的 `fetchMessagesBySender` 方法，
+     * 按发送者查询消息记录。
+     *
+     * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
+     * @param senderId 发送者 ID（字符串）
+     * @param skip 跳过条数
+     * @param limit 返回条数
+     */
+    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+        try {
+            let query = this.db<MessageInSQLDB>('messages').where('senderId', senderId)
+            if (roomId === 0) {
+                // 所有群
+                query = query.where('roomId', '<', 0)
+            } else {
+                query = query.where('roomId', roomId)
+            }
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            if (roomId === 0) {
+                // 所有群模式：保留 roomId 信息
+                return messages.reverse().map((message) => {
+                    const msgRoomId = message.roomId
+                    const converted = this.msgConFromDB(message)
+                    if (converted) (converted as any).roomId = msgRoomId
+                    return converted
+                })
+            }
             return messages.reverse().map((message) => this.msgConFromDB(message))
         } catch (e) {
             this.errorHandle(e)

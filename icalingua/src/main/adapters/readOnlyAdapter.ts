@@ -271,6 +271,14 @@ const adapter: Adapter = {
 
         return messages
     },
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+        await refreshRkeyIfNeeded()
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        for (const message of messages) {
+            processMessageRkey(message)
+        }
+        return messages
+    },
 
     async fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
         // 刷新 rkey（如果需要）
