@@ -1,5 +1,5 @@
 <template>
-    <div class="bg" ondragstart="return false;">
+    <div class="bg" ondragstart="return false">
         <div class="head">
             <div class="title">
                 <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">Stickers</a>
@@ -70,39 +70,41 @@
                 </div>
             </div>
         </div>
-        <div class="stickers_dir" v-if="panel === 'stickers'" @wheel="wheelHandler" ref="stickers_dir">
-            <a @click="changeCurrentDir(RECENT_CATEGORY)" :class="{ selected: current_dir === RECENT_CATEGORY }">
-                Recent
-            </a>
-            <a @click="changeCurrentDir(DEFAULT_CATEGORY)" :class="{ selected: current_dir === DEFAULT_CATEGORY }">
-                Default
-            </a>
-            <a
-                v-for="i in subdirs"
-                :key="i"
-                @click="changeCurrentDir(i)"
-                @click.right="dirMenu(i, $event)"
-                :class="{ selected: current_dir === i }"
-                >{{ i }}</a
-            >
-        </div>
-        <div v-if="panel === 'stickers'" class="panel">
-            <div class="empty" v-show="!pics.length">
-                No stickers found
-                <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
-            </div>
-            <div class="grid" v-show="pics.length">
-                <div v-for="i in pics" :key="i">
-                    <img
-                        :src="getStickerPreview(i)"
-                        :data-relative-path="i"
-                        @click="sendLocalSticker(i)"
-                        @click.right="localStickerMenu(i, $event)"
-                        @error="errorHandler"
-                        @mouseover="onmouseover"
-                        @mouseout="onmouseout"
-                    />
+        <div class="stickers-body" v-if="panel === 'stickers'">
+            <div class="panel">
+                <div class="empty" v-show="!pics.length">
+                    No stickers found
+                    <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
                 </div>
+                <div class="grid" v-show="pics.length">
+                    <div v-for="i in pics" :key="i">
+                        <img
+                            :src="getStickerPreview(i)"
+                            :data-relative-path="i"
+                            @click="sendLocalSticker(i)"
+                            @click.right="localStickerMenu(i, $event)"
+                            @error="errorHandler"
+                            @mouseover="onmouseover"
+                            @mouseout="onmouseout"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div class="stickers_dir" ref="stickers_dir">
+                <a @click="changeCurrentDir(RECENT_CATEGORY)" :class="{ selected: current_dir === RECENT_CATEGORY }">
+                    Recent
+                </a>
+                <a @click="changeCurrentDir(DEFAULT_CATEGORY)" :class="{ selected: current_dir === DEFAULT_CATEGORY }">
+                    Default
+                </a>
+                <a
+                    v-for="i in subdirs"
+                    :key="i"
+                    @click="changeCurrentDir(i)"
+                    @click.right="dirMenu(i, $event)"
+                    :class="{ selected: current_dir === i }"
+                    >{{ i }}</a
+                >
             </div>
         </div>
         <div class="emoji-panel" v-show="panel === 'emojis'">
@@ -128,7 +130,7 @@ const RECENT_CATEGORY = Symbol('RECENT')
 
 const RECENTS = {
     max: {
-        recentLocalSticker: 32,
+        recentLocalSticker: 120,
         recentRemoteSticker: 8,
         recentFace: 18,
     },
@@ -404,21 +406,36 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.stickers-body {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow: hidden;
+
+    > .panel {
+        flex: 1;
+        overflow: auto;
+        height: auto;
+    }
+}
+
 .stickers_dir {
-    width: 100%;
+    width: 30px;
+    min-width: 30px;
     white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    border-bottom: var(--chat-border-style);
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-left: var(--chat-border-style);
     background-color: var(--panel-header-bg);
     display: flex;
-    line-height: 30px;
-    height: 30px;
-    min-height: 30px;
+    flex-direction: column;
+    align-items: center;
 
     a {
-        margin-right: 8px;
+        writing-mode: vertical-rl;
+        padding: 8px 0;
         color: var(--panel-color-sticker-type);
+        cursor: pointer;
 
         &:hover {
             color: var(--panel-color-sticker-type-hover);
