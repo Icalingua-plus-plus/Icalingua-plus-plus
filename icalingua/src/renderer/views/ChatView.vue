@@ -42,16 +42,7 @@
                         @click-middle="removeChatGroup(chatGroup.name)"
                         @click-right="updateChatGroup(chatGroup.name)"
                     />
-                    <SideBarIcon
-                        icon="el-icon-edit-outline"
-                        name="Edit"
-                        @click="
-                            $message({
-                                type: 'info',
-                                message: '懒得写了（目前中键删除对应分组，右键增加/删除当前聊天到分组',
-                            })
-                        "
-                    />
+                    <SideBarIcon icon="el-icon-edit-outline" name="Edit" @click="chatGroupEditorVisible = true" />
                     <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
                     <SideBarIcon
                         icon="el-icon-s-unfold"
@@ -264,6 +255,7 @@
                 <el-button @click="chooseFileType('media')" icon="el-icon-picture-outline">识别媒体</el-button>
             </div>
         </el-dialog>
+        <ChatGroupEditor :visible.sync="chatGroupEditorVisible" :chatGroups="chatGroups" @saved="onChatGroupsSaved" />
     </div>
 </template>
 
@@ -280,6 +272,7 @@ import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import ProgressBar from '../components/ProgressBar.vue'
+import ChatGroupEditor from '../components/ChatGroupEditor.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
@@ -301,6 +294,7 @@ export default {
         Multipane,
         MultipaneResizer,
         ProgressBar,
+        ChatGroupEditor,
     },
     data() {
         return {
@@ -357,6 +351,7 @@ export default {
             tempFile: null,
             tempFileName: '',
             isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
+            chatGroupEditorVisible: false,
         }
     },
     async created() {
@@ -1152,6 +1147,17 @@ Chromium ${process.versions.chrome}`
                 ipc.addChatGroup({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
                 this.chatGroups.push({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
             })
+        },
+        onChatGroupsSaved(newGroups) {
+            this.chatGroups = newGroups
+            // 如果当前选中的分组被删除了，切回全部
+            if (
+                this.selectedChatGroup !== 'chats' &&
+                this.selectedChatGroup !== 'private' &&
+                !newGroups.find((g) => g.name === this.selectedChatGroup)
+            ) {
+                this.selectedChatGroup = 'chats'
+            }
         },
         removeChatGroup(group) {
             this.$confirm(`此操作将永久删除 ${group} 聊天分组, 是否继续?`, '提示', {

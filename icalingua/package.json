@@ -27,7 +27,9 @@
         "appId": "Icalingua++",
         "protocols": {
             "name": "Icalingua++ URL",
-            "schemes": ["icalingua"]
+            "schemes": [
+                "icalingua"
+            ]
         },
         "directories": {
             "output": "build",
@@ -204,12 +206,13 @@
         "silk-ilpp": "^1.0.1",
         "socket.io": "^4.8.1",
         "sqlite3": "5.1.6",
+        "vuedraggable": "^2.24.3",
         "xmlbuilder2": "^3.1.1"
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",
-        "@rspack/core": "^1.1.5",
         "@rspack/cli": "^1.1.5",
+        "@rspack/core": "^1.1.5",
         "@rspack/dev-server": "^1.1.5",
         "@types/fluent-ffmpeg": "^2.1.27",
         "@types/ioredis": "^4.28.10",
