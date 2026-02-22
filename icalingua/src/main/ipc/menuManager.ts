@@ -72,6 +72,37 @@ import sleep from '../../utils/sleep'
 import { spacingSendMessage } from '../../utils/panguSpacing'
 import { pb } from 'oicq-icalingua-plus-plus'
 
+const getStickersDir = () => path.join(app.getPath('userData'), 'stickers')
+const getStickerGroupSubMenu = (downloadFn: (dir: string) => void): Electron.MenuItemConstructorOptions[] => {
+    const stickersDir = getStickersDir()
+    let subdirs: string[] = []
+    try {
+        subdirs = fs
+            .readdirSync(stickersDir)
+            .filter((i) => {
+                try {
+                    return fs.statSync(path.join(stickersDir, i)).isDirectory()
+                } catch {
+                    return false
+                }
+            })
+            .sort()
+    } catch {}
+    const items: Electron.MenuItemConstructorOptions[] = [
+        {
+            label: '默认',
+            click: () => downloadFn(stickersDir),
+        },
+    ]
+    for (const dir of subdirs) {
+        items.push({
+            label: dir,
+            click: () => downloadFn(path.join(stickersDir, dir)),
+        })
+    }
+    return items
+}
+
 export const setOnlineStatus = (status: OnlineStatusType) => {
     setStatus(status)
     getConfig().account.onlineStatus = status
@@ -2084,30 +2115,14 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
                     )
                     fileMenu.append(
                         new MenuItem({
-                            label: '添加为默认表情',
-                            type: 'normal',
-                            click: async () => {
-                                const imgExt = await getImageExt(file.url)
-                                download(
-                                    file.url,
-                                    String(new Date().getTime()) + '.' + imgExt,
-                                    path.join(app.getPath('userData'), 'stickers'),
-                                )
-                            },
-                        }),
-                    )
-                    fileMenu.append(
-                        new MenuItem({
-                            label: '添加为分类表情',
-                            type: 'normal',
-                            visible: false, // TODO
-                            click: () => {
-                                download(
-                                    file.url,
-                                    String(new Date().getTime()),
-                                    path.join(app.getPath('userData'), 'stickers'),
-                                )
-                            },
+                            label: '添加为表情',
+                            type: 'submenu',
+                            submenu: Menu.buildFromTemplate(
+                                getStickerGroupSubMenu(async (dir) => {
+                                    const imgExt = await getImageExt(file.url)
+                                    download(file.url, String(new Date().getTime()) + '.' + imgExt, dir)
+                                }),
+                            ),
                         }),
                     )
                 }

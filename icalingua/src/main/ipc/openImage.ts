@@ -126,7 +126,40 @@ ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Arr
     openImage(url, external, urlList),
 )
 ipcMain.on('saveSticker', async (e, url: string) => {
-    const imgExt = await getImageExt(url)
-    download(url, String(new Date().getTime()) + '.' + imgExt, path.join(app.getPath('userData'), 'stickers'))
+    const { Menu } = require('electron') as typeof import('electron')
+    const fs = require('fs') as typeof import('fs')
+    const stickersDir = path.join(app.getPath('userData'), 'stickers')
+    let subdirs: string[] = []
+    try {
+        subdirs = fs
+            .readdirSync(stickersDir)
+            .filter((i: string) => {
+                try {
+                    return fs.statSync(path.join(stickersDir, i)).isDirectory()
+                } catch {
+                    return false
+                }
+            })
+            .sort()
+    } catch {}
+    const items: Electron.MenuItemConstructorOptions[] = [
+        {
+            label: '默认',
+            click: async () => {
+                const imgExt = await getImageExt(url)
+                download(url, String(new Date().getTime()) + '.' + imgExt, stickersDir)
+            },
+        },
+    ]
+    for (const dir of subdirs) {
+        items.push({
+            label: dir,
+            click: async () => {
+                const imgExt = await getImageExt(url)
+                download(url, String(new Date().getTime()) + '.' + imgExt, path.join(stickersDir, dir))
+            },
+        })
+    }
+    Menu.buildFromTemplate(items).popup({ window: BrowserWindow.fromWebContents(e.sender) })
 })
 export default openImage
