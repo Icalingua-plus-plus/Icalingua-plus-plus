@@ -32,6 +32,13 @@
                     icon="el-icon-download"
                     >批量存图</el-button
                 >
+                <el-button
+                    type="primary"
+                    @click="batchPlusOne"
+                    :disabled="msgsToForward.length === 0"
+                    icon="el-icon-plus"
+                    >+1</el-button
+                >
             </div>
 
             <div class="vac-icon-forward">
@@ -71,9 +78,12 @@ export default {
         recallMsgs() {
             this.msgsToForward.forEach((msg, index) => {
                 const waitTime = Math.floor(index / 5) * 1000
-                setTimeout(() => {
-                    ipc.deleteMessage(this.roomId, msg)
-                }, index * 200 + waitTime)
+                setTimeout(
+                    () => {
+                        ipc.deleteMessage(this.roomId, msg)
+                    },
+                    index * 200 + waitTime,
+                )
             })
             this.stopForward(false)
         },
@@ -98,6 +108,28 @@ export default {
                 this.$message.success(`已下载 ${count} 张图片`)
             } else {
                 this.$message.warning('选择的消息中没有图片')
+            }
+        },
+        async batchPlusOne() {
+            const msgsToForward = this.msgsToForward
+            this.stopForward(false)
+            let count = 0
+            for (const msg of this.messages) {
+                if (msgsToForward.includes(msg._id)) {
+                    if (!msg.flash && (!msg.file || msg.file.type.startsWith('image/'))) {
+                        const msgToSend = {
+                            content: msg.content,
+                            replyMessage: msg.replyMessage,
+                            imgpath: msg.file ? msg.file.url : undefined,
+                            at: [],
+                        }
+                        ipc.sendMessage(msgToSend)
+                        count++
+                        if (count < msgsToForward.length) {
+                            await new Promise((resolve) => setTimeout(resolve, 500))
+                        }
+                    }
+                }
             }
         },
     },
