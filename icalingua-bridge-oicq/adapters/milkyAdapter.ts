@@ -1562,7 +1562,19 @@ const adapter: typeof oicqAdapter = {
     getUnreadCount: async (priority, resolve) => resolve(await storage.getUnreadCount(priority)),
     getFirstUnreadRoom: async (priority, resolve) => resolve(await storage.getFirstUnreadRoom(priority)),
     getRoom: async (roomId, resolve) => resolve(await storage.getRoom(roomId)),
-    getMessageFromStorage: (roomId, msgId) => storage.getMessage(roomId, msgId),
+    getMessageFromStorage: async (roomId, msgId) => {
+        let msg = await storage.getMessage(roomId, msgId)
+        if (!msg && roomId > 0) {
+            // 私聊消息：回复时构造的 ID isSelf 固定为 false，但原消息可能是自己发的（isSelf=true）
+            // 翻转 isSelf 标志位再查一次
+            const decoded = decodeMessageId(msgId)
+            if (decoded && decoded.type === 'private') {
+                const altId = encodePrivateMessageId(decoded.peerId, decoded.messageSeq, 0, !decoded.isSelf)
+                msg = await storage.getMessage(roomId, altId)
+            }
+        }
+        return msg
+    },
     async getIgnoredChats(resolve) {
         resolve(await storage.getIgnoredChats())
     },
