@@ -307,7 +307,7 @@ export default {
             console.log('Stickers directory changed:', dir)
             this.current_dir = dir
             if (dir == RECENT_CATEGORY) {
-                this.pics = RECENTS.get('recentLocalSticker')
+                this.pics = RECENTS.get('recentLocalSticker').filter((i) => fs.existsSync(this.default_dir + i))
                 return
             }
             const subDir = dir == DEFAULT_CATEGORY ? '' : dir + '/'
