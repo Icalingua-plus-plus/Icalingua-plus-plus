@@ -251,7 +251,7 @@
         "sass-loader": "^16.0.5",
         "socket.io-client": "^4.8.1",
         "style-loader": "^4.0.0",
-        "systeminformation": "^5.27.3",
+        "systeminformation": "^5.30.8",
         "ts-node": "^10.9.2",
         "tsconfig-paths": "^3.15.0",
         "typescript": "^5.8.3",
