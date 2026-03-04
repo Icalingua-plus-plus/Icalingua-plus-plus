@@ -895,14 +895,23 @@ Chromium ${process.versions.chrome}`
         openImage: ipc.downloadFileByMessageData,
         async sendSticker(url) {
             const messageType = await ipc.getMessgeTypeSetting()
-            if (this.selectedRoom)
+            if (this.selectedRoom) {
+                const roomRef = this.$refs.room
+                const content = roomRef?.$refs?.roomTextarea?.message || ''
+                const replyMessage = roomRef?.messageReply || null
                 this.sendMessage({
-                    content: '',
+                    content,
                     room: this.selectedRoom,
+                    replyMessage,
                     imgpath: url,
                     sticker: true,
                     messageType: messageType === 'anonymous' ? 'anonymous' : undefined,
                 })
+
+                if (roomRef) {
+                    roomRef.resetMessage(true)
+                }
+            }
             this.$refs.room.focusTextarea()
             if (window.innerWidth < 1200) {
                 this.panel = ''
