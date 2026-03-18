@@ -476,7 +476,9 @@ export default {
             if (p) return
             this.rooms.forEach((e) => {
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter(
+                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
+                    )
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
@@ -1319,7 +1321,9 @@ Chromium ${process.versions.chrome}`
                 default:
                     const group = this.chatGroups.find((g) => g.name === this.selectedChatGroup)
                     if (!group) return []
-                    return this.rooms.filter((e) => group.rooms.includes(e.roomId))
+                    return this.rooms.filter(
+                        (e) => group.rooms.includes(e.roomId) || (group.includeAllPersonal && e.roomId > 0),
+                    )
             }
         },
     },
@@ -1353,7 +1357,9 @@ Chromium ${process.versions.chrome}`
             this.chatGroupsUnreadCount = {}
             n.forEach((e) => {
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter(
+                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
+                    )
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         // 屎山还在堆
@@ -1371,7 +1377,9 @@ Chromium ${process.versions.chrome}`
             this.rooms.forEach((e) => {
                 if (e.roomId === n) return
                 if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter((g) => g.rooms.includes(e.roomId))
+                    const groups = this.chatGroups.filter(
+                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
+                    )
                     if (e.unreadCount > 0) {
                         this.chatGroupsUnreadCount['chats'] = true
                         if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true

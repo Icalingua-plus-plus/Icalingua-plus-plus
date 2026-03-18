@@ -24,8 +24,9 @@ import upg12to13 from './SQLUpgradeScript/12to13'
 import upg13to14 from './SQLUpgradeScript/13to14'
 import upg14to15 from './SQLUpgradeScript/14to15'
 import upg15to16 from './SQLUpgradeScript/15to16'
+import upg16to17 from './SQLUpgradeScript/16to17'
 
-const dbVersionLatest = 16
+const dbVersionLatest = 17
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -206,6 +207,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 return {
                     ...chatGroup,
                     rooms: JSON.parse(chatGroup.rooms),
+                    includeAllPersonal: !!chatGroup.includeAllPersonal,
                 } as ChatGroup
             }
             return null
@@ -252,6 +254,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     if (dbVersion >= 7) await upg14to15(this.db)
                 case 15:
                     if (dbVersion >= 7) await upg15to16(this.db)
+                case 16:
+                    await upg16to17(this.db)
                 default:
                     break
             }
@@ -367,6 +371,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('name').unique().primary()
                     table.bigInteger('index')
                     table.text('rooms')
+                    table.boolean('includeAllPersonal').defaultTo(false)
                 })
             }
 

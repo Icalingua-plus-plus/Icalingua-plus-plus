@@ -28,6 +28,9 @@
                             />
                         </div>
                         <div class="group-actions">
+                            <el-tooltip content="包含所有私聊" placement="top" :open-delay="500">
+                                <el-switch v-model="group.includeAllPersonal" size="mini" active-color="#67C23A" />
+                            </el-tooltip>
                             <el-button type="text" icon="el-icon-edit" size="mini" @click="startRename(idx)" />
                             <el-button
                                 type="text"
@@ -98,6 +101,7 @@ export default {
                     name: g.name,
                     index: g.index,
                     rooms: [...g.rooms],
+                    includeAllPersonal: !!g.includeAllPersonal,
                     _originalName: g.name,
                     _key: ++keyCounter,
                 }))
@@ -175,6 +179,7 @@ export default {
                 name,
                 index: this.localGroups.length + 1,
                 rooms: [-1],
+                includeAllPersonal: false,
                 _originalName: null,
                 _key: ++keyCounter,
             })
@@ -196,13 +201,19 @@ export default {
                 const newIndex = idx + 1
                 if (g._originalName === null) {
                     // 新增的分组
-                    ipc.addChatGroup({ name: g.name, index: newIndex, rooms: g.rooms })
+                    ipc.addChatGroup({
+                        name: g.name,
+                        index: newIndex,
+                        rooms: g.rooms,
+                        includeAllPersonal: g.includeAllPersonal,
+                    })
                 } else {
                     // 已有分组，更新名称和顺序
                     ipc.updateChatGroup(g._originalName, {
                         name: g.name,
                         index: newIndex,
                         rooms: g.rooms,
+                        includeAllPersonal: g.includeAllPersonal,
                     })
                 }
             })
@@ -214,6 +225,7 @@ export default {
                     name: g.name,
                     index: idx + 1,
                     rooms: g.rooms,
+                    includeAllPersonal: g.includeAllPersonal,
                 })),
             )
             this.dialogVisible = false
@@ -275,10 +287,15 @@ export default {
     align-items: center;
     margin-left: 8px;
     flex-shrink: 0;
+    gap: 4px;
 
     .el-button {
         padding: 4px;
-        margin-left: 2px;
+        margin-left: 0;
+    }
+
+    .el-switch {
+        margin-right: 4px;
     }
 
     .delete-btn {
