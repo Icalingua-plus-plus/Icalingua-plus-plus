@@ -2632,6 +2632,16 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
                 },
             }),
         )
+    if (room.roomId < 0) {
+        menu.append(
+            new MenuItem({
+                label: '戳一戳',
+                click: () => {
+                    sendGroupPoke(Math.abs(room.roomId), message.senderId)
+                },
+            }),
+        )
+    }
     menu.append(
         new MenuItem({
             label: `查看头像`,
