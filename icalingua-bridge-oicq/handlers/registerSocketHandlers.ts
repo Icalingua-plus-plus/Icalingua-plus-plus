@@ -9,6 +9,7 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('addRoom', adapter.addRoom)
     socket.on('addChatGroup', adapter.addChatGroup)
     socket.on('updateChatGroup', adapter.updateChatGroup)
+    socket.on('removeChatGroup', adapter.removeChatGroup)
     socket.on('deleteMessage', adapter.deleteMessage)
     socket.on('hideMessage', adapter.hideMessage)
     socket.on('fetchHistory', adapter.fetchHistory)
