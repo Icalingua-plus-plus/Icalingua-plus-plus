@@ -359,9 +359,14 @@ const bringWindowToFront = (win: BrowserWindow) => {
     }
     win.show()
     // Windows 上需要临时设置 alwaysOnTop 才能真正获取焦点
+    // 延迟取消置顶，确保焦点已稳定获取
     win.setAlwaysOnTop(true)
     win.focus()
-    win.setAlwaysOnTop(false)
+    setTimeout(() => {
+        if (!win.isDestroyed()) {
+            win.setAlwaysOnTop(false)
+        }
+    }, 200)
 }
 
 export const tryToShowAllWindows = () => {
