@@ -13,7 +13,7 @@
                 </div>
             </a>
         </div>
-        <div v-show="panel === 'face'" class="panel face-panel">
+        <div v-show="panel === 'face'" class="panel face-panel" ref="facePanel">
             <div class="subheader" v-show="recentFace.length">最近使用</div>
             <div class="grid" v-show="recentFace.length">
                 <div v-for="i in recentFace" :key="i">
@@ -51,7 +51,7 @@
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'remote'" class="panel">
+        <div v-show="panel === 'remote'" class="panel" ref="remotePanel">
             <div class="subheader" v-show="recentRemoteSticker.length">最近使用</div>
             <div class="grid" v-show="recentRemoteSticker.length">
                 <div v-for="i in recentRemoteSticker" :key="i">
@@ -71,7 +71,7 @@
             </div>
         </div>
         <div class="stickers-body" v-if="panel === 'stickers'">
-            <div class="panel">
+            <div class="panel" ref="stickersPanel">
                 <div class="empty" v-show="!pics.length">
                     No stickers found
                     <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
@@ -304,6 +304,11 @@ export default {
             }
         },
         changeCurrentDir(dir) {
+            if (this.current_dir === dir) {
+                // 点击已选中的分组，滚动到顶部
+                if (this.$refs.stickersPanel) this.$refs.stickersPanel.scrollTop = 0
+                return
+            }
             console.log('Stickers directory changed:', dir)
             this.current_dir = dir
             if (dir == RECENT_CATEGORY) {
@@ -385,6 +390,13 @@ export default {
         },
         dirMenu: ipc.popupStickerDirMenu,
         setPanel(type) {
+            if (this.panel === type) {
+                // 点击已选中的 tab，滚动对应面板到顶部
+                const refMap = { face: 'facePanel', remote: 'remotePanel', stickers: 'stickersPanel' }
+                const ref = this.$refs[refMap[type]]
+                if (ref) ref.scrollTop = 0
+                return
+            }
             this.panel = type
             ipc.setLastUsedStickerType(type)
         },

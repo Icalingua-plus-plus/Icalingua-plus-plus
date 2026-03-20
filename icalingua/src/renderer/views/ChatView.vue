@@ -22,14 +22,14 @@
                         name="All Chats"
                         :selected="selectedChatGroup === 'chats'"
                         :redPoint="chatGroupsUnreadCount['chats']"
-                        @click="selectedChatGroup = 'chats'"
+                        @click="selectChatGroup('chats')"
                     />
                     <SideBarIcon
                         icon="el-icon-user"
                         name="Private"
                         :selected="selectedChatGroup === 'private'"
                         :redPoint="chatGroupsUnreadCount['private']"
-                        @click="selectedChatGroup = 'private'"
+                        @click="selectChatGroup('private')"
                     />
                     <SideBarIcon
                         v-for="chatGroup in chatGroups"
@@ -38,7 +38,7 @@
                         :name="chatGroup.name"
                         :selected="selectedChatGroup === chatGroup.name"
                         :redPoint="chatGroupsUnreadCount[chatGroup.name]"
-                        @click="selectedChatGroup = chatGroup.name"
+                        @click="selectChatGroup(chatGroup.name)"
                         @click-middle="removeChatGroup(chatGroup.name)"
                         @click-right="updateChatGroup(chatGroup.name)"
                     />
@@ -433,10 +433,10 @@ export default {
             } else if (e.ctrlKey) {
                 switch (e.key) {
                     case '1':
-                        this.selectedChatGroup = 'chats'
+                        this.selectChatGroup('chats')
                         break
                     case '2':
-                        this.selectedChatGroup = 'private'
+                        this.selectChatGroup('private')
                         break
                     case '3':
                     case '4':
@@ -447,7 +447,7 @@ export default {
                     case '9':
                         const n = Number(e.key)
                         if (this.chatGroups[n - 3]) {
-                            this.selectedChatGroup = this.chatGroups[n - 3].name
+                            this.selectChatGroup(this.chatGroups[n - 3].name)
                         }
                         break
                     default:
@@ -1290,6 +1290,15 @@ Chromium ${process.versions.chrome}`
             this.chooseFileTypeShown = true
             this.tempFile = file
             this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'
+        },
+        selectChatGroup(group) {
+            if (this.selectedChatGroup === group) {
+                // 点击已选中的分组，滚动聊天列表到顶部
+                const content = this.$refs.roomsPanel.$el.querySelector('.content')
+                if (content) content.scrollTop = 0
+            } else {
+                this.selectedChatGroup = group
+            }
         },
         switchUnreadRoom() {
             let unreadRoom
