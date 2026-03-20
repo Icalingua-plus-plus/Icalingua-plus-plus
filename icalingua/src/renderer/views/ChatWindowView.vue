@@ -3,60 +3,92 @@
         <div class="loading-container" v-if="!ready">
             <div class="pace-activity" />
         </div>
-        <Room
-            v-else
-            ref="room"
-            :current-user-id="account"
-            :rooms="[room]"
-            :messages="messages"
-            height="100vh"
-            :rooms-loaded="true"
-            :messages-loaded="messagesLoaded"
-            :show-audio="false"
-            :show-reaction-emojis="false"
-            :show-new-messages-divider="false"
-            :load-first-room="true"
-            :accepted-files="'*'"
-            :message-actions="[]"
-            :single-room="true"
-            :room-id="roomId"
-            :show-rooms-list="false"
-            :is-mobile="false"
-            :menu-actions="[]"
-            :show-send-icon="true"
-            :show-files="true"
-            :show-emojis="true"
-            :show-footer="!isShutUp"
-            :loading-rooms="false"
-            :text-formatting="true"
-            :linkify="linkify"
-            :account="account"
-            :username="username"
-            :last-unread-count="0"
-            :last-unread-at="false"
-            :showSinglePanel="false"
-            :removeHeaderEmotes="roomId < 0 && removeGroupNameEmotes"
-            :usePanguJsRecv="usePanguJsRecv"
-            :isSteamVrRunning="false"
-            :canLoadAfter="isInMiddle"
-            @send-message="sendMessage"
-            @open-file="openImage"
-            @pokefriend="pokeFriend"
-            @download-image="downloadImage"
-            @pokegroup="pokeGroup"
-            @open-forward="openForward"
-            @fetch-messages="fetchMessage"
-            @fetch-messages-after="fetchMessageAfter"
-        >
-            <template v-slot:menu-icon>
-                <i class="el-icon-more"></i>
-            </template>
-        </Room>
+        <div v-else class="chat-window-body">
+            <div class="chat-window-main">
+                <Room
+                    ref="room"
+                    :current-user-id="account"
+                    :rooms="[room]"
+                    :messages="messages"
+                    height="100vh"
+                    :rooms-loaded="true"
+                    :messages-loaded="messagesLoaded"
+                    :show-audio="false"
+                    :show-reaction-emojis="false"
+                    :show-new-messages-divider="false"
+                    :load-first-room="true"
+                    :accepted-files="'*'"
+                    :message-actions="[]"
+                    :single-room="true"
+                    :room-id="roomId"
+                    :show-rooms-list="false"
+                    :is-mobile="false"
+                    :menu-actions="[]"
+                    :show-send-icon="true"
+                    :show-files="true"
+                    :show-emojis="true"
+                    :show-footer="!isShutUp"
+                    :loading-rooms="false"
+                    :text-formatting="true"
+                    :linkify="linkify"
+                    :account="account"
+                    :username="username"
+                    :last-unread-count="0"
+                    :last-unread-at="false"
+                    :showSinglePanel="false"
+                    :removeHeaderEmotes="roomId < 0 && removeGroupNameEmotes"
+                    :usePanguJsRecv="usePanguJsRecv"
+                    :isSteamVrRunning="false"
+                    :canLoadAfter="isInMiddle"
+                    @send-message="sendMessage"
+                    @open-file="openImage"
+                    @pokefriend="pokeFriend"
+                    @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
+                    @close-stickers-panel="panel = ''"
+                    @download-image="downloadImage"
+                    @pokegroup="pokeGroup"
+                    @open-forward="openForward"
+                    @fetch-messages="fetchMessage"
+                    @fetch-messages-after="fetchMessageAfter"
+                >
+                    <template v-slot:menu-icon>
+                        <i class="el-icon-more"></i>
+                    </template>
+                </Room>
+            </div>
+            <transition name="vac-fade-stickers">
+                <div
+                    :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                    v-show="panel"
+                    class="panel-right"
+                    ref="stickerPanel"
+                >
+                    <transition name="vac-fade-stickers">
+                        <Stickers
+                            v-show="panel === 'stickers'"
+                            :open="panel === 'stickers'"
+                            @send="sendSticker"
+                            @close="panel = ''"
+                            @selectEmoji="
+                                $refs.room.useMessageContent($event.data)
+                                $refs.room.focusTextarea()
+                            "
+                            @selectFace="
+                                $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                $refs.room.focusTextarea()
+                            "
+                            @sendLottie="sendLottie"
+                        />
+                    </transition>
+                </div>
+            </transition>
+        </div>
     </div>
 </template>
 
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
+import Stickers from '../components/Stickers.vue'
 import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
 import '../utils/themes'
@@ -65,6 +97,7 @@ export default {
     name: 'ChatWindowView',
     components: {
         Room,
+        Stickers,
     },
     data() {
         return {
@@ -89,7 +122,29 @@ export default {
             isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
             targetMessageId: null, // 定位的目标消息 ID
             pendingGotoMessageId: null, // 等待定位的消息 ID（窗口初始化时使用）
+            panel: '', // 表情面板状态
+            stickerPanelWidth: 0, // 记录面板宽度，关闭时缩回
         }
+    },
+    watch: {
+        panel(val, oldVal) {
+            if (val && !oldVal) {
+                // 面板打开：等渲染完成后测量实际宽度再扩展窗口
+                this.$nextTick(() => {
+                    const el = this.$refs.stickerPanel
+                    if (el) {
+                        this.stickerPanelWidth = el.offsetWidth
+                        ipcRenderer.send('resizeChatWindow', this.stickerPanelWidth)
+                    }
+                })
+            } else if (!val && oldVal) {
+                // 面板关闭：缩回窗口
+                if (this.stickerPanelWidth > 0) {
+                    ipcRenderer.send('resizeChatWindow', -this.stickerPanelWidth)
+                    this.stickerPanelWidth = 0
+                }
+            }
+        },
     },
     async created() {
         // 从路由参数获取 roomId
@@ -279,6 +334,56 @@ export default {
             ipc.openForward(e.resId, e.fileName)
         },
 
+        async sendSticker(url) {
+            const messageType = await ipc.getMessgeTypeSetting()
+            const roomRef = this.$refs.room
+            const content = roomRef?.$refs?.roomTextarea?.message || ''
+            const replyMessage = roomRef?.messageReply || null
+            this.sendMessage({
+                content,
+                room: this.room,
+                replyMessage,
+                imgpath: url,
+                sticker: true,
+                messageType: messageType === 'anonymous' ? 'anonymous' : undefined,
+            })
+
+            if (roomRef) {
+                roomRef.resetMessage(true)
+            }
+            this.$refs.room.focusTextarea()
+            if (window.innerWidth < 1200) {
+                this.panel = ''
+            }
+        },
+
+        async sendLottie(lottie) {
+            const messageType = await ipc.getMessgeTypeSetting()
+            let lottieCode = `[QLottie: ${lottie.qlottie},${lottie.id}]`
+            const randomList = {
+                114: 5,
+                358: 6,
+                359: 3,
+                394: 6,
+                417: 6,
+                421: 6,
+                431: 6,
+            }
+            const getRandomInt = (max) => {
+                return Math.floor(Math.random() * Math.floor(max)) + 1
+            }
+            if (Object.keys(randomList).includes(String(lottie.id)))
+                lottieCode = `[QLottie: ${lottie.qlottie},${lottie.id},${getRandomInt(randomList[lottie.id])}]`
+            this.sendMessage({
+                content: lottieCode,
+                room: this.room,
+                messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
+            })
+            if (window.innerWidth < 1200) {
+                this.panel = ''
+            }
+        },
+
         removeGroupNameEmotesFunc(name) {
             if (!name) return name
             return name.replace(/\[.*?\]/g, '').trim() || name
@@ -361,6 +466,24 @@ export default {
 .chat-window-root {
     height: 100vh;
     width: 100%;
+}
+
+.chat-window-body {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+.chat-window-main {
+    flex: 1;
+    min-width: 0;
+    height: 100vh;
+}
+
+.panel-right {
+    height: 100vh;
+    border-left: var(--chat-border-style);
+    flex-shrink: 0;
 }
 
 .loading-container {

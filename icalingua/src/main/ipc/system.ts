@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, BrowserWindow } from 'electron'
 import { app } from 'electron'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
@@ -45,4 +45,11 @@ ipcMain.on('setLockPassword', (_, password: string) => {
     const salt = crypto.randomBytes(16).toString('hex')
     getConfig().lockPassword = md5(password + salt) + '|' + salt
     saveConfigFile()
+})
+
+ipcMain.on('resizeChatWindow', (event, deltaWidth: number) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win || win.isDestroyed()) return
+    const [w, h] = win.getSize()
+    win.setSize(w + deltaWidth, h)
 })
