@@ -1,10 +1,10 @@
 /**
  * Milky 协议客户端封装
- * 基于 @saltify/milky-node-sdk
+ * 基于 @saltify/milky-tea
  */
 
 import { EventEmitter } from 'eventemitter3'
-import { MilkyClient as SdkClient } from '@saltify/milky-node-sdk'
+import { MilkyClient as SdkClient, createMilkyClient } from '@saltify/milky-tea'
 import { IncomingSegment, OutgoingSegment } from '@saltify/milky-types'
 
 // ============ 事件类型定义 ============
@@ -193,69 +193,59 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async connect(): Promise<void> {
-        // 如果已有连接，先清理
-        if (this.client) {
-            this.client.dispose()
-        }
-
-        // 解析 URL
-        const urlObj = new URL(this.url)
-        const useTLS = urlObj.protocol === 'https:' || urlObj.protocol === 'wss:'
-        const authority = urlObj.host
-        const basePath = (urlObj.pathname.endsWith('/') ? urlObj.pathname : urlObj.pathname + '/') as
-            | `/${string}/`
-            | '/'
-
-        this.client = new SdkClient(authority, basePath, this.accessToken, useTLS, false)
+        this.client = createMilkyClient({ baseURL: this.url, token: this.accessToken })
 
         // 注册事件处理器
-        this.client.onEvent('message_receive', (event) => {
+        const eventSource = this.client.event('auto')
+        eventSource.addEventListener('message_receive', (event) => {
             this.emit('message', event.data as unknown as IncomingMessage)
         })
 
-        this.client.onEvent('message_recall', (event) => {
+        eventSource.addEventListener('message_recall', (event) => {
             this.emit('messageRecall', event.data as unknown as MessageRecallEvent)
         })
 
-        this.client.onEvent('group_member_increase', (event) => {
+        eventSource.addEventListener('group_member_increase', (event) => {
             this.emit('groupMemberIncrease', event.data as unknown as GroupMemberIncreaseEvent)
         })
 
-        this.client.onEvent('group_member_decrease', (event) => {
+        eventSource.addEventListener('group_member_decrease', (event) => {
             this.emit('groupMemberDecrease', event.data as unknown as GroupMemberDecreaseEvent)
         })
 
-        this.client.onEvent('group_mute', (event) => {
+        eventSource.addEventListener('group_mute', (event) => {
             this.emit('groupMute', event.data as unknown as GroupMuteEvent)
         })
 
-        this.client.onEvent('group_whole_mute', (event) => {
+        eventSource.addEventListener('group_whole_mute', (event) => {
             this.emit('groupWholeMute', event.data as unknown as GroupWholeMuteEvent)
         })
 
-        this.client.onEvent('group_admin_change', (event) => {
+        eventSource.addEventListener('group_admin_change', (event) => {
             this.emit('groupAdminChange', event.data as unknown as GroupAdminChangeEvent)
         })
 
-        this.client.onEvent('friend_nudge', (event) => {
+        eventSource.addEventListener('friend_nudge', (event) => {
             this.emit('friendNudge', event.data as unknown as FriendNudgeEvent)
         })
 
-        this.client.onEvent('group_nudge', (event) => {
+        eventSource.addEventListener('group_nudge', (event) => {
             this.emit('groupNudge', event.data as unknown as GroupNudgeEvent)
         })
 
-        this.client.onEvent('friend_file_upload', (event) => {
+        eventSource.addEventListener('friend_file_upload', (event) => {
             this.emit('friendFileUpload', event.data as unknown as FriendFileUploadEvent)
         })
 
-        this.client.onEvent('group_file_upload', (event) => {
+        eventSource.addEventListener('group_file_upload', (event) => {
             this.emit('groupFileUpload', event.data as unknown as GroupFileUploadEvent)
         })
 
-        this.client.onEvent('bot_offline', (event) => {
+        eventSource.addEventListener('bot_offline', (event) => {
             this.emit('botOffline', event.data as unknown as { reason: string })
         })
+
+        eventSource.close()
 
         // 获取登录信息
         const loginInfo = await this.getLoginInfo()
@@ -266,11 +256,11 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     // ============ API 方法 ============
 
     async getLoginInfo() {
-        return this.client.callApi('get_login_info') as Promise<{ uin: number; nickname: string }>
+        return this.client.system.getLoginInfo() as Promise<{ uin: number; nickname: string }>
     }
 
     async getImplInfo() {
-        return this.client.callApi('get_impl_info') as Promise<{
+        return this.client.system.getImplInfo() as Promise<{
             impl_name: string
             impl_version: string
             qq_protocol_version: string
@@ -280,27 +270,27 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getFriendList(noCache = false) {
-        return this.client.callApi('get_friend_list', { no_cache: noCache }) as Promise<{ friends: FriendEntity[] }>
+        return this.client.system.getFriendList({ no_cache: noCache }) as Promise<{ friends: FriendEntity[] }>
     }
 
     async getFriendInfo(userId: number, noCache = false) {
-        return this.client.callApi('get_friend_info', { user_id: Math.abs(userId), no_cache: noCache }) as Promise<{
+        return this.client.system.getFriendInfo({ user_id: Math.abs(userId), no_cache: noCache }) as Promise<{
             friend: FriendEntity
         }>
     }
 
     async getGroupList(noCache = false) {
-        return this.client.callApi('get_group_list', { no_cache: noCache }) as Promise<{ groups: GroupEntity[] }>
+        return this.client.system.getGroupList({ no_cache: noCache }) as Promise<{ groups: GroupEntity[] }>
     }
 
     async getGroupInfo(groupId: number, noCache = false) {
-        return this.client.callApi('get_group_info', { group_id: Math.abs(groupId), no_cache: noCache }) as Promise<{
+        return this.client.system.getGroupInfo({ group_id: Math.abs(groupId), no_cache: noCache }) as Promise<{
             group: GroupEntity
         }>
     }
 
     async getGroupMemberList(groupId: number, noCache = false) {
-        return this.client.callApi('get_group_member_list', {
+        return this.client.system.getGroupMemberList({
             group_id: Math.abs(groupId),
             no_cache: noCache,
         }) as Promise<{
@@ -309,7 +299,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getGroupMemberInfo(groupId: number, userId: number, noCache = false) {
-        return this.client.callApi('get_group_member_info', {
+        return this.client.system.getGroupMemberInfo({
             group_id: Math.abs(groupId),
             user_id: Math.abs(userId),
             no_cache: noCache,
@@ -317,7 +307,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getUserProfile(userId: number) {
-        return this.client.callApi('get_user_profile', { user_id: userId }) as Promise<{
+        return this.client.system.getUserProfile({ user_id: userId }) as Promise<{
             nickname: string
             qid: string
             age: number
@@ -332,29 +322,29 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async sendPrivateMessage(userId: number, message: OutgoingSegment[]) {
-        return this.client.callApi('send_private_message', { user_id: Math.abs(userId), message }) as Promise<{
+        return this.client.message.sendPrivateMessage({ user_id: Math.abs(userId), message }) as Promise<{
             message_seq: number
             time: number
         }>
     }
 
     async sendGroupMessage(groupId: number, message: OutgoingSegment[]) {
-        return this.client.callApi('send_group_message', { group_id: Math.abs(groupId), message }) as Promise<{
+        return this.client.message.sendGroupMessage({ group_id: Math.abs(groupId), message }) as Promise<{
             message_seq: number
             time: number
         }>
     }
 
     async recallPrivateMessage(userId: number, messageSeq: number) {
-        return this.client.callApi('recall_private_message', { user_id: Math.abs(userId), message_seq: messageSeq })
+        return this.client.message.recallPrivateMessage({ user_id: Math.abs(userId), message_seq: messageSeq })
     }
 
     async recallGroupMessage(groupId: number, messageSeq: number) {
-        return this.client.callApi('recall_group_message', { group_id: Math.abs(groupId), message_seq: messageSeq })
+        return this.client.message.recallGroupMessage({ group_id: Math.abs(groupId), message_seq: messageSeq })
     }
 
     async getMessage(messageScene: 'friend' | 'group' | 'temp', peerId: number, messageSeq: number) {
-        return this.client.callApi('get_message', {
+        return this.client.message.getMessage({
             message_scene: messageScene,
             peer_id: Math.abs(peerId),
             message_seq: messageSeq,
@@ -367,7 +357,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
         startMessageSeq?: number,
         limit?: number,
     ) {
-        return this.client.callApi('get_history_messages', {
+        return this.client.message.getHistoryMessages({
             message_scene: messageScene,
             peer_id: Math.abs(peerId),
             start_message_seq: startMessageSeq,
@@ -376,7 +366,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getForwardedMessages(forwardId: string) {
-        return this.client.callApi('get_forwarded_messages', { forward_id: forwardId }) as Promise<{
+        return this.client.message.getForwardedMessages({ forward_id: forwardId }) as Promise<{
             messages: Array<{
                 sender_name: string
                 avatar_url: string
@@ -387,7 +377,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async markMessageAsRead(messageScene: 'friend' | 'group' | 'temp', peerId: number, messageSeq: number) {
-        return this.client.callApi('mark_message_as_read', {
+        return this.client.message.markMessageAsRead({
             message_scene: messageScene,
             peer_id: Math.abs(peerId),
             message_seq: messageSeq,
@@ -395,7 +385,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async setGroupMemberCard(groupId: number, userId: number, card: string) {
-        return this.client.callApi('set_group_member_card', {
+        return this.client.group.setGroupMemberCard({
             group_id: Math.abs(groupId),
             user_id: Math.abs(userId),
             card,
@@ -403,7 +393,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async setGroupMemberMute(groupId: number, userId: number, duration: number) {
-        return this.client.callApi('set_group_member_mute', {
+        return this.client.group.setGroupMemberMute({
             group_id: Math.abs(groupId),
             user_id: Math.abs(userId),
             duration,
@@ -411,11 +401,11 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async setGroupWholeMute(groupId: number, isMute: boolean) {
-        return this.client.callApi('set_group_whole_mute', { group_id: Math.abs(groupId), is_mute: isMute })
+        return this.client.group.setGroupWholeMute({ group_id: Math.abs(groupId), is_mute: isMute })
     }
 
     async kickGroupMember(groupId: number, userId: number, rejectAddRequest = false) {
-        return this.client.callApi('kick_group_member', {
+        return this.client.group.kickGroupMember({
             group_id: Math.abs(groupId),
             user_id: userId,
             reject_add_request: rejectAddRequest,
@@ -423,27 +413,27 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async quitGroup(groupId: number) {
-        return this.client.callApi('quit_group', { group_id: Math.abs(groupId) })
+        return this.client.group.quitGroup({ group_id: Math.abs(groupId) })
     }
 
     async sendFriendNudge(userId: number, isSelf = false) {
-        return this.client.callApi('send_friend_nudge', { user_id: Math.abs(userId), is_self: isSelf })
+        return this.client.friend.sendFriendNudge({ user_id: Math.abs(userId), is_self: isSelf })
     }
 
     async sendGroupNudge(groupId: number, userId: number) {
-        return this.client.callApi('send_group_nudge', { group_id: Math.abs(groupId), user_id: Math.abs(userId) })
+        return this.client.group.sendGroupNudge({ group_id: Math.abs(groupId), user_id: Math.abs(userId) })
     }
 
     async getCookies(domain: string) {
-        return this.client.callApi('get_cookies', { domain }) as Promise<{ cookies: string }>
+        return this.client.system.getCookies({ domain }) as Promise<{ cookies: string }>
     }
 
     async getCSRFToken() {
-        return this.client.callApi('get_csrf_token') as Promise<{ csrf_token: string }>
+        return this.client.system.getCsrfToken() as Promise<{ csrf_token: string }>
     }
 
     async getGroupFiles(groupId: number, parentFolderId = '/') {
-        return this.client.callApi('get_group_files', {
+        return this.client.file.getGroupFiles({
             group_id: Math.abs(groupId),
             parent_folder_id: parentFolderId,
         }) as Promise<{
@@ -472,7 +462,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getGroupFileDownloadUrl(groupId: number, fileId: string) {
-        return this.client.callApi('get_group_file_download_url', {
+        return this.client.file.getGroupFileDownloadUrl({
             group_id: Math.abs(groupId),
             file_id: fileId,
         }) as Promise<{
@@ -481,7 +471,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getPrivateFileDownloadUrl(userId: number, fileId: string, fileHash: string) {
-        return this.client.callApi('get_private_file_download_url', {
+        return this.client.file.getPrivateFileDownloadUrl({
             user_id: Math.abs(userId),
             file_id: fileId,
             file_hash: fileHash,
@@ -489,7 +479,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async uploadGroupFile(groupId: number, fileUri: string, fileName: string, parentFolderId = '/') {
-        return this.client.callApi('upload_group_file', {
+        return this.client.file.uploadGroupFile({
             group_id: Math.abs(groupId),
             file_uri: fileUri,
             file_name: fileName,
@@ -498,7 +488,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async uploadPrivateFile(userId: number, fileUri: string, fileName: string) {
-        return this.client.callApi('upload_private_file', {
+        return this.client.file.uploadPrivateFile({
             user_id: Math.abs(userId),
             file_uri: fileUri,
             file_name: fileName,
@@ -506,7 +496,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async createGroupFolder(groupId: number, folderName: string) {
-        return this.client.callApi('create_group_folder', {
+        return this.client.file.createGroupFolder({
             group_id: Math.abs(groupId),
             folder_name: folderName,
         }) as Promise<{
@@ -515,15 +505,15 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async deleteGroupFile(groupId: number, fileId: string) {
-        return this.client.callApi('delete_group_file', { group_id: Math.abs(groupId), file_id: fileId })
+        return this.client.file.deleteGroupFile({ group_id: Math.abs(groupId), file_id: fileId })
     }
 
     async deleteGroupFolder(groupId: number, folderId: string) {
-        return this.client.callApi('delete_group_folder', { group_id: Math.abs(groupId), folder_id: folderId })
+        return this.client.file.deleteGroupFolder({ group_id: Math.abs(groupId), folder_id: folderId })
     }
 
     async moveGroupFile(groupId: number, fileId: string, parentFolderId: string, targetFolderId: string) {
-        return this.client.callApi('move_group_file', {
+        return this.client.file.moveGroupFile({
             group_id: Math.abs(groupId),
             file_id: fileId,
             parent_folder_id: parentFolderId,
@@ -532,7 +522,7 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async renameGroupFile(groupId: number, fileId: string, parentFolderId: string, newFileName: string) {
-        return this.client.callApi('rename_group_file', {
+        return this.client.file.renameGroupFile({
             group_id: Math.abs(groupId),
             file_id: fileId,
             parent_folder_id: parentFolderId,
@@ -541,10 +531,8 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     }
 
     async getResourceTempUrl(resourceId: string) {
-        return this.client.callApi('get_resource_temp_url', { resource_id: resourceId }) as Promise<{ url: string }>
+        return this.client.message.getResourceTempUrl({ resource_id: resourceId }) as Promise<{ url: string }>
     }
 
-    dispose() {
-        this.client?.dispose()
-    }
+    dispose() {}
 }

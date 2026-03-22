@@ -277,12 +277,9 @@ importers:
       '@noble/ed25519':
         specifier: 1.7.1
         version: 1.7.1
-      '@saltify/milky-node-sdk':
-        specifier: ^1.0.0
-        version: 1.0.0
-      '@saltify/milky-types':
-        specifier: ^1.0.0
-        version: 1.0.0
+      '@saltify/milky-tea':
+        specifier: ^0.1.2
+        version: 0.1.2
       axios:
         specifier: ^1.12.0
         version: 1.13.2
@@ -1119,11 +1116,16 @@ packages:
   '@rspack/lite-tapable@1.1.0':
     resolution: {integrity: sha512-E2B0JhYFmVAwdDiG14+DW0Di4Ze4Jg10Pc4/lILUrd5DRCaklduz2OvJ5HYQ6G+hd+WTzqQb3QnDNfK4yvAFYw==}
 
-  '@saltify/milky-node-sdk@1.0.0':
-    resolution: {integrity: sha512-wc4+QnRHGbLU9ICLQevub+gzvxANe217qvRnR64lFQxnuNRxej1SWVVUT8+TtbqPc3XI4MsAzGWDyxjMou2qFg==}
+  '@saltify/milky-tea@0.1.2':
+    resolution: {integrity: sha512-mEDuvtmIdk1f9SUGVPmNFXlFhZmH2WR9gODTPNyPqVwJVzxauX/G32V5SU9fnJR6S83om9Xrznw46qO+yu+bFw==}
+    peerDependencies:
+      eventsource: ^4.1.0
+    peerDependenciesMeta:
+      eventsource:
+        optional: true
 
-  '@saltify/milky-types@1.0.0':
-    resolution: {integrity: sha512-2xaPdHUM/gdqyZXkmv26/NIXZn1Snlsb/50zto8zXp3soNKlUQCfoRZRpQdD3auEqs686ol7TIqIemlxxDgySA==}
+  '@saltify/milky-types@1.2.0-rc.4':
+    resolution: {integrity: sha512-IUyE2GcdcLS5qw++k/PHHbpNhDeryKlfPMYLk+/UOn4MWHchvU1LQnqJmv/J/xSUYREy0Hac8fJ224O9j6PqqQ==}
 
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
@@ -2646,14 +2648,6 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
-
-  eventsource-client@1.2.0:
-    resolution: {integrity: sha512-kDI75RSzO3TwyG/K9w1ap8XwqSPcwi6jaMkNulfVeZmSeUM49U8kUzk1s+vKNt0tGrXgK47i+620Yasn1ccFiw==}
-    engines: {node: '>=18.0.0'}
-
-  eventsource-parser@3.0.6:
-    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
-    engines: {node: '>=18.0.0'}
 
   execa@8.0.1:
     resolution: {integrity: sha512-VyhnebXciFV2DESc+p6B+y0LjSm0krU4OgJN44qFAhBY0TJ+1V61tYD2+wHusZ6F9n5K+vl8k0sTy7PEfV4qpg==}
@@ -5206,8 +5200,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@4.3.5:
-    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
 
@@ -6283,15 +6277,13 @@ snapshots:
 
   '@rspack/lite-tapable@1.1.0': {}
 
-  '@saltify/milky-node-sdk@1.0.0':
+  '@saltify/milky-tea@0.1.2':
     dependencies:
-      '@saltify/milky-types': 1.0.0
-      eventsource-client: 1.2.0
-      zod: 4.3.5
+      '@saltify/milky-types': 1.2.0-rc.4
 
-  '@saltify/milky-types@1.0.0':
+  '@saltify/milky-types@1.2.0-rc.4':
     dependencies:
-      zod: 4.3.5
+      zod: 4.3.6
 
   '@sindresorhus/is@4.6.0': {}
 
@@ -8128,12 +8120,6 @@ snapshots:
   eventemitter3@5.0.1: {}
 
   events@3.3.0: {}
-
-  eventsource-client@1.2.0:
-    dependencies:
-      eventsource-parser: 3.0.6
-
-  eventsource-parser@3.0.6: {}
 
   execa@8.0.1:
     dependencies:
@@ -10929,4 +10915,4 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@4.3.5: {}
+  zod@4.3.6: {}
