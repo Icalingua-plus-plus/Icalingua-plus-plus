@@ -1318,6 +1318,8 @@ const adapter: typeof oicqAdapter = {
             }))
             resolve(all)
         } catch (e) {
+            console.error('获取群成员列表失败', 'group:', group, e)
+            console.trace('getGroupMembers 调用栈')
             clients.messageError('获取群成员列表失败')
             resolve([])
         }

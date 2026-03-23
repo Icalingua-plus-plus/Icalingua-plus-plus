@@ -2,7 +2,7 @@ import { build } from 'esbuild'
 import { readFileSync, writeFileSync, cpSync } from 'fs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
-const external = Object.keys(pkg.dependencies || {})
+const external = Object.keys(pkg.dependencies || {}).filter((dep) => !dep.startsWith('@saltify/'))
 
 await build({
     entryPoints: ['index.ts'],
