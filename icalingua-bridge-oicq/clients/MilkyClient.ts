@@ -4,8 +4,9 @@
  */
 
 import { EventEmitter } from 'eventemitter3'
-import { createMilkyClient, type MilkyClient as MilkyClientType, type MilkyEventSource } from '@saltify/milky-tea'
+import { createMilkyClient, type MilkyClient as MilkyClientType } from '@saltify/milky-tea'
 import type { IncomingSegment, OutgoingSegment } from '@saltify/milky-types'
+import type { EventSource as RawEventSource } from 'eventsource'
 
 // ============ 事件类型定义 ============
 
@@ -174,7 +175,7 @@ type MilkyClientEvents = {
 
 export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     private client: MilkyClientType
-    private eventSource: MilkyEventSource
+    private eventSource: RawEventSource
     private _uin: number = 0
     private _nickname: string = ''
 
@@ -205,58 +206,87 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
             strict: false,
         })
 
-        // 创建事件源
-        this.eventSource = this.client.event('auto', {
-            reconnect: { interval: 5000, attempts: 'always' },
+        // 直接使用 eventsource 包创建 SSE 连接
+        // milky-tea 内部硬编码监听 "milky_event" 事件类型，但部分 milky 服务端
+        // 可能使用默认的 "message" 类型，这里同时监听两者以确保兼容
+        const { EventSource } = await import('eventsource')
+        const eventUrl = new URL(this.url)
+        if (!eventUrl.pathname.endsWith('/')) eventUrl.pathname += '/'
+        eventUrl.pathname += 'event'
+        if (this.accessToken) eventUrl.searchParams.set('token', this.accessToken)
+
+        this.eventSource = new EventSource(eventUrl.toString())
+
+        this.eventSource.addEventListener('open', () => {
+            console.log('[MilkyClient] 事件源已连接')
         })
 
-        // 注册事件处理器
-        this.eventSource.addEventListener('message', (event) => {
-            const ev = event.data
-            switch (ev.type) {
-                case 'message_receive':
-                    this.emit('message', ev.data as unknown as IncomingMessage)
-                    break
-                case 'message_recall':
-                    this.emit('messageRecall', ev.data as unknown as MessageRecallEvent)
-                    break
-                case 'group_member_increase':
-                    this.emit('groupMemberIncrease', ev.data as unknown as GroupMemberIncreaseEvent)
-                    break
-                case 'group_member_decrease':
-                    this.emit('groupMemberDecrease', ev.data as unknown as GroupMemberDecreaseEvent)
-                    break
-                case 'group_mute':
-                    this.emit('groupMute', ev.data as unknown as GroupMuteEvent)
-                    break
-                case 'group_whole_mute':
-                    this.emit('groupWholeMute', ev.data as unknown as GroupWholeMuteEvent)
-                    break
-                case 'group_admin_change':
-                    this.emit('groupAdminChange', ev.data as unknown as GroupAdminChangeEvent)
-                    break
-                case 'friend_nudge':
-                    this.emit('friendNudge', ev.data as unknown as FriendNudgeEvent)
-                    break
-                case 'group_nudge':
-                    this.emit('groupNudge', ev.data as unknown as GroupNudgeEvent)
-                    break
-                case 'friend_file_upload':
-                    this.emit('friendFileUpload', ev.data as unknown as FriendFileUploadEvent)
-                    break
-                case 'group_file_upload':
-                    this.emit('groupFileUpload', ev.data as unknown as GroupFileUploadEvent)
-                    break
-                case 'bot_offline':
-                    this.emit('botOffline', ev.data as unknown as { reason: string })
-                    break
-            }
+        this.eventSource.addEventListener('error', (event: any) => {
+            console.error('[MilkyClient] 事件源错误', event.message || event)
         })
+
+        // SSE 事件处理
+        const handleEvent = (event: MessageEvent) => {
+            try {
+                const ev = typeof event.data === 'string' ? JSON.parse(event.data) : event.data
+                this.dispatchMilkyEvent(ev)
+            } catch (err) {
+                console.error('[MilkyClient] 事件解析失败', err)
+            }
+        }
+
+        // 兼容不同版本的 milky 服务端：同时监听 "message" 和 "milky_event"
+        this.eventSource.addEventListener('message', handleEvent)
+        this.eventSource.addEventListener('milky_event', handleEvent as any)
 
         // 获取登录信息
         const loginInfo = await this.getLoginInfo()
         this._uin = loginInfo.uin
         this._nickname = loginInfo.nickname
+    }
+
+    // ============ 事件分发 ============
+
+    private dispatchMilkyEvent(ev: { type?: string; event_type?: string; data: any }) {
+        console.log('dispatchMilkyEvent', ev)
+        switch (ev.event_type || ev.type) {
+            case 'message_receive':
+                this.emit('message', ev.data as IncomingMessage)
+                break
+            case 'message_recall':
+                this.emit('messageRecall', ev.data as MessageRecallEvent)
+                break
+            case 'group_member_increase':
+                this.emit('groupMemberIncrease', ev.data as GroupMemberIncreaseEvent)
+                break
+            case 'group_member_decrease':
+                this.emit('groupMemberDecrease', ev.data as GroupMemberDecreaseEvent)
+                break
+            case 'group_mute':
+                this.emit('groupMute', ev.data as GroupMuteEvent)
+                break
+            case 'group_whole_mute':
+                this.emit('groupWholeMute', ev.data as GroupWholeMuteEvent)
+                break
+            case 'group_admin_change':
+                this.emit('groupAdminChange', ev.data as GroupAdminChangeEvent)
+                break
+            case 'friend_nudge':
+                this.emit('friendNudge', ev.data as FriendNudgeEvent)
+                break
+            case 'group_nudge':
+                this.emit('groupNudge', ev.data as GroupNudgeEvent)
+                break
+            case 'friend_file_upload':
+                this.emit('friendFileUpload', ev.data as FriendFileUploadEvent)
+                break
+            case 'group_file_upload':
+                this.emit('groupFileUpload', ev.data as GroupFileUploadEvent)
+                break
+            case 'bot_offline':
+                this.emit('botOffline', ev.data as { reason: string })
+                break
+        }
     }
 
     // ============ API 方法 ============
