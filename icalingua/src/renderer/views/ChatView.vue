@@ -157,11 +157,11 @@
                     <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
                 </div>
             </div>
-            <MultipaneResizer class="resize-next" v-show="panel" />
+            <MultipaneResizer class="resize-next" v-show="panel && selectedRoomId" />
             <transition name="vac-fade-stickers">
                 <div
                     :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                    v-show="panel"
+                    v-show="panel && selectedRoomId"
                     class="panel panel-right"
                 >
                     <transition name="vac-fade-stickers">
@@ -1113,7 +1113,6 @@ Chromium ${process.versions.chrome}`
         closeRoom() {
             this.selectedRoomId = 0
             this.messages = []
-            this.panel = ''
             this.lastUnreadCount = 0
             this.lastUnreadAt = false
             this.isInMiddle = false // 关闭房间时重置中间加载状态
