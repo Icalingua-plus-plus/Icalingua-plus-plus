@@ -352,6 +352,9 @@ export default {
             tempFileName: '',
             isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
             chatGroupEditorVisible: false,
+            navBackStack: [], // 后退导航栈，存储 roomId
+            navForwardStack: [], // 前进导航栈，存储 roomId
+            isNavigating: false, // 标记是否正在通过前进/后退导航，避免重复入栈
         }
     },
     async created() {
@@ -385,6 +388,16 @@ export default {
                 this.panel = ''
             }
         })
+        //mouse side buttons (back/forward)
+        document.addEventListener('mouseup', (e) => {
+            if (e.button === 3) {
+                e.preventDefault()
+                this.navBack()
+            } else if (e.button === 4) {
+                e.preventDefault()
+                this.navForward()
+            }
+        })
         //keyboard
         document.addEventListener('keydown', (e) => {
             if (e.isComposing) return
@@ -394,6 +407,9 @@ export default {
                 if (this.selectedRoomId) this.panel = this.panel === 'stickers' ? '' : 'stickers'
             } else if (e.key === 'Escape') {
                 if (document.webkitIsFullScreen) return
+                // 清除前进后退导航栈
+                this.navBackStack = []
+                this.navForwardStack = []
                 if (this.$refs.room.messageReply || this.$refs.room.editAndResend || this.$refs.room.message)
                     this.$refs.room.resetMessage()
                 else if (this.$refs.room.file) this.$refs.room.resetMediaFile()
@@ -987,6 +1003,11 @@ Chromium ${process.versions.chrome}`
                 ipc.updateRoom(this.selectedRoom.roomId, { at: false })
             }
             if (this.selectedRoom.roomId === room.roomId) return
+            // 记录导航历史
+            if (!this.isNavigating && this.selectedRoom.roomId !== 0) {
+                this.navBackStack.push(this.selectedRoom.roomId)
+                this.navForwardStack = []
+            }
             this.selectedRoomId = room.roomId
             this.isInMiddle = false // 切换房间时重置中间加载状态
             ipc.setSelectedRoom(room.roomId, room.roomName)
@@ -1220,6 +1241,28 @@ Chromium ${process.versions.chrome}`
             if (e.button === 1) {
                 e.preventDefault()
             }
+        },
+        navBack() {
+            if (this.navBackStack.length === 0) return
+            const targetRoomId = this.navBackStack.pop()
+            if (this.selectedRoom.roomId !== 0) {
+                this.navForwardStack.push(this.selectedRoom.roomId)
+            }
+            this.isNavigating = true
+            this.chroom(targetRoomId).finally(() => {
+                this.isNavigating = false
+            })
+        },
+        navForward() {
+            if (this.navForwardStack.length === 0) return
+            const targetRoomId = this.navForwardStack.pop()
+            if (this.selectedRoom.roomId !== 0) {
+                this.navBackStack.push(this.selectedRoom.roomId)
+            }
+            this.isNavigating = true
+            this.chroom(targetRoomId).finally(() => {
+                this.isNavigating = false
+            })
         },
         getAvatarUrl,
         handleResize(e) {
