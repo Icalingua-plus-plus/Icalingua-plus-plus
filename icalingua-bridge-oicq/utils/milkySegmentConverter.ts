@@ -175,7 +175,7 @@ export function oicqToMilkySegment(elem: MessageElem): OutgoingSegment | null {
         case 'face':
             return {
                 type: 'face',
-                data: { face_id: String(elem.data.id) },
+                data: { face_id: String(elem.data.id), is_large: false },
             }
 
         case 'reply':

@@ -990,7 +990,7 @@ const adapter: typeof oicqAdapter = {
                     }
                 } else if (isFace) {
                     const faceId = FACE_REGEX.exec(part)[1]
-                    chain.push({ type: 'face', data: { face_id: faceId } })
+                    chain.push({ type: 'face', data: { face_id: faceId, is_large: false } })
                 } else if (messageType === 'text') {
                     chain.push({ type: 'text', data: { text: part } })
                 }
@@ -1031,7 +1031,7 @@ const adapter: typeof oicqAdapter = {
                 chain.length = 0
                 chain.push({
                     type: 'face',
-                    data: { face_id: faceId },
+                    data: { face_id: faceId, is_large: false },
                 })
             }
         }
