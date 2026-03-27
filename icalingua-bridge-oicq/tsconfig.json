@@ -5,7 +5,7 @@
         "lib": ["ES2022"],
         "esModuleInterop": true,
         "sourceMap": false,
-        "moduleResolution": "Bundler",
+        "moduleResolution": "Node",
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "strict": false,

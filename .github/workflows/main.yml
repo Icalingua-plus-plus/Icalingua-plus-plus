@@ -19,11 +19,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -63,11 +69,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -115,11 +127,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -163,11 +181,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -199,6 +223,9 @@ jobs:
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
             pnpm install --frozen-lockfile
+
+      - name: Fix file ownership after Docker
+        run: sudo chown -R $(id -u):$(id -g) .
 
       - name: build
         run: pnpm build:electron --arm64 --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
@@ -235,11 +262,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -270,7 +303,13 @@ jobs:
             chmod -R 777 /build
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
-            pnpm install --frozen-lockfile
+            # Use --ignore-scripts to avoid electron-winstaller postinstall failure on ARM
+            # (7z-arm.exe does not exist), then rebuild only the native module we need
+            pnpm install --frozen-lockfile --ignore-scripts
+            pnpm rebuild sqlite3
+
+      - name: Fix file ownership after Docker
+        run: sudo chown -R $(id -u):$(id -g) .
 
       - name: build
         run: pnpm build:electron --armv7l --dir -c.extraMetadata.version=${{ needs.build-dist-bundle.outputs.version }}
@@ -456,11 +495,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -510,11 +555,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -564,11 +615,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -638,11 +695,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -786,11 +849,17 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Cache pnpm and node-modules
-        uses: Icalinguaplusplus/node-pm-action@master
+      - name: Get pnpm store directory
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        id: pnpm-cache
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
         with:
-          node-modules: ./node_modules
-          package-manager: pnpm
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
