@@ -1004,7 +1004,7 @@ Chromium ${process.versions.chrome}`
             }
             if (this.selectedRoom.roomId === room.roomId) return
             // 记录导航历史
-            if (!this.isNavigating && this.selectedRoom.roomId !== 0) {
+            if (!this.isNavigating) {
                 this.navBackStack.push(this.selectedRoom.roomId)
                 this.navForwardStack = []
             }
