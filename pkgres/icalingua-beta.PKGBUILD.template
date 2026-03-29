@@ -4,7 +4,7 @@ pkgver=VERSION
 pkgrel=2
 pkgdesc='A branch of deleted Icalingua, with limited support, development edition'
 license=('AGPL3')
-depends=('ffmpeg' 'electron17' 'libappindicator-gtk3')
+depends=('ffmpeg' 'electron38' 'libappindicator-gtk3')
 optdepends=('mongodb-bin: Provides storage'
             'redis: Provides storage')
 arch=('ARCH')
