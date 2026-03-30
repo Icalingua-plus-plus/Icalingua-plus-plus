@@ -28,6 +28,9 @@
     ]
   },
   "pnpm": {
-    "neverBuiltDependencies": []
+    "neverBuiltDependencies": [],
+    "overrides": {
+      "negotiator": "0.6.4"
+    }
   }
 }
