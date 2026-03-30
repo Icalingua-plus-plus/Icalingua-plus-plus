@@ -187,7 +187,8 @@
             "singleArchFiles": "**/node_modules/sqlite3/lib/binding/**",
             "x64ArchFiles": "**/node_modules/sqlite3/lib/binding/**"
         },
-        "npmRebuild": false
+        "npmRebuild": false,
+        "afterPack": "./afterPack.cjs"
     },
     "dependencies": {
         "bindings": "^1.5.0",
