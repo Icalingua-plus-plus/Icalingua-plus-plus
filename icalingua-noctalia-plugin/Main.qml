@@ -17,31 +17,55 @@ Item {
     property var state: emptyState
 
     function openRoom(roomId) {
-        sock.write(JSON.stringify({action: "open", roomId: roomId}) + "\n")
-        sock.flush()
+        if (sockLoader.item) {
+            sockLoader.item.write(JSON.stringify({action: "open", roomId: roomId}) + "\n")
+            sockLoader.item.flush()
+        }
     }
 
     readonly property string socketPath: pluginApi.pluginSettings.socketPath || "/tmp/icalingua-noctalia.sock"
 
-    Socket {
-        id: sock
+    FileView {
         path: root.socketPath
-        connected: true
+        watchChanges: true
+        preload: false
+        printErrors: false
+        onFileChanged: root.reconnect()
+    }
 
-        parser: SplitParser {
-            onRead: message => {
-                try {
-                    root.state = JSON.parse(message)
-                } catch (e) {}
-            }
-        }
+    function reconnect() {
+        sockLoader.active = false
+        sockLoader.active = true
+    }
 
-        onConnectionStateChanged: {
-            if (!connected) {
-                root.state = root.emptyState
-                reconnectTimer.start()
-            } else {
-                reconnectTimer.stop()
+    Loader {
+        id: sockLoader
+        active: true
+        sourceComponent: Component {
+            Socket {
+                path: root.socketPath
+                connected: true
+
+                parser: SplitParser {
+                    onRead: message => {
+                        try {
+                            root.state = JSON.parse(message)
+                        } catch (e) {}
+                    }
+                }
+
+                onConnectionStateChanged: {
+                    if (!connected) {
+                        root.state = root.emptyState
+                        reconnectTimer.start()
+                    } else {
+                        reconnectTimer.stop()
+                    }
+                }
+
+                onError: {
+                    if (!connected) reconnectTimer.start()
+                }
             }
         }
     }
@@ -50,9 +74,6 @@ Item {
         id: reconnectTimer
         interval: 3000
         repeat: true
-        onTriggered: {
-            sock.connected = false
-            sock.connected = true
-        }
+        onTriggered: root.reconnect()
     }
 }
