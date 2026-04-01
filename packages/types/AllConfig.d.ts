@@ -53,6 +53,7 @@ type AllConfig = {
     disableImgViewTouchPad: boolean
     externalGfsBrowser: string
     imageViewerSize: WinSize
+    hideTray: boolean
 }
 
 export default AllConfig

@@ -1,12 +1,21 @@
 import net from 'net'
+import crypto from 'crypto'
 import fs from 'fs'
 import Room from '@icalingua/types/Room'
 import { getConfig } from './configManager'
 import { tryToShowMainWindow } from './windowManager'
 import ui from './ui'
+import argv from './argv'
 
-const SOCKET_PATH = '/tmp/icalingua-noctalia.sock'
+function getSocketPath(): string {
+    if (argv.config) {
+        const hash = crypto.createHash('md5').update(argv.config).digest('hex').slice(0, 8)
+        return `/tmp/icalingua-noctalia-${hash}.sock`
+    }
+    return '/tmp/icalingua-noctalia.sock'
+}
 
+let socketPath: string
 let server: net.Server | null = null
 const clients = new Set<net.Socket>()
 let lastState = ''
@@ -17,9 +26,12 @@ let currentNickname = ''
 let currentRooms: Room[] = []
 
 export function startNoctaliaServer() {
-    if (fs.existsSync(SOCKET_PATH)) {
+    if (process.platform !== 'linux') return
+    socketPath = getSocketPath()
+
+    if (fs.existsSync(socketPath)) {
         try {
-            fs.unlinkSync(SOCKET_PATH)
+            fs.unlinkSync(socketPath)
         } catch (e) {
             console.error('[NoctaliaServer] Failed to remove stale socket:', e)
             return
@@ -49,11 +61,11 @@ export function startNoctaliaServer() {
         console.error('[NoctaliaServer] Server error:', err)
     })
 
-    server.listen(SOCKET_PATH, () => {
+    server.listen(socketPath, () => {
         try {
-            fs.chmodSync(SOCKET_PATH, 0o777)
+            fs.chmodSync(socketPath, 0o777)
         } catch (e) {}
-        console.log('[NoctaliaServer] Listening on', SOCKET_PATH)
+        console.log('[NoctaliaServer] Listening on', socketPath)
     })
 }
 
@@ -67,9 +79,9 @@ export function stopNoctaliaServer() {
         server.close()
         server = null
     }
-    if (fs.existsSync(SOCKET_PATH)) {
+    if (fs.existsSync(socketPath)) {
         try {
-            fs.unlinkSync(SOCKET_PATH)
+            fs.unlinkSync(socketPath)
         } catch (e) {}
     }
 }

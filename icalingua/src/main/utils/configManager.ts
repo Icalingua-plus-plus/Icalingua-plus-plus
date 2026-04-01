@@ -115,6 +115,7 @@ const defaultConfig: AllConfig = {
     disableImgViewTouchPad: false,
     externalGfsBrowser: '',
     imageViewerSize: defaultImageViewerSize,
+    hideTray: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

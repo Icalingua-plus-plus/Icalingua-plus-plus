@@ -30,12 +30,14 @@ let darkIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'dark.png')
 let lightIcon = nativeImage.createFromPath(path.join(getStaticPath(), '256x256.png'))
 
 export const createTray = () => {
+    if (getConfig().hideTray) return
     tray = new Tray(path.join(getStaticPath(), 'trayTemplate.png'))
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     tray.on('click', () => tryToShowMainWindow())
     return updateTrayMenu()
 }
 export const updateTrayMenu = async () => {
+    if (!tray) return
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     const unreadRooms: Room[] = await getUnreadRooms()
     const menu = Menu.buildFromTemplate([
@@ -267,6 +269,7 @@ const getTrayIconColor = () => {
 }
 let currentIconUnread = false
 export const updateTrayIcon = async (force = false) => {
+    if (!tray) return
     let p: Electron.NativeImage
     const unread = await getUnreadCount()
     let selectedRoomId = ui.getSelectedRoomId()
