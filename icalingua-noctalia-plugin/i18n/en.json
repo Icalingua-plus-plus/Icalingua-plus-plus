@@ -1,0 +1,9 @@
+{
+    "tooltips": {
+        "unread-messages": "Icalingua++ unread messages"
+    },
+    "panel": {
+        "no-unread": "No unread messages",
+        "not-connected": "Not connected"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "tooltips": {
+        "unread-messages": "Icalingua++ 未读消息"
+    },
+    "panel": {
+        "no-unread": "没有未读消息",
+        "not-connected": "未连接"
+    }
+}

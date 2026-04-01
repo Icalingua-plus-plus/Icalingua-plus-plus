@@ -2,6 +2,7 @@ import { app, Menu, protocol } from 'electron'
 import { destroyWindow, getLoginWindow, showLoginWindow, tryToShowAllWindows } from './utils/windowManager'
 import { createBot, logOut } from './ipc/botAndStorage'
 import { getConfig } from './utils/configManager'
+import { startNoctaliaServer, stopNoctaliaServer } from './utils/noctaliaServer'
 import repl from 'repl'
 
 require('./utils/configManager')
@@ -10,6 +11,7 @@ require('./ipc/botAndStorage')
 require('./ipc/openImage')
 app.setAppUserModelId('Icalingua++')
 app.setAsDefaultProtocolClient('icalingua')
+startNoctaliaServer()
 protocol.registerBufferProtocol('jsbridge', () => {})
 if (process.env.NODE_ENV === 'development')
     protocol.registerFileProtocol('file', (request, cb) => {
@@ -47,6 +49,7 @@ app.on('second-instance', (_event, argv) => {
 
 app.on('before-quit', () => {
     logOut()
+    stopNoctaliaServer()
     destroyWindow()
 })
 

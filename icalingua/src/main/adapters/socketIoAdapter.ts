@@ -39,6 +39,7 @@ import {
     showLoginWindow,
     tryToShowAllWindows,
 } from '../utils/windowManager'
+import { updateNoctaliaRoom, updateNoctaliaOnlineData, updateNoctaliaRooms } from '../utils/noctaliaServer'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -85,6 +86,7 @@ const attachSocketEvents = () => {
             errorHandler(e, true)
         }
         await updateTrayIcon()
+        updateNoctaliaRoom(room)
     })
     socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
         ui.addMessage(roomId, message)
@@ -118,6 +120,7 @@ const attachSocketEvents = () => {
                 updateCheck: getConfig().updateCheck,
             }
             adapter.sendOnlineData()
+            updateNoctaliaOnlineData(data.uin, data.nick)
             await updateTrayIcon(true)
             await updateAppMenu()
         },
@@ -131,6 +134,7 @@ const attachSocketEvents = () => {
     socket.on('setAllRooms', (serverRooms: Room[] = []) => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
+        updateNoctaliaRooms(rooms)
     })
     socket.on('setAllChatGroups', (serverChatGroups: ChatGroup[] = []) => {
         chatGroups = serverChatGroups

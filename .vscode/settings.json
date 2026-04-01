@@ -1,4 +1,8 @@
 {
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "i18n-ally.localesPaths": [
+        "icalingua-noctalia-plugin/i18n",
+        "icalingua/src/renderer/components/vac-mod/locales"
+    ]
 }

@@ -1,0 +1,18 @@
+{
+    "id": "icalingua",
+    "name": "Icalingua++",
+    "version": "0.1.0",
+    "author": "Clansty",
+    "description": "QQ unread messages from Icalingua++ Bridge",
+    "entryPoints": {
+        "main": "Main.qml",
+        "barWidget": "BarWidget.qml",
+        "panel": "Panel.qml"
+    },
+    "metadata": {
+        "icon": "assets/icon.png",
+        "defaultSettings": {
+            "socketPath": "/tmp/icalingua-noctalia.sock"
+        }
+    }
+}
