@@ -704,6 +704,158 @@ const attachEventHandler = () => {
         storage.addMessage(roomId, message)
     })
 
+    bot.on('friendRequest', async (data) => {
+        debug('friendRequest', data)
+        const flag = `milky_friend:${data.initiator_uid}:false`
+        clients.sendAddRequest({
+            sub_type: 'add',
+            user_id: data.initiator_id,
+            nickname: String(data.initiator_id),
+            comment: data.comment,
+            source: data.via,
+            flag,
+            age: 0,
+            sex: 'unknown',
+        })
+    })
+
+    bot.on('groupJoinRequest', async (data) => {
+        debug('groupJoinRequest', data)
+        const flag = `milky_group_join:${data.notification_seq}:${data.group_id}:${data.is_filtered}`
+        let groupName = String(data.group_id)
+        try {
+            const group = await bot.getGroupInfo(data.group_id)
+            groupName = group.group.group_name
+        } catch {}
+        clients.sendAddRequest({
+            sub_type: 'add',
+            group_id: data.group_id,
+            group_name: groupName,
+            user_id: data.initiator_id,
+            nickname: String(data.initiator_id),
+            comment: data.comment,
+            flag,
+            role: 'member',
+        })
+    })
+
+    bot.on('groupInvitedJoinRequest', async (data) => {
+        debug('groupInvitedJoinRequest', data)
+        const flag = `milky_group_invited:${data.notification_seq}:${data.group_id}:false`
+        let groupName = String(data.group_id)
+        try {
+            const group = await bot.getGroupInfo(data.group_id)
+            groupName = group.group.group_name
+        } catch {}
+        clients.sendAddRequest({
+            sub_type: 'add',
+            group_id: data.group_id,
+            group_name: groupName,
+            user_id: data.target_user_id,
+            nickname: String(data.target_user_id),
+            comment: `由 ${data.initiator_id} 邀请`,
+            flag,
+            role: 'member',
+        })
+    })
+
+    bot.on('groupInvitation', async (data) => {
+        debug('groupInvitation', data)
+        const flag = `milky_group_invitation:${data.invitation_seq}:${data.group_id}`
+        let groupName = String(data.group_id)
+        try {
+            const group = await bot.getGroupInfo(data.group_id)
+            groupName = group.group.group_name
+        } catch {}
+        clients.sendAddRequest({
+            sub_type: 'invite',
+            group_id: data.group_id,
+            group_name: groupName,
+            user_id: data.initiator_id,
+            nickname: String(data.initiator_id),
+            flag,
+            role: 'member',
+        })
+    })
+
+    bot.on('groupNameChange', async (data) => {
+        debug('groupNameChange', data)
+        const groupId = Number(data.group_id)
+        const roomId = -groupId
+        const room = await storage.getRoom(roomId)
+        if (!room) return
+        const operatorId = Number(data.operator_id)
+        let operatorName = String(operatorId)
+        try {
+            const opInfo = await bot.getGroupMemberInfo(groupId, operatorId)
+            operatorName = opInfo.member.card || opInfo.member.nickname
+        } catch {}
+        room.roomName = data.new_group_name
+        const now = new Date()
+        const content = `${operatorName} 修改了群名为「${data.new_group_name}」`
+        const message: Message = {
+            _id: `groupname-${now.getTime()}-${groupId}`,
+            content,
+            username: '',
+            senderId: operatorId,
+            time: now.getTime(),
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        room.utime = now.getTime()
+        room.lastMessage = {
+            content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+            userId: operatorId,
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+
+    bot.on('groupEssenceMessageChange', async (data) => {
+        debug('groupEssenceMessageChange', data)
+        const groupId = Number(data.group_id)
+        const roomId = -groupId
+        if (await storage.isChatIgnored(roomId)) return
+        const room = await storage.getRoom(roomId)
+        if (!room) return
+        const operatorId = Number(data.operator_id)
+        let operatorName = String(operatorId)
+        try {
+            const opInfo = await bot.getGroupMemberInfo(groupId, operatorId)
+            operatorName = opInfo.member.card || opInfo.member.nickname
+        } catch {}
+        const now = new Date()
+        const content = data.is_set ? `${operatorName} 设置了一条精华消息` : `${operatorName} 移除了一条精华消息`
+        const message: Message = {
+            _id: `essence-${now.getTime()}-${groupId}-${data.message_seq}`,
+            content,
+            username: '',
+            senderId: operatorId,
+            time: now.getTime(),
+            timestamp: formatDate('hh:mm:ss', now),
+            date: formatDate('yyyy/MM/dd', now),
+            system: true,
+            files: [],
+        }
+        room.utime = now.getTime()
+        room.lastMessage = {
+            content,
+            username: '',
+            timestamp: formatDate('hh:mm', now),
+            userId: operatorId,
+        }
+        clients.addMessage(roomId, message)
+        clients.updateRoom(room)
+        storage.updateRoom(roomId, room)
+        storage.addMessage(roomId, message)
+    })
+
     bot.on('friendFileUpload', async (data) => {
         const now = new Date()
         const roomId = Number(data.user_id)
@@ -1696,8 +1848,50 @@ const adapter: typeof oicqAdapter = {
 
     // 未实现/不支持的功能
     disabledFeatures: ['IdLogin', 'OnlineStatus'],
-    async handleRequest(type, flag, accept) {
-        clients.messageError('Milky 适配器暂不支持处理请求')
+    async handleRequest(type: 'friend' | 'group', flag: string, accept: boolean = true) {
+        try {
+            if (flag.startsWith('milky_friend:')) {
+                // flag 格式: milky_friend:{initiator_uid}:{is_filtered}
+                const parts = flag.split(':')
+                const initiatorUid = parts[1]
+                const isFiltered = parts[2] === 'true'
+                if (accept) {
+                    await bot.acceptFriendRequest(initiatorUid, isFiltered)
+                } else {
+                    await bot.rejectFriendRequest(initiatorUid, isFiltered)
+                }
+            } else if (flag.startsWith('milky_group_join:') || flag.startsWith('milky_group_invited:')) {
+                // flag 格式: milky_group_join:{notification_seq}:{group_id}:{is_filtered}
+                //          milky_group_invited:{notification_seq}:{group_id}:{is_filtered}
+                const parts = flag.split(':')
+                const notificationSeq = Number(parts[1])
+                const groupId = Number(parts[2])
+                const isFiltered = parts[3] === 'true'
+                const notificationType = flag.startsWith('milky_group_join:')
+                    ? ('join_request' as const)
+                    : ('invited_join_request' as const)
+                if (accept) {
+                    await bot.acceptGroupRequest(notificationSeq, notificationType, groupId, isFiltered)
+                } else {
+                    await bot.rejectGroupRequest(notificationSeq, notificationType, groupId, isFiltered)
+                }
+            } else if (flag.startsWith('milky_group_invitation:')) {
+                // flag 格式: milky_group_invitation:{invitation_seq}:{group_id}
+                const parts = flag.split(':')
+                const invitationSeq = Number(parts[1])
+                const groupId = Number(parts[2])
+                if (accept) {
+                    await bot.acceptGroupInvitation(groupId, invitationSeq)
+                } else {
+                    await bot.rejectGroupInvitation(groupId, invitationSeq)
+                }
+            } else {
+                clients.messageError('未知的请求标志: ' + flag)
+            }
+        } catch (e) {
+            console.error('处理请求失败:', e)
+            clients.messageError('处理请求失败: ' + e.message)
+        }
         return null
     },
     async getGroupFileMeta(gin, fid, resolve) {
@@ -1768,7 +1962,13 @@ const adapter: typeof oicqAdapter = {
         clients.messageError('Milky 适配器不支持该操作')
     },
     async getRoamingStamp(no_cache, cb) {
-        cb([])
+        try {
+            const result = await bot.getCustomFaceUrlList()
+            cb(result.urls || [])
+        } catch (e) {
+            debug('获取收藏表情失败:', e.message)
+            cb([])
+        }
     },
     async makeForward(fakes, dm, origin, target) {
         if (!target) {
@@ -1840,7 +2040,75 @@ const adapter: typeof oicqAdapter = {
         return false
     },
     async getSystemMsg(cb) {
-        cb({})
+        try {
+            const ret_msg = {}
+            // 拉取好友请求
+            try {
+                const friendReqs = await bot.getFriendRequests()
+                for (const req of friendReqs.requests) {
+                    const flag = `milky_friend:${req.initiator_uid}:${req.is_filtered}`
+                    ret_msg[flag] = {
+                        sub_type: 'add',
+                        user_id: req.initiator_id,
+                        nickname: String(req.initiator_id),
+                        comment: req.comment,
+                        source: req.via,
+                        flag,
+                        age: 0,
+                        sex: 'unknown',
+                    }
+                }
+            } catch (e) {
+                debug('获取好友请求失败:', e.message)
+            }
+            // 拉取群通知
+            try {
+                const groupNotifs = await bot.getGroupNotifications()
+                for (const notif of groupNotifs.notifications) {
+                    let flag: string
+                    let data: any
+                    let groupName = String(notif.group_id)
+                    try {
+                        const group = await bot.getGroupInfo(notif.group_id)
+                        groupName = group.group.group_name
+                    } catch {}
+                    if (notif.notification_type === 'join_request') {
+                        flag = `milky_group_join:${notif.notification_seq}:${notif.group_id}:${notif.is_filtered}`
+                        data = {
+                            sub_type: 'add',
+                            group_id: notif.group_id,
+                            group_name: groupName,
+                            user_id: notif.initiator_id,
+                            nickname: String(notif.initiator_id),
+                            comment: notif.comment || '',
+                            flag,
+                            role: 'member',
+                        }
+                    } else if (notif.notification_type === 'invited_join_request') {
+                        flag = `milky_group_invited:${notif.notification_seq}:${notif.group_id}:${notif.is_filtered}`
+                        data = {
+                            sub_type: 'add',
+                            group_id: notif.group_id,
+                            group_name: groupName,
+                            user_id: notif.target_user_id,
+                            nickname: String(notif.target_user_id),
+                            comment: `由 ${notif.initiator_id} 邀请`,
+                            flag,
+                            role: 'member',
+                        }
+                    } else {
+                        continue
+                    }
+                    ret_msg[flag] = data
+                }
+            } catch (e) {
+                debug('获取群通知失败:', e.message)
+            }
+            cb(ret_msg)
+        } catch (e) {
+            console.error('getSystemMsg error:', e)
+            cb({})
+        }
     },
     setOnlineStatus(status) {
         return null

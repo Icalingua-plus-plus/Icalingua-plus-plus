@@ -124,6 +124,55 @@ export interface GroupFileUploadEvent {
     file_size: number
 }
 
+export interface FriendRequestEvent {
+    initiator_id: number
+    initiator_uid: string
+    comment: string
+    via: string
+}
+
+export interface GroupJoinRequestEvent {
+    group_id: number
+    notification_seq: number
+    is_filtered: boolean
+    initiator_id: number
+    comment: string
+}
+
+export interface GroupInvitedJoinRequestEvent {
+    group_id: number
+    notification_seq: number
+    initiator_id: number
+    target_user_id: number
+}
+
+export interface GroupInvitationEvent {
+    group_id: number
+    invitation_seq: number
+    initiator_id: number
+}
+
+export interface GroupNameChangeEvent {
+    group_id: number
+    new_group_name: string
+    operator_id: number
+}
+
+export interface GroupMessageReactionEvent {
+    group_id: number
+    user_id: number
+    message_seq: number
+    face_id: string
+    is_add: boolean
+}
+
+export interface GroupEssenceMessageChangeEvent {
+    group_id: number
+    message_seq: number
+    operator_id: number
+    is_set: boolean
+}
+
 // ============ 实体类型定义 ============
 
 export interface FriendEntity {
@@ -170,6 +219,13 @@ type MilkyClientEvents = {
     groupNudge: [GroupNudgeEvent]
     friendFileUpload: [FriendFileUploadEvent]
     groupFileUpload: [GroupFileUploadEvent]
+    friendRequest: [FriendRequestEvent]
+    groupJoinRequest: [GroupJoinRequestEvent]
+    groupInvitedJoinRequest: [GroupInvitedJoinRequestEvent]
+    groupInvitation: [GroupInvitationEvent]
+    groupNameChange: [GroupNameChangeEvent]
+    groupMessageReaction: [GroupMessageReactionEvent]
+    groupEssenceMessageChange: [GroupEssenceMessageChangeEvent]
     botOffline: [{ reason: string }]
 }
 
@@ -282,6 +338,27 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
                 break
             case 'group_file_upload':
                 this.emit('groupFileUpload', ev.data as GroupFileUploadEvent)
+                break
+            case 'friend_request':
+                this.emit('friendRequest', ev.data as FriendRequestEvent)
+                break
+            case 'group_join_request':
+                this.emit('groupJoinRequest', ev.data as GroupJoinRequestEvent)
+                break
+            case 'group_invited_join_request':
+                this.emit('groupInvitedJoinRequest', ev.data as GroupInvitedJoinRequestEvent)
+                break
+            case 'group_invitation':
+                this.emit('groupInvitation', ev.data as GroupInvitationEvent)
+                break
+            case 'group_name_change':
+                this.emit('groupNameChange', ev.data as GroupNameChangeEvent)
+                break
+            case 'group_message_reaction':
+                this.emit('groupMessageReaction', ev.data as GroupMessageReactionEvent)
+                break
+            case 'group_essence_message_change':
+                this.emit('groupEssenceMessageChange', ev.data as GroupEssenceMessageChangeEvent)
                 break
             case 'bot_offline':
                 this.emit('botOffline', ev.data as { reason: string })
@@ -568,6 +645,104 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
 
     async getResourceTempUrl(resourceId: string) {
         return this.client.fetch('get_resource_temp_url', { resource_id: resourceId }) as Promise<{ url: string }>
+    }
+
+    // ============ 好友请求 API ============
+
+    async getFriendRequests(limit = 20, isFiltered = false) {
+        return this.client.fetch('get_friend_requests', { limit, is_filtered: isFiltered }) as unknown as Promise<{
+            requests: Array<{
+                initiator_id: number
+                initiator_uid: string
+                comment: string
+                via: string
+                is_filtered: boolean
+            }>
+        }>
+    }
+
+    async acceptFriendRequest(initiatorUid: string, isFiltered = false) {
+        return this.client.fetch('accept_friend_request', { initiator_uid: initiatorUid, is_filtered: isFiltered })
+    }
+
+    async rejectFriendRequest(initiatorUid: string, isFiltered = false, reason?: string) {
+        return this.client.fetch('reject_friend_request', {
+            initiator_uid: initiatorUid,
+            is_filtered: isFiltered,
+            reason: reason || null,
+        })
+    }
+
+    // ============ 群通知/请求 API ============
+
+    async getGroupNotifications(limit = 20, isFiltered = false, startNotificationSeq?: number) {
+        return this.client.fetch('get_group_notifications', {
+            limit,
+            is_filtered: isFiltered,
+            start_notification_seq: startNotificationSeq || null,
+        }) as Promise<{
+            notifications: Array<{
+                notification_seq: number
+                notification_type: string
+                group_id: number
+                operator_id?: number
+                initiator_id?: number
+                target_user_id?: number
+                comment?: string
+                is_filtered: boolean
+            }>
+            next_notification_seq?: number
+        }>
+    }
+
+    async acceptGroupRequest(
+        notificationSeq: number,
+        notificationType: 'join_request' | 'invited_join_request',
+        groupId: number,
+        isFiltered = false,
+    ) {
+        return this.client.fetch('accept_group_request', {
+            notification_seq: notificationSeq,
+            notification_type: notificationType,
+            group_id: groupId,
+            is_filtered: isFiltered,
+        })
+    }
+
+    async rejectGroupRequest(
+        notificationSeq: number,
+        notificationType: 'join_request' | 'invited_join_request',
+        groupId: number,
+        isFiltered = false,
+        reason?: string,
+    ) {
+        return this.client.fetch('reject_group_request', {
+            notification_seq: notificationSeq,
+            notification_type: notificationType,
+            group_id: groupId,
+            is_filtered: isFiltered,
+            reason: reason || null,
+        })
+    }
+
+    async acceptGroupInvitation(groupId: number, invitationSeq: number) {
+        return this.client.fetch('accept_group_invitation', {
+            group_id: groupId,
+            invitation_seq: invitationSeq,
+        })
+    }
+
+    async rejectGroupInvitation(groupId: number, invitationSeq: number) {
+        return this.client.fetch('reject_group_invitation', {
+            group_id: groupId,
+            invitation_seq: invitationSeq,
+        })
+    }
+
+    // ============ 收藏表情 API ============
+
+    async getCustomFaceUrlList() {
+        return this.client.fetch('get_custom_face_url_list', undefined) as Promise<{ urls: string[] }>
     }
 
     dispose() {
