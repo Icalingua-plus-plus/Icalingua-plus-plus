@@ -21,7 +21,10 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
         case 'mention':
             return {
                 type: 'at',
-                data: { qq: Number(segment.data.user_id) },
+                data: {
+                    qq: Number(segment.data.user_id),
+                    text: 'name' in segment.data && segment.data.name ? '@' + segment.data.name : undefined,
+                },
             }
 
         case 'mention_all':
@@ -36,15 +39,24 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
                 data: { id: Number(segment.data.face_id) },
             }
 
-        case 'reply':
-            // reply 需要特殊处理，因为 milky 用的是 message_seq
-            // 这里先返回一个占位，实际的 id 需要在 adapter 层构造
+        case 'reply': {
+            // Milky 1.2: reply 段包含被回复消息的完整信息
+            const replyData: any = {
+                id: String(segment.data.message_seq),
+            }
+            if ('sender_id' in segment.data) {
+                replyData._milkyReply = {
+                    senderId: Number((segment.data as any).sender_id),
+                    senderName: (segment.data as any).sender_name || null,
+                    time: Number((segment.data as any).time),
+                    segments: (segment.data as any).segments,
+                }
+            }
             return {
                 type: 'reply',
-                data: {
-                    id: String(segment.data.message_seq), // 临时用 seq，后续需要转换
-                },
+                data: replyData,
             }
+        }
 
         case 'image':
             return {

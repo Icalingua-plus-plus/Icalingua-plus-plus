@@ -158,6 +158,30 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         message.content += m.data.url
                         break
                     case 'reply':
+                        // Milky 1.2: reply 段已内嵌被回复消息的完整内容
+                        if ((m.data as any)._milkyReply) {
+                            const milkyReply = (m.data as any)._milkyReply
+                            const senderId = milkyReply.senderId
+                            if (senderId === 80000000) replyAnonymous = true
+                            const senderName =
+                                milkyReply.senderName || (senderId === adapter.getUin() ? 'You' : String(senderId))
+                            const replyMsg: Message = {
+                                _id: m.data.id,
+                                date: '',
+                                senderId,
+                                timestamp: '',
+                                username: senderName,
+                                content: '',
+                                files: [],
+                            }
+                            if (milkyReply.segments && milkyReply.segments.length > 0) {
+                                const { milkySegmentsToOicq } = require('./milkySegmentConverter')
+                                await processMessage(milkySegmentsToOicq(milkyReply.segments), replyMsg, {}, roomId)
+                            }
+                            message.replyMessage = replyMsg
+                            if (senderId === adapter.getUin()) message.at = true
+                            break
+                        }
                         let user_id: number, time: number
                         const parsed = Buffer.from(m.data.id, 'base64')
                         if (m.data.id.length > 24) {
