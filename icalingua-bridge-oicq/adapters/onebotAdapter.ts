@@ -924,12 +924,31 @@ const adapter: typeof oicqAdapter = {
             })
         }
         if (content) {
+            // 转换新 @
+            const icalinguaAtRegex = /<IcalinguaAt qq=(\d+)>([^<]*)<\/IcalinguaAt>/
+            while (icalinguaAtRegex.test(content)) {
+                const icalinguaAt = icalinguaAtRegex.exec(content)
+                try {
+                    const atQQ = Number(icalinguaAt[1])
+                    const name = decodeURIComponent(icalinguaAt[2])
+                    if (!name) break
+                    at.push({
+                        id: atQQ === 1 ? 'all' : atQQ,
+                        text: name,
+                    })
+                    content = content.replace(icalinguaAt[0], name)
+                } catch (e) {
+                    console.error(e)
+                    break
+                }
+            }
             //这里是处理@人和表情 markup 的逻辑
             const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
             for (const { text } of at) {
+                if (!text) continue
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {

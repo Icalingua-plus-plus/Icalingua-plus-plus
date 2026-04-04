@@ -1097,9 +1097,28 @@ const adapter: typeof oicqAdapter = {
         }
 
         if (content) {
+            // 转换新 @
+            const icalinguaAtRegex = /<IcalinguaAt qq=(\d+)>([^<]*)<\/IcalinguaAt>/
+            while (icalinguaAtRegex.test(content)) {
+                const icalinguaAt = icalinguaAtRegex.exec(content)
+                try {
+                    const atQQ = Number(icalinguaAt[1])
+                    const name = decodeURIComponent(icalinguaAt[2])
+                    if (!name) break
+                    at.push({
+                        id: atQQ === 1 ? 'all' : atQQ,
+                        text: name,
+                    })
+                    content = content.replace(icalinguaAt[0], name)
+                } catch (e) {
+                    console.error(e)
+                    break
+                }
+            }
             const FACE_REGEX = /\[Face: (\d+)]/
             let splitContent = [content]
             for (const { text } of at) {
+                if (!text) continue
                 const newParts: string[] = []
                 for (let part of splitContent) {
                     while (part.includes(text)) {
