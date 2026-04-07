@@ -163,23 +163,61 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             const milkyReply = (m.data as any)._milkyReply
                             const senderId = milkyReply.senderId
                             if (senderId === 80000000) replyAnonymous = true
-                            const senderName =
-                                milkyReply.senderName || (senderId === adapter.getUin() ? 'You' : String(senderId))
-                            const replyMsg: Message = {
+
+                            // 优先从存储查找（已有完整的用户名等信息）
+                            let replyMsg: Message
+                            if (roomId) {
+                                replyMsg = await adapter.getMessageFromStorage(roomId, m.data.id)
+                            }
+
+                            if (!replyMsg) {
+                                // 存储中没有，用 milky 内嵌数据构建
+                                let senderName = milkyReply.senderName
+                                if (!senderName) {
+                                    if (senderId === adapter.getUin()) {
+                                        senderName = 'You'
+                                    } else if (roomId && roomId < 0) {
+                                        // 群聊：查群成员名
+                                        try {
+                                            const info = await adapter._getGroupMemberInfo(
+                                                Math.abs(roomId),
+                                                senderId,
+                                                false,
+                                            )
+                                            senderName = info.card || info.nickname
+                                        } catch {
+                                            senderName = String(senderId)
+                                        }
+                                    } else {
+                                        senderName = String(senderId)
+                                    }
+                                }
+                                replyMsg = {
+                                    _id: m.data.id,
+                                    date: '',
+                                    senderId,
+                                    timestamp: '',
+                                    username: senderName,
+                                    content: '',
+                                    files: [],
+                                }
+                                if (milkyReply.segments && milkyReply.segments.length > 0) {
+                                    const { milkySegmentsToOicq } = require('./milkySegmentConverter')
+                                    await processMessage(milkySegmentsToOicq(milkyReply.segments), replyMsg, {}, roomId)
+                                }
+                            }
+
+                            message.replyMessage = {
+                                ...replyMsg,
                                 _id: m.data.id,
-                                date: '',
-                                senderId,
-                                timestamp: '',
-                                username: senderName,
-                                content: '',
-                                files: [],
                             }
-                            if (milkyReply.segments && milkyReply.segments.length > 0) {
-                                const { milkySegmentsToOicq } = require('./milkySegmentConverter')
-                                await processMessage(milkySegmentsToOicq(milkyReply.segments), replyMsg, {}, roomId)
+                            if (replyMsg.file) {
+                                message.replyMessage.file = replyMsg.file
                             }
-                            message.replyMessage = replyMsg
-                            if (senderId === adapter.getUin()) message.at = true
+                            if (replyMsg.files) {
+                                message.replyMessage.files = replyMsg.files
+                            }
+                            if (replyMsg.senderId === adapter.getUin()) message.at = true
                             break
                         }
                         let user_id: number, time: number
