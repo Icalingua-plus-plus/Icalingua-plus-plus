@@ -1226,7 +1226,7 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: '退出',
                 click: exit,
-                accelerator: 'CommandOrControl+Q',
+                accelerator: getConfig().disableQuitShortcut ? undefined : 'CommandOrControl+Q',
             }),
         ],
         priority: new MenuItem({
@@ -1410,6 +1410,16 @@ export const updateAppMenu = async () => {
                 checked: getConfig().updateCheck === true,
                 click: (menuItem) => {
                     getConfig().updateCheck = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
+                label: '禁用 Ctrl+Q 退出快捷键',
+                type: 'checkbox',
+                checked: getConfig().disableQuitShortcut,
+                click: (menuItem) => {
+                    getConfig().disableQuitShortcut = menuItem.checked
+                    updateAppMenu()
                     saveConfigFile()
                 },
             }),

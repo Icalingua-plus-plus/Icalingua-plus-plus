@@ -116,6 +116,7 @@ const defaultConfig: AllConfig = {
     externalGfsBrowser: '',
     imageViewerSize: defaultImageViewerSize,
     hideTray: false,
+    disableQuitShortcut: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

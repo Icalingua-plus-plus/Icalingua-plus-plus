@@ -54,6 +54,7 @@ type AllConfig = {
     externalGfsBrowser: string
     imageViewerSize: WinSize
     hideTray: boolean
+    disableQuitShortcut: boolean
 }
 
 export default AllConfig
