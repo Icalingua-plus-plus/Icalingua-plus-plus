@@ -446,6 +446,23 @@ export default {
                     }
                     if (unreadRoom) this.chroom(unreadRoom)
                 }
+            } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                e.preventDefault()
+                const rooms = this.sortedRooms
+                if (!rooms.length) return
+
+                const selectedRoomIndex = rooms.indexOf(this.selectedRoom)
+                let newIndex
+                if (!this.selectedRoom) newIndex = 0
+                else if (e.key === 'ArrowUp') {
+                    newIndex = selectedRoomIndex - 1
+                    if (newIndex === -1) newIndex = rooms.length - 1
+                } else {
+                    newIndex = selectedRoomIndex + 1
+                    if (newIndex === rooms.length) newIndex = 0
+                }
+
+                this.chroom(rooms[newIndex])
             } else if (e.ctrlKey) {
                 switch (e.key) {
                     case '1':
