@@ -304,7 +304,6 @@ export default class MilkyClient extends EventEmitter<MilkyClientEvents> {
     // ============ 事件分发 ============
 
     private dispatchMilkyEvent(ev: { type?: string; event_type?: string; data: any }) {
-        console.log('dispatchMilkyEvent', ev)
         switch (ev.event_type || ev.type) {
             case 'message_receive':
                 this.emit('message', ev.data as IncomingMessage)

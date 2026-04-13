@@ -235,8 +235,8 @@ const attachEventHandler = () => {
         let roomName: string
         if (isGroup && data.group) {
             roomName = data.group.group_name
-        } else if (!isGroup && data.sender_id === roomId) {
-            roomName = senderName
+        } else if (!isGroup) {
+            roomName = data.friend?.remark || data.friend?.nickname || String(roomId)
         }
 
         const message: Message = {
