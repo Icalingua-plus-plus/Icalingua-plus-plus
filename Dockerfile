@@ -21,6 +21,7 @@ WORKDIR /app
 RUN apk add ffmpeg curl
 COPY --from=builder /tmp/build ./build
 ENV TZ=Asia/Shanghai
+ENV NODE_OPTIONS=--enable-source-maps
 
 EXPOSE 6789
 
