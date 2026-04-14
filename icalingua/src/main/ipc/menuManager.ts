@@ -1870,16 +1870,22 @@ export const updateAppMenu = async () => {
     }
     Menu.setApplicationMenu(menu)
 }
-ipcMain.on('popupRoomMenu', async (_, roomId: number, e) => {
-    const bounds = getMainWindow().getContentBounds()
+/** 获取 IPC 事件发送者所在的窗口，用于正确定位右键菜单（而非总是使用主窗口） */
+const getSenderWindow = (event: Electron.IpcMainEvent): BrowserWindow =>
+    BrowserWindow.fromWebContents(event.sender) || getMainWindow()
+
+ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     ;(await buildRoomMenu(await getRoom(roomId))).popup({
-        window: getMainWindow(),
+        window: win,
         ...pos,
     })
 })
-ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?: string, history?: boolean) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, sect?: string, history?: boolean) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu = new Menu()
     if ((message.deleted || message.hide) && !message.reveal)
@@ -2457,10 +2463,11 @@ ipcMain.on('popupMessageMenu', async (_, e, room: Room, message: Message, sect?:
             )
         }
     }
-    menu.popup({ window: getMainWindow(), ...pos })
+    menu.popup({ window: win, ...pos })
 })
-ipcMain.on('popupTextAreaMenu', (_, e) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupTextAreaMenu', (event, e) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     Menu.buildFromTemplate([
         {
@@ -2478,10 +2485,11 @@ ipcMain.on('popupTextAreaMenu', (_, e) => {
                 ui.setMessageText(spacingSendMessage(e.text, atCache.get()))
             },
         },
-    ]).popup({ window: getMainWindow(), ...pos })
+    ]).popup({ window: win, ...pos })
 })
-ipcMain.on('popupStickerMenu', (_, closePanel, e) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu: Electron.MenuItemConstructorOptions[] = [
         {
@@ -2530,10 +2538,11 @@ ipcMain.on('popupStickerMenu', (_, closePanel, e) => {
             click: ui.closePanel,
         })
     }
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
+    Menu.buildFromTemplate(menu).popup({ window: win, ...pos })
 })
-ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>, e) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupStickerItemMenu', (event, itemName: string, itemList: Array<string>, e) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
     menu.push({
@@ -2584,10 +2593,11 @@ ipcMain.on('popupStickerItemMenu', (_, itemName: string, itemList: Array<string>
             },
         })
     }
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
+    Menu.buildFromTemplate(menu).popup({ window: win, ...pos })
 })
-ipcMain.on('popupStickerDirMenu', (_, dirName: string, e) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupStickerDirMenu', (event, dirName: string, e) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu: (Electron.MenuItemConstructorOptions | Electron.MenuItem)[] = []
     menu.push({
@@ -2599,10 +2609,11 @@ ipcMain.on('popupStickerDirMenu', (_, dirName: string, e) => {
         },
     })
 
-    Menu.buildFromTemplate(menu).popup({ window: getMainWindow(), ...pos })
+    Menu.buildFromTemplate(menu).popup({ window: win, ...pos })
 })
-ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: ev.x - bounds.x, y: ev.y - bounds.y }
     const menu = Menu.buildFromTemplate([
         {
@@ -2629,7 +2640,7 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
             }),
         )
     }
-    if (e.sender === getMainWindow().webContents)
+    if (event.sender === getMainWindow().webContents)
         menu.append(
             new MenuItem({
                 label: '@ TA',
@@ -2819,10 +2830,11 @@ ipcMain.on('popupAvatarMenu', async (e, message: Message, room: Room, ev) => {
             }),
         )
     }
-    menu.popup({ window: getMainWindow(), ...pos })
+    menu.popup({ window: win, ...pos })
 })
-ipcMain.on('popupContactMenu', (_, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
-    const bounds = getMainWindow().getContentBounds()
+ipcMain.on('popupContactMenu', (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    const win = getSenderWindow(event)
+    const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu = new Menu()
     if (remark) {
@@ -2935,7 +2947,7 @@ ipcMain.on('popupContactMenu', (_, e, remark?: string, name?: string, displayId?
             }),
         )
     }
-    menu.popup({ window: getMainWindow(), ...pos })
+    menu.popup({ window: win, ...pos })
 })
 
 const copyImage = async (url: string) => {
@@ -2973,8 +2985,9 @@ ipcMain.on('copyImage', (_, url: string) => copyImage(url))
 
 ipcMain.on(
     'popupGroupMemberMenu',
-    async (_, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
-        const bounds = getMainWindow().getContentBounds()
+    async (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+        const win = getSenderWindow(event)
+        const bounds = win.getContentBounds()
         const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
         const menu = new Menu()
         if (remark) {
@@ -3180,7 +3193,7 @@ ipcMain.on(
                 }),
             )
         }
-        menu.popup({ window: getMainWindow(), ...pos })
+        menu.popup({ window: win, ...pos })
     },
 )
 
