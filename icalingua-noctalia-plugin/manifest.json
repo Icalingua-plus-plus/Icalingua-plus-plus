@@ -13,7 +13,8 @@
     "metadata": {
         "icon": "assets/icon.png",
         "defaultSettings": {
-            "socketPath": "/tmp/icalingua-noctalia.sock"
+            "socketPath": "/tmp/icalingua-noctalia.sock",
+            "maxAvatars": 5
         }
     }
 }
