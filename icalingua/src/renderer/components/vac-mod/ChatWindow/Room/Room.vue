@@ -1747,6 +1747,9 @@ export default {
             if (['amr'].includes(extension)) {
                 this.file.type = 'audio/amr'
             }
+            if (['psd', 'svg'].includes(extension)) {
+                this.file.type = ''
+            }
             if (force) this.file.type = ''
             if (isImageFile(this.file)) {
                 this.imageFile = fileURL
