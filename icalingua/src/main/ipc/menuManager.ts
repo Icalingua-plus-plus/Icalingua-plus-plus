@@ -334,10 +334,15 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         {
             label: `下载${avatarType}`,
             click: () => {
-                const cleanRoomName =
+                const roomName =
                     room.roomId < 0 && getConfig().removeGroupNameEmotes
                         ? removeGroupNameEmotes(room.roomName)
                         : room.roomName
+                const cleanRoomName = roomName
+                    .replace(/[^\u4e00-\u9fa5a-zA-Z0-9._()\- ]/g, '_') // 只允许：中文、英文、数字、._-()空格
+                    .replace(/\.+/g, '.') // 连续多个点压缩，防止 ...
+                    .replace(/^[.\s]+/, '') // 去掉开头的点和空格（隐藏文件）
+                    .slice(0, 50)
                 const basename = `${cleanRoomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
                 downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false, basename)
             },
