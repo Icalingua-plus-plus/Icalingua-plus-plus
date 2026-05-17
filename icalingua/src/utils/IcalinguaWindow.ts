@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, shell } from 'electron'
+import { BrowserWindow, screen, shell, dialog } from 'electron'
 import getStaticPath from './getStaticPath'
 import path from 'path'
 import fs from 'fs'
@@ -7,6 +7,20 @@ import { download } from '../main/ipc/downloadManager'
 
 export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
     const win = new BrowserWindow(options)
+    win.webContents.on('will-prevent-unload', (event) => {
+        const choice = dialog.showMessageBoxSync(win, {
+            type: 'question',
+            buttons: ['Leave', 'Stay'],
+            title: 'Do you want to leave this site?',
+            message: 'Changes you made may not be saved.',
+            defaultId: 0,
+            cancelId: 1
+        })
+        const leave = (choice === 0)
+        if (leave) {
+            event.preventDefault()
+        }
+    })
     if (
         options &&
         options.webPreferences &&
