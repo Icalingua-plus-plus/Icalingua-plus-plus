@@ -82,11 +82,20 @@ window.mqq.invoke = function (b, c, d, e) {
         xhr.open('POST', d.cgiURL)
         xhr.onload = () => {
             console.log(xhr.readyState, xhr.status,xhr.responseText)
-            const data = JSON.parse(xhr.responseText)
-            console.log(data)
-            if (data.ec === 0) {
+            try {
+                const data = JSON.parse(xhr.responseText)
+                console.log(data)
+                if (data.ec !== 0) {
+                    alert(`图片上传失败：${data.em.replace(/(&nbsp;)+/g, " ")}（${data.ec}）`)
+                }
                 console.log(d.callback)
                 d.callback(data)
+            } catch {
+                alert(`图片上传失败：${xhr.statusText}（${xhr.status}）`)
+                d.callback({
+                    ec: 22,
+                    em: 'picture&nbsp;format&nbsp;wrong'
+                })
             }
         }
         let form = new FormData()
@@ -111,6 +120,11 @@ window.mqq.media.getPicture = (type, callback) => {
     input.onchange = () => {
         file = input.files[0]
         console.log(file)
+        if (!file) return
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片不能大于5MB')
+            return
+        }
         const reader = new FileReader()
         reader.onload = () => {
             fileData = reader.result
