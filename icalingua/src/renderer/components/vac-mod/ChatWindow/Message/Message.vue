@@ -593,16 +593,16 @@ export default {
 .vac-message-box {
     position: relative;
     display: flex;
-    flex: 0 0 50%;
-    max-width: 50%;
+    width: 100%;
     justify-content: flex-start;
     line-height: 1.4;
     align-items: flex-end;
 }
 
 .vac-message-box-lottie {
-    max-width: 100% !important;
-    margin-left: 0% !important;
+    .vac-message-container {
+        max-width: 100%;
+    }
 }
 
 .vac-message-sender-avatar {
@@ -615,6 +615,7 @@ export default {
     padding: 2px 10px;
     align-items: end;
     min-width: 100px;
+    max-width: var(--chat-message-max-width, min(85%, 800px));
     box-sizing: content-box;
 }
 
@@ -623,7 +624,6 @@ export default {
 }
 
 .vac-offset-current {
-    margin-left: 50%;
     justify-content: flex-end;
 }
 
@@ -797,15 +797,6 @@ export default {
 
     .vac-message-container-offset {
         margin-top: 10px;
-    }
-
-    .vac-message-box {
-        flex: 0 0 80%;
-        max-width: 80%;
-    }
-
-    .vac-offset-current {
-        margin-left: 20%;
     }
 }
 
