@@ -388,7 +388,7 @@ export default {
                 roomRef.resetMessage(true)
             }
             this.$refs.room.focusTextarea()
-            if (window.innerWidth < 1200) {
+            if (!this.stickerPanelBottom && window.innerWidth < 1200) {
                 this.panel = ''
             }
         },
@@ -415,7 +415,7 @@ export default {
                 room: this.room,
                 messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
             })
-            if (window.innerWidth < 1200) {
+            if (!this.stickerPanelBottom && window.innerWidth < 1200) {
                 this.panel = ''
             }
         },

@@ -999,7 +999,7 @@ Chromium ${process.versions.chrome}`
                 }
             }
             this.$refs.room.focusTextarea()
-            if (window.innerWidth < 1200) {
+            if (!this.stickerPanelBottom && window.innerWidth < 1200) {
                 this.panel = ''
             }
         },
@@ -1025,7 +1025,7 @@ Chromium ${process.versions.chrome}`
                 room: this.selectedRoom,
                 messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
             })
-            if (window.innerWidth < 1200) {
+            if (!this.stickerPanelBottom && window.innerWidth < 1200) {
                 this.panel = ''
             }
         },
