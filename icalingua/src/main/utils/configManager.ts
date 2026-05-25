@@ -117,6 +117,8 @@ const defaultConfig: AllConfig = {
     imageViewerSize: defaultImageViewerSize,
     hideTray: false,
     disableQuitShortcut: false,
+    stickerPanelBottom: false,
+    stickerPanelHeight: 320,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

@@ -51,6 +51,9 @@ const ipc = {
     setRoomPanelSetting(roomPanelAvatarOnly: boolean, roomPanelWidth: number) {
         ipcRenderer.send('setRoomPanelSetting', roomPanelAvatarOnly, roomPanelWidth)
     },
+    setStickerPanelHeight(height: number) {
+        ipcRenderer.send('setStickerPanelHeight', height)
+    },
     async getClearRoomsBehavior(): Promise<'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo'> {
         return await ipcRenderer.invoke('getClearRoomsBehavior')
     },

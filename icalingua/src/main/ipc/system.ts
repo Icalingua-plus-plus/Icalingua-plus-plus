@@ -47,6 +47,11 @@ ipcMain.on('setLockPassword', (_, password: string) => {
     saveConfigFile()
 })
 
+ipcMain.on('setStickerPanelHeight', (_, height: number) => {
+    getConfig().stickerPanelHeight = height
+    saveConfigFile()
+})
+
 ipcMain.on('resizeChatWindow', (event, deltaWidth: number) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win || win.isDestroyed()) return

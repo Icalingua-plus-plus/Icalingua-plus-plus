@@ -232,6 +232,9 @@ export default {
     setSortRoomsByPriority(enable: boolean) {
         sendToMainWindow('setSortRoomsByPriority', enable)
     },
+    setStickerPanelBottom(enable: boolean) {
+        sendToMainWindow('setStickerPanelBottom', enable)
+    },
     forwardSingleMessage(_id: string) {
         sendToMainWindow('forwardSingleMessage', _id)
     },

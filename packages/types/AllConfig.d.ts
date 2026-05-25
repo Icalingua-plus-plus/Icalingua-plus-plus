@@ -55,6 +55,8 @@ type AllConfig = {
     imageViewerSize: WinSize
     hideTray: boolean
     disableQuitShortcut: boolean
+    stickerPanelBottom: boolean
+    stickerPanelHeight: number
 }
 
 export default AllConfig

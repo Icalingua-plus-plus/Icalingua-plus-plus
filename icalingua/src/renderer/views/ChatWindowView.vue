@@ -3,7 +3,7 @@
         <div class="loading-container" v-if="!ready">
             <div class="pace-activity" />
         </div>
-        <div v-else class="chat-window-body">
+        <div v-else class="chat-window-body" :class="{ 'chat-window-body-bottom': stickerPanelBottom }">
             <div class="chat-window-main">
                 <Room
                     ref="room"
@@ -56,7 +56,37 @@
                     </template>
                 </Room>
             </div>
-            <transition name="vac-fade-stickers">
+            <template v-if="stickerPanelBottom">
+                <div class="sticker-bottom-resizer" v-show="panel" @mousedown="startStickerHeightResize"></div>
+                <transition name="vac-fade-stickers">
+                    <div
+                        v-show="panel"
+                        class="panel-bottom"
+                        :style="{ height: stickerPanelHeight + 'px' }"
+                        ref="stickerPanel"
+                    >
+                        <transition name="vac-fade-stickers">
+                            <Stickers
+                                v-show="panel === 'stickers'"
+                                :open="panel === 'stickers'"
+                                :bottomMode="true"
+                                @send="sendSticker"
+                                @close="panel = ''"
+                                @selectEmoji="
+                                    $refs.room.useMessageContent($event.data)
+                                    $refs.room.focusTextarea()
+                                "
+                                @selectFace="
+                                    $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                    $refs.room.focusTextarea()
+                                "
+                                @sendLottie="sendLottie"
+                            />
+                        </transition>
+                    </div>
+                </transition>
+            </template>
+            <transition name="vac-fade-stickers" v-else>
                 <div
                     :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
                     v-show="panel"
@@ -124,10 +154,14 @@ export default {
             pendingGotoMessageId: null, // 等待定位的消息 ID（窗口初始化时使用）
             panel: '', // 表情面板状态
             stickerPanelWidth: 0, // 记录面板宽度，关闭时缩回
+            stickerPanelBottom: false, // 是否启用底部表情面板模式
+            stickerPanelHeight: 320, // 底部模式时的面板高度（px）
         }
     },
     watch: {
         panel(val, oldVal) {
+            // 底部模式下面板嵌入窗口内部，不再扩展窗口宽度
+            if (this.stickerPanelBottom) return
             if (val && !oldVal) {
                 // 面板打开：等渲染完成后测量实际宽度再扩展窗口
                 this.$nextTick(() => {
@@ -155,6 +189,8 @@ export default {
         this.linkify = settings.linkify
         this.removeGroupNameEmotes = settings.removeGroupNameEmotes
         this.usePanguJsRecv = settings.usePanguJsRecv
+        this.stickerPanelBottom = settings.stickerPanelBottom
+        this.stickerPanelHeight = settings.stickerPanelHeight || 320
 
         // 获取账号信息 - 通过 getUin 获取
         this.account = await ipc.getUin()
@@ -458,6 +494,28 @@ export default {
                 this.loading = false
             }
         },
+
+        startStickerHeightResize(e) {
+            e.preventDefault()
+            const startY = e.pageY
+            const startHeight = this.stickerPanelHeight
+            const onMove = (ev) => {
+                const delta = startY - ev.pageY
+                let next = startHeight + delta
+                const min = 150
+                const max = Math.max(min, Math.floor(window.innerHeight * 0.85))
+                if (next < min) next = min
+                if (next > max) next = max
+                this.stickerPanelHeight = next
+            }
+            const onUp = () => {
+                window.removeEventListener('mousemove', onMove)
+                window.removeEventListener('mouseup', onUp)
+                ipc.setStickerPanelHeight(this.stickerPanelHeight)
+            }
+            window.addEventListener('mousemove', onMove)
+            window.addEventListener('mouseup', onUp)
+        },
     },
 }
 </script>
@@ -474,16 +532,45 @@ export default {
     width: 100%;
 }
 
+.chat-window-body-bottom {
+    flex-direction: column;
+}
+
 .chat-window-main {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     height: 100vh;
+}
+
+.chat-window-body-bottom .chat-window-main {
+    height: auto;
 }
 
 .panel-right {
     height: 100vh;
     border-left: var(--chat-border-style);
     flex-shrink: 0;
+}
+
+.panel-bottom {
+    width: 100%;
+    flex-shrink: 0;
+    border-top: var(--chat-border-style);
+    background-color: var(--panel-background);
+    overflow: hidden;
+}
+
+.sticker-bottom-resizer {
+    /* 视觉上不占空间：3px hit area 通过负 margin 重叠到下方面板的 border-top 上 */
+    height: 3px;
+    margin-bottom: -3px;
+    width: 100%;
+    cursor: row-resize;
+    background-color: transparent;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
 }
 
 .loading-container {
@@ -495,6 +582,10 @@ export default {
 
 ::v-deep .vac-col-messages {
     height: 100vh;
+}
+
+.chat-window-body-bottom ::v-deep .vac-col-messages {
+    height: 100%;
 }
 </style>
 

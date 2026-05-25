@@ -1,6 +1,6 @@
 <template>
-    <div class="bg" ondragstart="return false">
-        <div class="head">
+    <div class="bg" :class="{ 'bg-bottom': bottomMode }" ondragstart="return false">
+        <div class="head" :class="{ 'head-compact': bottomMode }">
             <div class="title">
                 <a @click="setPanel('stickers')" :class="{ selected: panel === 'stickers' }">Stickers</a>
                 <a @click="setPanel('face')" :class="{ selected: panel === 'face' }">Face</a>
@@ -175,6 +175,7 @@ export default {
     },
     props: {
         open: { type: Boolean, required: false, default: false },
+        bottomMode: { type: Boolean, required: false, default: false },
     },
     data() {
         return {
@@ -608,5 +609,65 @@ export default {
     --ep-color-active: #409eff !important;
     width: 100% !important;
     border: none !important;
+}
+
+// 底部模式（表情面板固定在屏幕下方）
+.bg-bottom {
+    height: 100%;
+
+    .head-compact {
+        height: 36px;
+        min-height: 36px;
+        font-size: 14px;
+        padding: 0 12px;
+    }
+
+    // 所有面板高度交给 flex，不再吃满 100vh
+    .panel {
+        height: auto;
+    }
+
+    .emoji-panel {
+        height: auto;
+        flex: 1;
+    }
+
+    // 一行表情数量根据宽度自适应
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    }
+
+    .face-panel .grid {
+        // face 较小，密度更高
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    }
+
+    // stickers 面板与分类栏改为纵向排列：表情在上，分类标签在下
+    .stickers-body {
+        flex-direction: column;
+    }
+
+    .stickers_dir {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        border-left: none;
+        border-top: var(--chat-border-style);
+        padding: 4px;
+        gap: 2px;
+
+        a {
+            writing-mode: horizontal-tb;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+    }
 }
 </style>

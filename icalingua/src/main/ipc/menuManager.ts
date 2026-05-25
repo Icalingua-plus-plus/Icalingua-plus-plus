@@ -1591,6 +1591,17 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '表情面板固定在底部',
+                        sublabel: '横排显示在聊天区下方，可拖拽调整高度',
+                        type: 'checkbox',
+                        checked: getConfig().stickerPanelBottom,
+                        click: (menuItem) => {
+                            getConfig().stickerPanelBottom = menuItem.checked
+                            saveConfigFile()
+                            ui.setStickerPanelBottom(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '禁用图片查看器触摸板新手势',
                         type: 'checkbox',
                         checked: getConfig().disableImgViewTouchPad,
@@ -2832,123 +2843,126 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
     }
     menu.popup({ window: win, ...pos })
 })
-ipcMain.on('popupContactMenu', (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
-    const win = getSenderWindow(event)
-    const bounds = win.getContentBounds()
-    const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
-    const menu = new Menu()
-    if (remark) {
-        menu.append(
-            new MenuItem({
-                label: `复制 "${remark}"`,
-                click: () => {
-                    clipboard.writeText(remark)
-                },
-            }),
-        )
-    }
-    if (name && name !== remark) {
-        menu.append(
-            new MenuItem({
-                label: `复制 "${name}"`,
-                click: () => {
-                    clipboard.writeText(name)
-                },
-            }),
-        )
-    }
-    const roomId = group ? -displayId : displayId
-    if (displayId) {
-        menu.append(
-            new MenuItem({
-                label: `复制 "${displayId}"`,
-                click: () => {
-                    clipboard.writeText(displayId.toString())
-                },
-            }),
-        )
-        const avatarType = group ? '群头像' : '头像'
-        menu.append(
-            new MenuItem({
-                label: `查看${avatarType}`,
-                click: () => {
-                    openImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false)
-                },
-            }),
-        )
-        menu.append(
-            new MenuItem({
-                label: `下载${avatarType}`,
-                click: () => {
-                    const cleanRemark =
-                        group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
-                    const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
-                    downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
-                },
-            }),
-        )
-        // 添加"查看共同群聊"选项（仅对好友显示）
-        if (!group) {
+ipcMain.on(
+    'popupContactMenu',
+    (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+        const win = getSenderWindow(event)
+        const bounds = win.getContentBounds()
+        const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
+        const menu = new Menu()
+        if (remark) {
             menu.append(
                 new MenuItem({
-                    label: '查看共同群聊',
+                    label: `复制 "${remark}"`,
                     click: () => {
-                        getMainWindow().webContents.send(
-                            'showCommonGroups',
-                            displayId,
-                            remark || name || String(displayId),
+                        clipboard.writeText(remark)
+                    },
+                }),
+            )
+        }
+        if (name && name !== remark) {
+            menu.append(
+                new MenuItem({
+                    label: `复制 "${name}"`,
+                    click: () => {
+                        clipboard.writeText(name)
+                    },
+                }),
+            )
+        }
+        const roomId = group ? -displayId : displayId
+        if (displayId) {
+            menu.append(
+                new MenuItem({
+                    label: `复制 "${displayId}"`,
+                    click: () => {
+                        clipboard.writeText(displayId.toString())
+                    },
+                }),
+            )
+            const avatarType = group ? '群头像' : '头像'
+            menu.append(
+                new MenuItem({
+                    label: `查看${avatarType}`,
+                    click: () => {
+                        openImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false)
+                    },
+                }),
+            )
+            menu.append(
+                new MenuItem({
+                    label: `下载${avatarType}`,
+                    click: () => {
+                        const cleanRemark =
+                            group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
+                        const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
+                        downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
+                    },
+                }),
+            )
+            // 添加"查看共同群聊"选项（仅对好友显示）
+            if (!group) {
+                menu.append(
+                    new MenuItem({
+                        label: '查看共同群聊',
+                        click: () => {
+                            getMainWindow().webContents.send(
+                                'showCommonGroups',
+                                displayId,
+                                remark || name || String(displayId),
+                            )
+                        },
+                    }),
+                )
+            }
+        }
+        menu.append(
+            new MenuItem({
+                label: group ? '屏蔽消息' : '屏蔽此人',
+                click: () => {
+                    ui.confirmIgnoreChat({
+                        id: roomId,
+                        name: group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                    })
+                },
+            }),
+        )
+        if (group) {
+            menu.append(
+                new MenuItem({
+                    label: group.owner_id === getUin() ? '解散本群' : '退出本群',
+                    click: async () => {
+                        const win = newIcalinguaWindow({
+                            height: 130,
+                            width: 500,
+                            autoHideMenuBar: true,
+                            maximizable: false,
+                            modal: true,
+                            parent: getMainWindow(),
+                            webPreferences: {
+                                contextIsolation: false,
+                                nodeIntegration: true,
+                            },
+                        })
+                        await win.loadURL(
+                            getWinUrl() +
+                                '#/kickAndExit/' +
+                                (group.owner_id === getUin() ? 'dismiss' : 'exit') +
+                                '/' +
+                                displayId +
+                                '/0/' +
+                                querystring.escape(
+                                    getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                                ) +
+                                '/0',
                         )
                     },
                 }),
             )
         }
-    }
-    menu.append(
-        new MenuItem({
-            label: group ? '屏蔽消息' : '屏蔽此人',
-            click: () => {
-                ui.confirmIgnoreChat({
-                    id: roomId,
-                    name: group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
-                })
-            },
-        }),
-    )
-    if (group) {
-        menu.append(
-            new MenuItem({
-                label: group.owner_id === getUin() ? '解散本群' : '退出本群',
-                click: async () => {
-                    const win = newIcalinguaWindow({
-                        height: 130,
-                        width: 500,
-                        autoHideMenuBar: true,
-                        maximizable: false,
-                        modal: true,
-                        parent: getMainWindow(),
-                        webPreferences: {
-                            contextIsolation: false,
-                            nodeIntegration: true,
-                        },
-                    })
-                    await win.loadURL(
-                        getWinUrl() +
-                            '#/kickAndExit/' +
-                            (group.owner_id === getUin() ? 'dismiss' : 'exit') +
-                            '/' +
-                            displayId +
-                            '/0/' +
-                            querystring.escape(
-                                getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
-                            ) +
-                            '/0',
-                    )
-                },
-            }),
-        )
-    }
-    menu.popup({ window: win, ...pos })
-})
+        menu.popup({ window: win, ...pos })
+    },
+)
 
 const copyImage = async (url: string) => {
     // console.log(clipboard.availableFormats(),clipboard.read('text/uri-list'))

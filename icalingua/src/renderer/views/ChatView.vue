@@ -80,109 +80,153 @@
             </div>
             <MultipaneResizer style="z-index: 3" />
             <div
-                style="flex: 1"
-                class="vac-card-window"
+                class="chat-area"
                 v-show="!useSinglePanel || !showSinglePanel || (showSinglePanel && showPanel === 'chat')"
             >
-                <div class="pace-activity" v-show="loading" />
-                <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
-                <Room
-                    ref="room"
-                    :current-user-id="account"
-                    :rooms="rooms"
-                    :messages="messages"
-                    height="100vh"
-                    :rooms-loaded="true"
-                    :messages-loaded="messagesLoaded"
-                    :show-audio="false"
-                    :show-reaction-emojis="false"
-                    :show-new-messages-divider="false"
-                    :load-first-room="false"
-                    :accepted-files="'*'"
-                    :message-actions="[]"
-                    :single-room="true"
-                    :room-id="selectedRoom.roomId"
-                    :show-rooms-list="false"
-                    :is-mobile="false"
-                    :menu-actions="[]"
-                    :show-send-icon="true"
-                    :show-files="true"
-                    :show-emojis="true"
-                    :show-footer="!isShutUp"
-                    :loading-rooms="false"
-                    :text-formatting="true"
-                    :linkify="linkify"
-                    :account="account"
-                    :username="username"
-                    :last-unread-count="lastUnreadCount"
-                    :last-unread-at="lastUnreadAt"
-                    :showSinglePanel="showSinglePanel"
-                    :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
-                    :usePanguJsRecv="usePanguJsRecv"
-                    :isSteamVrRunning="isSteamVrRunning"
-                    :canLoadAfter="isInMiddle"
-                    @clear-last-unread-count="clearLastUnreadCount"
-                    @clear-last-unread-at="clearLastUnreadAt"
-                    @send-message="sendMessage"
-                    @open-file="openImage"
-                    @pokefriend="pokeFriend"
-                    @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
-                    @close-stickers-panel="panel = ''"
-                    @download-image="downloadImage"
-                    @pokegroup="pokeGroup"
-                    @open-forward="openForward"
-                    @fetch-messages="fetchMessage"
-                    @fetch-messages-after="fetchMessageAfter"
-                    @open-group-member-panel="
-                        ;((groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId))
-                    "
-                    @choose-forward-target="chooseForwardTarget"
-                    @start-chat="startChat"
-                    @back-contact="closeRoom"
-                    @open-choose-file-type="openChooseFileType"
-                >
-                    <template v-slot:menu-icon>
-                        <i class="el-icon-more"></i>
-                    </template>
-                </Room>
-                <pre
-                    v-show="selectedRoomId === 0 && sysInfo"
-                    style="position: absolute; right: 13px; top: 0; font-family: monospace; color: rgb(156, 166, 175)"
-                >
+                <div style="flex: 1; min-width: 0; min-height: 0; position: relative" class="vac-card-window">
+                    <div class="pace-activity" v-show="loading" />
+                    <div class="upload-progress" v-show="loading && uploadProgress !== '0'">{{ uploadProgress }}%</div>
+                    <Room
+                        ref="room"
+                        :current-user-id="account"
+                        :rooms="rooms"
+                        :messages="messages"
+                        height="100vh"
+                        :rooms-loaded="true"
+                        :messages-loaded="messagesLoaded"
+                        :show-audio="false"
+                        :show-reaction-emojis="false"
+                        :show-new-messages-divider="false"
+                        :load-first-room="false"
+                        :accepted-files="'*'"
+                        :message-actions="[]"
+                        :single-room="true"
+                        :room-id="selectedRoom.roomId"
+                        :show-rooms-list="false"
+                        :is-mobile="false"
+                        :menu-actions="[]"
+                        :show-send-icon="true"
+                        :show-files="true"
+                        :show-emojis="true"
+                        :show-footer="!isShutUp"
+                        :loading-rooms="false"
+                        :text-formatting="true"
+                        :linkify="linkify"
+                        :account="account"
+                        :username="username"
+                        :last-unread-count="lastUnreadCount"
+                        :last-unread-at="lastUnreadAt"
+                        :showSinglePanel="showSinglePanel"
+                        :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
+                        :usePanguJsRecv="usePanguJsRecv"
+                        :isSteamVrRunning="isSteamVrRunning"
+                        :canLoadAfter="isInMiddle"
+                        @clear-last-unread-count="clearLastUnreadCount"
+                        @clear-last-unread-at="clearLastUnreadAt"
+                        @send-message="sendMessage"
+                        @open-file="openImage"
+                        @pokefriend="pokeFriend"
+                        @stickers-panel="panel = panel === 'stickers' ? '' : 'stickers'"
+                        @close-stickers-panel="panel = ''"
+                        @download-image="downloadImage"
+                        @pokegroup="pokeGroup"
+                        @open-forward="openForward"
+                        @fetch-messages="fetchMessage"
+                        @fetch-messages-after="fetchMessageAfter"
+                        @open-group-member-panel="
+                            ;((groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId))
+                        "
+                        @choose-forward-target="chooseForwardTarget"
+                        @start-chat="startChat"
+                        @back-contact="closeRoom"
+                        @open-choose-file-type="openChooseFileType"
+                    >
+                        <template v-slot:menu-icon>
+                            <i class="el-icon-more"></i>
+                        </template>
+                    </Room>
+                    <pre
+                        v-show="selectedRoomId === 0 && sysInfo"
+                        style="
+                            position: absolute;
+                            right: 13px;
+                            top: 0;
+                            font-family: monospace;
+                            color: rgb(156, 166, 175);
+                        "
+                    >
  {{ sysInfo }} </pre
-                >
-                <div class="getting-history" v-if="historyCount">
-                    <div class="pace-activity" />
-                    <span> {{ historyFetchingName }} 正在获取历史消息... {{ historyCount }} </span>
-                    <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
+                    >
+                    <div class="getting-history" v-if="historyCount">
+                        <div class="pace-activity" />
+                        <span> {{ historyFetchingName }} 正在获取历史消息... {{ historyCount }} </span>
+                        <el-button @click="stopFetchingHistory" size="mini">就要这么多</el-button>
+                    </div>
                 </div>
-            </div>
-            <MultipaneResizer class="resize-next" v-show="panel && selectedRoomId" />
-            <transition name="vac-fade-stickers">
-                <div
-                    :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                    v-show="panel && selectedRoomId"
-                    class="panel panel-right"
-                >
+                <!-- 底部模式：横向分隔条 + 底部表情面板 -->
+                <template v-if="stickerPanelBottom">
+                    <div
+                        class="sticker-bottom-resizer"
+                        v-show="panel && selectedRoomId"
+                        @mousedown="startStickerHeightResize"
+                    ></div>
                     <transition name="vac-fade-stickers">
-                        <Stickers
-                            v-show="panel === 'stickers'"
-                            :open="panel === 'stickers'"
-                            @send="sendSticker"
-                            @close="panel = ''"
-                            @selectEmoji="
-                                $refs.room.useMessageContent($event.data)
-                                $refs.room.focusTextarea()
-                            "
-                            @selectFace="
-                                $refs.room.useMessageContent(`[Face: ${$event}]`)
-                                $refs.room.focusTextarea()
-                            "
-                            @sendLottie="sendLottie"
-                        />
+                        <div
+                            v-show="panel && selectedRoomId"
+                            class="panel sticker-bottom-container"
+                            :style="{ height: stickerPanelHeight + 'px' }"
+                        >
+                            <transition name="vac-fade-stickers">
+                                <Stickers
+                                    v-show="panel === 'stickers'"
+                                    :open="panel === 'stickers'"
+                                    :bottomMode="true"
+                                    @send="sendSticker"
+                                    @close="panel = ''"
+                                    @selectEmoji="
+                                        $refs.room.useMessageContent($event.data)
+                                        $refs.room.focusTextarea()
+                                    "
+                                    @selectFace="
+                                        $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                        $refs.room.focusTextarea()
+                                    "
+                                    @sendLottie="sendLottie"
+                                />
+                            </transition>
+                        </div>
                     </transition>
-                </div>
-            </transition>
+                </template>
+            </div>
+            <!-- 侧边模式（默认）：分隔条 + 右侧表情面板 -->
+            <template v-if="!stickerPanelBottom">
+                <MultipaneResizer class="resize-next" v-show="panel && selectedRoomId" />
+                <transition name="vac-fade-stickers">
+                    <div
+                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                        v-show="panel && selectedRoomId"
+                        class="panel panel-right"
+                    >
+                        <transition name="vac-fade-stickers">
+                            <Stickers
+                                v-show="panel === 'stickers'"
+                                :open="panel === 'stickers'"
+                                @send="sendSticker"
+                                @close="panel = ''"
+                                @selectEmoji="
+                                    $refs.room.useMessageContent($event.data)
+                                    $refs.room.focusTextarea()
+                                "
+                                @selectFace="
+                                    $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                    $refs.room.focusTextarea()
+                                "
+                                @sendLottie="sendLottie"
+                            />
+                        </transition>
+                    </div>
+                </transition>
+            </template>
         </Multipane>
         <el-dialog
             title="You are offline"
@@ -355,6 +399,8 @@ export default {
             navBackStack: [], // 后退导航栈，存储 roomId
             navForwardStack: [], // 前进导航栈，存储 roomId
             isNavigating: false, // 标记是否正在通过前进/后退导航，避免重复入栈
+            stickerPanelBottom: false, // 是否启用底部表情面板模式
+            stickerPanelHeight: 320, // 底部模式时的面板高度（px）
         }
     },
     async created() {
@@ -370,6 +416,8 @@ export default {
         this.useSinglePanel = settings.useSinglePanel
         this.removeGroupNameEmotes = settings.removeGroupNameEmotes
         this.usePanguJsRecv = settings.usePanguJsRecv
+        this.stickerPanelBottom = settings.stickerPanelBottom
+        this.stickerPanelHeight = settings.stickerPanelHeight || 320
         //endregion
         //region listener
         document.addEventListener('dragover', (e) => {
@@ -800,6 +848,9 @@ Chromium ${process.versions.chrome}`
         ipcRenderer.on('setUsePanguJsRecv', (_, b) => {
             this.usePanguJsRecv = b
         })
+        ipcRenderer.on('setStickerPanelBottom', (_, b) => {
+            this.stickerPanelBottom = b
+        })
         ipcRenderer.on('forwardSingleMessage', (_, message_id) => {
             this.chooseForwardTarget(false, false)
         })
@@ -1158,6 +1209,28 @@ Chromium ${process.versions.chrome}`
             const width = document.getElementsByClassName('panel rooms-panel')[0].offsetWidth
             ipc.setRoomPanelSetting(this.roomPanelAvatarOnly, width)
         },
+        startStickerHeightResize(e) {
+            e.preventDefault()
+            const startY = e.pageY
+            const startHeight = this.stickerPanelHeight
+            const onMove = (ev) => {
+                // 向上拖增大高度（面板在底部）
+                const delta = startY - ev.pageY
+                let next = startHeight + delta
+                const min = 150
+                const max = Math.max(min, Math.floor(window.innerHeight * 0.85))
+                if (next < min) next = min
+                if (next > max) next = max
+                this.stickerPanelHeight = next
+            }
+            const onUp = () => {
+                window.removeEventListener('mousemove', onMove)
+                window.removeEventListener('mouseup', onUp)
+                ipc.setStickerPanelHeight(this.stickerPanelHeight)
+            }
+            window.addEventListener('mousemove', onMove)
+            window.addEventListener('mouseup', onUp)
+        },
         sendForward(id, name) {
             this.$refs.room.sendForward(id, name, this.forwardMulti, this.forwardAnonymous)
             this.forwardShown = false
@@ -1507,6 +1580,37 @@ main div {
 
 .panel {
     background-color: var(--panel-background);
+}
+
+// 聊天区+底部表情面板的纵向容器（底部模式时启用）
+.chat-area {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.sticker-bottom-resizer {
+    // 视觉上不占空间：3px hit area 通过负 margin 重叠到下方面板的 border-top 上
+    // 用户看到的依然是那 1px 的 border，但鼠标 hover 在该 border 附近时即可拖拽
+    height: 3px;
+    margin-bottom: -3px;
+    width: 100%;
+    cursor: row-resize;
+    background-color: transparent;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 3;
+}
+
+.sticker-bottom-container {
+    width: 100%;
+    min-height: 120px;
+    flex-shrink: 0;
+    border-top: var(--chat-border-style);
+    overflow: hidden;
 }
 
 @keyframes pace-spinner {
