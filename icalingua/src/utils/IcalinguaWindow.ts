@@ -5,8 +5,41 @@ import fs from 'fs'
 import { getBkn, getCookies } from '../main/ipc/botAndStorage'
 import { download } from '../main/ipc/downloadManager'
 
-export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOptions): BrowserWindow {
-    const win = new BrowserWindow(options)
+/**
+ * Wayland 合成器（niri / Hyprland 等）的 open-* 窗口规则只在 surface 首次 commit
+ * 时匹配一次。Electron 单进程内所有窗口共享同一个 app_id，唯一可区分窗口类型的
+ * 属性是 title；而默认行为下窗口构造时 title 为空，等 HTML loadURL 完才被
+ * document.title 覆盖，存在加载慢就匹配不上规则的竞争。
+ *
+ * - stableTitle: 把 title 注入构造选项使首次 map 即生效，并拦截 page-title-updated
+ *   防止 HTML 改 title 破坏规则匹配。
+ * - deferShow: 强制 show:false 等 ready-to-show 再显示，顺带消除空白闪烁。
+ */
+export interface StableTitleOptions {
+    stableTitle?: string
+    deferShow?: boolean
+}
+
+export function newIcalinguaWindow(
+    options?: Electron.BrowserWindowConstructorOptions,
+    stable?: StableTitleOptions,
+): BrowserWindow {
+    const finalOptions: Electron.BrowserWindowConstructorOptions = { ...(options || {}) }
+    if (stable?.stableTitle) {
+        finalOptions.title = stable.stableTitle
+    }
+    if (stable?.deferShow) {
+        finalOptions.show = false
+    }
+    const win = new BrowserWindow(finalOptions)
+    if (stable?.stableTitle) {
+        win.on('page-title-updated', (e) => e.preventDefault())
+    }
+    if (stable?.deferShow) {
+        win.once('ready-to-show', () => {
+            if (!win.isDestroyed()) win.show()
+        })
+    }
     win.webContents.on('will-prevent-unload', (event) => {
         const choice = dialog.showMessageBoxSync(win, {
             type: 'question',
@@ -14,9 +47,9 @@ export function newIcalinguaWindow(options?: Electron.BrowserWindowConstructorOp
             title: 'Do you want to leave this site?',
             message: 'Changes you made may not be saved.',
             defaultId: 0,
-            cancelId: 1
+            cancelId: 1,
         })
-        const leave = (choice === 0)
+        const leave = choice === 0
         if (leave) {
             event.preventDefault()
         }

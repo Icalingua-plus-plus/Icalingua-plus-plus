@@ -49,15 +49,18 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
         } else {
             // 获取保存的窗口大小
             const imageViewerSize = getConfig().imageViewerSize
-            const viewerWindow = newIcalinguaWindow({
-                width: imageViewerSize.width,
-                height: imageViewerSize.height,
-                autoHideMenuBar: true,
-                webPreferences: {
-                    contextIsolation: false,
-                    preload: path.join(getStaticPath(), 'imgViewPreload.js'),
+            const viewerWindow = newIcalinguaWindow(
+                {
+                    width: imageViewerSize.width,
+                    height: imageViewerSize.height,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        preload: path.join(getStaticPath(), 'imgViewPreload.js'),
+                    },
                 },
-            })
+                { stableTitle: 'Icalingua++ ImageViewer', deferShow: true },
+            )
             // get main window screen location
             const bound = viewerWindow.getBounds()
             const screen = getMainWindowScreen()

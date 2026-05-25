@@ -254,16 +254,19 @@ ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) =>
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
-    const win = newIcalinguaWindow({
-        height: size.height - 200,
-        width,
-        autoHideMenuBar: true,
-        webPreferences: {
-            nodeIntegration: true,
-            webSecurity: false,
-            contextIsolation: false,
+    const win = newIcalinguaWindow(
+        {
+            height: size.height - 200,
+            width,
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
         },
-    })
+        { stableTitle: 'Icalingua++ ForwardView', deferShow: true },
+    )
     win.loadURL(getWinUrl() + '#/history')
     let messages: Promise<Message[]> | Message[]
     if (Array.isArray(resId)) {

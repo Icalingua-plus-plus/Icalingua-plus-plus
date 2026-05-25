@@ -50,18 +50,21 @@ export const loadMainWindow = () => {
             : theme === 'dark'
               ? '#131415'
               : '#FFFFFF'
-    mainWindow = newIcalinguaWindow({
-        height: winSize.height,
-        width: winSize.width,
-        show: process.env.NODE_ENV !== 'development' && !argv.hide,
-        backgroundColor: themeColor,
-        autoHideMenuBar: !getConfig().showAppMenu,
-        webPreferences: {
-            nodeIntegration: true,
-            webSecurity: false,
-            contextIsolation: false,
+    mainWindow = newIcalinguaWindow(
+        {
+            height: winSize.height,
+            width: winSize.width,
+            show: process.env.NODE_ENV !== 'development' && !argv.hide,
+            backgroundColor: themeColor,
+            autoHideMenuBar: !getConfig().showAppMenu,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
         },
-    })
+        { stableTitle: 'Icalingua++ Main' },
+    )
 
     if (loginWindow) loginWindow.destroy()
 
@@ -230,16 +233,19 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
         loginWindow.show()
         loginWindow.focus()
     } else {
-        loginWindow = newIcalinguaWindow({
-            height: 720,
-            width: 550,
-            maximizable: false,
-            webPreferences: {
-                webSecurity: false,
-                nodeIntegration: true,
-                contextIsolation: false,
+        loginWindow = newIcalinguaWindow(
+            {
+                height: 720,
+                width: 550,
+                maximizable: false,
+                webPreferences: {
+                    webSecurity: false,
+                    nodeIntegration: true,
+                    contextIsolation: false,
+                },
             },
-        })
+            { stableTitle: 'Icalingua++ Login', deferShow: true },
+        )
 
         loginWindow.on('closed', () => {
             loginWindow = null
@@ -247,7 +253,9 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
 
         if (process.env.NODE_ENV === 'development') {
             loadDevtools(loginWindow)
-            loginWindow.minimize()
+            // deferShow 下窗口最初 show:false，需要等 helper 的 ready-to-show
+            // show() 之后再 minimize，否则 minimize 状态会被 show() 覆盖
+            loginWindow.once('show', () => loginWindow.minimize())
         }
 
         return loginWindow.loadURL(
@@ -260,16 +268,19 @@ export const showRequestWindow = () => {
         requestWindow.show()
         requestWindow.focus()
     } else {
-        requestWindow = newIcalinguaWindow({
-            width: 750,
-            height: 600,
-            webPreferences: {
-                nodeIntegration: true,
-                webSecurity: false,
-                contextIsolation: false,
+        requestWindow = newIcalinguaWindow(
+            {
+                width: 750,
+                height: 600,
+                webPreferences: {
+                    nodeIntegration: true,
+                    webSecurity: false,
+                    contextIsolation: false,
+                },
+                autoHideMenuBar: true,
             },
-            autoHideMenuBar: true,
-        })
+            { stableTitle: 'Icalingua++ FriendRequest', deferShow: true },
+        )
 
         if (process.env.NODE_ENV === 'development') {
             loadDevtools(requestWindow)
@@ -290,18 +301,21 @@ export const sendToRequestWindow = (channel: string, payload?: any) => {
 }
 export const getMainWindow = () => mainWindow
 export const showSetLockPasswordWindow = () => {
-    const setLockPasswordWindow = newIcalinguaWindow({
-        height: 160,
-        width: 500,
-        autoHideMenuBar: true,
-        maximizable: false,
-        modal: true,
-        parent: mainWindow,
-        webPreferences: {
-            contextIsolation: false,
-            nodeIntegration: true,
+    const setLockPasswordWindow = newIcalinguaWindow(
+        {
+            height: 160,
+            width: 500,
+            autoHideMenuBar: true,
+            maximizable: false,
+            modal: true,
+            parent: mainWindow,
+            webPreferences: {
+                contextIsolation: false,
+                nodeIntegration: true,
+            },
         },
-    })
+        { stableTitle: 'Icalingua++ SetLockPassword', deferShow: true },
+    )
     setLockPasswordWindow.loadURL(getWinUrl() + '#/setLockPassword')
 }
 export const lockMainWindow = () => {
@@ -322,18 +336,21 @@ export const judgeLocked = (callback: () => void) => {
             callback()
         }
         if (!unlockWindow) {
-            unlockWindow = newIcalinguaWindow({
-                height: 160,
-                width: 500,
-                autoHideMenuBar: true,
-                maximizable: false,
-                modal: true,
-                parent: mainWindow,
-                webPreferences: {
-                    contextIsolation: false,
-                    nodeIntegration: true,
+            unlockWindow = newIcalinguaWindow(
+                {
+                    height: 160,
+                    width: 500,
+                    autoHideMenuBar: true,
+                    maximizable: false,
+                    modal: true,
+                    parent: mainWindow,
+                    webPreferences: {
+                        contextIsolation: false,
+                        nodeIntegration: true,
+                    },
                 },
-            })
+                { stableTitle: 'Icalingua++ Unlock', deferShow: true },
+            )
             unlockWindow.on('closed', () => {
                 unlockWindow = null
             })
@@ -432,16 +449,19 @@ export const showDeviceManagerWindow = () => {
         deviceManagerWindow.show()
         deviceManagerWindow.focus()
     } else {
-        deviceManagerWindow = newIcalinguaWindow({
-            width: 750,
-            height: 600,
-            webPreferences: {
-                nodeIntegration: true,
-                webSecurity: false,
-                contextIsolation: false,
+        deviceManagerWindow = newIcalinguaWindow(
+            {
+                width: 750,
+                height: 600,
+                webPreferences: {
+                    nodeIntegration: true,
+                    webSecurity: false,
+                    contextIsolation: false,
+                },
+                autoHideMenuBar: true,
             },
-            autoHideMenuBar: true,
-        })
+            { stableTitle: 'Icalingua++ DeviceManager', deferShow: true },
+        )
 
         if (process.env.NODE_ENV === 'development') {
             loadDevtools(deviceManagerWindow)
@@ -534,18 +554,21 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
               ? '#131415'
               : '#FFFFFF'
 
-    const win = newIcalinguaWindow({
-        height: size.height - 200,
-        width: 900,
-        title: roomName,
-        backgroundColor: themeColor,
-        autoHideMenuBar: true,
-        webPreferences: {
-            nodeIntegration: true,
-            webSecurity: false,
-            contextIsolation: false,
+    const win = newIcalinguaWindow(
+        {
+            height: size.height - 200,
+            width: 900,
+            title: roomName,
+            backgroundColor: themeColor,
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
         },
-    })
+        { deferShow: true },
+    )
 
     chatWindows.set(roomId, win)
 
