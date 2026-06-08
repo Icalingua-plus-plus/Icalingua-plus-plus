@@ -5,6 +5,25 @@
 import { IncomingSegment, OutgoingSegment } from '@saltify/milky-types'
 import type { MessageElem } from 'oicq-icalingua-plus-plus'
 import { MessageElemPlus } from '../types/MessageElemPlus'
+import { buildMilkyForwardJson } from './forwardMessageMeta'
+
+type MilkyReplySegmentData = {
+    readonly message_seq: number
+    readonly sender_id?: number
+    readonly sender_name?: string | null
+    readonly time?: number
+    readonly segments?: readonly (IncomingSegment | Record<string, unknown>)[]
+}
+
+type MilkyReplyData = {
+    id: string
+    _milkyReply?: {
+        readonly senderId: number
+        readonly senderName: string | null
+        readonly time: number
+        readonly segments: readonly (IncomingSegment | Record<string, unknown>)[] | undefined
+    }
+}
 
 /**
  * 将 Milky IncomingSegment 转换为 oicq MessageElem
@@ -41,15 +60,16 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
 
         case 'reply': {
             // Milky 1.2: reply 段包含被回复消息的完整信息
-            const replyData: any = {
+            const replySource: MilkyReplySegmentData = segment.data
+            const replyData: MilkyReplyData = {
                 id: String(segment.data.message_seq),
             }
-            if ('sender_id' in segment.data) {
+            if (replySource.sender_id !== undefined) {
                 replyData._milkyReply = {
-                    senderId: Number((segment.data as any).sender_id),
-                    senderName: (segment.data as any).sender_name || null,
-                    time: Number((segment.data as any).time),
-                    segments: (segment.data as any).segments,
+                    senderId: Number(replySource.sender_id),
+                    senderName: replySource.sender_name || null,
+                    time: Number(replySource.time),
+                    segments: replySource.segments,
                 }
             }
             return {
@@ -113,15 +133,7 @@ export function milkyToOicqSegment(segment: IncomingSegment): MessageElem {
             return {
                 type: 'json',
                 data: {
-                    data: JSON.stringify({
-                        app: 'com.tencent.multimsg',
-                        meta: {
-                            detail: {
-                                resid: segment.data.forward_id,
-                            },
-                        },
-                        prompt: '[聊天记录]',
-                    }),
+                    data: buildMilkyForwardJson(segment.data),
                 },
             }
 

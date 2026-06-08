@@ -2,14 +2,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import Message from '@icalingua/types/Message'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { base64decode } from 'nodejs-base64'
-import {
-    AtElem,
-    FileElem,
-    FriendInfo,
-    GroupMessageEventData,
-    MemberBaseInfo,
-    MessageElem,
-} from 'oicq-icalingua-plus-plus'
+import { AtElem, FileElem, FriendInfo, GroupMessageEventData, MemberBaseInfo } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import getImageUrlByMd5 from './getImageUrlByMd5'
@@ -17,12 +10,18 @@ import mime from './mime'
 import silkDecode from './silkDecode'
 import formatDate from './formatDate'
 import { ImgPttElemPlus, MessageElemPlus } from '../types/MessageElemPlus'
+import { formatForwardMessageBodyPrefix, getForwardMessagePrompt } from './forwardMessageMeta'
+
+type LastMessageLike = {
+    content?: string
+    username?: string | null
+}
 
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
     const processMessage = async (
         oicqMessage: MessageElemPlus[],
         message: Message,
-        lastMessage,
+        lastMessage: LastMessageLike,
         roomId = null,
         isHistory = false,
     ) => {
@@ -31,14 +30,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
 
             lastMessage.content = lastMessage.content ?? '' // 初始化最近信息内容
 
-            let lastType
+            let lastType: string | undefined
             let lastReply = false
             let replyAnonymous = false
             let markdown = ''
             for (let i = 0; i < oicqMessage.length; i++) {
                 const m = oicqMessage[i] || { type: 'unknown', data: {} }
-                let appurl
-                let url
+                let appurl: string | undefined
+                let url: string | undefined
                 switch (m.type) {
                     case 'at':
                         if (!isNaN(m.data.qq as number)) {
@@ -101,7 +100,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             url = getImageUrlByMd5(md5)
                         }
                         if (typeof m.data.file === 'string' && url.includes('c2cpicdw.qpic.cn')) {
-                            const md5 = m.data.file.substr(0, 32)
+                            const md5 = m.data.file.slice(0, 32)
                             ;/^([a-f\d]{32}|[A-F\d]{32})$/.test(md5) && (url = getImageUrlByMd5(md5))
                         }
                         message.file = {
@@ -115,10 +114,10 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         break
                     case 'bface':
                         lastMessage.content += '[Sticker]' + m.data.text
-                        url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.substr(
+                        url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.slice(
                             0,
                             2,
-                        )}/${m.data.file.substr(0, 32)}/raw${m.data.width || m.data.height || 300}.gif`
+                        )}/${m.data.file.slice(0, 32)}/raw${m.data.width || m.data.height || 300}.gif`
                         message.file = {
                             type: 'image/webp',
                             url,
@@ -132,12 +131,12 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         url = m.data.url
                         if (!url && !isHistory) {
                             if (roomId < 0) {
-                                const meta = await new Promise<FileElem['data']>((resolve, reject) => {
+                                const meta = await new Promise<FileElem['data']>((resolve) => {
                                     adapter.getGroupFileMeta(-roomId, m.data.fid || (m.data as any).file_id, resolve)
                                 })
                                 url = meta.url
                             } else {
-                                url = await new Promise<string>((resolve, reject) => {
+                                url = await new Promise<string>((resolve) => {
                                     // 貌似会和 downloadPrivateFileWithoutUrl 冲突，downloadPrivateFileWithoutUrl 写了等于没写
                                     // 不知道 nt 的私聊文件 url 有效期多久，不行的话写个判断 adapter 吧
                                     adapter.getPrivateFileUrl(m.data.fid || (m.data as any).file_id, resolve)
@@ -321,13 +320,15 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             try {
                                 const resId = jsonObj.meta?.detail?.resid
                                 const fileName = jsonObj.meta?.detail?.uniseq
+                                const forwardSummary = getForwardMessagePrompt(jsonObj) || '[Forward multiple messages]'
+                                const forwardPrefix = formatForwardMessageBodyPrefix(jsonObj)
                                 if (resId) {
-                                    lastMessage.content += '[Forward multiple messages]'
-                                    message.content = `[Forward: ${resId}]`
+                                    lastMessage.content += forwardSummary
+                                    message.content = `${forwardPrefix}[Forward: ${resId}]`
                                     break
                                 } else if (fileName) {
-                                    lastMessage.content += '[Forward multiple messages]'
-                                    message.content = `[NestedForward: ${fileName}]`
+                                    lastMessage.content += forwardSummary
+                                    message.content = `${forwardPrefix}[NestedForward: ${fileName}]`
                                     break
                                 }
                             } catch (err) {}
@@ -527,16 +528,16 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 const index = message.content.indexOf('：\n')
                                 let sender = ''
                                 if (index > -1) {
-                                    sender = message.content.substr(0, index)
-                                    message.content = message.content.substr(index + 2)
+                                    sender = message.content.slice(0, index)
+                                    message.content = message.content.slice(index + 2)
                                 } else {
                                     //是图片之类没有真实文本内容的
                                     //去除尾部：
-                                    sender = message.content.substr(0, message.content.length - 1)
+                                    sender = message.content.slice(0, message.content.length - 1)
                                     message.content = ''
                                 }
                                 message.username = lastMessage.username = sender
-                                lastMessage.content = lastMessage.content.substr(sender.length + 1)
+                                lastMessage.content = lastMessage.content.slice(sender.length + 1)
                             }
                         } catch (e) {}
                         break
