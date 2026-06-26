@@ -627,23 +627,20 @@ export default {
         maxViewportLength() {
             const w = window.visualViewport ? window.visualViewport : window
             const height = w.height || w.innerHeight
+            // 每条消息估算高度 60px，乘以 5 倍缓冲确保快速滚动不会出现空白
             return Math.ceil(height / 60) * 5
         },
     },
     watch: {
         canLoadAfter(val) {
-            console.log('canLoadAfter changed to:', val)
-            console.log('visibleViewport.tail:', this.visibleViewport.tail)
-            console.log('messages.length:', this.messages.length)
-            console.log('optimizeMethod:', this.optimizeMethod)
-            console.log('tail !== length:', this.visibleViewport.tail !== this.messages.length)
-            console.log('condition part 1:', this.visibleViewport.tail !== this.messages.length || val)
-            console.log('condition part 2:', this.optimizeMethod === 'infinite-loading')
-            console.log(
-                'full condition:',
-                (this.visibleViewport.tail !== this.messages.length || val) &&
-                    this.optimizeMethod === 'infinite-loading',
-            )
+            // 当 canLoadAfter 变为 true 且已在底部时，自动触发加载
+            if (
+                val &&
+                this.optimizeMethod === 'infinite-loading' &&
+                this.visibleViewport.tail >= this.messages.length
+            ) {
+                this.$emit('fetch-messages-after')
+            }
         },
         loadingMessages(val) {
             if (val) this.infiniteState.head = null
@@ -675,42 +672,43 @@ export default {
             const element = this.$refs.scrollContainer
             if (!element) return
 
-            const offset = (newVal ? newVal.length : 0) - (oldVal ? oldVal.length : 0)
-            if (
-                oldVal &&
-                oldVal.length &&
-                newVal &&
-                newVal.length &&
-                oldVal[oldVal.length - 1]._id === newVal[newVal.length - 1]._id
-            ) {
+            const newLen = newVal ? newVal.length : 0
+            const oldLen = oldVal ? oldVal.length : 0
+            const offset = newLen - oldLen
+
+            // 头部加载历史消息（最后一条消息相同 = 在前面插入了历史消息）
+            if (oldVal && oldLen && newVal && newLen && oldVal[oldLen - 1]._id === newVal[newLen - 1]._id) {
                 const scrollTop = this.getTopScroll(element)
                 const scrollBottom = this.getBottomScroll(element)
                 if (scrollTop < scrollBottom) {
-                    this.visibleViewport.tail = Math.min(
-                        newVal.length,
-                        this.visibleViewport.head + this.maxViewportLength,
-                    )
+                    // 接近顶部，扩展尾部保持视觉稳定
+                    this.visibleViewport.tail = Math.min(newLen, this.visibleViewport.head + this.maxViewportLength)
                 }
                 if (scrollTop > scrollBottom) {
-                    this.visibleViewport.tail = Math.min(newVal.length, this.visibleViewport.tail + offset)
+                    // 接近底部，向右平移视口
+                    this.visibleViewport.tail = Math.min(newLen, this.visibleViewport.tail + offset)
                     this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
                 }
             }
-            if (!oldVal || !oldVal.length || this.optimizeMethod === 'none') {
+
+            // 初始加载或不使用优化模式
+            if (!oldVal || !oldLen || this.optimizeMethod === 'none') {
                 this.visibleViewport.head = 0
-                this.visibleViewport.tail = newVal.length
+                this.visibleViewport.tail = newLen
             }
 
-            if (oldVal && newVal && oldVal.length === newVal.length - 1) {
+            // 新增单条消息
+            if (oldVal && newVal && oldLen === newLen - 1) {
                 this.loadingMessages = false
 
                 if (
-                    newVal[newVal.length - 1].senderId === this.currentUserId ||
+                    newVal[newLen - 1].senderId === this.currentUserId ||
                     (this.getBottomScroll(element) < 60 &&
-                        (this.visibleViewport.tail === oldVal.length || this.optimizeMethod === 'none'))
+                        (this.visibleViewport.tail === oldLen || this.optimizeMethod === 'none'))
                 ) {
+                    // 自己发的或在底部：自动滚动到底
                     if (this.optimizeMethod !== 'none') {
-                        this.visibleViewport.tail = newVal.length
+                        this.visibleViewport.tail = newLen
                         this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
                     }
                     return setTimeout(() => {
@@ -718,6 +716,7 @@ export default {
                         element.scrollTo(options)
                     }, 50)
                 } else {
+                    // 不在底部：显示新消息提示
                     this.scrollIcon = true
                     return this.scrollMessagesCount++
                 }
@@ -725,26 +724,21 @@ export default {
 
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
-            } else if (
-                newVal &&
-                newVal.length &&
-                !this.scrollIcon &&
-                !(oldVal && newVal.length === oldVal.length) &&
-                !this.canLoadAfter
-            ) {
+            } else if (newVal && newLen && !this.scrollIcon && !(oldVal && newLen === oldLen) && !this.canLoadAfter) {
                 // 不在 gotoMessage 模式时才自动滚动到底部
                 setTimeout(() => {
                     element.scrollTo({ top: element.scrollHeight })
                     this.loadingMessages = false
                 }, 0)
             }
+
             // 处理向下加载完成
             if (this.loadingTailMessages) {
                 this.loadingTailMessages = false
                 if (this.infiniteState.tail) {
-                    if (newVal.length > oldVal.length) {
+                    if (newLen > oldLen) {
                         // 有新消息加载，继续允许加载
-                        this.visibleViewport.tail = newVal.length
+                        this.visibleViewport.tail = newLen
                         this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
                         this.infiniteState.tail.loaded()
                     } else {
@@ -753,6 +747,8 @@ export default {
                     }
                 }
             }
+
+            // 处理滚动到最后未读消息
             if (this.checkCanScrollTimer) clearTimeout(this.checkCanScrollTimer)
             if (this.scrollingTolastMessage) {
                 this.checkCanScrollTimer = setTimeout(() => {
@@ -767,12 +763,12 @@ export default {
                                 this.$message.error('Message not found')
                                 return
                             }
-                            console.log('last unread message ID', _id)
                             this.scrollToMessage(_id)
                         }, 0)
                     }
                 }, 1000)
             }
+
             // 处理回复消息的定位
             if (this.scrollingToReplyMessage) {
                 setTimeout(() => {
@@ -784,6 +780,7 @@ export default {
                     }
                 }, 1000)
             }
+
             setTimeout(() => (this.loadingHeadMessages = false), 0)
         },
         messagesLoaded(val) {
@@ -798,7 +795,6 @@ export default {
         },
     },
     async mounted() {
-        console.log('Room mounted, canLoadAfter:', this.canLoadAfter, 'optimizeMethod:', this.optimizeMethod)
         this.newMessages = []
         this.$refs.roomTextarea.$refs.roomTextarea.addEventListener('keydown', (e) => {
             if (e.isComposing) return
@@ -1050,6 +1046,16 @@ export default {
             this.msgsToForward.push(_id)
             this.selectUpdateKey = 1
         })
+    },
+    beforeDestroy() {
+        if (this.onScrolling) {
+            clearTimeout(this.onScrolling)
+            this.onScrolling = null
+        }
+        if (this.checkCanScrollTimer) {
+            clearTimeout(this.checkCanScrollTimer)
+            this.checkCanScrollTimer = null
+        }
     },
     methods: {
         sendForward(target, name, multi = true, anonymous = false) {
@@ -1339,27 +1345,25 @@ export default {
             } else {
                 const index = this.messages.findIndex((e) => judgeSameMessage(e._id))
                 if (index !== -1) {
-                    let head = index - Math.floor(this.maxViewportLength / 2)
-                    let tail = head + this.maxViewportLength
-                    if (head < 0) {
-                        head = 0
-                        tail = Math.min(this.maxViewportLength, this.messages.length)
-                    }
-                    if (tail > this.messages.length) {
-                        tail = this.messages.length
-                        head = Math.max(tail - this.maxViewportLength, 0)
+                    // 将目标消息放在视口中心位置
+                    const halfViewport = Math.floor(this.maxViewportLength / 2)
+                    let head = Math.max(0, index - halfViewport)
+                    let tail = Math.min(head + this.maxViewportLength, this.messages.length)
+                    // 修正头部确保视口大小一致
+                    if (tail - head < this.maxViewportLength) {
+                        head = Math.max(0, tail - this.maxViewportLength)
                     }
                     if (this.optimizeMethod !== 'none') {
                         this.visibleViewport.head = head
                         this.visibleViewport.tail = tail
                     }
                     this.$nextTick(() => {
-                        const message = document.getElementById(this.messages[index]._id)
-                        if (message) {
-                            message.scrollIntoView()
-                            message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
+                        const el = document.getElementById(this.messages[index]._id)
+                        if (el) {
+                            el.scrollIntoView()
+                            el.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
                             setTimeout(() => {
-                                message.parentElement.style = ''
+                                el.parentElement.style = ''
                             }, 3000)
                         }
                     })
@@ -1653,10 +1657,13 @@ export default {
         },
         scrollToBottom() {
             const element = this.$refs.scrollContainer
+            if (!element) return
             if (this.optimizeMethod !== 'none') {
                 this.visibleViewport.tail = this.messages.length
                 this.visibleViewport.head = Math.max(this.messages.length - this.maxViewportLength, 0)
             }
+            this.scrollMessagesCount = 0
+            this.scrollIcon = false
             this.$nextTick(() => {
                 element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
             })
@@ -1882,14 +1889,8 @@ export default {
             this.visibleViewport.tail = Math.min(this.visibleViewport.tail + 10, this.messages.length)
             this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
             this.infiniteState.tail = infiniteState
-            console.log('loadTailMessages:', {
-                tail: this.visibleViewport.tail,
-                messagesLength: this.messages.length,
-                canLoadAfter: this.canLoadAfter,
-            })
             // 如果已经到达消息列表末尾且可以向后加载，触发加载更多
             if (this.visibleViewport.tail >= this.messages.length && this.canLoadAfter) {
-                console.log('Emitting fetch-messages-after')
                 this.loadingTailMessages = true
                 this.$emit('fetch-messages-after')
             } else if (this.visibleViewport.tail >= this.messages.length && !this.canLoadAfter) {
