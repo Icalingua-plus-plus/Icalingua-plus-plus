@@ -1,5 +1,6 @@
 import { MemberInfo } from 'oicq-icalingua-plus-plus'
 import ipc from './ipc'
+import sleep from '../../utils/sleep'
 
 /**
  * 群成员缓存管理器
@@ -44,6 +45,7 @@ class GroupMemberCache {
     async preloadAllGroups(groupIds: number[]): Promise<void> {
         for (const groupId of groupIds) {
             await this.getGroupMembers(Math.abs(groupId)).catch(() => [])
+            await sleep(100)
         }
         console.log(`Preloaded ${groupIds.length} groups' member lists`)
     }

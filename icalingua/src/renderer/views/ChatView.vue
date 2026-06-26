@@ -354,6 +354,7 @@ export default {
             username: '',
             priority: 3,
             isSteamVrRunning: false,
+            isGroupsPreloaded: false,
             theme: 'default',
             loading: false,
             isShutUp: false,
@@ -401,6 +402,7 @@ export default {
             isNavigating: false, // 标记是否正在通过前进/后退导航，避免重复入栈
             stickerPanelBottom: false, // 是否启用底部表情面板模式
             stickerPanelHeight: 320, // 底部模式时的面板高度（px）
+            _preloadDone: false, // 标记群成员预加载是否已调度，防止 gotOnlineData 多次触发
         }
     },
     async created() {
@@ -820,14 +822,17 @@ Chromium ${process.versions.chrome}`
                 if (updateCheck === 'ask') this.dialogAskCheckUpdateVisible = true
 
                 // 预加载所有群的成员列表（用于查找共同群聊功能）
-                setTimeout(() => {
-                    const groupIds = this.rooms.filter((r) => r.roomId < 0).map((r) => -r.roomId)
-                    if (groupIds.length > 0) {
-                        groupMemberCache.preloadAllGroups(groupIds).catch((err) => {
-                            console.error('Failed to preload group members:', err)
-                        })
-                    }
-                }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
+                if (!this.isGroupsPreloaded) {
+                    this.isGroupsPreloaded = true
+                    setTimeout(() => {
+                        const groupIds = this.rooms.filter((r) => r.roomId < 0).map((r) => -r.roomId)
+                        if (groupIds.length > 0) {
+                            groupMemberCache.preloadAllGroups(groupIds).catch((err) => {
+                                console.error('Failed to preload group members:', err)
+                            })
+                        }
+                    }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
+                }
             },
         )
         ipcRenderer.on('uploadProgress', (_, p) => {
