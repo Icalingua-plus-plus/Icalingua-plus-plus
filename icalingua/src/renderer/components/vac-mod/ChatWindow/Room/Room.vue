@@ -607,6 +607,7 @@ export default {
             isMessageEmpty: true,
             membersCount: 0,
             checkCanScrollTimer: null,
+            scrollToBottomTimer: null,
             pasteIcon: `file://${__static}/Clipboard.svg`,
         }
     },
@@ -707,14 +708,8 @@ export default {
                         (this.visibleViewport.tail === oldLen || this.optimizeMethod === 'none'))
                 ) {
                     // 自己发的或在底部：自动滚动到底
-                    if (this.optimizeMethod !== 'none') {
-                        this.visibleViewport.tail = newLen
-                        this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
-                    }
-                    return setTimeout(() => {
-                        const options = { top: element.scrollHeight, behavior: 'smooth' }
-                        element.scrollTo(options)
-                    }, 50)
+                    this.queueScrollToBottom()
+                    return
                 } else {
                     // 不在底部：显示新消息提示
                     this.scrollIcon = true
@@ -726,10 +721,7 @@ export default {
                 this.infiniteState.head.loaded()
             } else if (newVal && newLen && !this.scrollIcon && !(oldVal && newLen === oldLen) && !this.canLoadAfter) {
                 // 不在 gotoMessage 模式时才自动滚动到底部
-                setTimeout(() => {
-                    element.scrollTo({ top: element.scrollHeight })
-                    this.loadingMessages = false
-                }, 0)
+                this.queueScrollToBottom()
             }
 
             // 处理向下加载完成
@@ -1051,6 +1043,10 @@ export default {
         if (this.onScrolling) {
             clearTimeout(this.onScrolling)
             this.onScrolling = null
+        }
+        if (this.scrollToBottomTimer) {
+            cancelAnimationFrame(this.scrollToBottomTimer)
+            this.scrollToBottomTimer = null
         }
         if (this.checkCanScrollTimer) {
             clearTimeout(this.checkCanScrollTimer)
@@ -1656,8 +1652,16 @@ export default {
             return scrollHeight - clientHeight - scrollTop
         },
         scrollToBottom() {
+            this.queueScrollToBottom(true)
+        },
+        queueScrollToBottom(smooth = false) {
             const element = this.$refs.scrollContainer
             if (!element) return
+            this.loadingMessages = false
+            if (this.scrollToBottomTimer) {
+                cancelAnimationFrame(this.scrollToBottomTimer)
+                this.scrollToBottomTimer = null
+            }
             if (this.optimizeMethod !== 'none') {
                 this.visibleViewport.tail = this.messages.length
                 this.visibleViewport.head = Math.max(this.messages.length - this.maxViewportLength, 0)
@@ -1665,7 +1669,10 @@ export default {
             this.scrollMessagesCount = 0
             this.scrollIcon = false
             this.$nextTick(() => {
-                element.scrollTo({ top: element.scrollHeight, behavior: 'smooth' })
+                this.scrollToBottomTimer = requestAnimationFrame(() => {
+                    this.scrollToBottomTimer = null
+                    element.scrollTo({ top: element.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
+                })
             })
         },
         async scrollToLastMessage() {
