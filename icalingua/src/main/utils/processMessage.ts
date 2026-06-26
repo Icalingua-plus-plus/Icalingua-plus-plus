@@ -142,8 +142,8 @@ const processMessage = async (
                                 ? (data as GroupMessageEventData).anonymous
                                     ? (data as GroupMessageEventData).anonymous.name
                                     : oicq.getUin() === data.sender.user_id
-                                    ? 'You'
-                                    : (data.sender as MemberBaseInfo).card || data.sender.nickname
+                                      ? 'You'
+                                      : (data.sender as MemberBaseInfo).card || data.sender.nickname
                                 : (data.sender as FriendInfo).remark || data.sender.nickname
                         replyMessage = {
                             _id: '',

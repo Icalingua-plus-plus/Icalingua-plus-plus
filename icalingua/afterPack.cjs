@@ -135,12 +135,9 @@ function fixMissing(appNM, rootNM) {
 
             // Preserve nesting from source if it was nested there
             const nestedInSource = path.join(rootNM, name, 'node_modules', depName)
-            const wasNested = source === nestedInSource ||
-                source.startsWith(nestedInSource + path.sep)
+            const wasNested = source === nestedInSource || source.startsWith(nestedInSource + path.sep)
 
-            const dest = wasNested
-                ? path.join(appNM, name, 'node_modules', depName)
-                : path.join(appNM, depName)
+            const dest = wasNested ? path.join(appNM, name, 'node_modules', depName) : path.join(appNM, depName)
 
             if (fs.existsSync(dest)) continue
 
@@ -183,7 +180,7 @@ function searchAllNested(rootNM, depName) {
     for (const entry of safeReaddir(rootNM)) {
         if (entry.startsWith('.')) continue
         const candidates = entry.startsWith('@')
-            ? safeReaddir(path.join(rootNM, entry)).map(s => `${entry}/${s}`)
+            ? safeReaddir(path.join(rootNM, entry)).map((s) => `${entry}/${s}`)
             : [entry]
         for (const pkg of candidates) {
             const nested = path.join(rootNM, pkg, 'node_modules', depName)
@@ -235,7 +232,11 @@ function existsPkg(dir) {
 }
 
 function safeReaddir(dir) {
-    try { return fs.readdirSync(dir) } catch { return [] }
+    try {
+        return fs.readdirSync(dir)
+    } catch {
+        return []
+    }
 }
 
 function copyPackage(src, dest) {
