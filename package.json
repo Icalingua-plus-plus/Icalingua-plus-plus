@@ -12,9 +12,13 @@
     "icalingua": "workspace:*",
     "icalingua-bridge-oicq": "workspace:*"
   },
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.34.4",
   "devDependencies": {
-    "lint-staged": "^15.5.1"
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  },
+  "scripts": {
+    "prepare": "husky install"
   },
   "lint-staged": {
     "icalingua/**/*": [
