@@ -21,22 +21,28 @@
                 v-if="clearRoomsBehavior !== 'disabled'"
             ></span>
         </div>
-        <div class="content">
-            <RoomEntry
-                v-for="room in sortedRooms"
-                :key="room.roomId"
-                :room="room"
-                :selected="room.roomId === selected.roomId"
-                :priority="priority"
-                :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
-                :usePanguJs="usePanguJs"
-                @click="
-                    input = ''
-                    $emit('chroom', room)
-                "
-                @dblclick="openInNewWindow(room)"
-                @contextmenu="roomMenu(room, $event)"
-            />
+        <div class="content" ref="scrollContainer" @scroll="onScroll">
+            <div :style="{ height: totalHeight + 'px', position: 'relative' }">
+                <div
+                    :style="{ position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${offsetY}px)` }"
+                >
+                    <RoomEntry
+                        v-for="room in visibleRooms"
+                        :key="room.roomId"
+                        :room="room"
+                        :selected="room.roomId === selected.roomId"
+                        :priority="priority"
+                        :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
+                        :usePanguJs="usePanguJs"
+                        @click="
+                            input = ''
+                            $emit('chroom', room)
+                        "
+                        @dblclick="openInNewWindow(room)"
+                        @contextmenu="roomMenu(room, $event)"
+                    />
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -52,6 +58,22 @@ export default {
     name: 'TheRoomsPanel',
     components: { RoomEntry },
     computed: {
+        totalHeight() {
+            return this.sortedRooms.length * this.itemHeight
+        },
+        visibleRooms() {
+            const h = this.containerHeight || window.innerHeight
+            const start = Math.max(0, Math.floor(this.scrollTop / this.itemHeight) - this.bufferSize)
+            const end = Math.min(
+                this.sortedRooms.length,
+                Math.ceil((this.scrollTop + h) / this.itemHeight) + this.bufferSize,
+            )
+            return this.sortedRooms.slice(start, end)
+        },
+        offsetY() {
+            const start = Math.max(0, Math.floor(this.scrollTop / this.itemHeight) - this.bufferSize)
+            return start * this.itemHeight
+        },
         sortedRooms() {
             this.input = this.input.toUpperCase()
             let tmpr = [...this.rooms]
@@ -90,9 +112,17 @@ export default {
             input: '',
             clearRoomsBehavior: '',
             sortRoomsByPriority: false,
+            // 虚拟滚动
+            scrollTop: 0,
+            containerHeight: 0,
+            itemHeight: 70, // RoomEntry 固定高度
+            bufferSize: 5, // 上下额外渲染的条目数
         }
     },
     methods: {
+        onScroll(e) {
+            this.scrollTop = e.target.scrollTop
+        },
         roomMenu(room, e) {
             ipc.popupRoomMenu(room.roomId, e)
         },
@@ -126,6 +156,17 @@ export default {
             this.clearRoomsBehavior = behavior
         })
     },
+    mounted() {
+        // 虚拟滚动：DOM 就绪后初始化容器高度并监听大小变化
+        this._updateContainerHeight = () => {
+            if (this.$refs.scrollContainer) {
+                this.containerHeight = this.$refs.scrollContainer.clientHeight
+            }
+        }
+        this._updateContainerHeight()
+        this._resizeObserver = new ResizeObserver(this._updateContainerHeight)
+        this._resizeObserver.observe(this.$refs.scrollContainer)
+    },
     watch: {
         sortedRooms: {
             handler() {
@@ -133,6 +174,12 @@ export default {
             },
             immediate: true,
         },
+    },
+    beforeDestroy() {
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect()
+            this._resizeObserver = null
+        }
     },
 }
 </script>
