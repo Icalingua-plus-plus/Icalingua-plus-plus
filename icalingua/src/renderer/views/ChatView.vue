@@ -402,7 +402,6 @@ export default {
             isNavigating: false, // 标记是否正在通过前进/后退导航，避免重复入栈
             stickerPanelBottom: false, // 是否启用底部表情面板模式
             stickerPanelHeight: 320, // 底部模式时的面板高度（px）
-            _preloadDone: false, // 标记群成员预加载是否已调度，防止 gotOnlineData 多次触发
         }
     },
     async created() {
