@@ -198,6 +198,9 @@ export default {
         this.faceIdToLottie = faceIdToLottie
         this.watchedPath = {}
         this.generatingPath = new Set()
+        this._previewQueue = []
+        this._previewRunning = 0
+        this._previewConcurrency = 2
         this.panel = await ipc.getLastUsedStickerType()
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
 
@@ -258,6 +261,9 @@ export default {
         updateDefaultDir()
         fs.watch(this.default_dir, updateDefaultDir)
     },
+    beforeDestroy() {
+        this._previewQueue = []
+    },
     methods: {
         getStickerPreview(relPath) {
             return 'file://' + this.preview_dir + md5(relPath)
@@ -279,11 +285,25 @@ export default {
             if (fs.existsSync(previewPath) || this.generatingPath.has(relPath)) {
                 return
             }
-            console.log('Generating preview for', relPath)
             this.generatingPath.add(relPath)
-            const img = document.createElement('img')
-            img.src = 'file://' + path.join(this.default_dir, relPath)
-            img.onload = async () => {
+            this._previewQueue.push({ relPath, previewPath, imgEl: e.target })
+            this._processPreviewQueue()
+        },
+        _processPreviewQueue() {
+            while (this._previewRunning < this._previewConcurrency && this._previewQueue.length > 0) {
+                const task = this._previewQueue.shift()
+                this._previewRunning++
+                this._generateSinglePreview(task)
+            }
+        },
+        async _generateSinglePreview({ relPath, previewPath, imgEl }) {
+            try {
+                const img = document.createElement('img')
+                img.src = 'file://' + path.join(this.default_dir, relPath)
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve
+                    img.onerror = reject
+                })
                 const canvas = document.createElement('canvas')
                 canvas.width = img.width
                 canvas.height = img.height
@@ -297,11 +317,15 @@ export default {
                     console.error('Failed to generate preview for', relPath, 'at', previewPath)
                     console.error(err)
                     return
-                } finally {
-                    this.generatingPath.delete(relPath)
                 }
                 console.log('Preview generated for', relPath)
-                e.target.src = e.target.src
+                imgEl.src = imgEl.src
+            } catch (err) {
+                console.error('Failed to load image for preview', relPath, err)
+            } finally {
+                this.generatingPath.delete(relPath)
+                this._previewRunning--
+                this._processPreviewQueue()
             }
         },
         changeCurrentDir(dir) {
