@@ -11,8 +11,8 @@ class GroupMemberCache {
     private cache: Map<number, MemberInfo[]> = new Map()
     // 记录每个群的最后更新时间
     private lastUpdate: Map<number, number> = new Map()
-    // 缓存有效期（30分钟）
-    private readonly CACHE_EXPIRY = 30 * 60 * 1000
+    // 缓存有效期（60分钟）
+    private readonly CACHE_EXPIRY = 60 * 60 * 1000
     // preloadAllGroups 正在执行时复用同一个 Promise
     private preloadingPromise: Promise<void> | null = null
 
@@ -44,16 +44,19 @@ class GroupMemberCache {
     /**
      * 批量预加载所有群的成员列表（串行执行，避免并发请求过多）
      */
-    async preloadAllGroups(groupIds: number[]): Promise<void> {
+    async preloadAllGroups(): Promise<void> {
         if (this.preloadingPromise) {
             return this.preloadingPromise
         }
 
         this.preloadingPromise = (async () => {
             try {
+                const groups = await ipc.getGroups()
+                const groupIds = groups.map((g) => g.group_id)
+
                 for (const groupId of groupIds) {
                     await this.getGroupMembers(Math.abs(groupId)).catch(() => [])
-                    await sleep(100)
+                    await sleep(500)
                 }
                 console.log(`Preloaded ${groupIds.length} groups' member lists`)
             } finally {

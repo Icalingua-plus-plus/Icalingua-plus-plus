@@ -319,6 +319,7 @@ ipcMain.handle('getAccount', () => {
 ipcMain.handle('getFriend', (_, uin: number) => adapter.getFriend(uin))
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
+ipcMain.handle('getGroups', () => adapter.getGroups())
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
 ipcMain.on('requestOnlineData', adapter.sendOnlineData)

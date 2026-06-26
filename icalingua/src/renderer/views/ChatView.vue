@@ -821,12 +821,9 @@ Chromium ${process.versions.chrome}`
 
                 // 预加载所有群的成员列表（用于查找共同群聊功能）
                 setTimeout(() => {
-                    const groupIds = this.rooms.filter((r) => r.roomId < 0).map((r) => -r.roomId)
-                    if (groupIds.length > 0) {
-                        groupMemberCache.preloadAllGroups(groupIds).catch((err) => {
-                            console.error('Failed to preload group members:', err)
-                        })
-                    }
+                    groupMemberCache.preloadAllGroups().catch((err) => {
+                        console.error('Failed to preload group members:', err)
+                    })
                 }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
             },
         )

@@ -243,6 +243,9 @@ const ipc = {
     async getGroupMembers(gin: number): Promise<MemberInfo[]> {
         return await ipcRenderer.invoke('getGroupMembers', gin)
     },
+    async getGroups(): Promise<SearchableGroup[]> {
+        return await ipcRenderer.invoke('getGroups')
+    },
     async pushAtCache(at: AtCacheItem): Promise<number> {
         return await ipcRenderer.invoke('pushAtCache', at)
     },
