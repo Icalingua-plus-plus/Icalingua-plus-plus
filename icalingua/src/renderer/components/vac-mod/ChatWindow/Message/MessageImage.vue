@@ -125,19 +125,21 @@ export default {
                     this.file.url.startsWith('https://gchat.qpic.cn/download'))
             ) {
                 this.retried = true
-                const match = this.file.url.match(/&fileid=([^&]+)/)
-                if (match && match[1]) {
-                    try {
-                        const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', match[1])
+                try {
+                    const u = new URL(this.file.url)
+                    const fileid = u.searchParams.get('fileid')
+                    const appid = u.searchParams.get('appid') || '1407'
+                    if (fileid) {
+                        const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', fileid, appid)
                         if (newUrl) {
                             this.file.url = newUrl
                             this.imageLoading = true
                             this.err = false
                             return
                         }
-                    } catch (e) {
-                        console.error('刷新图片链接失败:', e)
                     }
+                } catch (e) {
+                    console.error('刷新图片链接失败:', e)
                 }
             }
         },

@@ -183,5 +183,5 @@ export default interface Adapter {
 
     getPrivateFileUrl(fileId: string): Promise<string>
 
-    getNTPicURLbyFileid(fileId: string): Promise<string>
+    getNTPicURLbyFileid(fileId: string, appid: string): Promise<string>
 }

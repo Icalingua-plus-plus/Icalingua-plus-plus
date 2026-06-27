@@ -646,7 +646,13 @@ const refreshRkey = async () => {
 const replaceRkey = (url: string) => {
     if (!rkey.length) return url
     if (!url) return url
-    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+    if (
+        !url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
+        !url.startsWith('https://gchat.qpic.cn/download')
+    ) {
+        return url
+    }
+
     const u = new URL(url)
     let r = ''
     switch (u.searchParams.get('appid')) {
@@ -1336,8 +1342,8 @@ const adapter: typeof oicqAdapter = {
         resolve('error')
         return
     },
-    getNTPicURLbyFileid(fileId: string, resolve): Promise<string> {
-        resolve('')
+    getNTPicURLbyFileid(fileId: string, appid: string, resolve): Promise<string> {
+        resolve(replaceRkey(`https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`))
         return
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {

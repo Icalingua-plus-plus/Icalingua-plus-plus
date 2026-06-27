@@ -1202,6 +1202,48 @@ const attachLoginHandler = () => {
 
 //endregion
 
+const replaceRkey = async (url: string): Promise<string> => {
+    if (!url) return url
+    if (
+        !url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
+        !url.startsWith('https://gchat.qpic.cn/download')
+    ) {
+        return url
+    }
+
+    try {
+        const u = new URL(url)
+        switch (u.searchParams.get('appid')) {
+            case '1406': // private
+            case '1407': // group
+                const ntPicURL = await bot.getNTPicURLbyFileid(u.searchParams.get('fileid'))
+                if (!ntPicURL.error && ntPicURL.data) {
+                    return ntPicURL.data
+                }
+            default:
+                return url
+        }
+    } catch (e) {
+        return url
+    }
+}
+
+const processMessageRkey = async (message: Message): Promise<void> => {
+    if (message.file?.url) {
+        message.file.url = await replaceRkey(message.file.url)
+    }
+    if (Array.isArray(message.files)) {
+        for (const file of message.files) {
+            if (file.url) {
+                file.url = await replaceRkey(file.url)
+            }
+        }
+    }
+    if (message.replyMessage?.file?.url) {
+        message.replyMessage.file.url = await replaceRkey(message.replyMessage.file.url)
+    }
+}
+
 interface OicqAdapter extends Adapter {
     getMessageFromStorage(roomId: number, msgId: string): Promise<Message>
 
@@ -1248,7 +1290,7 @@ const adapter: OicqAdapter = {
         }
         return 'error'
     },
-    async getNTPicURLbyFileid(fileId: string): Promise<string> {
+    async getNTPicURLbyFileid(fileId: string, appid: string): Promise<string> {
         try {
             const res = await bot.getNTPicURLbyFileid(fileId)
             if (!res.error && res.data) {
@@ -1900,24 +1942,44 @@ const adapter: OicqAdapter = {
         }
         currentLoadedMessagesCount = offset + 20
         const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
         if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         return messages
     },
     async fetchImageMessages(roomId: number, offset: number, endTime?: number) {
         const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
         return messages
     },
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number) {
         const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
         return messages
     },
     async fetchMessagesBySender(roomId: number, senderId: number, offset: number) {
         const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
         return messages
     },
     async searchMessages(roomId: number, keyword: string, offset: number) {
         const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        // 替换消息中的 rkey
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
         return messages
     },
     sliderLogin(ticket: string) {

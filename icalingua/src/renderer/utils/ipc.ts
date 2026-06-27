@@ -24,8 +24,8 @@ const ipc = {
     async getNick(): Promise<string> {
         return await ipcRenderer.invoke('getNick')
     },
-    async getNTPicURLbyFileid(fileId: string): Promise<string> {
-        return await ipcRenderer.invoke('getNTPicURLbyFileid', fileId)
+    async getNTPicURLbyFileid(fileId: string, appid: string): Promise<string> {
+        return await ipcRenderer.invoke('getNTPicURLbyFileid', fileId, appid)
     },
     async getSettings(): Promise<AllConfig> {
         return await ipcRenderer.invoke('getSettings')

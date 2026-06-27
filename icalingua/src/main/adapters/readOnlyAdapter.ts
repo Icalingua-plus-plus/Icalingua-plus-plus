@@ -94,7 +94,12 @@ const refreshRkeyIfNeeded = async () => {
 const replaceRkey = (url: string): string => {
     if (!url) return url
     if (!rkeyData) return url
-    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+    if (
+        !url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
+        !url.startsWith('https://gchat.qpic.cn/download')
+    ) {
+        return url
+    }
 
     try {
         const u = new URL(url)
@@ -351,8 +356,8 @@ const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
         return Promise.resolve('error')
     },
-    getNTPicURLbyFileid(fileId: string): Promise<string> {
-        return Promise.resolve('')
+    getNTPicURLbyFileid(fileId: string, appid: string): Promise<string> {
+        return Promise.resolve(replaceRkey(`https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`))
     },
 
     getFriend(uin: number): Promise<FriendInfo> {

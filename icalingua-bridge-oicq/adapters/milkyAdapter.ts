@@ -107,7 +107,12 @@ const refreshRkeyIfNeeded = async () => {
 const replaceRkey = (url: string): string => {
     if (!url) return url
     if (!rkeyData) return url
-    if (!url.startsWith('https://multimedia.nt.qq.com.cn/download')) return url
+    if (
+        !url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
+        !url.startsWith('https://gchat.qpic.cn/download')
+    ) {
+        return url
+    }
 
     try {
         const u = new URL(url)
@@ -1977,8 +1982,8 @@ const adapter: typeof oicqAdapter = {
             return 'error'
         }
     },
-    getNTPicURLbyFileid(fileId: string, resolve): Promise<string> {
-        resolve('')
+    getNTPicURLbyFileid(fileId: string, appid: string, resolve): Promise<string> {
+        resolve(replaceRkey(`https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`))
         return
     },
     async fetch7DaysHistory() {

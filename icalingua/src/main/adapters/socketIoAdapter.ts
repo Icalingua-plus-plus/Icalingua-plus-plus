@@ -364,8 +364,8 @@ const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },
-    getNTPicURLbyFileid(fileId: string): Promise<string> {
-        return new Promise((resolve) => socket.emit('getNTPicURLbyFileid', fileId, resolve))
+    getNTPicURLbyFileid(fileId: string, appid: string): Promise<string> {
+        return new Promise((resolve) => socket.emit('getNTPicURLbyFileid', fileId, appid, resolve))
     },
     getFriend(uin: number): Promise<FriendInfo> {
         return new Promise((resolve) => {
