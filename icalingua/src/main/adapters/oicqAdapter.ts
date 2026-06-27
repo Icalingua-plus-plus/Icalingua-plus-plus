@@ -116,6 +116,10 @@ let lastReceivedMessageInfo = {
 
 let isAutoFetching = false
 
+// 群成员信息缓存
+const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
+const memberInfoCache = new Map<string, { info: MemberInfo; timestamp: number }>()
+
 //region event handlers
 const eventHandlers = {
     async onQQMessage(data: MessageEventData | SyncMessageEventData) {
@@ -1392,9 +1396,20 @@ const adapter: OicqAdapter = {
         return (await bot.getGroupMemberInfo(group, member, noCache)).data
     },
     async _getGroupMemberInfo(group: number, member: number, noCache: boolean = true): Promise<MemberInfo> {
+        const cacheKey = `${group}:${member}`
+        if (!noCache) {
+            const cached = memberInfoCache.get(cacheKey)
+            if (cached && Date.now() - cached.timestamp < MEMBER_CACHE_TTL) {
+                return cached.info
+            }
+        }
         const data = (await bot.getGroupMemberList(group, noCache)).data
         if (!data) return
-        return data.get(member)
+        const info = data.get(member)
+        if (info) {
+            memberInfoCache.set(cacheKey, { info, timestamp: Date.now() })
+        }
+        return info
     },
     async getFriendsFallback(): Promise<SearchableFriend[]> {
         const friends = bot.fl.values()
