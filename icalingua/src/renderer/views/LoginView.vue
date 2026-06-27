@@ -27,87 +27,29 @@
                 <el-input type="text" placeholder="Head Sign API Key" v-model="form.signAPIKey" />
             </el-form-item>
             <el-form-item prop="protocol" label="Protocol" v-if="$route.query.disableIdLogin === 'false'">
-                <!-- shit code -->
-                <div class="protocols">
-                    <span>Android Phone</span>
-                    <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="10001">8.2.11</el-radio-button>
-                        <el-radio-button label="6">8.8.88</el-radio-button>
-                        <el-radio-button label="7">8.9.33</el-radio-button>
-                        <el-radio-button label="1">8.9.50</el-radio-button>
-                        <el-radio-button label="11">8.9.58</el-radio-button>
-                        <el-radio-button label="13">8.9.63</el-radio-button>
-                        <el-radio-button label="15">8.9.68</el-radio-button>
-                        <el-radio-button label="17">8.9.70</el-radio-button>
-                        <el-radio-button label="23">8.9.71</el-radio-button>
-                        <el-radio-button label="19">8.9.73</el-radio-button>
-                        <el-radio-button label="21">8.9.75</el-radio-button>
-                        <el-radio-button label="25">8.9.76</el-radio-button>
-                        <el-radio-button label="27">8.9.78</el-radio-button>
-                        <el-radio-button label="29">8.9.80</el-radio-button>
-                        <el-radio-button label="31">8.9.83</el-radio-button>
-                        <el-radio-button label="33">8.9.85</el-radio-button>
-                        <el-radio-button label="35">8.9.88</el-radio-button>
-                        <el-radio-button label="37">8.9.93</el-radio-button>
-                        <el-radio-button label="39">9.0.0</el-radio-button>
-                        <el-radio-button label="41">9.0.8</el-radio-button>
-                        <el-radio-button label="43">9.0.17</el-radio-button>
-                        <el-radio-button label="45">9.0.25</el-radio-button>
-                        <el-radio-button label="47">9.0.35</el-radio-button>
-                        <el-radio-button label="49">9.0.50</el-radio-button>
-                        <el-radio-button label="51">9.0.56</el-radio-button>
-                        <el-radio-button label="53">9.0.70</el-radio-button>
-                        <el-radio-button label="55">9.0.95</el-radio-button>
-                        <el-radio-button label="57">9.1.0</el-radio-button>
-                        <el-radio-button label="59">9.1.20</el-radio-button>
-                    </el-radio-group>
-                    <span>Android Pad</span>
-                    <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="8">8.9.33</el-radio-button>
-                        <el-radio-button label="2">8.9.50</el-radio-button>
-                        <el-radio-button label="12">8.9.58</el-radio-button>
-                        <el-radio-button label="14">8.9.63</el-radio-button>
-                        <el-radio-button label="16">8.9.68</el-radio-button>
-                        <el-radio-button label="18">8.9.70</el-radio-button>
-                        <el-radio-button label="24">8.9.71</el-radio-button>
-                        <el-radio-button label="20">8.9.73</el-radio-button>
-                        <el-radio-button label="22">8.9.75</el-radio-button>
-                        <el-radio-button label="26">8.9.76</el-radio-button>
-                        <el-radio-button label="28">8.9.78</el-radio-button>
-                        <el-radio-button label="30">8.9.80</el-radio-button>
-                        <el-radio-button label="32">8.9.83</el-radio-button>
-                        <el-radio-button label="34">8.9.85</el-radio-button>
-                        <el-radio-button label="36">8.9.88</el-radio-button>
-                        <el-radio-button label="38">8.9.93</el-radio-button>
-                        <el-radio-button label="40">9.0.0</el-radio-button>
-                        <el-radio-button label="42">9.0.8</el-radio-button>
-                        <el-radio-button label="44">9.0.17</el-radio-button>
-                        <el-radio-button label="46">9.0.25</el-radio-button>
-                        <el-radio-button label="48">9.0.35</el-radio-button>
-                        <el-radio-button label="50">9.0.50</el-radio-button>
-                        <el-radio-button label="52">9.0.56</el-radio-button>
-                        <el-radio-button label="54">9.0.70</el-radio-button>
-                        <el-radio-button label="56">9.0.95</el-radio-button>
-                        <el-radio-button label="58">9.1.0</el-radio-button>
-                        <el-radio-button label="60">9.1.20</el-radio-button>
-                    </el-radio-group>
-                    <span>Watch</span>
-                    <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="30002">2.0.5</el-radio-button>
-                        <el-radio-button label="30001">2.0.8</el-radio-button>
-                        <el-radio-button label="3">9.0.1</el-radio-button>
-                        <el-radio-button label="30003">9.0.3</el-radio-button>
-                    </el-radio-group>
-                    <span>iPad</span>
-                    <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="9">8.9.33</el-radio-button>
-                        <el-radio-button label="5">8.9.50</el-radio-button>
-                    </el-radio-group>
-                    <span>Other</span>
-                    <el-radio-group v-model="form.protocol" size="mini">
-                        <el-radio-button label="4">macOS 6.8.2</el-radio-button>
-                        <el-radio-button label="10">TIM 3.5.1</el-radio-button>
-                    </el-radio-group>
+                <div class="protocol-selects">
+                    <el-select
+                        v-model="selectedProtocolCategory"
+                        placeholder="设备类型"
+                        title="设备类型"
+                        size="small"
+                        @change="onCategoryChange"
+                    >
+                        <el-option
+                            v-for="category in protocolCategories"
+                            :key="category.name"
+                            :label="category.name"
+                            :value="category.name"
+                        />
+                    </el-select>
+                    <el-select v-model="form.protocol" placeholder="协议版本" title="协议版本" size="small">
+                        <el-option
+                            v-for="protocol in filteredProtocols"
+                            :key="protocol.value"
+                            :label="protocol.label"
+                            :value="protocol.value"
+                        />
+                    </el-select>
                 </div>
             </el-form-item>
             <el-form-item label="Status" v-if="$route.query.disableIdLogin === 'false'">
@@ -233,13 +175,125 @@ export default {
             verifyUrl: '',
             phone: '',
             sendTime: -1,
+            selectedProtocolCategory: 'Android Phone',
+            protocolCategories: [
+                {
+                    name: 'Android Phone',
+                    protocols: [
+                        { label: '8.2.11', value: '10001' },
+                        { label: '8.8.88', value: '6' },
+                        { label: '8.9.33', value: '7' },
+                        { label: '8.9.50', value: '1' },
+                        { label: '8.9.58', value: '11' },
+                        { label: '8.9.63', value: '13' },
+                        { label: '8.9.68', value: '15' },
+                        { label: '8.9.70', value: '17' },
+                        { label: '8.9.71', value: '23' },
+                        { label: '8.9.73', value: '19' },
+                        { label: '8.9.75', value: '21' },
+                        { label: '8.9.76', value: '25' },
+                        { label: '8.9.78', value: '27' },
+                        { label: '8.9.80', value: '29' },
+                        { label: '8.9.83', value: '31' },
+                        { label: '8.9.85', value: '33' },
+                        { label: '8.9.88', value: '35' },
+                        { label: '8.9.93', value: '37' },
+                        { label: '9.0.0', value: '39' },
+                        { label: '9.0.8', value: '41' },
+                        { label: '9.0.17', value: '43' },
+                        { label: '9.0.25', value: '45' },
+                        { label: '9.0.35', value: '47' },
+                        { label: '9.0.50', value: '49' },
+                        { label: '9.0.56', value: '51' },
+                        { label: '9.0.70', value: '53' },
+                        { label: '9.0.95', value: '55' },
+                        { label: '9.1.0', value: '57' },
+                        { label: '9.1.20', value: '59' },
+                    ],
+                },
+                {
+                    name: 'Android Pad',
+                    protocols: [
+                        { label: '8.9.33', value: '8' },
+                        { label: '8.9.50', value: '2' },
+                        { label: '8.9.58', value: '12' },
+                        { label: '8.9.63', value: '14' },
+                        { label: '8.9.68', value: '16' },
+                        { label: '8.9.70', value: '18' },
+                        { label: '8.9.71', value: '24' },
+                        { label: '8.9.73', value: '20' },
+                        { label: '8.9.75', value: '22' },
+                        { label: '8.9.76', value: '26' },
+                        { label: '8.9.78', value: '28' },
+                        { label: '8.9.80', value: '30' },
+                        { label: '8.9.83', value: '32' },
+                        { label: '8.9.85', value: '34' },
+                        { label: '8.9.88', value: '36' },
+                        { label: '8.9.93', value: '38' },
+                        { label: '9.0.0', value: '40' },
+                        { label: '9.0.8', value: '42' },
+                        { label: '9.0.17', value: '44' },
+                        { label: '9.0.25', value: '46' },
+                        { label: '9.0.35', value: '48' },
+                        { label: '9.0.50', value: '50' },
+                        { label: '9.0.56', value: '52' },
+                        { label: '9.0.70', value: '54' },
+                        { label: '9.0.95', value: '56' },
+                        { label: '9.1.0', value: '58' },
+                        { label: '9.1.20', value: '60' },
+                    ],
+                },
+                {
+                    name: 'Android Watch',
+                    protocols: [
+                        { label: '2.0.5', value: '30002' },
+                        { label: '2.0.8', value: '30001' },
+                        { label: '9.0.1', value: '3' },
+                        { label: '9.0.3', value: '30003' },
+                    ],
+                },
+                {
+                    name: 'iPad',
+                    protocols: [
+                        { label: '8.9.33', value: '9' },
+                        { label: '8.9.50', value: '5' },
+                    ],
+                },
+                {
+                    name: 'macOS',
+                    protocols: [{ label: '6.8.2', value: '4' }],
+                },
+                {
+                    name: 'Android TIM',
+                    protocols: [{ label: '3.5.1', value: '10' }],
+                },
+            ],
         }
+    },
+    computed: {
+        filteredProtocols() {
+            const category = this.protocolCategories.find((c) => c.name === this.selectedProtocolCategory)
+            return category ? category.protocols : []
+        },
     },
     async created() {
         this.ver = await ipc.getVersion()
         const _form = await ipc.getAccount()
         if (!_form.signAPIAddress) _form.signAPIAddress = ''
+
+        if (_form.protocol != null) _form.protocol = String(_form.protocol)
         this.form = _form
+
+        // 根据保存的 protocol 值初始化设备类型选择
+        if (_form.protocol) {
+            const protocolValue = _form.protocol
+            for (const category of this.protocolCategories) {
+                if (category.protocols.some((p) => p.value === protocolValue)) {
+                    this.selectedProtocolCategory = category.name
+                    break
+                }
+            }
+        }
         ipcRenderer.on('error', (_, msg) => {
             if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
             if (qrLoginInterval) clearInterval(qrLoginInterval) && (qrLoginInterval = null)
@@ -257,7 +311,6 @@ export default {
                     this.$alert('账号登录过于频繁，请稍后再试')
                     break
                 case '(45)':
-                    if (this.form.protocol === 3) break
                     if (String(msg).includes('QQ版本过低'))
                         this.$alert('账号被限制使用内置的 QQ 版本登录，请更换更高版本协议后重试')
                     else
@@ -287,6 +340,13 @@ export default {
         })
     },
     methods: {
+        onCategoryChange() {
+            // 切换设备类型时，自动选择该类型的第一个协议版本
+            const category = this.protocolCategories.find((c) => c.name === this.selectedProtocolCategory)
+            if (category && category.protocols.length > 0) {
+                this.form.protocol = category.protocols[0].value
+            }
+        },
         onSubmit(formName) {
             this.$refs[formName].validate(async (valid) => {
                 if (valid || this.$route.query.disableIdLogin === 'true') {
@@ -384,18 +444,14 @@ export default {
     margin: 0 0 22px;
 }
 
-.protocols {
-    clear: left;
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    align-items: center;
-    gap: 4px;
+.protocol-selects {
+    display: flex;
+    gap: 10px;
+    width: 100%;
 }
 
-.protocols span {
-    color: #606266;
-    font-size: 12px;
-    line-height: normal;
+.protocol-selects .el-select {
+    flex: 1;
 }
 
 .buttons {
