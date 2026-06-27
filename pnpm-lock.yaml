@@ -64,8 +64,8 @@ importers:
         specifier: ^2.23.0
         version: 2.26.2
       oicq-icalingua-plus-plus:
-        specifier: ^1.25.1
-        version: 1.25.1
+        specifier: ^1.26.2
+        version: 1.26.2
       pangu:
         specifier: ^4.0.7
         version: 4.0.7
@@ -332,8 +332,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       oicq-icalingua-plus-plus:
-        specifier: ^1.25.1
-        version: 1.25.1
+        specifier: ^1.26.2
+        version: 1.26.2
       pg:
         specifier: ^8.13.1
         version: 8.20.0
@@ -2563,8 +2563,8 @@ packages:
   electron-publish@26.8.1:
     resolution: {integrity: sha512-q+jrSTIh/Cv4eGZa7oVR+grEJo/FoLMYBAnSL5GCtqwUpr1T+VgKB/dn1pnzxIxqD8S/jP1yilT9VrwCqINR4w==}
 
-  electron-to-chromium@1.5.379:
-    resolution: {integrity: sha512-v/qV5aV5EUA2pGilzUCq5/eyOloZAqDZBu9UMBIzgPpLlprjSR6zswsWBTv0KpqxLGUAZEwhO95ZCt7srymNVA==}
+  electron-to-chromium@1.5.380:
+    resolution: {integrity: sha512-W6d5AbuEoRayO447cqrg6lKJIlscgRnnxOZl/08kfV71BQDoEBC7Wwis68z87LjyK6f4kWyTaubuDbhHKrZkbA==}
 
   electron-winstaller@5.4.0:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
@@ -3852,8 +3852,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  oicq-icalingua-plus-plus@1.25.1:
-    resolution: {integrity: sha512-hZWM8t1BPZ8/DZ8XDhAxyGNoeSt5cRIYxKr8+WLvorLqzlKszfbw6HWkY35M36cof7PO8JLZ+7rSRC11Us8MBQ==}
+  oicq-icalingua-plus-plus@1.26.2:
+    resolution: {integrity: sha512-SsEpG90TbPtfoyzqjFJPV6gZA92vzVV0n1solgtGIdlFw9e22a76JNJDWYU7VJxwtq2iUWP/mR8p2F142n28Nw==}
     engines: {node: '>= v12.16'}
     hasBin: true
 
@@ -7438,7 +7438,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.10.40
       caniuse-lite: 1.0.30001799
-      electron-to-chromium: 1.5.379
+      electron-to-chromium: 1.5.380
       node-releases: 2.0.50
       update-browserslist-db: 1.2.3(browserslist@4.28.4)
 
@@ -8009,7 +8009,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-to-chromium@1.5.379: {}
+  electron-to-chromium@1.5.380: {}
 
   electron-winstaller@5.4.0:
     dependencies:
@@ -9444,7 +9444,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  oicq-icalingua-plus-plus@1.25.1:
+  oicq-icalingua-plus-plus@1.26.2:
     dependencies:
       axios: 1.14.0
       jsqr: 1.4.0
