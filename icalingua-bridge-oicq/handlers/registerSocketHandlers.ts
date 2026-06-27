@@ -112,4 +112,5 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('getLoginDevices', adapter.getLoginDevices)
     socket.on('deleteLoginDevice', adapter.deleteLoginDevice)
     socket.on('getPrivateFileUrl', adapter.getPrivateFileUrl)
+    socket.on('getNTPicURLbyFileid', adapter.getNTPicURLbyFileid)
 }

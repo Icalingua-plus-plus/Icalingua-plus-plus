@@ -99,6 +99,14 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
 ipcMain.handle('getDisabledFeatures', () => getDisabledFeatures())
 ipcMain.handle('getUin', () => getUin())
 ipcMain.handle('getNick', () => getNickname())
+ipcMain.handle('getNTPicURLbyFileid', async (_, fileId: string) => {
+    const timeoutPromise = new Promise<string>((resolve) => {
+        const timeout = setTimeout(() => {
+            resolve('')
+        }, 5000)
+    })
+    return Promise.race([adapter.getNTPicURLbyFileid(fileId), timeoutPromise])
+})
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.on('randomDevice', (event, username: number) => {
     randomDevice(username)

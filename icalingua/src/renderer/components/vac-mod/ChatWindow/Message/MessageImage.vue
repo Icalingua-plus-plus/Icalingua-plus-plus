@@ -21,10 +21,7 @@
                 fit="cover"
                 referrer-policy="no-referrer"
                 @load="imageLoading = false"
-                @error="
-                    imageLoading = false
-                    err = true
-                "
+                @error="onImageError"
             >
                 <div slot="error" class="image-slot">
                     <i class="el-icon-picture-outline"></i>
@@ -52,10 +49,7 @@
                     fit="cover"
                     referrer-policy="no-referrer"
                     @load="imageLoading = false"
-                    @error="
-                        imageLoading = false
-                        err = true
-                    "
+                    @error="onImageError"
                 >
                     <div slot="error" class="image-slot">
                         <i class="el-icon-picture-outline"></i>
@@ -97,6 +91,7 @@ export default {
             imageLoading: true,
             imageResponsive: '',
             err: false,
+            retried: false,
             lightning: `file://${__static}/lightning.svg`,
         }
     },
@@ -118,6 +113,34 @@ export default {
     },
 
     methods: {
+        async onImageError() {
+            this.imageLoading = false
+            this.err = true
+            if (
+                !this.retried &&
+                this.file &&
+                this.file.url &&
+                this.file.url.includes('&fileid=') &&
+                (this.file.url.startsWith('https://multimedia.nt.qq.com.cn/download') ||
+                    this.file.url.startsWith('https://gchat.qpic.cn/download'))
+            ) {
+                this.retried = true
+                const match = this.file.url.match(/&fileid=([^&]+)/)
+                if (match && match[1]) {
+                    try {
+                        const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', match[1])
+                        if (newUrl) {
+                            this.file.url = newUrl
+                            this.imageLoading = true
+                            this.err = false
+                            return
+                        }
+                    } catch (e) {
+                        console.error('刷新图片链接失败:', e)
+                    }
+                }
+            }
+        },
         async openImage() {
             if (this.showForwardPanel) return
             const singleImageMode = (await ipcRenderer.invoke('getSettings')).singleImageMode

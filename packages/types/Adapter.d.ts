@@ -182,4 +182,6 @@ export default interface Adapter {
     deleteLoginDevice(flag: string): any
 
     getPrivateFileUrl(fileId: string): Promise<string>
+
+    getNTPicURLbyFileid(fileId: string): Promise<string>
 }

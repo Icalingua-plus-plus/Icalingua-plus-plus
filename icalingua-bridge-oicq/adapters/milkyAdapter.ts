@@ -1977,6 +1977,10 @@ const adapter: typeof oicqAdapter = {
             return 'error'
         }
     },
+    getNTPicURLbyFileid(fileId: string, resolve): Promise<string> {
+        resolve('')
+        return
+    },
     async fetch7DaysHistory() {
         clients.messageError('Milky 适配器不支持该操作')
     },

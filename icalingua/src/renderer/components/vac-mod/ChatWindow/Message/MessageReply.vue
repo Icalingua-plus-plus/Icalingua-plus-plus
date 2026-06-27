@@ -29,6 +29,7 @@
                 fit="cover"
                 referrer-policy="no-referrer"
                 class="vac-message-image-reply"
+                @error="onReplyImageError"
             >
                 <div slot="error" class="image-slot">
                     <i class="el-icon-picture-outline"></i>
@@ -73,6 +74,12 @@ export default {
         usePanguJs: { type: Boolean, required: false, default: false },
     },
 
+    data() {
+        return {
+            retried: false,
+        }
+    },
+
     computed: {
         isImage() {
             return isImageFile(this.message.replyMessage.file)
@@ -83,6 +90,32 @@ export default {
         scrollToOrigin() {
             if (this.showForwardPanel) return
             this.$emit('scroll-to-message', this.message.replyMessage._id)
+        },
+        async onReplyImageError() {
+            const file = this.message.replyMessage.file
+            if (
+                !this.retried &&
+                file &&
+                file.url &&
+                file.url.includes('&fileid=') &&
+                (file.url.startsWith('https://multimedia.nt.qq.com.cn/download') ||
+                    file.url.startsWith('https://gchat.qpic.cn/download'))
+            ) {
+                this.retried = true
+                const match = file.url.match(/&fileid=([^&]+)/)
+                if (match && match[1]) {
+                    try {
+                        const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', match[1])
+                        if (newUrl) {
+                            file.url = newUrl
+                            this.$forceUpdate()
+                            return
+                        }
+                    } catch (e) {
+                        console.error('回复图片刷新链接失败:', e)
+                    }
+                }
+            }
         },
         openImage(e) {
             if (this.showForwardPanel) return

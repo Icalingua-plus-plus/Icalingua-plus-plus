@@ -1336,6 +1336,10 @@ const adapter: typeof oicqAdapter = {
         resolve('error')
         return
     },
+    getNTPicURLbyFileid(fileId: string, resolve): Promise<string> {
+        resolve('')
+        return
+    },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')

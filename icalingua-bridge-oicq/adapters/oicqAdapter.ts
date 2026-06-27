@@ -1035,6 +1035,19 @@ const adapter = {
         resolve('error')
         return
     },
+    async getNTPicURLbyFileid(fileId: string, resolve): Promise<string> {
+        try {
+            const res = await bot.getNTPicURLbyFileid(fileId)
+            if (!res.error && res.data) {
+                resolve(res.data)
+                return
+            }
+            resolve('')
+        } catch (e) {
+            console.error(e)
+            resolve('')
+        }
+    },
     getFriend(uin: number, resolve: (friend: FriendInfo) => any) {
         resolve(bot.fl.get(uin))
     },

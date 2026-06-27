@@ -1248,6 +1248,18 @@ const adapter: OicqAdapter = {
         }
         return 'error'
     },
+    async getNTPicURLbyFileid(fileId: string): Promise<string> {
+        try {
+            const res = await bot.getNTPicURLbyFileid(fileId)
+            if (!res.error && res.data) {
+                return res.data
+            }
+            return ''
+        } catch (e) {
+            errorHandler(e, true)
+            return ''
+        }
+    },
     async getFriend(uin: number): Promise<FriendInfo> {
         return bot.fl.get(uin)
     },

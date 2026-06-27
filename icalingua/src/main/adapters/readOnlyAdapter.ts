@@ -351,6 +351,9 @@ const adapter: Adapter = {
     getMsgNewURL(id: string): Promise<string> {
         return Promise.resolve('error')
     },
+    getNTPicURLbyFileid(fileId: string): Promise<string> {
+        return Promise.resolve('')
+    },
 
     getFriend(uin: number): Promise<FriendInfo> {
         return Promise.resolve(null)
