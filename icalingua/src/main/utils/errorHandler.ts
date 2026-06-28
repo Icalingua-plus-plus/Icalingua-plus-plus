@@ -3,7 +3,7 @@ import { RetError } from 'oicq-icalingua-plus-plus'
 
 const errorHandler = (e: Error | RetError, noThrow = false) => {
     if ('name' in e) {
-        logger.error({ errname: e.name, errMsg: e.message, e: e.toString() })
+        logger.error({ errname: e.name, errMsg: e.message, e: e.toString(), stack: e.stack })
     } else {
         logger.error({ errname: e.code, errMsg: e.message, e: e.toString() })
     }
