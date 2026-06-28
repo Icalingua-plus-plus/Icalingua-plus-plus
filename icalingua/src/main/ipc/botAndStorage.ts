@@ -93,7 +93,7 @@ export const fetchLatestHistory = (roomId: number) => {
 export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
     const strCookies = await adapter.getCookies(domain)
     // 好家伙，原先那依托竟然也是我自己写的
-    return Object.fromEntries(strCookies.split('; ').map((pair) => pair.split('=')))
+    return Object.fromEntries(strCookies.split('; ').map((pair) => pair.replace(/;$/, '').split('=')))
 }
 
 ipcMain.handle('getDisabledFeatures', () => getDisabledFeatures())
