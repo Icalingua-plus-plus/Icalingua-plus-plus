@@ -377,6 +377,14 @@ jobs:
           name: app-x86_64.asar.unpacked
           path: app.asar.unpacked
 
+      - name: pack native modules for makepkg
+        run: |
+          if [ -d "app.asar.unpacked" ] && [ "$(ls -A app.asar.unpacked 2>/dev/null)" ]; then
+            tar cf native-modules.tar app.asar.unpacked
+          else
+            tar cf native-modules.tar --files-from /dev/null
+          fi
+
       - run: chmod -R 777 .
 
       - name: makepkg for x86_64
@@ -428,6 +436,14 @@ jobs:
         with:
           name: app-arm64.asar.unpacked
           path: app.asar.unpacked
+
+      - name: pack native modules for makepkg
+        run: |
+          if [ -d "app.asar.unpacked" ] && [ "$(ls -A app.asar.unpacked 2>/dev/null)" ]; then
+            tar cf native-modules.tar app.asar.unpacked
+          else
+            tar cf native-modules.tar --files-from /dev/null
+          fi
 
       - run: chmod -R 777 .
 
@@ -481,6 +497,14 @@ jobs:
         with:
           name: app-armv7l.asar.unpacked
           path: app.asar.unpacked
+
+      - name: pack native modules for makepkg
+        run: |
+          if [ -d "app.asar.unpacked" ] && [ "$(ls -A app.asar.unpacked 2>/dev/null)" ]; then
+            tar cf native-modules.tar app.asar.unpacked
+          else
+            tar cf native-modules.tar --files-from /dev/null
+          fi
 
       - run: chmod -R 777 .
 
