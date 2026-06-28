@@ -1609,7 +1609,6 @@ const adapter: typeof oicqAdapter = {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async revealMessage(roomId: number, messageId: string | number) {
-        clients.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     getUnreadCount: async (priority: 1 | 2 | 3 | 4 | 5, resolve) => resolve(await storage.getUnreadCount(priority)),

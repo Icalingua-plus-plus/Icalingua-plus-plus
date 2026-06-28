@@ -1980,7 +1980,6 @@ const adapter = {
         clients.renewMessageURL(messageId, URL)
     },
     async revealMessage(roomId: number, messageId: string | number) {
-        clients.revealMessage(messageId)
         await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {

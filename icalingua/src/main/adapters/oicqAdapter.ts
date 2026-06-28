@@ -2161,11 +2161,11 @@ const adapter: OicqAdapter = {
         }
     },
     async hideMessage(roomId: number, messageId: string) {
-        ui.hideMessage(messageId)
+        ui.hideMessage(messageId, roomId)
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
     },
     async revealMessage(roomId: number, messageId: string | number) {
-        ui.revealMessage(messageId)
+        ui.revealMessage(messageId, roomId)
         await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
     async renewMessageURL(roomId: number, messageId: string | number, URL) {

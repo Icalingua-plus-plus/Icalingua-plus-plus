@@ -47,9 +47,6 @@ export default {
     notifyError(msg: { title: string; message: string }) {
         broadcast('notifyError', msg)
     },
-    revealMessage(messageId: string | number) {
-        broadcast('revealMessage', messageId)
-    },
     renewMessage(roomId: number, messageId: string, message: Partial<Message>) {
         broadcast('renewMessage', { roomId, messageId, message })
     },

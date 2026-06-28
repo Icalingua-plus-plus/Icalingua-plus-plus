@@ -142,7 +142,6 @@ const attachSocketEvents = () => {
     })
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
-    socket.on('revealMessage', ui.revealMessage)
     socket.on(
         'renewMessage',
         ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Partial<Message> }) => {
@@ -538,7 +537,7 @@ const adapter: Adapter = {
         socket.emit('deleteMessage', roomId, messageId)
     },
     hideMessage(roomId: number, messageId: string) {
-        ui.hideMessage(messageId)
+        ui.hideMessage(messageId, roomId)
         socket.emit('hideMessage', roomId, messageId)
     },
     fetchHistory(messageId: string, roomId?: number) {
@@ -631,6 +630,7 @@ const adapter: Adapter = {
         socket.emit('removeChatGroup', name)
     },
     revealMessage(roomId: number, messageId: string | number) {
+        ui.revealMessage(messageId, roomId)
         socket.emit('revealMessage', roomId, messageId)
     },
     renewMessage(roomId: number, messageId: string, message: Message) {

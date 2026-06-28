@@ -250,6 +250,11 @@ export default {
             // 接收新消息
             ipcRenderer.on('addMessage', (_, { roomId, message }) => {
                 if (roomId === this.roomId) {
+                    const index = this.messages.findIndex((e) => e._id === message._id)
+                    if (index !== -1) {
+                        console.warning(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[index])
+                        return
+                    }
                     this.messages = [...this.messages, message]
                 }
             })
@@ -258,7 +263,8 @@ export default {
             ipcRenderer.on('deleteMessage', (_, messageId) => {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
-                    this.messages[index].deleted = true
+                    this.messages[index].deleted = Date.now()
+                    this.messages[index].reveal = false
                     this.messages = [...this.messages]
                 }
             })
@@ -268,6 +274,7 @@ export default {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
                     this.messages[index].hide = true
+                    this.messages[index].reveal = false
                     this.messages = [...this.messages]
                 }
             })
@@ -276,6 +283,7 @@ export default {
             ipcRenderer.on('revealMessage', (_, messageId) => {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
+                    this.messages[index].hide = false
                     this.messages[index].reveal = true
                     this.messages = [...this.messages]
                 }

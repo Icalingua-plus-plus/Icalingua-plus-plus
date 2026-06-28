@@ -739,7 +739,7 @@ export default {
         ipcRenderer.on('deleteMessage', (_, messageId) => {
             const message = this.messages.find((e) => e._id === messageId)
             if (message) {
-                message.deleted = new Date()
+                message.deleted = Date.now()
                 message.reveal = false
                 this.messages = [...this.messages]
             }
