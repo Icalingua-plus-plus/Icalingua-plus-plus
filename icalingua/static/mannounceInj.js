@@ -131,7 +131,7 @@ window.mqq.media.getPicture = (type, callback) => {
             b64File = fileData.toString('base64')
             callback(0, [{
                 data: b64File,
-                imageID: file.path,
+                imageID: file.name,
                 match: 0,
             }])
         }
