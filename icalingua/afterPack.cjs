@@ -125,30 +125,7 @@ function fixMissing(appNM, rootNM) {
         }
 
         for (const depName of Object.keys(pkgJson.dependencies || {})) {
-            // In pnpm, when two packages need different versions of the same dep,
-            // the non-hoisted version lives in the consumer's own node_modules.
-            // We must always prefer the consumer's nested version because a
-            // hoisted copy at root may be a completely different version.
-            const sourceNested = path.join(rootNM, name, 'node_modules', depName)
-            const hasSourceNested = existsPkg(sourceNested)
-
-            if (hasSourceNested) {
-                // Source has a version-conflicted nested copy — always use it.
-                const dest = path.join(appNM, name, 'node_modules', depName)
-                if (!existsPkg(dest)) {
-                    copyPackage(sourceNested, dest)
-                    copied++
-                    console.log(
-                        `[afterPack]   + ${path.relative(appNM, dest)} (version-conflicted, from source nested)`,
-                    )
-                }
-                continue
-            }
-
-            // Source did NOT have a nested copy — the source package was using
-            // the hoisted version. The app can use the hoisted version too,
-            // but only if it's actually present there.
-            if (canResolve(depName, dir, appNM)) continue
+            if (canResolve(depName, dir, appNM, rootNM, name)) continue
 
             const source = findInSource(depName, name, rootNM)
             if (!source) {
@@ -156,8 +133,22 @@ function fixMissing(appNM, rootNM) {
                 continue
             }
 
-            const dest = path.join(appNM, depName)
-            if (existsPkg(dest)) continue
+            // Preserve nesting from source if it was nested there
+            const nestedInSource = path.join(rootNM, name, 'node_modules', depName)
+            const wasNested = source === nestedInSource || source.startsWith(nestedInSource + path.sep)
+
+            const dest = wasNested ? path.join(appNM, name, 'node_modules', depName) : path.join(appNM, depName)
+
+            if (existsPkg(dest)) {
+                // Even if dest exists, check if it's the correct version.
+                // Previous builds may have copied the wrong version here.
+                const destVersion = getVersion(dest)
+                const sourceVersion = getVersion(source)
+                if (destVersion === sourceVersion) continue
+                console.log(
+                    `[afterPack]   ~ ${path.relative(appNM, dest)} version mismatch: dest=${destVersion} source=${sourceVersion}, overwriting`,
+                )
+            }
 
             copyPackage(source, dest)
             copied++
@@ -168,17 +159,46 @@ function fixMissing(appNM, rootNM) {
     return copied
 }
 
-function canResolve(depName, pkgDir, appNM) {
-    if (existsPkg(path.join(pkgDir, 'node_modules', depName))) return true
+/**
+ * Check if a dependency can be resolved from the app's node_modules.
+ *
+ * In pnpm, when two packages need different versions of the same dep, the
+ * non-hoisted version is placed in the consumer's own node_modules. A hoisted
+ * copy at root may be a completely different version.
+ *
+ * This function compares the actual version resolved in app against the version
+ * resolved in the source pnpm layout, so a hoisted mismatch is always detected.
+ */
+function canResolve(depName, pkgDir, appNM, rootNM, pkgName) {
+    // Find what version the source pnpm layout resolved to
+    const sourcePath = findInSource(depName, pkgName, rootNM)
+    const sourceVersion = sourcePath && getVersion(sourcePath)
+    if (!sourceVersion) return false
+
+    // Walk up the app's node_modules to find what version it resolves to
+    if (existsPkg(path.join(pkgDir, 'node_modules', depName))) {
+        return getVersion(path.join(pkgDir, 'node_modules', depName)) === sourceVersion
+    }
     let dir = pkgDir
     while (true) {
         const parent = path.dirname(dir)
         if (parent === dir) break
-        if (existsPkg(path.join(parent, 'node_modules', depName))) return true
+        const candidate = path.join(parent, 'node_modules', depName)
+        if (existsPkg(candidate)) {
+            return getVersion(candidate) === sourceVersion
+        }
         if (parent === path.dirname(appNM)) break
         dir = parent
     }
     return false
+}
+
+function getVersion(pkgDir) {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(pkgDir, 'package.json'), 'utf8')).version
+    } catch {
+        return null
+    }
 }
 
 function findInSource(depName, neededBy, rootNM) {

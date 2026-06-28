@@ -34,8 +34,7 @@
   "pnpm": {
     "neverBuiltDependencies": [],
     "overrides": {
-      "negotiator": "0.6.4",
-      "whatwg-url": "11.0.0"
+      "negotiator": "0.6.4"
     }
   }
 }
