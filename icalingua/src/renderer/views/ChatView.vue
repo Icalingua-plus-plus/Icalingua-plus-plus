@@ -16,41 +16,63 @@
                     </el-popover>
                 </div>
                 <!-- chat groups -->
-                <div class="chat-group" style="overflow: overlay" @mousedown="handleMouseDown">
-                    <SideBarIcon
-                        icon="el-icon-chat-square"
-                        name="All Chats"
-                        :selected="selectedChatGroup === 'chats'"
-                        :redPoint="chatGroupsUnreadCount['chats']"
-                        @click="selectChatGroup('chats')"
-                    />
-                    <SideBarIcon
-                        icon="el-icon-user"
-                        name="Private"
-                        :selected="selectedChatGroup === 'private'"
-                        :redPoint="chatGroupsUnreadCount['private']"
-                        @click="selectChatGroup('private')"
-                    />
-                    <SideBarIcon
-                        v-for="chatGroup in chatGroups"
-                        :key="chatGroup.name"
-                        icon="el-icon-folder"
-                        :name="chatGroup.name"
-                        :selected="selectedChatGroup === chatGroup.name"
-                        :redPoint="chatGroupsUnreadCount[chatGroup.name]"
-                        @click="selectChatGroup(chatGroup.name)"
-                        @click-middle="removeChatGroup(chatGroup.name)"
-                        @click-right="updateChatGroup(chatGroup.name)"
-                    />
-                    <SideBarIcon icon="el-icon-edit-outline" name="Edit" @click="chatGroupEditorVisible = true" />
-                    <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
-                    <SideBarIcon
-                        icon="el-icon-s-unfold"
-                        name="Next"
-                        @click="switchUnreadRoom"
-                        v-if="isSteamVrRunning"
-                    />
-                    <div style="height: 10px"></div>
+                <div class="chat-group-wrapper">
+                    <div
+                        class="chat-group"
+                        ref="chatGroupContainer"
+                        @scroll="onChatGroupScroll"
+                        @mousedown="handleMouseDown"
+                    >
+                        <SideBarIcon
+                            icon="el-icon-chat-square"
+                            name="All Chats"
+                            :selected="selectedChatGroup === 'chats'"
+                            :redPoint="chatGroupsUnreadCount['chats']"
+                            @click="selectChatGroup('chats')"
+                        />
+                        <SideBarIcon
+                            icon="el-icon-user"
+                            name="Private"
+                            :selected="selectedChatGroup === 'private'"
+                            :redPoint="chatGroupsUnreadCount['private']"
+                            @click="selectChatGroup('private')"
+                        />
+                        <SideBarIcon
+                            v-for="chatGroup in chatGroups"
+                            :key="chatGroup.name"
+                            icon="el-icon-folder"
+                            :name="chatGroup.name"
+                            :selected="selectedChatGroup === chatGroup.name"
+                            :redPoint="chatGroupsUnreadCount[chatGroup.name]"
+                            @click="selectChatGroup(chatGroup.name)"
+                            @click-middle="removeChatGroup(chatGroup.name)"
+                            @click-right="updateChatGroup(chatGroup.name)"
+                        />
+                        <SideBarIcon icon="el-icon-edit-outline" name="Edit" @click="chatGroupEditorVisible = true" />
+                        <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
+                        <SideBarIcon
+                            icon="el-icon-s-unfold"
+                            name="Next"
+                            @click="switchUnreadRoom"
+                            v-if="isSteamVrRunning"
+                        />
+                        <div style="height: 10px"></div>
+                    </div>
+                    <div
+                        v-show="showChatGroupScrollbar"
+                        class="custom-scrollbar-group"
+                        :class="{ 'is-dragging': chatGroupIsDragging }"
+                        @mousedown.prevent="onGroupTrackMouseDown"
+                    >
+                        <div
+                            class="custom-scrollbar-group-thumb"
+                            :style="{
+                                height: groupThumbHeight + 'px',
+                                transform: `translateY(${groupThumbTop}px)`,
+                            }"
+                            @mousedown.prevent.stop="onGroupThumbMouseDown"
+                        />
+                    </div>
                 </div>
             </el-aside>
             <div
@@ -155,8 +177,7 @@
                             color: rgb(156, 166, 175);
                         "
                     >
- {{ sysInfo }} </pre
-                    >
+ {{ sysInfo }} </pre>
                     <div class="getting-history" v-if="historyCount">
                         <div class="pace-activity" />
                         <span> {{ historyFetchingName }} 正在获取历史消息... {{ historyCount }} </span>
@@ -401,6 +422,12 @@ export default {
             isNavigating: false, // 标记是否正在通过前进/后退导航，避免重复入栈
             stickerPanelBottom: false, // 是否启用底部表情面板模式
             stickerPanelHeight: 320, // 底部模式时的面板高度（px）
+            // 聊天分组滚动条
+            chatGroupScrollTop: 0,
+            chatGroupContainerHeight: 0,
+            chatGroupScrollHeight: 0,
+            chatGroupIsDragging: false,
+            chatGroupScrollbarPadding: 3,
         }
     },
     async created() {
@@ -1328,6 +1355,41 @@ Chromium ${process.versions.chrome}`
                 e.preventDefault()
             }
         },
+        onChatGroupScroll(e) {
+            this.chatGroupScrollTop = e.target.scrollTop
+        },
+        onGroupThumbMouseDown(e) {
+            this.chatGroupIsDragging = true
+            this._groupDragStartY = e.clientY
+            this._groupDragStartScrollTop = this.chatGroupScrollTop
+            this._onGroupMouseMove = (ev) => this.onGroupThumbMouseMove(ev)
+            this._onGroupMouseUp = () => this.onGroupThumbMouseUp()
+            document.addEventListener('mousemove', this._onGroupMouseMove)
+            document.addEventListener('mouseup', this._onGroupMouseUp)
+        },
+        onGroupThumbMouseMove(e) {
+            const delta = e.clientY - this._groupDragStartY
+            const maxScroll = this.chatGroupScrollHeight - this.chatGroupContainerHeight
+            const maxOffset = this.groupTrackHeight - this.groupThumbHeight
+            const el = this.$refs.chatGroupContainer
+            if (el) el.scrollTop = this._groupDragStartScrollTop + (delta / maxOffset) * maxScroll
+        },
+        onGroupThumbMouseUp() {
+            document.removeEventListener('mousemove', this._onGroupMouseMove)
+            document.removeEventListener('mouseup', this._onGroupMouseUp)
+            this._onGroupMouseMove = null
+            this._onGroupMouseUp = null
+            this.chatGroupIsDragging = false
+        },
+        onGroupTrackMouseDown(e) {
+            const el = this.$refs.chatGroupContainer
+            if (!el) return
+            const rect = el.getBoundingClientRect()
+            const clickY = e.clientY - rect.top
+            const ratio = (clickY - this.chatGroupScrollbarPadding) / this.groupTrackHeight
+            const maxScroll = this.chatGroupScrollHeight - this.chatGroupContainerHeight
+            el.scrollTop = ratio * maxScroll - this.groupThumbHeight / 2
+        },
         navBack() {
             if (this.navBackStack.length === 0) return
             const targetRoomId = this.navBackStack.pop()
@@ -1464,8 +1526,48 @@ Chromium ${process.versions.chrome}`
                     )
             }
         },
+        showChatGroupScrollbar() {
+            return this.chatGroupScrollHeight > this.chatGroupContainerHeight && this.chatGroupContainerHeight > 0
+        },
+        groupThumbHeight() {
+            if (this.chatGroupScrollHeight <= 0) return 0
+            const ratio = this.chatGroupContainerHeight / this.chatGroupScrollHeight
+            return Math.max(20, ratio * this.chatGroupContainerHeight)
+        },
+        groupTrackHeight() {
+            return this.chatGroupContainerHeight - this.chatGroupScrollbarPadding * 2
+        },
+        groupThumbTop() {
+            if (this.chatGroupScrollHeight <= 0) return 0
+            const maxScroll = this.chatGroupScrollHeight - this.chatGroupContainerHeight
+            if (maxScroll <= 0) return 0
+            const maxOffset = this.groupTrackHeight - this.groupThumbHeight
+            return this.chatGroupScrollbarPadding + (this.chatGroupScrollTop / maxScroll) * maxOffset
+        },
+    },
+    mounted() {
+        this._updateChatGroupContainer = () => {
+            const el = this.$refs.chatGroupContainer
+            if (el) {
+                this.chatGroupContainerHeight = el.clientHeight
+                this.chatGroupScrollHeight = el.scrollHeight
+            }
+        }
+        // 等待 DOM 完全渲染后再测量
+        this.$nextTick(() => {
+            this._updateChatGroupContainer()
+            this._chatGroupResizeObserver = new ResizeObserver(this._updateChatGroupContainer)
+            const el = this.$refs.chatGroupContainer
+            if (el) this._chatGroupResizeObserver.observe(el)
+        })
     },
     watch: {
+        chatGroups: {
+            handler() {
+                this.$nextTick(this._updateChatGroupContainer)
+            },
+            deep: true,
+        },
         lastUnreadCount(n, o) {
             console.log('lastUnreadCount', n)
             if (n !== 0) {
@@ -1694,6 +1796,49 @@ main div {
     display: flex;
     flex-direction: column;
     z-index: 3;
+}
+
+.chat-group-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.chat-group {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+.chat-group::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.custom-scrollbar-group {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 4px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.chat-group-wrapper:hover .custom-scrollbar-group,
+.custom-scrollbar-group.is-dragging {
+    opacity: 1;
+}
+.custom-scrollbar-group-thumb {
+    width: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: background-color 0.15s;
+}
+.custom-scrollbar-group:not(.is-dragging) .custom-scrollbar-group-thumb:hover,
+.custom-scrollbar-group.is-dragging .custom-scrollbar-group-thumb {
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 .random-select {

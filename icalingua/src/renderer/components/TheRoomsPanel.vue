@@ -21,27 +21,47 @@
                 v-if="clearRoomsBehavior !== 'disabled'"
             ></span>
         </div>
-        <div class="content" ref="scrollContainer" @scroll="onScroll">
-            <div :style="{ height: totalHeight + 'px', position: 'relative' }">
-                <div
-                    :style="{ position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${offsetY}px)` }"
-                >
-                    <RoomEntry
-                        v-for="room in visibleRooms"
-                        :key="room.roomId"
-                        :room="room"
-                        :selected="room.roomId === selected.roomId"
-                        :priority="priority"
-                        :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
-                        :usePanguJs="usePanguJs"
-                        @click="
-                            input = ''
-                            $emit('chroom', room)
-                        "
-                        @dblclick="openInNewWindow(room)"
-                        @contextmenu="roomMenu(room, $event)"
-                    />
+        <div class="content-wrapper">
+            <div class="content" ref="scrollContainer" @scroll="onScroll">
+                <div :style="{ height: totalHeight + 'px', position: 'relative' }">
+                    <div
+                        :style="{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            transform: `translateY(${offsetY}px)`,
+                        }"
+                    >
+                        <RoomEntry
+                            v-for="room in visibleRooms"
+                            :key="room.roomId"
+                            :room="room"
+                            :selected="room.roomId === selected.roomId"
+                            :priority="priority"
+                            :removeEmotes="room.roomId < 0 && removeGroupNameEmotes"
+                            :usePanguJs="usePanguJs"
+                            @click="
+                                input = ''
+                                $emit('chroom', room)
+                            "
+                            @dblclick="openInNewWindow(room)"
+                            @contextmenu="roomMenu(room, $event)"
+                        />
+                    </div>
                 </div>
+            </div>
+            <div
+                v-show="showScrollbar"
+                class="custom-scrollbar"
+                :class="{ 'is-dragging': isDragging }"
+                @mousedown.prevent="onTrackMouseDown"
+            >
+                <div
+                    class="custom-scrollbar-thumb"
+                    :style="{ height: thumbHeight + 'px', transform: `translateY(${thumbTop}px)` }"
+                    @mousedown.prevent.stop="onThumbMouseDown"
+                />
             </div>
         </div>
     </div>
@@ -73,6 +93,27 @@ export default {
         offsetY() {
             const start = Math.max(0, Math.floor(this.scrollTop / this.itemHeight) - this.bufferSize)
             return start * this.itemHeight
+        },
+        scrollHeight() {
+            return this.sortedRooms.length * this.itemHeight
+        },
+        showScrollbar() {
+            return this.scrollHeight > this.containerHeight && this.containerHeight > 0
+        },
+        thumbHeight() {
+            if (this.scrollHeight <= 0) return 0
+            const ratio = this.containerHeight / this.scrollHeight
+            return Math.max(20, ratio * this.containerHeight)
+        },
+        trackHeight() {
+            return this.containerHeight - this.scrollbarPadding * 2
+        },
+        thumbTop() {
+            if (this.scrollHeight <= 0) return 0
+            const maxScroll = this.scrollHeight - this.containerHeight
+            if (maxScroll <= 0) return 0
+            const maxOffset = this.trackHeight - this.thumbHeight
+            return this.scrollbarPadding + (this.scrollTop / maxScroll) * maxOffset
         },
         sortedRooms() {
             this.input = this.input.toUpperCase()
@@ -117,6 +158,9 @@ export default {
             containerHeight: 0,
             itemHeight: 70, // RoomEntry 固定高度
             bufferSize: 5, // 上下额外渲染的条目数
+            // 自定义滚动条
+            scrollbarPadding: 3, // 避免滑块圆角超出边界
+            isDragging: false,
         }
     },
     methods: {
@@ -128,6 +172,35 @@ export default {
         },
         openInNewWindow(room) {
             ipc.openRoomInNewWindow(room.roomId)
+        },
+        onThumbMouseDown(e) {
+            this.isDragging = true
+            this._dragStartY = e.clientY
+            this._dragStartScrollTop = this.scrollTop
+            this._onMouseMove = (ev) => this.onThumbMouseMove(ev)
+            this._onMouseUp = () => this.onThumbMouseUp()
+            document.addEventListener('mousemove', this._onMouseMove)
+            document.addEventListener('mouseup', this._onMouseUp)
+        },
+        onThumbMouseMove(e) {
+            const delta = e.clientY - this._dragStartY
+            const maxScroll = this.scrollHeight - this.containerHeight
+            const maxOffset = this.trackHeight - this.thumbHeight
+            this.$refs.scrollContainer.scrollTop = this._dragStartScrollTop + (delta / maxOffset) * maxScroll
+        },
+        onThumbMouseUp() {
+            document.removeEventListener('mousemove', this._onMouseMove)
+            document.removeEventListener('mouseup', this._onMouseUp)
+            this._onMouseMove = null
+            this._onMouseUp = null
+            this.isDragging = false
+        },
+        onTrackMouseDown(e) {
+            const rect = this.$refs.scrollContainer.getBoundingClientRect()
+            const clickY = e.clientY - rect.top
+            const ratio = (clickY - this.scrollbarPadding) / this.trackHeight
+            const maxScroll = this.scrollHeight - this.containerHeight
+            this.$refs.scrollContainer.scrollTop = ratio * maxScroll - this.thumbHeight / 2
         },
         async clearRooms() {
             console.log(this.allRooms)
@@ -180,6 +253,7 @@ export default {
             this._resizeObserver.disconnect()
             this._resizeObserver = null
         }
+        if (this._onMouseUp) this.onThumbMouseUp()
     },
 }
 </script>
@@ -209,8 +283,49 @@ export default {
     display: none;
 }
 
+.content-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
 .content {
-    overflow: overlay;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+.content::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.custom-scrollbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 10px;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.content-wrapper:hover .custom-scrollbar,
+.custom-scrollbar.is-dragging {
+    opacity: 1;
+}
+
+.custom-scrollbar-thumb {
+    width: 6px;
+    margin: 0 2px;
+    border-radius: 3px;
+    background-color: #999;
+    transition: background-color 0.15s;
+}
+.custom-scrollbar:not(.is-dragging) .custom-scrollbar-thumb:hover,
+.custom-scrollbar.is-dragging .custom-scrollbar-thumb {
+    background-color: #dd5e89;
 }
 
 .input {
