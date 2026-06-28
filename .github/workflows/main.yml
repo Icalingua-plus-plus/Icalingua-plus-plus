@@ -317,10 +317,7 @@ jobs:
             chmod -R 777 /build
             cd /build
             pnpm config set store-dir /home/runner/.local/share/pnpm/store/v3
-            # Use --ignore-scripts to avoid electron-winstaller postinstall failure on ARM
-            # (7z-arm.exe does not exist), then rebuild only the native module we need
-            pnpm install --frozen-lockfile --ignore-scripts
-            pnpm rebuild sqlite3
+            pnpm install --frozen-lockfile
 
       - name: Fix file ownership after Docker
         run: sudo chown -R $(id -u):$(id -g) .
