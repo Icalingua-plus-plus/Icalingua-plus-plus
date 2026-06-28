@@ -29,8 +29,8 @@
     },
     "dependencies": {
         "@noble/ed25519": "1.7.1",
-        "@saltify/milky-tea": "^0.1.4",
-        "@saltify/milky-types": "^1.2.2",
+        "@saltify/milky-tea": "0.1.4",
+        "@saltify/milky-types": "1.2.0-rc.4",
         "axios": "^1.18.1",
         "body-parser": "^1.20.5",
         "eventemitter3": "^5.0.4",

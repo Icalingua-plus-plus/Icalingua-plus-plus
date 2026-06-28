@@ -284,11 +284,11 @@ importers:
         specifier: 1.7.1
         version: 1.7.1
       '@saltify/milky-tea':
-        specifier: ^0.1.4
+        specifier: 0.1.4
         version: 0.1.4(eventsource@4.1.0)
       '@saltify/milky-types':
-        specifier: ^1.2.2
-        version: 1.2.2
+        specifier: 1.2.0-rc.4
+        version: 1.2.0-rc.4
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -1210,9 +1210,6 @@ packages:
 
   '@saltify/milky-types@1.2.0-rc.4':
     resolution: {integrity: sha512-IUyE2GcdcLS5qw++k/PHHbpNhDeryKlfPMYLk+/UOn4MWHchvU1LQnqJmv/J/xSUYREy0Hac8fJ224O9j6PqqQ==}
-
-  '@saltify/milky-types@1.2.2':
-    resolution: {integrity: sha512-sNxd6Lz5xVBvlV87yKKvsU0fzOcQBwPLsY9MeLZ3fY8T7zp1RSkU2j2cF2z0Mcc+I0AW1kOXY1qt4xMwbJcSpQ==}
 
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
@@ -6331,10 +6328,6 @@ snapshots:
       eventsource: 4.1.0
 
   '@saltify/milky-types@1.2.0-rc.4':
-    dependencies:
-      zod: 4.4.3
-
-  '@saltify/milky-types@1.2.2':
     dependencies:
       zod: 4.4.3
 
