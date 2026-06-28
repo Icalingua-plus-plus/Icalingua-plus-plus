@@ -158,6 +158,13 @@ jobs:
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
+        name: upload app-x86_64.asar.unpacked
+        with:
+          name: app-x86_64.asar.unpacked
+          path: icalingua/build/linux-unpacked/resources/app.asar.unpacked
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
         name: upload x86_64
         with:
           name: x86_64-unpacked
@@ -237,6 +244,13 @@ jobs:
           name: app-arm64.asar
           path: icalingua/build/linux-arm64-unpacked/resources/app.asar
           if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        name: upload app-arm64.asar.unpacked
+        with:
+          name: app-arm64.asar.unpacked
+          path: icalingua/build/linux-arm64-unpacked/resources/app.asar.unpacked
+          if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         name: upload unpacked
@@ -323,6 +337,13 @@ jobs:
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
+        name: upload app-armv7l.asar.unpacked
+        with:
+          name: app-armv7l.asar.unpacked
+          path: icalingua/build/linux-armv7l-unpacked/resources/app.asar.unpacked
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v4
         name: upload unpacked
         with:
           name: armv7l-unpacked
@@ -349,6 +370,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-x86_64.asar
+
+      - name: get unpacked native modules for x86_64
+        uses: actions/download-artifact@v4
+        with:
+          name: app-x86_64.asar.unpacked
+          path: app.asar.unpacked
 
       - run: chmod -R 777 .
 
@@ -396,6 +423,12 @@ jobs:
         with:
           name: app-arm64.asar
 
+      - name: get unpacked native modules for aarch64
+        uses: actions/download-artifact@v4
+        with:
+          name: app-arm64.asar.unpacked
+          path: app.asar.unpacked
+
       - run: chmod -R 777 .
 
       - name: makepkg for aarch64
@@ -442,6 +475,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-armv7l.asar
+
+      - name: get unpacked native modules for armv7l
+        uses: actions/download-artifact@v4
+        with:
+          name: app-armv7l.asar.unpacked
+          path: app.asar.unpacked
 
       - run: chmod -R 777 .
 

@@ -13,6 +13,7 @@ provides=('electron-qq' 'icalingua')
 conflicts=('icalingua')
 replaces=('electron-qq' 'icalingua-plus-plus')
 source=(app.asar
+        app.asar.unpacked
         512x512.png
         ${_pkgname}.desktop
         ${_pkgname})
@@ -20,6 +21,7 @@ package() {
   install -Dm644 -t "${pkgdir}/usr/share/applications" "${_pkgname}.desktop"
   install -Dm644 "512x512.png" "$pkgdir/usr/share/icons/hicolor/512x512/apps/$_pkgname.png"
   install -Dm644 "app.asar" "${pkgdir}/usr/lib/${_pkgname}/${_pkgname}.asar"
+  cp -r "app.asar.unpacked" "${pkgdir}/usr/lib/${_pkgname}/${_pkgname}.asar.unpacked"
   install -Dm755 "${_pkgname}" "${pkgdir}/usr/bin/${_pkgname}"
   ln -s "/usr/bin/${_pkgname}" "${pkgdir}/usr/bin/electron-qq"
 }
