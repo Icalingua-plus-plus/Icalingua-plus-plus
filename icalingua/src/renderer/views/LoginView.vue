@@ -335,7 +335,8 @@ export default {
         ipcRenderer.on('qrcodeLogin', async (_, url) => {
             if (qrLoginInterval) clearInterval(qrLoginInterval)
             qrLoginInterval = setInterval(() => {
-                ipcRenderer.send('createBot', this.form)
+                const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
+                ipcRenderer.send('createBot', submitForm)
             }, 5 * 1000)
         })
     },
@@ -367,7 +368,8 @@ export default {
                             )
                         }, 60 * 1000)
                     }
-                    await ipcRenderer.send('createBot', this.form)
+                    const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
+                    await ipcRenderer.send('createBot', submitForm)
                 } else {
                     return false
                 }
