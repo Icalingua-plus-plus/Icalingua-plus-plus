@@ -493,6 +493,7 @@ jobs:
           name: app-armv7l.asar
 
       - name: get unpacked native modules for armv7l
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: app-armv7l.asar.unpacked
