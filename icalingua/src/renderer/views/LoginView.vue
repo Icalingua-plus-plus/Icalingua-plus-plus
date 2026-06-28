@@ -209,6 +209,7 @@ export default {
                         { label: '9.0.95', value: '55' },
                         { label: '9.1.0', value: '57' },
                         { label: '9.1.20', value: '59' },
+                        { label: '9.2.80', value: '61' },
                     ],
                 },
                 {
@@ -241,6 +242,7 @@ export default {
                         { label: '9.0.95', value: '56' },
                         { label: '9.1.0', value: '58' },
                         { label: '9.1.20', value: '60' },
+                        { label: '9.2.80', value: '62' },
                     ],
                 },
                 {
