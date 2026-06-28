@@ -9,6 +9,7 @@ export default class MongoStorageProvider implements StorageProvider {
     id: string | number
     connStr: string
     mdb: Db
+    private client: MongoClient
 
     constructor(connStr: string, id: string | number) {
         this.id = id
@@ -42,8 +43,10 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async connect(): Promise<void> {
-        const dba = await MongoClient.connect(this.connStr)
-        this.mdb = dba.db('eqq' + this.id)
+        console.log('Connecting to MongoDB... Addr: ' + this.connStr)
+        this.client = new MongoClient(this.connStr)
+        await this.client.connect()
+        this.mdb = this.client.db('eqq' + this.id)
         await this.mdb.collection('rooms').createIndex('roomId', {
             background: true,
             unique: true,
@@ -93,7 +96,7 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
-            return await this.mdb.collection('msg' + roomId).updateOne({ _id: messageId }, { $set: message })
+            return await this.mdb.collection('msg' + roomId).updateOne({ _id: messageId } as any, { $set: message })
         } catch (e) {}
     }
 
@@ -265,7 +268,7 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     getUnreadCount(priority: number): Promise<number> {
-        const unreadRooms = this.mdb.collection('rooms').find({
+        return this.mdb.collection('rooms').countDocuments({
             unreadCount: {
                 $gt: 0,
             },
@@ -273,7 +276,6 @@ export default class MongoStorageProvider implements StorageProvider {
                 $gte: priority,
             },
         })
-        return unreadRooms.count()
     }
 
     getFirstUnreadRoom(priority: number): Promise<Room> {
