@@ -48,6 +48,7 @@
                     @download-image="downloadImage"
                     @pokegroup="pokeGroup"
                     @open-forward="openForward"
+                    @open-choose-file-type="openChooseFileType"
                     @fetch-messages="fetchMessage"
                     @fetch-messages-after="fetchMessageAfter"
                 >
@@ -113,6 +114,17 @@
                 </div>
             </transition>
         </div>
+        <el-dialog
+            :title="tempFileName"
+            :visible.sync="chooseFileTypeShown"
+            :close-on-click-modal="false"
+            @close="tempFile = null"
+        >
+            <div class="random-select">
+                <el-button @click="chooseFileType('file')" icon="el-icon-paperclip">普通文件</el-button>
+                <el-button @click="chooseFileType('media')" icon="el-icon-picture-outline">识别媒体</el-button>
+            </div>
+        </el-dialog>
     </div>
 </template>
 
@@ -156,6 +168,9 @@ export default {
             stickerPanelWidth: 0, // 记录面板宽度，关闭时缩回
             stickerPanelBottom: false, // 是否启用底部表情面板模式
             stickerPanelHeight: 320, // 底部模式时的面板高度（px）
+            chooseFileTypeShown: false, // 选择文件类型对话框
+            tempFile: null, // 临时文件
+            tempFileName: '', // 临时文件名
         }
     },
     watch: {
@@ -244,9 +259,17 @@ export default {
         ipcRenderer.removeAllListeners('setShutUp')
         ipcRenderer.removeAllListeners('clearUnread')
         ipcRenderer.removeAllListeners('gotoMessage')
+        ipcRenderer.removeAllListeners('sendDice')
+        ipcRenderer.removeAllListeners('sendRps')
     },
     methods: {
         setupIpcListeners() {
+            // 阻止默认拖拽行为以支持文件拖入
+            document.addEventListener('dragover', (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+            })
+
             // 接收新消息
             ipcRenderer.on('addMessage', (_, { roomId, message }) => {
                 if (roomId === this.roomId) {
@@ -322,6 +345,16 @@ export default {
                     await this.gotoMessage(messageId)
                 }
             })
+
+            // 发送骰子（菜单操作）
+            ipcRenderer.on('sendDice', (_) => {
+                this.sendDice(0)
+            })
+
+            // 发送猜拳（菜单操作）
+            ipcRenderer.on('sendRps', (_) => {
+                this.sendRps(0)
+            })
         },
 
         async fetchMessage(reset, number) {
@@ -346,16 +379,95 @@ export default {
             }
         },
 
-        sendMessage(data) {
+        async sendMessage(data) {
+            let { content, file, replyMessage, b64img, imgpath, sticker, messageType, resend } = data
+            if (file) {
+                if (file.type.includes('image')) {
+                    if (file.size >= 10485760) {
+                        this.$message.warning('图片较大，发送可能失败，软件可能卡死')
+                    }
+                    const crypto = require('crypto')
+                    const buffer = Buffer.from(await file.blob.arrayBuffer())
+                    const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
+                    const b64 = buffer.toString('base64')
+                    b64img = `data:${file.type};base64,${b64}`
+                    imgpath = imgpath || `send_https://gchat.qpic.cn/gchatpic_new/0/0-0-${imgHashStr}/0`
+                    file = null
+                } else if (file.type.startsWith('audio')) {
+                    if (file.size >= 10485760) {
+                        this.$message.warning('语音较大，发送可能失败，软件可能卡死')
+                    }
+                    const buffer = Buffer.from(await file.blob.arrayBuffer())
+                    b64img = `data:audio;base64,${buffer.toString('base64')}`
+                    file = {
+                        type: file.type,
+                        size: file.size,
+                        path: file.path,
+                    }
+                } else
+                    file = {
+                        type: file.type,
+                        size: file.size,
+                        path: file.path,
+                    }
+            }
+            if (resend) ipc.deleteMessage(this.roomId, resend)
             ipc.sendMessage({
-                ...data,
+                content,
                 roomId: this.roomId,
+                file,
+                replyMessage,
                 room: this.room,
+                b64img,
+                imgpath,
+                sticker,
+                messageType,
             })
         },
 
         openImage: ipc.downloadFileByMessageData,
         downloadImage: ipc.downloadImage,
+
+        async openChooseFileType(file) {
+            if (!file) return
+            if ((await ipc.getSettings()).disableChooseFileType) return this.$refs.room.onFileChange(file)
+            this.chooseFileTypeShown = true
+            this.tempFile = file
+            this.tempFileName = '选择文件 ' + file[0].name + ' 的发送方式'
+        },
+
+        chooseFileType(type) {
+            this.chooseFileTypeShown = false
+            this.$refs.room.onFileChange(this.tempFile, type === 'file')
+        },
+
+        async sendDice(value) {
+            if (!value) {
+                value = Math.floor(Math.random() * 6) + 1
+            }
+            const messageType = await ipc.getMessgeTypeSetting()
+            // 使用新版本 QLottie 骰子
+            this.sendMessage({
+                content: `[QLottie: 33,358,${value}]`,
+                room: this.room,
+                messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
+            })
+        },
+
+        async sendRps(value) {
+            if (!value) {
+                value = Math.floor(Math.random() * 3) + 1
+            }
+            // 新版本猜拳值映射
+            if (value === 1) value = 3
+            else if (value === 3) value = 1
+            const messageType = await ipc.getMessgeTypeSetting()
+            this.sendMessage({
+                content: `[QLottie: 34,359,${value}]`,
+                room: this.room,
+                messageType: messageType === 'anonymous' ? 'anonymous' : 'text',
+            })
+        },
 
         pokeGroup(uin) {
             const group = -this.roomId

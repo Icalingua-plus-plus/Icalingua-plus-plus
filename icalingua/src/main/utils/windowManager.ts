@@ -517,6 +517,14 @@ export const sendToAllChatWindows = (channel: string, payload?: any) => {
     })
 }
 
+/** 根据 BrowserWindow 查找独立窗口对应的 roomId */
+export const getRoomIdByWindow = (win: BrowserWindow): number | undefined => {
+    for (const [roomId, w] of chatWindows) {
+        if (w === win || w.id === win.id) return roomId
+    }
+    return undefined
+}
+
 /** 聚焦独立聊天窗口 */
 export const focusChatWindow = (roomId: number): boolean => {
     const win = chatWindows.get(roomId)

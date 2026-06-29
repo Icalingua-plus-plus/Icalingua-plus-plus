@@ -27,6 +27,7 @@ import ui from '../utils/ui'
 import version from '../utils/version'
 import {
     getMainWindow,
+    getRoomIdByWindow,
     lockMainWindow,
     showDeviceManagerWindow,
     showRequestWindow,
@@ -2397,7 +2398,11 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                 new MenuItem({
                     label: '回复',
                     click: () => {
-                        ui.replyMessage(message)
+                        if (win !== getMainWindow()) {
+                            win.webContents.send('replyMessage', message)
+                        } else {
+                            ui.replyMessage(message)
+                        }
                     },
                 }),
             )
@@ -2413,6 +2418,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                                 replyMessage: message.replyMessage,
                                 imgpath: undefined,
                                 at: [],
+                                roomId: room.roomId,
                                 messageType,
                             }
                             if (message.file) {
@@ -2439,6 +2445,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                                     replyMessage: message.replyMessage,
                                     imgpath: undefined,
                                     at: [],
+                                    roomId: room.roomId,
                                     messageType,
                                 }
                                 sendMessage(msgToSend)
@@ -2449,10 +2456,17 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     new MenuItem({
                         label: '复制到编辑区',
                         click: () => {
-                            ui.setMessageText(message.content)
-                            if (message.file) ui.pasteGif(message.file.url)
-                            console.log(message.replyMessage)
-                            ui.replyMessage(message.replyMessage)
+                            if (win !== getMainWindow()) {
+                                win.webContents.send('setMessageText', message.content)
+                                if (message.file) win.webContents.send('pasteGif', message.file.url)
+                                console.log(message.replyMessage)
+                                win.webContents.send('replyMessage', message.replyMessage)
+                            } else {
+                                ui.setMessageText(message.content)
+                                if (message.file) ui.pasteGif(message.file.url)
+                                console.log(message.replyMessage)
+                                ui.replyMessage(message.replyMessage)
+                            }
                         },
                     }),
                 )
@@ -2485,6 +2499,8 @@ ipcMain.on('popupTextAreaMenu', (event, e) => {
     const win = getSenderWindow(event)
     const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
+    // 判断是否为独立聊天窗口
+    const isStandaloneWindow = win !== getMainWindow()
     Menu.buildFromTemplate([
         {
             role: 'cut',
@@ -2498,7 +2514,12 @@ ipcMain.on('popupTextAreaMenu', (event, e) => {
         {
             label: 'Pangu spacing',
             click: () => {
-                ui.setMessageText(spacingSendMessage(e.text, atCache.get()))
+                const text = spacingSendMessage(e.text, atCache.get())
+                if (isStandaloneWindow) {
+                    win.webContents.send('setMessageText', text)
+                } else {
+                    ui.setMessageText(text)
+                }
             },
         },
     ]).popup({ window: win, ...pos })
@@ -2519,23 +2540,36 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
             label: '发送猜拳',
             type: 'normal',
             click() {
-                ui.sendRps()
+                if (win !== getMainWindow()) {
+                    win.webContents.send('sendRps')
+                } else {
+                    ui.sendRps()
+                }
             },
         },
         {
             label: '发送骰子',
             type: 'normal',
             click() {
-                ui.sendDice()
+                if (win !== getMainWindow()) {
+                    win.webContents.send('sendDice')
+                } else {
+                    ui.sendDice()
+                }
             },
         },
         {
             label: '发送窗口抖动',
             type: 'normal',
             click() {
+                let roomId: number | undefined
+                if (win !== getMainWindow()) {
+                    roomId = getRoomIdByWindow(win)
+                }
                 sendMessage({
                     content: '[窗口抖动]',
                     at: [],
+                    roomId,
                     messageType: 'shake',
                 })
             },
@@ -2543,7 +2577,11 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
         {
             label: '戳自己',
             click: () => {
-                sendGroupPoke(Math.abs(ui.getSelectedRoomId()), getUin())
+                let roomId = ui.getSelectedRoomId()
+                if (win !== getMainWindow()) {
+                    roomId = getRoomIdByWindow(win) || roomId
+                }
+                sendGroupPoke(Math.abs(roomId), getUin())
             },
         },
     ]
@@ -2565,7 +2603,11 @@ ipcMain.on('popupStickerItemMenu', (event, itemName: string, itemList: Array<str
         label: '以图片方式发送',
         type: 'normal',
         click() {
-            ui.pasteGif(itemName)
+            if (win !== getMainWindow()) {
+                win.webContents.send('pasteGif', itemName)
+            } else {
+                ui.pasteGif(itemName)
+            }
         },
     })
     menu.push({
@@ -2656,7 +2698,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
             }),
         )
     }
-    if (event.sender === getMainWindow().webContents)
+    if (event.sender === getMainWindow().webContents || win !== getMainWindow())
         menu.append(
             new MenuItem({
                 label: '@ TA',
@@ -2665,7 +2707,11 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
                         text: '@' + message.username,
                         id: message.senderId,
                     })
-                    ui.addMessageText('@' + message.username + ' ')
+                    if (win !== getMainWindow()) {
+                        win.webContents.send('addMessageText', '@' + message.username + ' ')
+                    } else {
+                        ui.addMessageText('@' + message.username + ' ')
+                    }
                 },
             }),
         )
