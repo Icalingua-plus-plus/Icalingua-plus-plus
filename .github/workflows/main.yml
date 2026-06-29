@@ -890,10 +890,13 @@ jobs:
       - name: build
         shell: cmd
         run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set npm_config_arch=arm64
           set node_version=22.19.0
-
-          cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
+          pnpm i
+          pnpm deps:woa
+          pnpm build:ci
+          pnpm build:woa
         working-directory: icalingua
 
       - name: rename
