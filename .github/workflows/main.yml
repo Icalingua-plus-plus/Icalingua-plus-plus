@@ -887,6 +887,11 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: Install node-gyp@12
+        run: |
+          npm install -g node-gyp@12
+          echo "NPM_CONFIG_NODE_GYP=$($env:APPDATA)\npm\node_modules\node-gyp\bin\node-gyp.js" >> $env:GITHUB_ENV
+
       - name: build
         shell: cmd
         run: |
