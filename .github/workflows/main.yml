@@ -887,6 +887,9 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: Install node-gyp@12
+        run: npm install -g node-gyp@12
+
       - name: build
         shell: cmd
         run: |
@@ -894,7 +897,6 @@ jobs:
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set npm_config_arch=arm64
           set node_version=22.23.0
-          npm install -g node-gyp@12
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
