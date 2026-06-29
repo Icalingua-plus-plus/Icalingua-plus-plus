@@ -888,7 +888,9 @@ jobs:
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
       - name: Install node-gyp@12
-        run: npm install -g node-gyp@12
+        run: |
+          npm install -g node-gyp@12
+          echo "NPM_CONFIG_NODE_GYP=$($env:APPDATA)\npm\node_modules\node-gyp\bin\node-gyp.js" >> $env:GITHUB_ENV
 
       - name: build
         shell: cmd
@@ -897,6 +899,7 @@ jobs:
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set npm_config_arch=arm64
           set node_version=22.23.0
+          set npm_config_node_gyp=%APPDATA%\npm\node_modules\node-gyp\bin\node-gyp.js
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
