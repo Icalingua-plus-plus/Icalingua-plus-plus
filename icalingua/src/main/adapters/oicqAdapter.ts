@@ -2151,7 +2151,7 @@ const adapter: OicqAdapter = {
         const res = await bot.deleteMsg(messageId)
         console.log(res)
         if (!res.error) {
-            ui.deleteMessage(messageId)
+            ui.deleteMessage(messageId, roomId)
             await storage.updateMessage(roomId, messageId, { deleted: true, reveal: false })
         } else {
             ui.notifyError({

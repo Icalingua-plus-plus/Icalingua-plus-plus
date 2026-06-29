@@ -7,7 +7,13 @@ import { ipcMain } from 'electron'
 import { updateAppMenu } from '../ipc/menuManager'
 import { getConfig } from './configManager'
 import { updateTrayIcon } from './trayManager'
-import { sendToMainWindow, sendToRequestWindow, sendToChatWindow, isRoomInChatWindow } from './windowManager'
+import {
+    sendToMainWindow,
+    sendToRequestWindow,
+    sendToChatWindow,
+    isRoomInChatWindow,
+    sendToAllChatWindows,
+} from './windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let selectedRoomId = 0
@@ -106,6 +112,9 @@ export default {
         // 如果提供了 roomId，也发送到对应的独立窗口
         if (roomId && isRoomInChatWindow(roomId)) {
             sendToChatWindow(roomId, 'deleteMessage', messageId)
+        } else {
+            // 如果没有提供 roomId，则尝试在所有独立窗口中删除
+            sendToAllChatWindows('deleteMessage', messageId)
         }
     },
     hideMessage(messageId: string | number, roomId?: number) {
