@@ -891,18 +891,11 @@ jobs:
         shell: cmd
         run: |
           for /f "tokens=*" %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath') do set VS_DIR=%%i
-          if not defined VS_DIR exit /b 1
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" arm64
-          if errorlevel 1 exit /b 1
           set npm_config_arch=arm64
           set node_version=22.19.0
-          pnpm i
-          if errorlevel 1 exit /b 1
-          pnpm deps:woa
-          if errorlevel 1 exit /b 1
-          pnpm build:ci
-          if errorlevel 1 exit /b 1
-          pnpm build:woa
+
+          cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
 
       - name: rename
