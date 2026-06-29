@@ -203,6 +203,13 @@ jobs:
       - name: pnpm install
         run: pnpm install --frozen-lockfile
 
+      - name: Cache arm64 native modules
+        id: cache-arm64-native
+        uses: actions/cache@v4
+        with:
+          path: node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm64
+          key: ${{ runner.os }}-arm64-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: get dist
         uses: actions/download-artifact@v4
         with:
@@ -211,6 +218,7 @@ jobs:
 
       - uses: uraimo/run-on-arch-action@v2.8.1
         name: build native modules using another arch
+        if: steps.cache-arm64-native.outputs.cache-hit != 'true'
         with:
           arch: aarch64
           distro: ubuntu20.04
@@ -291,6 +299,13 @@ jobs:
       - name: pnpm install
         run: pnpm install --frozen-lockfile
 
+      - name: Cache armv7l native modules
+        id: cache-arm-native
+        uses: actions/cache@v4
+        with:
+          path: node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm
+          key: ${{ runner.os }}-armv7l-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: get dist
         uses: actions/download-artifact@v4
         with:
@@ -299,6 +314,7 @@ jobs:
 
       - uses: uraimo/run-on-arch-action@v2.8.1
         name: build native modules using another arch
+        if: steps.cache-arm-native.outputs.cache-hit != 'true'
         with:
           arch: armv7
           distro: ubuntu20.04
