@@ -2378,7 +2378,11 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     label: '多选',
                     type: 'normal',
                     click: () => {
-                        ui.startForward(message._id as string)
+                        if (win !== getMainWindow()) {
+                            win.webContents.send('startForward', message._id as string)
+                        } else {
+                            ui.startForward(message._id as string)
+                        }
                     },
                 }),
             )
