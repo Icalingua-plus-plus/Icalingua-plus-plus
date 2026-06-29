@@ -887,12 +887,21 @@ jobs:
           REF: ${{ github.REF }}
           GIT_VER: ${{ steps.git-ver.outputs.version }}
 
+      - name: Cache arm64 native modules
+        id: cache-arm64-native
+        uses: actions/cache@v4
+        with:
+          path: node_modules/sqlite3/lib/binding/napi-v6-win32-unknown-arm64
+          key: ${{ runner.os }}-arm64-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+
       - name: Install node-gyp@12
+        if: steps.cache-arm64-native.outputs.cache-hit != 'true'
         run: |
           npm install -g node-gyp@12
           echo "NPM_CONFIG_NODE_GYP=$($env:APPDATA)\npm\node_modules\node-gyp\bin\node-gyp.js" >> $env:GITHUB_ENV
 
-      - name: build
+      - name: build native
+        if: steps.cache-arm64-native.outputs.cache-hit != 'true'
         shell: cmd
         run: |
           for /f "tokens=*" %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath') do set VS_DIR=%%i
@@ -901,7 +910,13 @@ jobs:
           set node_version=22.23.0
           set npm_config_node_gyp=%APPDATA%\npm\node_modules\node-gyp\bin\node-gyp.js
 
-          cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
+          cmd.exe /c "pnpm deps:woa"
+        working-directory: icalingua
+
+      - name: build
+        run: |
+          pnpm build:ci
+          pnpm build:woa
         working-directory: icalingua
 
       - name: rename
