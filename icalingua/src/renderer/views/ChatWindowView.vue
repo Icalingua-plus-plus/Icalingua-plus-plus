@@ -262,6 +262,7 @@ export default {
         ipcRenderer.removeAllListeners('gotoMessage')
         ipcRenderer.removeAllListeners('sendDice')
         ipcRenderer.removeAllListeners('sendRps')
+        ipcRenderer.removeAllListeners('closePanel')
     },
     methods: {
         setupIpcListeners() {
@@ -355,6 +356,11 @@ export default {
             // 发送猜拳（菜单操作）
             ipcRenderer.on('sendRps', (_) => {
                 this.sendRps(0)
+            })
+
+            // 关闭表情面板
+            ipcRenderer.on('closePanel', () => {
+                this.panel = ''
             })
         },
 

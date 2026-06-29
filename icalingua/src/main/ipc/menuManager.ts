@@ -2594,7 +2594,13 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
         menu.push({
             label: '关闭面板',
             type: 'normal',
-            click: ui.closePanel,
+            click: () => {
+                if (win !== getMainWindow()) {
+                    win.webContents.send('closePanel')
+                } else {
+                    ui.closePanel()
+                }
+            },
         })
     }
     Menu.buildFromTemplate(menu).popup({ window: win, ...pos })
