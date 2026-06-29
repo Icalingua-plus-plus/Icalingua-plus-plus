@@ -65,8 +65,8 @@ importers:
         specifier: ^2.28.0
         version: 2.28.0
       oicq-icalingua-plus-plus:
-        specifier: ^1.26.4
-        version: 1.26.4
+        specifier: ^1.26.5
+        version: 1.26.5
       pangu:
         specifier: ^4.0.7
         version: 4.0.7
@@ -333,8 +333,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       oicq-icalingua-plus-plus:
-        specifier: ^1.26.4
-        version: 1.26.4
+        specifier: ^1.26.5
+        version: 1.26.5
       pg:
         specifier: ^8.22.0
         version: 8.22.0
@@ -2788,6 +2788,10 @@ packages:
     resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
     engines: {node: '>=14.14'}
 
+  fs-extra@11.3.6:
+    resolution: {integrity: sha512-w8ZNZr2mKIc7qeNaQ9AVPT1+iFaI+Avd4xudVOvdDJ8VytREi1Ft5Ih7hd9jjehod8vAM5GMsfQ/TpPf4EyoEA==}
+    engines: {node: '>=14.14'}
+
   fs-extra@7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
     engines: {node: '>=6 <7 || >=8'}
@@ -3655,8 +3659,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  oicq-icalingua-plus-plus@1.26.4:
-    resolution: {integrity: sha512-tjzCs6Hcpj/6UUZ0SZINSNc5njkjHfva0tmpkVzJ6oiElwyaO1KaOdNwI1fiPeMVLL95XohXgwJBP+PBUXiIEg==}
+  oicq-icalingua-plus-plus@1.26.5:
+    resolution: {integrity: sha512-1PhTq8otkcywyEZ3Rh8pa2CL+KhU7uLps/16YwJeWss34mZXUa+v6iq2cF+PzS/nSdkzSekl237KkXmrsdW7rg==}
     engines: {node: '>= v12.16'}
     hasBin: true
 
@@ -5603,7 +5607,7 @@ snapshots:
     dependencies:
       cross-dirname: 0.1.0
       debug: 4.4.3
-      fs-extra: 11.3.5
+      fs-extra: 11.3.6
       minimist: 1.2.8
       postject: 1.0.0-alpha.6
     transitivePeerDependencies:
@@ -8008,6 +8012,13 @@ snapshots:
       jsonfile: 6.2.1
       universalify: 2.0.1
 
+  fs-extra@11.3.6:
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.2.1
+      universalify: 2.0.1
+    optional: true
+
   fs-extra@7.0.1:
     dependencies:
       graceful-fs: 4.2.11
@@ -8861,7 +8872,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  oicq-icalingua-plus-plus@1.26.4:
+  oicq-icalingua-plus-plus@1.26.5:
     dependencies:
       axios: 1.18.1
       jsqr: 1.4.0
