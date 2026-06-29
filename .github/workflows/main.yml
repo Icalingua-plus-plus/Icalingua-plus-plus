@@ -871,7 +871,7 @@ jobs:
         shell: cmd
         run: |
           set npm_config_arch=arm64
-          set node_version=22.19.0
+          set node_version=22.23.0
           mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64
           curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\arm64\node.lib https://nodejs.org/download/release/v%node_version%/win-arm64/node.lib
           pnpm install --frozen-lockfile
@@ -893,7 +893,8 @@ jobs:
           for /f "tokens=*" %%i in ('"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath') do set VS_DIR=%%i
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set npm_config_arch=arm64
-          set node_version=22.19.0
+          set node_version=22.23.0
+          npm config set msvs_version 2022
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
