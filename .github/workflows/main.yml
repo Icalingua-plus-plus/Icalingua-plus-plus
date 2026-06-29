@@ -894,7 +894,7 @@ jobs:
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" arm64
           set npm_config_arch=arm64
           set node_version=22.23.0
-          npm config set msvs_version 2022
+          set GYP_MSVS_VERSION=2022
 
           cmd.exe /c "pnpm i & pnpm deps:woa & pnpm build:ci & pnpm build:woa"
         working-directory: icalingua
