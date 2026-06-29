@@ -31,6 +31,8 @@
             :loading-rooms="false"
             :text-formatting="true"
             :linkify="linkify"
+            :account="account"
+            :username="username"
             :usePanguJsRecv="usePanguJsRecv"
             @fetch-messages="loadMoreMessages"
             @download-image="downloadImage"
@@ -68,6 +70,8 @@ export default {
             roomId: 0,
             senderName: '',
             loading: false,
+            account: 0,
+            username: '',
         }
     },
     async created() {
@@ -75,6 +79,8 @@ export default {
         const settings = await ipc.getSettings()
         this.linkify = settings.linkify
         this.usePanguJsRecv = settings.usePanguJsRecv
+        this.account = await ipc.getUin()
+        this.username = await ipc.getNick()
         ipcRenderer.on('initMemberHistory', async (event, { senderId, roomId, senderName }) => {
             this.senderId = senderId
             this.roomId = roomId
@@ -84,8 +90,21 @@ export default {
                 document.title = `${senderName} 在所有群的发言记录`
                 this.room.roomName = `${senderName} 在所有群的发言记录`
             } else {
-                document.title = `${senderName} 的发言记录`
-                this.room.roomName = `${senderName} 的发言记录`
+                let groupName = ''
+                let groupNumber = ''
+                try {
+                    const roomInfo = await ipc.getRoomInfo(roomId)
+                    if (roomInfo && roomInfo.roomName) {
+                        groupName = roomInfo.roomName
+                        if (roomId < 0) {
+                            groupNumber = String(-roomId)
+                        }
+                    }
+                } catch (e) {}
+                const titleSuffix =
+                    groupName && groupNumber ? `在 ${groupName}（${groupNumber}）` : groupName ? `在 ${groupName}` : ''
+                document.title = `${senderName} ${titleSuffix}的发言记录`
+                this.room.roomName = `${senderName} ${titleSuffix}的发言记录`
             }
             // 加载第一页消息
             await this.fetchInitialMessages()
@@ -97,11 +116,10 @@ export default {
     methods: {
         async fetchInitialMessages() {
             this.loading = true
+            let msgs
             try {
-                const msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, 0)
-                if (msgs && msgs.length) {
-                    this.messages = this.processMessages(msgs)
-                }
+                msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, 0)
+                console.log('Fetched initial messages:', msgs)
                 if (!msgs || msgs.length < 20) {
                     this.messagesLoaded = true
                 }
@@ -110,9 +128,14 @@ export default {
                 this.messagesLoaded = true
             }
             this.loading = false
-            // 标记准备好，Room 组件开始渲染
+            // 先显示 Room 组件（messages 为空），让 watcher 以空数组初始化
             this.ready = true
-            // 等 Room 渲染完成后滚动到底部
+            // 等待 Room 组件挂载完成
+            await this.$nextTick()
+            if (msgs && msgs.length) {
+                this.messages = this.processMessages(msgs)
+            }
+            // 等消息渲染完成后滚动到底部
             this.$nextTick(() => {
                 setTimeout(() => {
                     if (this.$refs.room && this.$refs.room.$refs.scrollContainer) {
