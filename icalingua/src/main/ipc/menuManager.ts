@@ -2473,6 +2473,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                 menu.append(
                     new MenuItem({
                         label: '转发',
+                        visible: win === getMainWindow(),
                         click: () => {
                             ui.forwardSingleMessage(message._id as string)
                         },

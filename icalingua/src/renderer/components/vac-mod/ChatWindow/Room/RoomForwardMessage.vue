@@ -3,6 +3,7 @@
         <div v-if="showForwardPanel" class="vac-forward-container">
             <div class="vac-forward-box">
                 <el-button
+                    v-if="!standalone"
                     type="primary"
                     @click="stopForward(true, false)"
                     :disabled="msgsToForward.length === 0"
@@ -10,6 +11,7 @@
                     >逐条转发</el-button
                 >
                 <el-button
+                    v-if="!standalone"
                     type="primary"
                     @click="stopForward(true)"
                     @contextmenu.prevent.native="stopForward(true, true, true)"
@@ -69,6 +71,7 @@ export default {
         account: { type: Number, required: true },
         username: { type: String, required: true },
         roomId: { type: [String, Number], required: true },
+        standalone: { type: Boolean, default: false },
     },
     methods: {
         stopForward(isCreate, multi = true, anonymous = false) {
@@ -122,6 +125,7 @@ export default {
                             replyMessage: msg.replyMessage,
                             imgpath: msg.file ? msg.file.url : undefined,
                             at: [],
+                            roomId: this.roomId,
                         }
                         ipc.sendMessage(msgToSend)
                         count++

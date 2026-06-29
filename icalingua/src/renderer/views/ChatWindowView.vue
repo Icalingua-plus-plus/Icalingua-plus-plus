@@ -40,6 +40,7 @@
                     :usePanguJsRecv="usePanguJsRecv"
                     :isSteamVrRunning="false"
                     :canLoadAfter="isInMiddle"
+                    :standalone="true"
                     @send-message="sendMessage"
                     @open-file="openImage"
                     @pokefriend="pokeFriend"

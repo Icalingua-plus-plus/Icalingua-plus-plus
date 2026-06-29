@@ -238,6 +238,7 @@
                 :account="account"
                 :username="username"
                 :roomId="roomId"
+                :standalone="standalone"
             />
             <div
                 style="padding-top: 10px; padding-left: 10px; color: var(--panel-color-desc)"
@@ -547,6 +548,7 @@ export default {
         usePanguJsRecv: { type: Boolean, required: false, default: false },
         isSteamVrRunning: { type: Boolean, required: false, default: false },
         canLoadAfter: { type: Boolean, required: false, default: false },
+        standalone: { type: Boolean, default: false },
     },
     data() {
         return {
