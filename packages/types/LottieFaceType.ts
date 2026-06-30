@@ -105,6 +105,13 @@ export const faceIdToLottie = new Map([
     [467, { packId: '4', lottieId: '15' }],
     [468, { packId: '4', lottieId: '16' }],
     [469, { packId: '4', lottieId: '17' }],
+    [472, { packId: '4', lottieId: '74' }],
+    [474, { packId: '4', lottieId: '76' }],
+    [475, { packId: '4', lottieId: '77' }],
+    [476, { packId: '4', lottieId: '78' }],
+    [477, { packId: '4', lottieId: '79' }],
+    [478, { packId: '4', lottieId: '80' }],
+    [479, { packId: '4', lottieId: '81' }],
 
     [382, { packId: '5', lottieId: '1' }],
     [383, { packId: '5', lottieId: '2' }],
