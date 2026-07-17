@@ -217,6 +217,10 @@ export default {
 
 .el-tabs__header {
     margin: unset !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--panel-background);
 }
 
 .el-tabs__item {
@@ -246,6 +250,7 @@ export default {
 
 .contacts-content {
     overflow: auto;
+    scrollbar-gutter: stable;
 }
 
 .icon-button {
