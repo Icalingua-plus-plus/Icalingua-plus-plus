@@ -1,11 +1,30 @@
 <template>
-    <div v-if="style" :style="style" ref="lavContainer" />
+    <video
+        v-if="videoUrl"
+        ref="videoEl"
+        :src="videoUrl"
+        :style="style"
+        :autoplay="autoPlay"
+        muted
+        playsinline
+        @loadeddata="onVideoLoaded"
+        @ended="onVideoEnded"
+        @timeupdate="onVideoTimeUpdate"
+    />
+    <div v-else-if="style" :style="style" ref="lavContainer" />
 </template>
 
 <script>
 import lottie from 'lottie-web'
 import fs from 'fs'
 import path from 'path'
+import {
+    hasCache,
+    getCacheUrl,
+    isSupported as isWebmSupported,
+    queueRender,
+    onRenderComplete,
+} from '../utils/lottieWebmCache'
 
 const lottieJsonCache = new Map()
 
@@ -74,27 +93,23 @@ export default {
         style: null,
         isVisible: false,
         observer: null,
+        videoUrl: null,
+        isReplaying: false,
     }),
+    computed: {
+        isTwoSegment() {
+            return this.pathResult && this.pathResult !== this.path
+        },
+    },
     mounted() {
         this.init()
-        // 使用 IntersectionObserver 替代 scroll 事件监听
-        // 浏览器原生优化，非阻塞，不会随滚动频繁触发
-        this.observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.target !== this.$el) continue
-                    if (entry.isIntersecting) {
-                        this.onEnterViewport()
-                    } else {
-                        this.onLeaveViewport()
-                    }
-                }
-            },
-            { rootMargin: '100px' }, // 提前 100px 开始加载，减少视觉空白
-        )
-        this.$nextTick(() => {
-            if (this.$el) this.observer.observe(this.$el)
-        })
+        this.setupObserver()
+        // 如果已有 WebM 缓存，直接切换到视频模式
+        this.tryUseVideoCache()
+        // 没有缓存则立即排队后台渲染（离屏渲染，不依赖组件可见性）
+        if (!this.videoUrl) {
+            this.$nextTick(() => this.queueWebmRender())
+        }
     },
     destroyed() {
         if (this.observer) {
@@ -188,14 +203,50 @@ export default {
                 this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax),
             )
         },
+        tryUseVideoCache() {
+            if (!isWebmSupported()) return
+            const jsonData = loadLottieJsonData(this.path)
+            let resultData = null
+            if (this.pathResult && this.pathResult !== this.path) {
+                try {
+                    resultData = loadLottieJsonData(this.pathResult)
+                } catch {
+                    /* ignore */
+                }
+            }
+            if (hasCache(jsonData, resultData)) {
+                this.videoUrl = getCacheUrl(jsonData, resultData)
+            }
+        },
+        setupObserver() {
+            this.observer = new IntersectionObserver(
+                (entries) => {
+                    for (const entry of entries) {
+                        if (entry.target !== this.$el) continue
+                        if (entry.isIntersecting) {
+                            this.onEnterViewport()
+                        } else {
+                            this.onLeaveViewport()
+                        }
+                    }
+                },
+                { rootMargin: '100px' },
+            )
+            this.$nextTick(() => {
+                if (this.$el) this.observer.observe(this.$el)
+            })
+        },
         onEnterViewport() {
             if (!this.path) return
-            if (!this.anim) {
-                // 首次进入视口：创建动画
+            this.isVisible = true
+            if (this.videoUrl && this.$refs.videoEl) {
+                // 视频模式：直接恢复播放
+                this.$refs.videoEl.play()
+            } else if (!this.anim) {
+                // 首次进入视口：创建 lottie 动画
                 this.initAnimation()
             } else {
                 // 再次进入视口：恢复播放（而非重建）
-                this.isVisible = true
                 this.anim.play()
                 if (this.loopDelayMin > 0) {
                     this.executeLoop()
@@ -208,20 +259,131 @@ export default {
                 clearTimeout(this.loopTimer)
                 this.loopTimer = null
             }
-            if (this.anim) {
-                // 暂停而非销毁，下次进入时直接恢复，避免重复 IO 和解析
+            if (this.videoUrl && this.$refs.videoEl) {
+                // 视频模式：暂停
+                this.$refs.videoEl.pause()
+            } else if (this.anim) {
+                // lottie 模式：暂停而非销毁，下次进入时直接恢复
                 this.anim.pause()
+            }
+        },
+        /**
+         * 将当前动画加入后台 WebM 渲染队列
+         * 由 lottieWebmCache 串行执行，不阻塞前台
+         */
+        queueWebmRender() {
+            if (!isWebmSupported() || !this.path) {
+                console.log('[LottieAnim]', 'WebM not supported or no path')
+                return
+            }
+            const jsonData = loadLottieJsonData(this.path)
+            let resultData = null
+            if (this.pathResult && this.pathResult !== this.path) {
+                try {
+                    resultData = loadLottieJsonData(this.pathResult)
+                } catch {
+                    /* result JSON 不存在，忽略 */
+                }
+            }
+            if (hasCache(jsonData, resultData)) return
+            console.log('[LottieAnim]', 'Queuing render for', this.path)
+            queueRender(this.path, this.pathResult || undefined, jsonData, resultData)
+            // 如果渲染已完成（缓存命中），queueRender 内部会 skip
+            // 这里注册监听，下次渲染完成后自动切换到视频模式
+            onRenderComplete(this.path, this.pathResult || undefined, jsonData, resultData, () => {
+                this.videoUrl = getCacheUrl(jsonData, resultData)
+                if (this.anim) {
+                    this.anim.destroy()
+                    this.anim = null
+                }
+                // v-if 切换后 DOM 重建，需要重新观察新元素
+                this.$nextTick(() => {
+                    if (this.observer && this.$el) {
+                        this.observer.disconnect()
+                        this.observer.observe(this.$el)
+                    }
+                    // 根据当前可见性决定播放或暂停
+                    if (this.$refs.videoEl) {
+                        if (this.isVisible) {
+                            this.$refs.videoEl.play()
+                        } else {
+                            this.$refs.videoEl.pause()
+                        }
+                    }
+                })
+            })
+        },
+        onVideoLoaded() {
+            if (this.$refs.videoEl) {
+                this.$refs.videoEl.playbackRate = this.speed
+            }
+            this.$emit('AnimControl', this.$refs.videoEl)
+        },
+        onVideoEnded() {
+            if (!this.loop || this.isTwoSegment) return
+            this.replayVideo()
+        },
+        onVideoTimeUpdate() {
+            const el = this.$refs.videoEl
+            if (!el || !this.loop || this.isTwoSegment || el.paused || this.isReplaying) return
+            if (el.duration && el.duration > 0 && el.currentTime >= el.duration - 0.1) {
+                this.replayVideo()
+            }
+        },
+        replayVideo() {
+            // 两段式动画（先播A再播B）不该循环，单段 pathResult===path 的可以循环
+            if (!this.loop || this.isTwoSegment || this.isReplaying) return
+            const el = this.$refs.videoEl
+            if (!el) return
+            this.isReplaying = true
+            if (this.loopDelayMin > 0) {
+                const delay = this.getRandomInt(
+                    this.loopDelayMin,
+                    this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax,
+                )
+                this.loopTimer = setTimeout(() => {
+                    el.currentTime = 0
+                    el.play()
+                    // seek 完成后才解除防重入
+                    el.addEventListener(
+                        'seeked',
+                        () => {
+                            this.isReplaying = false
+                        },
+                        { once: true },
+                    )
+                }, delay)
+            } else {
+                el.currentTime = 0
+                el.play()
+                el.addEventListener(
+                    'seeked',
+                    () => {
+                        this.isReplaying = false
+                    },
+                    { once: true },
+                )
             }
         },
     },
     watch: {
-        path: function (newVal, oldVal) {
-            // path 变化时销毁旧动画，下次 IntersectionObserver 触发时重建
+        path() {
+            // 完整清理旧状态
+            this.videoUrl = null
             if (this.anim) {
                 this.anim.destroy()
                 this.anim = null
             }
+            if (this.observer) {
+                this.observer.disconnect()
+                this.observer = null
+            }
+            if (this.loopTimer) {
+                clearTimeout(this.loopTimer)
+                this.loopTimer = null
+            }
             this.init()
+            this.setupObserver()
         },
     },
 }
