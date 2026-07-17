@@ -1849,6 +1849,10 @@ const adapter: OicqAdapter = {
             const filepath = path.join(app.getPath('userData'), 'data', String(form.username))
             const devicepath = path.join(filepath, `device-${String(form.username)}.json`)
             if (!fs.existsSync(devicepath)) adapter.randomDevice(Number(form.username))
+            const apkInfo = form.apkInfo ? JSON.parse(form.apkInfo) : undefined
+            if (apkInfo && apkInfo.sign) {
+                apkInfo.sign = Buffer.from(apkInfo.sign, 'hex')
+            }
             bot = createClient(Number(form.username), {
                 platform: Number(form.protocol),
                 data_dir: path.join(app.getPath('userData'), '/data'),
@@ -1859,6 +1863,7 @@ const adapter: OicqAdapter = {
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
                 useNT: form.useNT,
+                apk_info: apkInfo,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {

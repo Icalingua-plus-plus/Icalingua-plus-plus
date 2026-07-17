@@ -33,6 +33,7 @@ const emptyLoginForm: LoginForm = {
     protocol: 5,
     autologin: false,
     onlineStatus: OnlineStatusType.Online,
+    apkInfo: '',
 }
 
 const CONFIG_PATH = argv.config || 'config.yaml'

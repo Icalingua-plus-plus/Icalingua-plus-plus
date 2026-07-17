@@ -74,6 +74,18 @@
                 <span class="el-form-item__label">Use NT's register</span>
                 <el-switch v-model="form.useNT" />
             </el-form-item>
+            <el-form-item prop="apkInfo" v-show="form.protocol === '-1'">
+                <span class="el-form-item__label">Custom APK Info (JSON)</span>
+                <el-tooltip content="可选，自定义 oicq 协议参数" placement="top">
+                    <el-input
+                        type="textarea"
+                        :rows="3"
+                        placeholder='{ "id": "com.tencent.mobileqq", "name": "com.tencent.mobileqq", "version": "9.0.95" }'
+                        v-model="apkInfoStr"
+                        @blur="onApkInfoBlur"
+                    />
+                </el-tooltip>
+            </el-form-item>
             <el-form-item label="Storage engine">
                 <el-select v-model="form.storageType" size="small">
                     <el-option label="MongoDB" value="mdb">MongoDB</el-option>
@@ -165,6 +177,7 @@ export default {
              * @type LoginForm
              */
             form: {},
+            apkInfoStr: '',
             rules: {
                 username: [{ required: true, trigger: 'blur' }],
             },
@@ -269,6 +282,10 @@ export default {
                     name: 'Android TIM',
                     protocols: [{ label: '3.5.1', value: '10' }],
                 },
+                {
+                    name: 'Custom',
+                    protocols: [{ label: 'Custom', value: '-1' }],
+                },
             ],
         }
     },
@@ -282,6 +299,7 @@ export default {
         this.ver = await ipc.getVersion()
         const _form = await ipc.getAccount()
         if (!_form.signAPIAddress) _form.signAPIAddress = ''
+        this.apkInfoStr = _form.apkInfo || ''
 
         if (_form.protocol != null) _form.protocol = String(_form.protocol)
         this.form = _form
@@ -371,6 +389,19 @@ export default {
                         }, 60 * 1000)
                     }
                     const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
+                    if (this.form.protocol === '-1') {
+                        const apkStr = this.apkInfoStr.trim()
+                        if (apkStr) {
+                            try {
+                                JSON.parse(apkStr)
+                            } catch (e) {
+                                this.$message.error('APK Info JSON 格式错误: ' + e.message)
+                                this.disabled = false
+                                return
+                            }
+                        }
+                        submitForm.apkInfo = apkStr || '{}'
+                    }
                     await ipcRenderer.send('createBot', submitForm)
                 } else {
                     return false
@@ -410,6 +441,15 @@ export default {
                     message: `已尝试随机生成 ${this.form.username} 的设备消息`,
                 })
             })
+        },
+        onApkInfoBlur() {
+            const val = this.apkInfoStr.trim()
+            if (!val) return
+            try {
+                JSON.parse(val)
+            } catch (e) {
+                this.$message.error('APK Info JSON 格式错误: ' + e.message)
+            }
         },
     },
 }

@@ -17,6 +17,8 @@ type LoginForm = {
     signAPIKey?: string
     forceAlgoT544?: boolean
     useNT?: boolean
+    /** 自定义 APK 信息，JSON 字符串，传给 createClient 的 apk_info 参数 */
+    apkInfo?: string
 }
 
 export default LoginForm
