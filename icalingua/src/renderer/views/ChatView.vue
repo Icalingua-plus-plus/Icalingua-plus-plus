@@ -954,12 +954,24 @@ Chromium ${process.versions.chrome}`
                 this.messages = []
             }
             const _roomId = this.selectedRoom.roomId
-            const msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            let msgs2add
+            try {
+                msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+            } catch (e) {
+                console.error('fetchMessage failed:', e)
+                return
+            }
             let nonSystemMessageCount = 0
             if (number) {
                 while (nonSystemMessageCount < number) {
                     if (_roomId !== this.selectedRoom.roomId) return
-                    const msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
+                    let msgs
+                    try {
+                        msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
+                    } catch (e) {
+                        console.error('fetchMessage loop failed:', e)
+                        break
+                    }
                     nonSystemMessageCount += msgs.filter((e) => !e.system).length
                     msgs2add.unshift(...msgs)
                     if (!msgs.length) {
@@ -972,13 +984,18 @@ Chromium ${process.versions.chrome}`
                 if (_roomId !== this.selectedRoom.roomId) return
 
                 const existingIds = new Set(this.messages.map((e) => e._id))
-                if (msgs2add.some((e) => existingIds.has(e._id))) return
-                if (msgs2add.length) {
-                    for (const msg of msgs2add) {
+                // 过滤掉已经存在的消息，而不是全部丢弃
+                // 旧逻辑 some+return 会导致 messagesLoaded 永远不被设为 true，
+                // 进而 Room.vue 的 loadingMessages 一直是 true，消息完全空白
+                const newMsgs = msgs2add.filter((e) => !existingIds.has(e._id))
+                if (newMsgs.length) {
+                    for (const msg of newMsgs) {
                         msg.__v_skip = true
                     }
-                    this.messages = [...msgs2add, ...this.messages]
-                } else this.messagesLoaded = true
+                    this.messages = [...newMsgs, ...this.messages]
+                } else {
+                    this.messagesLoaded = true
+                }
 
                 if (at) {
                     const atMessages = this.messages.filter((e) => e.at)

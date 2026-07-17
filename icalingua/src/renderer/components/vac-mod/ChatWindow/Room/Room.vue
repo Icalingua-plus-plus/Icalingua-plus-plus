@@ -719,6 +719,12 @@ export default {
                 }
             }
 
+            // 防御性修复：只要消息列表非空就清除 loading 状态
+            // 解决 addMessage 与 fetchMessage 竞态导致 loadingMessages 永远为 true 的问题
+            if (newLen > 0 && this.loadingMessages) {
+                this.loadingMessages = false
+            }
+
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
             } else if (newVal && newLen && !this.scrollIcon && !(oldVal && newLen === oldLen) && !this.canLoadAfter) {
