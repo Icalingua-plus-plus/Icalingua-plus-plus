@@ -5,6 +5,18 @@
 <script>
 import lottie from 'lottie-web'
 import fs from 'fs'
+import path from 'path'
+
+const lottieJsonCache = new Map()
+
+function loadLottieJsonData(filePath) {
+    if (lottieJsonCache.has(filePath)) {
+        return lottieJsonCache.get(filePath)
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    lottieJsonCache.set(filePath, data)
+    return data
+}
 
 export default {
     props: {
@@ -55,27 +67,51 @@ export default {
         name: 'lottie-animation',
         rendererSettings: {
             scaleMode: 'centerCrop',
-            clearCanvas: true,
             progressiveLoad: true,
             hideOnTransparent: true,
         },
         anim: null,
         style: null,
+        isVisible: false,
+        observer: null,
     }),
     mounted() {
         this.init()
-        window.addEventListener('scroll', this.scrollHandle, true)
+        // 使用 IntersectionObserver 替代 scroll 事件监听
+        // 浏览器原生优化，非阻塞，不会随滚动频繁触发
+        this.observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.target !== this.$el) continue
+                    if (entry.isIntersecting) {
+                        this.onEnterViewport()
+                    } else {
+                        this.onLeaveViewport()
+                    }
+                }
+            },
+            { rootMargin: '100px' }, // 提前 100px 开始加载，减少视觉空白
+        )
+        this.$nextTick(() => {
+            if (this.$el) this.observer.observe(this.$el)
+        })
     },
     destroyed() {
-        if (this.anim) this.anim.destroy() // Releases resources. The DOM element will be emptied.
-        window.removeEventListener('scroll', this.scrollHandle, true)
-        console.log('lottie animation destroyed.')
+        if (this.observer) {
+            this.observer.disconnect()
+            this.observer = null
+        }
+        if (this.loopTimer) {
+            clearTimeout(this.loopTimer)
+            this.loopTimer = null
+        }
+        if (this.anim) {
+            this.anim.destroy()
+            this.anim = null
+        }
     },
     methods: {
-        async loadJsonData(path) {
-            return JSON.parse(fs.readFileSync(path, 'utf-8'))
-        },
-        async init() {
+        init() {
             this.style = {
                 width: this.width !== -1 ? `${this.width}px` : '100%',
                 height: this.height !== -1 ? `${this.height}px` : '100%',
@@ -83,12 +119,12 @@ export default {
                 margin: '0 auto',
             }
         },
-        async initAnimation() {
-            let jsonData = await this.loadJsonData(this.path)
+        initAnimation() {
+            const jsonData = loadLottieJsonData(this.path)
             let jsonResultData = null
             if (this.pathResult && this.pathResult !== this.path) {
                 try {
-                    jsonResultData = await this.loadJsonData(this.pathResult)
+                    jsonResultData = loadLottieJsonData(this.pathResult)
                 } catch (error) {
                     console.error(error)
                 }
@@ -116,7 +152,7 @@ export default {
                 this.anim.autoplay = false
                 this.executeLoop()
             }
-            //如果有第二个动画，就等第一个动画播放完毕后再播放第二个动画
+            // 如果有第二个动画，就等第一个动画播放完毕后再播放第二个动画
             if (jsonResultData) {
                 this.anim.addEventListener('complete', () => {
                     this.anim.destroy() // Releases resources. The DOM element will be emptied.
@@ -131,6 +167,8 @@ export default {
                     this.anim.setSpeed(this.speed)
                 })
             }
+
+            this.isVisible = true
         },
         getRandomInt(min, max) {
             min = Math.ceil(min)
@@ -139,36 +177,50 @@ export default {
             return Math.floor(Math.random() * (max - min)) + min
         },
         executeLoop() {
+            if (!this.anim || !this.isVisible) return
             this.anim.play()
-            setTimeout(
+            this.loopTimer = setTimeout(
                 () => {
+                    if (!this.anim || !this.isVisible) return
                     this.anim.stop()
                     this.executeLoop()
                 },
                 this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax),
             )
         },
-        scrollHandle() {
-            const offset = this.$el.parentElement.getBoundingClientRect()
-            const offsetTop = offset.top
-            const offsetBottom = offset.bottom
-            if (offsetTop <= window.innerHeight && offsetBottom >= 0) {
-                if (!this.anim && this.path) {
-                    this.initAnimation()
-                }
-                // console.log('进入可视区域');
-                if (this.anim) this.anim.play() // Play the animation if it is in the viewport
+        onEnterViewport() {
+            if (!this.path) return
+            if (!this.anim) {
+                // 首次进入视口：创建动画
+                this.initAnimation()
             } else {
-                // console.log('移出可视区域');
-                if (this.anim) {
-                    this.anim.destroy() // Destroy the animation if it is not in the viewport
-                    this.anim = null
+                // 再次进入视口：恢复播放（而非重建）
+                this.isVisible = true
+                this.anim.play()
+                if (this.loopDelayMin > 0) {
+                    this.executeLoop()
                 }
+            }
+        },
+        onLeaveViewport() {
+            this.isVisible = false
+            if (this.loopTimer) {
+                clearTimeout(this.loopTimer)
+                this.loopTimer = null
+            }
+            if (this.anim) {
+                // 暂停而非销毁，下次进入时直接恢复，避免重复 IO 和解析
+                this.anim.pause()
             }
         },
     },
     watch: {
         path: function (newVal, oldVal) {
+            // path 变化时销毁旧动画，下次 IntersectionObserver 触发时重建
+            if (this.anim) {
+                this.anim.destroy()
+                this.anim = null
+            }
             this.init()
         },
     },
