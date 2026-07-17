@@ -71,7 +71,7 @@ import sleep from '../utils/sleep'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import formatDuration from '../utils/formatDuration'
-import { deleteUploadedFile, getUploadedFile } from '../utils/uploadFileManager'
+import { deleteUploadedFile, getUploadedFilePath, getUploadedFileName } from '../utils/uploadFileManager'
 
 let bot: Client
 let storage: StorageProvider
@@ -1233,10 +1233,16 @@ const adapter = {
         if (!room) room = await storage.getRoom(roomId)
         if (!roomId) roomId = room.roomId
         if (file && ((file.type && !file.type.includes('image') && !file.type.startsWith('audio')) || !file.type)) {
-            const uploadedFile = getUploadedFile(file.path)
+            const filePath = getUploadedFilePath(file.path)
+            const fileName = getUploadedFileName(file.path)
+            if (!filePath || !fileName) {
+                clients.messageError('文件上传失败：找不到已上传的文件')
+                clients.closeLoading()
+                return
+            }
             //群文件
             if (roomId > 0) {
-                bot.sendFile(roomId, uploadedFile.buffer, uploadedFile.fileName)
+                bot.sendFile(roomId, filePath, fileName)
                     .then(async (data) => {
                         if (data.error) {
                             clients.notifyError({ title: '文件上传失败', message: data.error.message })
@@ -1257,7 +1263,7 @@ const adapter = {
                             type: file.type,
                             size: file.size,
                             url: '',
-                            name: uploadedFile.fileName,
+                            name: fileName,
                         }
                         message.files.push(message.file)
                         const parsed = Buffer.from(data.data.message_id, 'base64')
@@ -1278,7 +1284,7 @@ const adapter = {
                     })
             } else {
                 const gfs = bot.acquireGfs(-roomId)
-                gfs.upload(uploadedFile.buffer, undefined, uploadedFile.fileName)
+                gfs.upload(filePath, '/', fileName)
                     .catch((e) => {
                         console.error(e)
                         clients.messageError(e.message + '(' + e.code + ')')

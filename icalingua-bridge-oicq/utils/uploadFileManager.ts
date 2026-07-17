@@ -118,17 +118,23 @@ export const requestUpload = (
         const allUploaded = file.uploadedOffsets.size === totalChunks
 
         if (allUploaded) {
-            // 验证文件完整性
-            try {
-                const buffer = fs.readFileSync(file.filePath)
-                const fileHash = crypto.createHash('sha256').update(buffer).digest('hex')
+            // 验证文件完整性（流式计算 hash，避免一次性读入整个文件）
+            const stream = fs.createReadStream(file.filePath)
+            const hashCompute = crypto.createHash('sha256')
+            stream.on('data', (chunk) => hashCompute.update(chunk))
+            stream.on('end', () => {
+                const fileHash = hashCompute.digest('hex')
                 if (fileHash === hash) {
                     cb({ allSuccess: true, uploaded: Array.from(file.uploadedOffsets) })
-                    return
+                } else {
+                    cb({ allSuccess: false, uploaded: Array.from(file.uploadedOffsets) })
                 }
-            } catch (e) {
+            })
+            stream.on('error', (e) => {
                 console.error('Failed to verify file:', e)
-            }
+                cb({ allSuccess: false, uploaded: Array.from(file.uploadedOffsets) })
+            })
+            return
         }
 
         cb({ allSuccess: false, uploaded: Array.from(file.uploadedOffsets) })
@@ -212,36 +218,11 @@ export const getUploadedFileUri = (hash: string): string | undefined => {
 }
 
 /**
- * 获取已上传文件的 Buffer（供 oicq 使用）
- */
-export const getUploadedFileBuffer = (hash: string): Buffer | undefined => {
-    const file = fileMap.get(hash)
-    if (!file) return undefined
-    try {
-        return fs.readFileSync(file.filePath)
-    } catch (e) {
-        console.error('Failed to read uploaded file:', e)
-        return undefined
-    }
-}
-
-/**
  * 获取已上传文件的文件名
  */
 export const getUploadedFileName = (hash: string): string | undefined => {
     const file = fileMap.get(hash)
     return file?.fileName
-}
-
-/**
- * 获取已上传文件的信息（兼容旧 API）
- */
-export const getUploadedFile = (hash: string): { fileName: string; buffer: Buffer } | undefined => {
-    const file = fileMap.get(hash)
-    if (!file) return undefined
-    const buffer = getUploadedFileBuffer(hash)
-    if (!buffer) return undefined
-    return { fileName: file.fileName, buffer }
 }
 
 /**

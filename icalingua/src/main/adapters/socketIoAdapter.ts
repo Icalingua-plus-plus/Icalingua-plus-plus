@@ -696,15 +696,32 @@ const adapter: Adapter = {
                 allSuccess: boolean
                 uploaded: number[]
             }
-            const fileData = fs.readFileSync(data.file.path)
             const fileName = data.file.path.split('\\').pop().split('/').pop()
-            const fileHash = crypto.createHash('sha256').update(fileData).digest('hex')
+            const fileSize = fs.statSync(data.file.path).size
+            // 流式计算文件 hash，避免一次性读入整个文件
+            const fileHash = await new Promise<string>((resolve, reject) => {
+                const hash = crypto.createHash('sha256')
+                const stream = fs.createReadStream(data.file.path)
+                stream.on('data', (chunk) => hash.update(chunk))
+                stream.on('end', () => resolve(hash.digest('hex')))
+                stream.on('error', reject)
+            })
             const chunkSize = 512 * 1024
-            const chunks = []
-            for (let i = 0; i < fileData.length; i += chunkSize) {
-                chunks.push(fileData.slice(i, i + chunkSize))
+            const totalChunks = Math.ceil(fileSize / chunkSize)
+            // 按需读取文件分片的辅助函数
+            const readChunk = (offset: number, length: number): Promise<Buffer> => {
+                return new Promise((resolve, reject) => {
+                    const buffer = Buffer.alloc(length)
+                    fs.open(data.file.path, 'r', (err, fd) => {
+                        if (err) return reject(err)
+                        fs.read(fd, buffer, 0, length, offset, (err) => {
+                            fs.close(fd, () => {})
+                            if (err) return reject(err)
+                            resolve(buffer)
+                        })
+                    })
+                })
             }
-            const totalChunks = chunks.length
             const requestUpload = (
                 fileName: string,
                 hash: string,
@@ -714,7 +731,7 @@ const adapter: Adapter = {
                     socket.emit('requestUpload', fileName, hash, fileSize, resolve)
                 })
             }
-            const response = await requestUpload(fileName, fileHash, fileData.length)
+            const response = await requestUpload(fileName, fileHash, fileSize)
             if (!response.allSuccess) {
                 let uploadedChunks = response.uploaded.length
                 const uploadChunk = (offset: number, chunk: Buffer, chunkHash: string): Promise<boolean> => {
@@ -723,13 +740,16 @@ const adapter: Adapter = {
                     })
                 }
                 const progress = ui.notifyProgress('uploadFile-' + fileHash, '正在上传到 bridge: ' + fileName)
-                for (let i = 0; i < chunks.length; i++) {
+                for (let i = 0; i < totalChunks; i++) {
                     if (response.uploaded.includes(i * chunkSize)) continue
-                    const chunkHash = crypto.createHash('sha256').update(chunks[i]).digest('hex')
+                    const offset = i * chunkSize
+                    const length = Math.min(chunkSize, fileSize - offset)
+                    const chunk = await readChunk(offset, length)
+                    const chunkHash = crypto.createHash('sha256').update(chunk).digest('hex')
                     let success = false
                     let retry = 0
                     while (!success && retry < 3) {
-                        success = await uploadChunk(i * chunkSize, chunks[i], chunkHash)
+                        success = await uploadChunk(offset, chunk, chunkHash)
                         retry++
                     }
                     if (!success) {
