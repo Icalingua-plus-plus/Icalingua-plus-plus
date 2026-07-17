@@ -857,8 +857,7 @@ const adapter: typeof oicqAdapter = {
         file,
         replyMessage,
         room,
-        b64img,
-        imgpath,
+        media,
         at,
         sticker,
         messageType,
@@ -1068,27 +1067,32 @@ const adapter: typeof oicqAdapter = {
                 chain.push(element)
             }
         }
-        if (b64img) {
-            chain.push({
-                type: 'image',
-                data: {
-                    file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
-                    type: sticker ? 'face' : 'image',
-                    // @ts-ignore
-                    sub_type: sticker ? 1 : 0,
-                },
-            })
-        } else if (imgpath) {
-            chain.push({
-                type: 'image',
-                data: {
-                    file: imgpath,
-                    type: sticker ? 'face' : 'image',
-                    // @ts-ignore
-                    sub_type: sticker ? 1 : 0,
-                    url: imgpath.replace(/\\/g, '/'),
-                },
-            })
+        if (media && media.length) {
+            for (const img of media) {
+                const rawB64 = img.b64 ? img.b64.replace(/^data:.+;base64,/, '') : null
+                if (img.b64) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            file: 'base64://' + rawB64,
+                            type: sticker ? 'face' : 'image',
+                            // @ts-ignore
+                            sub_type: sticker ? 1 : 0,
+                        },
+                    })
+                } else if (img.url) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            file: img.url,
+                            type: sticker ? 'face' : 'image',
+                            // @ts-ignore
+                            sub_type: sticker ? 1 : 0,
+                            url: img.url.replace(/\\/g, '/'),
+                        },
+                    })
+                }
+            }
         } else if (file) {
             chain.push({
                 type: 'image',

@@ -517,11 +517,15 @@ export default {
             const msgToSend = {
                 content: this.message.content,
                 replyMessage: this.message.replyMessage,
-                imgpath: undefined,
                 at: [],
             }
-            if (this.message.file) {
-                msgToSend.imgpath = this.message.file.url
+            const imageUrls = this.message.files
+                ? this.message.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
+                : this.message.file
+                  ? [this.message.file.url]
+                  : []
+            if (imageUrls.length) {
+                msgToSend.media = imageUrls.map((url) => ({ url }))
             }
             ipc.sendMessage(msgToSend)
             new Audio(`file://${__static}/action_menu_select.wav`).play()

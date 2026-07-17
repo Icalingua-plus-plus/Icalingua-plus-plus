@@ -162,7 +162,7 @@ ipcMain.on('sendMessage', async (_, data) => {
                     const buffer = fs.readFileSync(silkFilePath)
                     data.file.path = silkFilePath
                     data.file.type = 'audio/silk'
-                    data.b64img = `data:audio;base64,${buffer.toString('base64')}`
+                    data.media = [{ b64: `data:audio;base64,${buffer.toString('base64')}` }]
                     ui.messageSuccess('高清语音编码成功，正在发送...')
                 } catch (e) {
                     console.error(e)

@@ -1,6 +1,14 @@
 import Room from './Room'
 import AtCacheItem from './AtCacheElem'
 
+/** 单张图片/音频附件 */
+export interface ImageAttachment {
+    /** base64 数据（data:image/xxx;base64,... 或 data:audio;base64,...） */
+    b64?: string
+    /** 图片/音频 URL 或路径 */
+    url?: string
+}
+
 type SendMessageParams = {
     content: string
     roomId?: number
@@ -11,8 +19,8 @@ type SendMessageParams = {
     }
     replyMessage?: any
     room?: Room
-    b64img?: string
-    imgpath?: string
+    /** 图片/音频附件列表 */
+    media?: ImageAttachment[]
     at: AtCacheItem[]
     sticker?: boolean
     messageType?: string

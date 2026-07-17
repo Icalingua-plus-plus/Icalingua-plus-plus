@@ -2417,16 +2417,20 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                         click: () => {
                             let messageType
                             if (getConfig().anonymous) messageType = 'anonymous'
-                            const msgToSend = {
+                            const msgToSend: any = {
                                 content: message.content,
                                 replyMessage: message.replyMessage,
-                                imgpath: undefined,
                                 at: [],
                                 roomId: room.roomId,
                                 messageType,
                             }
-                            if (message.file) {
-                                msgToSend.imgpath = message.file.url
+                            const imageUrls = message.files
+                                ? message.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
+                                : message.file
+                                  ? [message.file.url]
+                                  : []
+                            if (imageUrls.length) {
+                                msgToSend.media = imageUrls.map((url) => ({ url }))
                             }
                             sendMessage(msgToSend)
                         },
@@ -2447,7 +2451,6 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                                 const msgToSend = {
                                     content: message.code,
                                     replyMessage: message.replyMessage,
-                                    imgpath: undefined,
                                     at: [],
                                     roomId: room.roomId,
                                     messageType,
@@ -2460,15 +2463,18 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     new MenuItem({
                         label: '复制到编辑区',
                         click: () => {
+                            const imageUrls = message.files
+                                ? message.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
+                                : message.file
+                                  ? [message.file.url]
+                                  : []
                             if (win !== getMainWindow()) {
                                 win.webContents.send('setMessageText', message.content)
-                                if (message.file) win.webContents.send('pasteGif', message.file.url)
-                                console.log(message.replyMessage)
+                                for (const url of imageUrls) win.webContents.send('pasteGif', url)
                                 win.webContents.send('replyMessage', message.replyMessage)
                             } else {
                                 ui.setMessageText(message.content)
-                                if (message.file) ui.pasteGif(message.file.url)
-                                console.log(message.replyMessage)
+                                for (const url of imageUrls) ui.pasteGif(url)
                                 ui.replyMessage(message.replyMessage)
                             }
                         },

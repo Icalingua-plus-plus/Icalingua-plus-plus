@@ -647,11 +647,16 @@ const adapter: Adapter = {
     },
     async sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room) data.roomId = ui.getSelectedRoomId()
-        if (data.imgpath && !/^https?:\/\//.test(data.imgpath) && !data.imgpath.startsWith('send_')) {
-            const fileContent = fs.readFileSync(data.imgpath)
-            const type = await fileType.fromBuffer(fileContent)
-            data.b64img = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
-            data.imgpath = null
+        // 将本地路径转为 base64
+        if (data.media && data.media.length) {
+            for (const img of data.media) {
+                if (img.url && !img.b64 && !/^https?:\/\//.test(img.url)) {
+                    const fileContent = fs.readFileSync(img.url)
+                    const type = await fileType.fromBuffer(fileContent)
+                    img.b64 = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
+                    img.url = null
+                }
+            }
         }
         if (data.file && data.file.type.startsWith('audio/')) {
             socket.emit('requestToken', (token: string) =>
@@ -670,7 +675,7 @@ const adapter: Adapter = {
             )
             return
         }
-        if (data.b64img) {
+        if (data.media && data.media.some((i) => i.b64)) {
             socket.emit('requestToken', (token: string) =>
                 axios
                     .post(getConfig().server + `/api/${token}/sendMessage`, data, {

@@ -248,30 +248,27 @@
                 编辑重发
             </div>
 
-            <div class="vac-box-footer" v-show="showFooter">
-                <div v-if="imageFile" class="vac-media-container">
-                    <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
-                        <slot name="image-close-icon">
-                            <svg-icon name="close" param="image" />
-                        </slot>
+            <!-- 多图预览条：位于输入框上方，类似回复面板 -->
+            <transition name="vac-slide-up">
+                <div v-if="imageFiles.length && showFooter" class="vac-attached-images-bar">
+                    <div class="vac-attached-images-list" @wheel.prevent="onImageListWheel">
+                        <div v-for="(img, idx) in imageFiles" :key="idx" class="vac-attached-image-item">
+                            <img :src="img" @click="openImage(img)" />
+                            <div class="vac-attached-image-remove" @click="removeImage(idx)">
+                                <svg-icon name="close" param="image" />
+                            </div>
+                        </div>
                     </div>
-                    <div class="vac-media-file">
-                        <img
-                            ref="mediaFile"
-                            :src="imageFile"
-                            @load="onMediaLoad"
-                            @click="openImage(imageFile)"
-                            :style="{
-                                'max-height': `${
-                                    mediaDimensions ? `min(calc( 100vh - 120px), ${mediaDimensions.height}px)` : null
-                                }`,
-                                cursor: 'pointer',
-                            }"
-                        />
+                    <div class="vac-icon-reply">
+                        <div class="vac-svg-button" @click="resetMediaFile">
+                            <svg-icon name="close-outline" />
+                        </div>
                     </div>
                 </div>
+            </transition>
 
-                <div v-else-if="videoFile" class="vac-media-container">
+            <div class="vac-box-footer" v-show="showFooter">
+                <div v-if="videoFiles.length" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
                             <svg-icon name="close" param="image" />
@@ -279,15 +276,15 @@
                     </div>
                     <div ref="mediaFile" class="vac-media-file">
                         <video width="100%" height="100%" controls>
-                            <source :src="videoFile" type="video/mp4" />
-                            <source :src="videoFile" type="video/ogg" />
-                            <source :src="videoFile" type="video/webm" />
+                            <source :src="videoFiles[0]" type="video/mp4" />
+                            <source :src="videoFiles[0]" type="video/ogg" />
+                            <source :src="videoFiles[0]" type="video/webm" />
                         </video>
                     </div>
                 </div>
 
                 <div
-                    v-else-if="file"
+                    v-else-if="files.length && !imageFiles.length && !videoFiles.length"
                     class="vac-file-container"
                     :class="{ 'vac-file-container-edit': editedMessage._id }"
                 >
@@ -296,8 +293,8 @@
                             <svg-icon name="file" />
                         </slot>
                     </div>
-                    <div v-if="file && file.audio" class="vac-file-message-room">
-                        {{ file.name }}
+                    <div v-if="files[0] && files[0].audio" class="vac-file-message-room">
+                        {{ files[0].name }}
                     </div>
                     <div v-else class="vac-file-message-room">
                         {{ $refs.roomTextarea.message }}
@@ -350,7 +347,7 @@
                 </transition>
 
                 <room-text-area
-                    v-show="!file || imageFile || videoFile"
+                    v-show="!files.length || imageFiles.length || videoFiles.length"
                     ref="roomTextarea"
                     :placeholder="textMessages.TYPE_MESSAGE"
                     class="vac-textarea"
@@ -431,6 +428,7 @@
                         ref="file"
                         type="file"
                         :accept="acceptedFiles"
+                        multiple
                         style="display: none"
                         @change="onFileChange($event.target.files)"
                     />
@@ -440,6 +438,7 @@
                         ref="fileForce"
                         type="file"
                         :accept="acceptedFiles"
+                        multiple
                         style="display: none"
                         @change="onFileChange($event.target.files, true)"
                     />
@@ -559,8 +558,9 @@ export default {
             loadingHeadMessages: false,
             loadingTailMessages: false,
             file: null,
-            imageFile: null,
-            videoFile: null,
+            files: [],
+            imageFiles: [],
+            videoFiles: [],
             mediaDimensions: null,
             fileDialog: false,
             emojiOpened: false,
@@ -790,8 +790,8 @@ export default {
                 else this.infiniteState.head.complete()
             }
         },
-        file(val) {
-            this.isMessageEmpty = !val && !this.$refs.roomTextarea.message.trim()
+        files(val) {
+            this.isMessageEmpty = (!val || !val.length) && !this.$refs.roomTextarea.message.trim()
         },
     },
     async mounted() {
@@ -880,7 +880,7 @@ export default {
                     return
                 } else if (lastMessage.file) {
                     return
-                    this.file = lastMessage.file
+                    this.files = [lastMessage.file]
                 }
                 this.messageReply = lastMessage.replyMessage
                 this.$refs.roomTextarea.message = lastMessage.content
@@ -1425,7 +1425,9 @@ export default {
             this.$emit('typing-message', null)
 
             if (editFile) {
-                this.file = null
+                this.files = []
+                this.imageFiles = []
+                this.videoFiles = []
                 this.$refs.roomTextarea.message = ''
                 return
             }
@@ -1434,10 +1436,10 @@ export default {
             this.$refs.roomTextarea.message = ''
             this.editedMessage = {}
             this.messageReply = null
-            this.file = null
+            this.files = []
             this.mediaDimensions = null
-            this.imageFile = null
-            this.videoFile = null
+            this.imageFiles = []
+            this.videoFiles = []
             this.emojiOpened = false
             this.editAndResend = false
             this.preventKeyboardFromClosing()
@@ -1452,22 +1454,35 @@ export default {
             if (!type) return
 
             const blob = await read[0].getType(type)
-            this.imageFile = URL.createObjectURL(blob)
-            this.file = {
+            const url = URL.createObjectURL(blob)
+            this.imageFiles.push(url)
+            this.files.push({
                 name: '粘贴的图片',
                 type: type,
-                url: this.imageFile,
+                url: url,
                 blob,
-            }
+            })
+            this.focusTextarea()
         },
         resetMediaFile() {
             this.mediaDimensions = null
-            this.imageFile = null
-            this.videoFile = null
+            this.imageFiles = []
+            this.videoFiles = []
             this.editedMessage.file = null
-            this.file = null
+            this.files = []
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
+        },
+        removeImage(idx) {
+            this.imageFiles.splice(idx, 1)
+            this.files.splice(idx, 1)
+            if (!this.imageFiles.length && !this.files.length) {
+                this.resetMediaFile()
+            }
+        },
+        onImageListWheel(e) {
+            const el = e.currentTarget
+            el.scrollLeft += e.deltaY
         },
         resetTextareaSize() {
             if (!this.$refs.roomTextarea.$refs.roomTextarea) return
@@ -1538,12 +1553,12 @@ export default {
             let message = this.$refs.roomTextarea.message
             this.$refs.roomTextarea.message = ''
 
-            if (!this.file && !message) return
+            if ((!this.files || !this.files.length) && !message) return
 
             const messageType = await ipc.getMessgeTypeSetting()
 
             if (messageType === 'raw') {
-                const { action } = await this.$confirm('你确定要发送 OICQ 原始消息吗？', '提示', {
+                const { action } = await this.$confirm('你确定要发送 OICQ 原始消息吗？？', '提示', {
                     confirmButtonText: '确定',
                     cancelButtonText: '取消',
                     type: 'warning',
@@ -1553,7 +1568,7 @@ export default {
 
             this.$emit('send-message', {
                 content: message,
-                file: this.file,
+                files: this.files,
                 replyMessage: this.messageReply,
                 resend: this.editAndResend,
                 messageType: messageType,
@@ -1571,7 +1586,7 @@ export default {
             const debugmode = await ipc.getDebugSetting()
             let message = this.$refs.roomTextarea.message.trim()
 
-            if (!this.file && !message) return
+            if ((!this.files || !this.files.length) && !message) return
 
             if (!debugmode && message.match(/serviceID[\s]*?=[\s]*?('|")(13|60|76|83)('|")/g)) return
 
@@ -1597,7 +1612,7 @@ export default {
 
             this.$emit('send-message', {
                 content: message,
-                file: this.file,
+                file: this.files && this.files.length ? this.files[0] : null,
                 replyMessage: this.messageReply,
                 resend: this.editAndResend,
                 messageType: msgType,
@@ -1639,14 +1654,17 @@ export default {
         editMessage(message) {
             this.resetMessage()
             this.editedMessage = { ...message }
-            this.file = message.file
 
-            if (isImageFile(this.file)) {
-                this.imageFile = message.file.url
-                setTimeout(() => this.onMediaLoad(), 0)
-            } else if (isVideoFile(this.file)) {
-                this.videoFile = message.file.url
-                setTimeout(() => this.onMediaLoad(), 50)
+            if (message.file) {
+                this.files = [message.file]
+
+                if (isImageFile(message.file)) {
+                    this.imageFiles = [message.file.url]
+                    setTimeout(() => this.onMediaLoad(), 0)
+                } else if (isVideoFile(message.file)) {
+                    this.videoFiles = [message.file.url]
+                    setTimeout(() => this.onMediaLoad(), 50)
+                }
             }
 
             this.$refs.roomTextarea.message = message.content
@@ -1737,65 +1755,79 @@ export default {
         },
         async onFileChange(files, force = false) {
             this.fileDialog = true
-            this.resetMediaFile()
 
-            const file = files[0]
-            let filePath = file.path
-            if (!filePath && webUtils && webUtils.getPathForFile) {
-                console.log('Electron >= 32.0.0')
-                try {
-                    filePath = webUtils.getPathForFile(file)
-                } catch (e) {
-                    console.error(e)
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i]
+                let filePath = file.path
+                if (!filePath && webUtils && webUtils.getPathForFile) {
+                    console.log('Electron >= 32.0.0')
+                    try {
+                        filePath = webUtils.getPathForFile(file)
+                    } catch (e) {
+                        console.error(e)
+                    }
+                }
+                const fileURL = filePath ? filePath : URL.createObjectURL(file)
+                const blobFile = await fetch(fileURL).then((res) => res.blob())
+                const typeIndex = file.name.lastIndexOf('.')
+
+                const fileObj = {
+                    blob: blobFile,
+                    name: file.name.substring(0, typeIndex),
+                    size: file.size,
+                    type: file.type,
+                    extension: file.name.substring(typeIndex + 1),
+                    localUrl: fileURL,
+                    path: filePath,
+                }
+                const extension = fileObj.extension.toLowerCase()
+                if (['slk', 'silk'].includes(extension)) {
+                    fileObj.type = 'audio/silk'
+                }
+                if (['amr'].includes(extension)) {
+                    fileObj.type = 'audio/amr'
+                }
+                if (['psd', 'svg'].includes(extension)) {
+                    fileObj.type = ''
+                }
+                if (force) fileObj.type = ''
+                this.files.push(fileObj)
+
+                if (isImageFile(fileObj)) {
+                    this.imageFiles.push(fileURL)
+                } else if (isVideoFile(fileObj)) {
+                    this.resetMediaFile()
+                    this.files = [fileObj]
+                    this.videoFiles.push(fileURL)
+                    setTimeout(() => this.onMediaLoad(), 50)
+                    break
+                } else if (isAudioFile(fileObj)) {
+                    this.resetMediaFile()
+                    this.files = [fileObj]
+                    this.videoFiles.push(fileURL)
+                    setTimeout(() => this.onMediaLoad(), 50)
+                    break
+                } else {
+                    this.resetMediaFile()
+                    this.files = [fileObj]
+                    this.$refs.roomTextarea.message = file.name
+                    break
                 }
             }
-            const fileURL = filePath ? filePath : URL.createObjectURL(file)
-            const blobFile = await fetch(fileURL).then((res) => res.blob())
-            const typeIndex = file.name.lastIndexOf('.')
 
-            this.file = {
-                blob: blobFile,
-                name: file.name.substring(0, typeIndex),
-                size: file.size,
-                type: file.type,
-                extension: file.name.substring(typeIndex + 1),
-                localUrl: fileURL,
-                path: filePath,
-            }
-            const extension = this.file.extension.toLowerCase()
-            if (['slk', 'silk'].includes(extension)) {
-                this.file.type = 'audio/silk'
-            }
-            if (['amr'].includes(extension)) {
-                this.file.type = 'audio/amr'
-            }
-            if (['psd', 'svg'].includes(extension)) {
-                this.file.type = ''
-            }
-            if (force) this.file.type = ''
-            if (isImageFile(this.file)) {
-                this.imageFile = fileURL
-            } else if (isVideoFile(this.file)) {
-                this.videoFile = fileURL
-                setTimeout(() => this.onMediaLoad(), 50)
-            } else if (isAudioFile(this.file)) {
-                this.videoFile = fileURL
-                setTimeout(() => this.onMediaLoad(), 50)
-            } else {
-                this.$refs.roomTextarea.message = file.name
-            }
-
-            setTimeout(() => (this.fileDialog = false), 500)
+            setTimeout(() => {
+                this.fileDialog = false
+                this.focusTextarea()
+            }, 500)
         },
         async onPasteGif(GifURL) {
             this.fileDialog = true
-            this.resetMediaFile()
 
             const blobFile = await fetch(GifURL).then((res) => res.blob())
             const fileURL = URL.createObjectURL(blobFile)
             const typeIndex = GifURL.lastIndexOf('.')
 
-            this.file = {
+            const fileObj = {
                 blob: blobFile,
                 name: GifURL.substring(0, typeIndex),
                 size: blobFile.size,
@@ -1805,8 +1837,12 @@ export default {
                 path: GifURL,
             }
 
-            this.imageFile = fileURL
-            setTimeout(() => (this.fileDialog = false), 500)
+            this.files.push(fileObj)
+            this.imageFiles.push(fileURL)
+            setTimeout(() => {
+                this.fileDialog = false
+                this.focusTextarea()
+            }, 500)
         },
         openFile({ message, action }) {
             this.$emit('open-file', { message, action, room: this.room })
@@ -2054,7 +2090,11 @@ export default {
             }
         },
         async openImage(src) {
-            ipcRenderer.send('openImage', src, this.localImageViewerByDefault)
+            if (this.imageFiles.length > 1) {
+                ipcRenderer.send('openImage', src, false, [...this.imageFiles])
+            } else {
+                ipcRenderer.send('openImage', src, this.localImageViewerByDefault)
+            }
         },
     },
 }
@@ -2250,9 +2290,86 @@ export default {
 
 .vac-media-container {
     position: absolute;
-    max-width: 25%;
+    max-width: 50%;
     left: 16px;
     top: 18px;
+}
+
+.vac-attached-images-bar {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-top: var(--chat-border-style);
+    background: var(--chat-footer-bg-color);
+    gap: 4px;
+
+    .vac-icon-reply {
+        margin-left: 10px;
+
+        svg {
+            height: 20px;
+            width: 20px;
+        }
+    }
+}
+
+.vac-attached-images-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    flex: 1;
+    min-width: 0;
+    padding: 2px 0;
+    scrollbar-width: thin;
+}
+
+.vac-attached-image-item {
+    position: relative;
+    flex-shrink: 0;
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--chat-border-style-color, rgba(0, 0, 0, 0.1));
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        cursor: pointer;
+        display: block;
+    }
+}
+
+.vac-attached-image-remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s;
+
+    svg {
+        width: 10px;
+        height: 10px;
+        fill: #fff;
+    }
+}
+
+.vac-attached-image-item:hover .vac-attached-image-remove {
+    opacity: 1;
+}
+
+.vac-multi-images-preview {
+    display: none;
 }
 
 .vac-media-file {

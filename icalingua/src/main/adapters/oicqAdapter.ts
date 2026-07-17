@@ -1471,8 +1471,7 @@ const adapter: OicqAdapter = {
         file,
         replyMessage,
         room,
-        b64img,
-        imgpath,
+        media,
         at,
         sticker,
         messageType,
@@ -1740,33 +1739,37 @@ const adapter: OicqAdapter = {
                 chain.push(element)
             }
         }
-        if (b64img) {
-            if (file && file.type.startsWith('audio')) {
-                chain.push({
-                    type: 'record',
-                    data: {
-                        file: Buffer.from(b64img.replace(/^data:.+;base64,/, ''), 'base64'),
-                    },
-                })
-            } else {
-                chain.push({
-                    type: 'image',
-                    data: {
-                        file: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
-                        type: sticker ? 'face' : 'image',
-                        url: imgpath && imgpath.startsWith('send_') ? imgpath.replace('send_', '') : b64img,
-                    },
-                })
+        // 图片/音频发送
+        if (media && media.length) {
+            for (const img of media) {
+                const rawB64 = img.b64 ? img.b64.replace(/^data:.+;base64,/, '') : null
+                if (img.b64 && img.b64.startsWith('data:audio')) {
+                    chain.push({
+                        type: 'record',
+                        data: {
+                            file: Buffer.from(rawB64, 'base64'),
+                        },
+                    })
+                } else if (img.b64) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            file: 'base64://' + rawB64,
+                            type: sticker ? 'face' : 'image',
+                            url: img.url || img.b64,
+                        },
+                    })
+                } else if (img.url) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            file: img.url,
+                            type: sticker ? 'face' : 'image',
+                            url: img.url.replace(/\\/g, '/'),
+                        },
+                    })
+                }
             }
-        } else if (imgpath) {
-            chain.push({
-                type: 'image',
-                data: {
-                    file: imgpath,
-                    type: sticker ? 'face' : 'image',
-                    url: imgpath.replace(/\\/g, '/'),
-                },
-            })
         } else if (file) {
             chain.push({
                 type: 'image',

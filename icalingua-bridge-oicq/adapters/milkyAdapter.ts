@@ -974,8 +974,7 @@ const adapter: typeof oicqAdapter = {
         file,
         replyMessage,
         room,
-        b64img,
-        imgpath,
+        media,
         at,
         sticker,
         messageType,
@@ -992,9 +991,9 @@ const adapter: typeof oicqAdapter = {
                 let audioUri: string
                 let tempFilePath: string | null = null
 
-                if (b64img) {
+                if (media && media.length && media[0].b64) {
                     // 从 base64 数据创建临时文件
-                    const base64Data = b64img.replace(/^data:.+;base64,/, '')
+                    const base64Data = media[0].b64.replace(/^data:.+;base64,/, '')
                     const buffer = Buffer.from(base64Data, 'base64')
 
                     // 生成临时文件名
@@ -1173,22 +1172,26 @@ const adapter: typeof oicqAdapter = {
             }
         }
 
-        if (b64img) {
-            chain.push({
-                type: 'image',
-                data: {
-                    uri: 'base64://' + b64img.replace(/^data:.+;base64,/, ''),
-                    sub_type: sticker ? 'sticker' : 'normal',
-                },
-            })
-        } else if (imgpath) {
-            chain.push({
-                type: 'image',
-                data: {
-                    uri: imgpath.startsWith('http') ? imgpath : `file://${imgpath}`,
-                    sub_type: sticker ? 'sticker' : 'normal',
-                },
-            })
+        if (media && media.length) {
+            for (const img of media) {
+                if (img.b64) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            uri: 'base64://' + img.b64.replace(/^data:.+;base64,/, ''),
+                            sub_type: sticker ? 'sticker' : 'normal',
+                        },
+                    })
+                } else if (img.url) {
+                    chain.push({
+                        type: 'image',
+                        data: {
+                            uri: img.url.startsWith('http') ? img.url : `file://${img.url}`,
+                            sub_type: sticker ? 'sticker' : 'normal',
+                        },
+                    })
+                }
+            }
         } else if (file) {
             chain.push({
                 type: 'image',

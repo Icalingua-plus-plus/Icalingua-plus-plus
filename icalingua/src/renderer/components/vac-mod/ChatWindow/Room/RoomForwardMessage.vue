@@ -123,9 +123,16 @@ export default {
                         const msgToSend = {
                             content: msg.content,
                             replyMessage: msg.replyMessage,
-                            imgpath: msg.file ? msg.file.url : undefined,
                             at: [],
                             roomId: this.roomId,
+                        }
+                        const imageUrls = msg.files
+                            ? msg.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
+                            : msg.file
+                              ? [msg.file.url]
+                              : []
+                        if (imageUrls.length) {
+                            msgToSend.media = imageUrls.map((url) => ({ url }))
                         }
                         ipc.sendMessage(msgToSend)
                         count++

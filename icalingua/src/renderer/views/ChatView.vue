@@ -343,6 +343,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import groupMemberCache from '../utils/groupMemberCache'
+import { processFiles } from '../utils/processFiles'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
@@ -892,11 +893,10 @@ Chromium ${process.versions.chrome}`
         async sendMessage({
             content,
             roomId,
-            file,
+            files,
             replyMessage,
             room,
-            b64img,
-            imgpath,
+            media: extraMedia,
             resend,
             sticker,
             messageType,
@@ -908,38 +908,21 @@ Chromium ${process.versions.chrome}`
             }
             if (!room) room = this.rooms.find((e) => e.roomId === roomId)
             if (!roomId) roomId = room.roomId
-            if (file) {
-                if (file.type.includes('image')) {
-                    if (file.size >= 10485760) {
-                        this.$message.warning('图片较大，发送可能失败，软件可能卡死')
-                    }
-                    const crypto = require('crypto')
-                    const buffer = Buffer.from(await file.blob.arrayBuffer())
-                    const imgHashStr = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
-                    const b64 = buffer.toString('base64')
-                    b64img = `data:${file.type};base64,${b64}`
-                    imgpath = imgpath || `send_https://gchat.qpic.cn/gchatpic_new/0/0-0-${imgHashStr}/0`
-                    file = null
-                } else if (file.type.startsWith('audio')) {
-                    if (file.size >= 10485760) {
-                        this.$message.warning('语音较大，发送可能失败，软件可能卡死')
-                    }
-                    const buffer = Buffer.from(await file.blob.arrayBuffer())
-                    b64img = `data:audio;base64,${buffer.toString('base64')}`
-                    file = {
-                        type: file.type,
-                        size: file.size,
-                        path: file.path,
-                    }
-                } else
-                    file = {
-                        type: file.type,
-                        size: file.size,
-                        path: file.path,
-                    }
-            }
+
+            const processed = await processFiles(files || [], (msg) => this.$message.warning(msg))
+            const media = [...(extraMedia || []), ...processed.media]
+
             if (resend) ipc.deleteMessage(roomId, resend)
-            ipc.sendMessage({ content, roomId, file, replyMessage, room, b64img, imgpath, sticker, messageType })
+            ipc.sendMessage({
+                content,
+                roomId,
+                file: processed.file,
+                replyMessage,
+                room,
+                media,
+                sticker,
+                messageType,
+            })
         },
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
@@ -1030,7 +1013,7 @@ Chromium ${process.versions.chrome}`
                     content,
                     room: this.selectedRoom,
                     replyMessage,
-                    imgpath: url,
+                    media: [{ url }],
                     sticker: true,
                     messageType: messageType === 'anonymous' ? 'anonymous' : undefined,
                 })
