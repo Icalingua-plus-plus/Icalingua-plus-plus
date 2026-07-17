@@ -219,31 +219,36 @@ async function renderToWebm(
             })
 
             anim.addEventListener('DOMLoaded', async () => {
-                const svg = container.querySelector('svg')
-                if (!svg) {
-                    anim.destroy()
-                    reject(new Error('No SVG element found'))
-                    return
-                }
-
-                const total = anim.totalFrames
-
-                for (let f = 0; f < total; f++) {
-                    anim.goToAndStop(f, true)
-                    await svgToCanvas(svg, ctx, w, h)
-
-                    // CanvasSource.add(timestampSeconds, durationSeconds)
-                    // 时间戳精确计算，不受实时时钟影响
-                    const timestamp = (frameOffset + f) * durationPerFrame
-                    await videoSource.add(timestamp, durationPerFrame)
-
-                    if (f % 8 === 7) {
-                        await new Promise<void>((r) => setTimeout(r, 0))
+                try {
+                    const svg = container.querySelector('svg')
+                    if (!svg) {
+                        anim.destroy()
+                        reject(new Error('No SVG element found'))
+                        return
                     }
-                }
 
-                anim.destroy()
-                resolve()
+                    const total = anim.totalFrames
+
+                    for (let f = 0; f < total; f++) {
+                        anim.goToAndStop(f, true)
+                        await svgToCanvas(svg, ctx, w, h)
+
+                        // CanvasSource.add(timestampSeconds, durationSeconds)
+                        // 时间戳精确计算，不受实时时钟影响
+                        const timestamp = (frameOffset + f) * durationPerFrame
+                        await videoSource.add(timestamp, durationPerFrame)
+
+                        if (f % 8 === 7) {
+                            await new Promise<void>((r) => setTimeout(r, 0))
+                        }
+                    }
+
+                    anim.destroy()
+                    resolve()
+                } catch (err) {
+                    anim.destroy()
+                    reject(err)
+                }
             })
         })
     }
@@ -267,6 +272,11 @@ async function renderToWebm(
 
         return new Blob([(output.target as BufferTarget).buffer!], { type: 'video/webm' })
     } catch (e) {
+        try {
+            videoSource.close()
+        } catch {
+            /* ignore */
+        }
         try {
             await output.cancel()
         } catch {
@@ -316,6 +326,7 @@ export function queueRender(
             notifyByCacheKey(key)
         } catch (err) {
             console.error(LOG_TAG, 'Render failed:', path.basename(jsonPath), err)
+            notifyByCacheKey(key) // 清理 listeners，防止泄漏
         } finally {
             pendingKeys.delete(key)
         }
