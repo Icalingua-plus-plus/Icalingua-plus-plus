@@ -1147,6 +1147,11 @@ const initStorage = async () => {
             default:
                 break
         }
+        if (storage instanceof SQLStorageProvider) {
+            storage.onUpgradeProgress = (step, total, message) => {
+                sendToLoginWindow('dbUpgradeProgress', { step, total, message })
+            }
+        }
         await storage.connect()
         storage.getAllRooms().then((e) => {
             e.forEach((e) => {

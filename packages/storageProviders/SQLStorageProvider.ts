@@ -51,6 +51,8 @@ export default class SQLStorageProvider implements StorageProvider {
     type: 'pg' | 'mysql' | 'sqlite3'
     db: Knex
     errorHandle: Function
+    /** 数据库升级进度回调，参数：(当前步骤, 总步骤, 描述) */
+    onUpgradeProgress: (step: number, total: number, message: string) => void
     private qid: string
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
@@ -219,42 +221,76 @@ export default class SQLStorageProvider implements StorageProvider {
     /** 私有方法，用来根据当前数据库版本对数据库进行升级，从而在 Icalingua 使用的数据类型发生改变时，数据库可以存放下它们 */
     private async updateDB(dbVersion: number) {
         console.log('info', '正在升级数据库')
+        const total = dbVersionLatest - dbVersion
+        let step = 0
+        const report = (msg: string) => {
+            step++
+            if (this.onUpgradeProgress) this.onUpgradeProgress(step, total, msg)
+        }
         // 这个 switch 居然不用 break，好耶！
         try {
             switch (dbVersion) {
                 case 0:
+                    report('升级数据库 v0 → v1')
                     await upg0to1(this.db)
                 case 1:
+                    report('升级数据库 v1 → v2')
                     await upg1to2(this.db)
                 case 2:
+                    report('升级数据库 v2 → v3')
                     await upg2to3(this.db)
                 case 3:
+                    report('升级数据库 v3 → v4')
                     await upg3to4(this.db)
                 case 4:
+                    report('升级数据库 v4 → v5')
                     await upg4to5(this.db)
                 case 5:
+                    report('升级数据库 v5 → v6')
                     await upg5to6(this.db)
                 case 6:
+                    report('升级数据库 v6 → v7')
                     await upg6to7(this.db, this.type)
                 case 7:
+                    report('升级数据库 v7 → v8')
                     await upg7to8(this.db)
                 case 8:
-                    if (dbVersion >= 7) await upg8to9(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v8 → v9')
+                        await upg8to9(this.db)
+                    }
                 case 9:
-                    if (dbVersion >= 7) await upg9to10(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v9 → v10')
+                        await upg9to10(this.db)
+                    }
                 case 10:
+                    report('升级数据库 v10 → v11')
                     await upg10to11(this.db)
                 case 11:
-                    if (dbVersion >= 7) await upg11to12(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v11 → v12')
+                        await upg11to12(this.db)
+                    }
                 case 12:
-                    if (dbVersion >= 7) await upg12to13(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v12 → v13')
+                        await upg12to13(this.db)
+                    }
                 case 13:
                 //await upg13to14(this.db)
                 case 14:
-                    if (dbVersion >= 7) await upg14to15(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v14 → v15')
+                        await upg14to15(this.db)
+                    }
                 case 15:
-                    if (dbVersion >= 7) await upg15to16(this.db)
+                    if (dbVersion >= 7) {
+                        report('升级数据库 v15 → v16')
+                        await upg15to16(this.db)
+                    }
                 case 16:
+                    report('升级数据库 v16 → v17')
                     await upg16to17(this.db)
                 default:
                     break
@@ -379,6 +415,8 @@ export default class SQLStorageProvider implements StorageProvider {
             const dbVersion = await this.db<DBVersion>(`dbVersion`).select('dbVersion')
             // 若版本低于当前版本则启动升级函数
             if (dbVersion[0].dbVersion < dbVersionLatest) {
+                if (this.onUpgradeProgress)
+                    this.onUpgradeProgress(0, dbVersionLatest - dbVersion[0].dbVersion, '正在升级数据库...')
                 await this.updateDB(dbVersion[0].dbVersion)
             }
 

@@ -120,6 +120,14 @@
             <p v-if="errmsg" class="error">
                 {{ errmsg }}
             </p>
+            <div v-if="dbUpgrade.total > 0" class="db-upgrade-progress">
+                <p>{{ dbUpgrade.message }}</p>
+                <el-progress
+                    :percentage="Math.round((dbUpgrade.step / dbUpgrade.total) * 100)"
+                    :stroke-width="16"
+                    :text-inside="true"
+                />
+            </div>
             <el-form-item class="buttons">
                 <el-button type="primary" v-on:click="onSubmit('loginForm')">
                     <span v-show="!form.password">QR Code</span>
@@ -183,6 +191,7 @@ export default {
             },
             disabled: false,
             errmsg: '',
+            dbUpgrade: { step: 0, total: 0, message: '' },
             shouldSubmitSmsCode: false,
             smsCode: '',
             verifyUrl: '',
@@ -320,6 +329,7 @@ export default {
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
+            this.dbUpgrade = { step: 0, total: 0, message: '' }
 
             const tmp = String(msg).split(' ')
             const code = tmp[tmp.length - 1]
@@ -359,6 +369,10 @@ export default {
                 ipcRenderer.send('createBot', submitForm)
             }, 5 * 1000)
         })
+        ipcRenderer.on('dbUpgradeProgress', (_, { step, total, message }) => {
+            this.dbUpgrade = { step, total, message }
+            if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
+        })
     },
     methods: {
         onCategoryChange() {
@@ -372,6 +386,7 @@ export default {
             this.$refs[formName].validate(async (valid) => {
                 if (valid || this.$route.query.disableIdLogin === 'true') {
                     this.disabled = true
+                    this.dbUpgrade = { step: 0, total: 0, message: '' }
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
                     if (!this.form.signAPIAddress) {
@@ -486,6 +501,16 @@ export default {
 .error {
     color: red;
     margin: 0 0 22px;
+}
+
+.db-upgrade-progress {
+    margin: 0 0 22px;
+}
+
+.db-upgrade-progress p {
+    margin: 0 0 8px;
+    color: #606266;
+    font-size: 13px;
 }
 
 .protocol-selects {

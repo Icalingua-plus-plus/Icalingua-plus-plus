@@ -18,7 +18,7 @@ import axios from 'axios'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo, FileElem } from 'oicq-icalingua-plus-plus'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
-import { getMainWindow, loadMainWindow, showLoginWindow } from '../utils/windowManager'
+import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow } from '../utils/windowManager'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import ui from '../utils/ui'
@@ -190,6 +190,11 @@ const initStorage = async () => {
                 break
             default:
                 break
+        }
+        if (storage instanceof SQLStorageProvider) {
+            storage.onUpgradeProgress = (step, total, message) => {
+                sendToLoginWindow('dbUpgradeProgress', { step, total, message })
+            }
         }
         await storage.connect()
     } catch (err) {
