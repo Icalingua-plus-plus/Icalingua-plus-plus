@@ -74,11 +74,14 @@ import { spacingSendMessage } from '../../utils/panguSpacing'
 import { pb } from 'oicq-icalingua-plus-plus'
 
 const getStickersDir = () => path.join(app.getPath('userData'), 'stickers')
-const getStickerGroupSubMenu = (downloadFn: (dir: string) => void): Electron.MenuItemConstructorOptions[] => {
+let cachedStickerSubdirs: string[] | null = null
+let stickerDirWatcher: fs.FSWatcher | null = null
+
+const ensureStickerSubdirsCached = () => {
+    if (cachedStickerSubdirs !== null) return
     const stickersDir = getStickersDir()
-    let subdirs: string[] = []
     try {
-        subdirs = fs
+        cachedStickerSubdirs = fs
             .readdirSync(stickersDir)
             .filter((i) => {
                 try {
@@ -88,7 +91,26 @@ const getStickerGroupSubMenu = (downloadFn: (dir: string) => void): Electron.Men
                 }
             })
             .sort()
-    } catch {}
+    } catch {
+        cachedStickerSubdirs = []
+    }
+    if (!stickerDirWatcher) {
+        try {
+            stickerDirWatcher = fs.watch(stickersDir, () => {
+                cachedStickerSubdirs = null
+            })
+            stickerDirWatcher.on('error', () => {
+                cachedStickerSubdirs = null
+                stickerDirWatcher = null
+            })
+        } catch {}
+    }
+}
+
+const getStickerGroupSubMenu = (downloadFn: (dir: string) => void): Electron.MenuItemConstructorOptions[] => {
+    const stickersDir = getStickersDir()
+    ensureStickerSubdirsCached()
+    const subdirs = cachedStickerSubdirs || []
     const items: Electron.MenuItemConstructorOptions[] = [
         {
             label: '默认',
