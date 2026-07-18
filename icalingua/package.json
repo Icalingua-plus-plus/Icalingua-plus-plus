@@ -201,7 +201,7 @@
         "mongodb": "^4.17.2",
         "mysql": "^2.18.1",
         "nan": "^2.28.0",
-        "oicq-icalingua-plus-plus": "^1.26.9",
+        "oicq-icalingua-plus-plus": "^1.26.10",
         "pangu": "^4.0.7",
         "pg": "^8.22.0",
         "pg-query-stream": "^4.16.0",
