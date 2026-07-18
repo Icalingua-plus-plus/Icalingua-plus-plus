@@ -769,7 +769,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 query = query.where('time', '<=', endTime)
             }
             const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
-            return messages.reverse().map((message) => this.msgConFromDB(message))
+            return messages.map((message) => this.msgConFromDB(message))
         } catch (e) {
             this.errorHandle(e)
         }

@@ -198,7 +198,7 @@ export default class MongoStorageProvider implements StorageProvider {
                 limit,
             })
             .toArray()
-        return arr.reverse()
+        return arr
     }
 
     async removeRoom(roomId: number): Promise<any> {

@@ -314,7 +314,6 @@ export default class RedisStorageProvider implements StorageProvider {
             }
         }
 
-        imageMessages.sort((a, b) => a.time - b.time)
         return imageMessages
     }
 
