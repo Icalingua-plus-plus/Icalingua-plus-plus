@@ -208,7 +208,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm64
-          key: ${{ runner.os }}-arm64-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-arm64-native-sqlite3-516
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -304,7 +304,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/sqlite3/lib/binding/napi-v6-linux-glibc-arm
-          key: ${{ runner.os }}-armv7l-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-armv7l-native-sqlite3-516
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -892,7 +892,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/sqlite3/lib/binding/napi-v6-win32-unknown-arm64
-          key: ${{ runner.os }}-arm64-native-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-arm64-native-sqlite3-516
 
       - name: Install node-gyp@12
         if: steps.cache-arm64-native.outputs.cache-hit != 'true'
