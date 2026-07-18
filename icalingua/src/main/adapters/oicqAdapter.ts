@@ -1868,7 +1868,7 @@ const adapter: OicqAdapter = {
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
                 useNT: form.useNT,
-                apk_info: apkInfo,
+                apk_info: Number(form.protocol) === -1 ? apkInfo : undefined,
             })
             _sendPrivateMsg = bot.sendPrivateMsg
             bot.sendPrivateMsg = async (user_id: number, message: MessageElem[] | string, auto_escape?: boolean) => {
