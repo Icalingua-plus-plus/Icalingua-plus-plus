@@ -98,7 +98,7 @@ export default {
 
     computed: {
         isImageLoading() {
-            return this.file.url.indexOf('blob:http') !== -1 || this.imageLoading
+            return this.imageLoading
         },
         isHidden() {
             return this.hideChatImageByDefault || /[!！] *[Hh] *[Ii] *[Dd] *[Ee]/.test(this.content)
@@ -131,7 +131,7 @@ export default {
                     const appid = u.searchParams.get('appid') || '1407'
                     if (fileid) {
                         const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', fileid, appid)
-                        if (newUrl) {
+                        if (newUrl && newUrl !== this.file.url) {
                             this.file.url = newUrl
                             this.imageLoading = true
                             this.err = false
