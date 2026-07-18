@@ -87,6 +87,22 @@ export default class SQLStorageProvider implements StorageProvider {
                         charset: 'utf8mb4',
                     },
                     useNullAsDefault: true,
+                    pool: {
+                        min: 2,
+                        max: 2,
+                        afterCreate: (conn: any, done: any) => {
+                            conn.exec(
+                                [
+                                    'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
+                                    'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
+                                    'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
+                                    'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
+                                    'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
+                                ].join('; '),
+                                (err: any) => done(err, conn),
+                            )
+                        },
+                    },
                 })
                 break
             case 'mysql':
@@ -94,6 +110,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     client: 'mysql',
                     connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
+                    pool: { min: 2, max: 2 },
                 })
                 break
             case 'pg':
@@ -102,6 +119,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
                     searchPath: [this.qid, 'public'],
+                    pool: { min: 2, max: 2 },
                 })
                 break
             default:
