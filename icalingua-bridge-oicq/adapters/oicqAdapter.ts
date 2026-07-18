@@ -1881,6 +1881,7 @@ const adapter = {
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {
         if (bot) bot.logout()
+        return storage?.close()
     },
     getMessageFromStorage: (roomId: number, msgId: string) => storage.getMessage(roomId, msgId),
     getMsg: (id: string) => bot.getMsg(id),

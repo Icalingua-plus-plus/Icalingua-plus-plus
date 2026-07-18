@@ -469,7 +469,9 @@ const adapter: Adapter = {
 
     setOnlineStatus(status: number): any {},
 
-    logOut(): void {},
+    logOut() {
+        return storage?.close()
+    },
 
     clearCurrentRoomUnread(): any {},
 

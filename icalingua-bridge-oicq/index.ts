@@ -30,3 +30,20 @@ if (config.milky) {
 initSocketIo(adapter)
 
 if (userConfig.account.autologin) adapter.createBot(userConfig.account)
+
+// 优雅退出：关闭数据库连接
+let shuttingDown = false
+const gracefulShutdown = async () => {
+    if (shuttingDown) return
+    shuttingDown = true
+    console.log('Closing database connection...')
+    try {
+        await adapter.logOut()
+    } catch (e) {
+        console.error('Error during shutdown:', e)
+    }
+    process.exit(0)
+}
+
+process.on('SIGINT', gracefulShutdown)
+process.on('SIGTERM', gracefulShutdown)

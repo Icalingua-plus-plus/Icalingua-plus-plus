@@ -1742,7 +1742,9 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 没必要实现的动作
-    logOut() {},
+    logOut() {
+        return storage?.close()
+    },
     randomDevice(username: number) {},
     reLogin() {},
     sliderLogin(ticket: string) {},

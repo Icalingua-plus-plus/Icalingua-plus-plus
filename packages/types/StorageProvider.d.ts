@@ -55,4 +55,7 @@ export default interface StorageProvider {
     fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]>
 
     searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]>
+
+    /** 关闭数据库连接，释放资源。应在进程退出前调用。 */
+    close(): Promise<void>
 }

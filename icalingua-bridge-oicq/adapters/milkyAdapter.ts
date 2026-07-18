@@ -2149,7 +2149,9 @@ const adapter: typeof oicqAdapter = {
     async deleteLoginDevice(flag) {
         return null
     },
-    logOut() {},
+    logOut() {
+        return storage?.close()
+    },
     randomDevice(username) {},
     reLogin() {},
     sliderLogin(ticket) {},

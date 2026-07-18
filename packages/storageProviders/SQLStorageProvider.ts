@@ -869,4 +869,18 @@ export default class SQLStorageProvider implements StorageProvider {
             return e
         }
     }
+
+    /** 实现 {@link StorageProvider} 类的 `close` 方法，
+     * 关闭数据库连接池，确保所有待写入数据 flush 到磁盘。
+     * 应在进程退出前调用。
+     */
+    async close(): Promise<void> {
+        try {
+            if (this.db) {
+                await this.db.destroy()
+            }
+        } catch (e) {
+            this.errorHandle(e)
+        }
+    }
 }

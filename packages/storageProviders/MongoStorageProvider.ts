@@ -9,6 +9,7 @@ export default class MongoStorageProvider implements StorageProvider {
     id: string | number
     connStr: string
     mdb: Db
+    private mongoClient: MongoClient
 
     constructor(connStr: string, id: string | number) {
         this.id = id
@@ -42,8 +43,8 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async connect(): Promise<void> {
-        const dba = await MongoClient.connect(this.connStr)
-        this.mdb = dba.db('eqq' + this.id)
+        this.mongoClient = await MongoClient.connect(this.connStr)
+        this.mdb = this.mongoClient.db('eqq' + this.id)
         await this.mdb.collection('rooms').createIndex('roomId', {
             background: true,
             unique: true,
@@ -71,6 +72,12 @@ export default class MongoStorageProvider implements StorageProvider {
             background: true,
             unique: true,
         })
+    }
+
+    async close(): Promise<void> {
+        if (this.mongoClient) {
+            await this.mongoClient.close()
+        }
     }
 
     async addMessage(roomId: number, message: Message): Promise<any> {

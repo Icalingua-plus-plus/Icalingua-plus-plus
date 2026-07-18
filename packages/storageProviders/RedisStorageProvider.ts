@@ -23,6 +23,12 @@ export default class RedisStorageProvider implements StorageProvider {
         return Promise.resolve()
     }
 
+    async close(): Promise<void> {
+        if (this.redis) {
+            await this.redis.quit()
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `getIgnoredChats` 方法，
      * 是对 `ignoredChats` 的“查所有”操作。
      *
