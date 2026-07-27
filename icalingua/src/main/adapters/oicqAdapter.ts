@@ -1863,7 +1863,7 @@ const adapter: OicqAdapter = {
                 data_dir: path.join(app.getPath('userData'), '/data'),
                 ignore_self: false,
                 brief: true,
-                log_level: process.env.NODE_ENV === 'development' ? 'warn' : 'error',
+                log_level: process.env.NODE_ENV === 'development' ? 'debug' : 'warn',
                 sign_api_addr: form.signAPIAddress,
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
