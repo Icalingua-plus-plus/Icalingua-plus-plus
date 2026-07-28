@@ -66,7 +66,7 @@ import createRoom from '../utils/createRoom'
 import formatDate from '../utils/formatDate'
 import getImageUrlByMd5 from '../utils/getImageUrlByMd5'
 import getSysInfo from '../utils/getSysInfo'
-import createProcessMessage from '../utils/processMessage'
+import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import sleep from '../utils/sleep'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
@@ -949,6 +949,11 @@ const initStorage = async () => {
                 break
         }
         await storage.connect()
+        registerSilkDecodeCompleter({
+            replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
+            renewMessage: (roomId, messageId, message) => clients.renewMessage(roomId, messageId, message),
+            getMessage: (roomId, messageId) => storage.getMessage(roomId, messageId),
+        })
         storage.getAllRooms().then((e) => {
             e.forEach((e) => {
                 //更新群的名称

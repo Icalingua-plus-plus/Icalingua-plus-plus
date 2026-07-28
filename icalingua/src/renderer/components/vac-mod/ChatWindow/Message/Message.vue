@@ -182,7 +182,32 @@
                         ></message-video>
 
                         <div v-else-if="isAudio" class="vac-audio-message">
-                            <div id="vac-audio-player">
+                            <div v-if="isAudioDecoding" class="vac-audio-decoding" title="语音解码中">
+                                <div class="vac-audio-decoding-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" width="18" height="18">
+                                        <path
+                                            fill="currentColor"
+                                            d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zm-7 8a1 1 0 0 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.93V20h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.07A7 7 0 0 1 5 11z"
+                                        />
+                                    </svg>
+                                </div>
+                                <div class="vac-audio-decoding-wave" aria-hidden="true">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="vac-audio-decoding-text">
+                                    <span class="vac-audio-decoding-title">语音解码中</span>
+                                    <span class="vac-audio-decoding-dots">
+                                        <i></i>
+                                        <i></i>
+                                        <i></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-else id="vac-audio-player">
                                 <audio controls controlslist="nodownload noremoteplayback novolume nomute">
                                     <source :src="audioPath" />
                                 </audio>
@@ -357,7 +382,15 @@ export default {
         isAudio() {
             return this.checkAudioType(this.message.file)
         },
+        isAudioDecoding() {
+            return (
+                this.isAudio &&
+                this.message.file &&
+                (this.message.file.name === 'decoding' || this.message.file.url === 'decoding')
+            )
+        },
         audioPath() {
+            if (this.isAudioDecoding) return ''
             if (this.message.file.url === this.message.file.name) {
                 return this.recordPath + '/' + this.message.file.name
             }
@@ -752,6 +785,146 @@ export default {
 
 .vac-audio-message {
     margin-top: 3px;
+}
+
+.vac-audio-decoding {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+    max-width: 300px;
+    height: 40px;
+    padding: 0 12px 0 10px;
+    box-sizing: border-box;
+    border-radius: 20px;
+    background: var(--chat-message-bg-color-media, rgba(0, 0, 0, 0.06));
+    color: var(--chat-message-color, inherit);
+    user-select: none;
+}
+
+.vac-audio-decoding-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: rgba(25, 118, 210, 0.12);
+    color: #1976d2;
+    animation: vac-audio-decoding-pulse 1.6s ease-in-out infinite;
+}
+
+.vac-audio-decoding-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+    flex-shrink: 0;
+
+    span {
+        display: block;
+        width: 3px;
+        height: 100%;
+        border-radius: 2px;
+        background: currentColor;
+        opacity: 0.55;
+        transform-origin: center;
+        animation: vac-audio-decoding-bar 1s ease-in-out infinite;
+
+        &:nth-child(1) {
+            animation-delay: 0s;
+        }
+        &:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+        &:nth-child(3) {
+            animation-delay: 0.24s;
+        }
+        &:nth-child(4) {
+            animation-delay: 0.36s;
+        }
+        &:nth-child(5) {
+            animation-delay: 0.48s;
+        }
+    }
+}
+
+.vac-audio-decoding-text {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1;
+    opacity: 0.85;
+}
+
+.vac-audio-decoding-title {
+    white-space: nowrap;
+}
+
+.vac-audio-decoding-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 2px;
+
+    i {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.35;
+        animation: vac-audio-decoding-dot 1.2s ease-in-out infinite;
+
+        &:nth-child(1) {
+            animation-delay: 0s;
+        }
+        &:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        &:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    }
+}
+
+@keyframes vac-audio-decoding-bar {
+    0%,
+    100% {
+        transform: scaleY(0.35);
+        opacity: 0.35;
+    }
+    50% {
+        transform: scaleY(1);
+        opacity: 0.9;
+    }
+}
+
+@keyframes vac-audio-decoding-dot {
+    0%,
+    80%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(0);
+    }
+    40% {
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+}
+
+@keyframes vac-audio-decoding-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.18);
+    }
+    50% {
+        transform: scale(1.04);
+        box-shadow: 0 0 0 4px rgba(25, 118, 210, 0);
+    }
 }
 
 .vac-file-message {

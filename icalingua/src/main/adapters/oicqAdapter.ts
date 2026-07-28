@@ -76,7 +76,7 @@ import { getConfig, saveConfigFile } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
-import processMessage from '../utils/processMessage'
+import processMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
@@ -1153,6 +1153,12 @@ const initStorage = async () => {
             }
         }
         await storage.connect()
+        // 语音异步解码完成后写库并推送 UI
+        registerSilkDecodeCompleter({
+            replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
+            renewMessage: (roomId, messageId, message) => ui.renewMessage(roomId, messageId, message),
+            getMessage: (roomId, messageId) => storage.getMessage(roomId, messageId),
+        })
         storage.getAllRooms().then((e) => {
             e.forEach((e) => {
                 //更新群的名称

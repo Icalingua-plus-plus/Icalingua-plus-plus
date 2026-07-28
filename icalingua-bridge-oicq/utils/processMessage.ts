@@ -11,10 +11,113 @@ import silkDecode from './silkDecode'
 import formatDate from './formatDate'
 import { ImgPttElemPlus, MessageElemPlus } from '../types/MessageElemPlus'
 import { formatForwardMessageBodyPrefix, getForwardMessagePrompt } from './forwardMessageMeta'
+import sleep from './sleep'
 
 type LastMessageLike = {
     content?: string
     username?: string | null
+}
+
+/** 语音异步解码完成后的落库/推送回调，由 adapter 在 storage 初始化后注册 */
+type SilkDecodeCompleter = {
+    replaceMessage: (roomId: number, messageId: string | number, message: Message) => Promise<any>
+    renewMessage: (roomId: number, messageId: string, message: Partial<Message>) => void
+    getMessage?: (roomId: number, messageId: string) => Promise<Message | null>
+}
+
+let silkDecodeCompleter: SilkDecodeCompleter | null = null
+
+export const registerSilkDecodeCompleter = (completer: SilkDecodeCompleter) => {
+    silkDecodeCompleter = completer
+}
+
+const AUDIO_DECODING_PLACEHOLDER = '[语音解码中]'
+const AUDIO_DECODING_FILE = 'decoding'
+
+const buildAudioFile = (fileName: string, fid?: string) => {
+    const file = {
+        type: 'audio/ogg',
+        url: fileName,
+        name: fileName,
+    } as Message['file']
+    if (fid) file.fid = fid
+    return file
+}
+
+const clearDecodingPlaceholderContent = (content: string) => {
+    if (!content) return ''
+    if (content === AUDIO_DECODING_PLACEHOLDER) return ''
+    return content.split(AUDIO_DECODING_PLACEHOLDER).join('').replace(/^\n+/, '').replace(/\n+$/, '')
+}
+
+/**
+ * 后台解码 silk，不阻塞消息入库。
+ * 等消息写入 DB 后再 replace + renew，避免与 addMessage 竞态。
+ */
+const scheduleAsyncSilkDecode = (roomId: number, message: Message, url: string, fileIndex: number, fid?: string) => {
+    const messageId = message._id
+    if (messageId === undefined || messageId === null || messageId === '') return
+
+    setImmediate(async () => {
+        const completer = silkDecodeCompleter
+        if (!completer) {
+            try {
+                const fileName = await silkDecode(url)
+                const file = buildAudioFile(fileName, fid)
+                message.file = file
+                message.files[fileIndex] = file
+                message.content = clearDecodingPlaceholderContent(message.content)
+            } catch (e) {
+                console.error(e)
+                message.content = '[语音转换失败]' + (e as Error).message + '\n' + url
+            }
+            return
+        }
+
+        try {
+            const fileName = await silkDecode(url)
+            const file = buildAudioFile(fileName, fid)
+
+            if (completer.getMessage) {
+                const deadline = Date.now() + 3000
+                while (Date.now() < deadline) {
+                    const existing = await completer.getMessage(roomId, String(messageId))
+                    if (existing) break
+                    await sleep(20)
+                }
+            } else {
+                await sleep(50)
+            }
+
+            message.file = file
+            if (fileIndex >= 0 && fileIndex < message.files.length) {
+                message.files[fileIndex] = file
+            } else {
+                message.files.push(file)
+            }
+            message.content = clearDecodingPlaceholderContent(message.content)
+
+            await completer.replaceMessage(roomId, messageId, message)
+            completer.renewMessage(roomId, String(messageId), {
+                file,
+                files: message.files,
+                content: message.content,
+            })
+        } catch (e) {
+            console.error(e)
+            message.content = '[语音转换失败]' + (e as Error).message + '\n' + url
+            try {
+                await completer.replaceMessage(roomId, messageId, message)
+                completer.renewMessage(roomId, String(messageId), {
+                    content: message.content,
+                    file: message.file,
+                    files: message.files,
+                })
+            } catch (err) {
+                console.error(err)
+            }
+        }
+    })
 }
 
 const createProcessMessage = (adapter: typeof oicqAdapter) => {
@@ -485,24 +588,39 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         }
                         message.files.push(message.file)
                         break
-                    case 'record':
-                        try {
-                            const fileName = await silkDecode(m.data.url)
-                            message.file = {
-                                type: 'audio/ogg',
-                                url: fileName,
-                                name: fileName,
-                            }
-                            if (typeof m.data.file === 'string') {
-                                message.file.fid = m.data.file
-                            }
-                            message.files.push(message.file)
-                        } catch (e) {
-                            console.error(e)
-                            message.content = '[语音转换失败]' + e.message + '\n' + m.data.url
-                        }
+                    case 'record': {
                         lastMessage.content = '[Audio]'
+                        const recordUrl = m.data.url
+                        const recordFid = typeof m.data.file === 'string' ? m.data.file : undefined
+                        if (!recordUrl) {
+                            message.content += '[无法处理的语音]undefined'
+                            break
+                        }
+
+                        // 主消息（有 _id + roomId）异步解码；历史拉取/回复引用仍同步
+                        const canAsyncDecode =
+                            !isHistory &&
+                            roomId != null &&
+                            message._id !== undefined &&
+                            message._id !== null &&
+                            message._id !== ''
+
+                        if (canAsyncDecode) {
+                            message.file = buildAudioFile(AUDIO_DECODING_FILE, recordFid)
+                            message.files.push(message.file)
+                            scheduleAsyncSilkDecode(roomId, message, recordUrl, message.files.length - 1, recordFid)
+                        } else {
+                            try {
+                                const fileName = await silkDecode(recordUrl)
+                                message.file = buildAudioFile(fileName, recordFid)
+                                message.files.push(message.file)
+                            } catch (e) {
+                                console.error(e)
+                                message.content = '[语音转换失败]' + (e as Error).message + '\n' + recordUrl
+                            }
+                        }
                         break
+                    }
                     case 'mirai':
                         try {
                             message.mirai = JSON.parse(m.data.data)

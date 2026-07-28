@@ -29,7 +29,7 @@ import {
     Ret,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
-import createProcessMessage from '../utils/processMessage'
+import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import formatDate from '../utils/formatDate'
 import { Socket } from 'socket.io'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
@@ -97,6 +97,11 @@ const initStorage = async () => {
                 break
         }
         await storage.connect()
+        registerSilkDecodeCompleter({
+            replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
+            renewMessage: (roomId, messageId, message) => clients.renewMessage(roomId, messageId, message),
+            getMessage: (roomId, messageId) => storage.getMessage(roomId, messageId),
+        })
         storage.getAllRooms().then((e) => {
             e.forEach(async (e) => {
                 //更新群的名称
