@@ -23,6 +23,8 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
 
 let tray: Tray
+let menuUpdatePromise: Promise<void> | null = null
+let menuUpdatePending = false
 
 let darknewmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'darknewmsg.png'))
 let newmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'newmsg.png'))
@@ -38,8 +40,30 @@ export const createTray = () => {
 }
 export const updateTrayMenu = async () => {
     if (!tray) return
+    if (menuUpdatePromise) {
+        menuUpdatePending = true
+        return menuUpdatePromise
+    }
+    do {
+        menuUpdatePending = false
+        menuUpdatePromise = _updateTrayMenu()
+        try {
+            await menuUpdatePromise
+        } finally {
+            menuUpdatePromise = null
+        }
+    } while (menuUpdatePending)
+}
+
+const _updateTrayMenu = async () => {
+    if (!tray) return
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
-    const unreadRooms: Room[] = await getUnreadRooms()
+    let unreadRooms: Room[]
+    try {
+        unreadRooms = await getUnreadRooms()
+    } catch {
+        unreadRooms = []
+    }
     const menu = Menu.buildFromTemplate([
         {
             label: `${getNickname()} (${getUin()})`,
