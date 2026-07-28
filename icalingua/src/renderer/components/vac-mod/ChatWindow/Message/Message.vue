@@ -207,11 +207,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <div v-else id="vac-audio-player">
-                                <audio controls controlslist="nodownload noremoteplayback novolume nomute">
-                                    <source :src="audioPath" />
-                                </audio>
-                            </div>
+                            <message-audio v-else :src="audioPath" />
                         </div>
 
                         <div v-else-if="message.file" class="vac-file-message">
@@ -292,6 +288,7 @@ import FormatMessage from '../../components/FormatMessage'
 import MessageReply from './MessageReply'
 import MessageImage from './MessageImage'
 import MessageVideo from './MessageVideo'
+import MessageAudio from './MessageAudio'
 
 import getLottieFace from '../../../../utils/getLottieFace'
 
@@ -311,6 +308,7 @@ export default {
         FormatMessage,
         MessageReply,
         MessageImage,
+        MessageAudio,
         MessageVideo,
         LottieAnimation,
     },
@@ -764,23 +762,6 @@ export default {
     font-size: 10px;
     color: var(--chat-message-color-timestamp);
     text-align: right;
-}
-
-.selector:not(*:root),
-#vac-audio-player {
-    max-width: 300px;
-    overflow: hidden;
-    border-top-right-radius: 1em;
-    border-bottom-right-radius: 2.5em 1em;
-
-    audio {
-        height: 40px;
-        max-width: 100%;
-
-        &::-webkit-media-controls-panel {
-            height: 40px;
-        }
-    }
 }
 
 .vac-audio-message {
