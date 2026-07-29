@@ -23,6 +23,8 @@
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
             @room-menu="roomMenu"
+            @open-group-announcements="openGroupAnnouncements"
+            @open-group-files="openGroupFiles"
             @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
@@ -1993,6 +1995,12 @@ export default {
         textctx: ipc.popupTextAreaMenu,
         roomMenu(e) {
             ipc.popupRoomMenu(this.room.roomId, e)
+        },
+        openGroupAnnouncements() {
+            ipc.openGroupAnnouncements(this.room.roomId)
+        },
+        openGroupFiles() {
+            ipc.openGroupFiles(this.room.roomId)
         },
         stickersMenu(e) {
             ipc.popupStickerMenu(e, false)

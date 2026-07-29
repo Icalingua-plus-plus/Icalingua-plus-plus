@@ -144,6 +144,12 @@ const ipc = {
     popupRoomMenu(roomId: number, e) {
         ipcRenderer.send('popupRoomMenu', roomId, { x: e.screenX, y: e.screenY })
     },
+    openGroupAnnouncements(roomId: number) {
+        ipcRenderer.send('openGroupAnnouncements', roomId)
+    },
+    openGroupFiles(roomId: number) {
+        ipcRenderer.send('openGroupFiles', roomId)
+    },
     popupAvatarMenu(message: Message, room: Room, e) {
         ipcRenderer.send('popupAvatarMenu', message, room, { x: e.screenX, y: e.screenY })
     },
