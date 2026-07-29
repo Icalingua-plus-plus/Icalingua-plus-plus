@@ -120,7 +120,8 @@ export default {
             let count = 0
             for (const msg of this.messages) {
                 if (msgsToForward.includes(msg._id)) {
-                    if (!msg.flash && (!msg.file || msg.file.type.startsWith('image/'))) {
+                    const type = msg.file?.type
+                    if (!msg.flash && (!type || type.startsWith('image/') || type.startsWith('audio/'))) {
                         const msgToSend = createPlusOneMessage(msg, {
                             roomId: this.roomId,
                         })

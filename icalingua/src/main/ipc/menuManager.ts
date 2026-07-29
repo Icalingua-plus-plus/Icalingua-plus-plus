@@ -2433,7 +2433,8 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     },
                 }),
             )
-            if (!message.file || message.file.type.startsWith('image/')) {
+            const messageFileType = message.file?.type
+            if (!messageFileType || messageFileType.startsWith('image/') || messageFileType.startsWith('audio/')) {
                 menu.append(
                     new MenuItem({
                         label: `+1${message.code ? ' (普通消息)' : ''}`,

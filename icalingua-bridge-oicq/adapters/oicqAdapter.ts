@@ -1314,7 +1314,12 @@ const adapter = {
             const img = media?.[index]
             if (!img || consumedMedia.has(index)) return
             const rawB64 = img.b64 ? img.b64.replace(/^data:.+;base64,/, '') : null
-            if (img.b64 && img.b64.startsWith('data:audio')) {
+            if (img.type?.startsWith('audio/') && img.fid) {
+                chain.push({
+                    type: 'record',
+                    data: { file: img.fid },
+                })
+            } else if (img.b64 && img.b64.startsWith('data:audio')) {
                 chain.push({
                     type: 'record',
                     data: { file: Buffer.from(rawB64, 'base64') },

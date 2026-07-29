@@ -7,6 +7,10 @@ export interface ImageAttachment {
     b64?: string
     /** 图片/音频 URL 或路径 */
     url?: string
+    /** 附件 MIME 类型，用于区分图片和语音 */
+    type?: string
+    /** 协议侧资源标识，语音 +1 时优先复用，避免重新编码 */
+    fid?: string
     /** Attachment position in the message text. */
     order?: number
 }

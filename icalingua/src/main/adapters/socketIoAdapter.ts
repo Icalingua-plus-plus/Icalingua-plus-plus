@@ -650,6 +650,8 @@ const adapter: Adapter = {
         // 将本地路径转为 base64
         if (data.media && data.media.length) {
             for (const img of data.media) {
+                // 收到的语音使用协议资源 fid 直接 +1，不要尝试读取本地解码缓存文件。
+                if (img.type?.startsWith('audio/') && img.fid) continue
                 if (img.url && !img.b64 && !/^https?:\/\//.test(img.url)) {
                     const fileContent = fs.readFileSync(img.url)
                     const type = await fileType.fromBuffer(fileContent)

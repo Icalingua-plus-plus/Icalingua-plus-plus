@@ -489,8 +489,9 @@ export default {
             }
         },
         canPlusOne() {
-            // +1 功能只在消息没有文件或文件是图片时可用
-            return !this.message.flash && (!this.message.file || this.message.file.type.startsWith('image/'))
+            // +1 功能支持普通消息、图片和可复用协议资源的语音
+            const type = this.message.file?.type
+            return !this.message.flash && (!type || type.startsWith('image/') || type.startsWith('audio/'))
         },
     },
 
