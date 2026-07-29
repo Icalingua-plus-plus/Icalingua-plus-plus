@@ -2,7 +2,6 @@ import { ipcMain, BrowserWindow } from 'electron'
 import { app } from 'electron'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
-import md5 from 'md5'
 import crypto from 'crypto'
 
 ipcMain.handle('getVersion', () => version.version)
@@ -43,7 +42,10 @@ ipcMain.on('setLastUsedStickerType', (_, type: 'face' | 'remote' | 'stickers' | 
 
 ipcMain.on('setLockPassword', (_, password: string) => {
     const salt = crypto.randomBytes(16).toString('hex')
-    getConfig().lockPassword = md5(password + salt) + '|' + salt
+    const iterations = 100000
+    const keyLength = 64
+    const derivedKey = crypto.pbkdf2Sync(password, salt, iterations, keyLength, 'sha512')
+    getConfig().lockPassword = derivedKey.toString('hex') + '|' + salt + '|' + iterations
     saveConfigFile()
 })
 
