@@ -29,6 +29,11 @@ import {
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
+import {
+    getMediaPartIndex,
+    shiftMediaOrdersAfterTextReplacement,
+    splitContentByMediaOrder,
+} from '../utils/messageMediaOrder'
 import formatDate from '../utils/formatDate'
 import { Socket } from 'socket.io'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
@@ -1094,6 +1099,29 @@ const adapter: typeof oicqAdapter = {
         }
 
         const chain: OutgoingSegment[] = []
+        const consumedMedia = new Set<number>()
+        const appendMedia = (index: number) => {
+            const img = media?.[index]
+            if (!img || consumedMedia.has(index)) return
+            if (img.b64) {
+                chain.push({
+                    type: 'image',
+                    data: {
+                        uri: 'base64://' + img.b64.replace(/^data:.+;base64,/, ''),
+                        sub_type: sticker ? 'sticker' : 'normal',
+                    },
+                })
+            } else if (img.url) {
+                chain.push({
+                    type: 'image',
+                    data: {
+                        uri: img.url.startsWith('http') ? img.url : `file://${img.url}`,
+                        sub_type: sticker ? 'sticker' : 'normal',
+                    },
+                })
+            }
+            consumedMedia.add(index)
+        }
 
         if (replyMessage) {
             const decoded = decodeMessageId(replyMessage._id as string)
@@ -1118,6 +1146,7 @@ const adapter: typeof oicqAdapter = {
                         id: atQQ === 1 ? 'all' : atQQ,
                         text: name,
                     })
+                    shiftMediaOrdersAfterTextReplacement(media, icalinguaAt.index, icalinguaAt[0].length, name.length)
                     content = content.replace(icalinguaAt[0], name)
                 } catch (e) {
                     console.error(e)
@@ -1125,7 +1154,7 @@ const adapter: typeof oicqAdapter = {
                 }
             }
             const FACE_REGEX = /\[Face: (\d+)]/
-            let splitContent = [content]
+            let splitContent = messageType === 'text' ? splitContentByMediaOrder(content, media || []) : [content]
             for (const { text } of at) {
                 if (!text) continue
                 const newParts: string[] = []
@@ -1160,6 +1189,11 @@ const adapter: typeof oicqAdapter = {
             }
             splitContent = newParts
             for (const part of splitContent) {
+                const mediaIndex = getMediaPartIndex(part)
+                if (mediaIndex !== null) {
+                    appendMedia(mediaIndex)
+                    continue
+                }
                 const atInfo = at.find((e) => e.text === part)
                 const isFace = FACE_REGEX.test(part)
                 if (atInfo) {
@@ -1178,25 +1212,7 @@ const adapter: typeof oicqAdapter = {
         }
 
         if (media && media.length) {
-            for (const img of media) {
-                if (img.b64) {
-                    chain.push({
-                        type: 'image',
-                        data: {
-                            uri: 'base64://' + img.b64.replace(/^data:.+;base64,/, ''),
-                            sub_type: sticker ? 'sticker' : 'normal',
-                        },
-                    })
-                } else if (img.url) {
-                    chain.push({
-                        type: 'image',
-                        data: {
-                            uri: img.url.startsWith('http') ? img.url : `file://${img.url}`,
-                            sub_type: sticker ? 'sticker' : 'normal',
-                        },
-                    })
-                }
-            }
+            media.forEach((_, index) => appendMedia(index))
         } else if (file) {
             chain.push({
                 type: 'image',

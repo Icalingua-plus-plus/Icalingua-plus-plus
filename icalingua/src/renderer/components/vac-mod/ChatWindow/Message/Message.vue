@@ -128,6 +128,49 @@
                             <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
 
+                        <template v-else-if="orderedMessageParts">
+                            <div v-for="part in orderedMessageParts" :key="part.key" class="vac-ordered-message-part">
+                                <message-image
+                                    v-if="part.type === 'image'"
+                                    :current-user-id="currentUserId"
+                                    :file="part.file"
+                                    :flash="message.flash"
+                                    :content="message.content"
+                                    :room-users="roomUsers"
+                                    :text-formatting="textFormatting"
+                                    :image-hover="imageHover"
+                                    :showForwardPanel="showForwardPanel"
+                                    :hide-chat-image-by-default="hideChatImageByDefault"
+                                    :local-image-viewer-by-default="localImageViewerByDefault"
+                                    :messages="messages"
+                                    :message="message"
+                                    :img_index="part.fileIndex"
+                                    @open-file="openFile"
+                                >
+                                    <template v-for="(i, name) in $scopedSlots" #[name]="data">
+                                        <slot :name="name" v-bind="data" />
+                                    </template>
+                                </message-image>
+                                <format-message
+                                    v-else
+                                    :content="part.content"
+                                    :users="roomUsers"
+                                    :text-formatting="textFormatting"
+                                    :linkify="linkify"
+                                    :showForwardPanel="showForwardPanel"
+                                    :forward-res-id="forwardResId"
+                                    :code="message.code"
+                                    :disableQLottie="disableQLottie"
+                                    :usePanguJs="usePanguJs"
+                                    @open-forward="$emit('open-forward', $event)"
+                                >
+                                    <template #deleted-icon="data">
+                                        <slot name="deleted-icon" v-bind="data" />
+                                    </template>
+                                </format-message>
+                            </div>
+                        </template>
+
                         <template v-else-if="isImage && message.files">
                             <message-image
                                 v-for="(file, i) in message.files"
@@ -230,6 +273,7 @@
                         <format-message
                             v-if="
                                 ((!message.deleted && !message.hide) || message.reveal) &&
+                                !orderedMessageParts &&
                                 !(lottie && message.content.startsWith('[QLottie') && !disableQLottie)
                             "
                             :content="message.content"
@@ -300,6 +344,8 @@ import ipc from '../../../../utils/ipc'
 import getImageUrlByMd5 from '../../../../../utils/getImageUrlByMd5'
 import getAvatarUrl from '../../../../../utils/getAvatarUrl'
 import pangu from 'pangu'
+import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
+import createPlusOneMessage from '../../../../../utils/createPlusOneMessage'
 
 export default {
     name: 'Message',
@@ -374,6 +420,9 @@ export default {
         },
         isImage() {
             return isImageFile(this.message.file)
+        },
+        orderedMessageParts() {
+            return getOrderedMessageParts(this.message)
         },
         isVideo() {
             return this.checkVideoType(this.message.file)
@@ -546,20 +595,7 @@ export default {
             new Audio(`file://${__static}/action_menu_select.wav`).play()
         },
         plusOne() {
-            const msgToSend = {
-                content: this.message.content,
-                replyMessage: this.message.replyMessage,
-                at: [],
-            }
-            const imageUrls = this.message.files
-                ? this.message.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
-                : this.message.file
-                  ? [this.message.file.url]
-                  : []
-            if (imageUrls.length) {
-                msgToSend.media = imageUrls.map((url) => ({ url }))
-            }
-            ipc.sendMessage(msgToSend)
+            ipc.sendMessage(createPlusOneMessage(this.message))
             new Audio(`file://${__static}/action_menu_select.wav`).play()
         },
     },

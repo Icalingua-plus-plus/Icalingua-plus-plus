@@ -7,6 +7,8 @@ export interface ImageAttachment {
     b64?: string
     /** 图片/音频 URL 或路径 */
     url?: string
+    /** Attachment position in the message text. */
+    order?: number
 }
 
 type SendMessageParams = {

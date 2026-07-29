@@ -58,6 +58,7 @@
 <script>
 import SvgIcon from '../../components/SvgIcon'
 import ipc from '../../../../utils/ipc'
+import createPlusOneMessage from '../../../../../utils/createPlusOneMessage'
 export default {
     name: 'RoomForwardMessage',
     components: {
@@ -120,20 +121,9 @@ export default {
             for (const msg of this.messages) {
                 if (msgsToForward.includes(msg._id)) {
                     if (!msg.flash && (!msg.file || msg.file.type.startsWith('image/'))) {
-                        const msgToSend = {
-                            content: msg.content,
-                            replyMessage: msg.replyMessage,
-                            at: [],
+                        const msgToSend = createPlusOneMessage(msg, {
                             roomId: this.roomId,
-                        }
-                        const imageUrls = msg.files
-                            ? msg.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
-                            : msg.file
-                              ? [msg.file.url]
-                              : []
-                        if (imageUrls.length) {
-                            msgToSend.media = imageUrls.map((url) => ({ url }))
-                        }
+                        })
                         ipc.sendMessage(msgToSend)
                         count++
                         if (count < msgsToForward.length) {

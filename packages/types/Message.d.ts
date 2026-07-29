@@ -3,6 +3,11 @@ import MessageMirai from './MessageMirai'
 interface MessageFile {
     type: string
     url: string
+    /**
+     * UTF-16 offset in `Message.content` where this attachment appeared.
+     * Older messages omit it and keep the legacy media-before-text layout.
+     */
+    order?: number
     size?: number
     name?: string
     fid?: string

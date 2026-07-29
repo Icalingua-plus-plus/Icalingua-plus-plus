@@ -50,6 +50,12 @@ const clearDecodingPlaceholderContent = (content: string) => {
     return content.split(AUDIO_DECODING_PLACEHOLDER).join('').replace(/^\n+/, '').replace(/\n+$/, '')
 }
 
+const shiftMediaOrders = (message: Message, removedLength: number) => {
+    for (const file of message.files || []) {
+        if (Number.isInteger(file.order)) file.order = Math.max(0, file.order - removedLength)
+    }
+}
+
 /**
  * 后台解码 silk，不阻塞消息入库。
  * 等消息写入 DB 后再 replace + renew，避免与 addMessage 竞态。
@@ -209,6 +215,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         message.file = {
                             type: 'image/jpeg',
                             url,
+                            order: message.content.length,
                             isFace: m.data.type === 'face',
                             height: data.height,
                             width: data.width,
@@ -224,6 +231,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         message.file = {
                             type: 'image/webp',
                             url,
+                            order: message.content.length,
                             isFace: true,
                         }
                         message.files.push(message.file)
@@ -634,11 +642,13 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 if (index > -1) {
                                     sender = message.content.substring(0, index)
                                     message.content = message.content.substring(index + 3)
+                                    shiftMediaOrders(message, index + 3)
                                 } else {
                                     //是图片之类没有真实文本内容的
                                     //去除尾部：
                                     sender = message.content.substring(0, message.content.length - 2)
                                     message.content = ''
+                                    shiftMediaOrders(message, Number.MAX_SAFE_INTEGER)
                                 }
                                 message.username = lastMessage.username = sender
                                 lastMessage.content = lastMessage.content.substring(sender.length + 3)
@@ -648,11 +658,13 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                                 if (index > -1) {
                                     sender = message.content.slice(0, index)
                                     message.content = message.content.slice(index + 2)
+                                    shiftMediaOrders(message, index + 2)
                                 } else {
                                     //是图片之类没有真实文本内容的
                                     //去除尾部：
                                     sender = message.content.slice(0, message.content.length - 1)
                                     message.content = ''
+                                    shiftMediaOrders(message, Number.MAX_SAFE_INTEGER)
                                 }
                                 message.username = lastMessage.username = sender
                                 lastMessage.content = lastMessage.content.slice(sender.length + 1)

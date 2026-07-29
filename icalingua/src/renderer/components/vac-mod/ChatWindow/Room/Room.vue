@@ -487,6 +487,7 @@ import getStaticPath from '../../../../../utils/getStaticPath'
 import ipc from '../../../../utils/ipc'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
+import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
 
 const faceDir = path.join(getStaticPath(), 'face')
 
@@ -1120,6 +1121,8 @@ export default {
                 }
                 if (msg) {
                     let content = msg.content
+                    const orderedParts = getOrderedMessageParts(msg)
+                    const forwardedImageIndexes = new Set()
                     singleMessage.user_id = msg.senderId
                     if (msg.replyMessage) {
                         singleMessage.message.push({
@@ -1130,48 +1133,67 @@ export default {
                             },
                         })
                     }
-                    if (content) {
-                        const icalinguaAtRegex = /<IcalinguaAt qq=\d+>([^<]*)<\/IcalinguaAt>/
-                        while (icalinguaAtRegex.test(content)) {
-                            const icalinguaAt = icalinguaAtRegex.exec(content)
-                            content = content.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
-                        }
+                    if (content || orderedParts) {
+                        const messageParts = orderedParts || [{ type: 'text', content }]
+                        for (const messagePart of messageParts) {
+                            if (messagePart.type === 'image') {
+                                const file = messagePart.file
+                                forwardedImageIndexes.add(messagePart.fileIndex)
+                                singleMessage.message.push({
+                                    type: 'image',
+                                    data: {
+                                        file: file.url.startsWith('data:image')
+                                            ? 'base64://' + file.url.replace(/^data:.+;base64,/, '')
+                                            : file.url,
+                                        type: 'image',
+                                    },
+                                })
+                                continue
+                            }
 
-                        const FACE_REGEX = /\[Face: (\d+)]/
-                        const Parts = []
-                        let splitContent = content
-                        while (FACE_REGEX.test(splitContent)) {
-                            const exec = FACE_REGEX.exec(splitContent)
-                            const index = exec.index
-                            const before = splitContent.substr(0, index)
-                            const text = exec[0]
-                            splitContent = splitContent.substr(index + text.length)
-                            before && Parts.push(before)
-                            Parts.push(text)
-                        }
-                        Parts.push(splitContent)
-                        for (const part of Parts) {
-                            const isFace = FACE_REGEX.test(part)
-                            if (isFace) {
-                                var temp = FACE_REGEX.exec(part)[1]
-                                singleMessage.message.push({
-                                    type: 'face',
-                                    data: {
-                                        id: Number.parseInt(temp, 10),
-                                    },
-                                })
-                            } else {
-                                singleMessage.message.push({
-                                    type: 'text',
-                                    data: {
-                                        text: part,
-                                    },
-                                })
+                            let partContent = messagePart.content
+                            const icalinguaAtRegex = /<IcalinguaAt qq=\d+>([^<]*)<\/IcalinguaAt>/
+                            while (icalinguaAtRegex.test(partContent)) {
+                                const icalinguaAt = icalinguaAtRegex.exec(partContent)
+                                partContent = partContent.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
+                            }
+
+                            const FACE_REGEX = /\[Face: (\d+)]/
+                            const parts = []
+                            while (FACE_REGEX.test(partContent)) {
+                                const exec = FACE_REGEX.exec(partContent)
+                                const index = exec.index
+                                const before = partContent.substr(0, index)
+                                const text = exec[0]
+                                partContent = partContent.substr(index + text.length)
+                                before && parts.push(before)
+                                parts.push(text)
+                            }
+                            parts.push(partContent)
+                            for (const part of parts) {
+                                const isFace = FACE_REGEX.test(part)
+                                if (isFace) {
+                                    const faceId = FACE_REGEX.exec(part)[1]
+                                    singleMessage.message.push({
+                                        type: 'face',
+                                        data: {
+                                            id: Number.parseInt(faceId, 10),
+                                        },
+                                    })
+                                } else if (part) {
+                                    singleMessage.message.push({
+                                        type: 'text',
+                                        data: {
+                                            text: part,
+                                        },
+                                    })
+                                }
                             }
                         }
                     }
                     if (msg.files) {
-                        msg.files.forEach((file) => {
+                        msg.files.forEach((file, fileIndex) => {
+                            if (forwardedImageIndexes.has(fileIndex)) return
                             if (file.type.startsWith('image/')) {
                                 singleMessage.message.push({
                                     type: 'image',

@@ -76,6 +76,11 @@ import { getConfig, saveConfigFile } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
+import {
+    getMediaPartIndex,
+    shiftMediaOrdersAfterTextReplacement,
+    splitContentByMediaOrder,
+} from '../utils/messageMediaOrder'
 import processMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
@@ -1558,6 +1563,37 @@ const adapter: OicqAdapter = {
         }
 
         const chain: MessageElem[] = []
+        const consumedMedia = new Set<number>()
+        const appendMedia = (index: number) => {
+            const img = media?.[index]
+            if (!img || consumedMedia.has(index)) return
+            const rawB64 = img.b64 ? img.b64.replace(/^data:.+;base64,/, '') : null
+            if (img.b64 && img.b64.startsWith('data:audio')) {
+                chain.push({
+                    type: 'record',
+                    data: { file: Buffer.from(rawB64, 'base64') },
+                })
+            } else if (img.b64) {
+                chain.push({
+                    type: 'image',
+                    data: {
+                        file: 'base64://' + rawB64,
+                        type: sticker ? 'face' : 'image',
+                        url: img.url || img.b64,
+                    },
+                })
+            } else if (img.url) {
+                chain.push({
+                    type: 'image',
+                    data: {
+                        file: img.url,
+                        type: sticker ? 'face' : 'image',
+                        url: img.url.replace(/\\/g, '/'),
+                    },
+                })
+            }
+            consumedMedia.add(index)
+        }
 
         if (messageType === 'anonymous') {
             if (roomId < 0)
@@ -1614,6 +1650,7 @@ const adapter: OicqAdapter = {
                         id: atQQ === 1 ? 'all' : atQQ,
                         text: name,
                     })
+                    shiftMediaOrdersAfterTextReplacement(media, icalinguaAt.index, icalinguaAt[0].length, name.length)
                     content = content.replace(icalinguaAt[0], name)
                 } catch (e) {
                     console.error(e)
@@ -1622,7 +1659,7 @@ const adapter: OicqAdapter = {
             }
             //这里是处理@人和表情 markup 的逻辑
             const FACE_REGEX = /\[Face: (\d+)]/
-            let splitContent = [content]
+            let splitContent = messageType === 'text' ? splitContentByMediaOrder(content, media || []) : [content]
             // 把 @xxx 的部分单独分割开
             // '喵@小A @小B呜' -> ['喵', '@小A', ' ', '@小B', '呜']
             for (const { text } of at) {
@@ -1662,6 +1699,11 @@ const adapter: OicqAdapter = {
             splitContent = newParts
             // 最后根据每个 string 元素判断类型并且换成对应的 MessageElem
             for (const part of splitContent) {
+                const mediaIndex = getMediaPartIndex(part)
+                if (mediaIndex !== null) {
+                    appendMedia(mediaIndex)
+                    continue
+                }
                 const atInfo = at.find((e) => e.text === part)
                 const isFace = FACE_REGEX.test(part)
                 let element: MessageElem
@@ -1752,35 +1794,7 @@ const adapter: OicqAdapter = {
         }
         // 图片/音频发送
         if (media && media.length) {
-            for (const img of media) {
-                const rawB64 = img.b64 ? img.b64.replace(/^data:.+;base64,/, '') : null
-                if (img.b64 && img.b64.startsWith('data:audio')) {
-                    chain.push({
-                        type: 'record',
-                        data: {
-                            file: Buffer.from(rawB64, 'base64'),
-                        },
-                    })
-                } else if (img.b64) {
-                    chain.push({
-                        type: 'image',
-                        data: {
-                            file: 'base64://' + rawB64,
-                            type: sticker ? 'face' : 'image',
-                            url: img.url || img.b64,
-                        },
-                    })
-                } else if (img.url) {
-                    chain.push({
-                        type: 'image',
-                        data: {
-                            file: img.url,
-                            type: sticker ? 'face' : 'image',
-                            url: img.url.replace(/\\/g, '/'),
-                        },
-                    })
-                }
-            }
+            media.forEach((_, index) => appendMedia(index))
         } else if (file) {
             chain.push({
                 type: 'image',

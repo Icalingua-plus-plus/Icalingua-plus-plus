@@ -11,6 +11,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getStaticPath from '../../utils/getStaticPath'
 import getWinUrl from '../../utils/getWinUrl'
+import createPlusOneMessage from '../../utils/createPlusOneMessage'
 import { newIcalinguaWindow, openMannounceWindow } from '../../utils/IcalinguaWindow'
 import socketIoProvider from '../providers/socketIoProvider'
 import atCache from '../utils/atCache'
@@ -2439,21 +2440,11 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                         click: () => {
                             let messageType
                             if (getConfig().anonymous) messageType = 'anonymous'
-                            const msgToSend: any = {
-                                content: message.content,
-                                replyMessage: message.replyMessage,
-                                at: [],
+                            else if (message.code) messageType = 'text'
+                            const msgToSend = createPlusOneMessage(message, {
                                 roomId: room.roomId,
                                 messageType,
-                            }
-                            const imageUrls = message.files
-                                ? message.files.filter((f) => f.type && f.type.startsWith('image')).map((f) => f.url)
-                                : message.file
-                                  ? [message.file.url]
-                                  : []
-                            if (imageUrls.length) {
-                                msgToSend.media = imageUrls.map((url) => ({ url }))
-                            }
+                            })
                             sendMessage(msgToSend)
                         },
                     }),
