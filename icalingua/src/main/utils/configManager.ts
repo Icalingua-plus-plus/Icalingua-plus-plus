@@ -49,6 +49,7 @@ const defaultAria2Config: Aria2Config = {
     host: '127.0.0.1',
     port: 6800,
     secure: false,
+    allowSelfSigned: false,
     secret: '',
     path: '/jsonrpc',
 }

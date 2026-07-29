@@ -2,7 +2,6 @@
 import Aria2Config from '@icalingua/types/Aria2Config'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
-import Aria2 from 'aria2'
 import { BrowserWindow, DownloadItem, app, dialog, ipcMain, shell } from 'electron'
 import edl from 'electron-dl'
 import path from 'path'
@@ -18,17 +17,53 @@ import axios from 'axios'
 import fileType from 'file-type'
 import { Readable } from 'stream'
 import fetch from 'node-fetch'
+import { Agent } from 'https'
 
-let aria2: Aria2 | null = null
+class Aria2RpcClient {
+    private readonly agent?: Agent
+    private id = 0
+
+    constructor(private readonly config: Aria2Config) {
+        // This agent is used only by aria2 RPC requests and does not alter global TLS verification.
+        if (config.secure && config.allowSelfSigned) {
+            this.agent = new Agent({ rejectUnauthorized: false })
+        }
+    }
+
+    private get url() {
+        const protocol = this.config.secure ? 'https' : 'http'
+        return `${protocol}://${this.config.host}:${this.config.port}${this.config.path}`
+    }
+
+    async open() {
+        await this.call('aria2.getVersion')
+    }
+
+    async call(method: string, ...parameters: unknown[]) {
+        const params = this.config.secret ? [`token:${this.config.secret}`, ...parameters] : parameters
+        const response = await fetch(this.url, {
+            method: 'POST',
+            body: JSON.stringify({ method, jsonrpc: '2.0', id: this.id++, params }),
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            agent: this.agent,
+        })
+        if (!response.ok) throw new Error(`Aria2 RPC HTTP ${response.status}`)
+
+        const result = await response.json()
+        if (result.error) throw new Error(result.error.message || 'Aria2 RPC error')
+        return result.result
+    }
+}
+
+let aria2: Aria2RpcClient | null = null
 
 export const loadConfig = (config: Aria2Config) => {
-    const { enabled, slient, ...rest } = config
+    const { enabled } = config
     if (enabled) {
-        aria2 = new Aria2({
-            // aria2 在导入 node-fetch 时有问题，手动指定一下
-            fetch,
-            ...rest,
-        })
+        aria2 = new Aria2RpcClient(config)
         aria2
             .open()
             .then(() => {

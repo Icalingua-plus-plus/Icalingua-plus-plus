@@ -13,8 +13,11 @@
             <el-form-item label="端口">
                 <el-input-number v-model.number="aria2.port" />
             </el-form-item>
-            <el-form-item label="安全">
+            <el-form-item label="HTTPS">
                 <el-switch v-model="aria2.secure" />
+            </el-form-item>
+            <el-form-item label="允许自签名">
+                <el-switch v-model="aria2.allowSelfSigned" :disabled="!aria2.secure" />
             </el-form-item>
             <el-form-item label="密钥">
                 <el-input v-model="aria2.secret" />

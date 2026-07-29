@@ -4,6 +4,7 @@ type Aria2Config = {
     host: string
     port: number
     secure: boolean
+    allowSelfSigned: boolean
     secret: string
     path: string
 }

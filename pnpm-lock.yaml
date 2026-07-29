@@ -137,9 +137,6 @@ importers:
       ajv:
         specifier: ^6.15.0
         version: 6.15.0
-      aria2:
-        specifier: 5.0.0
-        version: 5.0.0
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -1741,10 +1738,6 @@ packages:
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-
-  aria2@5.0.0:
-    resolution: {integrity: sha512-jFGuo5GmvgOpQ4UnAknw9kMMFOQIPxmjKG3weQzn71lvmJXpfsFwzUsSyeih77PLTqE1+OHbgXqnZma/gW1QhA==}
-    engines: {node: '>= 22.0.0'}
 
   array-flatten@1.1.1:
     resolution: {integrity: sha512-PCVAQswWemu6UdxsDFFX/+gVeYqKAod3D3UVm91jHwynguOwAvYPhx8nNlM++NqRcK6CxxpUafjmhIdKiHibqg==}
@@ -7036,8 +7029,6 @@ snapshots:
       sprintf-js: 1.0.3
 
   argparse@2.0.1: {}
-
-  aria2@5.0.0: {}
 
   array-flatten@1.1.1: {}
 

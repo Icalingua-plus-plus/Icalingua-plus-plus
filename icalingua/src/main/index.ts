@@ -14,8 +14,6 @@ import argv from './utils/argv'
     '都是笑话 不值一提 该放弃',
 ])()
 
-//防止连接自签名的 aria2 出错
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 // 可选的禁用硬件加速 #416
 if (argv.dha) {
     app.disableHardwareAcceleration()
