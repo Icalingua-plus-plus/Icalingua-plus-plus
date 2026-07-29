@@ -42,14 +42,32 @@
                 <span class="vac-audio-time">{{ timeText }}</span>
 
                 <div class="vac-audio-actions">
-                    <button
-                        type="button"
-                        class="vac-audio-chip"
-                        :title="'播放速度 ' + playbackRate + 'x'"
-                        @click.stop="cycleRate"
+                    <el-dropdown
+                        trigger="click"
+                        placement="top-start"
+                        class="vac-audio-rate-dropdown"
+                        popper-class="vac-audio-rate-popper"
+                        @command="setPlaybackRate"
                     >
-                        {{ playbackRate }}x
-                    </button>
+                        <button
+                            type="button"
+                            class="vac-audio-chip"
+                            :title="'播放速度 ' + playbackRate + 'x'"
+                            @click.stop
+                        >
+                            {{ playbackRate }}x
+                        </button>
+                        <el-dropdown-menu slot="dropdown" class="vac-audio-rate-menu">
+                            <el-dropdown-item
+                                v-for="rate in playbackRates"
+                                :key="rate"
+                                :command="rate"
+                                :class="{ 'is-active': rate === playbackRate }"
+                            >
+                                {{ rate }}x
+                            </el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
 
                     <div class="vac-audio-volume" @click.stop>
                         <button
@@ -120,6 +138,7 @@ export default {
             volume: 1,
             muted: false,
             playbackRate: 1,
+            playbackRates: PLAYBACK_RATES,
             hasError: false,
             _audio: null,
             _audioHandlers: null,
@@ -322,11 +341,14 @@ export default {
             this.timeText = `${this.formatTime(sec)} / ${this.formatTime(this.durationSec)}`
         },
         cycleRate() {
-            const idx = PLAYBACK_RATES.indexOf(this.playbackRate)
-            const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length]
-            this.playbackRate = next
+            const idx = this.playbackRates.indexOf(this.playbackRate)
+            const next = this.playbackRates[(idx + 1) % this.playbackRates.length]
+            this.setPlaybackRate(next)
+        },
+        setPlaybackRate(rate) {
+            this.playbackRate = rate
             const audio = this.getAudio()
-            if (audio) audio.playbackRate = next
+            if (audio) audio.playbackRate = rate
         },
         toggleMute() {
             this.muted = !this.muted
@@ -575,6 +597,34 @@ export default {
     align-items: center;
     gap: 6px;
     min-width: 0;
+}
+
+.vac-audio-rate-dropdown {
+    display: inline-flex;
+}
+
+.vac-audio-rate-menu {
+    min-width: 72px;
+}
+
+.vac-audio-rate-menu ::v-deep .el-dropdown-menu__item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    line-height: 30px;
+    padding: 0 12px;
+    font-size: 11px;
+}
+
+.vac-audio-rate-menu ::v-deep .el-dropdown-menu__item.is-active {
+    color: #1976d2;
+    font-weight: 600;
+    background: rgba(25, 118, 210, 0.08);
+}
+
+.vac-audio-rate-popper {
+    padding: 4px 0;
 }
 
 .vac-audio-chip {
