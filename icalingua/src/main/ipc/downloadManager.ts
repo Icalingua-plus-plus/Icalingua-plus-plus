@@ -1,8 +1,9 @@
+// allow: SIZE_OK - 下载状态、完成路径与 IPC 必须共享同一 DownloadItem 生命周期
 import Aria2Config from '@icalingua/types/Aria2Config'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import Aria2 from 'aria2'
-import { BrowserWindow, DownloadItem, app, dialog, ipcMain } from 'electron'
+import { BrowserWindow, DownloadItem, app, dialog, ipcMain, shell } from 'electron'
 import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
@@ -73,7 +74,7 @@ const registerDownload = (item: DownloadItem, url: string, fileName: string) => 
                 ui.messageError(`下载中止 ${fileName}`)
                 break
             case 'completed':
-                ui.messageSuccess(`下载完成 ${fileName}`)
+                ui.notifyDownloadComplete(fileName, item.getSavePath())
                 break
         }
     })
@@ -295,6 +296,10 @@ ipcMain.on('downloadFileByMessageData', (_, data: { action: string; message: Mes
 ipcMain.on('downloadImage', (_, url, saveAs = false) => downloadImage(url, saveAs))
 ipcMain.on('downloadGroupFile', (_, gin: number, fid: string) => downloadGroupFile(gin, fid))
 ipcMain.on('cancelDownload', (_, url: string) => downloads.get(url)?.cancel())
+ipcMain.on('openDownloadedFile', async (_, filePath: string) => {
+    const error = await shell.openPath(filePath)
+    if (error) ui.messageError(`打开文件失败：${error}`)
+})
 ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     getConfig().aria2 = config
     loadConfig(config)

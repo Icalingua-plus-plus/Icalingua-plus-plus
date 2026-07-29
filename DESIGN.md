@@ -58,6 +58,16 @@ The base unit is `4px`; existing compact steps are `4px`, `8px`, `12px`, and `16
 - **Motion**: only direct control feedback; the header itself does not animate.
 - **Layout**: fixed shell region; message content owns scrolling.
 
+### Download Complete Notification
+
+- **Structure**: success notification containing the downloaded file name and one visible `打开` action.
+- **Variants**: completed; cancelled and interrupted downloads continue to use error messages.
+- **Spacing**: `8px` between the file name and action; the name occupies remaining width and ellipsizes.
+- **States**: persistent until dismissed, button hover, active, focus, and disabled states come from Element UI.
+- **Accessibility**: the action uses visible command text and native button keyboard behavior; notification content is announced by Element UI.
+- **Motion**: uses the existing notification transition only; no additional animation.
+- **Layout**: compact horizontal cluster inside the notification surface.
+
 ## 6. Motion & Interaction
 
 | Type | Duration | Easing | Usage |

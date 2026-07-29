@@ -132,6 +132,9 @@ const ipc = {
     cancelDownload(id: string) {
         ipcRenderer.send('cancelDownload', id)
     },
+    openDownloadedFile(filePath: string) {
+        ipcRenderer.send('openDownloadedFile', filePath)
+    },
     sendGroupPoke(gin: number, uin: number) {
         ipcRenderer.send('sendGroupPoke', gin, uin)
     },

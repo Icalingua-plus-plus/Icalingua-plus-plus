@@ -338,6 +338,7 @@ import TheContactsPanel from '../components/TheContactsPanel.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import ChatGroupEditor from '../components/ChatGroupEditor.vue'
+import DownloadCompleteNotification from '../components/DownloadCompleteNotification.vue'
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import createRoom from '../../utils/createRoom'
@@ -361,6 +362,7 @@ export default {
         MultipaneResizer,
         ProgressBar,
         ChatGroupEditor,
+        DownloadCompleteNotification,
     },
     data() {
         return {
@@ -639,6 +641,19 @@ export default {
             if (instance) {
                 instance.notification.close()
             }
+        })
+        ipcRenderer.on('notifyDownloadComplete', (_, { fileName, filePath }) => {
+            const message = this.$createElement(DownloadCompleteNotification, {
+                props: { fileName },
+                on: { open: () => ipc.openDownloadedFile(filePath) },
+            })
+            this.$notify.success({
+                title: '下载完成',
+                message,
+                customClass: 'el-notification-download-complete',
+                offset: 80,
+                duration: 0,
+            })
         })
         ipcRenderer.on('message', (_, p) => this.$message(p))
         ipcRenderer.on('messageError', (_, p) => this.$message.error(p))

@@ -72,6 +72,9 @@ export default {
             close: () => sendToMainWindow('notifyProgressClose', id),
         }
     },
+    notifyDownloadComplete(fileName: string, filePath: string) {
+        sendToMainWindow('notifyDownloadComplete', { fileName, filePath })
+    },
     message(string: string) {
         if (getConfig().silentFetchHistory && string.endsWith(' 条消息')) return
         sendToMainWindow('message', string)
