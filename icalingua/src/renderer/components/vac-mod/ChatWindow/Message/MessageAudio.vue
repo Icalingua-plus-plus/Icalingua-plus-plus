@@ -5,18 +5,6 @@
         @dblclick.stop.prevent
         @click.stop
     >
-        <audio
-            ref="audio"
-            :src="src"
-            preload="metadata"
-            @loadedmetadata="onLoadedMetadata"
-            @durationchange="onLoadedMetadata"
-            @play="onPlay"
-            @pause="onPause"
-            @ended="onEnded"
-            @error="onError"
-        />
-
         <button
             type="button"
             class="vac-audio-play"
@@ -120,6 +108,7 @@ export default {
     name: 'MessageAudio',
     props: {
         src: { type: String, required: true },
+        audioSession: { type: Object, required: true },
     },
     data() {
         return {
@@ -132,29 +121,97 @@ export default {
             muted: false,
             playbackRate: 1,
             hasError: false,
+            _audio: null,
+            _audioHandlers: null,
         }
     },
     watch: {
         src() {
             this.stopProgressTimer()
+            this.clearSeekThrottle()
             this.resetState()
             this.$nextTick(() => {
-                const audio = this.$refs.audio
+                const audio = this.getAudio()
                 if (!audio) return
-                audio.load()
+                this.bindAudio()
+                this.syncLocalSettingsFromAudio()
+                this.syncAudioSource()
+                this.onLoadedMetadata()
+                this.syncFromAudio(true)
+                if (this.isAudioActive(audio)) this.startProgressTimer()
             })
         },
     },
     mounted() {
-        this.applyProgress(0)
+        const audio = this.getAudio()
+        if (!audio) return
+        this.bindAudio()
+        this.syncLocalSettingsFromAudio()
+        this.syncAudioSource()
+        this.onLoadedMetadata()
+        this.syncFromAudio(true)
+        if (this.isAudioActive(audio)) this.startProgressTimer()
     },
     beforeDestroy() {
         this.stopProgressTimer()
         this.clearSeekThrottle()
         this.unbindDragListeners()
-        this.$refs.audio?.pause()
+        this.unbindAudio()
     },
     methods: {
+        getAudio() {
+            return this.audioSession && this.audioSession.audio ? this.audioSession.audio : null
+        },
+        isAudioActive(audio) {
+            return !!audio && !audio.paused && !audio.ended && !audio.error
+        },
+        bindAudio() {
+            const audio = this.getAudio()
+            if (!audio) return
+            if (!this._audioHandlers) {
+                this._audioHandlers = {
+                    loadedmetadata: this.onLoadedMetadata.bind(this),
+                    durationchange: this.onLoadedMetadata.bind(this),
+                    play: this.onPlay.bind(this),
+                    pause: this.onPause.bind(this),
+                    ended: this.onEnded.bind(this),
+                    error: this.onError.bind(this),
+                }
+            }
+            if (this._audio === audio) return
+            this.unbindAudio()
+            this._audio = audio
+            Object.entries(this._audioHandlers).forEach(([eventName, handler]) => {
+                audio.addEventListener(eventName, handler)
+            })
+        },
+        unbindAudio() {
+            const audio = this._audio
+            if (!audio || !this._audioHandlers) return
+            Object.entries(this._audioHandlers).forEach(([eventName, handler]) => {
+                audio.removeEventListener(eventName, handler)
+            })
+            this._audio = null
+        },
+        syncAudioSource() {
+            const audio = this.getAudio()
+            if (!audio || !this.src) return
+            if (audio.getAttribute('src') !== this.src) {
+                audio.pause()
+                audio.src = this.src
+                audio.load()
+            }
+            audio.playbackRate = this.playbackRate
+            audio.volume = this.volume
+            audio.muted = this.muted
+        },
+        syncLocalSettingsFromAudio() {
+            const audio = this.getAudio()
+            if (!audio) return
+            this.playbackRate = audio.playbackRate || this.playbackRate
+            this.volume = typeof audio.volume === 'number' ? audio.volume : this.volume
+            this.muted = !!audio.muted
+        },
         resetState() {
             this.isPlaying = false
             this.isDragging = false
@@ -171,9 +228,9 @@ export default {
             this.applyProgress(0)
         },
         togglePlay() {
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (!audio || !this.src || this.hasError) return
-            if (audio.paused) {
+            if (audio.paused || audio.ended) {
                 audio.play().catch(() => {
                     this.isPlaying = false
                     this.stopProgressTimer()
@@ -183,7 +240,7 @@ export default {
             }
         },
         onLoadedMetadata() {
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (!audio) return
             const d = audio.duration
             // Chrome 有已知 bug：seek 到末尾附近会触发 durationchange 返回更大的 duration，
@@ -236,13 +293,18 @@ export default {
             this._progressTimer = null
         },
         syncFromAudio(force) {
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (!audio) return
             const current = audio.currentTime || 0
-            const duration = this._duration || 0
+            const duration = audio.duration && isFinite(audio.duration) ? audio.duration : this._duration || 0
+            if (duration && duration !== this._duration) {
+                this._duration = duration
+                this.durationSec = Math.floor(duration)
+            }
             const ratio = duration ? Math.max(0, Math.min(1, current / duration)) : 0
             this.applyProgress(ratio)
             this.updateTimeText(current, force)
+            this.isPlaying = this.isAudioActive(audio)
         },
         applyProgress(ratio) {
             const safe = Math.max(0, Math.min(1, ratio))
@@ -263,19 +325,19 @@ export default {
             const idx = PLAYBACK_RATES.indexOf(this.playbackRate)
             const next = PLAYBACK_RATES[(idx + 1) % PLAYBACK_RATES.length]
             this.playbackRate = next
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (audio) audio.playbackRate = next
         },
         toggleMute() {
             this.muted = !this.muted
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (audio) audio.muted = this.muted
         },
         onVolumeInput(e) {
             const value = Number(e.target.value)
             this.volume = value
             this.muted = value === 0
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (audio) {
                 audio.volume = value
                 audio.muted = this.muted
@@ -329,7 +391,7 @@ export default {
             if (!duration || !isFinite(duration)) return
             const ratio = this._pendingSeekRatio
             if (ratio == null) return
-            const audio = this.$refs.audio
+            const audio = this.getAudio()
             if (!audio) return
             const target = ratio * duration
             // 避免极小抖动反复 seek

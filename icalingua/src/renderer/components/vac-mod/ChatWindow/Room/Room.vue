@@ -99,6 +99,7 @@
                                 :message="m"
                                 :index="i + visibleViewport.head"
                                 :messages="messages"
+                                :audio-session="getAudioSession(m)"
                                 :edited-message="editedMessage"
                                 :message-actions="messageActions"
                                 :room-users="room.users"
@@ -611,6 +612,7 @@ export default {
             checkCanScrollTimer: null,
             scrollToBottomTimer: null,
             pasteIcon: `file://${__static}/Clipboard.svg`,
+            audioSessions: {},
         }
     },
     computed: {
@@ -651,6 +653,7 @@ export default {
         },
         async room(newVal, oldVal) {
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
+                this.clearAudioSessions()
                 this.loadingMessages = true
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
@@ -1060,8 +1063,29 @@ export default {
             clearTimeout(this.checkCanScrollTimer)
             this.checkCanScrollTimer = null
         }
+        this.clearAudioSessions()
     },
     methods: {
+        getAudioSession(message) {
+            if (!message || !message._id || !message.file || !isAudioFile(message.file)) return null
+            if (message.file.name === 'decoding' || message.file.url === 'decoding') return null
+            if (!this.audioSessions[message._id]) {
+                this.$set(this.audioSessions, message._id, {
+                    audio: new Audio(),
+                })
+            }
+            return this.audioSessions[message._id]
+        },
+        clearAudioSessions() {
+            Object.values(this.audioSessions).forEach((session) => {
+                const audio = session && session.audio
+                if (!audio) return
+                audio.pause()
+                audio.removeAttribute('src')
+                audio.load()
+            })
+            this.audioSessions = {}
+        },
         sendForward(target, name, multi = true, anonymous = false) {
             const isJSON = (str) => {
                 try {

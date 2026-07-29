@@ -207,7 +207,7 @@
                                     </span>
                                 </div>
                             </div>
-                            <message-audio v-else :src="audioPath" />
+                            <message-audio v-else :src="audioPath" :audio-session="audioSession" />
                         </div>
 
                         <div v-else-if="message.file" class="vac-file-message">
@@ -319,6 +319,7 @@ export default {
         index: { type: Number, required: true },
         message: { type: Object, required: true },
         messages: { type: Array, required: true },
+        audioSession: { type: Object, default: null },
         editedMessage: { type: Object, required: true },
         roomUsers: { type: Array, default: () => [] },
         roomFooterRef: { type: HTMLDivElement, default: null },
