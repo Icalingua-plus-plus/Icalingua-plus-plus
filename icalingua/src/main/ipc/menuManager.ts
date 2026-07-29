@@ -12,14 +12,12 @@ import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getStaticPath from '../../utils/getStaticPath'
 import getWinUrl from '../../utils/getWinUrl'
 import createPlusOneMessage from '../../utils/createPlusOneMessage'
-import { newIcalinguaWindow, openMannounceWindow } from '../../utils/IcalinguaWindow'
-import socketIoProvider from '../providers/socketIoProvider'
+import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import atCache from '../utils/atCache'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import exit from '../utils/exit'
 import exportContacts from '../utils/exportContacts'
 import exportGroupMembers from '../utils/exportGroupMembers'
-import gfsTokenManager from '../utils/gfsTokenManager'
 import isAdmin from '../utils/isAdmin'
 import openMedia from '../utils/openMedia'
 import setPriority from '../utils/setPriority'
@@ -54,7 +52,6 @@ import {
     removeChat,
     renewMessage,
     renewMessageURL,
-    requestGfsToken,
     revealMessage,
     sendMessage,
     setOnlineStatus as setStatus,
@@ -73,6 +70,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import sleep from '../../utils/sleep'
 import { spacingSendMessage } from '../../utils/panguSpacing'
 import { pb } from 'oicq-icalingua-plus-plus'
+import { openGroupAnnouncements, openGroupFiles } from '../utils/groupWebApps'
 
 const getStickersDir = () => path.join(app.getPath('userData'), 'stickers')
 let cachedStickerSubdirs: string[] | null = null
@@ -491,84 +489,13 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         webApps.append(
             new MenuItem({
                 label: '群公告',
-                async click() {
-                    const size = screen.getPrimaryDisplay().size
-                    const win = newIcalinguaWindow({
-                        height: size.height - 200,
-                        width: 500,
-                        autoHideMenuBar: true,
-                        title: '群公告',
-                        webPreferences: {
-                            preload: path.join(getStaticPath(), 'mannouncePreload.js'),
-                            contextIsolation: false,
-                        },
-                    })
-                    const cookies = await getCookies('qun.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://web.qun.qq.com',
-                            domain: '.qun.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    win.webContents.setWindowOpenHandler((details) => {
-                        if (details.url.startsWith('https://web.qun.qq.com/mannounce/')) {
-                            const win1 = openMannounceWindow(
-                                details.url.includes('detail') ? '查看群公告' : '发布新公告',
-                                250,
-                                details.url,
-                            )
-                            win1.on('closed', () => {
-                                if (win.isDestroyed()) return
-                                win.webContents.reload()
-                            })
-                        }
-                        return { action: 'deny' }
-                    })
-                    win.webContents.on('did-finish-load', () => {
-                        win.webContents.executeJavaScript(
-                            fs.readFileSync(path.join(getStaticPath(), 'mannounceInj.js'), 'utf-8'),
-                        )
-                    })
-                    await win.loadURL('https://web.qun.qq.com/mannounce/index.html#gc=' + -room.roomId)
-                },
+                click: () => openGroupAnnouncements(room),
             }),
         )
         webApps.append(
             new MenuItem({
                 label: '群文件',
-                async click() {
-                    const external = getConfig().externalGfsBrowser
-                    let url
-                    if (external) {
-                        url = external.replace('{groupId}', String(-room.roomId))
-                    } else if (getConfig().adapter === 'socketIo') {
-                        const token = await requestGfsToken(-room.roomId)
-                        url = `${getConfig().server}/file-manager/?${token}`
-                    } else {
-                        const token = gfsTokenManager.create(-room.roomId)
-                        url = `http://localhost:${socketIoProvider.getPort()}/file-manager/?${token}`
-                    }
-                    const size = screen.getPrimaryDisplay().size
-                    const win = newIcalinguaWindow({
-                        autoHideMenuBar: true,
-                        height: size.height - 200,
-                        width: 1500,
-                        webPreferences: {
-                            // 修复循环触发下载的问题
-                            partition: 'file-manager',
-                            preload: path.join(getStaticPath(), 'fileManagerPreload.js'),
-                            contextIsolation: false,
-                        },
-                    })
-                    win.webContents.session.on('will-download', (e, item) => {
-                        item.cancel()
-                        download(item.getURL(), item.getFilename())
-                    })
-                    win.loadURL(url)
-                    win.webContents.executeJavaScript('window.isAdmin = "' + (await isAdmin(room.roomId)) + '"')
-                },
+                click: () => openGroupFiles(room),
             }),
         )
         webApps.append(
@@ -1923,6 +1850,8 @@ ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
         ...pos,
     })
 })
+ipcMain.on('openGroupAnnouncements', async (_, roomId: number) => openGroupAnnouncements(await getRoom(roomId)))
+ipcMain.on('openGroupFiles', async (_, roomId: number) => openGroupFiles(await getRoom(roomId)))
 ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, sect?: string, history?: boolean) => {
     const win = getSenderWindow(event)
     const bounds = win.getContentBounds()
