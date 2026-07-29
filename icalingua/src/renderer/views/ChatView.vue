@@ -429,6 +429,10 @@ export default {
             chatGroupScrollHeight: 0,
             chatGroupIsDragging: false,
             chatGroupScrollbarPadding: 3,
+            // roomId → groupNames Set 反向索引，避免 rooms×groups 双重循环
+            _roomToGroupIndex: null,
+            // 标记了 includeAllPersonal 的分组名列表
+            _includeAllPersonalGroupNames: null,
         }
     },
     async created() {
@@ -581,22 +585,12 @@ export default {
         })
         ipcRenderer.on('setDisableChatGroupsRedPointSeeting', (_, p) => {
             this.disableChatGroupsRedPoint = p
-            this.chatGroupsUnreadCount = {}
-            if (p) return
-            this.rooms.forEach((e) => {
-                if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(
-                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
-                    )
-                    if (e.unreadCount > 0) {
-                        this.chatGroupsUnreadCount['chats'] = true
-                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach((g) => {
-                            this.chatGroupsUnreadCount[g.name] = true
-                        })
-                    }
-                }
-            })
+            if (!p) {
+                this._rebuildRoomToGroupIndex()
+                this._recomputeChatGroupsUnreadCount()
+            } else {
+                this.chatGroupsUnreadCount = {}
+            }
         })
         ipcRenderer.on('openGroupMemberPanel', (_, p) => {
             this.groupmemberShown = p.shown
@@ -1501,6 +1495,49 @@ Chromium ${process.versions.chrome}`
             }
             if (unreadRoom) this.chroom(unreadRoom)
         },
+        /** 重建 roomId → groupNames 反向索引（chatGroups 变化时调用） */
+        _rebuildRoomToGroupIndex() {
+            const idx = new Map()
+            const includeAllPersonalNames = new Set()
+            for (const g of this.chatGroups) {
+                if (g.includeAllPersonal) {
+                    includeAllPersonalNames.add(g.name)
+                }
+                for (const roomId of g.rooms) {
+                    if (!idx.has(roomId)) idx.set(roomId, new Set())
+                    idx.get(roomId).add(g.name)
+                }
+            }
+            this._roomToGroupIndex = idx
+            this._includeAllPersonalGroupNames = includeAllPersonalNames
+        },
+        /** 利用反向索引增量计算未读红点（O(rooms) */
+        _recomputeChatGroupsUnreadCount() {
+            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
+            const unread = {}
+            const selectedId = this.selectedRoomId
+            for (const e of this.rooms) {
+                if (selectedId && e.roomId === selectedId) continue
+                if (e.unreadCount > 0 && (e.priority >= this.priority || e.at)) {
+                    unread['chats'] = true
+                    if (e.roomId > 0) unread['private'] = true
+                    // 反向索引 O(1) 查找该 room 所属的自定义分组
+                    const groups = this._roomToGroupIndex?.get(e.roomId)
+                    if (groups) {
+                        for (const gName of groups) {
+                            unread[gName] = true
+                        }
+                    }
+                    // includeAllPersonal 分组匹配所有私聊
+                    if (e.roomId > 0 && this._includeAllPersonalGroupNames) {
+                        for (const gName of this._includeAllPersonalGroupNames) {
+                            unread[gName] = true
+                        }
+                    }
+                }
+            }
+            this.chatGroupsUnreadCount = unread
+        },
     },
     computed: {
         cssVars() {
@@ -1564,6 +1601,8 @@ Chromium ${process.versions.chrome}`
     watch: {
         chatGroups: {
             handler() {
+                this._rebuildRoomToGroupIndex()
+                this._recomputeChatGroupsUnreadCount()
                 this.$nextTick(this._updateChatGroupContainer)
             },
             deep: true,
@@ -1592,43 +1631,11 @@ Chromium ${process.versions.chrome}`
                 }, 30000)
             }
         },
-        rooms(n) {
-            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
-            this.chatGroupsUnreadCount = {}
-            n.forEach((e) => {
-                if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(
-                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
-                    )
-                    if (e.unreadCount > 0) {
-                        this.chatGroupsUnreadCount['chats'] = true
-                        // 屎山还在堆
-                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach((g) => {
-                            this.chatGroupsUnreadCount[g.name] = true
-                        })
-                    }
-                }
-            })
+        rooms() {
+            this._recomputeChatGroupsUnreadCount()
         },
-        selectedRoomId(n) {
-            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
-            this.chatGroupsUnreadCount = {}
-            this.rooms.forEach((e) => {
-                if (e.roomId === n) return
-                if (e.priority >= this.priority || e.at) {
-                    const groups = this.chatGroups.filter(
-                        (g) => g.rooms.includes(e.roomId) || (g.includeAllPersonal && e.roomId > 0),
-                    )
-                    if (e.unreadCount > 0) {
-                        this.chatGroupsUnreadCount['chats'] = true
-                        if (e.roomId > 0) this.chatGroupsUnreadCount['personal'] = true
-                        groups.forEach((g) => {
-                            this.chatGroupsUnreadCount[g.name] = true
-                        })
-                    }
-                }
-            })
+        selectedRoomId() {
+            this._recomputeChatGroupsUnreadCount()
         },
     },
 }
