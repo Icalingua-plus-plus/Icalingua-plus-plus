@@ -1426,7 +1426,10 @@ export default {
             // 消息未找到，尝试自动加载
             if (autoLoad && !isRetry) {
                 const maxRetries = 10
-                if (this.scrollingToReplyMessageRetryCount < maxRetries) {
+                if (
+                    this.scrollingToReplyMessageRetryCount < maxRetries &&
+                    !(this.$route.name === 'history-page' || this.$route.name === 'member-history-page')
+                ) {
                     this.scrollingToReplyMessageRetryCount++
                     const loadCount = 200 // 每次加载200条消息
                     console.log(
