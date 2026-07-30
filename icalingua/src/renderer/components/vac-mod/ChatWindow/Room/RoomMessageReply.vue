@@ -5,7 +5,7 @@
                 <img v-if="isImageFile" :src="messageReply.file.url" class="vac-image-reply" />
                 <div class="vac-reply-info">
                     <div class="vac-reply-username">
-                        {{ messageReply.username }}
+                        {{ messageReply.username || replySenderId }}
                     </div>
                     <div class="vac-reply-content">
                         <format-message
@@ -35,6 +35,7 @@
 <script>
 import SvgIcon from '../../components/SvgIcon'
 import FormatMessage from '../../components/FormatMessage'
+import { parseReplySenderId } from '../../utils/parseReplySenderId'
 
 const { isImageFile } = require('../../utils/mediaFile')
 
@@ -56,6 +57,9 @@ export default {
     computed: {
         isImageFile() {
             return isImageFile(this.messageReply.file)
+        },
+        replySenderId() {
+            return parseReplySenderId(this.messageReply)
         },
     },
 }

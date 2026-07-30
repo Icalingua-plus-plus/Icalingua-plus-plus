@@ -81,7 +81,7 @@
                             }"
                             style="display: flex"
                         >
-                            <span style="width: 100%">{{ message.username }}</span>
+                            <span style="width: 100%">{{ message.username || message.senderId }}</span>
                             <span
                                 v-show="
                                     message.role &&

@@ -1,7 +1,8 @@
 <template>
     <div class="vac-reply-message">
-        <div class="vac-reply-username" v-if="message.replyMessage.username">
-            {{ message.replyMessage.username }}
+        <div class="vac-reply-username">
+            <span v-if="message.replyMessage.username">{{ message.replyMessage.username }}</span>
+            <span v-else>{{ replySenderId }}</span>
             <div style="float: right; width: 15px; height: 15px; cursor: pointer" @click="scrollToOrigin">
                 <svg
                     width="15"
@@ -96,6 +97,7 @@
 import FormatMessage from '../../components/FormatMessage'
 import { ipcRenderer } from 'electron'
 import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
+import { parseReplySenderId } from '../../utils/parseReplySenderId'
 
 const { isImageFile } = require('../../utils/mediaFile')
 
@@ -126,6 +128,9 @@ export default {
         },
         orderedReplyParts() {
             return getOrderedMessageParts(this.message.replyMessage)
+        },
+        replySenderId() {
+            return parseReplySenderId(this.message.replyMessage)
         },
     },
 
