@@ -13,11 +13,9 @@ import { download } from '../main/ipc/downloadManager'
  *
  * - stableTitle: 把 title 注入构造选项使首次 map 即生效，并拦截 page-title-updated
  *   防止 HTML 改 title 破坏规则匹配。
- * - deferShow: 强制 show:false 等 ready-to-show 再显示，顺带消除空白闪烁。
  */
 export interface StableTitleOptions {
     stableTitle?: string
-    deferShow?: boolean
 }
 
 export function newIcalinguaWindow(
@@ -25,20 +23,24 @@ export function newIcalinguaWindow(
     stable?: StableTitleOptions,
 ): BrowserWindow {
     const finalOptions: Electron.BrowserWindowConstructorOptions = { ...(options || {}) }
+    const shouldShowImmediately = finalOptions.show !== false
+    if (shouldShowImmediately) {
+        // Let Electron finish creating and styling the native window before mapping it on screen.
+        // This avoids the default-colored client-area frame that Windows may paint for show:true.
+        finalOptions.show = false
+    }
     if (stable?.stableTitle) {
         finalOptions.title = stable.stableTitle
     }
-    if (stable?.deferShow) {
-        finalOptions.show = false
-    }
     const win = new BrowserWindow(finalOptions)
+    if (finalOptions.backgroundColor) {
+        win.setBackgroundColor(finalOptions.backgroundColor)
+    }
     if (stable?.stableTitle) {
         win.on('page-title-updated', (e) => e.preventDefault())
     }
-    if (stable?.deferShow) {
-        win.once('ready-to-show', () => {
-            if (!win.isDestroyed()) win.show()
-        })
+    if (shouldShowImmediately) {
+        win.show()
     }
     win.webContents.on('will-prevent-unload', (event) => {
         const choice = dialog.showMessageBoxSync(win, {

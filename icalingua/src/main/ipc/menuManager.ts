@@ -153,6 +153,7 @@ const openMemberHistoryWindow = (senderId: number, roomId: number, senderName: s
     const win = newIcalinguaWindow({
         height: size.height - 200,
         width,
+        backgroundColor: themes.getThemeBackgroundColor(),
         autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
@@ -179,6 +180,7 @@ const openMessageSearchWindow = (roomId: number, roomName: string) => {
     const win = newIcalinguaWindow({
         height: size.height - 200,
         width,
+        backgroundColor: themes.getThemeBackgroundColor(),
         autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
@@ -319,6 +321,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 const win = newIcalinguaWindow({
                     height: size.height - 200,
                     width: 800,
+                    backgroundColor: themes.getThemeBackgroundColor(),
                     autoHideMenuBar: true,
                     webPreferences: {
                         nodeIntegration: true,

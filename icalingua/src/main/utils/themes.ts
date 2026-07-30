@@ -6,6 +6,15 @@ import * as configMgr from './configManager'
 var themeList = ['light', 'dark']
 var themeData: any = {}
 
+function syncNativeThemeSource() {
+    const theme = configMgr.getConfig().theme
+    nativeTheme.themeSource = theme === 'auto' ? 'system' : theme === 'dark' ? 'dark' : 'light'
+}
+
+// BrowserWindow may paint once using Electron's native color scheme before its backgroundColor takes effect.
+// Set it during main-process startup so the native first frame matches the configured application theme.
+syncNativeThemeSource()
+
 export function getThemeData() {
     return themeData
 }
@@ -14,12 +23,19 @@ export function getThemeList() {
     return themeList
 }
 
+export function getThemeBackgroundColor() {
+    const theme = configMgr.getConfig().theme
+    const isDark = theme === 'auto' ? nativeTheme.shouldUseDarkColors : theme === 'dark'
+    return isDark ? '#131415' : '#FFFFFF'
+}
+
 export function refreshTheme() {
     windowMgr.sendToMainWindow('theme:refresh')
     windowMgr.sendToAllChatWindows('theme:refresh')
 }
 
 export function useTheme(theme: string) {
+    syncNativeThemeSource()
     windowMgr.sendToMainWindow('theme:use', theme)
     windowMgr.sendToAllChatWindows('theme:use', theme)
 }

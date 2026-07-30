@@ -41,15 +41,7 @@ export const isAppLocked = () => isLocked
 export const loadMainWindow = () => {
     //start main window
     const winSize = getConfig().winSize
-    const theme = getConfig().theme
-    const themeColor =
-        theme === 'auto'
-            ? nativeTheme.shouldUseDarkColors
-                ? '#131415'
-                : '#FFFFFF'
-            : theme === 'dark'
-              ? '#131415'
-              : '#FFFFFF'
+    const themeColor = themes.getThemeBackgroundColor()
     mainWindow = newIcalinguaWindow(
         {
             height: winSize.height,
@@ -244,7 +236,7 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
                     contextIsolation: false,
                 },
             },
-            { stableTitle: 'Icalingua++ Login', deferShow: true },
+            { stableTitle: 'Icalingua++ Login' },
         )
 
         loginWindow.on('closed', () => {
@@ -253,9 +245,7 @@ export const showLoginWindow = (isConfiguringBridge = false, disableIdLogin = fa
 
         if (process.env.NODE_ENV === 'development') {
             loadDevtools(loginWindow)
-            // deferShow 下窗口最初 show:false，需要等 helper 的 ready-to-show
-            // show() 之后再 minimize，否则 minimize 状态会被 show() 覆盖
-            loginWindow.once('show', () => loginWindow.minimize())
+            loginWindow.minimize()
         }
 
         return loginWindow.loadURL(
@@ -279,7 +269,7 @@ export const showRequestWindow = () => {
                 },
                 autoHideMenuBar: true,
             },
-            { stableTitle: 'Icalingua++ FriendRequest', deferShow: true },
+            { stableTitle: 'Icalingua++ FriendRequest' },
         )
 
         if (process.env.NODE_ENV === 'development') {
@@ -314,7 +304,7 @@ export const showSetLockPasswordWindow = () => {
                 nodeIntegration: true,
             },
         },
-        { stableTitle: 'Icalingua++ SetLockPassword', deferShow: true },
+        { stableTitle: 'Icalingua++ SetLockPassword' },
     )
     setLockPasswordWindow.loadURL(getWinUrl() + '#/setLockPassword')
 }
@@ -349,7 +339,7 @@ export const judgeLocked = (callback: () => void) => {
                         nodeIntegration: true,
                     },
                 },
-                { stableTitle: 'Icalingua++ Unlock', deferShow: true },
+                { stableTitle: 'Icalingua++ Unlock' },
             )
             unlockWindow.on('closed', () => {
                 unlockWindow = null
@@ -460,7 +450,7 @@ export const showDeviceManagerWindow = () => {
                 },
                 autoHideMenuBar: true,
             },
-            { stableTitle: 'Icalingua++ DeviceManager', deferShow: true },
+            { stableTitle: 'Icalingua++ DeviceManager' },
         )
 
         if (process.env.NODE_ENV === 'development') {
@@ -552,31 +542,18 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
     }
 
     const size = screen.getPrimaryDisplay().size
-    const theme = getConfig().theme
-    const themeColor =
-        theme === 'auto'
-            ? nativeTheme.shouldUseDarkColors
-                ? '#131415'
-                : '#FFFFFF'
-            : theme === 'dark'
-              ? '#131415'
-              : '#FFFFFF'
-
-    const win = newIcalinguaWindow(
-        {
-            height: size.height - 200,
-            width: 900,
-            title: roomName,
-            backgroundColor: themeColor,
-            autoHideMenuBar: true,
-            webPreferences: {
-                nodeIntegration: true,
-                webSecurity: false,
-                contextIsolation: false,
-            },
+    const win = newIcalinguaWindow({
+        height: size.height - 200,
+        width: 900,
+        title: roomName,
+        backgroundColor: themes.getThemeBackgroundColor(),
+        autoHideMenuBar: true,
+        webPreferences: {
+            nodeIntegration: true,
+            webSecurity: false,
+            contextIsolation: false,
         },
-        { deferShow: true },
-    )
+    })
 
     chatWindows.set(roomId, win)
 

@@ -53,13 +53,15 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                 {
                     width: imageViewerSize.width,
                     height: imageViewerSize.height,
+                    show: false,
+                    backgroundColor: '#000000',
                     autoHideMenuBar: true,
                     webPreferences: {
                         contextIsolation: false,
                         preload: path.join(getStaticPath(), 'imgViewPreload.js'),
                     },
                 },
-                { stableTitle: 'Icalingua++ ImageViewer', deferShow: true },
+                { stableTitle: 'Icalingua++ ImageViewer' },
             )
             // get main window screen location
             const bound = viewerWindow.getBounds()
@@ -81,6 +83,7 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             viewerWindow.loadURL(
                 'file://' + path.join(getStaticPath(), 'imgView.html') + '?' + querystring.stringify({ url }),
             )
+            viewerWindow.show()
             //viewerWindow.maximize()
             // 监听窗口关闭事件，保存窗口大小
             viewerWindow.on('close', () => {

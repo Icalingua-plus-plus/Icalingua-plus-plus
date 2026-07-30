@@ -230,6 +230,7 @@ ipcMain.on('openMemberHistory', async (_, senderId: number, roomId: number, send
     const win = newIcalinguaWindow({
         height: size.height - 200,
         width,
+        backgroundColor: themes.getThemeBackgroundColor(),
         autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: true,
@@ -266,6 +267,7 @@ ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) =>
         {
             height: size.height - 200,
             width,
+            backgroundColor: themes.getThemeBackgroundColor(),
             autoHideMenuBar: true,
             webPreferences: {
                 nodeIntegration: true,
@@ -273,7 +275,7 @@ ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) =>
                 contextIsolation: false,
             },
         },
-        { stableTitle: 'Icalingua++ ForwardView', deferShow: true },
+        { stableTitle: 'Icalingua++ ForwardView' },
     )
     win.loadURL(getWinUrl() + '#/history')
     let messages: Promise<Message[]> | Message[]
