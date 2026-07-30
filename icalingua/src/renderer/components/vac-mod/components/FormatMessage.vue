@@ -55,7 +55,7 @@
             </template>
         </div>
         <div v-else class="vac-message-content">
-            {{ formattedContent }}
+            {{ content }}
         </div>
     </div>
 </template>
@@ -66,7 +66,7 @@ import SvgIcon from './SvgIcon'
 const path = require('path')
 
 import { parseForwardPreview, resolveForwardResource } from '../utils/forwardMessage'
-import { formatMessageParts, formatUserTags, padFaceId } from '../utils/messageFormatting'
+import { formatMessageParts, padFaceId } from '../utils/messageFormatting'
 
 export default {
     name: 'FormatMessage',
@@ -75,7 +75,6 @@ export default {
     props: {
         content: { type: [String, Number], required: true },
         deleted: { type: Boolean, default: false },
-        users: { type: Array, default: () => [] },
         linkify: { type: Boolean, default: true },
         singleLine: { type: Boolean, default: false },
         textFormatting: { type: Boolean, required: true },
@@ -94,14 +93,11 @@ export default {
 
     computed: {
         linkifiedMessage() {
-            return formatMessageParts(this.formattedContent, {
+            return formatMessageParts(String(this.content), {
                 linkify: this.linkify,
                 disableQLottie: this.disableQLottie,
                 usePanguJs: this.usePanguJs,
             })
-        },
-        formattedContent() {
-            return formatUserTags(String(this.content), this.users)
         },
         forwardPreview() {
             return parseForwardPreview(this.code)

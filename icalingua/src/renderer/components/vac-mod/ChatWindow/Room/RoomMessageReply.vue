@@ -10,7 +10,6 @@
                     <div class="vac-reply-content">
                         <format-message
                             :content="messageReply.content"
-                            :users="room.users"
                             :text-formatting="true"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"

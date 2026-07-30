@@ -14,11 +14,6 @@ export interface MessagePart {
     title?: string
 }
 
-export interface MessageUser {
-    _id: string | number
-    username: string
-}
-
 export interface MessageFormattingOptions {
     linkify?: boolean
     disableQLottie?: boolean
@@ -38,11 +33,6 @@ interface TokenMatch {
     index: number
     endIndex: number
     part: MessagePart
-}
-
-interface UserTagIndex {
-    usersById: Map<string, MessageUser>
-    idLengths: number[]
 }
 
 /**
@@ -135,24 +125,6 @@ export function formatMessageParts(
     })
 }
 
-export function formatUserTags(content: string, users: MessageUser[] = []): string {
-    const parts = content.split('<usertag>')
-    if (parts.length === 1 || !users.length) return content
-
-    const userTagIndex = createUserTagIndex(users)
-    return parts
-        .map((part, index) => {
-            if (index === 0) return part
-
-            const userId = findTaggedUserId(part, userTagIndex)
-            if (!userId) return `<usertag>${part}`
-
-            const user = userTagIndex.usersById.get(userId)!
-            return `<usertag>@${user.username}${part.slice(userId.length)}`
-        })
-        .join('')
-}
-
 export function padFaceId(value: number, length = 3): string {
     return String(value).padStart(length, '0')
 }
@@ -194,27 +166,6 @@ function maskTextForLinkify(text: string): string {
         (maskedText, pattern) => maskedText.replace(pattern, (value) => ' '.repeat(value.length)),
         text,
     )
-}
-
-function createUserTagIndex(users: MessageUser[]): UserTagIndex {
-    const usersById = new Map<string, MessageUser>()
-
-    for (const user of users) {
-        const userId = String(user._id)
-        if (userId && !usersById.has(userId)) usersById.set(userId, user)
-    }
-
-    const idLengths = [...new Set([...usersById.keys()].map((userId) => userId.length))].sort(
-        (left, right) => right - left,
-    )
-    return { usersById, idLengths }
-}
-
-function findTaggedUserId(contentAfterTag: string, { usersById, idLengths }: UserTagIndex): string | undefined {
-    for (const length of idLengths) {
-        const userId = contentAfterTag.slice(0, length)
-        if (usersById.has(userId)) return userId
-    }
 }
 
 function matchRuleAt(text: string, index: number, rule: PseudoMarkdownRule): TokenMatch | null {

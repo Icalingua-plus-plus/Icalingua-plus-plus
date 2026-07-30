@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { parseForwardPreview, resolveForwardResource } from './forwardMessage'
-import { formatMessageParts, formatUserTags, padFaceId, parseMessageText } from './messageFormatting'
+import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
 
 test('parses message tokens and preserves line breaks', () => {
     assert.deepEqual(parseMessageText('hello\n[Face: 12]\n[Forward: resource]'), [
@@ -68,14 +68,7 @@ test('downgrades QLottie and applies spacing only to plain text', () => {
     )
 })
 
-test('formats legacy user tags and face identifiers', () => {
-    assert.equal(
-        formatUserTags('<usertag>12 and <usertag>1', [
-            { _id: 1, username: 'Alice' },
-            { _id: 12, username: 'Bob' },
-        ]),
-        '<usertag>@Bob and <usertag>@Alice',
-    )
+test('pads face identifiers', () => {
     assert.equal(padFaceId(7), '007')
     assert.equal(padFaceId(1234), '1234')
 })

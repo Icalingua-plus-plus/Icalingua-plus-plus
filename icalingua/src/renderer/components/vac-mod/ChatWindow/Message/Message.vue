@@ -103,7 +103,6 @@
                         <message-reply
                             v-if="((!message.deleted && !message.hide) || message.reveal) && message.replyMessage"
                             :message="message"
-                            :room-users="roomUsers"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
                             :forward-res-id="forwardResId"
@@ -136,7 +135,6 @@
                                     :file="part.file"
                                     :flash="message.flash"
                                     :content="message.content"
-                                    :room-users="roomUsers"
                                     :text-formatting="textFormatting"
                                     :image-hover="imageHover"
                                     :showForwardPanel="showForwardPanel"
@@ -154,7 +152,6 @@
                                 <format-message
                                     v-else
                                     :content="part.content"
-                                    :users="roomUsers"
                                     :text-formatting="textFormatting"
                                     :linkify="linkify"
                                     :showForwardPanel="showForwardPanel"
@@ -179,7 +176,6 @@
                                 :file="file"
                                 :flash="message.flash"
                                 :content="message.content"
-                                :room-users="roomUsers"
                                 :text-formatting="textFormatting"
                                 :image-hover="imageHover"
                                 :showForwardPanel="showForwardPanel"
@@ -202,7 +198,6 @@
                             :file="message.file"
                             :flash="message.flash"
                             :content="message.content"
-                            :room-users="roomUsers"
                             :text-formatting="textFormatting"
                             :image-hover="imageHover"
                             :showForwardPanel="showForwardPanel"
@@ -277,7 +272,6 @@
                                 !(lottie && message.content.startsWith('[QLottie') && !disableQLottie)
                             "
                             :content="message.content"
-                            :users="roomUsers"
                             :text-formatting="textFormatting"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"

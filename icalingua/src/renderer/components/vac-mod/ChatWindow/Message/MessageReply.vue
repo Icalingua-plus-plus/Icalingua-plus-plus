@@ -46,7 +46,6 @@
                 <format-message
                     v-else-if="part.type === 'text'"
                     :content="part.content"
-                    :users="roomUsers"
                     :text-formatting="true"
                     :linkify="linkify"
                     :showForwardPanel="showForwardPanel"
@@ -78,7 +77,6 @@
             <div class="vac-reply-content">
                 <format-message
                     :content="message.replyMessage.content"
-                    :users="roomUsers"
                     :text-formatting="true"
                     :linkify="linkify"
                     :showForwardPanel="showForwardPanel"
@@ -106,7 +104,6 @@ export default {
     props: {
         linkify: { type: Boolean, default: true },
         message: { type: Object, required: true },
-        roomUsers: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
         forwardResId: { type: String, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },

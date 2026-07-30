@@ -73,7 +73,6 @@ export default {
     props: {
         currentUserId: { type: [String, Number], required: true },
         file: { type: Object, required: true },
-        roomUsers: { type: Array, required: true },
         textFormatting: { type: Boolean, required: true },
         imageHover: { type: Boolean, required: true },
         flash: { type: Boolean, default: false },
