@@ -128,6 +128,8 @@ export const defaultThemeStyles = {
             dropdownScroll: '#0a0a0a',
             microphone: '#1976d2',
             microphoneOff: '#eb4034',
+            loudspeaker: '#0a0a0a',
+            folder: '#0a0a0a',
         },
 
         panel: {
@@ -276,6 +278,8 @@ export const defaultThemeStyles = {
             dropdownScroll: '#0a0a0a',
             microphone: '#fff',
             microphoneOff: '#eb4034',
+            loudspeaker: '#fff',
+            folder: '#fff',
         },
 
         panel: {
@@ -430,6 +434,8 @@ export const cssThemeVars = ({
         '--chat-icon-color-dropdown-scroll': icons.dropdownScroll,
         '--chat-icon-color-microphone': icons.microphone,
         '--chat-icon-color-microphone-off': icons.microphoneOff,
+        '--chat-icon-color-loudspeaker': icons.loudspeaker,
+        '--chat-icon-color-folder': icons.folder,
 
         //panel
         '--panel-background': panel.background,

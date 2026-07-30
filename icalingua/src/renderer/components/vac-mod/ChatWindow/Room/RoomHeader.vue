@@ -45,30 +45,32 @@
                     </slot>
                 </div>
                 <slot v-if="room.roomId" name="room-options">
-                    <div v-if="room.roomId < 0" class="vac-room-actions">
-                        <button
-                            type="button"
-                            class="vac-svg-button vac-room-action"
-                            title="群公告"
-                            aria-label="打开群公告"
-                            @click="$emit('open-group-announcements')"
-                        >
-                            <i class="el-icon-bell"></i>
-                        </button>
-                        <button
-                            type="button"
-                            class="vac-svg-button vac-room-action"
-                            title="群文件"
-                            aria-label="打开群文件"
-                            @click="$emit('open-group-files')"
-                        >
-                            <i class="el-icon-folder"></i>
-                        </button>
-                    </div>
-                    <div class="vac-svg-button vac-room-options" @click="$emit('room-menu', $event)">
-                        <slot name="menu-icon">
-                            <svg-icon name="menu" />
-                        </slot>
+                    <div class="vac-room-actions-group">
+                        <div v-if="room.roomId < 0" class="vac-room-actions">
+                            <button
+                                type="button"
+                                class="vac-svg-button vac-room-action"
+                                title="群公告"
+                                aria-label="打开群公告"
+                                @click="$emit('open-group-announcements')"
+                            >
+                                <svg-icon name="loudspeaker" />
+                            </button>
+                            <button
+                                type="button"
+                                class="vac-svg-button vac-room-action"
+                                title="群文件"
+                                aria-label="打开群文件"
+                                @click="$emit('open-group-files')"
+                            >
+                                <svg-icon name="folder" />
+                            </button>
+                        </div>
+                        <div class="vac-svg-button vac-room-options" @click="$emit('room-menu', $event)" title="菜单">
+                            <slot name="menu-icon">
+                                <svg-icon name="menu" />
+                            </slot>
+                        </div>
                     </div>
                     <transition v-if="menuActions.length" name="vac-slide-left">
                         <div v-if="menuOpened" v-click-outside="closeMenu" class="vac-menu-options">
@@ -207,7 +209,18 @@ export default {
 }
 
 .vac-room-options {
-    margin-left: 8px;
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+    max-height: none;
+}
+
+.vac-room-options svg {
+    display: block;
+    height: 20px;
+    width: 20px;
 }
 
 .vac-room-actions {
@@ -215,10 +228,17 @@ export default {
     flex: 0 0 auto;
     align-items: center;
     gap: 8px;
+}
+
+.vac-room-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin-left: auto;
 }
 
 .vac-room-action {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 32px;
@@ -228,10 +248,18 @@ export default {
     outline: none;
     color: var(--chat-icon-color-menu);
     background: transparent;
-    font-size: 20px;
     transition:
         transform 0.2s,
         opacity 0.2s;
+}
+
+.vac-room-action svg {
+    height: 20px;
+    width: 20px;
+}
+
+.vac-room-action svg path {
+    fill: currentColor;
 }
 
 .vac-room-action:active {
