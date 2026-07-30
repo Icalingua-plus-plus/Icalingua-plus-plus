@@ -160,8 +160,9 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             m.data.text = '@全体成员'
                         } else if (!m.data.text) {
                             const info = await adapter._getGroupMemberInfo(Math.abs(roomId), m.data.qq as any, false)
-                            m.data.text = '@' + (info.card || info.nickname)
+                            m.data.text = '@' + (info?.card || info?.nickname || String(m.data.qq))
                         }
+                        if (!m.data.text || m.data.text === '@') m.data.text = `@${String(m.data.qq)}`
                     // noinspection FallThroughInSwitchStatementJS 确信
                     case 'text':
                         // PCQQ 发送的消息的换行符是 \r，统一转成 \n

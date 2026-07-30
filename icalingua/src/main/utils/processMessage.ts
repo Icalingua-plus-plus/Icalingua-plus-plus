@@ -148,6 +148,7 @@ const processMessage = async (
                     lastReply = true
                     break
                 }
+                if (!m.data.text || m.data.text === '@') m.data.text = `@${String(m.data.qq)}`
             // noinspection FallThroughInSwitchStatementJS 确信
             case 'text':
                 // PCQQ 发送的消息的换行符是 \r，统一转成 \n

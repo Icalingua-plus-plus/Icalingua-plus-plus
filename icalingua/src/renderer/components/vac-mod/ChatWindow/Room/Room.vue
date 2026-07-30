@@ -333,7 +333,10 @@
                         v-slot="{ id, name }"
                         :list="
                             groupMembers
-                                ? groupMembers.map(({ card, nickname, user_id }) => [card || nickname, user_id])
+                                ? groupMembers.map(({ card, nickname, user_id }) => [
+                                      card || nickname || String(user_id),
+                                      user_id,
+                                  ])
                                 : []
                         "
                         description="member(s)"
@@ -1576,8 +1579,9 @@ export default {
         useQuickAt(id, name) {
             this.isQuickAtOn = false
             if (typeof id === 'number') {
-                const atText = `@${name}`
-                if (id !== 0 && name !== '全体成员') {
+                const atName = name || String(id)
+                const atText = `@${atName}`
+                if (id !== 0 && atName !== '全体成员') {
                     ipc.pushAtCache({
                         text: atText,
                         id: id,
@@ -1588,7 +1592,7 @@ export default {
                         text: '@全体成员',
                     })
                 }
-                this.useMessageContent((this.useAtKey ? name : atText) + ' ')
+                this.useMessageContent((this.useAtKey ? atName : atText) + ' ')
             }
             this.useAtKey = false
             setTimeout(() => this.focusTextarea(), 0)

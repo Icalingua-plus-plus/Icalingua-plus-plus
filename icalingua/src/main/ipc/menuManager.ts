@@ -2667,13 +2667,16 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
                 label: '@ TA',
                 click() {
                     atCache.push({
-                        text: '@' + message.username,
+                        text: '@' + (message.username || String(message.senderId)),
                         id: message.senderId,
                     })
                     if (win !== getMainWindow()) {
-                        win.webContents.send('addMessageText', '@' + message.username + ' ')
+                        win.webContents.send(
+                            'addMessageText',
+                            '@' + (message.username || String(message.senderId)) + ' ',
+                        )
                     } else {
-                        ui.addMessageText('@' + message.username + ' ')
+                        ui.addMessageText('@' + (message.username || String(message.senderId)) + ' ')
                     }
                 },
             }),
@@ -3130,10 +3133,10 @@ ipcMain.on(
                     label: '@ TA',
                     click: async () => {
                         atCache.push({
-                            text: '@' + remark,
+                            text: '@' + (remark || String(displayId)),
                             id: displayId,
                         })
-                        ui.addMessageText('@' + remark + ' ')
+                        ui.addMessageText('@' + (remark || String(displayId)) + ' ')
                         ui.openGroupMemberPanel(false)
                     },
                 }),
