@@ -61,11 +61,3 @@ export function spacingNotification(desc: string): string {
     desc && parts.push({ ignore: false, text: desc })
     return parts.map((part) => (part.ignore ? part.text : pangu.spacing(part.text))).join('')
 }
-
-export function spacingLinkifiedMessage(message: any[]) {
-    message.forEach((m) => {
-        if (!m.url && !m.face && !m.forward && !m.nestedforward && !m.tag && !m.inline && !m.multiline && !m.image) {
-            m.value = pangu.spacing(m.value)
-        }
-    })
-}

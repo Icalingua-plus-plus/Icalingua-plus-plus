@@ -3,57 +3,31 @@
         <div v-if="textFormatting" :class="{ 'vac-text-ellipsis': singleLine }">
             <template v-for="(message, i) in linkifiedMessage">
                 <component
-                    :is="message.url ? 'a' : 'span'"
-                    v-if="!message.face && !message.forward && !message.nestedforward"
+                    :is="message.href ? 'a' : 'span'"
+                    v-if="message.type !== 'face' && message.type !== 'forward' && message.type !== 'nestedforward'"
                     :key="i"
                     :class="{
                         'vac-text-ellipsis': singleLine,
-                        'vac-text-bold': message.bold,
-                        'vac-text-italic': deleted || message.italic,
-                        'vac-text-strike': message.strike,
-                        'vac-text-underline': message.underline,
-                        'vac-text-inline-code': !singleLine && message.inline,
-                        'vac-text-multiline-code': !singleLine && message.multiline,
-                        'vac-text-tag': !singleLine && !reply && message.tag,
-                        'vac-text-spoiler': !showSpoiler && message.spoiler,
-                        'vac-text-spoiler-transition': message.spoiler,
-                        'vac-text-at': message.at,
+                        'vac-text-italic': deleted,
+                        'vac-text-at': message.type === 'at',
                     }"
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
                     :title="message.title"
                     @dragstart="
                         (a) => {
-                            if (message.at) a.preventDefault()
+                            if (message.type === 'at') a.preventDefault()
                         }
                     "
-                    @click="showSpoiler = true"
                     style="word-break: break-word"
                 >
                     <slot name="deleted-icon" v-bind="{ deleted }">
                         <svg-icon v-if="deleted" name="deleted" class="vac-icon-deleted" />
                     </slot>
-                    <template v-if="message.url && message.image">
-                        <div class="vac-image-link-container">
-                            <div
-                                class="vac-image-link"
-                                :style="{
-                                    'background-image': `url('${message.value}')`,
-                                    height: message.height,
-                                }"
-                            />
-                        </div>
-                        <div class="vac-image-link-message">
-                            <span>{{ message.value }}</span>
-                        </div>
-                    </template>
-                    <template v-else>
-                        <br v-if="message.breakLine" />
-                        <span class="vac-message-content">{{ message.value }}</span>
-                    </template>
+                    <br v-if="message.type === 'breakLine'" />
+                    <span class="vac-message-content">{{ message.value }}</span>
                 </component>
-                <span v-if="message.face" :key="i">
-                    <br v-if="message.breakLine && message.face" />
+                <span v-if="message.type === 'face'" :key="i">
                     <img
                         class="face"
                         :src="'file://' + facepath + preZeroFill(Number(message.value), 3)"
@@ -61,19 +35,19 @@
                     />
                 </span>
                 <a
-                    v-if="message.forward"
+                    v-if="message.type === 'forward'"
                     style="cursor: pointer"
                     :key="i"
-                    :title="parseForwardPreview(code)"
+                    :title="forwardPreview"
                     @click="openForward(message)"
                 >
                     View Forwarded Messages
                 </a>
                 <a
-                    v-if="message.nestedforward"
+                    v-if="message.type === 'nestedforward'"
                     style="cursor: pointer"
                     :key="i"
-                    :title="parseForwardPreview(code)"
+                    :title="forwardPreview"
                     @click="openNested(message)"
                 >
                     View Forwarded Messages
@@ -91,8 +65,8 @@ import SvgIcon from './SvgIcon'
 
 const path = require('path')
 
-import formatString from '../utils/formatString'
-import { spacingLinkifiedMessage } from '../../../../utils/panguSpacing'
+import { parseForwardPreview, resolveForwardResource } from '../utils/forwardMessage'
+import { formatMessageParts, formatUserTags, padFaceId } from '../utils/messageFormatting'
 
 export default {
     name: 'FormatMessage',
@@ -104,7 +78,6 @@ export default {
         users: { type: Array, default: () => [] },
         linkify: { type: Boolean, default: true },
         singleLine: { type: Boolean, default: false },
-        reply: { type: Boolean, default: false },
         textFormatting: { type: Boolean, required: true },
         showForwardPanel: { type: Boolean, required: true },
         forwardResId: { type: String, required: false },
@@ -116,163 +89,39 @@ export default {
     data() {
         return {
             facepath: path.join(__static, '/face/'),
-            showSpoiler: false,
         }
     },
 
     computed: {
         linkifiedMessage() {
-            let content = this.formatTags(String(this.content))
-            if (this.disableQLottie) {
-                const idReg =
-                    content.match(/\[QLottie: (\d+)\,(\d+)\]/) || content.match(/\[QLottie: (\d+)\,(\d+)\,(\d+)\]/)
-                if (idReg && idReg[0] === content) {
-                    content = `[Face: ${idReg[2]}]`
-                }
-            }
-            const message = formatString(content, this.linkify)
-
-            // 尾部如果有换行需要增加一个
-            if (content.length > 0 && content[content.length - 1] === '\n') {
-                message.push({
-                    value: '',
-                    types: ['breakLine'],
-                })
-            }
-
-            message.forEach((m) => {
-                m.url = this.checkType(m, 'url')
-                m.bold = this.checkType(m, 'bold')
-                m.italic = this.checkType(m, 'italic')
-                m.strike = this.checkType(m, 'strike')
-                m.underline = this.checkType(m, 'underline')
-                m.inline = this.checkType(m, 'inline-code')
-                m.multiline = this.checkType(m, 'multiline-code')
-                m.tag = this.checkType(m, 'tag')
-                m.face = this.checkType(m, 'face')
-                m.forward = this.checkType(m, 'forward')
-                m.nestedforward = this.checkType(m, 'nestedforward')
-                m.breakLine = this.checkType(m, 'breakLine')
-                m.spoiler = this.checkType(m, 'spoiler')
-                m.image = this.checkImageType(m)
-                m.at = this.checkType(m, 'at')
-                if (m.at) {
-                    const value = String(m.value).split('>')
-                    const qq = Number(value.shift())
-                    if (!qq || isNaN(qq) || value.length === 0 || qq <= 0) {
-                        m.value = `<IcalinguaAt qq=${m.value}</IcalinguaAt>`
-                        return
-                    }
-                    m.href = qq ? `icalingua://at?name=${value.join('>')}&qq=${qq}` : ''
-                    m.value = decodeURIComponent(value.join('>'))
-                    if (m.href) m.title = `${m.value}(${qq})`
-                    if (qq === 1) m.title = m.value
-                    m.url = true
-                }
+            return formatMessageParts(this.formattedContent, {
+                linkify: this.linkify,
+                disableQLottie: this.disableQLottie,
+                usePanguJs: this.usePanguJs,
             })
-
-            if (this.usePanguJs) {
-                spacingLinkifiedMessage(message)
-            }
-
-            return message
         },
         formattedContent() {
-            return this.formatTags(this.content)
+            return formatUserTags(String(this.content), this.users)
+        },
+        forwardPreview() {
+            return parseForwardPreview(this.code)
         },
     },
 
     methods: {
-        checkType(message, type) {
-            return message.types.indexOf(type) !== -1
-        },
-        checkImageType(message) {
-            let index = message.value.lastIndexOf('.')
-            const slashIndex = message.value.lastIndexOf('/')
-            if (slashIndex > index) index = -1
-
-            const type = message.value.substring(index + 1, message.value.length)
-
-            const isMedia = index > 0 && type.toLowerCase().startsWith('image/')
-
-            if (isMedia) this.setImageSize(message)
-
-            return isMedia
-        },
-        setImageSize(message) {
-            const image = new Image()
-            image.src = message.value
-
-            image.addEventListener('load', onLoad)
-
-            function onLoad(img) {
-                const ratio = img.path[0].width / 150
-                message.height = Math.round(img.path[0].height / ratio) + 'px'
-                image.removeEventListener('load', onLoad)
-            }
-        },
-        formatTags(content) {
-            this.users.forEach((user) => {
-                const index = content.indexOf(user._id)
-                const isTag = content.substring(index - 9, index) === '<usertag>'
-                if (isTag) content = content.replace(user._id, `@${user.username}`)
-            })
-
-            return content
-        },
         openForward(message) {
             if (this.showForwardPanel) return
-            if (!message.forward) return
-            if (this.code) {
-                try {
-                    const json = JSON.parse(this.code)
-                    if (Array.isArray(json)) {
-                        this.$emit('open-forward', { resId: json })
-                        return
-                    }
-                } catch (e) {}
-            }
+            if (message.type !== 'forward') return
 
-            this.$emit('open-forward', { resId: message.value })
+            this.$emit('open-forward', { resId: resolveForwardResource(this.code, message.value) })
         },
         openNested(message) {
             if (this.showForwardPanel) return
-            if (!message.nestedforward) return
+            if (message.type !== 'nestedforward') return
             this.$emit('open-forward', { resId: this.forwardResId, fileName: message.value })
         },
         preZeroFill(num, size) {
-            if (num >= Math.pow(10, size)) {
-                //如果num本身位数不小于size位
-                return num.toString()
-            } else {
-                var _str = Array(size + 1).join('0') + num
-                return _str.slice(_str.length - size)
-            }
-        },
-        parseForwardPreview(code) {
-            let preview = ''
-            try {
-                const json = JSON.parse(code)
-                const detail = json.meta.detail
-                preview += detail.source + '\n'
-                for (let i of detail.news) preview += i.text + '\n'
-                return preview
-            } catch (e) {}
-            try {
-                const parser = new DOMParser()
-                const xmlDoc = parser.parseFromString(code, 'text/xml')
-                const titles = xmlDoc.getElementsByTagName('title')
-                for (let i of titles) preview += i.textContent + '\n'
-                const titleReg = /<title(.*?)<\/title>/g
-                if (titleReg.test(code) && !titles.length) {
-                    const titleMatch = code.match(titleReg)
-                    const titleXml = '<item>' + titleMatch.join('') + '</item>'
-                    const doc = parser.parseFromString(titleXml, 'text/xml')
-                    const titles2 = doc.getElementsByTagName('title')
-                    for (let i of titles2) preview += i.textContent + '\n'
-                }
-                return preview
-            } catch (e) {}
+            return padFaceId(num, size)
         },
     },
 }
@@ -298,44 +147,10 @@ export default {
     text-overflow: ellipsis;
 }
 
-.vac-image-link-container {
-    background-color: var(--chat-message-bg-color-media);
-    padding: 8px;
-    margin: 2px auto;
-    border-radius: 4px;
-}
-
-.vac-image-link {
-    position: relative;
-    background-color: var(--chat-message-bg-color-image) !important;
-    background-size: contain;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    height: 150px;
-    width: 150px;
-    max-width: 100%;
-    border-radius: 4px;
-    margin: 0 auto;
-}
-
-.vac-image-link-message {
-    max-width: 166px;
-    font-size: 12px;
-}
-
 img.face {
     width: 18px;
     height: 18px;
     margin-bottom: -4px;
-}
-
-.vac-text-spoiler {
-    background-color: #0a0a0a;
-    cursor: pointer;
-}
-
-.vac-text-spoiler-transition {
-    transition: all 0.5s;
 }
 
 .vac-text-at {

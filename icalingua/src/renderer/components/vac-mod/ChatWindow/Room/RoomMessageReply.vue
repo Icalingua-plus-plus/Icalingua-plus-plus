@@ -12,7 +12,6 @@
                             :content="messageReply.content"
                             :users="room.users"
                             :text-formatting="true"
-                            :reply="true"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
                             :usePanguJs="usePanguJs"
