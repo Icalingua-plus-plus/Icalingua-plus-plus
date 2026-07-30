@@ -163,6 +163,8 @@ export const download = async (url: string, out: string, dir?: string, saveAs = 
 loadConfig(getConfig().aria2)
 
 const extFromMime = (mime: string) => {
+    mime = mime.split(';', 1)[0].trim().toLowerCase()
+
     switch (mime) {
         case 'image/jpeg':
             return 'jpg'
@@ -216,7 +218,8 @@ export const getImageExt = async (url: string) => {
                 Range: 'bytes=0-4100',
             },
         })
-        const ext = extFromMime(response.headers['content-type'])
+        const contentType = response.headers['content-type']
+        const ext = typeof contentType === 'string' ? extFromMime(contentType) : null
         if (ext) {
             return ext
         }
