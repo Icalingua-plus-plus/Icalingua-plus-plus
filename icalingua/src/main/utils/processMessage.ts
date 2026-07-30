@@ -245,7 +245,20 @@ const processMessage = async (
                 }
                 if (!replyMessage) {
                     //get the message
-                    const getRet = await oicq.getMsg(m.data.id)
+                    let getRet
+                    if (m.data.message) {
+                        getRet = {
+                            data: {
+                                sender: {
+                                    nickname: String(user_id),
+                                    user_id,
+                                },
+                                message: m.data.message,
+                            },
+                        }
+                    } else {
+                        getRet = await oicq.getMsg(m.data.id)
+                    }
                     if (getRet.data) {
                         //获取到库里面还没有的历史消息
                         //暂时先不加回库里了
