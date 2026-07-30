@@ -2,7 +2,7 @@
     <div class="settings">
         <p>
             设定 <b>{{ $route.params.groupName }} ({{ gin }})</b> 中
-            <b>{{ $route.params.userName }} ({{ uin }})</b> 的禁言时长为：
+            <b>{{ $route.params.userName || '未知用户' }} ({{ uin }})</b> 的禁言时长为：
         </p>
         <el-input
             placeholder="留空或设置0分钟取消禁言"

@@ -2812,7 +2812,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
                                     : room.roomName,
                             ) +
                             '/' +
-                            querystring.escape(message.username) +
+                            querystring.escape(message.username || String(message.senderId)) +
                             '/' +
                             querystring.escape(message.anonymousflag),
                     )
@@ -2849,7 +2849,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
                                     : room.roomName,
                             ) +
                             '/' +
-                            querystring.escape(message.username),
+                            querystring.escape(message.username || String(message.senderId)),
                     )
                 },
             }),
@@ -3178,7 +3178,7 @@ ipcMain.on(
                                         : selectedRoom.roomName,
                                 ) +
                                 '/' +
-                                querystring.escape(remark) +
+                                querystring.escape(remark || String(displayId)) +
                                 '/' +
                                 'null',
                         )
@@ -3215,7 +3215,7 @@ ipcMain.on(
                                         : selectedRoom.roomName,
                                 ) +
                                 '/' +
-                                querystring.escape(remark),
+                                querystring.escape(remark || String(displayId)),
                         )
                     },
                 }),

@@ -1,7 +1,8 @@
 <template>
     <div class="settings">
         <p v-if="this.$route.params.action === 'kick'">
-            在 <b>{{ $route.params.groupName }}</b> 中踢出 <b>{{ $route.params.userName }} ({{ uin }})</b>？
+            在 <b>{{ $route.params.groupName }}</b> 中踢出
+            <b>{{ $route.params.userName || '未知用户' }} ({{ uin }})</b>？
         </p>
         <p v-if="this.$route.params.action === 'exit'">
             确认退出 <b>{{ $route.params.groupName }}</b
