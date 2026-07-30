@@ -474,7 +474,7 @@ export default {
         async sendSticker(url) {
             const messageType = await ipc.getMessgeTypeSetting()
             const roomRef = this.$refs.room
-            const content = roomRef?.$refs?.roomTextarea?.message || ''
+            const content = roomRef?.getMessageText() || ''
             const replyMessage = roomRef?.messageReply || null
             this.sendMessage({
                 content,

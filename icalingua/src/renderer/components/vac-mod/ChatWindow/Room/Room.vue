@@ -296,11 +296,8 @@
                             <svg-icon name="file" />
                         </slot>
                     </div>
-                    <div v-if="files[0] && files[0].audio" class="vac-file-message-room">
-                        {{ files[0].name }}
-                    </div>
-                    <div v-else class="vac-file-message-room">
-                        {{ $refs.roomTextarea.message }}
+                    <div class="vac-file-message-room" :title="files[0].name + '.' + files[0].extension">
+                        {{ files[0].name + '.' + files[0].extension }}
                     </div>
                     <div class="vac-svg-button vac-icon-remove" @click="resetMessage(null, true)">
                         <slot name="file-close-icon">
@@ -352,7 +349,7 @@
                     </SearchInput>
                 </transition>
 
-                <room-text-area
+                <textarea
                     v-show="!files.length || imageFiles.length || videoFiles.length"
                     ref="roomTextarea"
                     :placeholder="textMessages.TYPE_MESSAGE"
@@ -367,7 +364,8 @@
                         'padding-left': `${mediaDimensions ? mediaDimensions.width - 10 : 12}px`,
                     }"
                     @input="onChangeInput"
-                    @click-right="textctx"
+                    @keydown="onTextareaKeydown"
+                    @click.right="textctx"
                     spellcheck="false"
                 />
 
@@ -482,7 +480,6 @@ import SvgIcon from '../../components/SvgIcon'
 import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
-import RoomTextArea from './RoomTextArea'
 import Message from '../Message/Message'
 import SearchInput from '../../../SearchInput'
 
@@ -511,7 +508,6 @@ export default {
         RoomHeader,
         RoomMessageReply,
         RoomForwardMessage,
-        RoomTextArea,
         Message,
         SearchInput,
     },
@@ -558,13 +554,11 @@ export default {
     },
     data() {
         return {
-            message: '',
             editedMessage: {},
             messageReply: null,
             loadingMessages: false,
             loadingHeadMessages: false,
             loadingTailMessages: false,
-            file: null,
             files: [],
             imageFiles: [],
             videoFiles: [],
@@ -799,139 +793,12 @@ export default {
                 else this.infiniteState.head.complete()
             }
         },
-        files(val) {
-            this.isMessageEmpty = (!val || !val.length) && !this.$refs.roomTextarea.message.trim()
+        files() {
+            this.updateMessageEmptyState()
         },
     },
     async mounted() {
         this.newMessages = []
-        this.$refs.roomTextarea.$refs.roomTextarea.addEventListener('keydown', (e) => {
-            if (e.isComposing) return
-            if (e.key === 'Enter') {
-                switch (keyToSendMessage) {
-                    case 'Enter':
-                        if (e.ctrlKey) {
-                            let selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
-                            let selectionEnd = this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd
-                            this.$refs.roomTextarea.message =
-                                this.$refs.roomTextarea.message.substr(0, selectionStart) +
-                                '\n' +
-                                this.$refs.roomTextarea.message.substr(selectionEnd)
-                            setTimeout(() => this.onChangeInput(), 0)
-                        } else if (e.shiftKey) {
-                            setTimeout(() => this.onChangeInput(), 0)
-                        } else {
-                            this.sendMessage()
-                            e.preventDefault()
-                        }
-                        break
-                    case 'CtrlEnter':
-                        if (!e.ctrlKey) {
-                            setTimeout(() => this.onChangeInput(), 0)
-                        } else {
-                            this.sendMessage()
-                            e.preventDefault()
-                        }
-                        break
-                    case 'ShiftEnter':
-                        if (e.ctrlKey) {
-                            let selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
-                            let selectionEnd = this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd
-                            this.$refs.roomTextarea.message =
-                                this.$refs.roomTextarea.message.substr(0, selectionStart) +
-                                '\n' +
-                                this.$refs.roomTextarea.message.substr(selectionEnd)
-                            setTimeout(() => this.onChangeInput(), 0)
-                        } else if (!e.shiftKey) {
-                            setTimeout(() => this.onChangeInput(), 0)
-                        } else {
-                            this.sendMessage()
-                            e.preventDefault()
-                        }
-                        break
-                    default:
-                        console.log('qwq')
-                }
-            } else if (e.key === 'ArrowUp') {
-                if (e.ctrlKey) {
-                    // Ctrl + ↑ 选择上一条消息进行回复
-                    e.preventDefault()
-                    const nonSystemMessages = this.messages.filter((msg) => !msg.system && !msg.flash)
-                    if (!nonSystemMessages.length) return
-
-                    if (this.messageReply === null) {
-                        // 如果当前没有回复消息，选择最后一条消息
-                        this.messageReply = nonSystemMessages[nonSystemMessages.length - 1]
-                    } else {
-                        // 如果已经有回复消息，找到当前消息的位置，向前切换
-                        const currentIndex = nonSystemMessages.findIndex((msg) => msg._id === this.messageReply._id)
-                        if (currentIndex > 0) {
-                            this.messageReply = nonSystemMessages[currentIndex - 1]
-                        }
-                    }
-                    // 高亮选中的消息
-                    if (this.messageReply) {
-                        this.$nextTick(() => this.highlightMessage(this.messageReply._id))
-                    }
-                    this.focusTextarea()
-                    return
-                }
-
-                if (this.$refs.roomTextarea.message) return
-                //编辑重发上一条消息
-                e.preventDefault()
-                const ownMessages = this.messages.filter((e) => e.senderId === this.currentUserId)
-                if (!ownMessages.length) return
-                const lastMessage = ownMessages[ownMessages.length - 1]
-                if (lastMessage.file && lastMessage.file.type.startsWith('image')) {
-                    this.onPasteGif(lastMessage.file.url)
-                } else if (lastMessage.file && lastMessage.file.type.startsWith('audio')) {
-                    return
-                } else if (lastMessage.file) {
-                    return
-                    this.files = [lastMessage.file]
-                }
-                this.messageReply = lastMessage.replyMessage
-                this.$refs.roomTextarea.message = lastMessage.content
-                this.$nextTick(
-                    () =>
-                        (this.$refs.roomTextarea.$refs.roomTextarea.selectionStart =
-                            this.$refs.roomTextarea.$refs.roomTextarea.selectionEnd =
-                                this.$refs.roomTextarea.message.length),
-                )
-                this.editAndResend = lastMessage._id
-            } else if (e.key === 'ArrowDown' && e.ctrlKey) {
-                // Ctrl + ↓ 选择下一条消息进行回复
-                e.preventDefault()
-                if (this.messageReply === null) return
-
-                const nonSystemMessages = this.messages.filter((msg) => !msg.system && !msg.flash)
-                if (!nonSystemMessages.length) return
-
-                // 找到当前消息的位置，向后切换
-                const currentIndex = nonSystemMessages.findIndex((msg) => msg._id === this.messageReply._id)
-                if (currentIndex !== -1) {
-                    if (currentIndex < nonSystemMessages.length - 1) {
-                        // 不是最后一条，切换到下一条
-                        this.messageReply = nonSystemMessages[currentIndex + 1]
-                        // 高亮选中的消息
-                        this.$nextTick(() => this.highlightMessage(this.messageReply._id))
-                    } else {
-                        // 已经是最后一条消息，取消回复
-                        this.messageReply = null
-                    }
-                }
-                this.focusTextarea()
-            } else if (e.key === 'e' && e.ctrlKey) {
-                // 快捷表情选择
-                this.isQuickFaceOn = true
-                this.$nextTick(() => this.$refs.quickface.focus())
-            } else if (e.key === 'm' && e.ctrlKey && this.room.roomId < 0) {
-                // 快捷 at 选择
-                this.isQuickAtOn = true
-                this.$nextTick(() => this.$refs.quickat.focus())
-            }
-        })
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
@@ -966,7 +833,7 @@ export default {
             //纯文本
             if (event.dataTransfer.getData('text')) {
                 if (event.target.className === 'vac-textarea') {
-                    this.$refs.roomTextarea.message += event.dataTransfer.getData('text')
+                    this.appendMessageText(event.dataTransfer.getData('text'))
                     this.focusTextarea()
                     this.$nextTick(() => this.resizeTextarea())
                 }
@@ -1014,12 +881,12 @@ export default {
             keyToSendMessage = key
         })
         ipcRenderer.on('addMessageText', (_, message) => {
-            this.$refs.roomTextarea.message += message
+            this.appendMessageText(message)
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
         ipcRenderer.on('setMessageText', (_, message) => {
-            this.$refs.roomTextarea.message = message
+            this.setMessageText(message)
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
@@ -1072,6 +939,124 @@ export default {
         this.clearAudioSessions()
     },
     methods: {
+        getMessageText() {
+            return this.$refs.roomTextarea?.value || ''
+        },
+        setMessageText(message) {
+            const textarea = this.$refs.roomTextarea
+            if (!textarea) return
+
+            textarea.value = message == null ? '' : String(message)
+            this.updateMessageEmptyState(textarea.value)
+        },
+        appendMessageText(message) {
+            this.setMessageText(this.getMessageText() + message)
+        },
+        updateMessageEmptyState(message = this.getMessageText()) {
+            const isEmpty = !this.files.length && !message.trim()
+            if (isEmpty !== this.isMessageEmpty) this.isMessageEmpty = isEmpty
+        },
+        onTextareaKeydown(event) {
+            if (event.isComposing) return
+
+            if (event.key === 'Enter') {
+                this.onEnterKeydown(event)
+            } else if (event.key === 'ArrowUp') {
+                if (event.ctrlKey) {
+                    // Ctrl + ↑ 选择上一条消息进行回复
+                    event.preventDefault()
+                    this.moveReplySelection(-1)
+                } else if (!this.getMessageText()) {
+                    // 编辑重发上一条消息
+                    event.preventDefault()
+                    this.editLastOwnMessage()
+                }
+            } else if (event.key === 'ArrowDown' && event.ctrlKey) {
+                // Ctrl + ↓ 选择下一条消息进行回复
+                event.preventDefault()
+                this.moveReplySelection(1)
+            } else if (event.key === 'e' && event.ctrlKey) {
+                // 快捷表情选择
+                this.isQuickFaceOn = true
+                this.$nextTick(() => this.$refs.quickface.focus())
+            } else if (event.key === 'n' && event.ctrlKey && this.room.roomId < 0) {
+                // 快捷 at 选择
+                this.isQuickAtOn = true
+                this.$nextTick(() => this.$refs.quickat.focus())
+            }
+        },
+        onEnterKeydown(event) {
+            const shouldSend =
+                (keyToSendMessage === 'Enter' && !event.ctrlKey && !event.shiftKey) ||
+                (keyToSendMessage === 'CtrlEnter' && event.ctrlKey) ||
+                (keyToSendMessage === 'ShiftEnter' && !event.ctrlKey && event.shiftKey)
+
+            if (shouldSend) {
+                event.preventDefault()
+                this.sendMessage()
+                return
+            }
+
+            const shouldInsertLineBreak =
+                event.ctrlKey && (keyToSendMessage === 'Enter' || keyToSendMessage === 'ShiftEnter')
+            if (shouldInsertLineBreak) {
+                event.preventDefault()
+                this.useMessageContent('\n')
+                this.onChangeInput()
+            }
+        },
+        moveReplySelection(direction) {
+            if (direction > 0 && !this.messageReply) return
+
+            const messages = this.messages.filter((message) => !message.system && !message.flash)
+            if (!messages.length) return
+
+            if (!this.messageReply) {
+                // 如果当前没有回复消息，选择最后一条消息
+                this.messageReply = messages[messages.length - 1]
+            } else {
+                // 如果已经有回复消息，找到当前消息的位置，向前切换
+                const currentIndex = messages.findIndex((message) => message._id === this.messageReply._id)
+                if (currentIndex === -1) {
+                    if (direction < 0) {
+                        this.$nextTick(() => this.highlightMessage(this.messageReply._id))
+                    }
+                    this.focusTextarea()
+                    return
+                }
+
+                const nextIndex = currentIndex + direction
+                if (nextIndex >= 0 && nextIndex < messages.length) {
+                    this.messageReply = messages[nextIndex]
+                } else if (direction > 0 && currentIndex === messages.length - 1) {
+                    this.messageReply = null
+                }
+            }
+
+            if (this.messageReply) {
+                this.$nextTick(() => this.highlightMessage(this.messageReply._id))
+            }
+            this.focusTextarea()
+        },
+        editLastOwnMessage() {
+            const ownMessages = this.messages.filter((message) => message.senderId === this.currentUserId)
+            if (!ownMessages.length) return
+
+            const lastMessage = ownMessages[ownMessages.length - 1]
+            if (lastMessage.file && isImageFile(lastMessage.file)) {
+                this.onPasteGif(lastMessage.file.url)
+            } else if (lastMessage.file) {
+                return
+            }
+
+            this.messageReply = lastMessage.replyMessage
+            this.setMessageText(lastMessage.content)
+            this.$nextTick(() => {
+                const end = this.getMessageText().length
+                this.$refs.roomTextarea.setSelectionRange(end, end)
+            })
+            this.editAndResend = lastMessage._id
+        },
         getAudioSession(message) {
             if (!message || !message._id || !message.file || !isAudioFile(message.file)) return null
             if (message.file.name === 'decoding' || message.file.url === 'decoding') return null
@@ -1482,12 +1467,12 @@ export default {
                 this.files = []
                 this.imageFiles = []
                 this.videoFiles = []
-                this.$refs.roomTextarea.message = ''
+                this.setMessageText('')
                 return
             }
 
             this.resetTextareaSize()
-            this.$refs.roomTextarea.message = ''
+            this.setMessageText('')
             this.editedMessage = {}
             this.messageReply = null
             this.files = []
@@ -1500,7 +1485,7 @@ export default {
             setTimeout(() => this.focusTextarea(disableMobileFocus), 0)
         },
         async paste() {
-            this.$refs.roomTextarea.message += await navigator.clipboard.readText()
+            this.appendMessageText(await navigator.clipboard.readText())
             const read = await navigator.clipboard.read()
             console.log(read)
             if (!read[0]) return
@@ -1539,26 +1524,24 @@ export default {
             el.scrollLeft += e.deltaY
         },
         resetTextareaSize() {
-            if (!this.$refs.roomTextarea.$refs.roomTextarea) return
-            this.$refs.roomTextarea.$refs.roomTextarea.style.height = '20px'
+            if (!this.$refs.roomTextarea) return
+            this.$refs.roomTextarea.style.height = '20px'
         },
         useMessageContent(content) {
-            const textarea = this.$refs.roomTextarea.$refs.roomTextarea
+            const textarea = this.$refs.roomTextarea
             const { selectionStart, selectionEnd } = textarea
-            this.$refs.roomTextarea.message =
-                this.$refs.roomTextarea.message.slice(0, selectionStart) +
-                content +
-                this.$refs.roomTextarea.message.slice(selectionEnd)
+            const message = this.getMessageText()
+            this.setMessageText(message.slice(0, selectionStart) + content + message.slice(selectionEnd))
             const newStart = selectionStart + content.length
             this.$nextTick(() => textarea.setSelectionRange(newStart, newStart))
         },
         focusTextarea(disableMobileFocus) {
             if (detectMobile() && disableMobileFocus) return
-            if (!this.$refs.roomTextarea.$refs.roomTextarea) return
-            this.$refs.roomTextarea.$refs.roomTextarea.focus()
+            if (!this.$refs.roomTextarea) return
+            this.$refs.roomTextarea.focus()
         },
         preventKeyboardFromClosing() {
-            if (this.keepKeyboardOpen) this.$refs.roomTextarea.$refs.roomTextarea.focus()
+            if (this.keepKeyboardOpen) this.focusTextarea()
         },
         closeQuickFace() {
             this.isQuickFaceOn = false
@@ -1605,8 +1588,8 @@ export default {
             setTimeout(() => this.focusTextarea(), 0)
         },
         async sendMessage() {
-            let message = this.$refs.roomTextarea.message
-            this.$refs.roomTextarea.message = ''
+            const message = this.getMessageText()
+            this.setMessageText('')
 
             if ((!this.files || !this.files.length) && !message) return
 
@@ -1639,7 +1622,7 @@ export default {
                 return false
             }
             const debugmode = await ipc.getDebugSetting()
-            let message = this.$refs.roomTextarea.message.trim()
+            const message = this.getMessageText().trim()
 
             if ((!this.files || !this.files.length) && !message) return
 
@@ -1722,7 +1705,7 @@ export default {
                 }
             }
 
-            this.$refs.roomTextarea.message = message.content
+            this.setMessageText(message.content)
         },
         getTopScroll(element) {
             const { scrollTop } = element
@@ -1774,15 +1757,17 @@ export default {
             }
             this.$emit('clear-last-unread-at')
         },
-        onChangeInput(e) {
+        onChangeInput(event) {
+            const message = event?.target?.value ?? this.getMessageText()
             this.keepKeyboardOpen = true
+            this.updateMessageEmptyState(message)
             this.resizeTextarea()
-            this.$emit('typing-message', this.$refs.roomTextarea.message)
-            const selectionStart = this.$refs.roomTextarea.$refs.roomTextarea.selectionStart
+            this.$emit('typing-message', message)
+            const selectionStart = this.$refs.roomTextarea.selectionStart
             if (
                 this.room.roomId < 0 &&
-                this.$refs.roomTextarea.message.slice(selectionStart - 1, selectionStart) === '@' &&
-                !e.isComposing
+                message.slice(selectionStart - 1, selectionStart) === '@' &&
+                !event?.isComposing
             ) {
                 this.useAtKey = true
                 this.isQuickAtOn = true
@@ -1790,7 +1775,7 @@ export default {
             }
         },
         resizeTextarea() {
-            const el = this.$refs.roomTextarea.$refs.roomTextarea
+            const el = this.$refs.roomTextarea
 
             if (!el) return
 
@@ -1865,7 +1850,7 @@ export default {
                 } else {
                     this.resetMediaFile()
                     this.files = [fileObj]
-                    this.$refs.roomTextarea.message = file.name
+                    this.setMessageText(file.name)
                     break
                 }
             }
@@ -1903,7 +1888,7 @@ export default {
             this.$emit('open-file', { message, action, room: this.room })
         },
         textareaActionHandler() {
-            this.$emit('textarea-action-handler', this.$refs.roomTextarea.message)
+            this.$emit('textarea-action-handler', this.getMessageText())
         },
         msgctx(e, message) {
             const _message = Object.assign({}, message)

@@ -1016,7 +1016,7 @@ Chromium ${process.versions.chrome}`
             const messageType = await ipc.getMessgeTypeSetting()
             if (this.selectedRoom) {
                 const roomRef = this.$refs.room
-                const content = roomRef?.$refs?.roomTextarea?.message || ''
+                const content = roomRef?.getMessageText() || ''
                 const replyMessage = roomRef?.messageReply || null
                 this.sendMessage({
                     content,
