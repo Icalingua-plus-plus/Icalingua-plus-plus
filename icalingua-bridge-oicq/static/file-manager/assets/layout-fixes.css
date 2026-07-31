@@ -1,0 +1,7 @@
+html {
+    scrollbar-gutter: stable;
+}
+
+.ant-table-body {
+    scrollbar-gutter: stable;
+}
