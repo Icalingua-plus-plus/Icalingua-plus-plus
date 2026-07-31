@@ -2676,13 +2676,12 @@ export default {
 }
 
 .vac-record-button {
-    align-self: center;
+    align-self: flex-end;
     flex: 0 0 auto;
 }
 
 .vac-record-button svg {
     width: 20px;
-    height: 20px;
 }
 
 .vac-recording {
