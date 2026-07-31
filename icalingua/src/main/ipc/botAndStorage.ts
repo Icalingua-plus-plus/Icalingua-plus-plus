@@ -152,21 +152,27 @@ ipcMain.on('sendMessage', async (_, data) => {
     if (getConfig().sendSilkAudio) {
         if (data.file && data.file.type && data.file.type.startsWith('audio')) {
             const filepath = data.file.path
-            const fd = await fs.promises.open(filepath, 'r')
-            const head = (await fd.read(Buffer.alloc(7), 0, 7, 0)).buffer
-            fd.close()
-            if (!head.includes('SILK') && !head.includes('AMR')) {
-                ui.message('正在尝试编码高清语音...')
-                try {
-                    const silkFilePath = await silkEncode(data.file.path)
-                    const buffer = fs.readFileSync(silkFilePath)
-                    data.file.path = silkFilePath
-                    data.file.type = 'audio/silk'
-                    data.media = [{ b64: `data:audio;base64,${buffer.toString('base64')}` }]
-                    ui.messageSuccess('高清语音编码成功，正在发送...')
-                } catch (e) {
-                    console.error(e)
-                    ui.messageError('高清语音编码失败，将发送普通语音')
+            // Memory-backed recordings may not have a local path. Their media
+            // payload can still be sent, but they cannot be silk-encoded here.
+            if (filepath && fs.existsSync(filepath)) {
+                const fd = await fs.promises.open(filepath, 'r')
+                const head = Buffer.alloc(7)
+                await fd.read(head, 0, head.length, 0)
+                await fd.close()
+                const header = head.toString('ascii')
+                if (!header.includes('SILK') && !header.includes('AMR')) {
+                    ui.message('正在尝试编码高清语音...')
+                    try {
+                        const silkFilePath = await silkEncode(data.file.path)
+                        const buffer = fs.readFileSync(silkFilePath)
+                        data.file.path = silkFilePath
+                        data.file.type = 'audio/silk'
+                        data.media = [{ b64: `data:audio;base64,${buffer.toString('base64')}` }]
+                        ui.messageSuccess('高清语音编码成功，正在发送...')
+                    } catch (e) {
+                        console.error(e)
+                        ui.messageError('高清语音编码失败，将发送普通语音')
+                    }
                 }
             }
         }

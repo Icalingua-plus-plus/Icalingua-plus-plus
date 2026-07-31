@@ -271,6 +271,62 @@
             </transition>
 
             <div class="vac-box-footer" v-show="showFooter">
+                <el-dialog
+                    title="发送语音"
+                    :visible.sync="audioDialogVisible"
+                    width="360px"
+                    append-to-body
+                    :close-on-click-modal="false"
+                    :close-on-press-escape="false"
+                    :show-close="!isAudioSending"
+                    @close="handleAudioDialogClose"
+                >
+                    <div class="vac-audio-dialog-body">
+                        <div class="vac-audio-dialog-status">
+                            <span v-if="isAudioRecording" class="vac-audio-recording-dot"></span>
+                            <i v-else-if="isAudioStarting" class="el-icon-loading"></i>
+                            <span>{{ audioRecordingStatus }}</span>
+                            <strong>{{ formatAudioDuration(audioDuration) }}</strong>
+                        </div>
+
+                        <p v-if="isAudioStarting || isAudioRecording" class="vac-audio-dialog-hint">
+                            {{ audioRecordingHint }}
+                        </p>
+                        <message-audio
+                            v-else-if="audioRecordUrl"
+                            class="vac-audio-preview"
+                            :src="audioRecordUrl"
+                            :audio-session="audioPreviewSession"
+                        />
+                    </div>
+
+                    <span slot="footer" class="dialog-footer">
+                        <template v-if="isAudioStarting || isAudioRecording">
+                            <el-button @click="cancelAudioRecording">取消</el-button>
+                            <el-button
+                                type="primary"
+                                :loading="isAudioStarting"
+                                :disabled="isAudioStarting"
+                                @click="stopAudioRecording"
+                            >
+                                完成
+                            </el-button>
+                        </template>
+                        <template v-else>
+                            <el-button :disabled="isAudioSending" @click="cancelAudioRecording">取消</el-button>
+                            <el-button :disabled="isAudioSending" @click="reRecordAudio">重录</el-button>
+                            <el-button
+                                type="primary"
+                                :loading="isAudioSending"
+                                :disabled="isAudioSending"
+                                @click="sendAudioRecording"
+                            >
+                                发送
+                            </el-button>
+                        </template>
+                    </span>
+                </el-dialog>
+
                 <div v-if="videoFiles.length" class="vac-media-container">
                     <div class="vac-svg-button vac-icon-media" @click="resetMediaFile">
                         <slot name="image-close-icon">
@@ -389,6 +445,21 @@
                         <svg-icon name="emoji" />
                     </div>
 
+                    <div
+                        v-if="showAudio"
+                        class="vac-svg-button vac-record-button"
+                        :class="{
+                            'vac-recording': isAudioRecording,
+                            'vac-recording-pending': isAudioStarting || isAudioSending,
+                        }"
+                        :title="isAudioStarting ? '正在启动麦克风' : isAudioRecording ? '停止录音' : '录音'"
+                        @click="toggleAudioRecording"
+                    >
+                        <slot name="audio-icon">
+                            <svg-icon :name="isAudioRecording ? 'microphone-off' : 'microphone'" />
+                        </slot>
+                    </div>
+
                     <el-popover placement="top" trigger="hover">
                         <div
                             slot="reference"
@@ -466,6 +537,7 @@
 </template>
 
 <script>
+import fs from 'fs'
 import path from 'path'
 import { ipcRenderer, webUtils } from 'electron'
 import _ from 'lodash'
@@ -481,6 +553,7 @@ import RoomHeader from './RoomHeader'
 import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
+import MessageAudio from '../Message/MessageAudio'
 import SearchInput from '../../../SearchInput'
 
 import faceNames from '../../../../../../static/faceNames'
@@ -490,6 +563,7 @@ import ipc from '../../../../utils/ipc'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
 import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
+import Recorder from '../../utils/recorder'
 
 const faceDir = path.join(getStaticPath(), 'face')
 
@@ -509,6 +583,7 @@ export default {
         RoomMessageReply,
         RoomForwardMessage,
         Message,
+        MessageAudio,
         SearchInput,
     },
     directives: {
@@ -613,6 +688,17 @@ export default {
             scrollToBottomTimer: null,
             pasteIcon: `file://${__static}/Clipboard.svg`,
             audioSessions: {},
+            audioPreviewSession: { audio: new Audio() },
+            audioRecorder: null,
+            isAudioStarting: false,
+            isAudioRecording: false,
+            isAudioSending: false,
+            audioDialogVisible: false,
+            audioRecord: null,
+            audioRecordUrl: '',
+            audioDuration: 0,
+            audioDurationTimer: null,
+            audioRecordingStartedAt: 0,
         }
     },
     computed: {
@@ -634,6 +720,14 @@ export default {
             const height = w.height || w.innerHeight
             // 每条消息估算高度 60px，乘以 5 倍缓冲确保快速滚动不会出现空白
             return Math.ceil(height / 60) * 5
+        },
+        audioRecordingStatus() {
+            if (this.isAudioStarting) return '正在启动麦克风'
+            if (this.isAudioRecording) return '正在录音'
+            return '录音预览'
+        },
+        audioRecordingHint() {
+            return this.isAudioStarting ? '准备完成后再开始说话' : '点击“完成”结束录音'
         },
     },
     watch: {
@@ -924,6 +1018,7 @@ export default {
         })
     },
     beforeDestroy() {
+        this.disposeAudioRecorder()
         if (this.onScrolling) {
             clearTimeout(this.onScrolling)
             this.onScrolling = null
@@ -939,6 +1034,207 @@ export default {
         this.clearAudioSessions()
     },
     methods: {
+        createAudioRecorder() {
+            if (this.audioRecorder) return this.audioRecorder
+
+            this.audioRecorder = new Recorder({
+                sampleRate: 24000,
+                bitRate: 16,
+                afterRecording: (record) => this.handleAudioRecord(record),
+                micFailed: (error) => this.handleAudioRecordError(error),
+            })
+            return this.audioRecorder
+        },
+        async startAudioRecording() {
+            this.clearAudioRecord()
+            this.audioDialogVisible = true
+            this.audioDuration = 0
+            this.isAudioStarting = true
+            this.isAudioRecording = false
+            try {
+                const recorder = this.createAudioRecorder()
+                const result = await recorder.start()
+                if (!result) return
+                if (!this.isAudioStarting || !this.audioDialogVisible) {
+                    recorder.cancel()
+                    return
+                }
+
+                this.audioDuration = Number(recorder.duration) || 0
+                this.audioRecordingStartedAt = Date.now() - this.audioDuration * 1000
+                this.isAudioStarting = false
+                this.isAudioRecording = true
+                this.startAudioDurationTimer()
+            } catch (error) {
+                this.handleAudioRecordError(error)
+            }
+        },
+        toggleAudioRecording() {
+            if (!this.showAudio || this.isAudioStarting || this.isAudioSending || this.audioRecord) return
+
+            if (this.isAudioRecording) {
+                this.stopAudioRecording()
+                return
+            }
+
+            this.startAudioRecording()
+        },
+        handleAudioRecord(record) {
+            this.isAudioStarting = false
+            this.isAudioRecording = false
+            this.stopAudioDurationTimer()
+            // Ignore a recording that contains no captured audio frames.
+            if (!record || !record.blob || !record.blob.size || !record.duration) {
+                this.clearAudioRecord()
+                this.audioDialogVisible = false
+                return
+            }
+
+            this.audioRecord = record
+            this.audioRecordUrl = record.url || ''
+            this.audioDuration = record.duration
+            this.audioDialogVisible = true
+        },
+        stopAudioRecording() {
+            if (this.isAudioStarting) return
+            const recorder = this.audioRecorder
+            if (!recorder) return
+            try {
+                recorder.stop()
+            } catch (error) {
+                this.handleAudioRecordError(error)
+            }
+        },
+        startAudioDurationTimer() {
+            this.stopAudioDurationTimer()
+            this.audioDurationTimer = setInterval(() => {
+                if (!this.isAudioRecording) return
+                this.audioDuration = (Date.now() - this.audioRecordingStartedAt) / 1000
+            }, 200)
+        },
+        stopAudioDurationTimer() {
+            if (!this.audioDurationTimer) return
+            clearInterval(this.audioDurationTimer)
+            this.audioDurationTimer = null
+        },
+        formatAudioDuration(seconds) {
+            const duration = Math.max(0, Math.floor(Number(seconds) || 0))
+            const minutes = Math.floor(duration / 60)
+            const remainder = String(duration % 60).padStart(2, '0')
+            return `${minutes}:${remainder}`
+        },
+        cancelAudioRecording() {
+            if (this.isAudioSending) return
+            if (this.isAudioStarting || this.isAudioRecording) this.audioRecorder?.cancel?.()
+            this.stopAudioDurationTimer()
+            this.isAudioStarting = false
+            this.isAudioRecording = false
+            this.audioDialogVisible = false
+            this.clearAudioRecord()
+        },
+        reRecordAudio() {
+            if (this.isAudioStarting || this.isAudioSending || this.isAudioRecording) return
+
+            this.startAudioRecording()
+        },
+        async sendAudioRecording() {
+            if (!this.audioRecord || this.isAudioSending) return
+
+            this.isAudioSending = true
+            try {
+                const file = await this.persistAudioRecord(this.audioRecord)
+                const messageType = await ipc.getMessgeTypeSetting()
+                this.$emit('send-message', {
+                    content: '',
+                    files: [file],
+                    replyMessage: this.messageReply,
+                    messageType,
+                })
+                this.audioDialogVisible = false
+                this.clearAudioRecord()
+                this.resetMessage(true)
+            } catch (error) {
+                console.error('Failed to save recording:', error)
+                this.$message.error('录音保存失败，无法发送语音')
+            } finally {
+                this.isAudioSending = false
+            }
+        },
+        clearAudioRecord() {
+            const recordUrl = this.audioRecord?.url
+            const previewUrl = this.audioRecordUrl
+            const recorder = this.audioRecorder
+            this.resetAudioSession(this.audioPreviewSession)
+            this.audioRecord = null
+            this.audioRecordUrl = ''
+            if (recorder?.clearRecords) recorder.clearRecords()
+            else if (recordUrl) URL.revokeObjectURL(recordUrl)
+            if (previewUrl && previewUrl !== recordUrl) URL.revokeObjectURL(previewUrl)
+        },
+        handleAudioRecordError(error) {
+            if (error) console.error('Microphone access failed:', error)
+            this.stopAudioDurationTimer()
+            this.isAudioStarting = false
+            this.isAudioRecording = false
+            this.isAudioSending = false
+            this.audioDialogVisible = false
+            this.clearAudioRecord()
+            this.$message.error('无法访问麦克风，请检查麦克风权限')
+        },
+        handleAudioDialogClose() {
+            if (this.isAudioStarting || this.isAudioRecording) this.audioRecorder?.cancel?.()
+            this.stopAudioDurationTimer()
+            this.isAudioStarting = false
+            this.isAudioRecording = false
+            this.audioDialogVisible = false
+            this.clearAudioRecord()
+        },
+        async persistAudioRecord(record) {
+            const recordsDir = path.join(await ipc.getStorePath(), 'records')
+            await fs.promises.mkdir(recordsDir, { recursive: true })
+
+            const filename = `record-${Date.now()}.wav`
+            const filePath = path.join(recordsDir, filename)
+            const buffer = Buffer.from(await record.blob.arrayBuffer())
+            await fs.promises.writeFile(filePath, buffer)
+
+            return {
+                blob: record.blob,
+                name: filename,
+                size: buffer.length,
+                type: 'audio/wav',
+                extension: 'wav',
+                path: filePath,
+                localUrl: record.url,
+            }
+        },
+        disposeAudioRecorder() {
+            this.stopAudioDurationTimer()
+            this.audioDialogVisible = false
+            this.clearAudioRecord()
+
+            const recorder = this.audioRecorder
+            if (recorder) {
+                try {
+                    if (typeof recorder.dispose === 'function') {
+                        recorder.dispose()
+                    } else if (typeof recorder.cancel === 'function') {
+                        recorder.cancel()
+                    } else {
+                        recorder.stream?.getTracks().forEach((track) => track.stop())
+                        recorder.input?.disconnect()
+                        recorder.processor?.disconnect()
+                        recorder.context?.close()
+                    }
+                } catch (error) {
+                    console.warn('Failed to dispose audio recorder:', error)
+                }
+            }
+            this.audioRecorder = null
+            this.isAudioStarting = false
+            this.isAudioRecording = false
+            this.isAudioSending = false
+        },
         getMessageText() {
             return this.$refs.roomTextarea?.value || ''
         },
@@ -1067,14 +1363,15 @@ export default {
             }
             return this.audioSessions[message._id]
         },
+        resetAudioSession(session) {
+            const audio = session?.audio
+            if (!audio) return
+            audio.pause()
+            audio.removeAttribute('src')
+            audio.load()
+        },
         clearAudioSessions() {
-            Object.values(this.audioSessions).forEach((session) => {
-                const audio = session && session.audio
-                if (!audio) return
-                audio.pause()
-                audio.removeAttribute('src')
-                audio.load()
-            })
+            Object.values(this.audioSessions).forEach((session) => this.resetAudioSession(session))
             this.audioSessions = {}
         },
         sendForward(target, name, multi = true, anonymous = false) {
@@ -2315,6 +2612,83 @@ export default {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+}
+
+.vac-record-button {
+    align-self: center;
+    flex: 0 0 auto;
+}
+
+.vac-record-button svg {
+    width: 20px;
+    height: 20px;
+}
+
+.vac-recording {
+    color: var(--chat-color-primary, #f56c6c);
+}
+
+.vac-recording svg {
+    fill: var(--chat-color-primary, #f56c6c) !important;
+}
+
+.vac-recording-pending {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.vac-audio-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.vac-audio-dialog-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+    font-size: 14px;
+}
+
+.vac-audio-dialog-status strong {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.vac-audio-dialog-hint {
+    margin: 0;
+    color: var(--panel-color-desc, #606266);
+    font-size: 13px;
+}
+
+.vac-audio-recording-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+    background: #f56c6c;
+    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.45);
+    animation: vac-audio-recording-pulse 1.4s infinite;
+}
+
+.vac-audio-preview {
+    align-self: center;
+    width: 100%;
+    max-width: 300px;
+    margin: 2px 0 4px;
+}
+
+@keyframes vac-audio-recording-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.45);
+    }
+    50% {
+        box-shadow: 0 0 0 5px rgba(245, 108, 108, 0);
     }
 }
 

@@ -13,7 +13,7 @@
                     height="100vh"
                     :rooms-loaded="true"
                     :messages-loaded="messagesLoaded"
-                    :show-audio="false"
+                    :show-audio="true"
                     :show-reaction-emojis="false"
                     :show-new-messages-divider="false"
                     :load-first-room="true"

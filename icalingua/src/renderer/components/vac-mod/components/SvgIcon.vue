@@ -237,6 +237,10 @@ export default {
     fill: var(--chat-icon-color-dropdown-scroll);
 }
 
+#vac-icon-microphone {
+    fill: var(--chat-icon-color-microphone);
+}
+
 #vac-icon-microphone-off {
     fill: var(--chat-icon-color-microphone-off);
 }
