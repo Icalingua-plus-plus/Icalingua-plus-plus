@@ -603,6 +603,12 @@ export default {
         ipcRenderer.on('setDisableChatGroupsSeeting', (_, p) => {
             this.disableChatGroups = p
             this.selectedChatGroup = 'chats'
+            if (p) {
+                this.chatGroupsUnreadCount = {}
+            } else {
+                this._rebuildRoomToGroupIndex()
+                this._recomputeChatGroupsUnreadCount()
+            }
         })
         ipcRenderer.on('setDisableChatGroupsRedPointSeeting', (_, p) => {
             this.disableChatGroupsRedPoint = p
@@ -838,12 +844,16 @@ export default {
             this.offlineReason = msg
             this.offline = true
         })
-        ipcRenderer.on('clearCurrentRoomUnread', () => (this.selectedRoom.unreadCount = 0))
+        ipcRenderer.on('clearCurrentRoomUnread', () => {
+            this.selectedRoom.unreadCount = 0
+            this._recomputeChatGroupsUnreadCount()
+        })
         ipcRenderer.on('clearRoomUnread', (_, roomId) => {
             const room = this.rooms.find((e) => e.roomId === roomId)
             if (room) {
                 room.unreadCount = 0
                 room.at = false
+                this._recomputeChatGroupsUnreadCount()
             }
         })
         ipcRenderer.on('updatePriority', (_, p) => (this.priority = p))
@@ -1534,29 +1544,30 @@ Chromium ${process.versions.chrome}`
             this._roomToGroupIndex = idx
             this._includeAllPersonalGroupNames = includeAllPersonalNames
         },
-        /** 利用反向索引增量计算未读红点（O(rooms) */
+        /** 利用反向索引计算各聊天分组中满足通知条件的会话数量（O(rooms)） */
         _recomputeChatGroupsUnreadCount() {
-            if (this.disableChatGroups || this.disableChatGroupsRedPoint) return
+            if (this.disableChatGroups || this.disableChatGroupsRedPoint) {
+                this.chatGroupsUnreadCount = {}
+                return
+            }
             const unread = {}
             const selectedId = this.selectedRoomId
             for (const e of this.rooms) {
                 if (selectedId && e.roomId === selectedId) continue
                 if (e.unreadCount > 0 && (e.priority >= this.priority || e.at)) {
-                    unread['chats'] = true
-                    if (e.roomId < 0) unread['group'] = true
-                    if (e.roomId > 0) unread['private'] = true
+                    unread['chats'] = (unread['chats'] || 0) + 1
+                    if (e.roomId < 0) unread['group'] = (unread['group'] || 0) + 1
+                    if (e.roomId > 0) unread['private'] = (unread['private'] || 0) + 1
                     // 反向索引 O(1) 查找该 room 所属的自定义分组
-                    const groups = this._roomToGroupIndex?.get(e.roomId)
-                    if (groups) {
-                        for (const gName of groups) {
-                            unread[gName] = true
-                        }
-                    }
-                    // includeAllPersonal 分组匹配所有私聊
+                    const groups = new Set(this._roomToGroupIndex?.get(e.roomId) || [])
+                    // includeAllPersonal 分组匹配所有私聊；Set 可避免和显式分组重复计数
                     if (e.roomId > 0 && this._includeAllPersonalGroupNames) {
                         for (const gName of this._includeAllPersonalGroupNames) {
-                            unread[gName] = true
+                            groups.add(gName)
                         }
+                    }
+                    for (const gName of groups) {
+                        unread[gName] = (unread[gName] || 0) + 1
                     }
                 }
             }
@@ -1666,6 +1677,9 @@ Chromium ${process.versions.chrome}`
             this._recomputeChatGroupsUnreadCount()
         },
         selectedRoomId() {
+            this._recomputeChatGroupsUnreadCount()
+        },
+        priority() {
             this._recomputeChatGroupsUnreadCount()
         },
     },

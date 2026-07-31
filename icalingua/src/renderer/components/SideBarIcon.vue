@@ -1,8 +1,10 @@
 <template>
     <a :title="title" @click="$emit('click')" @click.middle="$emit('click-middle')" @click.right="$emit('click-right')">
         <div :class="{ selected }">
-            <slot name="icon"><i :class="icon"></i></slot>
-            <i :class="{ redPoint }"></i>
+            <span class="icon-wrapper">
+                <slot name="icon"><i :class="icon"></i></slot>
+                <span v-if="redPoint > 0" class="redPoint">{{ redPoint }}</span>
+            </span>
             <br />
             {{ name }}
         </div>
@@ -17,7 +19,10 @@ export default {
         name: String,
         title: String,
         selected: Boolean,
-        redPoint: Boolean,
+        redPoint: {
+            type: Number,
+            default: 0,
+        },
     },
 }
 </script>
@@ -34,20 +39,33 @@ a > div {
     font-size: 12px;
     word-break: break-all;
 }
-a > div > i {
+.icon-wrapper {
+    position: relative;
+    display: inline-block;
+    height: 24px;
+}
+.icon-wrapper > i {
     font-size: 24px;
 }
 .redPoint {
-    position: relative;
-}
-.redPoint::before {
     position: absolute;
-    content: '';
     top: 0;
     right: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+    transform: translate(50%, -50%);
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    box-sizing: border-box;
+    border-radius: 7px;
     background-color: #ff0000;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-family: msyh;
+    font-size: 10px;
+    font-style: normal;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
 }
 </style>
