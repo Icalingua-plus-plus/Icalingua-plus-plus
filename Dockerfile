@@ -10,9 +10,10 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store,sharing=locked \
     cd icalingua-bridge-oicq && \
     pnpm i && \
-    pnpm build && \
+    pnpm compile && \
     mv /app/icalingua-bridge-oicq/build /tmp/build && \
-    cd /tmp/build && npm i
+    cd /tmp/build && npm i && \
+    mv /tmp/build/@icalingua /tmp/build/node_modules/
 
 # Production image, copy all the files and run next
 FROM node:24-alpine as runner
