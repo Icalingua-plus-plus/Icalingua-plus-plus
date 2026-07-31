@@ -3,6 +3,20 @@ const CHANNEL_COUNT = 1
 const BIT_DEPTH = 16
 const BYTES_PER_SAMPLE = BIT_DEPTH / 8
 
+export interface WavRecord {
+    id: number
+    blob: Blob
+    url: string
+    duration?: number
+}
+
+export interface WavEncoderOptions {
+    bufferSize?: number
+    sampleRate?: number
+    inputSampleRate?: number
+    samples?: Float32Array | Float32Array[]
+}
+
 /**
  * Encode mono Float32 PCM samples as a 16-bit PCM WAV file.
  *
@@ -11,14 +25,19 @@ const BYTES_PER_SAMPLE = BIT_DEPTH / 8
  * encoder performs a small linear resample when the rates differ.
  */
 export default class WavEncoder {
-    constructor(options = {}) {
+    private readonly bufferSize: number
+    private readonly sampleRate: number
+    private readonly inputSampleRate: number
+    private readonly samples: Float32Array | Float32Array[]
+
+    constructor(options: WavEncoderOptions = {}) {
         this.bufferSize = options.bufferSize || 4096
         this.sampleRate = Number(options.sampleRate) || DEFAULT_SAMPLE_RATE
         this.inputSampleRate = Number(options.inputSampleRate) || this.sampleRate
         this.samples = options.samples || []
     }
 
-    finish() {
+    finish(): WavRecord {
         const input = this._joinSamples()
         const samples = this._resample(input)
         const dataSize = samples.length * BYTES_PER_SAMPLE
@@ -49,10 +68,8 @@ export default class WavEncoder {
     }
 
     /** Flatten ScriptProcessor chunks without padding the final chunk. */
-    _joinSamples() {
-        if (ArrayBuffer.isView(this.samples)) {
-            return new Float32Array(this.samples)
-        }
+    private _joinSamples(): Float32Array {
+        if (ArrayBuffer.isView(this.samples)) return new Float32Array(this.samples)
 
         const chunks = Array.isArray(this.samples) ? this.samples : []
         const length = chunks.reduce((total, chunk) => total + (chunk?.length || 0), 0)
@@ -67,7 +84,7 @@ export default class WavEncoder {
     }
 
     /** Linear resampling keeps the encoder dependency-free and deterministic. */
-    _resample(input) {
+    private _resample(input: Float32Array): Float32Array {
         if (!input.length || this.inputSampleRate === this.sampleRate) return input
 
         const outputLength = Math.max(1, Math.round((input.length * this.sampleRate) / this.inputSampleRate))
@@ -83,16 +100,14 @@ export default class WavEncoder {
         return output
     }
 
-    _floatTo16BitPCM(output, offset, input) {
+    private _floatTo16BitPCM(output: DataView, offset: number, input: Float32Array): void {
         for (let i = 0; i < input.length; i++, offset += BYTES_PER_SAMPLE) {
             const sample = Math.max(-1, Math.min(1, input[i]))
             output.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true)
         }
     }
 
-    _writeString(view, offset, string) {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i))
-        }
+    private _writeString(view: DataView, offset: number, string: string): void {
+        for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i))
     }
 }

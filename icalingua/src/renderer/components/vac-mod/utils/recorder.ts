@@ -1,4 +1,4 @@
-import WavEncoder from './wav-encoder'
+import WavEncoder, { WavRecord } from './wav-encoder'
 
 const DEFAULT_SAMPLE_RATE = 24000
 const CHANNEL_COUNT = 1
@@ -6,13 +6,57 @@ const BIT_DEPTH = 16
 const BUFFER_SIZE = 4096
 const READY_TIMEOUT_MS = 5000
 
+export interface RecorderOptions {
+    beforeRecording?: (message: string) => void
+    pauseRecording?: (message: string) => void
+    afterRecording?: (record: WavRecord) => void
+    micFailed?: (error: unknown) => void
+    format?: string
+    bitRate?: number
+    sampleRate?: number
+    bufferSize?: number
+}
+
+type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext }
+
 /**
  * Capture microphone input and produce a mono 24kHz/16-bit WAV record.
  * The public callbacks and recordList/lastRecord methods are kept compatible
  * with the old VAC recorder helper.
  */
 export default class Recorder {
-    constructor(options = {}) {
+    beforeRecording?: (message: string) => void
+    pauseRecording?: (message: string) => void
+    afterRecording?: (record: WavRecord) => void
+    micFailed?: (error: unknown) => void
+    format?: string
+
+    encoderOptions: {
+        bitRate?: number
+        sampleRate: number
+    }
+    bufferSize: number
+    records: WavRecord[]
+    isPause: boolean
+    isRecording: boolean
+    duration: number
+    volume: number | string
+    wavSamples: Float32Array[]
+
+    private _duration: number
+    private _capturedSamples: number
+    private _sessionId: number
+    private inputSampleRate: number
+    private stream: MediaStream | null
+    private input: MediaStreamAudioSourceNode | null
+    private processor: ScriptProcessorNode | null
+    private context: AudioContext | null
+    private sink: GainNode | AudioDestinationNode | null
+    private _readyResolve: ((value: Recorder | null) => void) | null
+    private _readyReject: ((reason?: unknown) => void) | null
+    private _readyTimer: ReturnType<typeof setTimeout> | null
+
+    constructor(options: RecorderOptions = {}) {
         this.beforeRecording = options.beforeRecording
         this.pauseRecording = options.pauseRecording
         this.afterRecording = options.afterRecording
@@ -46,7 +90,7 @@ export default class Recorder {
         this._readyTimer = null
     }
 
-    start() {
+    start(): Promise<Recorder | null> {
         if (this.isRecording && !this.isPause) return Promise.resolve(this)
 
         const mediaDevices = typeof navigator !== 'undefined' && navigator.mediaDevices
@@ -59,7 +103,7 @@ export default class Recorder {
         }
 
         const sessionId = ++this._sessionId
-        this.beforeRecording && this.beforeRecording('start recording')
+        this.beforeRecording?.('start recording')
         this.isPause = false
         this.isRecording = true
         this._capturedSamples = 0
@@ -84,7 +128,7 @@ export default class Recorder {
                 if (!ready || sessionId !== this._sessionId || !this.isRecording) return null
                 return this
             })
-            .catch((error) => {
+            .catch((error: unknown) => {
                 if (sessionId === this._sessionId) {
                     this.isRecording = false
                     this.isPause = false
@@ -94,7 +138,7 @@ export default class Recorder {
             })
     }
 
-    stop() {
+    stop(): WavRecord | null {
         if (!this.isRecording && !this.stream) return null
 
         ++this._sessionId
@@ -117,12 +161,12 @@ export default class Recorder {
         this.isPause = false
         this.isRecording = false
 
-        this.afterRecording && this.afterRecording(record)
+        this.afterRecording?.(record)
         return record
     }
 
     /** Stop capture and discard the current recording without emitting a record. */
-    cancel() {
+    cancel(): void {
         ++this._sessionId
         this._disconnectCapture()
         this.wavSamples = []
@@ -135,45 +179,46 @@ export default class Recorder {
     }
 
     /** Alias used by components when they are destroyed. */
-    dispose() {
+    dispose(): void {
         this.cancel()
         this.clearRecords()
     }
 
-    pause() {
+    pause(): void {
         if (!this.isRecording || this.isPause) return
 
         this._disconnectCapture()
         this._duration = this.duration
         this.isPause = true
-        this.pauseRecording && this.pauseRecording('pause recording')
+        this.pauseRecording?.('pause recording')
     }
 
-    recordList() {
+    recordList(): WavRecord[] {
         return this.records
     }
 
-    lastRecord() {
+    lastRecord(): WavRecord | undefined {
         return this.records.slice(-1).pop()
     }
 
-    clearRecords() {
+    clearRecords(): void {
         this.records.forEach((record) => {
             if (record?.url) URL.revokeObjectURL(record.url)
         })
         this.records = []
     }
 
-    async _micCaptured(stream) {
+    private async _micCaptured(stream: MediaStream): Promise<Recorder | null> {
         this.stream = stream
         try {
-            let context
-            const AudioContext = window.AudioContext || window.webkitAudioContext
-            if (!AudioContext) throw new Error('当前环境不支持 AudioContext')
+            const AudioContextCtor = window.AudioContext || (window as WebkitWindow).webkitAudioContext
+            if (!AudioContextCtor) throw new Error('当前环境不支持 AudioContext')
+
+            let context: AudioContext
             try {
-                context = new AudioContext({ sampleRate: this.encoderOptions.sampleRate })
+                context = new AudioContextCtor({ sampleRate: this.encoderOptions.sampleRate })
             } catch (_) {
-                context = new AudioContext()
+                context = new AudioContextCtor()
             }
 
             this.context = context
@@ -185,9 +230,9 @@ export default class Recorder {
             // A silent sink keeps ScriptProcessor callbacks alive without monitoring
             // the microphone through the speakers.
             this.sink = context.createGain ? context.createGain() : context.destination
-            if (this.sink.gain) this.sink.gain.value = 0
+            if (this.sink && 'gain' in this.sink) this.sink.gain.value = 0
 
-            const firstFrame = new Promise((resolve, reject) => {
+            const firstFrame = new Promise<Recorder | null>((resolve, reject) => {
                 this._readyResolve = resolve
                 this._readyReject = reject
                 this._readyTimer = setTimeout(() => {
@@ -195,7 +240,7 @@ export default class Recorder {
                 }, READY_TIMEOUT_MS)
             })
 
-            this.processor.onaudioprocess = (event) => {
+            this.processor.onaudioprocess = (event: AudioProcessingEvent) => {
                 const sample = event.inputBuffer.getChannelData(0)
                 if (!sample.length) return
 
@@ -224,10 +269,10 @@ export default class Recorder {
         }
     }
 
-    _disconnectCapture() {
+    private _disconnectCapture(): void {
         this._settleReady(null)
-        if (this.stream) this.stream.getTracks().forEach((track) => track.stop())
-        if (this.input) this.input.disconnect()
+        this.stream?.getTracks().forEach((track) => track.stop())
+        this.input?.disconnect()
         if (this.processor) {
             this.processor.onaudioprocess = null
             this.processor.disconnect()
@@ -248,19 +293,19 @@ export default class Recorder {
         this.context = null
     }
 
-    _settleReady(value, error = null) {
+    private _settleReady(value: Recorder | null, error: Error | null = null): void {
         if (!this._readyResolve && !this._readyReject) return
-        clearTimeout(this._readyTimer)
+        if (this._readyTimer) clearTimeout(this._readyTimer)
         const resolve = this._readyResolve
         const reject = this._readyReject
         this._readyResolve = null
         this._readyReject = null
         this._readyTimer = null
-        if (error) reject(error)
-        else resolve(value)
+        if (error) reject?.(error)
+        else resolve?.(value)
     }
 
-    _micError(error) {
-        this.micFailed && this.micFailed(error)
+    private _micError(error: unknown): void {
+        this.micFailed?.(error)
     }
 }
