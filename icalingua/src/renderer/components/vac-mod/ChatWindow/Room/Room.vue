@@ -216,7 +216,7 @@
             </transition>
         </div>
         <div
-            v-show="Object.keys(room).length"
+            v-show="hasValidRoom"
             ref="roomFooter"
             class="vac-room-footer"
             :class="{ 'vac-app-box-shadow': (showFooter && (messageReply || editAndResend)) || showForwardPanel }"
@@ -710,6 +710,10 @@ export default {
         },
         room() {
             return this.rooms.find((room) => room.roomId === this.roomId) || {}
+        },
+        hasValidRoom() {
+            const roomId = Number(this.room.roomId)
+            return Number.isFinite(roomId) && roomId !== 0 && Object.keys(this.room).length
         },
         showNoMessages() {
             return this.room.roomId && !this.messages.length && !this.loadingMessages && !this.loadingRooms
