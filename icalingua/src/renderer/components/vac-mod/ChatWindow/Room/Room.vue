@@ -568,6 +568,8 @@ import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
 import Recorder from '../../utils/recorder'
 
 const faceDir = path.join(getStaticPath(), 'face')
+const messageDraftStorageKey = 'icalingua:message-draft'
+const messageDraftThrottleMs = 500
 
 /** @type 'Enter'|'CtrlEnter'|'ShiftEnter' */
 let keyToSendMessage
@@ -701,6 +703,8 @@ export default {
             audioDuration: 0,
             audioDurationTimer: null,
             audioRecordingStartedAt: 0,
+            messageDraftSaveTimer: null,
+            pendingMessageDraft: '',
         }
     },
     computed: {
@@ -899,6 +903,7 @@ export default {
     },
     async mounted() {
         this.newMessages = []
+        this.restoreMessageDraft()
 
         window.addEventListener('paste', (event) => {
             console.log(event.clipboardData.files)
@@ -1024,6 +1029,7 @@ export default {
         })
     },
     beforeDestroy() {
+        this.saveMessageDraft(this.getMessageText(), true)
         this.disposeAudioRecorder()
         if (this.onScrolling) {
             clearTimeout(this.onScrolling)
@@ -1244,11 +1250,52 @@ export default {
         getMessageText() {
             return this.$refs.roomTextarea?.value || ''
         },
-        setMessageText(message) {
+        persistMessageDraft() {
+            try {
+                if (this.pendingMessageDraft) localStorage.setItem(messageDraftStorageKey, this.pendingMessageDraft)
+                else localStorage.removeItem(messageDraftStorageKey)
+            } catch (error) {
+                console.warn('Failed to save message draft:', error)
+            }
+        },
+        saveMessageDraft(message, immediate = false) {
+            if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') return
+
+            this.pendingMessageDraft = message == null ? '' : String(message)
+            if (immediate) {
+                if (this.messageDraftSaveTimer) {
+                    clearTimeout(this.messageDraftSaveTimer)
+                    this.messageDraftSaveTimer = null
+                }
+                this.persistMessageDraft()
+                return
+            }
+
+            if (this.messageDraftSaveTimer) return
+            this.messageDraftSaveTimer = setTimeout(() => {
+                this.messageDraftSaveTimer = null
+                this.persistMessageDraft()
+            }, messageDraftThrottleMs)
+        },
+        restoreMessageDraft() {
+            if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') return
+
+            try {
+                const draft = localStorage.getItem(messageDraftStorageKey)
+                if (!draft || this.getMessageText()) return
+
+                this.setMessageText(draft, false)
+                this.$nextTick(() => this.resizeTextarea())
+            } catch (error) {
+                console.warn('Failed to restore message draft:', error)
+            }
+        },
+        setMessageText(message, saveDraft = true) {
             const textarea = this.$refs.roomTextarea
             if (!textarea) return
 
             textarea.value = message == null ? '' : String(message)
+            if (saveDraft) this.saveMessageDraft(textarea.value, !textarea.value)
             this.updateMessageEmptyState(textarea.value)
         },
         appendMessageText(message) {
@@ -2063,6 +2110,7 @@ export default {
         onChangeInput(event) {
             const message = event?.target?.value ?? this.getMessageText()
             this.keepKeyboardOpen = true
+            this.saveMessageDraft(message, !message)
             this.updateMessageEmptyState(message)
             this.resizeTextarea()
             this.$emit('typing-message', message)
