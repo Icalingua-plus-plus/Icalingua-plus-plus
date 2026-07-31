@@ -22,7 +22,7 @@
             ></span>
         </div>
         <div class="content-wrapper">
-            <div class="content" ref="scrollContainer" @scroll="onScroll">
+            <div class="content" ref="scrollContainer" @scroll.passive="onScroll">
                 <div :style="{ height: totalHeight + 'px', position: 'relative' }">
                     <div
                         :style="{
@@ -58,8 +58,9 @@
                 @mousedown.prevent="onTrackMouseDown"
             >
                 <div
+                    ref="scrollbarThumb"
                     class="custom-scrollbar-thumb"
-                    :style="{ height: thumbHeight + 'px', transform: `translateY(${thumbTop}px)` }"
+                    :style="{ height: thumbHeight + 'px' }"
                     @mousedown.prevent.stop="onThumbMouseDown"
                 />
             </div>
@@ -107,13 +108,6 @@ export default {
         },
         trackHeight() {
             return this.containerHeight - this.scrollbarPadding * 2
-        },
-        thumbTop() {
-            if (this.scrollHeight <= 0) return 0
-            const maxScroll = this.scrollHeight - this.containerHeight
-            if (maxScroll <= 0) return 0
-            const maxOffset = this.trackHeight - this.thumbHeight
-            return this.scrollbarPadding + (this.scrollTop / maxScroll) * maxOffset
         },
         sortedRooms() {
             this.input = this.input.toUpperCase()
@@ -165,7 +159,41 @@ export default {
     },
     methods: {
         onScroll(e) {
-            this.scrollTop = e.target.scrollTop
+            const scrollTop = e.target.scrollTop
+            this._pendingScrollTop = scrollTop
+
+            if (!this._scrollFrame) {
+                this._scrollFrame = requestAnimationFrame(() => {
+                    this._scrollFrame = null
+                    this._updateScrollbarPosition(this._pendingScrollTop)
+                })
+            }
+
+            const h = this.containerHeight || window.innerHeight
+            const start = Math.max(0, Math.floor(scrollTop / this.itemHeight) - this.bufferSize)
+            const end = Math.min(
+                this.sortedRooms.length,
+                Math.ceil((scrollTop + h) / this.itemHeight) + this.bufferSize,
+            )
+            const renderRange = `${start}:${end}`
+            if (renderRange !== this._renderRange) {
+                this._renderRange = renderRange
+                this.scrollTop = scrollTop
+            }
+        },
+        _updateScrollbarPosition(scrollTop) {
+            const thumb = this.$refs.scrollbarThumb
+            if (!thumb) return
+
+            const maxScroll = this.scrollHeight - this.containerHeight
+            if (maxScroll <= 0 || this.containerHeight <= 0) {
+                thumb.style.transform = `translateY(${this.scrollbarPadding}px)`
+                return
+            }
+
+            const maxOffset = Math.max(0, this.trackHeight - this.thumbHeight)
+            const ratio = Math.max(0, Math.min(1, scrollTop / maxScroll))
+            thumb.style.transform = `translateY(${this.scrollbarPadding + ratio * maxOffset}px)`
         },
         roomMenu(room, e) {
             ipc.popupRoomMenu(room.roomId, e)
@@ -176,7 +204,7 @@ export default {
         onThumbMouseDown(e) {
             this.isDragging = true
             this._dragStartY = e.clientY
-            this._dragStartScrollTop = this.scrollTop
+            this._dragStartScrollTop = this.$refs.scrollContainer?.scrollTop || 0
             this._onMouseMove = (ev) => this.onThumbMouseMove(ev)
             this._onMouseUp = () => this.onThumbMouseUp()
             document.addEventListener('mousemove', this._onMouseMove)
@@ -237,6 +265,7 @@ export default {
             }
         }
         this._updateContainerHeight()
+        this.$nextTick(() => this._updateScrollbarPosition(this.$refs.scrollContainer?.scrollTop || 0))
         this._resizeObserver = new ResizeObserver(this._updateContainerHeight)
         this._resizeObserver.observe(this.$refs.scrollContainer)
     },
@@ -244,6 +273,7 @@ export default {
         sortedRooms: {
             handler() {
                 this.$emit('update-sorted-rooms', this.sortedRooms)
+                this.$nextTick(() => this._updateScrollbarPosition(this.$refs.scrollContainer?.scrollTop || 0))
             },
             immediate: true,
         },
@@ -252,6 +282,10 @@ export default {
         if (this._resizeObserver) {
             this._resizeObserver.disconnect()
             this._resizeObserver = null
+        }
+        if (this._scrollFrame) {
+            cancelAnimationFrame(this._scrollFrame)
+            this._scrollFrame = null
         }
         if (this._onMouseUp) this.onThumbMouseUp()
     },
@@ -322,6 +356,7 @@ export default {
     border-radius: 3px;
     background-color: #999;
     transition: background-color 0.15s;
+    will-change: transform;
 }
 .custom-scrollbar:not(.is-dragging) .custom-scrollbar-thumb:hover,
 .custom-scrollbar.is-dragging .custom-scrollbar-thumb {
