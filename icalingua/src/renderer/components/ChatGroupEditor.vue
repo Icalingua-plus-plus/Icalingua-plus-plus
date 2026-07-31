@@ -1,6 +1,15 @@
 <template>
     <el-dialog title="编辑分组" :visible.sync="dialogVisible" width="400px" @close="$emit('update:visible', false)">
         <div class="editor-content">
+            <div class="group-help" role="note">
+                <i class="el-icon-info"></i>
+                <div>
+                    <div class="group-help-title">分组说明</div>
+                    <div>All Chats 显示全部会话；Group 仅显示群聊；Private 仅显示私聊。</div>
+                    <div>打开会话后，右键对应自定义分组即可添加或移除当前会话。</div>
+                    <div>开启开关后，该自定义分组会自动包含所有私聊。</div>
+                </div>
+            </div>
             <div class="group-list">
                 <draggable
                     v-model="localGroups"
@@ -129,7 +138,7 @@ export default {
                 this.cancelRename()
                 return
             }
-            if (newName === 'chats' || newName === 'private') {
+            if (['chats', 'group', 'private'].includes(newName)) {
                 this.$message({ type: 'error', message: '不能使用保留名称' })
                 this.cancelRename()
                 return
@@ -166,7 +175,7 @@ export default {
                 this.$message({ type: 'error', message: '分组名称不能超过10个字符' })
                 return
             }
-            if (name === 'chats' || name === 'private') {
+            if (['chats', 'group', 'private'].includes(name)) {
                 this.$message({ type: 'error', message: '不能使用保留名称' })
                 return
             }
@@ -240,6 +249,31 @@ export default {
     max-height: 300px;
     overflow-y: auto;
     margin-bottom: 16px;
+}
+
+.group-help {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    color: #606266;
+    font-size: 12px;
+    line-height: 1.6;
+    background-color: var(--panel-header-bg, #f5f7fa);
+    border: 1px solid var(--chat-border-color, #ebeef5);
+    border-radius: 4px;
+
+    > i {
+        flex-shrink: 0;
+        margin-top: 3px;
+        color: #409eff;
+    }
+}
+
+.group-help-title {
+    margin-bottom: 2px;
+    color: #303133;
+    font-weight: 600;
 }
 
 .group-item {

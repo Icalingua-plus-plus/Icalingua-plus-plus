@@ -1,7 +1,7 @@
 <template>
-    <a @click="$emit('click')" @click.middle="$emit('click-middle')" @click.right="$emit('click-right')">
+    <a :title="title" @click="$emit('click')" @click.middle="$emit('click-middle')" @click.right="$emit('click-right')">
         <div :class="{ selected }">
-            <i :class="icon"></i>
+            <slot name="icon"><i :class="icon"></i></slot>
             <i :class="{ redPoint }"></i>
             <br />
             {{ name }}
@@ -15,6 +15,7 @@ export default {
     props: {
         icon: String,
         name: String,
+        title: String,
         selected: Boolean,
         redPoint: Boolean,
     },

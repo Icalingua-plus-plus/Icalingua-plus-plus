@@ -26,13 +26,24 @@
                         <SideBarIcon
                             icon="el-icon-chat-square"
                             name="All Chats"
+                            title="查看所有会话"
                             :selected="selectedChatGroup === 'chats'"
                             :redPoint="chatGroupsUnreadCount['chats']"
                             @click="selectChatGroup('chats')"
                         />
                         <SideBarIcon
+                            name="Group"
+                            title="查看所有群聊"
+                            :selected="selectedChatGroup === 'group'"
+                            :redPoint="chatGroupsUnreadCount['group']"
+                            @click="selectChatGroup('group')"
+                        >
+                            <GroupChatIcon slot="icon" />
+                        </SideBarIcon>
+                        <SideBarIcon
                             icon="el-icon-user"
                             name="Private"
+                            title="查看所有私聊"
                             :selected="selectedChatGroup === 'private'"
                             :redPoint="chatGroupsUnreadCount['private']"
                             @click="selectChatGroup('private')"
@@ -45,11 +56,16 @@
                             :selected="selectedChatGroup === chatGroup.name"
                             :redPoint="chatGroupsUnreadCount[chatGroup.name]"
                             @click="selectChatGroup(chatGroup.name)"
+                            :title="`查看分组：${chatGroup.name}`"
                             @click-middle="removeChatGroup(chatGroup.name)"
                             @click-right="updateChatGroup(chatGroup.name)"
                         />
-                        <SideBarIcon icon="el-icon-edit-outline" name="Edit" @click="chatGroupEditorVisible = true" />
-                        <SideBarIcon icon="el-icon-plus" name="Add" @click="editChatGroups" />
+                        <SideBarIcon
+                            icon="el-icon-edit-outline"
+                            name="Edit"
+                            title="编辑分组"
+                            @click="chatGroupEditorVisible = true"
+                        />
                         <SideBarIcon
                             icon="el-icon-s-unfold"
                             name="Next"
@@ -333,6 +349,7 @@ import { Multipane, MultipaneResizer } from '../components/multipane'
 import path from 'path'
 import { ipcRenderer } from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
+import GroupChatIcon from '../components/GroupChatIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
 import TheContactsPanel from '../components/TheContactsPanel.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
@@ -355,6 +372,7 @@ export default {
         Room,
         Stickers,
         SideBarIcon,
+        GroupChatIcon,
         TheRoomsPanel,
         TheContactsPanel,
         TheGroupMemberPanel,
@@ -550,9 +568,11 @@ export default {
                         this.selectChatGroup('chats')
                         break
                     case '2':
-                        this.selectChatGroup('private')
+                        this.selectChatGroup('group')
                         break
                     case '3':
+                        this.selectChatGroup('private')
+                        break
                     case '4':
                     case '5':
                     case '6':
@@ -560,8 +580,8 @@ export default {
                     case '8':
                     case '9':
                         const n = Number(e.key)
-                        if (this.chatGroups[n - 3]) {
-                            this.selectChatGroup(this.chatGroups[n - 3].name)
+                        if (this.chatGroups[n - 4]) {
+                            this.selectChatGroup(this.chatGroups[n - 4].name)
                         }
                         break
                     default:
@@ -1273,39 +1293,12 @@ Chromium ${process.versions.chrome}`
             this.forwardAnonymous = anonymous
             console.log('forwardMulti', multi, 'forwardAnonymous', anonymous)
         },
-        editChatGroups() {
-            this.$prompt('请输入新聊天分组名字', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                inputValidator: (value) => {
-                    if (value.length > 10) {
-                        return '聊天分组名字不能超过10个字符'
-                    }
-                },
-            }).then(({ value }) => {
-                if (!value) {
-                    this.$message({
-                        type: 'error',
-                        message: '请输入新聊天分组名字',
-                    })
-                    return
-                }
-                if (this.chatGroups.find((e) => e.name === value) || value === 'chats') {
-                    this.$message({
-                        type: 'error',
-                        message: '聊天分组名字重复',
-                    })
-                    return
-                }
-                ipc.addChatGroup({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
-                this.chatGroups.push({ name: value, index: this.chatGroups.length + 1, rooms: [-1] })
-            })
-        },
         onChatGroupsSaved(newGroups) {
             this.chatGroups = newGroups
             // 如果当前选中的分组被删除了，切回全部
             if (
                 this.selectedChatGroup !== 'chats' &&
+                this.selectedChatGroup !== 'group' &&
                 this.selectedChatGroup !== 'private' &&
                 !newGroups.find((g) => g.name === this.selectedChatGroup)
             ) {
@@ -1548,6 +1541,7 @@ Chromium ${process.versions.chrome}`
                 if (selectedId && e.roomId === selectedId) continue
                 if (e.unreadCount > 0 && (e.priority >= this.priority || e.at)) {
                     unread['chats'] = true
+                    if (e.roomId < 0) unread['group'] = true
                     if (e.roomId > 0) unread['private'] = true
                     // 反向索引 O(1) 查找该 room 所属的自定义分组
                     const groups = this._roomToGroupIndex?.get(e.roomId)
@@ -1581,6 +1575,8 @@ Chromium ${process.versions.chrome}`
             switch (this.selectedChatGroup) {
                 case 'chats':
                     return this.rooms
+                case 'group':
+                    return this.rooms.filter((e) => e.roomId < 0)
                 case 'private':
                     return this.rooms.filter((e) => e.roomId > 0)
                 default:
