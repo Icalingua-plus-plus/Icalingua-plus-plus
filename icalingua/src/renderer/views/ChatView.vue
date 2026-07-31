@@ -291,7 +291,7 @@
                 <el-button @click="sendDice(5)">5</el-button>
                 <el-button @click="sendDice(6)">6</el-button>
             </div>
-            <span slot="footer">
+            <span slot="footer" class="random-dialog-footer">
                 <el-checkbox v-model="sendDiceNew">新版</el-checkbox>
                 <el-button @click="sendDiceShown = false">取消</el-button>
                 <el-button type="primary" @click="sendDice(0)">随机</el-button>
@@ -303,7 +303,7 @@
                 <el-button @click="sendRps(2)">剪刀</el-button>
                 <el-button @click="sendRps(3)">布</el-button>
             </div>
-            <span slot="footer">
+            <span slot="footer" class="random-dialog-footer">
                 <el-checkbox v-model="sendRpsNew">新版</el-checkbox>
                 <el-button @click="sendRpsShown = false">取消</el-button>
                 <el-button type="primary" @click="sendRps(0)">随机</el-button>
@@ -1887,6 +1887,21 @@ main div {
 
     .el-button {
         flex-grow: 1;
+    }
+}
+
+.random-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+
+    .el-checkbox {
+        margin-right: 8px;
+    }
+
+    .el-button + .el-button {
+        margin-left: 0;
     }
 }
 </style>
