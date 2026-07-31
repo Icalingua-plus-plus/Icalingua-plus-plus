@@ -1113,7 +1113,8 @@ const adapter = {
         bot.setGroupLeave(gin)
     },
     setGroupBan(gin: number, uin: number, duration?: number): any {
-        bot.setGroupBan(gin, uin, duration)
+        if (uin === 0) bot.setGroupWholeBan(gin, duration > 0)
+        else bot.setGroupBan(gin, uin, duration)
     },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)

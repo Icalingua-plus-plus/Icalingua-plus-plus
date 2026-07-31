@@ -636,6 +636,39 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         )
         menu.append(
             new MenuItem({
+                label: '全员禁言',
+                visible: (await isAdmin(room.roomId)) !== false,
+                async click() {
+                    const win = newIcalinguaWindow({
+                        height: 210,
+                        width: 600,
+                        autoHideMenuBar: true,
+                        maximizable: false,
+                        modal: true,
+                        parent: getMainWindow(),
+                        webPreferences: {
+                            contextIsolation: false,
+                            nodeIntegration: true,
+                        },
+                    })
+                    const groupName = getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                    await win.loadURL(
+                        getWinUrl() +
+                            '#/muteUser/' +
+                            -room.roomId +
+                            '/0/' +
+                            querystring.escape(groupName) +
+                            '/' +
+                            querystring.escape('全体成员') +
+                            '/null',
+                    )
+                },
+            }),
+        )
+        menu.append(
+            new MenuItem({
                 label: '群成员管理',
                 submenu: [
                     {

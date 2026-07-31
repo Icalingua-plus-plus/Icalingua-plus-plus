@@ -1526,7 +1526,8 @@ const adapter: typeof oicqAdapter = {
         bot.setGroupMemberCard(group, uin, nick)
     },
     setGroupBan(gin: number, uin: number, duration?: number) {
-        bot.setGroupMemberMute(gin, uin, duration || 0)
+        if (uin === 0) bot.setGroupWholeMute(gin, duration > 0)
+        else bot.setGroupMemberMute(gin, uin, duration || 0)
     },
     setGroupKick(gin: number, uin: number) {
         bot.kickGroupMember(gin, uin)
