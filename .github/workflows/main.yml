@@ -848,6 +848,62 @@ jobs:
           path: icalingua/build/Icalingua++*.exe
           if-no-files-found: error
 
+  build-windows32:
+    runs-on: windows-2025
+    outputs:
+      version: ${{ steps.git-ver.outputs.version }}
+      arch-version: ${{ steps.version.outputs.arch-version }}
+      pkg-name: ${{ steps.version.outputs.pkg-name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        run: corepack enable
+
+      - name: Fetch node.lib and pnpm install
+        shell: cmd
+        run: |
+          set npm_config_arch=ia32
+          set node_version=22.23.0
+          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\ia32
+          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\ia32\node.lib https://nodejs.org/download/release/v%node_version%/win-x86/node.lib
+          pnpm install --frozen-lockfile
+
+      - id: git-ver
+        run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
+
+      - name: check version and write version info
+        run: node .github/check-version.js
+        id: version
+        env:
+          SHA: ${{ github.sha }}
+          REF: ${{ github.REF }}
+          GIT_VER: ${{ steps.git-ver.outputs.version }}
+
+      - name: build
+        run: |
+          pnpm build:ci
+          pnpm build:win32
+        working-directory: icalingua
+
+      - name: rename
+        run: ../../.github/winrename.bat x86
+        working-directory: icalingua/build
+
+      - uses: actions/upload-artifact@v4
+        name: Upload Icalingua_Windows32.exe
+        with:
+          name: Icalingua_Windows32.exe
+          path: icalingua/build/Icalingua++*.exe
+          if-no-files-found: error
+
   build-windows-arm64:
     runs-on: windows-2025
     outputs:
@@ -1001,6 +1057,7 @@ jobs:
       - pack-otherpkg-armv7l
       - build-dist-bundle
       - build-windows64
+      - build-windows32
       - build-macos
       - build-windows-arm64
     steps:
@@ -1119,6 +1176,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Icalingua_Windows64.exe
+          path: release
+
+      - name: get Icalingua_Windows32.exe
+        uses: actions/download-artifact@v4
+        with:
+          name: Icalingua_Windows32.exe
           path: release
 
       - name: get Icalingua_Windows_arm64.exe
