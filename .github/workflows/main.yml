@@ -867,14 +867,15 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Fetch node.lib and pnpm install
+      - name: pnpm install for ia32
         shell: cmd
         run: |
           set npm_config_arch=ia32
-          set node_version=22.23.0
-          mkdir %APPDATA%\..\Local\node-gyp\Cache\%node_version%\ia32
-          curl -Lo %APPDATA%\..\Local\node-gyp\Cache\%node_version%\ia32\node.lib https://nodejs.org/download/release/v%node_version%/win-x86/node.lib
           pnpm install --frozen-lockfile
+
+      - name: Install ia32 sqlite3 binary
+        run: pnpm deps:win32
+        working-directory: icalingua
 
       - id: git-ver
         run: echo "version=$(git describe --tags | sed 's/v//')" >> $env:GITHUB_OUTPUT
