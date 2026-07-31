@@ -1,6 +1,6 @@
 <template>
     <Room
-        class="vac-card-window icalingua-theme-holder"
+        class="vac-card-window"
         :current-user-id="0"
         :rooms="[room]"
         :messages="messages"

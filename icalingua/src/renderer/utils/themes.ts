@@ -13,6 +13,7 @@ const styles = {
 
 const availableThemes: { [key: string]: any } = {}
 const themeSysDefault = defaultThemeStyles.light
+const THEME_STYLE_ID = 'icalingua-theme-styles'
 
 export function registerTheme(theme: string, style: any) {
     function patchObject(target, source) {
@@ -41,13 +42,18 @@ export function useTheme(theme: string) {
 }
 
 function setupThemeStyles(style: any) {
-    document.querySelectorAll('.icalingua-theme-holder').forEach((dom) => {
-        if (dom instanceof HTMLElement) {
-            for (let key in style) {
-                ;(dom as any).attributeStyleMap.set(key, style[key])
-            }
-        }
-    })
+    let themeStyle = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement
+    if (!themeStyle) {
+        themeStyle = document.createElement('style')
+        themeStyle.id = THEME_STYLE_ID
+        document.head.appendChild(themeStyle)
+    }
+
+    themeStyle.textContent = `:root {
+${Object.entries(style)
+    .map(([key, value]) => `    ${key}: ${value};`)
+    .join('\n')}
+}`
     ipcRenderer.send('theme:set-complete')
 }
 

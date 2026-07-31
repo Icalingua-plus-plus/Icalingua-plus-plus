@@ -13,3 +13,4 @@ build
 *.yml
 *.json
 .husky
+*.ejs

@@ -1,5 +1,5 @@
 <template>
-    <div class="message-search icalingua-theme-holder">
+    <div class="message-search">
         <div class="search-header">
             <span class="search-title">{{ roomName }} - 搜索聊天记录</span>
         </div>

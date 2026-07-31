@@ -1,5 +1,5 @@
 <template>
-    <div class="vac-card-window icalingua-theme-holder chat-window-root" ondragstart="return false">
+    <div class="vac-card-window chat-window-root" ondragstart="return false">
         <div class="loading-container" v-if="!ready">
             <div class="pace-activity" />
         </div>
