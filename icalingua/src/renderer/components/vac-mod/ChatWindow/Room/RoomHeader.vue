@@ -65,6 +65,24 @@
                             >
                                 <svg-icon name="folder" />
                             </button>
+                            <button
+                                type="button"
+                                class="vac-svg-button vac-room-action"
+                                title="群相册"
+                                aria-label="打开群相册"
+                                @click="$emit('open-group-album')"
+                            >
+                                <svg-icon name="album" />
+                            </button>
+                            <button
+                                type="button"
+                                class="vac-svg-button vac-room-action"
+                                title="群精华"
+                                aria-label="打开群精华"
+                                @click="$emit('open-group-essence')"
+                            >
+                                <svg-icon name="message-star" />
+                            </button>
                         </div>
                         <div class="vac-svg-button vac-room-options" @click="$emit('room-menu', $event)" title="菜单">
                             <slot name="menu-icon">

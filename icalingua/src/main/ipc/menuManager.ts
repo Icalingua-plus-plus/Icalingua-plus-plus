@@ -70,7 +70,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import sleep from '../../utils/sleep'
 import { spacingSendMessage } from '../../utils/panguSpacing'
 import { pb } from 'oicq-icalingua-plus-plus'
-import { openGroupAnnouncements, openGroupFiles } from '../utils/groupWebApps'
+import { openGroupAlbum, openGroupAnnouncements, openGroupEssence, openGroupFiles } from '../utils/groupWebApps'
 
 const getStickersDir = () => path.join(app.getPath('userData'), 'stickers')
 let cachedStickerSubdirs: string[] | null = null
@@ -465,28 +465,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         webApps.append(
             new MenuItem({
                 label: '查看精华消息',
-                async click() {
-                    const size = screen.getPrimaryDisplay().size
-                    const win = newIcalinguaWindow({
-                        height: size.height - 200,
-                        width: 500,
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            preload: path.join(getStaticPath(), 'essenceInj.js'),
-                            contextIsolation: false,
-                        },
-                    })
-                    const cookies = await getCookies('qun.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://qun.qq.com',
-                            domain: '.qun.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    await win.loadURL('https://qun.qq.com/essence/index?gc=' + -room.roomId)
-                },
+                click: () => openGroupEssence(room),
             }),
         )
         webApps.append(
@@ -527,39 +506,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         webApps.append(
             new MenuItem({
                 label: '群相册',
-                async click() {
-                    const size = screen.getPrimaryDisplay().size
-                    const win = newIcalinguaWindow({
-                        height: size.height - 200,
-                        width: 800,
-                        autoHideMenuBar: true,
-                    })
-                    const cookies = await getCookies('qzone.qq.com')
-                    for (const i in cookies) {
-                        await win.webContents.session.cookies.set({
-                            url: 'https://h5.qzone.qq.com',
-                            name: i,
-                            value: cookies[i],
-                        })
-                    }
-                    win.webContents.setWindowOpenHandler((details) => {
-                        const parsedUrl = new URL(details.url)
-                        if (parsedUrl.hostname === 'qungz.photo.store.qq.com') openImage(details.url)
-                        else if (parsedUrl.hostname === 'download.photo.qq.com') {
-                            const roomName = getConfig().removeGroupNameEmotes
-                                ? removeGroupNameEmotes(room.roomName)
-                                : room.roomName
-                            download(
-                                details.url,
-                                `${roomName}(${-room.roomId})的群相册_${new Date().getTime()}.zip`,
-                                undefined,
-                                true,
-                            )
-                        }
-                        return { action: 'deny' }
-                    })
-                    await win.loadURL('https://h5.qzone.qq.com/groupphoto/album?inqq=1&groupId=' + -room.roomId)
-                },
+                click: () => openGroupAlbum(room),
             }),
         )
         webApps.append(
@@ -1865,6 +1812,8 @@ ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
 })
 ipcMain.on('openGroupAnnouncements', async (_, roomId: number) => openGroupAnnouncements(await getRoom(roomId)))
 ipcMain.on('openGroupFiles', async (_, roomId: number) => openGroupFiles(await getRoom(roomId)))
+ipcMain.on('openGroupAlbum', async (_, roomId: number) => openGroupAlbum(await getRoom(roomId)))
+ipcMain.on('openGroupEssence', async (_, roomId: number) => openGroupEssence(await getRoom(roomId)))
 ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, sect?: string, history?: boolean) => {
     const win = getSenderWindow(event)
     const bounds = win.getContentBounds()

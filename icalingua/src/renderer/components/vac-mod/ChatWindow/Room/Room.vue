@@ -25,6 +25,8 @@
             @room-menu="roomMenu"
             @open-group-announcements="openGroupAnnouncements"
             @open-group-files="openGroupFiles"
+            @open-group-album="openGroupAlbum"
+            @open-group-essence="openGroupEssence"
             @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
@@ -2312,6 +2314,12 @@ export default {
         },
         openGroupFiles() {
             ipc.openGroupFiles(this.room.roomId)
+        },
+        openGroupAlbum() {
+            ipc.openGroupAlbum(this.room.roomId)
+        },
+        openGroupEssence() {
+            ipc.openGroupEssence(this.room.roomId)
         },
         stickersMenu(e) {
             ipc.popupStickerMenu(e, false)

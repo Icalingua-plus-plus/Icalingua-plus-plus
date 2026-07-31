@@ -153,6 +153,12 @@ const ipc = {
     openGroupFiles(roomId: number) {
         ipcRenderer.send('openGroupFiles', roomId)
     },
+    openGroupAlbum(roomId: number) {
+        ipcRenderer.send('openGroupAlbum', roomId)
+    },
+    openGroupEssence(roomId: number) {
+        ipcRenderer.send('openGroupEssence', roomId)
+    },
     popupAvatarMenu(message: Message, room: Room, e) {
         ipcRenderer.send('popupAvatarMenu', message, room, { x: e.screenX, y: e.screenY })
     },
