@@ -65,10 +65,10 @@
                         @mousedown.prevent="onGroupTrackMouseDown"
                     >
                         <div
+                            ref="chatGroupScrollbarThumb"
                             class="custom-scrollbar-group-thumb"
                             :style="{
                                 height: groupThumbHeight + 'px',
-                                transform: `translateY(${groupThumbTop}px)`,
                             }"
                             @mousedown.prevent.stop="onGroupThumbMouseDown"
                         />
@@ -426,7 +426,6 @@ export default {
             stickerPanelBottom: false, // 是否启用底部表情面板模式
             stickerPanelHeight: 320, // 底部模式时的面板高度（px）
             // 聊天分组滚动条
-            chatGroupScrollTop: 0,
             chatGroupContainerHeight: 0,
             chatGroupScrollHeight: 0,
             chatGroupIsDragging: false,
@@ -1365,12 +1364,26 @@ Chromium ${process.versions.chrome}`
             }
         },
         onChatGroupScroll(e) {
-            this.chatGroupScrollTop = e.target.scrollTop
+            this._chatGroupPendingScrollTop = e.target.scrollTop
+            if (this._chatGroupScrollFrame) return
+            this._chatGroupScrollFrame = requestAnimationFrame(() => {
+                this._chatGroupScrollFrame = null
+                this._updateChatGroupScrollbarPosition(this._chatGroupPendingScrollTop)
+            })
+        },
+        _updateChatGroupScrollbarPosition(scrollTop) {
+            const thumb = this.$refs.chatGroupScrollbarThumb
+            if (!thumb) return
+
+            const maxScroll = this.chatGroupScrollHeight - this.chatGroupContainerHeight
+            const maxOffset = this.groupTrackHeight - this.groupThumbHeight
+            const ratio = maxScroll > 0 ? Math.max(0, Math.min(1, scrollTop / maxScroll)) : 0
+            thumb.style.transform = `translateY(${this.chatGroupScrollbarPadding + ratio * maxOffset}px)`
         },
         onGroupThumbMouseDown(e) {
             this.chatGroupIsDragging = true
             this._groupDragStartY = e.clientY
-            this._groupDragStartScrollTop = this.chatGroupScrollTop
+            this._groupDragStartScrollTop = this.$refs.chatGroupContainer?.scrollTop || 0
             this._onGroupMouseMove = (ev) => this.onGroupThumbMouseMove(ev)
             this._onGroupMouseUp = () => this.onGroupThumbMouseUp()
             document.addEventListener('mousemove', this._onGroupMouseMove)
@@ -1589,13 +1602,6 @@ Chromium ${process.versions.chrome}`
         groupTrackHeight() {
             return this.chatGroupContainerHeight - this.chatGroupScrollbarPadding * 2
         },
-        groupThumbTop() {
-            if (this.chatGroupScrollHeight <= 0) return 0
-            const maxScroll = this.chatGroupScrollHeight - this.chatGroupContainerHeight
-            if (maxScroll <= 0) return 0
-            const maxOffset = this.groupTrackHeight - this.groupThumbHeight
-            return this.chatGroupScrollbarPadding + (this.chatGroupScrollTop / maxScroll) * maxOffset
-        },
     },
     mounted() {
         this._updateChatGroupContainer = () => {
@@ -1603,6 +1609,7 @@ Chromium ${process.versions.chrome}`
             if (el) {
                 this.chatGroupContainerHeight = el.clientHeight
                 this.chatGroupScrollHeight = el.scrollHeight
+                this.$nextTick(() => this._updateChatGroupScrollbarPosition(el.scrollTop))
             }
         }
         // 等待 DOM 完全渲染后再测量
@@ -1612,6 +1619,17 @@ Chromium ${process.versions.chrome}`
             const el = this.$refs.chatGroupContainer
             if (el) this._chatGroupResizeObserver.observe(el)
         })
+    },
+    beforeDestroy() {
+        if (this._chatGroupResizeObserver) {
+            this._chatGroupResizeObserver.disconnect()
+            this._chatGroupResizeObserver = null
+        }
+        if (this._chatGroupScrollFrame) {
+            cancelAnimationFrame(this._chatGroupScrollFrame)
+            this._chatGroupScrollFrame = null
+        }
+        if (this._onGroupMouseUp) this.onGroupThumbMouseUp()
     },
     watch: {
         chatGroups: {
@@ -1857,6 +1875,7 @@ main div {
     border-radius: 2px;
     background-color: rgba(255, 255, 255, 0.3);
     transition: background-color 0.15s;
+    will-change: transform;
 }
 .custom-scrollbar-group:not(.is-dragging) .custom-scrollbar-group-thumb:hover,
 .custom-scrollbar-group.is-dragging .custom-scrollbar-group-thumb {
