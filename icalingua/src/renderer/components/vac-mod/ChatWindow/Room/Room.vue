@@ -741,6 +741,12 @@ export default {
         },
     },
     watch: {
+        hasValidRoom(val) {
+            if (val) this.scheduleTextareaResize()
+        },
+        showFooter(val) {
+            if (val) this.scheduleTextareaResize()
+        },
         canLoadAfter(val) {
             // 当 canLoadAfter 变为 true 且已在底部时，自动触发加载
             if (
@@ -1285,7 +1291,6 @@ export default {
                 if (!draft || this.getMessageText()) return
 
                 this.setMessageText(draft, false)
-                this.$nextTick(() => this.resizeTextarea())
             } catch (error) {
                 console.warn('Failed to restore message draft:', error)
             }
@@ -1297,6 +1302,12 @@ export default {
             textarea.value = message == null ? '' : String(message)
             if (saveDraft) this.saveMessageDraft(textarea.value, !textarea.value)
             this.updateMessageEmptyState(textarea.value)
+            this.scheduleTextareaResize()
+        },
+        scheduleTextareaResize() {
+            this.$nextTick(() => {
+                requestAnimationFrame(() => this.resizeTextarea())
+            })
         },
         appendMessageText(message) {
             this.setMessageText(this.getMessageText() + message)
