@@ -48,6 +48,7 @@ import {
     hideMessage,
     ignoreChat,
     makeForward,
+    markRoomUnread,
     pinRoom,
     removeChat,
     renewMessage,
@@ -280,6 +281,10 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         {
             label: pinTitle,
             click: () => pinRoom(room.roomId, !room.index),
+        },
+        {
+            label: '标记为未读',
+            click: () => markRoomUnread(room.roomId),
         },
         {
             label: '删除会话',

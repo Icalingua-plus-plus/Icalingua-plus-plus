@@ -640,6 +640,16 @@ const adapter: Adapter = {
         adapter.updateRoom(roomId, { unreadCount: 0, at: false })
         updateTrayIcon()
     },
+    markRoomUnread(roomId: number) {
+        if (!socket) return
+        const room = rooms.find((e) => e.roomId === roomId)
+        if (!room) return
+        room.unreadCount = Math.max(room.unreadCount || 0, 1)
+        room.at = false
+        ui.updateRoom(room)
+        adapter.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        updateTrayIcon()
+    },
     async createBot(form: LoginForm) {
         if (account) {
             //是登录远端

@@ -2160,6 +2160,15 @@ const adapter: OicqAdapter = {
         await storage.updateRoom(roomId, { unreadCount: 0, at: false })
         await updateTrayIcon()
     },
+    async markRoomUnread(roomId: number) {
+        const room = await storage.getRoom(roomId)
+        if (!room) return
+        room.unreadCount = Math.max(room.unreadCount || 0, 1)
+        room.at = false
+        ui.updateRoom(room)
+        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        await updateTrayIcon()
+    },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
         await storage.updateRoom(roomId, { priority })
         ui.setAllRooms(await storage.getAllRooms())

@@ -480,6 +480,16 @@ const adapter: Adapter = {
         ui.clearRoomUnread(roomId)
     },
 
+    async markRoomUnread(roomId: number): Promise<void> {
+        const room = await storage.getRoom(roomId)
+        if (!room) return
+        room.unreadCount = Math.max(room.unreadCount || 0, 1)
+        room.at = false
+        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        ui.updateRoom(room)
+        await updateTrayIcon()
+    },
+
     setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): any {
         // 只读模式不允许修改
     },

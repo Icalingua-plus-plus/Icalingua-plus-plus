@@ -117,6 +117,8 @@ export default interface Adapter {
 
     clearCurrentRoomUnread(): any
 
+    markRoomUnread(roomId: number): any
+
     setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): any
 
     setRoomAutoDownload(roomId: number, autoDownload: boolean): any

@@ -776,6 +776,7 @@ export default {
                 }
             }
             this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
+            this._recomputeChatGroupsUnreadCount()
         })
         ipcRenderer.on('addMessage', (_, { roomId, message }) => {
             message.__v_skip = true
