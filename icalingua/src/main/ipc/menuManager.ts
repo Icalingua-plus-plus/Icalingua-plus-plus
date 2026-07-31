@@ -1402,6 +1402,16 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '压缩发送图片',
+                sublabel: 'JPG（75% 质量）',
+                type: 'checkbox',
+                checked: getConfig().compressImages === true,
+                click: (menuItem) => {
+                    getConfig().compressImages = menuItem.checked
+                    saveConfigFile()
+                },
+            }),
+            new MenuItem({
                 label: '启用插件',
                 type: 'checkbox',
                 checked: getConfig().custom === true,

@@ -57,6 +57,7 @@ type AllConfig = {
     disableQuitShortcut: boolean
     stickerPanelBottom: boolean
     stickerPanelHeight: number
+    compressImages: boolean
 }
 
 export default AllConfig

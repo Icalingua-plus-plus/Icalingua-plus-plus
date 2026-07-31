@@ -121,6 +121,7 @@ const defaultConfig: AllConfig = {
     disableQuitShortcut: false,
     stickerPanelBottom: false,
     stickerPanelHeight: 320,
+    compressImages: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()

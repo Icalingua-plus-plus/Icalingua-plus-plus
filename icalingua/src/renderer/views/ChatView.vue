@@ -937,7 +937,9 @@ Chromium ${process.versions.chrome}`
             if (!room) room = this.rooms.find((e) => e.roomId === roomId)
             if (!roomId) roomId = room.roomId
 
-            const processed = await processFiles(files || [], (msg) => this.$message.warning(msg))
+            const hasImages = (files || []).some((file) => file.type.includes('image'))
+            const compressImages = hasImages ? (await ipc.getSettings()).compressImages : false
+            const processed = await processFiles(files || [], (msg) => this.$message.warning(msg), compressImages)
             const media = [...(extraMedia || []), ...processed.media]
 
             if (resend) ipc.deleteMessage(roomId, resend)

@@ -390,7 +390,9 @@ export default {
         async sendMessage(data) {
             let { content, files, replyMessage, media: extraMedia, sticker, messageType, resend } = data
 
-            const processed = await processFiles(files || [], (msg) => this.$message.warning(msg))
+            const hasImages = (files || []).some((file) => file.type.includes('image'))
+            const compressImages = hasImages ? (await ipc.getSettings()).compressImages : false
+            const processed = await processFiles(files || [], (msg) => this.$message.warning(msg), compressImages)
             const media = [...(extraMedia || []), ...processed.media]
 
             if (resend) ipc.deleteMessage(this.roomId, resend)
