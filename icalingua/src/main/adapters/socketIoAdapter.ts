@@ -1,4 +1,5 @@
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
+import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
 import BridgeVersionInfo from '@icalingua/types/BridgeVersionInfo'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
@@ -63,6 +64,115 @@ let chatGroups: ChatGroup[] = []
 let loggedIn = false
 let account: LoginForm
 let disabledFeatures: SpecialFeature[]
+let localStorage: SQLStorageProvider
+let localStorageUin = 0
+let localStorageInit: Promise<SQLStorageProvider | null>
+let localStorageWriteQueue = Promise.resolve()
+let localStorageClosePromise: Promise<void>
+
+const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null> => {
+    if (!getConfig().bridgeLocalDatabaseSync || !accountUin) return Promise.resolve(null)
+    if (localStorage && localStorageUin === accountUin) return Promise.resolve(localStorage)
+    if (localStorageInit && localStorageUin === accountUin) return localStorageInit
+
+    localStorageUin = accountUin
+    localStorageInit = (async () => {
+        if (localStorage) await localStorage.close()
+        const storage = new SQLStorageProvider(
+            `${accountUin}`,
+            'sqlite3',
+            {
+                dataPath: path.join(app.getPath('userData'), 'data'),
+            },
+            errorHandler,
+        )
+        storage.onUpgradeProgress = (step, total, message) => {
+            sendToLoginWindow('dbUpgradeProgress', { step, total, message })
+        }
+        await storage.connect()
+        localStorage = storage
+        console.log(`Bridge 本地数据库同步已启用：${accountUin}`)
+        return storage
+    })().catch((error) => {
+        localStorage = null
+        localStorageInit = null
+        localStorageUin = 0
+        errorHandler(error, true)
+        ui.messageError('Bridge 本地数据库初始化失败')
+        return null
+    })
+    return localStorageInit
+}
+
+const queueLocalStorageWrite = (write: (storage: SQLStorageProvider) => Promise<any> | any) => {
+    if (!getConfig().bridgeLocalDatabaseSync || !uin) return
+    const accountUin = uin
+    localStorageWriteQueue = localStorageWriteQueue
+        .then(async () => {
+            if (!getConfig().bridgeLocalDatabaseSync || accountUin !== uin) return
+            const storage = await ensureLocalStorage(accountUin)
+            if (storage) await write(storage)
+        })
+        .catch((error) => errorHandler(error, true))
+}
+
+const upsertLocalRoom = async (storage: SQLStorageProvider, room: Room) => {
+    if (await storage.getRoom(room.roomId)) await storage.updateRoom(room.roomId, room)
+    else await storage.addRoom(room)
+}
+
+const upsertLocalChatGroup = async (storage: SQLStorageProvider, chatGroup: ChatGroup) => {
+    const existing = (await storage.getAllChatGroups()).some(({ name }) => name === chatGroup.name)
+    if (existing) await storage.updateChatGroup(chatGroup.name, chatGroup)
+    else await storage.addChatGroup(chatGroup)
+}
+
+const persistLocalMessages = async (storage: SQLStorageProvider, roomId: number, messages: Message[] = []) => {
+    const messagesByRoom = new Map<number, Message[]>()
+    for (const message of messages) {
+        const messageRoomId = (message as Message & { roomId?: number }).roomId ?? roomId
+        // “所有群”搜索结果只有携带原始 roomId 时才能安全写入，避免把消息错误归入 room 0。
+        if (!messageRoomId) continue
+        if (!messagesByRoom.has(messageRoomId)) messagesByRoom.set(messageRoomId, [])
+        messagesByRoom.get(messageRoomId).push(message)
+    }
+    await Promise.all(
+        Array.from(messagesByRoom.entries()).map(([messageRoomId, roomMessages]) =>
+            storage.addMessages(messageRoomId, roomMessages),
+        ),
+    )
+}
+
+const persistLocalMessageUpdate = async (
+    storage: SQLStorageProvider,
+    roomId: number,
+    messageId: string | number,
+    message: Partial<Message>,
+) => {
+    const existing = await storage.getMessage(roomId, String(messageId))
+    if (existing) {
+        await storage.replaceMessage(roomId, messageId, {
+            ...existing,
+            ...message,
+            _id: messageId,
+        })
+    } else if (message._id !== undefined && message.files) {
+        await storage.addMessage(roomId, message as Message)
+    }
+}
+
+const closeLocalStorage = () => {
+    if (localStorageClosePromise) return localStorageClosePromise
+    localStorageClosePromise = (async () => {
+        await localStorageWriteQueue
+        const storage = localStorage || (localStorageInit && (await localStorageInit))
+        if (storage) await storage.close()
+        localStorage = null
+        localStorageInit = null
+        localStorageUin = 0
+    })()
+    return localStorageClosePromise
+}
 
 const attachSocketEvents = () => {
     socket.off('connect_error')
@@ -85,11 +195,13 @@ const attachSocketEvents = () => {
         } catch (e) {
             errorHandler(e, true)
         }
+        queueLocalStorageWrite((storage) => upsertLocalRoom(storage, room))
         await updateTrayIcon()
         updateNoctaliaRoom(room)
     })
     socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
         ui.addMessage(roomId, message)
+        queueLocalStorageWrite((storage) => storage.addMessage(roomId, message))
         if (
             typeof message._id === 'string' &&
             roomId === ui.getSelectedRoomId() &&
@@ -98,21 +210,30 @@ const attachSocketEvents = () => {
         )
             adapter.reportRead(message._id)
     })
-    socket.on('deleteMessage', ui.deleteMessage)
+    socket.on('deleteMessage', (messageId: string | number) => {
+        ui.deleteMessage(messageId)
+        queueLocalStorageWrite((storage) =>
+            storage.updateMessage(0, messageId, {
+                deleted: true,
+                reveal: false,
+            }),
+        )
+    })
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
     socket.on(
         'onlineData',
         async (data: { online: boolean; nick: string; uin: number; sysInfo: string; bkn: number }) => {
+            uin = data.uin
+            bkn = data.bkn
+            nickname = data.nick
+            if (getConfig().bridgeLocalDatabaseSync) ensureLocalStorage(data.uin)
             if (!loggedIn) {
                 loggedIn = true
                 await loadMainWindow()
                 await createTray()
             }
             if (getLoginWindow()) getLoginWindow().close()
-            uin = data.uin
-            bkn = data.bkn
-            nickname = data.nick
             cachedOnlineData = {
                 ...data,
                 priority: getConfig().priority,
@@ -135,10 +256,28 @@ const attachSocketEvents = () => {
         rooms = serverRooms
         ui.setAllRooms(rooms)
         updateNoctaliaRooms(rooms)
+        queueLocalStorageWrite(async (storage) => {
+            const localRoomIds = new Set((await storage.getAllRooms()).map(({ roomId }) => roomId))
+            await Promise.all(
+                serverRooms.map((room) =>
+                    localRoomIds.has(room.roomId) ? storage.updateRoom(room.roomId, room) : storage.addRoom(room),
+                ),
+            )
+        })
     })
     socket.on('setAllChatGroups', (serverChatGroups: ChatGroup[] = []) => {
         chatGroups = serverChatGroups
         ui.setAllChatGroups(chatGroups)
+        queueLocalStorageWrite(async (storage) => {
+            const localChatGroupNames = new Set((await storage.getAllChatGroups()).map(({ name }) => name))
+            await Promise.all(
+                serverChatGroups.map((chatGroup) =>
+                    localChatGroupNames.has(chatGroup.name)
+                        ? storage.updateChatGroup(chatGroup.name, chatGroup)
+                        : storage.addChatGroup(chatGroup),
+                ),
+            )
+        })
     })
     socket.on('closeLoading', ui.closeLoading)
     socket.on('notifyError', ui.notifyError)
@@ -146,14 +285,19 @@ const attachSocketEvents = () => {
         'renewMessage',
         ({ roomId, messageId, message }: { roomId: number; messageId: string; message: Partial<Message> }) => {
             ui.renewMessage(roomId, messageId, message)
+            queueLocalStorageWrite((storage) => persistLocalMessageUpdate(storage, roomId, messageId, message))
         },
     )
     socket.on('renewMessageURL', ({ messageId, URL }: { messageId: string | number; URL: string }) => {
         ui.renewMessageURL(messageId, URL)
     })
-    socket.on('syncRead', ui.clearRoomUnread)
+    socket.on('syncRead', (roomId: number) => {
+        ui.clearRoomUnread(roomId)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { unreadCount: 0, at: false }))
+    })
     socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
+        queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
     })
     let notif: ElectronNotification
     let isSteamVrRunning = false
@@ -445,13 +589,26 @@ const adapter: Adapter = {
         }
     },
     getIgnoredChats(): Promise<IgnoreChatInfo[]> {
-        return new Promise((resolve) => socket.emit('getIgnoredChats', resolve))
+        return new Promise((resolve) =>
+            socket.emit('getIgnoredChats', (ignoredChats: IgnoreChatInfo[]) => {
+                queueLocalStorageWrite(async (storage) => {
+                    const localIgnoredChatIds = new Set((await storage.getIgnoredChats()).map(({ id }) => id))
+                    await Promise.all(
+                        ignoredChats
+                            .filter(({ id }) => !localIgnoredChatIds.has(id))
+                            .map((ignoredChat) => storage.addIgnoredChat(ignoredChat)),
+                    )
+                })
+                resolve(ignoredChats)
+            }),
+        )
     },
     getFriendsFallback(): Promise<SearchableFriend[]> {
         return new Promise((resolve) => socket.emit('getFriendsFallback', resolve))
     },
     removeIgnoredChat(roomId: number): any {
         socket.emit('removeIgnoredChat', roomId)
+        queueLocalStorageWrite((storage) => storage.removeIgnoredChat(roomId))
     },
     getCookies(domain: CookiesDomain): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -461,10 +618,12 @@ const adapter: Adapter = {
     addRoom(room: Room) {
         rooms.unshift(room)
         socket.emit('addRoom', room)
+        queueLocalStorageWrite((storage) => upsertLocalRoom(storage, room))
     },
     addChatGroup(chatGroup: ChatGroup) {
         chatGroups.unshift(chatGroup)
         socket.emit('addChatGroup', chatGroup)
+        queueLocalStorageWrite((storage) => upsertLocalChatGroup(storage, chatGroup))
     },
     clearCurrentRoomUnread() {
         if (!ui.getSelectedRoomId()) return
@@ -535,10 +694,22 @@ const adapter: Adapter = {
     },
     deleteMessage(roomId: number, messageId: string) {
         socket.emit('deleteMessage', roomId, messageId)
+        queueLocalStorageWrite((storage) =>
+            storage.updateMessage(roomId, messageId, {
+                deleted: true,
+                reveal: false,
+            }),
+        )
     },
     hideMessage(roomId: number, messageId: string) {
         ui.hideMessage(messageId, roomId)
         socket.emit('hideMessage', roomId, messageId)
+        queueLocalStorageWrite((storage) =>
+            storage.updateMessage(roomId, messageId, {
+                hide: true,
+                reveal: false,
+            }),
+        )
     },
     fetchHistory(messageId: string, roomId?: number) {
         if (!roomId) roomId = ui.getSelectedRoomId()
@@ -555,27 +726,42 @@ const adapter: Adapter = {
         updateTrayIcon()
         currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessages', roomId, offset, resolve)
+            socket.emit('fetchMessages', roomId, offset, (messages: Message[]) => {
+                queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
+                resolve(messages)
+            })
         })
     },
     fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchImageMessages', roomId, offset, endTime, resolve)
+            socket.emit('fetchImageMessages', roomId, offset, endTime, (messages: Message[]) => {
+                queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
+                resolve(messages)
+            })
         })
     },
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessagesAround', roomId, messageId, before, after, resolve)
+            socket.emit('fetchMessagesAround', roomId, messageId, before, after, (messages: Message[]) => {
+                queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
+                resolve(messages)
+            })
         })
     },
     fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessagesBySender', roomId, senderId, offset, resolve)
+            socket.emit('fetchMessagesBySender', roomId, senderId, offset, (messages: Message[]) => {
+                queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
+                resolve(messages)
+            })
         })
     },
     searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('searchMessages', roomId, keyword, offset, resolve)
+            socket.emit('searchMessages', roomId, keyword, offset, (messages: Message[]) => {
+                queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
+                resolve(messages)
+            })
         })
     },
     getFirstUnreadRoom(): Promise<Room> {
@@ -613,10 +799,18 @@ const adapter: Adapter = {
     },
     ignoreChat(data: IgnoreChatInfo) {
         socket.emit('ignoreChat', data)
+        queueLocalStorageWrite(async (storage) => {
+            if (!(await storage.isChatIgnored(data.id))) await storage.addIgnoredChat(data)
+            await storage.removeRoom(data.id)
+        })
     },
-    logOut(): void {},
+    logOut() {
+        socket?.disconnect()
+        return closeLocalStorage()
+    },
     pinRoom(roomId: number, pin: boolean) {
         socket.emit('pinRoom', roomId, pin)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { index: pin ? 1 : 0 }))
     },
     reLogin(): void {
         if (socket.disconnected) socket.connect()
@@ -624,14 +818,22 @@ const adapter: Adapter = {
     },
     removeChat(roomId: number) {
         socket.emit('removeChat', roomId)
+        queueLocalStorageWrite((storage) => storage.removeRoom(roomId))
         ui.chroom(0)
     },
     removeChatGroup(name: string) {
         socket.emit('removeChatGroup', name)
+        queueLocalStorageWrite((storage) => storage.removeChatGroup(name))
     },
     revealMessage(roomId: number, messageId: string | number) {
         ui.revealMessage(messageId, roomId)
         socket.emit('revealMessage', roomId, messageId)
+        queueLocalStorageWrite((storage) =>
+            storage.updateMessage(roomId, messageId, {
+                hide: false,
+                reveal: true,
+            }),
+        )
     },
     renewMessage(roomId: number, messageId: string, message: Message) {
         socket.emit('renewMessage', roomId, messageId, message)
@@ -775,18 +977,22 @@ const adapter: Adapter = {
     },
     setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         socket.emit('setRoomAutoDownload', roomId, autoDownload)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { autoDownload }))
     },
     setRoomAutoDownloadPath(roomId: number, downloadPath: string) {
         socket.emit('setRoomAutoDownloadPath', roomId, downloadPath)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { downloadPath }))
     },
     setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
         socket.emit('setRoomPriority', roomId, priority)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { priority }))
     },
     sliderLogin(ticket: string): void {
         socket.emit('login-slider-ticket', ticket)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         socket.emit('updateMessage', roomId, messageId, message)
+        queueLocalStorageWrite((storage) => persistLocalMessageUpdate(storage, roomId, messageId, message))
     },
     updateRoom(roomId: number, room: object) {
         try {
@@ -798,6 +1004,7 @@ const adapter: Adapter = {
             errorHandler(e, true)
         }
         socket.emit('updateRoom', roomId, room)
+        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, room))
     },
     updateChatGroup(name: string, chatGroup: ChatGroup) {
         try {
@@ -810,6 +1017,7 @@ const adapter: Adapter = {
         }
         // TODO
         socket.emit('updateChatGroup', name, chatGroup)
+        queueLocalStorageWrite((storage) => storage.updateChatGroup(name, chatGroup))
     },
     getRoamingStamp(no_cache?: boolean): Promise<RoamingStamp[]> {
         return new Promise((resolve, reject) => {

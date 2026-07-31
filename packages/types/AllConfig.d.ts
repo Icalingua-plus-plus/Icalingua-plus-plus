@@ -58,6 +58,7 @@ type AllConfig = {
     stickerPanelBottom: boolean
     stickerPanelHeight: number
     compressImages: boolean
+    bridgeLocalDatabaseSync: boolean
 }
 
 export default AllConfig

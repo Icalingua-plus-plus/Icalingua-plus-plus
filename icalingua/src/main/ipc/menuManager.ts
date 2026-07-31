@@ -1628,6 +1628,17 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '将 Bridge 数据同步到本地数据库',
+                        sublabel: '使用与本地模式相同的 SQLite 数据库',
+                        type: 'checkbox',
+                        checked: getConfig().bridgeLocalDatabaseSync,
+                        visible: getConfig().adapter === 'socketIo',
+                        click: (menuItem) => {
+                            getConfig().bridgeLocalDatabaseSync = menuItem.checked
+                            saveConfigFile()
+                        },
+                    },
+                    {
                         label: '静默获取历史消息',
                         sublabel: '隐藏刷屏的提示',
                         type: 'checkbox',

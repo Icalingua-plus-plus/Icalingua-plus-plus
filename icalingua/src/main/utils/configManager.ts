@@ -122,6 +122,7 @@ const defaultConfig: AllConfig = {
     stickerPanelBottom: false,
     stickerPanelHeight: 320,
     compressImages: false,
+    bridgeLocalDatabaseSync: false,
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
