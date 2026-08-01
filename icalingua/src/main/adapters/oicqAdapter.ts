@@ -1557,6 +1557,7 @@ const adapter: OicqAdapter = {
                     .catch((e) => {
                         ui.messageError(e.message + '(' + e.code + ')')
                         ui.closeLoading()
+                        uiProgress.close()
                     })
             }
             ui.message('文件上传中')

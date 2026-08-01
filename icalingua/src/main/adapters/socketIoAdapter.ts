@@ -942,41 +942,58 @@ const adapter: Adapter = {
                 fileSize: number,
             ): Promise<requestUploadResponse> => {
                 return new Promise((resolve, reject) => {
-                    socket.emit('requestUpload', fileName, hash, fileSize, resolve)
+                    // 兜底：服务器无响应时避免永久挂起
+                    const timer = setTimeout(() => reject(new Error('requestUpload 响应超时')), 30000)
+                    socket.emit('requestUpload', fileName, hash, fileSize, (result: requestUploadResponse) => {
+                        clearTimeout(timer)
+                        resolve(result)
+                    })
                 })
             }
-            const response = await requestUpload(fileName, fileHash, fileSize)
-            if (!response.allSuccess) {
-                let uploadedChunks = response.uploaded.length
-                const uploadChunk = (offset: number, chunk: Buffer, chunkHash: string): Promise<boolean> => {
-                    return new Promise((resolve, reject) => {
-                        socket.emit('uploadFile', fileHash, offset, chunk, chunkHash, resolve)
-                    })
-                }
-                const progress = ui.notifyProgress('uploadFile-' + fileHash, '正在上传到 bridge: ' + fileName)
-                for (let i = 0; i < totalChunks; i++) {
-                    if (response.uploaded.includes(i * chunkSize)) continue
-                    const offset = i * chunkSize
-                    const length = Math.min(chunkSize, fileSize - offset)
-                    const chunk = await readChunk(offset, length)
-                    const chunkHash = crypto.createHash('sha256').update(chunk).digest('hex')
-                    let success = false
-                    let retry = 0
-                    while (!success && retry < 3) {
-                        success = await uploadChunk(offset, chunk, chunkHash)
-                        retry++
+            // 分片上传失败时也能正确关闭进度条通知
+            const progress = ui.notifyProgress('uploadFile-' + fileHash, '正在上传到 bridge: ' + fileName)
+            try {
+                const response = await requestUpload(fileName, fileHash, fileSize)
+                if (!response.allSuccess) {
+                    let uploadedChunks = response.uploaded.length
+                    const uploadChunk = (offset: number, chunk: Buffer, chunkHash: string): Promise<boolean> => {
+                        return new Promise((resolve, reject) => {
+                            // 兜底：断线或服务器不回调时避免进度条永久挂起
+                            const timer = setTimeout(() => reject(new Error('uploadFile 响应超时')), 60000)
+                            socket.emit('uploadFile', fileHash, offset, chunk, chunkHash, (result: boolean) => {
+                                clearTimeout(timer)
+                                resolve(result)
+                            })
+                        })
                     }
-                    if (!success) {
-                        ui.messageError('文件上传 bridge 失败')
-                        progress.close()
-                        return
+                    for (let i = 0; i < totalChunks; i++) {
+                        if (response.uploaded.includes(i * chunkSize)) continue
+                        const offset = i * chunkSize
+                        const length = Math.min(chunkSize, fileSize - offset)
+                        const chunk = await readChunk(offset, length)
+                        const chunkHash = crypto.createHash('sha256').update(chunk).digest('hex')
+                        let success = false
+                        let retry = 0
+                        while (!success && retry < 3) {
+                            success = await uploadChunk(offset, chunk, chunkHash)
+                            retry++
+                        }
+                        if (!success) {
+                            throw new Error('文件上传 bridge 失败')
+                        }
+                        uploadedChunks++
+                        progress.value((uploadedChunks / totalChunks) * 100)
                     }
-                    uploadedChunks++
-                    progress.value((uploadedChunks / totalChunks) * 100)
                 }
+                data.file.path = fileHash
+            } catch (e) {
+                ui.messageError('文件上传 bridge 失败')
+                console.error('文件上传 bridge 失败')
+                errorHandler(e, true)
+                return
+            } finally {
                 progress.close()
             }
-            data.file.path = fileHash
         } else {
         }
         console.log(data.file)
