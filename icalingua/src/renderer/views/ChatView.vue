@@ -671,7 +671,7 @@ export default {
                 message,
                 customClass: 'el-notification-download-complete',
                 offset: 80,
-                duration: 0,
+                duration: 10000,
             })
         })
         ipcRenderer.on('message', (_, p) => this.$message(p))
