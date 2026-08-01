@@ -20,6 +20,7 @@ let deviceManagerWindow: BrowserWindow
 let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
+let titleBarUpdatePromise: Promise<void> | null = null
 
 // 独立聊天窗口映射表 (roomId -> BrowserWindow)
 const chatWindows: Map<number, BrowserWindow> = new Map()
@@ -38,7 +39,7 @@ async function loadDevtools(window: BrowserWindow) {
 }
 
 export const isAppLocked = () => isLocked
-export const loadMainWindow = () => {
+export const loadMainWindow = (show = process.env.NODE_ENV !== 'development' && !argv.hide) => {
     //start main window
     const winSize = getConfig().winSize
     const themeColor = themes.getThemeBackgroundColor()
@@ -48,7 +49,8 @@ export const loadMainWindow = () => {
             width: winSize.width,
             minHeight: MAIN_WINDOW_MIN_SIZE.height,
             minWidth: MAIN_WINDOW_MIN_SIZE.width,
-            show: process.env.NODE_ENV !== 'development' && !argv.hide,
+            frame: !getConfig().hideTitleBar,
+            show,
             backgroundColor: themeColor,
             autoHideMenuBar: !getConfig().showAppMenu,
             webPreferences: {
@@ -202,6 +204,68 @@ export const loadMainWindow = () => {
     })
 
     return mainWindow.loadURL(getWinUrl() + '#/main')
+}
+
+/** 重建主窗口以应用只能在 BrowserWindow 创建时设置的标题栏样式。 */
+export const setMainWindowTitleBarHidden = (hidden: boolean) => {
+    const apply = async () => {
+        if (getConfig().hideTitleBar === hidden) return
+
+        const previousWindow = mainWindow
+        getConfig().hideTitleBar = hidden
+
+        if (!previousWindow || previousWindow.isDestroyed()) {
+            saveConfigFile()
+            await recreateChatWindowsTitleBar()
+            return
+        }
+
+        const normalBounds = previousWindow.getNormalBounds()
+        const wasMaximized = previousWindow.isMaximized()
+        const wasFullScreen = previousWindow.isFullScreen()
+        const wasVisible = previousWindow.isVisible()
+        const wasFocused = previousWindow.isFocused()
+        const selectedRoomId = ui.getSelectedRoomId()
+
+        getConfig().winSize = {
+            width: normalBounds.width,
+            height: normalBounds.height,
+            max: wasMaximized,
+        }
+        saveConfigFile()
+
+        try {
+            await loadMainWindow(false)
+            const nextWindow = mainWindow
+            nextWindow.setBounds(normalBounds)
+            if (wasMaximized) nextWindow.maximize()
+            if (wasFullScreen) nextWindow.setFullScreen(true)
+
+            previousWindow.destroy()
+
+            if (wasVisible && !isAppLocked()) {
+                nextWindow.show()
+                if (wasFocused) nextWindow.focus()
+            }
+            if (selectedRoomId) setTimeout(() => ui.chroom(selectedRoomId), 0)
+
+            await recreateChatWindowsTitleBar()
+            updateTrayIcon()
+            updateTrayMenu()
+        } catch (error) {
+            if (mainWindow && mainWindow !== previousWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
+            mainWindow = previousWindow
+            getConfig().hideTitleBar = !hidden
+            saveConfigFile()
+            throw error
+        }
+    }
+
+    const next = titleBarUpdatePromise ? titleBarUpdatePromise.catch(() => undefined).then(apply) : apply()
+    titleBarUpdatePromise = next
+    return next.finally(() => {
+        if (titleBarUpdatePromise === next) titleBarUpdatePromise = null
+    })
 }
 export const showMainWindow = () => {
     if (mainWindow && process.env.NODE_ENV !== 'development' && !argv.hide) {
@@ -529,7 +593,7 @@ export const focusChatWindow = (roomId: number): boolean => {
 }
 
 /** 打开独立聊天窗口 */
-export const openChatWindow = async (roomId: number, roomName: string, gotoMessageId?: string) => {
+export const openChatWindow = async (roomId: number, roomName: string, gotoMessageId?: string, show = true) => {
     // 如果已经打开，聚焦并返回
     if (isRoomInChatWindow(roomId)) {
         focusChatWindow(roomId)
@@ -548,6 +612,8 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
         height: size.height - 200,
         width: 900,
         title: roomName,
+        frame: !getConfig().hideTitleBar,
+        show,
         backgroundColor: themes.getThemeBackgroundColor(),
         autoHideMenuBar: true,
         webPreferences: {
@@ -560,7 +626,7 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
     chatWindows.set(roomId, win)
 
     win.on('closed', () => {
-        chatWindows.delete(roomId)
+        if (chatWindows.get(roomId) === win) chatWindows.delete(roomId)
     })
 
     // 窗口聚焦时清除未读
@@ -590,6 +656,45 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
         shell.openExternal(details.url)
         return { action: 'deny' }
     })
+}
+
+/** Recreate detached chat windows to apply BrowserWindow title bar options. */
+async function recreateChatWindowsTitleBar() {
+    const states = Array.from(chatWindows.entries())
+        .filter(([, win]) => !win.isDestroyed())
+        .map(([roomId, win]) => ({
+            roomId,
+            roomName: win.getTitle() || String(roomId),
+            bounds: win.getNormalBounds(),
+            wasMaximized: win.isMaximized(),
+            wasFullScreen: win.isFullScreen(),
+            wasVisible: win.isVisible(),
+            wasFocused: win.isFocused(),
+            win,
+        }))
+
+    await Promise.all(
+        states.map(async (state) => {
+            try {
+                if (chatWindows.get(state.roomId) !== state.win) return
+
+                chatWindows.delete(state.roomId)
+                state.win.destroy()
+                await openChatWindow(state.roomId, state.roomName, undefined, state.wasVisible)
+
+                const nextWindow = chatWindows.get(state.roomId)
+                if (!nextWindow || nextWindow.isDestroyed()) return
+
+                nextWindow.setBounds(state.bounds)
+                if (state.wasMaximized) nextWindow.maximize()
+                if (state.wasFullScreen) nextWindow.setFullScreen(true)
+                if (!state.wasVisible) nextWindow.hide()
+                if (state.wasFocused) nextWindow.focus()
+            } catch (error) {
+                console.error(`Failed to update title bar for chat window ${state.roomId}`, error)
+            }
+        }),
+    )
 }
 
 /** 关闭独立聊天窗口 */

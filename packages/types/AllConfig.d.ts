@@ -54,6 +54,7 @@ type AllConfig = {
     externalGfsBrowser: string
     imageViewerSize: WinSize
     hideTray: boolean
+    hideTitleBar: boolean
     disableQuitShortcut: boolean
     stickerPanelBottom: boolean
     stickerPanelHeight: number

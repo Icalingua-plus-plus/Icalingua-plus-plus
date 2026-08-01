@@ -158,6 +158,7 @@
                         :removeHeaderEmotes="selectedRoom.roomId < 0 && removeGroupNameEmotes"
                         :usePanguJsRecv="usePanguJsRecv"
                         :isSteamVrRunning="isSteamVrRunning"
+                        :window-drag-enabled="hideTitleBar"
                         :canLoadAfter="isInMiddle"
                         @clear-last-unread-count="clearLastUnreadCount"
                         @clear-last-unread-at="clearLastUnreadAt"
@@ -427,6 +428,7 @@ export default {
             showSinglePanel: false,
             removeGroupNameEmotes: false,
             usePanguJsRecv: false,
+            hideTitleBar: false,
             showPanel: 'contact', // 'chat' or 'contact', 只有showSinglePanel为true有效
             notifyProgresses: new Map(),
             sendDiceShown: false,
@@ -467,6 +469,7 @@ export default {
         this.useSinglePanel = settings.useSinglePanel
         this.removeGroupNameEmotes = settings.removeGroupNameEmotes
         this.usePanguJsRecv = settings.usePanguJsRecv
+        this.hideTitleBar = settings.hideTitleBar
         this.stickerPanelBottom = settings.stickerPanelBottom
         this.stickerPanelHeight = settings.stickerPanelHeight || 320
         //endregion

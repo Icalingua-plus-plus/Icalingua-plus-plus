@@ -39,6 +39,7 @@
                     :removeHeaderEmotes="roomId < 0 && removeGroupNameEmotes"
                     :usePanguJsRecv="usePanguJsRecv"
                     :isSteamVrRunning="false"
+                    :window-drag-enabled="hideTitleBar"
                     :canLoadAfter="isInMiddle"
                     :standalone="true"
                     @send-message="sendMessage"
@@ -163,6 +164,7 @@ export default {
             isShutUp: false,
             removeGroupNameEmotes: false,
             usePanguJsRecv: false,
+            hideTitleBar: false,
             isInMiddle: false, // 是否从中间加载（用于支持向下翻页）
             targetMessageId: null, // 定位的目标消息 ID
             pendingGotoMessageId: null, // 等待定位的消息 ID（窗口初始化时使用）
@@ -206,6 +208,7 @@ export default {
         this.linkify = settings.linkify
         this.removeGroupNameEmotes = settings.removeGroupNameEmotes
         this.usePanguJsRecv = settings.usePanguJsRecv
+        this.hideTitleBar = settings.hideTitleBar
         this.stickerPanelBottom = settings.stickerPanelBottom
         this.stickerPanelHeight = settings.stickerPanelHeight || 320
 

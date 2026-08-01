@@ -1,5 +1,9 @@
 <template>
-    <div v-show="(isMobile && !showRoomsList) || !isMobile || singleRoom" class="vac-col-messages">
+    <div
+        v-show="(isMobile && !showRoomsList) || !isMobile || singleRoom"
+        class="vac-col-messages"
+        :class="{ 'vac-empty-window-drag-region': windowDragEnabled && !room.roomId }"
+    >
         <slot v-if="(!rooms.length && !loadingRooms) || (!room.roomId && !loadFirstRoom)" name="no-room-selected">
             <div class="vac-container-center vac-room-empty">
                 <div>{{ textMessages.ROOM_EMPTY }}</div>
@@ -19,6 +23,7 @@
             :members-count="membersCount"
             :showSinglePanel="showSinglePanel"
             :removeEmotes="removeHeaderEmotes"
+            :window-drag-enabled="windowDragEnabled"
             @toggle-rooms-list="$emit('toggle-rooms-list')"
             @menu-action-handler="$emit('menu-action-handler', $event)"
             @pokefriend="$emit('pokefriend')"
@@ -630,6 +635,7 @@ export default {
         isSteamVrRunning: { type: Boolean, required: false, default: false },
         canLoadAfter: { type: Boolean, required: false, default: false },
         standalone: { type: Boolean, default: false },
+        windowDragEnabled: { type: Boolean, default: false },
     },
     data() {
         return {
@@ -2544,6 +2550,11 @@ export default {
     overflow: hidden;
     display: flex;
     flex-flow: column;
+}
+
+.vac-empty-window-drag-region {
+    -webkit-app-region: drag;
+    user-select: none;
 }
 
 .vac-container-scroll {

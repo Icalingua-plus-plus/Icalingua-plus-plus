@@ -1,5 +1,5 @@
 <template>
-    <div class="vac-room-header vac-app-border-b">
+    <div class="vac-room-header vac-app-border-b" :class="{ 'vac-window-drag-region': windowDragEnabled }">
         <slot name="room-header" v-bind="{ room, typingUsers }">
             <div class="vac-room-wrapper">
                 <div v-show="showSinglePanel" class="vac-svg-button vac-room-back" @click="$emit('back-contact')">
@@ -139,6 +139,7 @@ export default {
         membersCount: { type: Number, default: 0 },
         showSinglePanel: { type: Boolean, require: false, default: false },
         removeEmotes: { type: Boolean, require: false, default: false },
+        windowDragEnabled: { type: Boolean, default: false },
     },
 
     data() {
@@ -181,6 +182,22 @@ export default {
     z-index: 10;
     background: var(--chat-header-bg-color);
     border-top-right-radius: var(--chat-container-border-radius);
+}
+
+.vac-window-drag-region {
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+.vac-window-drag-region .vac-room-back,
+.vac-window-drag-region .vac-toggle-button,
+.vac-window-drag-region .vac-info-wrapper.vac-item-clickable,
+.vac-window-drag-region .vac-room-info,
+.vac-window-drag-region .vac-room-actions-group,
+.vac-window-drag-region .vac-menu-options,
+.vac-window-drag-region a,
+.vac-window-drag-region button {
+    -webkit-app-region: no-drag;
 }
 
 .vac-room-wrapper {

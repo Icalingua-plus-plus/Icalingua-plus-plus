@@ -17,7 +17,13 @@ import { pushUnreadCount } from './socketIoSlave'
 import ui from './ui'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import { setOnlineStatus, updateAppMenu } from '../ipc/menuManager'
-import { getMainWindow, isAppLocked, lockMainWindow, tryToShowMainWindow } from './windowManager'
+import {
+    getMainWindow,
+    isAppLocked,
+    lockMainWindow,
+    setMainWindowTitleBarHidden,
+    tryToShowMainWindow,
+} from './windowManager'
 import openImage from '../ipc/openImage'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
@@ -174,14 +180,25 @@ const _updateTrayMenu = async () => {
     )
     menu.append(
         new MenuItem({
-            label: '显示菜单栏',
+            label: '隐藏菜单栏',
             type: 'checkbox',
-            checked: getConfig().showAppMenu,
+            checked: !getConfig().showAppMenu,
             click(item) {
-                getConfig().showAppMenu = item.checked
-                getMainWindow().setMenuBarVisibility(item.checked)
-                getMainWindow().setAutoHideMenuBar(!item.checked)
+                getConfig().showAppMenu = !item.checked
+                getMainWindow().setMenuBarVisibility(!item.checked)
+                getMainWindow().setAutoHideMenuBar(item.checked)
                 saveConfigFile()
+            },
+        }),
+    )
+    menu.append(
+        new MenuItem({
+            label: '隐藏标题栏',
+            type: 'checkbox',
+            checked: getConfig().hideTitleBar,
+            click: (item) => {
+                void setMainWindowTitleBarHidden(item.checked).catch(console.error)
+                updateAppMenu()
             },
         }),
     )

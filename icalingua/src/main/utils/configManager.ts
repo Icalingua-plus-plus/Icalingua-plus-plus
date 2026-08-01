@@ -138,6 +138,7 @@ const defaultConfig: AllConfig = {
     externalGfsBrowser: '',
     imageViewerSize: defaultImageViewerSize,
     hideTray: false,
+    hideTitleBar: false,
     disableQuitShortcut: false,
     stickerPanelBottom: false,
     stickerPanelHeight: 320,
