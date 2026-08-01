@@ -1,20 +1,46 @@
 <template>
     <div class="root">
-        <div class="head" v-show="!roomPanelAvatarOnly || disableChatGroups">
+        <div
+            ref="head"
+            class="head"
+            :class="{ 'compact-search-active': compactRoomSearch && roomSearchExpanded }"
+            v-show="!roomPanelAvatarOnly || disableChatGroups"
+        >
             <el-popover
                 placement="right-end"
                 :title="username"
                 trigger="hover"
                 :content="`${account}`"
-                v-if="disableChatGroups"
+                v-if="disableChatGroups && !(compactRoomSearch && roomSearchExpanded)"
             >
                 <a slot="reference" @click="$emit('chroom', account)" style="cursor: pointer">
                     <el-avatar :src="getAvatarUrl(account)" />
                 </a>
             </el-popover>
-            <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
+            <el-input
+                v-show="!compactRoomSearch || roomSearchExpanded"
+                ref="roomSearchInput"
+                class="more input"
+                v-model="input"
+                placeholder="Search"
+                prefix-icon="el-icon-search"
+                clearable
+                @blur="collapseRoomSearch"
+            />
             <span
-                class="more icon-button global-message-search-icon"
+                v-if="compactRoomSearch && !roomSearchExpanded"
+                class="more el-icon-search icon-button room-search-toggle"
+                :class="{ 'has-query': input }"
+                :title="input ? `当前搜索：${input}` : '搜索会话'"
+                aria-label="搜索会话"
+                role="button"
+                tabindex="0"
+                @click="expandRoomSearch"
+                @keydown.enter.space.prevent="expandRoomSearch"
+            ></span>
+            <span
+                v-show="!(compactRoomSearch && roomSearchExpanded)"
+                class="more icon-button persistent-head-action global-message-search-icon"
                 title="搜索全部聊天记录"
                 aria-label="搜索全部聊天记录"
                 role="button"
@@ -24,9 +50,15 @@
                 <i class="el-icon-chat-line-square" aria-hidden="true"></i>
                 <i class="el-icon-search search-mark" aria-hidden="true"></i>
             </span>
-            <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
             <span
-                class="more el-icon-delete icon-button"
+                v-show="!(compactRoomSearch && roomSearchExpanded)"
+                class="more el-icon-user icon-button persistent-head-action"
+                @click="$emit('show-contacts')"
+                title="联系人"
+            ></span>
+            <span
+                v-show="!(compactRoomSearch && roomSearchExpanded)"
+                class="more el-icon-delete icon-button persistent-head-action"
                 @click="clearRooms"
                 title="清理会话"
                 v-if="clearRoomsBehavior !== 'disabled'"
@@ -158,6 +190,8 @@ export default {
             input: '',
             clearRoomsBehavior: '',
             sortRoomsByPriority: false,
+            compactRoomSearch: false,
+            roomSearchExpanded: false,
             // 虚拟滚动
             scrollTop: 0,
             containerHeight: 0,
@@ -169,6 +203,46 @@ export default {
         }
     },
     methods: {
+        updateHeaderLayout() {
+            const head = this.$refs.head
+            if (!head || head.clientWidth <= 0) return
+
+            const headStyle = window.getComputedStyle(head)
+            const horizontalPadding =
+                (Number.parseFloat(headStyle.paddingLeft) || 0) + (Number.parseFloat(headStyle.paddingRight) || 0)
+            const measuredActionsWidth = Array.from(head.querySelectorAll('.persistent-head-action')).reduce(
+                (width, action) => width + action.getBoundingClientRect().width,
+                0,
+            )
+            if (measuredActionsWidth > 0) this._persistentActionsWidth = measuredActionsWidth
+
+            const actionsWidth = this._persistentActionsWidth || 48
+            const avatarWidth = this.disableChatGroups ? 40 : 0
+            const availableInputWidth = head.clientWidth - horizontalPadding - avatarWidth - actionsWidth - 10
+            const shouldCompact = availableInputWidth < 96
+            const inputElement = this.$refs.roomSearchInput?.$el
+            const inputFocused = inputElement?.contains(document.activeElement)
+
+            if (shouldCompact && !this.compactRoomSearch && inputFocused) this.roomSearchExpanded = true
+            if (!shouldCompact) this.roomSearchExpanded = false
+            this.compactRoomSearch = shouldCompact
+        },
+        expandRoomSearch() {
+            if (this._roomSearchBlurTimer) {
+                clearTimeout(this._roomSearchBlurTimer)
+                this._roomSearchBlurTimer = null
+            }
+            this.roomSearchExpanded = true
+            this.$nextTick(() => this.$refs.roomSearchInput?.focus())
+        },
+        collapseRoomSearch() {
+            if (!this.compactRoomSearch) return
+            if (this._roomSearchBlurTimer) clearTimeout(this._roomSearchBlurTimer)
+            this._roomSearchBlurTimer = setTimeout(() => {
+                this.roomSearchExpanded = false
+                this._roomSearchBlurTimer = null
+            }, 0)
+        },
         onScroll(e) {
             const scrollTop = e.target.scrollTop
             this._pendingScrollTop = scrollTop
@@ -277,11 +351,13 @@ export default {
             if (this.$refs.scrollContainer) {
                 this.containerHeight = this.$refs.scrollContainer.clientHeight
             }
+            this.updateHeaderLayout()
         }
         this._updateContainerHeight()
         this.$nextTick(() => this._updateScrollbarPosition(this.$refs.scrollContainer?.scrollTop || 0))
         this._resizeObserver = new ResizeObserver(this._updateContainerHeight)
         this._resizeObserver.observe(this.$refs.scrollContainer)
+        this._resizeObserver.observe(this.$refs.head)
     },
     watch: {
         sortedRooms: {
@@ -290,6 +366,12 @@ export default {
                 this.$nextTick(() => this._updateScrollbarPosition(this.$refs.scrollContainer?.scrollTop || 0))
             },
             immediate: true,
+        },
+        clearRoomsBehavior() {
+            this.$nextTick(() => this.updateHeaderLayout())
+        },
+        disableChatGroups() {
+            this.$nextTick(() => this.updateHeaderLayout())
         },
     },
     beforeDestroy() {
@@ -300,6 +382,10 @@ export default {
         if (this._scrollFrame) {
             cancelAnimationFrame(this._scrollFrame)
             this._scrollFrame = null
+        }
+        if (this._roomSearchBlurTimer) {
+            clearTimeout(this._roomSearchBlurTimer)
+            this._roomSearchBlurTimer = null
         }
         if (this._onMouseUp) this.onThumbMouseUp()
     },
@@ -318,9 +404,14 @@ export default {
     background-color: var(--panel-header-bg);
     height: 64px;
     min-height: 64px;
+    min-width: 0;
     display: flex;
     align-items: center;
     padding: 0 10px;
+}
+
+.head > .icon-button {
+    flex: 0 0 auto;
 }
 
 .rooms-panel.avatar-only .head {
@@ -378,7 +469,23 @@ export default {
 }
 
 .input {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
     margin-left: 10px;
+    overflow: hidden;
+}
+
+.head.compact-search-active .input {
+    margin-left: 0;
+}
+
+.room-search-toggle {
+    margin-right: auto;
+
+    &.has-query {
+        color: #409eff;
+    }
 }
 
 .global-message-search-icon {
