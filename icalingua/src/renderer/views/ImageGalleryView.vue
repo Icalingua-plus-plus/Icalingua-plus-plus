@@ -1,5 +1,5 @@
 <template>
-    <div class="image-gallery">
+    <div class="image-gallery icalingua-theme-holder">
         <div class="gallery-header">
             <span class="gallery-title">{{ roomName }} 的聊天图片</span>
             <el-date-picker
