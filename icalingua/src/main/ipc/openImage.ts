@@ -9,7 +9,7 @@ import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
 import { toInteger } from 'lodash'
-import { getConfig, saveConfigFile } from '../utils/configManager'
+import { ensureWinSizeMinimum, getConfig, IMAGE_VIEWER_MIN_SIZE, saveConfigFile } from '../utils/configManager'
 import { download, downloadImage2Open, getImageExt } from './downloadManager'
 
 let viewer = ''
@@ -53,6 +53,8 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
                 {
                     width: imageViewerSize.width,
                     height: imageViewerSize.height,
+                    minWidth: IMAGE_VIEWER_MIN_SIZE.width,
+                    minHeight: IMAGE_VIEWER_MIN_SIZE.height,
                     show: false,
                     backgroundColor: '#000000',
                     autoHideMenuBar: true,
@@ -87,13 +89,14 @@ const openImage = (url: string, external: boolean = false, urlList: Array<string
             //viewerWindow.maximize()
             // 监听窗口关闭事件，保存窗口大小
             viewerWindow.on('close', () => {
-                const size = viewerWindow.getSize()
+                const normalBounds = viewerWindow.getNormalBounds()
                 const isMaximized = viewerWindow.isMaximized()
                 getConfig().imageViewerSize = {
-                    width: isMaximized ? imageViewerSize.width : size[0],
-                    height: isMaximized ? imageViewerSize.height : size[1],
+                    width: isMaximized ? imageViewerSize.width : normalBounds.width,
+                    height: isMaximized ? imageViewerSize.height : normalBounds.height,
                     max: isMaximized,
                 }
+                ensureWinSizeMinimum(getConfig().imageViewerSize, IMAGE_VIEWER_MIN_SIZE)
                 saveConfigFile()
             })
             if (urlList.length > 1 && !getConfig().singleImageMode) {

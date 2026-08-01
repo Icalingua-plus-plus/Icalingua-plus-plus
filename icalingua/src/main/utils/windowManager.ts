@@ -1,6 +1,6 @@
 import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, Menu, MenuItem } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
-import { getConfig, saveConfigFile } from './configManager'
+import { getConfig, saveConfigFile, MAIN_WINDOW_MIN_SIZE } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import { updateTrayIcon, updateTrayMenu } from './trayManager'
 import path from 'path'
@@ -46,6 +46,8 @@ export const loadMainWindow = () => {
         {
             height: winSize.height,
             width: winSize.width,
+            minHeight: MAIN_WINDOW_MIN_SIZE.height,
+            minWidth: MAIN_WINDOW_MIN_SIZE.width,
             show: process.env.NODE_ENV !== 'development' && !argv.hide,
             backgroundColor: themeColor,
             autoHideMenuBar: !getConfig().showAppMenu,

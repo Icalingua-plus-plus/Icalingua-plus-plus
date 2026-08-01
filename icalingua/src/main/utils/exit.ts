@@ -1,17 +1,18 @@
 import { getMainWindow } from './windowManager'
-import { getConfig, saveConfigFile } from './configManager'
+import { ensureWinSizeMinimum, getConfig, MAIN_WINDOW_MIN_SIZE, saveConfigFile } from './configManager'
 import { BrowserWindow } from 'electron'
 
 const exit = () => {
     const win = getMainWindow()
-    const size = win.getSize()
+    const normalBounds = win.getNormalBounds()
     const originSize = getConfig().winSize
     const allWindows = BrowserWindow.getAllWindows()
     getConfig().winSize = {
-        width: win.isMaximized() ? originSize.width : size[0],
-        height: win.isMaximized() ? originSize.height : size[1],
+        width: win.isMaximized() ? originSize.width : normalBounds.width,
+        height: win.isMaximized() ? originSize.height : normalBounds.height,
         max: win.isMaximized(),
     }
+    ensureWinSizeMinimum(getConfig().winSize, MAIN_WINDOW_MIN_SIZE)
     saveConfigFile()
     win.destroy()
     allWindows.forEach((w) => {
