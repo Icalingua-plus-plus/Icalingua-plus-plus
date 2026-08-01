@@ -168,23 +168,42 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     /** 按关键字搜索消息记录。
-     * @param roomId 房间 ID
+     * @param roomId 房间 ID，为 0 时搜索全部会话
      * @param keyword 搜索关键字
      */
     async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
         try {
-            const arr = await this.mdb
-                .collection<any>('msg' + roomId)
-                .find(
-                    { content: { $regex: keyword, $options: 'i' } },
-                    {
+            const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const query = { content: { $regex: escapedKeyword, $options: 'i' } }
+            if (roomId !== 0) {
+                return await this.mdb
+                    .collection<any>('msg' + roomId)
+                    .find(query, {
                         sort: [['time', -1]],
                         skip,
                         limit,
-                    },
-                )
-                .toArray()
-            return arr
+                    })
+                    .toArray()
+            }
+
+            const rooms = await this.getAllRooms()
+            const perRoomLimit = skip + limit
+            const results = await Promise.all(
+                rooms.map(async (room) => {
+                    const messages = await this.mdb
+                        .collection<any>('msg' + room.roomId)
+                        .find(query, {
+                            sort: [['time', -1]],
+                            limit: perRoomLimit,
+                        })
+                        .toArray()
+                    return messages.map((message) => ({ ...message, roomId: room.roomId })) as Message[]
+                }),
+            )
+            return results
+                .flat()
+                .sort((a, b) => (b.time || 0) - (a.time || 0))
+                .slice(skip, skip + limit)
         } catch (e) {
             return []
         }

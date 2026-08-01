@@ -1,12 +1,12 @@
 <template>
     <div class="message-search icalingua-theme-holder">
         <div class="search-header">
-            <span class="search-title">{{ roomName }} - 搜索聊天记录</span>
+            <span class="search-title">{{ searchTitle }}</span>
         </div>
         <div class="search-bar">
             <el-input
                 v-model="keyword"
-                placeholder="输入关键词搜索"
+                :placeholder="isGlobalSearch ? '搜索全部会话中的消息' : '输入关键词搜索当前会话'"
                 prefix-icon="el-icon-search"
                 clearable
                 size="medium"
@@ -16,17 +16,23 @@
             <el-button type="primary" size="medium" @click="doSearch" :loading="loading">搜索</el-button>
         </div>
         <div class="search-results" ref="resultsContainer" @scroll="handleScroll">
-            <div v-if="messages.length === 0 && searched && !loading" class="empty-state">
+            <div v-if="messages.length === 0 && searched && !loading && !searchError" class="empty-state">
                 <i class="el-icon-search"></i>
                 <p>未找到相关消息</p>
             </div>
-            <div v-for="msg in messages" :key="msg._id" class="result-item">
+            <div v-for="msg in messages" :key="resultKey(msg)" class="result-item">
                 <div class="result-avatar">
                     <img :src="getAvatar(msg)" @error="handleAvatarError" />
                 </div>
                 <div class="result-content">
                     <div class="result-header">
-                        <span class="result-sender">{{ msg.username }}</span>
+                        <div class="result-identity">
+                            <span class="result-sender">{{ msg.username }}</span>
+                            <span v-if="isGlobalSearch" class="result-room" :title="getRoomName(msg)">
+                                <i :class="msg.roomId < 0 ? 'el-icon-chat-dot-square' : 'el-icon-user'"></i>
+                                {{ getRoomName(msg) }}
+                            </span>
+                        </div>
                         <span class="result-time">{{ formatTime(msg.time) }}</span>
                     </div>
                     <div class="result-text" v-html="highlightKeyword(msg.content)"></div>
@@ -37,6 +43,7 @@
                     </el-button>
                 </div>
             </div>
+            <div v-if="searchError" class="search-error">{{ searchError }}</div>
             <div v-if="loading" class="loading-indicator"><i class="el-icon-loading"></i> 搜索中...</div>
             <div v-if="noMore && messages.length > 0" class="no-more">没有更多结果了</div>
         </div>
@@ -59,23 +66,34 @@ export default {
             loading: false,
             noMore: false,
             searched: false,
+            searchError: '',
         }
+    },
+    computed: {
+        isGlobalSearch() {
+            return this.roomId === 0
+        },
+        searchTitle() {
+            return this.isGlobalSearch ? '全局消息搜索' : `${this.roomName} - 搜索聊天记录`
+        },
     },
     async created() {
         document.title = '搜索聊天记录'
         ipcRenderer.on('initMessageSearch', (event, { roomId, roomName }) => {
             this.roomId = roomId
             this.roomName = roomName
-            document.title = `${roomName} - 搜索聊天记录`
+            document.title = this.searchTitle
         })
     },
     methods: {
         async doSearch() {
+            if (this.loading) return
             const keyword = this.keyword.trim()
             if (!keyword) return
             this.messages = []
             this.noMore = false
             this.searched = true
+            this.searchError = ''
             await this.fetchResults()
         },
         async fetchResults() {
@@ -93,6 +111,7 @@ export default {
                 }
             } catch (e) {
                 console.error('Search failed:', e)
+                this.searchError = '搜索失败，请稍后重试'
                 this.noMore = true
             }
             this.loading = false
@@ -101,6 +120,7 @@ export default {
             this.messages = []
             this.noMore = false
             this.searched = false
+            this.searchError = ''
         },
         handleScroll(e) {
             const { scrollTop, scrollHeight, clientHeight } = e.target
@@ -109,7 +129,20 @@ export default {
             }
         },
         jumpToMessage(msg) {
-            ipc.gotoMessage(this.roomId, String(msg._id))
+            const targetRoomId = this.isGlobalSearch ? Number(msg.roomId) : this.roomId
+            if (!targetRoomId) {
+                this.$message.error('无法确定消息所属会话')
+                return
+            }
+            ipc.gotoMessage(targetRoomId, String(msg._id))
+        },
+        resultKey(msg) {
+            return `${msg.roomId === undefined ? this.roomId : msg.roomId}:${msg._id}`
+        },
+        getRoomName(msg) {
+            if (msg._roomName) return msg._roomName
+            if (msg.roomId === undefined) return '未知会话'
+            return `${msg.roomId < 0 ? '群聊' : '私聊'} ${Math.abs(msg.roomId)}`
         },
         getAvatar(msg) {
             if (msg.head_img) return msg.head_img
@@ -130,9 +163,24 @@ export default {
             return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${timeStr}`
         },
         highlightKeyword(content) {
-            if (!content || !this.keyword.trim()) return content || ''
-            const escaped = this.keyword.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            return content.replace(new RegExp(escaped, 'gi'), (match) => `<span class="highlight">${match}</span>`)
+            const escapedContent = this.escapeHtml(content || '')
+            if (!this.keyword.trim()) return escapedContent
+            const escapedKeyword = this.escapeHtml(this.keyword.trim())
+            const pattern = escapedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            return escapedContent.replace(
+                new RegExp(pattern, 'gi'),
+                (match) => `<span class="highlight">${match}</span>`,
+            )
+        },
+        escapeHtml(value) {
+            const entities = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;',
+            }
+            return String(value).replace(/[&<>"']/g, (character) => entities[character])
         },
     },
 }
@@ -214,17 +262,44 @@ export default {
 .result-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     margin-bottom: 4px;
+}
+
+.result-identity {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
 }
 
 .result-sender {
     font-size: 13px;
     font-weight: 500;
     color: var(--chat-color, #333);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-room {
+    display: inline-flex;
+    align-items: center;
+    max-width: 240px;
+    gap: 4px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: var(--panel-item-bg, rgba(0, 0, 0, 0.05));
+    color: var(--chat-header-color-info, #999);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .result-time {
+    flex-shrink: 0;
     font-size: 11px;
     color: var(--chat-header-color-info, #999);
 }
@@ -255,10 +330,15 @@ export default {
 
 .loading-indicator,
 .no-more,
-.empty-state {
+.empty-state,
+.search-error {
     text-align: center;
     padding: 20px;
     color: var(--chat-header-color-info, #999);
+}
+
+.search-error {
+    color: #f56c6c;
 }
 
 .empty-state {

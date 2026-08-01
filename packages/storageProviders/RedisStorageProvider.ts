@@ -271,23 +271,31 @@ export default class RedisStorageProvider implements StorageProvider {
     }
 
     /** 按关键字搜索消息记录。
-     * @param roomId 房间 ID
+     * @param roomId 房间 ID，为 0 时搜索全部会话
      * @param keyword 搜索关键字
      */
     async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
-        const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${roomId}:msgIdList`, 0, -1)
-        const matched: Message[] = []
         const lowerKeyword = keyword.toLowerCase()
 
-        for (const key of allMsgKeys) {
-            const msg = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, key)
-            if (!msg) continue
-            const message = JSON.parse(msg) as Message
-            if (message.content && message.content.toLowerCase().includes(lowerKeyword)) {
-                matched.push(message)
+        const scanRoom = async (targetRoomId: number, includeRoomId: boolean): Promise<Message[]> => {
+            const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${targetRoomId}:msgIdList`, 0, -1)
+            const matched: Message[] = []
+            for (const key of allMsgKeys) {
+                const msg = await this.redis.hget(`${this.qid}:msg${targetRoomId}:messages`, key)
+                if (!msg) continue
+                const message = JSON.parse(msg) as Message
+                if (message.content && message.content.toLowerCase().includes(lowerKeyword)) {
+                    if (includeRoomId) message.roomId = targetRoomId
+                    matched.push(message)
+                }
             }
+            return matched
         }
 
+        const matched =
+            roomId === 0
+                ? (await Promise.all((await this.getAllRooms()).map((room) => scanRoom(room.roomId, true)))).flat()
+                : await scanRoom(roomId, false)
         matched.sort((a, b) => b.time - a.time)
         return matched.slice(skip, skip + limit)
     }

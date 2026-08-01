@@ -89,6 +89,9 @@ const ipc = {
     async searchMessages(roomId: number, keyword: string, offset: number): Promise<Array<Message>> {
         return await ipcRenderer.invoke('searchMessages', { roomId, keyword, offset })
     },
+    openGlobalMessageSearch() {
+        ipcRenderer.send('openGlobalMessageSearch')
+    },
     openMemberHistory(senderId: number, roomId: number, senderName: string) {
         ipcRenderer.send('openMemberHistory', senderId, roomId, senderName)
     },

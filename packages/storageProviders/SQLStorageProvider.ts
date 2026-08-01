@@ -750,7 +750,7 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     /** 实现 {@link StorageProvider} 类的 `searchMessages` 方法，
-     * 按关键字搜索消息记录。
+     * 按关键字搜索消息记录。roomId 为 0 时搜索全部会话。
      *
      * @param roomId 房间 ID
      * @param keyword 搜索关键字
@@ -759,14 +759,15 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
         try {
-            const messages = await this.db<MessageInSQLDB>('messages')
-                .where('roomId', roomId)
-                .where('content', 'like', `%${keyword}%`)
-                .orderBy('time', 'desc')
-                .limit(limit)
-                .offset(skip)
-                .select('*')
-            return messages.map((message) => this.msgConFromDB(message))
+            let query = this.db<MessageInSQLDB>('messages').where('content', 'like', `%${keyword}%`)
+            if (roomId !== 0) query = query.where('roomId', roomId)
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            return messages.map((message) => {
+                const messageRoomId = Number(message.roomId)
+                const converted = this.msgConFromDB(message)
+                if (roomId === 0 && converted) converted.roomId = messageRoomId
+                return converted
+            })
         } catch (e) {
             this.errorHandle(e)
         }

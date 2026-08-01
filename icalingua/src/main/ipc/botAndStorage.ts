@@ -227,6 +227,37 @@ ipcMain.handle(
     'searchMessages',
     async (_, { roomId, keyword, offset }: { roomId: number; keyword: string; offset: number }) => {
         const messages = await adapter.searchMessages(roomId, keyword, offset)
+        if (roomId === 0) {
+            const roomIds = Array.from(
+                new Set(
+                    messages
+                        .map((message) => message.roomId)
+                        .filter((messageRoomId): messageRoomId is number => messageRoomId !== undefined),
+                ),
+            )
+            const roomEntries = await Promise.all(
+                roomIds.map(async (messageRoomId) => {
+                    try {
+                        return [messageRoomId, await adapter.getRoom(messageRoomId)] as const
+                    } catch (e) {
+                        return [messageRoomId, null] as const
+                    }
+                }),
+            )
+            const rooms = new Map(roomEntries)
+            return messages.map((message) => {
+                if (message.roomId === undefined) return message
+                const room = rooms.get(message.roomId)
+                return {
+                    ...message,
+                    _roomName: room
+                        ? message.roomId < 0 && getConfig().removeGroupNameEmotes
+                            ? removeGroupNameEmotes(room.roomName)
+                            : room.roomName
+                        : `${message.roomId < 0 ? '群聊' : '私聊'} ${Math.abs(message.roomId)}`,
+                }
+            })
+        }
         return messages
     },
 )

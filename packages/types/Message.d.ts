@@ -18,6 +18,10 @@ interface MessageFile {
 
 export default interface Message {
     _id: string | number
+    /** Present when a message is returned from a cross-room query. */
+    roomId?: number
+    /** Display metadata attached to cross-room query results. */
+    _roomName?: string
     senderId?: number
     username: string
     content: string

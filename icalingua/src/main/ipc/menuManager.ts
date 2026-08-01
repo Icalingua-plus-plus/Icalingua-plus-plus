@@ -1026,6 +1026,11 @@ export const updateAppMenu = async () => {
                 },
             }),
             new MenuItem({
+                label: '搜索全部聊天记录',
+                accelerator: 'CommandOrControl+Shift+F',
+                click: () => openMessageSearchWindow(0, '全部会话'),
+            }),
+            new MenuItem({
                 label: '获取最近会话的历史消息',
                 sublabel: '一周内有消息的会话',
                 click: () => fetch7DaysHistory(),
@@ -1859,6 +1864,7 @@ ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
         ...pos,
     })
 })
+ipcMain.on('openGlobalMessageSearch', () => openMessageSearchWindow(0, '全部会话'))
 ipcMain.on('openGroupAnnouncements', async (_, roomId: number) => openGroupAnnouncements(await getRoom(roomId)))
 ipcMain.on('openGroupFiles', async (_, roomId: number) => openGroupFiles(await getRoom(roomId)))
 ipcMain.on('openGroupAlbum', async (_, roomId: number) => openGroupAlbum(await getRoom(roomId)))

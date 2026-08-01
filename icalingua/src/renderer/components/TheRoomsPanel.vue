@@ -13,6 +13,17 @@
                 </a>
             </el-popover>
             <el-input class="more input" v-model="input" placeholder="Search" prefix-icon="el-icon-search" clearable />
+            <span
+                class="more icon-button global-message-search-icon"
+                title="搜索全部聊天记录"
+                aria-label="搜索全部聊天记录"
+                role="button"
+                tabindex="0"
+                @click="openGlobalMessageSearch"
+            >
+                <i class="el-icon-chat-line-square" aria-hidden="true"></i>
+                <i class="el-icon-search search-mark" aria-hidden="true"></i>
+            </span>
             <span class="more el-icon-user icon-button" @click="$emit('show-contacts')" title="联系人"></span>
             <span
                 class="more el-icon-delete icon-button"
@@ -201,6 +212,9 @@ export default {
         openInNewWindow(room) {
             ipc.openRoomInNewWindow(room.roomId)
         },
+        openGlobalMessageSearch() {
+            ipc.openGlobalMessageSearch()
+        },
         onThumbMouseDown(e) {
             this.isDragging = true
             this._dragStartY = e.clientY
@@ -365,5 +379,21 @@ export default {
 
 .input {
     margin-left: 10px;
+}
+
+.global-message-search-icon {
+    position: relative;
+    display: inline-block;
+
+    .search-mark {
+        position: absolute;
+        right: -0.32em;
+        bottom: -0.22em;
+        padding: 1px;
+        border-radius: 50%;
+        background: var(--panel-header-bg);
+        font-size: 0.62em;
+        font-weight: 600;
+    }
 }
 </style>
