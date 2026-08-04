@@ -24,7 +24,7 @@
         "build:dir": "ts-node .electron-vue/build.ts && electron-builder --dir",
         "build:clean": "cross-env BUILD_TARGET=clean ts-node .electron-vue/build.ts",
         "dev": "cross-env NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
-        "test:message-formatting": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/components/vac-mod/utils/messageFormatting.test.ts"
+        "test:message-formatting": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/components/vac-mod/utils/messageFormatting.test.ts src/renderer/components/vac-mod/utils/messageMarkdown.test.ts"
     },
     "build": {
         "productName": "Icalingua++",

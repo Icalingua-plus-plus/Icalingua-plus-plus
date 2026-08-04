@@ -176,7 +176,10 @@ export const loadMainWindow = (show = process.env.NODE_ENV !== 'development' && 
                 ui.messageError(PROTOCOL_UNSUPPORT)
             }
         } else if (url1.protocol === 'mqqapi:') {
-            if (action === 'group/invite_join') {
+            if (action === 'aio/inlinecmd') {
+                const command = url1.searchParams.get('command')
+                if (command) ui.setMessageText(command)
+            } else if (action === 'group/invite_join') {
                 showRequestWindow()
             } else {
                 ui.messageError(PROTOCOL_UNSUPPORT)

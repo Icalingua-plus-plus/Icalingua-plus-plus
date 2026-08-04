@@ -65,6 +65,7 @@
                             'vac-message-highlight': isMessageHover,
                             'vac-message-current': message.senderId === currentUserId,
                             'vac-message-deleted': message.deleted || message.hide,
+                            'vac-message-markdown': message.markdown,
                             'vac-message-clickable': showForwardPanel,
                             'vac-message-selected': selected,
                         }"
@@ -82,6 +83,7 @@
                             style="display: flex"
                         >
                             <span style="width: 100%">{{ message.username || message.senderId }}</span>
+                            <span v-if="message.markdown" class="vac-text-markdown-badge">Markdown</span>
                             <span
                                 v-show="
                                     message.role &&
@@ -126,6 +128,15 @@
                             </slot>
                             <span>{{ textMessages.MESSAGE_HIDE }}</span>
                         </div>
+
+                        <message-markdown
+                            v-else-if="message.markdown"
+                            :content="message.content"
+                            :hide-chat-image-by-default="hideChatImageByDefault"
+                            :local-image-viewer-by-default="localImageViewerByDefault"
+                            :show-forward-panel="showForwardPanel"
+                            @inline-command="$emit('inline-command', $event)"
+                        />
 
                         <template v-else-if="orderedMessageParts">
                             <div v-for="part in orderedMessageParts" :key="part.key" class="vac-ordered-message-part">
@@ -268,6 +279,7 @@
                         <format-message
                             v-if="
                                 ((!message.deleted && !message.hide) || message.reveal) &&
+                                !message.markdown &&
                                 !orderedMessageParts &&
                                 !(lottie && message.content.startsWith('[QLottie') && !disableQLottie)
                             "
@@ -327,6 +339,7 @@ import MessageReply from './MessageReply'
 import MessageImage from './MessageImage'
 import MessageVideo from './MessageVideo'
 import MessageAudio from './MessageAudio'
+import MessageMarkdown from './MessageMarkdown'
 
 import getLottieFace from '../../../../utils/getLottieFace'
 
@@ -350,6 +363,7 @@ export default {
         MessageImage,
         MessageAudio,
         MessageVideo,
+        MessageMarkdown,
         LottieAnimation,
     },
 
@@ -485,7 +499,11 @@ export default {
         canPlusOne() {
             // +1 功能支持普通消息、图片和可复用协议资源的语音
             const type = this.message.file?.type
-            return !this.message.flash && (!type || type.startsWith('image/') || type.startsWith('audio/'))
+            return (
+                !this.message.markdown &&
+                !this.message.flash &&
+                (!type || type.startsWith('image/') || type.startsWith('audio/'))
+            )
         },
     },
 
@@ -724,6 +742,11 @@ export default {
     background: var(--chat-message-bg-color-me) !important;
 }
 
+.vac-message-markdown {
+    padding: 6px 9px 3px;
+    border-radius: 8px;
+}
+
 .vac-message-deleted {
     color: var(--chat-message-color-deleted) !important;
     font-size: 13px !important;
@@ -794,6 +817,18 @@ export default {
     font-size: 10px;
     color: var(--chat-message-color-timestamp);
     text-align: right;
+}
+
+.vac-text-markdown-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 0 4px;
+    border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.4;
+    opacity: 0.85;
+    vertical-align: middle;
 }
 
 .vac-audio-message {

@@ -778,7 +778,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         }
                     }
                 } catch (e) {}
-                message.content += '\n\n[markdown]\n' + markdown
+                message.markdown = true
+                message.content = markdown
             }
             return { message, lastMessage }
         } catch (e) {

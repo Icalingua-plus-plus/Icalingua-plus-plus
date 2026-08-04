@@ -289,6 +289,7 @@ const processMessage = async (
                         _id: m.data.id,
                         username: replyMessage.username,
                         content: replyMessage.content,
+                        markdown: replyMessage.markdown,
                         files: [],
                     }
                     if (replyMessage.file) {
@@ -641,7 +642,8 @@ const processMessage = async (
                 }
             }
         } catch (e) {}
-        message.content += '\n\n[markdown]\n' + markdown
+        message.markdown = true
+        message.content = markdown
     }
     return { message, lastMessage }
 }

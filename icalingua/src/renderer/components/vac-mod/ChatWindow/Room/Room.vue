@@ -138,6 +138,7 @@
                                 @del-msg-to-forward="delmsgToForward"
                                 @scroll-to-message="(id) => scrollToMessage(id, true)"
                                 @reply="replyMessage(m, $event)"
+                                @inline-command="useMessageInlineCommand(m, $event)"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :hide-chat-video-by-default="hideChatVideoByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
@@ -2055,6 +2056,29 @@ export default {
             if (message.system || message.flash) return
             this.messageReply = message
             this.focusTextarea()
+        },
+        useMessageInlineCommand(message, inlineCommand) {
+            const senderId = Number(message.senderId)
+            const senderName = message.username || String(message.senderId)
+            const atText = `@${senderName}`
+            const command = inlineCommand.command.trimEnd()
+            if (!command) return
+
+            if (Number.isFinite(senderId)) {
+                ipc.pushAtCache({
+                    id: senderId,
+                    text: atText,
+                })
+            }
+            this.setMessageText(`${atText} ${command} `)
+            if (inlineCommand.reply) this.replyMessage(message)
+            else this.focusTextarea()
+
+            this.$nextTick(() => {
+                const textarea = this.$refs.roomTextarea
+                const end = this.getMessageText().length
+                textarea?.setSelectionRange(end, end)
+            })
         },
         editMessage(message) {
             this.resetMessage()

@@ -25,6 +25,8 @@ export default interface Message {
     senderId?: number
     username: string
     content: string
+    /** Render `content` using QQ Bot Markdown semantics. */
+    markdown?: boolean
     code?: string
     timestamp?: string
     date?: string

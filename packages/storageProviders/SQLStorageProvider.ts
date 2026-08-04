@@ -25,8 +25,9 @@ import upg13to14 from './SQLUpgradeScript/13to14'
 import upg14to15 from './SQLUpgradeScript/14to15'
 import upg15to16 from './SQLUpgradeScript/15to16'
 import upg16to17 from './SQLUpgradeScript/16to17'
+import upg17to18 from './SQLUpgradeScript/17to18'
 
-const dbVersionLatest = 17
+const dbVersionLatest = 18
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -198,6 +199,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     replyMessage: JSON.parse(message.replyMessage),
                     at: JSON.parse(message.at),
                     mirai: JSON.parse(message.mirai),
+                    markdown: !!message.markdown,
                 } as Message
             }
             return null
@@ -310,6 +312,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 16:
                     report('升级数据库 v16 → v17')
                     await upg16to17(this.db)
+                case 17:
+                    report('升级数据库 v17 → v18')
+                    await upg17to18(this.db)
                 default:
                     break
             }
@@ -377,6 +382,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('senderId')
                     table.string('username')
                     table.text('content').nullable()
+                    table.boolean('markdown').nullable()
                     table.text('code').nullable()
                     table.string('timestamp')
                     table.string('date')
