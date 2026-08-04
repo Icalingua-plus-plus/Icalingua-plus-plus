@@ -235,6 +235,7 @@
                 :showForwardPanel="showForwardPanel"
                 :usePanguJs="usePanguJsRecv"
                 @reset-message="resetMessage"
+                @open-forward="$emit('open-forward', $event)"
             >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
                     <slot :name="name" v-bind="data" />

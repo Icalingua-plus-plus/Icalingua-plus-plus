@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { parseForwardPreview, resolveForwardResource } from './forwardMessage'
+import { parseForwardCard, parseForwardPreview, resolveForwardResource, stripForwardPreview } from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
 
 test('parses message tokens and preserves line breaks', () => {
@@ -89,11 +89,35 @@ test('handles newline-heavy messages without recursion', () => {
 })
 
 test('handles forwarded-message resource IDs and JSON previews', () => {
+    const code =
+        '{"prompt":"[Chat record]","meta":{"detail":{"source":"Group chat","news":[{"text":"First"},{"text":"Second"}]}}}'
+
     assert.deepEqual(resolveForwardResource('["a","b"]', 'fallback'), ['a', 'b'])
     assert.equal(resolveForwardResource('{"id":"a"}', 'fallback'), 'fallback')
+    assert.equal(parseForwardPreview(code), 'Group chat\nFirst\nSecond\n')
+    assert.deepEqual(parseForwardCard(code), {
+        title: 'Group chat',
+        messages: ['First', 'Second'],
+        footer: 'Chat record',
+    })
     assert.equal(
-        parseForwardPreview('{"meta":{"detail":{"source":"Group chat","news":[{"text":"First"},{"text":"Second"}]}}}'),
-        'Group chat\nFirst\nSecond\n',
+        stripForwardPreview(`Group chat\nFirst\nSecond\n[Forward: res-123]`, parseForwardCard(code)),
+        '[Forward: res-123]',
+    )
+    assert.equal(stripForwardPreview('[Forward: res-123]', parseForwardCard(undefined)), '[Forward: res-123]')
+    assert.deepEqual(
+        parseForwardCard(
+            '<msg action="viewMultiMsg" brief="[Chat record]"><item><title>Group chat</title><title>Alice: hello</title><title>Bob: world</title><summary>View 2 forwarded messages</summary></item></msg>',
+        ),
+        {
+            title: 'Group chat',
+            messages: ['Alice: hello', 'Bob: world'],
+            footer: 'View 2 forwarded messages',
+        },
+    )
+    assert.equal(
+        parseForwardCard('{"prompt":"[Chat record]","meta":{"detail":{"summary":"View 2 forwarded messages"}}}').footer,
+        'View 2 forwarded messages',
     )
     assert.equal(
         parseForwardPreview('{"meta":{"detail":{"news":[{},{"text":"Only valid text"}]}}}'),

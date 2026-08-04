@@ -50,6 +50,7 @@
                     :linkify="linkify"
                     :showForwardPanel="showForwardPanel"
                     :forward-res-id="forwardResId"
+                    :code="message.replyMessage.code"
                     :usePanguJs="usePanguJs"
                     @open-forward="$emit('open-forward', $event)"
                 />
@@ -81,6 +82,7 @@
                     :linkify="linkify"
                     :showForwardPanel="showForwardPanel"
                     :forward-res-id="forwardResId"
+                    :code="message.replyMessage.code"
                     :usePanguJs="usePanguJs"
                     @open-forward="$emit('open-forward', $event)"
                 />

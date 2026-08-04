@@ -1,3 +1,11 @@
+export interface ForwardCardPreview {
+    title: string
+    messages: string[]
+    footer: string
+}
+
+const DEFAULT_FORWARD_FOOTER = '聊天记录'
+
 export function resolveForwardResource(code: string | undefined, fallback: string): string | unknown[] {
     if (code) {
         try {
@@ -9,67 +17,108 @@ export function resolveForwardResource(code: string | undefined, fallback: strin
     return fallback
 }
 
-export function parseForwardPreview(code: string | undefined): string {
-    if (!code) return ''
+export function parseForwardCard(code: string | undefined): ForwardCardPreview {
+    if (!code) return emptyForwardCard()
 
-    const jsonPreview = parseJsonPreview(code)
-    if (jsonPreview !== null) return jsonPreview
-
-    return parseXmlPreview(code)
+    return parseJsonCard(code) || parseXmlCard(code) || emptyForwardCard()
 }
 
-function parseJsonPreview(code: string): string | null {
+export function parseForwardPreview(code: string | undefined): string {
+    return formatForwardPreview(parseForwardCard(code))
+}
+
+export function stripForwardPreview(content: string, card: ForwardCardPreview): string {
+    const preview = formatForwardPreview(card)
+    if (!preview || !content.startsWith(preview)) return content
+
+    const remainder = content.slice(preview.length).trimStart()
+    return /^\[(?:Forward|NestedForward): [^\r\n]+\]/.test(remainder) ? content.slice(preview.length) : content
+}
+
+function parseJsonCard(code: string): ForwardCardPreview | null {
     try {
-        const detail = JSON.parse(code)?.meta?.detail
-        if (!isRecord(detail)) return null
+        const payload = JSON.parse(code)
+        if (!isRecord(payload) || !isRecord(payload.meta) || !isRecord(payload.meta.detail)) return null
 
-        const lines: string[] = []
-        if (isNonEmptyString(detail.source)) lines.push(detail.source)
+        const detail = payload.meta.detail
+        const title = firstNonEmptyString(detail.source, detail.title) || ''
+        const messages: string[] = []
 
-        if (Array.isArray(detail.news)) {
-            for (const item of detail.news) {
-                if (isRecord(item) && isNonEmptyString(item.text)) lines.push(item.text)
-            }
-        }
+        const news = Array.isArray(detail.news) ? detail.news : []
+        messages.push(...news.map((item) => (isRecord(item) ? item.text : item)).filter(isNonEmptyString))
 
-        return lines.length ? formatPreview(lines) : null
+        const footer = formatForwardLabel(firstNonEmptyString(detail.summary, payload.prompt, payload.desc))
+        return createForwardCard(title, messages, footer)
     } catch {
         return null
     }
 }
 
-function parseXmlPreview(code: string): string {
-    const parsedTitles = parseTitlesWithDom(code)
-    if (parsedTitles.length) return formatPreview(parsedTitles)
+function parseXmlCard(code: string): ForwardCardPreview | null {
+    if (typeof DOMParser !== 'undefined') {
+        try {
+            const parser = new DOMParser()
+            const document = parser.parseFromString(code, 'text/xml')
+            const titles = Array.from(document.getElementsByTagName('title'))
+                .map((element) => element.textContent)
+                .filter(isNonEmptyString)
+            if (titles.length) {
+                const summary = Array.from(document.getElementsByTagName('summary'))
+                    .map((element) => element.textContent)
+                    .find(isNonEmptyString)
+                const brief = document.documentElement?.getAttribute('brief')
+                return createForwardCard(
+                    titles[0],
+                    titles.slice(1),
+                    formatForwardLabel(firstNonEmptyString(summary, brief)),
+                )
+            }
+        } catch {}
+    }
 
-    const fallbackTitles = [...code.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/gi)]
+    const titles = [...code.matchAll(/<title\b[^>]*>([\s\S]*?)<\/title>/gi)]
         .map((match) => unwrapCdata(match[1]))
         .filter(isNonEmptyString)
+    if (!titles.length) return null
 
-    return fallbackTitles.length ? formatPreview(fallbackTitles) : ''
+    const summaryMatch = code.match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/i)
+    const summary = summaryMatch ? unwrapCdata(summaryMatch[1]) : undefined
+    const briefMatch = code.match(/\bbrief\s*=\s*(['"])([\s\S]*?)\1/i)
+    return createForwardCard(
+        titles[0],
+        titles.slice(1),
+        formatForwardLabel(firstNonEmptyString(summary, briefMatch?.[2])),
+    )
 }
 
-function parseTitlesWithDom(code: string): string[] {
-    if (typeof DOMParser === 'undefined') return []
+function emptyForwardCard(): ForwardCardPreview {
+    return createForwardCard()
+}
 
-    try {
-        const parser = new DOMParser()
-        const document = parser.parseFromString(code, 'text/xml')
-        return Array.from(document.getElementsByTagName('title'))
-            .map((title) => title.textContent)
-            .filter(isNonEmptyString)
-    } catch {
-        return []
-    }
+function createForwardCard(title = '', messages: string[] = [], footer = ''): ForwardCardPreview {
+    return { title, messages, footer: footer || DEFAULT_FORWARD_FOOTER }
+}
+
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+    return values.find(isNonEmptyString)
+}
+
+function formatForwardLabel(value: string | undefined): string {
+    if (!value) return ''
+
+    const trimmed = value.trim()
+    const bracketed = trimmed.match(/^\[([\s\S]+)]$/)
+    return bracketed ? bracketed[1] : trimmed
+}
+
+function formatForwardPreview(card: ForwardCardPreview): string {
+    const lines = [card.title, ...card.messages].filter(isNonEmptyString)
+    return lines.length ? `${lines.join('\n')}\n` : ''
 }
 
 function unwrapCdata(value: string): string {
     const match = value.match(/^<!\[CDATA\[([\s\S]*)]]>$/)
     return match ? match[1] : value
-}
-
-function formatPreview(lines: string[]): string {
-    return `${lines.join('\n')}\n`
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

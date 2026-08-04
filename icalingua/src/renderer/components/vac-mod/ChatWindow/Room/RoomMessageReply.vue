@@ -13,7 +13,9 @@
                             :text-formatting="true"
                             :linkify="linkify"
                             :showForwardPanel="showForwardPanel"
+                            :code="messageReply.code"
                             :usePanguJs="usePanguJs"
+                            @open-forward="$emit('open-forward', $event)"
                         />
                     </div>
                 </div>
