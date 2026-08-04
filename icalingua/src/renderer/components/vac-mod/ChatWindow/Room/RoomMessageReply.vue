@@ -96,6 +96,10 @@ export default {
         font-size: 12px;
         color: var(--chat-message-color-reply-content);
         white-space: pre-line;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     .vac-icon-reply {
