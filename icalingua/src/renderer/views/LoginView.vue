@@ -392,8 +392,8 @@ export default {
                     if (!this.form.signAPIAddress) {
                         this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
                     }
-                    if (this.form.useNT) {
-                        this.$message('使用实验性 NT 上线，可能不支持部分功能')
+                    if (!this.form.useNT) {
+                        this.$message('使用新版本时建议使用 NT 上线以支持部分新功能')
                     }
                     if (this.form.password) {
                         if (loginTimeout) clearTimeout(loginTimeout)

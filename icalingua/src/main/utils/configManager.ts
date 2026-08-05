@@ -61,7 +61,7 @@ const emptyLoginForm: LoginForm = {
     signAPIAddress: '',
     signAPIKey: '',
     forceAlgoT544: false,
-    useNT: false,
+    useNT: true,
     apkInfo: '',
 }
 const defaultAria2Config: Aria2Config = {
