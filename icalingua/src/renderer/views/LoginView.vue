@@ -120,10 +120,13 @@
             <p v-if="errmsg" class="error">
                 {{ errmsg }}
             </p>
-            <div v-if="dbUpgrade.total > 0" class="db-upgrade-progress">
+            <div v-if="dbUpgrade.active" class="db-upgrade-progress">
                 <p>{{ dbUpgrade.message }}</p>
                 <el-progress
-                    :percentage="Math.round((dbUpgrade.step / dbUpgrade.total) * 100)"
+                    :percentage="
+                        dbUpgrade.total > 0 ? Math.min(100, Math.round((dbUpgrade.step / dbUpgrade.total) * 100)) : 0
+                    "
+                    :indeterminate="dbUpgrade.total <= 0"
                     :stroke-width="16"
                     :text-inside="true"
                 />
@@ -191,7 +194,7 @@ export default {
             },
             disabled: false,
             errmsg: '',
-            dbUpgrade: { step: 0, total: 0, message: '' },
+            dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             shouldSubmitSmsCode: false,
             smsCode: '',
             verifyUrl: '',
@@ -306,6 +309,7 @@ export default {
     },
     async created() {
         this.ver = await ipc.getVersion()
+        this.dbUpgrade = await ipc.getDbUpgradeProgress()
         const _form = await ipc.getAccount()
         if (!_form.signAPIAddress) _form.signAPIAddress = ''
         this.apkInfoStr = _form.apkInfo || ''
@@ -329,7 +333,7 @@ export default {
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
-            this.dbUpgrade = { step: 0, total: 0, message: '' }
+            this.dbUpgrade = { active: false, step: 0, total: 0, message: '' }
 
             const tmp = String(msg).split(' ')
             const code = tmp[tmp.length - 1]
@@ -369,8 +373,8 @@ export default {
                 ipcRenderer.send('createBot', submitForm)
             }, 5 * 1000)
         })
-        ipcRenderer.on('dbUpgradeProgress', (_, { step, total, message }) => {
-            this.dbUpgrade = { step, total, message }
+        ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+            this.dbUpgrade = progress
             if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
         })
     },
@@ -386,7 +390,7 @@ export default {
             this.$refs[formName].validate(async (valid) => {
                 if (valid || this.$route.query.disableIdLogin === 'true') {
                     this.disabled = true
-                    this.dbUpgrade = { step: 0, total: 0, message: '' }
+                    this.dbUpgrade = { active: false, step: 0, total: 0, message: '' }
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
                     if (!this.form.signAPIAddress) {

@@ -5,6 +5,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions, { MessageHistoryWindow } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -60,7 +61,7 @@ import {
 import path from 'path'
 import { Socket } from 'socket.io'
 import { config, saveUserConfig, userConfig } from '../providers/configManager'
-import { broadcast } from '../providers/socketIoProvider'
+import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
 import clients from '../utils/clients'
 import createRoom from '../utils/createRoom'
 import formatDate from '../utils/formatDate'
@@ -953,6 +954,7 @@ const initStorage = async () => {
             default:
                 break
         }
+        storage.onUpgradeProgress = broadcastDatabaseUpgradeProgress
         await storage.connect()
         registerSilkDecodeCompleter({
             replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
@@ -1056,6 +1058,10 @@ const processMessageRkey = async (message: Message): Promise<void> => {
 const adapter = {
     loggedIn: false,
     disabledFeatures: [] as SpecialFeature[],
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: async () => {
+        await storage?.validateMessageSearchIndex?.()
+    },
     async getMsgNewURL(id: string, resolve): Promise<string> {
         const history = await adapter.getMsg(id)
         if (history.error) {
@@ -1715,8 +1721,13 @@ const adapter = {
         }
         resolve(groupsAll)
     },
-    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
-        if (!offset) {
+    async fetchMessages(
+        roomId: number,
+        options: MessagePageOptions,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        if (!options?.before) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
@@ -1735,23 +1746,22 @@ const adapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
         }
-        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
+        if (messages.length && !options?.before && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
     async fetchImageMessages(
         roomId: number,
-        offset: number,
-        endTime: number | undefined,
+        options: MessagePageOptions,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        const messages = (await storage.fetchImageMessages(roomId, options || {}, 30)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -1776,11 +1786,11 @@ const adapter = {
     async fetchMessagesBySender(
         roomId: number,
         senderId: number,
-        offset: number,
+        options: MessagePageOptions,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -1790,11 +1800,11 @@ const adapter = {
     async searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        options: MessagePageOptions,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        const messages = (await storage.searchMessages(roomId, keyword, options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -1905,6 +1915,7 @@ const adapter = {
 
     setOnlineStatus: (status: number) => bot.setOnlineStatus(status),
     logOut() {
+        broadcastDatabaseUpgradeProgress({ active: false, step: 0, total: 0, message: '' })
         if (bot) bot.logout()
         return storage?.close()
     },
@@ -2021,7 +2032,7 @@ const adapter = {
     async revealMessage(roomId: number, messageId: string | number) {
         await storage.updateMessage(roomId, messageId, { hide: false, reveal: true })
     },
-    async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
+    async fetchHistory(messageId: string, roomId: number, loadedWindow?: MessageHistoryWindow) {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
         const messages = []
@@ -2135,7 +2146,12 @@ const adapter = {
         let room = await storage.getRoom(roomId)
         clients.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
         storage
-            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .fetchMessagesInTimeRange(
+                roomId,
+                loadedWindow?.oldestTime,
+                loadedWindow?.endTime ?? Date.now(),
+                (loadedWindow?.loadedCount || 0) + 20,
+            )
             .then((messages) => clients.setMessages(roomId, messages))
 
         //刷新未读数量
@@ -2239,7 +2255,7 @@ const adapter = {
             await sleep(50)
         }
         for (const i of msgIds2Fetch) {
-            await adapter.fetchHistory(i.id, i.roomId, 0)
+            await adapter.fetchHistory(i.id, i.roomId)
             if (i.unread) {
                 try {
                     const room = await storage.getRoom(i.roomId)

@@ -4,8 +4,10 @@ import { getConfig, saveConfigFile } from '../utils/configManager'
 import version from '../utils/version'
 import md5 from 'md5'
 import crypto from 'crypto'
+import { getDatabaseUpgradeProgress } from '../utils/windowManager'
 
 ipcMain.handle('getVersion', () => version.version)
+ipcMain.handle('getDbUpgradeProgress', () => getDatabaseUpgradeProgress())
 ipcMain.handle('getSettings', () => getConfig())
 ipcMain.handle('getKeyToSendMessage', () => getConfig().keyToSendMessage)
 ipcMain.handle('getClearRoomsBehavior', () => getConfig().clearRoomsBehavior)

@@ -10,6 +10,7 @@ import registerFileMgrHandler from '../handlers/registerFileMgrHandler'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import fs from 'fs'
 import type oicqAdapter from '../adapters/oicqAdapter'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 
 type ClientRoles = 'main' | 'fileMgr'
 
@@ -23,6 +24,35 @@ const io = new Server(httpServer, {
 
 const port = config.port || 6789
 const host = config.host || '0.0.0.0'
+const databaseUpgradeProgressInterval = 500
+let latestDatabaseUpgradeProgress: DatabaseUpgradeProgress = {
+    active: false,
+    step: 0,
+    total: 0,
+    message: '',
+}
+let pendingDatabaseUpgradeProgress: DatabaseUpgradeProgress | null = null
+let databaseUpgradeProgressTimer: ReturnType<typeof setTimeout> | null = null
+let lastDatabaseUpgradeProgressSentAt = 0
+
+const flushDatabaseUpgradeProgress = () => {
+    databaseUpgradeProgressTimer = null
+    if (!pendingDatabaseUpgradeProgress) return
+    const progress = pendingDatabaseUpgradeProgress
+    pendingDatabaseUpgradeProgress = null
+    lastDatabaseUpgradeProgressSentAt = Date.now()
+    io.to('authed').emit('dbUpgradeProgress', progress)
+    if (pendingDatabaseUpgradeProgress) scheduleDatabaseUpgradeProgress()
+}
+
+const scheduleDatabaseUpgradeProgress = () => {
+    if (databaseUpgradeProgressTimer) return
+    const elapsed = Date.now() - lastDatabaseUpgradeProgressSentAt
+    databaseUpgradeProgressTimer = setTimeout(
+        flushDatabaseUpgradeProgress,
+        Math.max(0, databaseUpgradeProgressInterval - elapsed),
+    )
+}
 
 export const init = (adapter: typeof oicqAdapter) => {
     console.log('initExpress')
@@ -44,6 +74,7 @@ export const init = (adapter: typeof oicqAdapter) => {
                             console.log('客户端验证成功')
                             socket.emit('authSucceed')
                             socket.join('authed')
+                            socket.emit('dbUpgradeProgress', { ...latestDatabaseUpgradeProgress })
                             registerSocketHandlers(io, socket, adapter)
                             if (adapter.loggedIn) adapter.sendOnlineData()
                             else socket.emit('requestSetup', userConfig.account)
@@ -82,4 +113,15 @@ export const init = (adapter: typeof oicqAdapter) => {
 }
 
 export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
+export const broadcastDatabaseUpgradeProgress = (progress: DatabaseUpgradeProgress) => {
+    latestDatabaseUpgradeProgress = { ...progress }
+    pendingDatabaseUpgradeProgress = { ...progress }
+    if (!progress.active) {
+        if (databaseUpgradeProgressTimer) clearTimeout(databaseUpgradeProgressTimer)
+        databaseUpgradeProgressTimer = null
+        flushDatabaseUpgradeProgress()
+        return
+    }
+    scheduleDatabaseUpgradeProgress()
+}
 export const getClientsCount = () => io.sockets.sockets.size

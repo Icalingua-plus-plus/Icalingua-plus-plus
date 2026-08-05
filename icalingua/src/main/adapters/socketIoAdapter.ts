@@ -4,11 +4,13 @@ import BridgeVersionInfo from '@icalingua/types/BridgeVersionInfo'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions, { MessageHistoryWindow } from '@icalingua/types/MessagePage'
 import OnlineData from '@icalingua/types/OnlineData'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import axios from 'axios'
 import { app, dialog, Notification as ElectronNotification } from 'electron'
 import fileType from 'file-type'
@@ -36,6 +38,7 @@ import {
     getMainWindow,
     isAppLocked,
     loadMainWindow,
+    sendDatabaseUpgradeProgress,
     sendToLoginWindow,
     showLoginWindow,
     tryToShowAllWindows,
@@ -56,7 +59,7 @@ let socket: Socket
 let uin = 0
 let bkn = 0
 let nickname = ''
-let currentLoadedMessagesCount = 0
+const loadedMessageWindows = new Map<number, MessageHistoryWindow>()
 let cachedOnlineData: OnlineData & { serverInfo: string }
 let versionInfo: BridgeVersionInfo
 let rooms: Room[] = []
@@ -69,6 +72,17 @@ let localStorageUin = 0
 let localStorageInit: Promise<SQLStorageProvider | null>
 let localStorageWriteQueue = Promise.resolve()
 let localStorageClosePromise: Promise<void>
+let remoteMessageSearchIndexReady = false
+
+const updateLoadedMessageWindow = (roomId: number, options: MessagePageOptions, messages: Message[]) => {
+    if (!messages.length) return
+    const previous = options?.before ? loadedMessageWindows.get(roomId) : undefined
+    loadedMessageWindows.set(roomId, {
+        oldestTime: Math.min(previous?.oldestTime ?? Number.POSITIVE_INFINITY, Number(messages[0].time || 0)),
+        endTime: previous?.endTime ?? options?.endTime ?? Date.now(),
+        loadedCount: (previous?.loadedCount || 0) + messages.length,
+    })
+}
 
 const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null> => {
     if (!getConfig().bridgeLocalDatabaseSync || !accountUin) return Promise.resolve(null)
@@ -86,9 +100,7 @@ const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null
             },
             errorHandler,
         )
-        storage.onUpgradeProgress = (step, total, message) => {
-            sendToLoginWindow('dbUpgradeProgress', { step, total, message })
-        }
+        storage.onUpgradeProgress = (progress) => sendDatabaseUpgradeProgress(progress)
         await storage.connect()
         localStorage = storage
         console.log(`Bridge 本地数据库同步已启用：${accountUin}`)
@@ -180,6 +192,24 @@ const attachSocketEvents = () => {
         ui.setOffline(`与服务器连接断开：${e.message}`)
     })
     socket.on('connect', () => ui.setOnline())
+    socket.on('disconnect', () => {
+        remoteMessageSearchIndexReady = false
+        sendDatabaseUpgradeProgress(
+            {
+                active: false,
+                step: 0,
+                total: 0,
+                message: '',
+            },
+            'bridge',
+        )
+        void updateAppMenu()
+    })
+    socket.on('dbUpgradeProgress', (progress: DatabaseUpgradeProgress) => {
+        remoteMessageSearchIndexReady = !progress.active
+        sendDatabaseUpgradeProgress(progress, 'bridge')
+        if (!progress.active) void updateAppMenu()
+    })
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
@@ -504,6 +534,20 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    isMessageSearchIndexReady: () => loggedIn && remoteMessageSearchIndexReady,
+    validateMessageSearchIndex(): Promise<void> {
+        if (!loggedIn || !remoteMessageSearchIndexReady) return Promise.resolve()
+        remoteMessageSearchIndexReady = false
+        return new Promise((resolve, reject) => {
+            socket.emit('validateMessageSearchIndex', (result?: { ok?: boolean; error?: string }) => {
+                if (result?.ok === false) {
+                    reject(new Error(result.error || 'Bridge 消息搜索索引校验失败'))
+                    return
+                }
+                resolve()
+            })
+        })
+    },
     getMsgNewURL(id: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },
@@ -723,7 +767,7 @@ const adapter: Adapter = {
     },
     fetchHistory(messageId: string, roomId?: number) {
         if (!roomId) roomId = ui.getSelectedRoomId()
-        socket.emit('fetchHistory', messageId, roomId, currentLoadedMessagesCount)
+        socket.emit('fetchHistory', messageId, roomId, loadedMessageWindows.get(roomId))
     },
     stopFetchingHistory() {
         socket.emit('stopFetchingHistory')
@@ -731,20 +775,20 @@ const adapter: Adapter = {
     fetch7DaysHistory() {
         socket.emit('fetch7DaysHistory')
     },
-    fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        if (!offset) adapter.clearCurrentRoomUnread()
+    fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
+        if (!options?.before) adapter.clearCurrentRoomUnread()
         updateTrayIcon()
-        currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessages', roomId, offset, (messages: Message[]) => {
+            socket.emit('fetchMessages', roomId, options || {}, (messages: Message[]) => {
+                updateLoadedMessageWindow(roomId, options || {}, messages)
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })
         })
     },
-    fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
+    fetchImageMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchImageMessages', roomId, offset, endTime, (messages: Message[]) => {
+            socket.emit('fetchImageMessages', roomId, options || {}, (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })
@@ -758,17 +802,17 @@ const adapter: Adapter = {
             })
         })
     },
-    fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+    fetchMessagesBySender(roomId: number, senderId: number, options: MessagePageOptions): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessagesBySender', roomId, senderId, offset, (messages: Message[]) => {
+            socket.emit('fetchMessagesBySender', roomId, senderId, options || {}, (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })
         })
     },
-    searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
+    searchMessages(roomId: number, keyword: string, options: MessagePageOptions): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('searchMessages', roomId, keyword, offset, (messages: Message[]) => {
+            socket.emit('searchMessages', roomId, keyword, options || {}, (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })

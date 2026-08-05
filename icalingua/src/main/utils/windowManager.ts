@@ -12,6 +12,7 @@ import md5 from 'md5'
 import crypto from 'crypto'
 import atCache from './atCache'
 import * as themes from './themes'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
@@ -21,6 +22,23 @@ let unlockWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
 let titleBarUpdatePromise: Promise<void> | null = null
+type DatabaseUpgradeProgressSource = 'local' | 'bridge'
+
+const emptyDatabaseUpgradeProgress = (): DatabaseUpgradeProgress => ({
+    active: false,
+    step: 0,
+    total: 0,
+    message: '',
+})
+const databaseUpgradeProgressBySource: Record<
+    DatabaseUpgradeProgressSource,
+    { progress: DatabaseUpgradeProgress; sequence: number }
+> = {
+    local: { progress: emptyDatabaseUpgradeProgress(), sequence: 0 },
+    bridge: { progress: emptyDatabaseUpgradeProgress(), sequence: 0 },
+}
+let databaseUpgradeProgress: DatabaseUpgradeProgress = emptyDatabaseUpgradeProgress()
+let databaseUpgradeProgressSequence = 0
 
 // 独立聊天窗口映射表 (roomId -> BrowserWindow)
 const chatWindows: Map<number, BrowserWindow> = new Map()
@@ -352,6 +370,24 @@ export const sendToLoginWindow = (channel: string, payload?: any) => {
     if (loginWindow) loginWindow.webContents.send(channel, payload)
     else showLoginWindow().then(() => loginWindow.webContents.send(channel, payload))
 }
+export const sendDatabaseUpgradeProgress = (
+    progress: DatabaseUpgradeProgress,
+    source: DatabaseUpgradeProgressSource = 'local',
+) => {
+    databaseUpgradeProgressBySource[source] = {
+        progress: { ...progress },
+        sequence: ++databaseUpgradeProgressSequence,
+    }
+    const activeProgress = Object.values(databaseUpgradeProgressBySource)
+        .filter(({ progress: value }) => value.active)
+        .sort((a, b) => b.sequence - a.sequence)[0]
+    databaseUpgradeProgress = activeProgress ? { ...activeProgress.progress } : emptyDatabaseUpgradeProgress()
+    if (loginWindow && !loginWindow.isDestroyed())
+        loginWindow.webContents.send('dbUpgradeProgress', databaseUpgradeProgress)
+    if (mainWindow && !mainWindow.isDestroyed())
+        mainWindow.webContents.send('dbUpgradeProgress', databaseUpgradeProgress)
+}
+export const getDatabaseUpgradeProgress = (): DatabaseUpgradeProgress => ({ ...databaseUpgradeProgress })
 export const sendToMainWindow = (channel: string, payload?: any) => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
 }

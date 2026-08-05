@@ -35,12 +35,13 @@
             @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
-            <template v-for="(index, name) in $scopedSlots" #[name]="data">
+            <template v-for="(index, name) in $scopedSlots" v-if="name !== 'messages-top'" #[name]="data">
                 <slot :name="name" v-bind="data" />
             </template>
         </room-header>
 
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
+            <slot name="messages-top" />
             <loader :show="loadingMessages" />
             <div
                 ref="messagesContainer"
@@ -2588,6 +2589,34 @@ export default {
     overflow-y: auto;
     margin-top: 60px;
     -webkit-overflow-scrolling: touch;
+}
+
+.db-upgrade-banner {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 6px 12px;
+    color: var(--chat-message-color);
+    background: var(--chat-content-bg-color);
+    border-bottom: 1px solid var(--chat-message-divider-color, rgba(128, 128, 128, 0.25));
+
+    .el-icon-loading {
+        flex: 0 0 auto;
+    }
+
+    .db-upgrade-banner-message {
+        flex: 0 1 auto;
+        white-space: nowrap;
+    }
+
+    .el-progress {
+        flex: 1 1 auto;
+        min-width: 80px;
+    }
 }
 
 .vac-messages-container {

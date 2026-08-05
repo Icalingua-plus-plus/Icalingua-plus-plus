@@ -4,6 +4,7 @@ import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { ipcMain, screen, shell } from 'electron'
 import getCharCount from '../../utils/getCharCount'
@@ -82,6 +83,13 @@ export const {
     sendGroupPoke,
     getPrivateFileUrl,
 } = adapter
+
+export const canValidateMessageSearchIndex = () => adapter?.isMessageSearchIndexReady?.() === true
+
+export const validateMessageSearchIndex = async () => {
+    await adapter?.validateMessageSearchIndex?.()
+}
+
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
     let uid = roomId
@@ -184,16 +192,13 @@ ipcMain.on('sendMessage', async (_, data) => {
 })
 ipcMain.on('deleteMessage', (_, roomId: number, messageId: string) => deleteMessage(roomId, messageId))
 ipcMain.on('hideMessage', (_, roomId: number, messageId: string) => hideMessage(roomId, messageId))
-ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset: number }) => {
-    offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
-    return adapter.fetchMessages(roomId, offset)
+ipcMain.handle('fetchMessage', (_, { roomId, options }: { roomId: number; options: MessagePageOptions }) => {
+    !options?.before && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
+    return adapter.fetchMessages(roomId, options || {})
 })
-ipcMain.handle(
-    'fetchImageMessages',
-    (_, { roomId, offset, endTime }: { roomId: number; offset: number; endTime?: number }) => {
-        return adapter.fetchImageMessages(roomId, offset, endTime)
-    },
-)
+ipcMain.handle('fetchImageMessages', (_, { roomId, options }: { roomId: number; options: MessagePageOptions }) => {
+    return adapter.fetchImageMessages(roomId, options || {})
+})
 ipcMain.handle(
     'fetchMessagesAround',
     (_, { roomId, messageId, before, after }: { roomId: number; messageId: string; before: number; after: number }) => {
@@ -202,8 +207,8 @@ ipcMain.handle(
 )
 ipcMain.handle(
     'fetchMessagesBySender',
-    async (_, { roomId, senderId, offset }: { roomId: number; senderId: number; offset: number }) => {
-        const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset)
+    async (_, { roomId, senderId, options }: { roomId: number; senderId: number; options: MessagePageOptions }) => {
+        const messages = await adapter.fetchMessagesBySender(roomId, senderId, options || {})
         if (roomId === 0) {
             // 所有群模式：为每条消息附加群头像和群名
             for (const msg of messages) {
@@ -226,8 +231,8 @@ ipcMain.handle(
 )
 ipcMain.handle(
     'searchMessages',
-    async (_, { roomId, keyword, offset }: { roomId: number; keyword: string; offset: number }) => {
-        const messages = await adapter.searchMessages(roomId, keyword, offset)
+    async (_, { roomId, keyword, options }: { roomId: number; keyword: string; options: MessagePageOptions }) => {
+        const messages = await adapter.searchMessages(roomId, keyword, options || {})
         if (roomId === 0) {
             const roomIds = Array.from(
                 new Set(

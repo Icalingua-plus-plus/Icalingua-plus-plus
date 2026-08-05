@@ -5,6 +5,7 @@ import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -18,7 +19,13 @@ import axios from 'axios'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo, FileElem } from 'oicq-icalingua-plus-plus'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import { createTray, updateTrayIcon } from '../utils/trayManager'
-import { getMainWindow, loadMainWindow, sendToLoginWindow, showLoginWindow } from '../utils/windowManager'
+import {
+    getMainWindow,
+    loadMainWindow,
+    sendDatabaseUpgradeProgress,
+    sendToLoginWindow,
+    showLoginWindow,
+} from '../utils/windowManager'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import ui from '../utils/ui'
@@ -147,10 +154,18 @@ const initStorage = async () => {
     try {
         switch (loginForm.storageType) {
             case 'mdb':
-                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                storage = new MongoStorageProvider(
+                    loginForm.mdbConnStr,
+                    loginForm.username,
+                    path.join(app.getPath('userData'), 'data'),
+                )
                 break
             case 'redis':
-                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                storage = new RedisStorageProvider(
+                    loginForm.rdsHost,
+                    `${loginForm.username}`,
+                    path.join(app.getPath('userData'), 'data'),
+                )
                 break
             case 'sqlite':
                 storage = new SQLStorageProvider(
@@ -171,6 +186,7 @@ const initStorage = async () => {
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
                         database: loginForm.sqlDatabase,
+                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                     },
                     errorHandler,
                 )
@@ -184,6 +200,7 @@ const initStorage = async () => {
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
                         database: loginForm.sqlDatabase,
+                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                     },
                     errorHandler,
                 )
@@ -191,9 +208,10 @@ const initStorage = async () => {
             default:
                 break
         }
-        if (storage instanceof SQLStorageProvider) {
-            storage.onUpgradeProgress = (step, total, message) => {
-                sendToLoginWindow('dbUpgradeProgress', { step, total, message })
+        if (storage) {
+            storage.onUpgradeProgress = (progress) => {
+                sendDatabaseUpgradeProgress(progress)
+                if (!progress.active) void updateAppMenu()
             }
         }
         await storage.connect()
@@ -211,6 +229,8 @@ const initStorage = async () => {
 }
 
 const adapter: Adapter = {
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     // ==================== 需要实现的读取方法 ====================
 
     async createBot(form: LoginForm) {
@@ -263,16 +283,16 @@ const adapter: Adapter = {
         }
     },
 
-    async fetchMessages(roomId: number, offset: number): Promise<Message[]> {
+    async fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
         // 只读模式始终禁言
-        if (!offset) {
+        if (!options?.before) {
             ui.setShutUp(true)
         }
 
         // 刷新 rkey（如果需要）
         await refreshRkeyIfNeeded()
 
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
 
         // 替换消息中的 rkey
         for (const message of messages) {
@@ -281,28 +301,28 @@ const adapter: Adapter = {
 
         return messages
     },
-    async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+    async fetchMessagesBySender(roomId: number, senderId: number, options: MessagePageOptions): Promise<Message[]> {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), options || {}, 20)) || []
         for (const message of messages) {
             processMessageRkey(message)
         }
         return messages
     },
-    async searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
+    async searchMessages(roomId: number, keyword: string, options: MessagePageOptions): Promise<Message[]> {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        const messages = (await storage.searchMessages(roomId, keyword, options || {}, 20)) || []
         for (const message of messages) {
             processMessageRkey(message)
         }
         return messages
     },
 
-    async fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
+    async fetchImageMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
         // 刷新 rkey（如果需要）
         await refreshRkeyIfNeeded()
 
-        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        const messages = (await storage.fetchImageMessages(roomId, options || {}, 30)) || []
 
         // 替换消息中的 rkey
         for (const message of messages) {

@@ -57,6 +57,22 @@
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
                     </template>
+                    <template v-slot:messages-top>
+                        <div v-if="dbUpgrade.active" class="db-upgrade-banner">
+                            <i class="el-icon-loading"></i>
+                            <span class="db-upgrade-banner-message">{{ dbUpgrade.message }}</span>
+                            <el-progress
+                                :percentage="
+                                    dbUpgrade.total > 0
+                                        ? Math.min(100, Math.round((dbUpgrade.step / dbUpgrade.total) * 100))
+                                        : 0
+                                "
+                                :indeterminate="dbUpgrade.total <= 0"
+                                :show-text="false"
+                                :stroke-width="4"
+                            />
+                        </div>
+                    </template>
                 </Room>
             </div>
             <template v-if="stickerPanelBottom">
@@ -156,6 +172,9 @@ export default {
             },
             messages: [],
             messagesLoaded: false,
+            messageCursor: null,
+            messageEndTime: null,
+            dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             loading: true,
             ready: false, // 数据是否准备好
             account: 0,
@@ -202,6 +221,7 @@ export default {
     async created() {
         // 从路由参数获取 roomId
         this.roomId = parseInt(this.$route.params.roomId)
+        this.dbUpgrade = await ipc.getDbUpgradeProgress()
 
         // 获取设置
         const settings = await ipc.getSettings()
@@ -267,6 +287,7 @@ export default {
         ipcRenderer.removeAllListeners('sendDice')
         ipcRenderer.removeAllListeners('sendRps')
         ipcRenderer.removeAllListeners('closePanel')
+        ipcRenderer.removeAllListeners('dbUpgradeProgress')
     },
     methods: {
         setupIpcListeners() {
@@ -274,6 +295,10 @@ export default {
             document.addEventListener('dragover', (event) => {
                 event.preventDefault()
                 event.stopPropagation()
+            })
+
+            ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+                this.dbUpgrade = progress
             })
 
             // 接收新消息
@@ -372,15 +397,28 @@ export default {
             if (reset) {
                 this.messages = []
                 this.messagesLoaded = false
+                this.messageCursor = null
+                this.messageEndTime = Date.now()
             }
             this.loading = true
             try {
-                const offset = reset ? 0 : this.messages.length
-                const msgs = await ipc.fetchMessage(this.roomId, offset)
+                if (!this.messageEndTime) this.messageEndTime = Date.now()
+                const msgs = await ipc.fetchMessage(this.roomId, {
+                    before: this.messageCursor || undefined,
+                    endTime: this.messageEndTime,
+                })
                 if (reset) {
                     this.messages = msgs || []
                 } else {
                     this.messages = [...(msgs || []), ...this.messages]
+                }
+                if (msgs && msgs.length) {
+                    const first = msgs[0]
+                    this.messageCursor = {
+                        time: Number(first.time || 0),
+                        id: String(first._id),
+                        ...(first.roomId === undefined ? {} : { roomId: Number(first.roomId) }),
+                    }
                 }
                 this.messagesLoaded = true
             } catch (e) {

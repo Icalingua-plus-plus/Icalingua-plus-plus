@@ -65,6 +65,8 @@ export default {
             messages: [],
             loading: false,
             noMore: false,
+            cursor: null,
+            endTime: null,
             searched: false,
             searchError: '',
         }
@@ -92,6 +94,8 @@ export default {
             if (!keyword) return
             this.messages = []
             this.noMore = false
+            this.cursor = null
+            this.endTime = Date.now()
             this.searched = true
             this.searchError = ''
             await this.fetchResults()
@@ -102,9 +106,18 @@ export default {
             if (!keyword) return
             this.loading = true
             try {
-                const msgs = await ipc.searchMessages(this.roomId, keyword, this.messages.length)
+                const msgs = await ipc.searchMessages(this.roomId, keyword, {
+                    before: this.cursor || undefined,
+                    endTime: this.endTime,
+                })
                 if (msgs && msgs.length) {
                     this.messages = [...this.messages, ...msgs]
+                    const last = msgs[msgs.length - 1]
+                    this.cursor = {
+                        time: Number(last.time || 0),
+                        id: String(last._id),
+                        ...(last.roomId === undefined ? {} : { roomId: Number(last.roomId) }),
+                    }
                 }
                 if (!msgs || msgs.length < 20) {
                     this.noMore = true
@@ -119,6 +132,8 @@ export default {
         clearResults() {
             this.messages = []
             this.noMore = false
+            this.cursor = null
+            this.endTime = null
             this.searched = false
             this.searchError = ''
         },
