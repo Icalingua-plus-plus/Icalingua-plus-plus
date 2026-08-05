@@ -1241,7 +1241,7 @@ Chromium ${process.versions.chrome}`
             this.$refs.room.focusTextarea()
         },
         openForward(e) {
-            ipc.openForward(e.resId, e.fileName)
+            ipc.openForward(e.resId, e.fileName, e.fallbackResId)
         },
         stopFetchingHistory() {
             ipc.stopFetchMessage()

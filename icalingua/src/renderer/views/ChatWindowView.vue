@@ -473,7 +473,7 @@ export default {
         },
 
         openForward(e) {
-            ipc.openForward(e.resId, e.fileName)
+            ipc.openForward(e.resId, e.fileName, e.fallbackResId)
         },
 
         async sendSticker(url) {

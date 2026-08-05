@@ -17,7 +17,6 @@ import { getConfig } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
 import getFriends from '../utils/getFriends'
 import * as themes from '../utils/themes'
-import Message from '@icalingua/types/Message'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { spacingSendMessage } from '../../utils/panguSpacing'
 import silkEncode from '../utils/silkEncode'
@@ -25,6 +24,8 @@ import fs from 'fs'
 import ui from '../utils/ui'
 import { openChatWindow, isRoomInChatWindow, focusChatWindow } from '../utils/windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
+import { loadForwardMessages } from '../utils/forwardMessages'
+import type { ForwardResId } from '../utils/forwardMessages'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -297,7 +298,7 @@ ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: obje
 ipcMain.on('sendGroupPoke', (_, gin, uin) => adapter.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => adapter.addRoom(room))
 ipcMain.on('addChatGroup', (_, chatGroup) => adapter.addChatGroup(chatGroup))
-ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) => {
+ipcMain.on('openForward', (_, resId: ForwardResId, fileName?: string, fallbackResId?: string) => {
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
@@ -316,12 +317,7 @@ ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) =>
         { stableTitle: 'Icalingua++ ForwardView' },
     )
     win.loadURL(getWinUrl() + '#/history')
-    let messages: Promise<Message[]> | Message[]
-    if (Array.isArray(resId)) {
-        messages = resId
-    } else {
-        messages = adapter.getForwardMsg(resId, fileName)
-    }
+    const messages = loadForwardMessages(adapter, resId, fileName, fallbackResId)
     win.webContents.on('did-finish-load', async function () {
         // theme
         win.webContents.send('theme:sync-theme-data', themes.getThemeData())
@@ -333,9 +329,9 @@ ipcMain.on('openForward', async (_, resId: string | any[], fileName?: string) =>
             }
         })
         // load messages
-        if (messages instanceof Promise) messages = await messages
-        win.webContents.send('loadMessages', messages)
-        win.webContents.send('setResId', resId)
+        const loaded = await messages
+        win.webContents.send('loadMessages', loaded.messages)
+        win.webContents.send('setResId', loaded.resId)
     })
 })
 ipcMain.handle('getIgnoredChats', adapter.getIgnoredChats)

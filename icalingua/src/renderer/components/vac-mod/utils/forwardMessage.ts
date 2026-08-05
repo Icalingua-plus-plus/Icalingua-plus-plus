@@ -6,15 +6,31 @@ export interface ForwardCardPreview {
 
 const DEFAULT_FORWARD_FOOTER = '聊天记录'
 
-export function resolveForwardResource(code: string | undefined, fallback: string): string | unknown[] {
-    if (code) {
-        try {
-            const parsed = JSON.parse(code)
-            if (Array.isArray(parsed)) return parsed
-        } catch {}
-    }
+export interface ForwardResource {
+    resId?: string
+    messages?: unknown[]
+    fileName?: string
+}
 
-    return fallback
+export function parseForwardResource(code: string | undefined): ForwardResource {
+    if (!code) return {}
+
+    try {
+        const parsed = JSON.parse(code)
+        if (Array.isArray(parsed)) return { messages: parsed }
+
+        const detail =
+            isRecord(parsed) && isRecord(parsed.meta) && isRecord(parsed.meta.detail) ? parsed.meta.detail : undefined
+        return createForwardResource(
+            detail && firstNonEmptyString(detail.resid),
+            detail && firstNonEmptyString(detail.uniseq),
+        )
+    } catch {}
+
+    return createForwardResource(
+        code.match(/\bm_resid\s*=\s*(['"])([\s\S]*?)\1/i)?.[2],
+        code.match(/\bm_fileName\s*=\s*(['"])([\s\S]*?)\1/i)?.[2],
+    )
 }
 
 export function parseForwardCard(code: string | undefined): ForwardCardPreview {
@@ -93,6 +109,13 @@ function parseXmlCard(code: string): ForwardCardPreview | null {
 
 function emptyForwardCard(): ForwardCardPreview {
     return createForwardCard()
+}
+
+function createForwardResource(resId?: string, fileName?: string): ForwardResource {
+    const resource: ForwardResource = {}
+    if (resId) resource.resId = resId
+    if (fileName) resource.fileName = fileName
+    return resource
 }
 
 function createForwardCard(title = '', messages: string[] = [], footer = ''): ForwardCardPreview {

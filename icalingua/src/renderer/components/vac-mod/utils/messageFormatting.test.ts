@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { parseForwardCard, parseForwardPreview, resolveForwardResource, stripForwardPreview } from './forwardMessage'
+import { parseForwardCard, parseForwardPreview, parseForwardResource, stripForwardPreview } from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
 
 test('parses message tokens and preserves line breaks', () => {
@@ -92,8 +92,14 @@ test('handles forwarded-message resource IDs and JSON previews', () => {
     const code =
         '{"prompt":"[Chat record]","meta":{"detail":{"source":"Group chat","news":[{"text":"First"},{"text":"Second"}]}}}'
 
-    assert.deepEqual(resolveForwardResource('["a","b"]', 'fallback'), ['a', 'b'])
-    assert.equal(resolveForwardResource('{"id":"a"}', 'fallback'), 'fallback')
+    assert.deepEqual(parseForwardResource('["a","b"]'), { messages: ['a', 'b'] })
+    assert.deepEqual(parseForwardResource('{"id":"a"}'), {})
+    const resourceCode = '{"meta":{"detail":{"resid":"code-resid","uniseq":"file-1"}}}'
+    assert.deepEqual(parseForwardResource(resourceCode), { resId: 'code-resid', fileName: 'file-1' })
+    assert.deepEqual(parseForwardResource('<msg m_resid="xml-resid" m_fileName="file-2" />'), {
+        resId: 'xml-resid',
+        fileName: 'file-2',
+    })
     assert.equal(parseForwardPreview(code), 'Group chat\nFirst\nSecond\n')
     assert.deepEqual(parseForwardCard(code), {
         title: 'Group chat',

@@ -179,7 +179,7 @@ export default {
             return msgs
         },
         openForward(e) {
-            ipc.openForward(e.resId, e.fileName)
+            ipc.openForward(e.resId, e.fileName, e.fallbackResId)
         },
         openImage: ipc.downloadFileByMessageData,
         downloadImage: ipc.downloadImage,

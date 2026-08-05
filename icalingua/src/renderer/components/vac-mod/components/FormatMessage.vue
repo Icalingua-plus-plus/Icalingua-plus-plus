@@ -4,10 +4,7 @@
             <template v-for="(message, i) in linkifiedMessage">
                 <component
                     :is="message.href ? 'a' : 'span'"
-                    v-if="
-                        message.type !== 'face' &&
-                        ((message.type !== 'forward' && message.type !== 'nestedforward') || !hasForwardCard)
-                    "
+                    v-if="message.type !== 'face' && (!isForwardMessage(message) || !hasForwardCard)"
                     :key="i"
                     :class="{
                         'vac-text-ellipsis': singleLine,
@@ -38,7 +35,7 @@
                     />
                 </span>
                 <forward-message-card
-                    v-if="hasForwardCard && (message.type === 'forward' || message.type === 'nestedforward')"
+                    v-if="hasForwardCard && isForwardMessage(message)"
                     :key="i"
                     :preview="forwardCard"
                     :clickable="!showForwardPanel"
@@ -58,7 +55,7 @@ import ForwardMessageCard from './ForwardMessageCard'
 
 const path = require('path')
 
-import { parseForwardCard, resolveForwardResource, stripForwardPreview } from '../utils/forwardMessage'
+import { parseForwardCard, parseForwardResource, stripForwardPreview } from '../utils/forwardMessage'
 import { formatMessageParts, padFaceId } from '../utils/messageFormatting'
 
 export default {
@@ -98,24 +95,41 @@ export default {
         forwardCard() {
             return parseForwardCard(this.code)
         },
+        forwardResource() {
+            return parseForwardResource(this.code)
+        },
         hasForwardCard() {
             return Boolean(this.code && this.code.trim())
+        },
+        isForwardHistory() {
+            return this.$route && this.$route.name === 'history-page' && Boolean(this.forwardResId)
         },
     },
 
     methods: {
+        isForwardMessage(message) {
+            return message.type === 'forward' || message.type === 'nestedforward'
+        },
         formatPartValue(message) {
             if (message.type === 'forward') return `[Forward: ${message.value}]`
             if (message.type === 'nestedforward') return `[NestedForward: ${message.value}]`
             return message.value
         },
         openForwardCard(message) {
-            if (this.showForwardPanel) return
-            if (message.type === 'forward') {
-                this.$emit('open-forward', { resId: resolveForwardResource(this.code, message.value) })
-            } else if (message.type === 'nestedforward') {
-                this.$emit('open-forward', { resId: this.forwardResId, fileName: message.value })
+            if (this.showForwardPanel || !this.isForwardMessage(message)) return
+            this.$emit('open-forward', this.createForwardEvent(message))
+        },
+        createForwardEvent(message) {
+            const { messages, resId, fileName } = this.forwardResource
+            const useNested = Boolean(this.forwardResId && (this.isForwardHistory || message.type === 'nestedforward'))
+            if (!useNested) return { resId: messages ?? resId ?? message.value }
+
+            const event = {
+                resId: this.forwardResId,
+                fileName: fileName || message.value,
             }
+            if (resId) event.fallbackResId = resId
+            return event
         },
         preZeroFill(num, size) {
             return padFaceId(num, size)
