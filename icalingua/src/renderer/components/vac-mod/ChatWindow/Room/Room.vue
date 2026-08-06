@@ -40,9 +40,8 @@
             </template>
         </room-header>
 
-        <slot name="messages-top" />
-
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
+            <slot name="messages-top" />
             <loader :show="loadingMessages" />
             <div
                 ref="messagesContainer"
@@ -2590,6 +2589,35 @@ export default {
     overflow-y: auto;
     margin-top: 60px;
     -webkit-overflow-scrolling: touch;
+}
+
+.db-upgrade-banner {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 6px 12px;
+    color: var(--chat-message-color);
+    background: var(--chat-content-bg-color);
+    background: color-mix(in srgb, var(--chat-content-bg-color) 82%, transparent);
+    border-bottom: 1px solid var(--chat-message-divider-color, rgba(128, 128, 128, 0.25));
+
+    .el-icon-loading {
+        flex: 0 0 auto;
+    }
+
+    .db-upgrade-banner-message {
+        flex: 0 1 auto;
+        white-space: nowrap;
+    }
+
+    .el-progress {
+        flex: 1 1 auto;
+        min-width: 80px;
+    }
 }
 
 .vac-messages-container {

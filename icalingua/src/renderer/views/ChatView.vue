@@ -1735,24 +1735,6 @@ Chromium ${process.versions.chrome}`
     }
 }
 
-.db-upgrade-banner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    color: var(--panel-color-desc);
-    background: var(--panel-background);
-
-    .db-upgrade-banner-message {
-        flex: 0 0 auto;
-    }
-
-    .el-progress {
-        flex: 1;
-        min-width: 80px;
-    }
-}
-
 .el-main {
     padding: 0;
     height: 100vh;

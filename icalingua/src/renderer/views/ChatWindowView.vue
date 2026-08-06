@@ -655,24 +655,6 @@ export default {
     width: 100%;
 }
 
-.db-upgrade-banner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    color: var(--panel-color-desc);
-    background: var(--panel-background);
-
-    .db-upgrade-banner-message {
-        flex: 0 0 auto;
-    }
-
-    .el-progress {
-        flex: 1;
-        min-width: 80px;
-    }
-}
-
 .chat-window-body {
     display: flex;
     height: 100vh;
