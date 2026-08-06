@@ -10,6 +10,7 @@ import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 
 const ipc = {
     sendMessage(data) {
@@ -122,6 +123,9 @@ const ipc = {
     },
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
+    },
+    async getDbUpgradeProgress(): Promise<DatabaseUpgradeProgress> {
+        return await ipcRenderer.invoke('getDbUpgradeProgress')
     },
     download(url: string, out: string, dir?: string) {
         ipcRenderer.send('download', url, out, dir)

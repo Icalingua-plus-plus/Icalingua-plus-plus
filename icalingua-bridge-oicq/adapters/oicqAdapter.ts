@@ -60,7 +60,7 @@ import {
 import path from 'path'
 import { Socket } from 'socket.io'
 import { config, saveUserConfig, userConfig } from '../providers/configManager'
-import { broadcast } from '../providers/socketIoProvider'
+import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
 import clients from '../utils/clients'
 import createRoom from '../utils/createRoom'
 import formatDate from '../utils/formatDate'
@@ -953,6 +953,7 @@ const initStorage = async () => {
             default:
                 break
         }
+        storage.onUpgradeProgress = (progress) => broadcastDatabaseUpgradeProgress(progress)
         await storage.connect()
         registerSilkDecodeCompleter({
             replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
@@ -1054,6 +1055,8 @@ const processMessageRkey = async (message: Message): Promise<void> => {
 }
 
 const adapter = {
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     loggedIn: false,
     disabledFeatures: [] as SpecialFeature[],
     async getMsgNewURL(id: string, resolve): Promise<string> {

@@ -5,7 +5,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
-import { broadcast } from '../providers/socketIoProvider'
+import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
 import OnebotClient, { GroupMessage } from '../clients/OnebotClient'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
@@ -101,6 +101,7 @@ const initStorage = async () => {
             default:
                 break
         }
+        storage.onUpgradeProgress = (progress) => broadcastDatabaseUpgradeProgress(progress)
         await storage.connect()
         registerSilkDecodeCompleter({
             replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
@@ -682,6 +683,8 @@ const replaceRkey = (url: string) => {
 }
 
 const adapter: typeof oicqAdapter = {
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     loggedIn: false,
     async createBot(form: LoginForm) {
         bot = new OnebotClient(config.onebot)

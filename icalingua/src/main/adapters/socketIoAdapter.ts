@@ -1,6 +1,7 @@
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
 import BridgeVersionInfo from '@icalingua/types/BridgeVersionInfo'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
@@ -36,6 +37,7 @@ import {
     getMainWindow,
     isAppLocked,
     loadMainWindow,
+    sendDatabaseUpgradeProgress,
     sendToLoginWindow,
     showLoginWindow,
     tryToShowAllWindows,
@@ -69,6 +71,7 @@ let localStorageUin = 0
 let localStorageInit: Promise<SQLStorageProvider | null>
 let localStorageWriteQueue = Promise.resolve()
 let localStorageClosePromise: Promise<void>
+let remoteMessageSearchIndexReady = false
 
 const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null> => {
     if (!getConfig().bridgeLocalDatabaseSync || !accountUin) return Promise.resolve(null)
@@ -86,9 +89,7 @@ const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null
             },
             errorHandler,
         )
-        storage.onUpgradeProgress = (step, total, message) => {
-            sendToLoginWindow('dbUpgradeProgress', { step, total, message })
-        }
+        storage.onUpgradeProgress = (progress) => sendDatabaseUpgradeProgress(progress)
         await storage.connect()
         localStorage = storage
         console.log(`Bridge 本地数据库同步已启用：${accountUin}`)
@@ -180,6 +181,16 @@ const attachSocketEvents = () => {
         ui.setOffline(`与服务器连接断开：${e.message}`)
     })
     socket.on('connect', () => ui.setOnline())
+    socket.on('disconnect', () => {
+        remoteMessageSearchIndexReady = false
+        sendDatabaseUpgradeProgress({ active: false, step: 0, total: 0, message: '' }, 'bridge')
+        void updateAppMenu()
+    })
+    socket.on('dbUpgradeProgress', (progress: DatabaseUpgradeProgress) => {
+        remoteMessageSearchIndexReady = !progress.active
+        sendDatabaseUpgradeProgress(progress, 'bridge')
+        if (!progress.active) void updateAppMenu()
+    })
     socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
@@ -504,6 +515,23 @@ const attachSocketEvents = () => {
 }
 
 const adapter: Adapter = {
+    isMessageSearchIndexReady: () =>
+        (loggedIn && remoteMessageSearchIndexReady) || localStorage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => {
+        if (loggedIn && remoteMessageSearchIndexReady) {
+            remoteMessageSearchIndexReady = false
+            return new Promise<void>((resolve, reject) => {
+                socket.emit('validateMessageSearchIndex', (result?: { ok?: boolean; error?: string }) => {
+                    if (result?.ok === false) {
+                        reject(new Error(result.error || '消息搜索索引校验失败'))
+                        return
+                    }
+                    resolve()
+                })
+            })
+        }
+        return localStorage?.validateMessageSearchIndex?.() || Promise.resolve()
+    },
     getMsgNewURL(id: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },

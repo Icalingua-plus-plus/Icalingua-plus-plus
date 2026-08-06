@@ -35,10 +35,12 @@
             @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
-            <template v-for="(index, name) in $scopedSlots" #[name]="data">
+            <template v-for="(index, name) in $scopedSlots" v-if="name !== 'messages-top'" #[name]="data">
                 <slot :name="name" v-bind="data" />
             </template>
         </room-header>
+
+        <slot name="messages-top" />
 
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <loader :show="loadingMessages" />

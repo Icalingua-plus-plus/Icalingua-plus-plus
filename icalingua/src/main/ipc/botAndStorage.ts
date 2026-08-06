@@ -82,6 +82,13 @@ export const {
     sendGroupPoke,
     getPrivateFileUrl,
 } = adapter
+
+export const canValidateMessageSearchIndex = () => adapter?.isMessageSearchIndexReady?.() === true
+
+export const validateMessageSearchIndex = async () => {
+    await adapter?.validateMessageSearchIndex?.()
+}
+
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
     let uid = roomId

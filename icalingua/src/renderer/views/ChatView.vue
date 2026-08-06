@@ -183,6 +183,22 @@
                         <template v-slot:menu-icon>
                             <i class="el-icon-more"></i>
                         </template>
+                        <template v-slot:messages-top>
+                            <div v-if="dbUpgrade.active" class="db-upgrade-banner">
+                                <i class="el-icon-loading"></i>
+                                <span class="db-upgrade-banner-message">{{ dbUpgrade.message }}</span>
+                                <el-progress
+                                    :percentage="
+                                        dbUpgrade.total > 0
+                                            ? Math.min(100, Math.round((dbUpgrade.step / dbUpgrade.total) * 100))
+                                            : 0
+                                    "
+                                    :indeterminate="dbUpgrade.total <= 0"
+                                    :show-text="false"
+                                    :stroke-width="4"
+                                />
+                            </div>
+                        </template>
                     </Room>
                     <pre
                         v-show="selectedRoomId === 0 && sysInfo"
@@ -390,6 +406,7 @@ export default {
             selectedRoomId: 0,
             account: 0,
             messagesLoaded: false,
+            dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             panel: '',
             offline: false,
             offlineReason: '',
@@ -460,6 +477,7 @@ export default {
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
+        this.dbUpgrade = await ipc.getDbUpgradeProgress()
         const settings = await ipc.getSettings()
         this.linkify = settings.linkify
         this.disableChatGroups = settings.disableChatGroups
@@ -474,6 +492,9 @@ export default {
         this.stickerPanelHeight = settings.stickerPanelHeight || 320
         //endregion
         //region listener
+        ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+            this.dbUpgrade = progress
+        })
         document.addEventListener('dragover', (e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -1711,6 +1732,24 @@ Chromium ${process.versions.chrome}`
 
     span {
         margin: 0 5px;
+    }
+}
+
+.db-upgrade-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    color: var(--panel-color-desc);
+    background: var(--panel-background);
+
+    .db-upgrade-banner-message {
+        flex: 0 0 auto;
+    }
+
+    .el-progress {
+        flex: 1;
+        min-width: 80px;
     }
 }
 

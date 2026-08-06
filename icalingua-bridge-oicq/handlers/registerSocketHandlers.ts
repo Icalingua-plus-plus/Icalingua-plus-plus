@@ -6,6 +6,14 @@ import sendImgTokenManager from '../utils/sendImgTokenManager'
 import { requestUpload, uploadFile } from '../utils/uploadFileManager'
 
 export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
+    socket.on('validateMessageSearchIndex', async (resolve?: (value: { ok: boolean; error?: string }) => void) => {
+        try {
+            await adapter.validateMessageSearchIndex?.()
+            resolve?.({ ok: true })
+        } catch (error) {
+            resolve?.({ ok: false, error: error instanceof Error ? error.message : String(error) })
+        }
+    })
     socket.on('addRoom', adapter.addRoom)
     socket.on('addChatGroup', adapter.addChatGroup)
     socket.on('updateChatGroup', adapter.updateChatGroup)

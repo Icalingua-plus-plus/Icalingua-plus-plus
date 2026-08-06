@@ -74,6 +74,10 @@ export default interface Adapter {
     /** Use roomId 0 to search all conversations. */
     searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]>
 
+    isMessageSearchIndexReady?(): boolean
+
+    validateMessageSearchIndex?(): Promise<void>
+
     sliderLogin(ticket: string): void
 
     reLogin(): void

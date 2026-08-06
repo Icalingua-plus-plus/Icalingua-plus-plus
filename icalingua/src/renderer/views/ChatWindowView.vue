@@ -57,6 +57,22 @@
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
                     </template>
+                    <template v-slot:messages-top>
+                        <div v-if="dbUpgrade.active" class="db-upgrade-banner">
+                            <i class="el-icon-loading"></i>
+                            <span class="db-upgrade-banner-message">{{ dbUpgrade.message }}</span>
+                            <el-progress
+                                :percentage="
+                                    dbUpgrade.total > 0
+                                        ? Math.min(100, Math.round((dbUpgrade.step / dbUpgrade.total) * 100))
+                                        : 0
+                                "
+                                :indeterminate="dbUpgrade.total <= 0"
+                                :show-text="false"
+                                :stroke-width="4"
+                            />
+                        </div>
+                    </template>
                 </Room>
             </div>
             <template v-if="stickerPanelBottom">
@@ -156,6 +172,7 @@ export default {
             },
             messages: [],
             messagesLoaded: false,
+            dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             loading: true,
             ready: false, // 数据是否准备好
             account: 0,
@@ -202,6 +219,7 @@ export default {
     async created() {
         // 从路由参数获取 roomId
         this.roomId = parseInt(this.$route.params.roomId)
+        this.dbUpgrade = await ipc.getDbUpgradeProgress()
 
         // 获取设置
         const settings = await ipc.getSettings()
@@ -267,6 +285,7 @@ export default {
         ipcRenderer.removeAllListeners('sendDice')
         ipcRenderer.removeAllListeners('sendRps')
         ipcRenderer.removeAllListeners('closePanel')
+        ipcRenderer.removeAllListeners('dbUpgradeProgress')
     },
     methods: {
         setupIpcListeners() {
@@ -274,6 +293,10 @@ export default {
             document.addEventListener('dragover', (event) => {
                 event.preventDefault()
                 event.stopPropagation()
+            })
+
+            ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+                this.dbUpgrade = progress
             })
 
             // 接收新消息
@@ -630,6 +653,24 @@ export default {
 .chat-window-root {
     height: 100vh;
     width: 100%;
+}
+
+.db-upgrade-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    color: var(--panel-color-desc);
+    background: var(--panel-background);
+
+    .db-upgrade-banner-message {
+        flex: 0 0 auto;
+    }
+
+    .el-progress {
+        flex: 1;
+        min-width: 80px;
+    }
 }
 
 .chat-window-body {

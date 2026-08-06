@@ -1,32 +1,238 @@
 import Redis from 'ioredis'
+import path from 'path'
 import { compact } from 'lodash'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
+import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
+import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 
 export default class RedisStorageProvider implements StorageProvider {
     qid: string
     connStr: string
     redis: Redis.Redis
+    private searchIndex: SQLiteMessageSearchIndex
+    onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     /** `constructor` 方法。 */
-    constructor(connStr: string, id: string) {
+    constructor(connStr: string, id: string, searchDataPath = path.join(process.cwd(), 'data')) {
         this.connStr = connStr
         this.qid = `eqq:${id}`
+        this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
+            loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
+            loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
+            loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
+            countMessages: () => this.countSearchMessages(),
+            reportProgress: (progress) => this.reportUpgradeProgress(progress),
+        })
+    }
+
+    private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {
+        try {
+            this.onUpgradeProgress?.(progress)
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     /** `connect` 方法。在这里与数据库建立连接。 */
-    connect(): Promise<void> {
+    async connect(): Promise<void> {
         this.redis = new Redis(this.connStr)
-        return Promise.resolve()
+        await this.searchIndex.open()
     }
 
     async close(): Promise<void> {
+        await this.searchIndex.close()
         if (this.redis) {
             await this.redis.quit()
         }
+    }
+
+    isMessageSearchIndexReady(): boolean {
+        return this.searchIndex?.isReady === true
+    }
+
+    async validateMessageSearchIndex(): Promise<void> {
+        await this.searchIndex?.validate()
+    }
+
+    private roomMessageKey(roomId: number): string {
+        return `${this.qid}:msg${roomId}:messages`
+    }
+
+    private roomMessageListKey(roomId: number): string {
+        return `${this.qid}:msg${roomId}:msgIdList`
+    }
+
+    private async getSearchRooms(): Promise<Room[]> {
+        return (await this.getAllRooms()).slice().sort((left, right) => Number(left.roomId) - Number(right.roomId))
+    }
+
+    private async getMessages(roomId: number, ids: string[]): Promise<Message[]> {
+        if (!ids.length) return []
+        const messages = await Promise.all(
+            ids.map(async (id) => {
+                const raw = await this.redis.hget(this.roomMessageKey(roomId), String(id))
+                if (!raw) return null
+                return JSON.parse(raw) as Message
+            }),
+        )
+        return messages.filter(Boolean) as Message[]
+    }
+
+    private async getMessagesBySearchTimes(roomId: number, times: number[]): Promise<Message[]> {
+        if (!times.length) return []
+        const key = this.roomMessageListKey(roomId)
+        const pipeline = this.redis.pipeline()
+        for (const time of times) pipeline.zrangebyscore(key, time, time)
+        const replies = await pipeline.exec()
+        const ids = Array.from(
+            new Set((replies || []).flatMap((reply: any) => (Array.isArray(reply?.[1]) ? (reply[1] as string[]) : []))),
+        )
+        return this.getMessages(roomId, ids)
+    }
+
+    private async loadSearchIdsAfter(roomId: number, time: number, id: string | undefined, limit: number) {
+        const key = this.roomMessageListKey(roomId)
+        const sameTimeIds =
+            time > 0 ? await (this.redis.zrangebyscore as any)(key, String(time), String(time)) : ([] as string[])
+        const sameTimeAfter = sameTimeIds.filter((value: string) => id === undefined || String(value) > id)
+        if (sameTimeAfter.length >= limit) return sameTimeAfter.slice(0, limit)
+        const laterIds = await (this.redis.zrangebyscore as any)(
+            key,
+            time > 0 ? `(${time}` : '(0',
+            '+inf',
+            'LIMIT',
+            0,
+            Math.max(1, limit - sameTimeAfter.length),
+        )
+        return sameTimeAfter.concat(laterIds)
+    }
+
+    private async loadSearchBatch(
+        cursor: SQLiteSearchCursor | undefined,
+        limit: number,
+    ): Promise<SQLiteSearchMessage[]> {
+        const rooms = await this.getSearchRooms()
+        let roomIndex = 0
+        let time = 0
+        let id: string | undefined
+        if (cursor) {
+            try {
+                const value = JSON.parse(cursor.id)
+                roomIndex = Math.max(0, Number(value.roomIndex || 0))
+                time = Math.max(0, Number(value.time ?? cursor.time ?? 0))
+                id = value.value === undefined ? undefined : String(value.value)
+            } catch {
+                return []
+            }
+        }
+
+        while (roomIndex < rooms.length) {
+            const roomId = Number(rooms[roomIndex].roomId)
+            const ids = await this.loadSearchIdsAfter(roomId, time, id, Math.max(1, Math.trunc(limit)))
+            if (!ids.length) {
+                roomIndex++
+                time = 0
+                id = undefined
+                continue
+            }
+            const messages = await this.getMessages(roomId, ids)
+            const byId = new Map(messages.map((message) => [String(message._id), message]))
+            const result: SQLiteSearchMessage[] = []
+            for (const value of ids) {
+                const message = byId.get(String(value))
+                if (!message || Number(message.time || 0) <= 0) continue
+                result.push({
+                    ...message,
+                    id: JSON.stringify({ roomIndex, time: Number(message.time), value: String(message._id) }),
+                })
+            }
+            if (result.length) return result
+            roomIndex++
+            time = 0
+            id = undefined
+        }
+        return []
+    }
+
+    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
+        if (!times.length) return []
+        const rooms = await this.getSearchRooms()
+        return (
+            await Promise.all(rooms.map((room) => this.getMessagesBySearchTimes(Number(room.roomId), times)))
+        ).flat()
+    }
+
+    private async loadSearchTimeCounts(afterTime: number, limit: number) {
+        const rooms = await this.getSearchRooms()
+        const roomCounts = await Promise.all(
+            rooms.map(async (room) => {
+                const key = this.roomMessageListKey(Number(room.roomId))
+                const counts = new Map<number, number>()
+                let lowerTime = Math.trunc(afterTime || 0)
+                while (counts.size < Math.max(1, Math.trunc(limit))) {
+                    const minScore = lowerTime > 0 ? `(${lowerTime}` : '(0'
+                    const values = await (this.redis.zrangebyscore as any)(
+                        key,
+                        minScore,
+                        '+inf',
+                        'WITHSCORES',
+                        'LIMIT',
+                        0,
+                        Math.max(1, Math.trunc(limit)),
+                    )
+                    if (!values.length) break
+                    const scores = Array.from(
+                        new Set<number>(
+                            values
+                                .filter((_: unknown, index: number) => index % 2 === 1)
+                                .map((value: unknown) => Math.trunc(Number(value)))
+                                .filter((time: number) => time > 0),
+                        ),
+                    )
+                    if (!scores.length) break
+                    const pipeline = this.redis.pipeline()
+                    scores.forEach((time) => pipeline.zcount(key, String(time), String(time)))
+                    const result = await pipeline.exec()
+                    scores.forEach((time, index) => {
+                        counts.set(time, Math.max(0, Number(result?.[index]?.[1] || 0)))
+                    })
+                    const nextTime = Math.max(...scores)
+                    if (nextTime <= lowerTime) break
+                    lowerTime = nextTime
+                }
+                return counts
+            }),
+        )
+        const counts = new Map<number, number>()
+        for (const roomCountsForRoom of roomCounts) {
+            for (const [time, messageCount] of roomCountsForRoom) {
+                counts.set(time, (counts.get(time) || 0) + messageCount)
+            }
+        }
+        return Array.from(counts, ([time, messageCount]) => ({ time, messageCount }))
+            .sort((left, right) => left.time - right.time)
+            .slice(0, Math.max(1, Math.trunc(limit)))
+    }
+
+    private async countSearchMessages(): Promise<number> {
+        const rooms = await this.getSearchRooms()
+        const counts = await Promise.all(
+            rooms.map((room) => this.redis.zcount(this.roomMessageListKey(Number(room.roomId)), '(0', '+inf')),
+        )
+        return counts.reduce((total, count) => total + Number(count || 0), 0)
+    }
+
+    private async queueSearchMessages(messages: Message[], needsRebuild = false): Promise<void> {
+        await this.searchIndex.queueMessages(messages, needsRebuild)
+    }
+
+    private async syncSearchIndex(messages: Message[]): Promise<void> {
+        await this.searchIndex.syncMessages(messages)
     }
 
     /** 实现 {@link StorageProvider} 类的 `getIgnoredChats` 方法，
@@ -189,8 +395,10 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在收到消息时被调用。
      */
     async addMessage(roomId: number, message: Message): Promise<void> {
+        await this.queueSearchMessages([message])
         await this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
         await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
+        await this.syncSearchIndex([message])
     }
 
     /** 实现 {@link StorageProvider} 类的 `updateMessage` 方法，
@@ -199,9 +407,26 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在“用户撤回消息”等需要改动消息内容的事件中被调用。
      */
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
-        const msgInDB = JSON.parse(await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`))
-        const msgToUpdate = { ...msgInDB, ...message }
-        return this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${messageId}`, JSON.stringify(msgToUpdate))
+        const raw = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
+        if (!raw) return
+        const msgInDB = JSON.parse(raw) as Message
+        const msgToUpdate = { ...msgInDB, ...message } as Message
+        const searchContentChanged =
+            String(msgInDB.content || '') !== String(msgToUpdate.content || '') ||
+            Number(msgInDB.time || 0) !== Number(msgToUpdate.time || 0)
+        await this.queueSearchMessages([msgToUpdate], searchContentChanged)
+        const result = await this.redis.hset(
+            `${this.qid}:msg${roomId}:messages`,
+            `${messageId}`,
+            JSON.stringify(msgToUpdate),
+        )
+        if (searchContentChanged) {
+            await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, msgToUpdate.time, messageId)
+            await this.searchIndex.requestRebuild()
+        } else {
+            await this.syncSearchIndex([msgToUpdate])
+        }
+        return result
     }
 
     /** 实现 {@link StorageProvider} 类的 `replaceMessage` 方法，
@@ -274,8 +499,64 @@ export default class RedisStorageProvider implements StorageProvider {
      * @param roomId 房间 ID，为 0 时搜索全部会话
      * @param keyword 搜索关键字
      */
+    private async searchMessagesFromSearchIndex(
+        roomId: number,
+        keyword: string,
+        skip: number,
+        limit: number,
+    ): Promise<Message[] | null> {
+        if (!this.searchIndex.isReady) return null
+        const normalized = normalizeSearchText(keyword)
+        if (!normalized) return null
+        try {
+            const result: Message[] = []
+            let skipped = 0
+            let maxTime: number | undefined
+            while (result.length < limit) {
+                const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
+                if (times === null) return null
+                if (!times.length) break
+                const roomIds =
+                    roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
+                const messages = (
+                    await Promise.all(
+                        roomIds.map(async (rid) => {
+                            const values = await this.getMessagesBySearchTimes(rid, times)
+                            return values.map((message) => (roomId === 0 ? { ...message, roomId: rid } : message))
+                        }),
+                    )
+                )
+                    .flat()
+                    .filter((message) => messageMatchesKeyword(message, normalized))
+                messages.sort((left, right) => {
+                    const timeDifference = Number(right.time || 0) - Number(left.time || 0)
+                    if (timeDifference) return timeDifference
+                    return String(right._id).localeCompare(String(left._id))
+                })
+                for (const message of messages) {
+                    if (skipped < skip) {
+                        skipped++
+                        continue
+                    }
+                    result.push(message)
+                    if (result.length >= limit) break
+                }
+                const lastTime = Number(times[times.length - 1])
+                maxTime = lastTime - 1
+                if (lastTime <= 0) break
+            }
+            return result
+        } catch (error) {
+            return null
+        }
+    }
+
     async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
-        const lowerKeyword = keyword.toLowerCase()
+        const lowerKeyword = normalizeSearchText(keyword)
+        if (lowerKeyword) {
+            const indexed = await this.searchMessagesFromSearchIndex(roomId, lowerKeyword, skip, limit)
+            if (indexed !== null) return indexed
+        }
 
         const scanRoom = async (targetRoomId: number, includeRoomId: boolean): Promise<Message[]> => {
             const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${targetRoomId}:msgIdList`, 0, -1)
@@ -382,12 +663,15 @@ export default class RedisStorageProvider implements StorageProvider {
      *
      * 在获取聊天历史消息时，该方法被调用。
      */
-    addMessages(roomId: number, messages: Message[]): Promise<any> {
-        messages.forEach((message) => {
-            this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
-            this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
-        })
-        return Promise.resolve()
+    async addMessages(roomId: number, messages: Message[]): Promise<any> {
+        await this.queueSearchMessages(messages)
+        const pipeline = this.redis.pipeline()
+        for (const message of messages) {
+            pipeline.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
+            pipeline.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
+        }
+        if (messages.length) await pipeline.exec()
+        await this.syncSearchIndex(messages)
     }
 
     /** 实现 {@link StorageProvider} 类的 `getUnreadCount` 方法，

@@ -89,6 +89,7 @@ import {
     getMainWindow,
     isAppLocked,
     loadMainWindow,
+    sendDatabaseUpgradeProgress,
     sendToLoginWindow,
     showLoginWindow,
     showRequestWindow,
@@ -1108,10 +1109,18 @@ const initStorage = async () => {
     try {
         switch (loginForm.storageType) {
             case 'mdb':
-                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
+                storage = new MongoStorageProvider(
+                    loginForm.mdbConnStr,
+                    loginForm.username,
+                    path.join(app.getPath('userData'), 'data'),
+                )
                 break
             case 'redis':
-                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
+                storage = new RedisStorageProvider(
+                    loginForm.rdsHost,
+                    `${loginForm.username}`,
+                    path.join(app.getPath('userData'), 'data'),
+                )
                 break
             case 'sqlite':
                 storage = new SQLStorageProvider(
@@ -1128,6 +1137,7 @@ const initStorage = async () => {
                     `${loginForm.username}`,
                     'mysql',
                     {
+                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                         host: loginForm.sqlHost,
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
@@ -1141,6 +1151,7 @@ const initStorage = async () => {
                     `${loginForm.username}`,
                     'pg',
                     {
+                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                         host: loginForm.sqlHost,
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
@@ -1152,9 +1163,10 @@ const initStorage = async () => {
             default:
                 break
         }
-        if (storage instanceof SQLStorageProvider) {
-            storage.onUpgradeProgress = (step, total, message) => {
-                sendToLoginWindow('dbUpgradeProgress', { step, total, message })
+        if (storage) {
+            storage.onUpgradeProgress = (progress) => {
+                sendDatabaseUpgradeProgress(progress)
+                if (!progress.active) void updateAppMenu()
             }
         }
         await storage.connect()
@@ -1279,6 +1291,8 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     getDisabledFeatures(): Promise<SpecialFeature[]> {
         return Promise.resolve([])
     },

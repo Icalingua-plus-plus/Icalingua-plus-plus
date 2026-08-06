@@ -5,7 +5,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
-import { broadcast } from '../providers/socketIoProvider'
+import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
 import MilkyClient, { IncomingMessage } from '../clients/MilkyClient'
 import Room from '@icalingua/types/Room'
 import axios from 'axios'
@@ -190,6 +190,7 @@ const initStorage = async () => {
             default:
                 break
         }
+        storage.onUpgradeProgress = (progress) => broadcastDatabaseUpgradeProgress(progress)
         await storage.connect()
         registerSilkDecodeCompleter({
             replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
@@ -923,6 +924,8 @@ const attachEventHandler = () => {
 }
 
 const adapter: typeof oicqAdapter = {
+    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
+    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     loggedIn: false,
     async createBot(form: LoginForm) {
         loginForm = form
