@@ -5,7 +5,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
-import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
+import { broadcast } from '../providers/socketIoProvider'
 import OnebotClient, { GroupMessage } from '../clients/OnebotClient'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
@@ -29,7 +29,6 @@ import {
     Ret,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageHistoryWindow } from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import {
     getMediaPartIndex,
@@ -102,7 +101,6 @@ const initStorage = async () => {
             default:
                 break
         }
-        storage.onUpgradeProgress = broadcastDatabaseUpgradeProgress
         await storage.connect()
         registerSilkDecodeCompleter({
             replaceMessage: (roomId, messageId, message) => storage.replaceMessage(roomId, messageId, message),
@@ -685,10 +683,6 @@ const replaceRkey = (url: string) => {
 
 const adapter: typeof oicqAdapter = {
     loggedIn: false,
-    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
-    validateMessageSearchIndex: async () => {
-        await storage?.validateMessageSearchIndex?.()
-    },
     async createBot(form: LoginForm) {
         bot = new OnebotClient(config.onebot)
         await bot.connect()
@@ -1378,7 +1372,7 @@ const adapter: typeof oicqAdapter = {
         resolve(replaceRkey(`https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`))
         return
     },
-    async fetchHistory(messageId: string, roomId: number, loadedWindow?: MessageHistoryWindow) {
+    async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
         let totalCount = 0
@@ -1461,12 +1455,7 @@ const adapter: typeof oicqAdapter = {
         console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
         clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
         storage
-            .fetchMessagesInTimeRange(
-                roomId,
-                loadedWindow?.oldestTime,
-                loadedWindow?.endTime ?? Date.now(),
-                (loadedWindow?.loadedCount || 0) + 20,
-            )
+            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
     },
 
@@ -1483,13 +1472,8 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 存储动作
-    async fetchMessages(
-        roomId: number,
-        options: MessagePageOptions,
-        client: Socket,
-        callback: (arg0: Message[]) => void,
-    ) {
-        if (!options?.before) {
+    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
+        if (!offset) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
@@ -1506,8 +1490,8 @@ const adapter: typeof oicqAdapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
-        if (messages.length && !options?.before && typeof messages[messages.length - 1]._id === 'string')
+        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         for (const message of messages) {
             if (message.file?.url) {
@@ -1528,11 +1512,12 @@ const adapter: typeof oicqAdapter = {
     },
     async fetchImageMessages(
         roomId: number,
-        options: MessagePageOptions,
+        offset: number,
+        endTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchImageMessages(roomId, options || {}, 30)) || []
+        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
         for (const message of messages) {
             if (message.file?.url) {
                 message.file.url = replaceRkey(message.file?.url)
@@ -1573,11 +1558,11 @@ const adapter: typeof oicqAdapter = {
     async fetchMessagesBySender(
         roomId: number,
         senderId: number,
-        options: MessagePageOptions,
+        offset: number,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), options || {}, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
         for (const message of messages) {
             if (message.file?.url) {
                 message.file.url = replaceRkey(message.file?.url)
@@ -1595,11 +1580,11 @@ const adapter: typeof oicqAdapter = {
     async searchMessages(
         roomId: number,
         keyword: string,
-        options: MessagePageOptions,
+        offset: number,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.searchMessages(roomId, keyword, options || {}, 20)) || []
+        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
         for (const message of messages) {
             if (message.file?.url) {
                 message.file.url = replaceRkey(message.file?.url)
@@ -1780,7 +1765,6 @@ const adapter: typeof oicqAdapter = {
 
     // 没必要实现的动作
     logOut() {
-        broadcastDatabaseUpgradeProgress({ active: false, step: 0, total: 0, message: '' })
         return storage?.close()
     },
     randomDevice(username: number) {},

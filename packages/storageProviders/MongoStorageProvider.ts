@@ -1,48 +1,19 @@
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import StorageProvider from '@icalingua/types/StorageProvider'
-import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import { Db, MongoClient } from 'mongodb'
-import path from 'path'
-import {
-    buildSearchGrams,
-    compareMessageDesc,
-    isBeforeCursor,
-    messageMatchesKeyword,
-    normalizeSearchText,
-} from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 
 export default class MongoStorageProvider implements StorageProvider {
     id: string | number
     connStr: string
     mdb: Db
     private mongoClient: MongoClient
-    private searchIndex: SQLiteMessageSearchIndex
-    private readonly searchIndexVersion = 1
-    onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
-    constructor(connStr: string, id: string | number, searchDataPath = path.join(process.cwd(), 'data')) {
+    constructor(connStr: string, id: string | number) {
         this.id = id
         this.connStr = connStr
-        this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
-            loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
-            loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
-            loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
-            countMessages: () => this.countSearchMessages(),
-            reportProgress: (progress) => this.reportUpgradeProgress(progress),
-        })
-    }
-
-    private reportUpgradeProgress(progress: DatabaseUpgradeProgress) {
-        try {
-            this.onUpgradeProgress?.(progress)
-        } catch (error) {
-            console.error(error)
-        }
     }
 
     removeIgnoredChat(id: number): Promise<any> {
@@ -74,260 +45,50 @@ export default class MongoStorageProvider implements StorageProvider {
     async connect(): Promise<void> {
         this.mongoClient = await MongoClient.connect(this.connStr)
         this.mdb = this.mongoClient.db('eqq' + this.id)
-        await this.mdb.collection('rooms').createIndex('roomId', { background: true, unique: true })
-        await this.mdb.collection('rooms').createIndex({ utime: -1 }, { background: true })
+        await this.mdb.collection('rooms').createIndex('roomId', {
+            background: true,
+            unique: true,
+        })
+        await this.mdb.collection('rooms').createIndex(
+            { utime: -1 },
+            {
+                background: true,
+            },
+        )
         const rooms = await this.getAllRooms()
-        for (const room of rooms) await this.ensureMessageCollectionIndexes(room.roomId)
-        await this.mdb.collection('ignoredChats').createIndex('id', { background: true, unique: true })
-        await this.mdb.collection('chatGroups').createIndex('name', { background: true, unique: true })
-        await this.searchIndex.open()
-        if ((await this.searchIndex.getState('legacyMongoSearchRemoved')) !== '1') {
-            try {
-                await this.mdb.dropCollection('messageSearch')
-            } catch {}
-            try {
-                await this.mdb.dropCollection('messageSearchMeta')
-            } catch {}
-            await this.searchIndex.setState('legacyMongoSearchRemoved', '1')
+        for (const i of rooms) {
+            await this.mdb.collection('msg' + i.roomId).createIndex(
+                { time: -1 },
+                {
+                    background: true,
+                },
+            )
         }
+        await this.mdb.collection('ignoredChats').createIndex('id', {
+            background: true,
+            unique: true,
+        })
+        await this.mdb.collection('chatGroups').createIndex('name', {
+            background: true,
+            unique: true,
+        })
     }
 
     async close(): Promise<void> {
-        await this.searchIndex.close()
-        if (this.mongoClient) await this.mongoClient.close()
-    }
-
-    isMessageSearchIndexReady(): boolean {
-        return this.searchIndex?.isReady === true
-    }
-
-    async validateMessageSearchIndex(): Promise<void> {
-        await this.searchIndex?.validate()
-    }
-
-    private searchDocument(roomId: number, message: Message) {
-        return {
-            roomId,
-            messageId: String(message._id),
-            senderId: Number(message.senderId),
-            time: Number(message.time || 0),
-            content: message.content || '',
-            grams: buildSearchGrams(message.content),
+        if (this.mongoClient) {
+            await this.mongoClient.close()
         }
-    }
-
-    private async syncSearchDocuments(roomId: number, messages: Message[]) {
-        if (!messages.length) return
-        await this.mdb.collection('messageSearch').bulkWrite(
-            messages.map((message) => ({
-                updateOne: {
-                    filter: { roomId, messageId: String(message._id) },
-                    update: { $set: this.searchDocument(roomId, message) },
-                    upsert: true,
-                },
-            })),
-            { ordered: false },
-        )
-    }
-
-    private messageIdCandidates(messageId: string | number): Array<string | number> {
-        const candidates: Array<string | number> = [messageId, String(messageId)]
-        const numericId = Number(messageId)
-        if (Number.isFinite(numericId)) candidates.push(numericId)
-        return Array.from(new Set(candidates))
-    }
-
-    private messageIdQuery(messageId: string | number) {
-        return { _id: { $in: this.messageIdCandidates(messageId) } }
-    }
-
-    private async loadSearchBatch(
-        cursor: SQLiteSearchCursor | undefined,
-        limit: number,
-    ): Promise<SQLiteSearchMessage[]> {
-        const rooms = await this.getAllRooms()
-        let roomIndex = 0
-        let time = 0
-        let id: any = undefined
-        if (cursor) {
-            try {
-                const value = JSON.parse(cursor.id)
-                roomIndex = Math.max(0, Number(value.roomIndex || 0))
-                id = value.value
-                time = Number(cursor.time || 0)
-            } catch {
-                return []
-            }
-        }
-
-        while (roomIndex < rooms.length) {
-            const roomId = Number(rooms[roomIndex].roomId)
-            const conditions: any[] = [{ time: { $gt: time } }]
-            if (id !== undefined) conditions.push({ time, _id: { $gt: id } })
-            const messages = await this.mdb
-                .collection<any>('msg' + roomId)
-                .find({ $or: conditions }, { projection: { _id: 1, time: 1, content: 1 } })
-                .sort({ time: 1, _id: 1 })
-                .limit(limit)
-                .toArray()
-            if (messages.length) {
-                return messages.map((message) => ({
-                    ...message,
-                    id: JSON.stringify({ roomIndex, value: message._id }),
-                }))
-            }
-            roomIndex++
-            time = 0
-            id = undefined
-        }
-        return []
-    }
-
-    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
-        if (!times.length) return []
-        const rooms = await this.getAllRooms()
-        return (
-            await Promise.all(
-                rooms.map((room) =>
-                    this.mdb
-                        .collection<any>('msg' + Number(room.roomId))
-                        .find({ time: { $in: times } }, { projection: { _id: 1, time: 1, content: 1 } })
-                        .toArray(),
-                ),
-            )
-        ).flat()
-    }
-
-    private async loadSearchTimeCounts(afterTime: number, limit: number) {
-        const rooms = await this.getAllRooms()
-        const roomCounts = await Promise.all(
-            rooms.map((room) =>
-                this.mdb
-                    .collection<any>('msg' + Number(room.roomId))
-                    .aggregate([
-                        { $match: { time: { $gt: Math.trunc(afterTime || 0) } } },
-                        { $group: { _id: '$time', messageCount: { $sum: 1 } } },
-                        { $sort: { _id: 1 } },
-                        { $limit: Math.max(1, Math.trunc(limit)) },
-                    ])
-                    .toArray(),
-            ),
-        )
-        const counts = new Map<number, number>()
-        for (const rows of roomCounts) {
-            for (const row of rows) {
-                const time = Math.trunc(Number(row._id))
-                if (time <= 0) continue
-                counts.set(time, (counts.get(time) || 0) + Math.max(0, Number(row.messageCount || 0)))
-            }
-        }
-        return Array.from(counts, ([time, messageCount]) => ({ time, messageCount }))
-            .sort((left, right) => left.time - right.time)
-            .slice(0, Math.max(1, Math.trunc(limit)))
-    }
-
-    private async countSearchMessages(): Promise<number> {
-        const rooms = await this.getAllRooms()
-        const counts = await Promise.all(
-            rooms.map((room) =>
-                this.mdb.collection<any>('msg' + Number(room.roomId)).countDocuments({ time: { $gt: 0 } }),
-            ),
-        )
-        return counts.reduce((total, count) => total + Number(count || 0), 0)
-    }
-
-    private async queueSearchMessages(messages: Message[], needsRebuild = false) {
-        await this.searchIndex.queueMessages(messages, needsRebuild)
-    }
-
-    private async syncSearchIndex(messages: Message[]) {
-        await this.searchIndex.syncMessages(messages)
-    }
-
-    private async ensureMessageCollectionIndexes(roomId: number) {
-        await this.mdb.collection('msg' + roomId).createIndex({ time: -1, _id: -1 }, { background: true })
-        await this.mdb.collection('msg' + roomId).createIndex({ senderId: 1, time: -1, _id: -1 }, { background: true })
-    }
-
-    private async rebuildMessageSearchIndex() {
-        await this.mdb.collection('messageSearch').deleteMany({})
-        for (const room of await this.getAllRooms()) {
-            const messages = await this.mdb
-                .collection<any>('msg' + room.roomId)
-                .find({}, { projection: { _id: 1, senderId: 1, time: 1, content: 1, files: 1, file: 1 } })
-                .toArray()
-            if (!messages.length) continue
-            await this.syncSearchDocuments(room.roomId, messages as Message[])
-        }
-    }
-
-    private applyCursor(query: any, options: MessagePageOptions, includeRoomId = false, idField = '_id') {
-        const conditions: any[] = []
-        if (options?.endTime !== undefined) conditions.push({ time: { $lte: options.endTime } })
-        const cursor = options?.before
-        if (cursor) {
-            if (includeRoomId && cursor.roomId !== undefined) {
-                conditions.push({
-                    $or: [
-                        { time: { $lt: cursor.time } },
-                        { time: cursor.time, roomId: { $lt: cursor.roomId } },
-                        { time: cursor.time, roomId: cursor.roomId, [idField]: { $lt: cursor.id } },
-                    ],
-                })
-            } else {
-                conditions.push({
-                    $or: [{ time: { $lt: cursor.time } }, { time: cursor.time, [idField]: { $lt: cursor.id } }],
-                })
-            }
-        }
-        return conditions.length ? { $and: [query, ...conditions] } : query
-    }
-
-    private async hydrateSearchDocuments(documents: any[], includeRoomId: boolean): Promise<Message[]> {
-        const grouped = new Map<number, string[]>()
-        for (const document of documents) {
-            const ids = grouped.get(Number(document.roomId)) || []
-            ids.push(String(document.messageId))
-            grouped.set(Number(document.roomId), ids)
-        }
-        const originals = new Map<string, Message>()
-        await Promise.all(
-            Array.from(grouped.entries()).map(async ([roomId, ids]) => {
-                const candidates = Array.from(new Set(ids.flatMap((id) => this.messageIdCandidates(id))))
-                const messages = await this.mdb
-                    .collection<any>('msg' + roomId)
-                    .find({ _id: { $in: candidates } })
-                    .toArray()
-                for (const message of messages) originals.set(`${roomId}:${String(message._id)}`, message as Message)
-            }),
-        )
-        return documents
-            .map((document) => {
-                const message = originals.get(`${document.roomId}:${document.messageId}`)
-                if (!message) return null
-                return includeRoomId ? ({ ...message, roomId: Number(document.roomId) } as Message) : message
-            })
-            .filter(Boolean) as Message[]
     }
 
     async addMessage(roomId: number, message: Message): Promise<any> {
-        const storedMessage = message
-        let result
-        await this.queueSearchMessages([storedMessage])
         try {
-            result = await this.mdb.collection('msg' + roomId).insertOne(storedMessage as object)
+            return await this.mdb.collection('msg' + roomId).insertOne(message as object)
         } catch (e) {}
-        try {
-            await this.syncSearchIndex([storedMessage])
-        } catch (e) {}
-        return result
     }
 
     async addRoom(room: Room): Promise<any> {
         try {
-            const result = await this.mdb.collection('rooms').insertOne(room)
-            await this.ensureMessageCollectionIndexes(room.roomId)
-            return result
+            return await this.mdb.collection('rooms').insertOne(room)
         } catch (e) {}
     }
 
@@ -339,22 +100,7 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
-            const current = await this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
-            if (!current) return
-            const merged = {
-                ...current,
-                ...message,
-                _id: current._id,
-            }
-            const searchContentChanged =
-                String(current.content || '') !== String(merged.content || '') ||
-                Number(current.time || 0) !== Number(merged.time || 0)
-            await this.queueSearchMessages([merged], searchContentChanged)
-            const { _id, ...fields } = merged
-            const result = await this.mdb.collection('msg' + roomId).updateOne({ _id: current._id }, { $set: fields })
-            if (searchContentChanged) await this.searchIndex.requestRebuild(Number(merged.time || current.time || 0))
-            else await this.syncSearchIndex([merged])
-            return result
+            return await this.mdb.collection('msg' + roomId).updateOne({ _id: messageId }, { $set: message })
         } catch (e) {}
     }
 
@@ -362,231 +108,156 @@ export default class MongoStorageProvider implements StorageProvider {
         return await this.updateMessage(roomId, messageId, message)
     }
 
-    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
-        const query = this.applyCursor({}, options, false, '_id')
-        const documents = await this.mdb
+    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
+        const arr = await this.mdb
             .collection<any>('msg' + roomId)
-            .find(query, {
-                sort: [
-                    ['time', -1],
-                    ['_id', -1],
-                ],
-                limit,
-            })
+            .find(
+                {},
+                {
+                    sort: [['time', -1]],
+                    skip,
+                    limit,
+                },
+            )
             .toArray()
-        return documents.reverse()
-    }
-
-    async fetchMessagesInTimeRange(
-        roomId: number,
-        startTime?: number,
-        endTime?: number,
-        limit?: number,
-    ): Promise<Message[]> {
-        const query: any = {}
-        if (startTime !== undefined || endTime !== undefined) query.time = {}
-        if (startTime !== undefined) query.time.$gte = startTime
-        if (endTime !== undefined) query.time.$lte = endTime
-        const options: any = {
-            sort: [
-                ['time', -1],
-                ['_id', -1],
-            ],
-        }
-        if (limit !== undefined) options.limit = limit
-        const documents = await this.mdb
-            .collection<any>('msg' + roomId)
-            .find(query, options)
-            .toArray()
-        return documents.reverse()
+        return arr.reverse()
     }
 
     /** 按发送者查询消息记录。
      * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
      * @param senderId 发送者 ID（字符串）
      */
-    async fetchMessagesBySender(
-        roomId: number,
-        senderId: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[]> {
+    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
         try {
-            const roomIds =
-                roomId === 0
-                    ? (await this.getAllRooms()).filter((r) => r.roomId < 0).map((room) => Number(room.roomId))
-                    : [roomId]
-            const messages = (
+            if (roomId === 0) {
+                // 所有群模式：遍历所有群集合
+                const rooms = await this.getAllRooms()
+                const groupRooms = rooms.filter((r) => r.roomId < 0)
+                const allMessages: Message[] = []
                 await Promise.all(
-                    roomIds.map(async (rid) => {
-                        const query = this.applyCursor({ senderId: Number(senderId) }, options, false, '_id')
-                        const values = await this.mdb
-                            .collection<any>('msg' + rid)
-                            .find(query, {
-                                sort: [
-                                    ['time', -1],
-                                    ['_id', -1],
-                                ],
-                                limit,
-                            })
+                    groupRooms.map(async (room) => {
+                        const msgs = await this.mdb
+                            .collection<any>('msg' + room.roomId)
+                            .find({ senderId: Number(senderId) })
                             .toArray()
-                        return values.map((message) => (roomId === 0 ? { ...message, roomId: rid } : message))
+                        for (const msg of msgs) {
+                            msg.roomId = room.roomId
+                        }
+                        allMessages.push(...msgs)
                     }),
                 )
-            ).flat()
-            const filtered = messages.filter(
-                (message) =>
-                    (options?.endTime === undefined || Number(message.time || 0) <= options.endTime) &&
-                    isBeforeCursor(message, options?.before),
-            )
-            filtered.sort(compareMessageDesc)
-            return filtered.slice(0, limit).reverse()
+                allMessages.sort((a, b) => b.time - a.time)
+                return allMessages.slice(skip, skip + limit).reverse()
+            } else {
+                const arr = await this.mdb
+                    .collection<any>('msg' + roomId)
+                    .find(
+                        { senderId: Number(senderId) },
+                        {
+                            sort: [['time', -1]],
+                            skip,
+                            limit,
+                        },
+                    )
+                    .toArray()
+                return arr.reverse()
+            }
         } catch (e) {
             return []
         }
-    }
-
-    private async searchMessagesFromSearchTimes(
-        roomId: number,
-        keyword: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[] | null> {
-        if (!this.searchIndex.isReady) return null
-        const normalized = normalizeSearchText(keyword)
-        if (!normalized) return null
-        let upperTime = options?.endTime
-        if (options?.before) {
-            upperTime = upperTime === undefined ? options.before.time : Math.min(upperTime, options.before.time)
-        }
-        const result: Message[] = []
-        while (result.length < limit && (upperTime === undefined || upperTime >= 0)) {
-            const times = await this.searchIndex.searchTimes(normalized, { maxTime: upperTime, limit: 256 })
-            if (times === null) return null
-            if (!times.length) break
-            const roomIds = roomId === 0 ? (await this.getAllRooms()).map((room) => Number(room.roomId)) : [roomId]
-            const messages = (
-                await Promise.all(
-                    roomIds.map((rid) =>
-                        this.mdb
-                            .collection<any>('msg' + rid)
-                            .find({ time: { $in: times } })
-                            .toArray()
-                            .then((values) => values.map((message) => ({ ...message, roomId: rid }))),
-                    ),
-                )
-            )
-                .flat()
-                .filter(
-                    (message) =>
-                        (options?.endTime === undefined || Number(message.time || 0) <= options.endTime) &&
-                        isBeforeCursor(message, options?.before) &&
-                        messageMatchesKeyword(message, normalized),
-                )
-            messages.sort(compareMessageDesc)
-            for (const message of messages) {
-                if (roomId !== 0) delete (message as any).roomId
-                result.push(message)
-                if (result.length >= limit) break
-            }
-            upperTime = Number(times[times.length - 1]) - 1
-        }
-        return result.slice(0, limit)
     }
 
     /** 按关键字搜索消息记录。
      * @param roomId 房间 ID，为 0 时搜索全部会话
      * @param keyword 搜索关键字
      */
-    async searchMessages(
-        roomId: number,
-        keyword: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[]> {
+    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
         try {
-            const normalized = normalizeSearchText(keyword)
-            if (normalized) {
-                const indexed = await this.searchMessagesFromSearchTimes(roomId, keyword, options, limit)
-                if (indexed !== null) return indexed
+            const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const query = { content: { $regex: escapedKeyword, $options: 'i' } }
+            if (roomId !== 0) {
+                return await this.mdb
+                    .collection<any>('msg' + roomId)
+                    .find(query, {
+                        sort: [['time', -1]],
+                        skip,
+                        limit,
+                    })
+                    .toArray()
             }
-            const roomIds = roomId === 0 ? (await this.getAllRooms()).map((room) => Number(room.roomId)) : [roomId]
-            const messages = (
-                await Promise.all(
-                    roomIds.map((rid) =>
-                        this.mdb
-                            .collection<any>('msg' + rid)
-                            .find({})
-                            .sort({ time: -1, _id: -1 })
-                            .limit(Math.max(limit * 4, limit))
-                            .toArray()
-                            .then((values) => values.map((message) => ({ ...message, roomId: rid }))),
-                    ),
-                )
+
+            const rooms = await this.getAllRooms()
+            const perRoomLimit = skip + limit
+            const results = await Promise.all(
+                rooms.map(async (room) => {
+                    const messages = await this.mdb
+                        .collection<any>('msg' + room.roomId)
+                        .find(query, {
+                            sort: [['time', -1]],
+                            limit: perRoomLimit,
+                        })
+                        .toArray()
+                    return messages.map((message) => ({ ...message, roomId: room.roomId })) as Message[]
+                }),
             )
+            return results
                 .flat()
-                .filter(
-                    (message) =>
-                        (options?.endTime === undefined || Number(message.time || 0) <= options.endTime) &&
-                        isBeforeCursor(message, options?.before) &&
-                        (!normalized || messageMatchesKeyword(message, normalized)),
-                )
-            messages.sort(compareMessageDesc)
-            return messages.slice(0, limit).map((message) => {
-                if (roomId !== 0) delete (message as any).roomId
-                return message
-            })
+                .sort((a, b) => (b.time || 0) - (a.time || 0))
+                .slice(skip, skip + limit)
         } catch (e) {
             return []
         }
     }
 
-    async fetchImageMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
-        const query = this.applyCursor({ 'files.type': { $regex: /^image\// } }, options, false, '_id')
-        const documents = await this.mdb
+    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+        const query: any = {
+            'files.type': { $regex: /^image\// },
+        }
+        if (endTime) {
+            query.time = { $lte: endTime }
+        }
+        const arr = await this.mdb
             .collection<any>('msg' + roomId)
             .find(query, {
-                sort: [
-                    ['time', -1],
-                    ['_id', -1],
-                ],
+                sort: [['time', -1]],
+                skip,
                 limit,
             })
             .toArray()
-        return documents
+        return arr
     }
 
     async removeRoom(roomId: number): Promise<any> {
         try {
-            return await this.mdb.collection('rooms').findOneAndDelete({ roomId })
+            return await this.mdb.collection('rooms').findOneAndDelete({ roomId: roomId })
         } catch (e) {}
     }
 
     async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         try {
-            return await this.mdb.collection('rooms').updateOne({ roomId }, { $set: room })
+            return await this.mdb.collection('rooms').updateOne({ roomId: roomId }, { $set: room })
         } catch (e) {}
     }
 
     async removeChatGroup(name: string): Promise<any> {
         try {
-            return await this.mdb.collection('chatGroups').findOneAndDelete({ name })
+            return await this.mdb.collection('chatGroups').findOneAndDelete({ name: name })
         } catch (e) {}
     }
 
     async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<any> {
         try {
-            return await this.mdb.collection('chatGroups').updateOne({ name }, { $set: chatGroup })
+            return await this.mdb.collection('chatGroups').updateOne({ name: name }, { $set: chatGroup })
         } catch (e) {}
     }
 
     getMessage(roomId: number, messageId: string): Promise<Message> {
-        return this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
+        return this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
     }
 
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
         // 先获取目标消息的时间
-        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
+        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
         if (!targetMsg) return []
 
         const targetTime = targetMsg.time
@@ -608,23 +279,11 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
-        const storedMessages = messages
-        let result
-        await this.queueSearchMessages(storedMessages)
         try {
-            if (storedMessages.length)
-                result = await this.mdb
-                    .collection('msg' + roomId)
-                    .insertMany(storedMessages as object[], { ordered: false })
+            return await this.mdb.collection('msg' + roomId).insertMany(messages as object[], { ordered: false }) //确信
         } catch (e) {
-            result = e
+            return e
         }
-        try {
-            await this.syncSearchIndex(storedMessages)
-        } catch (e) {
-            if (!result) result = e
-        }
-        return result
     }
 
     getRoom(roomId: number): Promise<Room> {
@@ -632,14 +291,26 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     getUnreadCount(priority: number): Promise<number> {
-        return this.mdb
-            .collection('rooms')
-            .find({ unreadCount: { $gt: 0 }, priority: { $gte: priority } })
-            .count()
+        const unreadRooms = this.mdb.collection('rooms').find({
+            unreadCount: {
+                $gt: 0,
+            },
+            priority: {
+                $gte: priority,
+            },
+        })
+        return unreadRooms.count()
     }
 
     getFirstUnreadRoom(priority: number): Promise<Room> {
-        return this.mdb.collection<any>('rooms').findOne({ unreadCount: { $gt: 0 }, priority: { $gte: priority } })
+        return this.mdb.collection<any>('rooms').findOne({
+            unreadCount: {
+                $gt: 0,
+            },
+            priority: {
+                $gte: priority,
+            },
+        })
     }
 
     addIgnoredChat(info: IgnoreChatInfo): Promise<any> {

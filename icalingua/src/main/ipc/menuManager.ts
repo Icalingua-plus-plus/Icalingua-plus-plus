@@ -63,8 +63,6 @@ import {
     sendGroupSign,
     getDisabledFeatures,
     sendGroupPoke,
-    canValidateMessageSearchIndex,
-    validateMessageSearchIndex,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
 import openImage from './openImage'
@@ -1031,16 +1029,6 @@ export const updateAppMenu = async () => {
                 label: '搜索全部聊天记录',
                 accelerator: 'CommandOrControl+Shift+F',
                 click: () => openMessageSearchWindow(0, '全部会话'),
-            }),
-            new MenuItem({
-                label: '校验消息搜索索引',
-                visible: canValidateMessageSearchIndex(),
-                click: async () => {
-                    const validation = validateMessageSearchIndex()
-                    await updateAppMenu()
-                    await validation
-                    await updateAppMenu()
-                },
             }),
             new MenuItem({
                 label: '获取最近会话的历史消息',

@@ -10,8 +10,6 @@ import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
-import MessagePageOptions from '@icalingua/types/MessagePage'
-import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 
 const ipc = {
     sendMessage(data) {
@@ -71,11 +69,11 @@ const ipc = {
     async getUin(): Promise<number> {
         return await ipcRenderer.invoke('getUin')
     },
-    async fetchMessage(roomId: number, options: MessagePageOptions): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessage', { roomId, options })
+    async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchMessage', { roomId, offset })
     },
-    async fetchImageMessages(roomId: number, options: MessagePageOptions): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchImageMessages', { roomId, options })
+    async fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchImageMessages', { roomId, offset, endTime })
     },
     async fetchMessagesAround(
         roomId: number,
@@ -85,15 +83,11 @@ const ipc = {
     ): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessagesAround', { roomId, messageId, before, after })
     },
-    async fetchMessagesBySender(
-        roomId: number,
-        senderId: number,
-        options: MessagePageOptions,
-    ): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, options })
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, offset })
     },
-    async searchMessages(roomId: number, keyword: string, options: MessagePageOptions): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('searchMessages', { roomId, keyword, options })
+    async searchMessages(roomId: number, keyword: string, offset: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('searchMessages', { roomId, keyword, offset })
     },
     openGlobalMessageSearch() {
         ipcRenderer.send('openGlobalMessageSearch')
@@ -128,9 +122,6 @@ const ipc = {
     },
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
-    },
-    async getDbUpgradeProgress(): Promise<DatabaseUpgradeProgress> {
-        return await ipcRenderer.invoke('getDbUpgradeProgress')
     },
     download(url: string, out: string, dir?: string) {
         ipcRenderer.send('download', url, out, dir)

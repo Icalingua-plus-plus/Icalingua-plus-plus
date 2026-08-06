@@ -9,7 +9,6 @@ import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
 import SpecialFeature from './SpecialFeature'
-import MessagePageOptions from './MessagePage'
 
 type CookiesDomain =
     | 'tenpay.com'
@@ -64,22 +63,16 @@ export default interface Adapter {
 
     getFriendsFallback(): Promise<SearchableFriend[]>
 
-    fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]>
+    fetchMessages(roomId: number, offset: number): Promise<Message[]>
 
-    fetchImageMessages(roomId: number, options: MessagePageOptions): Promise<Message[]>
+    fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]>
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
-    fetchMessagesBySender(roomId: number, senderId: number, options: MessagePageOptions): Promise<Message[]>
+    fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]>
 
     /** Use roomId 0 to search all conversations. */
-    searchMessages(roomId: number, keyword: string, options: MessagePageOptions): Promise<Message[]>
-
-    /** Whether the disposable message search index is ready for manual validation. */
-    isMessageSearchIndexReady?(): boolean
-
-    /** Run the message search index consistency check on demand. */
-    validateMessageSearchIndex?(): Promise<void>
+    searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]>
 
     sliderLogin(ticket: string): void
 

@@ -2,20 +2,9 @@ import Room from './Room'
 import Message from './Message'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import ChatGroup from './ChatGroup'
-import MessagePageOptions from './MessagePage'
-import DatabaseUpgradeProgress from './DatabaseUpgradeProgress'
 
 export default interface StorageProvider {
     connect(): Promise<void>
-
-    /** Optional progress callback for disposable database indexes and upgrades. */
-    onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
-
-    /** Whether the disposable message search index has finished building. */
-    isMessageSearchIndexReady?(): boolean
-
-    /** Run the message search index consistency check on demand. */
-    validateMessageSearchIndex?(): Promise<void>
 
     updateRoom(roomId: number, room: Partial<Room>): Promise<any>
 
@@ -29,11 +18,9 @@ export default interface StorageProvider {
 
     replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any>
 
-    fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]>
+    fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
 
-    fetchImageMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]>
-
-    fetchMessagesInTimeRange(roomId: number, startTime?: number, endTime?: number, limit?: number): Promise<Message[]>
+    fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]>
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
@@ -65,15 +52,10 @@ export default interface StorageProvider {
 
     getAllChatGroups(): Promise<ChatGroup[]>
 
-    fetchMessagesBySender(
-        roomId: number,
-        senderId: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[]>
+    fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]>
 
     /** Use roomId 0 to search all conversations; global results include their original roomId. */
-    searchMessages(roomId: number, keyword: string, options: MessagePageOptions, limit: number): Promise<Message[]>
+    searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]>
 
     /** 关闭数据库连接，释放资源。应在进程退出前调用。 */
     close(): Promise<void>

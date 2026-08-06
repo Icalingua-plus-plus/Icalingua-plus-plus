@@ -64,7 +64,7 @@ export default {
             images: [],
             loading: false,
             noMore: false,
-            cursor: null,
+            offset: 0,
             endTime: null, // 用于从指定月份开始加载
             selectedMonth: null,
             pickerOptions: {
@@ -101,20 +101,15 @@ export default {
     methods: {
         async loadImages() {
             if (this.loading || this.noMore) return
-            if (this.endTime === null) this.endTime = Date.now()
             this.loading = true
             try {
-                const messages = await ipc.fetchImageMessages(this.roomId, {
-                    before: this.cursor || undefined,
-                    endTime: this.endTime,
-                })
+                const messages = await ipc.fetchImageMessages(this.roomId, this.offset, this.endTime)
                 if (messages.length === 0) {
                     this.noMore = true
                 } else {
                     const newImages = this.extractImages(messages)
                     this.images.push(...newImages)
-                    const last = messages[messages.length - 1]
-                    this.cursor = { time: Number(last.time || 0), id: String(last._id) }
+                    this.offset += messages.length
                     // 如果加载的图片不够填满屏幕，继续加载
                     this.$nextTick(() => {
                         const content = this.$refs.galleryContent
@@ -173,7 +168,7 @@ export default {
 
             // 重置状态，从指定月份开始加载
             this.images = []
-            this.cursor = null
+            this.offset = 0
             this.noMore = false
             this.endTime = endOfMonth
 

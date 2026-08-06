@@ -183,22 +183,6 @@
                         <template v-slot:menu-icon>
                             <i class="el-icon-more"></i>
                         </template>
-                        <template v-slot:messages-top>
-                            <div v-if="dbUpgrade.active" class="db-upgrade-banner">
-                                <i class="el-icon-loading"></i>
-                                <span class="db-upgrade-banner-message">{{ dbUpgrade.message }}</span>
-                                <el-progress
-                                    :percentage="
-                                        dbUpgrade.total > 0
-                                            ? Math.min(100, Math.round((dbUpgrade.step / dbUpgrade.total) * 100))
-                                            : 0
-                                    "
-                                    :indeterminate="dbUpgrade.total <= 0"
-                                    :show-text="false"
-                                    :stroke-width="4"
-                                />
-                            </div>
-                        </template>
                     </Room>
                     <pre
                         v-show="selectedRoomId === 0 && sysInfo"
@@ -406,9 +390,6 @@ export default {
             selectedRoomId: 0,
             account: 0,
             messagesLoaded: false,
-            messageCursor: null,
-            messageEndTime: null,
-            dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             panel: '',
             offline: false,
             offlineReason: '',
@@ -479,7 +460,6 @@ export default {
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
-        this.dbUpgrade = await ipc.getDbUpgradeProgress()
         const settings = await ipc.getSettings()
         this.linkify = settings.linkify
         this.disableChatGroups = settings.disableChatGroups
@@ -494,9 +474,6 @@ export default {
         this.stickerPanelHeight = settings.stickerPanelHeight || 320
         //endregion
         //region listener
-        ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
-            this.dbUpgrade = progress
-        })
         document.addEventListener('dragover', (e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -1002,24 +979,11 @@ Chromium ${process.versions.chrome}`
             if (reset) {
                 this.messagesLoaded = false
                 this.messages = []
-                this.messageCursor = null
-                this.messageEndTime = Date.now()
             }
             const _roomId = this.selectedRoom.roomId
             let msgs2add
             try {
-                msgs2add = await ipc.fetchMessage(_roomId, {
-                    before: this.messageCursor || undefined,
-                    endTime: this.messageEndTime || Date.now(),
-                })
-                if (msgs2add.length) {
-                    const first = msgs2add[0]
-                    this.messageCursor = {
-                        time: Number(first.time || 0),
-                        id: String(first._id),
-                        ...(first.roomId === undefined ? {} : { roomId: Number(first.roomId) }),
-                    }
-                }
+                msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
             } catch (e) {
                 console.error('fetchMessage failed:', e)
                 return
@@ -1030,18 +994,7 @@ Chromium ${process.versions.chrome}`
                     if (_roomId !== this.selectedRoom.roomId) return
                     let msgs
                     try {
-                        msgs = await ipc.fetchMessage(_roomId, {
-                            before: this.messageCursor || undefined,
-                            endTime: this.messageEndTime || Date.now(),
-                        })
-                        if (msgs.length) {
-                            const first = msgs[0]
-                            this.messageCursor = {
-                                time: Number(first.time || 0),
-                                id: String(first._id),
-                                ...(first.roomId === undefined ? {} : { roomId: Number(first.roomId) }),
-                            }
-                        }
+                        msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
                     } catch (e) {
                         console.error('fetchMessage loop failed:', e)
                         break

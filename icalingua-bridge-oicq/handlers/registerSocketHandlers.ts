@@ -1,5 +1,4 @@
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
 import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
@@ -7,14 +6,6 @@ import sendImgTokenManager from '../utils/sendImgTokenManager'
 import { requestUpload, uploadFile } from '../utils/uploadFileManager'
 
 export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
-    socket.on('validateMessageSearchIndex', async (resolve?: (value: { ok: boolean; error?: string }) => void) => {
-        try {
-            await adapter.validateMessageSearchIndex?.()
-            resolve?.({ ok: true })
-        } catch (error) {
-            resolve?.({ ok: false, error: error instanceof Error ? error.message : String(error) })
-        }
-    })
     socket.on('addRoom', adapter.addRoom)
     socket.on('addChatGroup', adapter.addChatGroup)
     socket.on('updateChatGroup', adapter.updateChatGroup)
@@ -25,13 +16,17 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('fetch7DaysHistory', adapter.fetch7DaysHistory)
     socket.on(
         'fetchMessages',
-        (roomId: number, options: MessagePageOptions, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
-            adapter.fetchMessages(roomId, options, socket, resolve),
+        (roomId: number, offset: number, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
+            adapter.fetchMessages(roomId, offset, socket, resolve),
     )
     socket.on(
         'fetchImageMessages',
-        (roomId: number, options: MessagePageOptions, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
-            adapter.fetchImageMessages(roomId, options, socket, resolve),
+        (
+            roomId: number,
+            offset: number,
+            endTime: number | undefined,
+            resolve: (value: Message[] | PromiseLike<Message[]>) => void,
+        ) => adapter.fetchImageMessages(roomId, offset, endTime, socket, resolve),
     )
     socket.on(
         'fetchMessagesAround',
@@ -48,18 +43,18 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
         (
             roomId: number,
             senderId: number,
-            options: MessagePageOptions,
+            offset: number,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.fetchMessagesBySender(roomId, senderId, options, socket, resolve),
+        ) => adapter.fetchMessagesBySender(roomId, senderId, offset, socket, resolve),
     )
     socket.on(
         'searchMessages',
         (
             roomId: number,
             keyword: string,
-            options: MessagePageOptions,
+            offset: number,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.searchMessages(roomId, keyword, options, socket, resolve),
+        ) => adapter.searchMessages(roomId, keyword, offset, socket, resolve),
     )
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)
     socket.on('getForwardMsg', adapter.getForwardMsg)

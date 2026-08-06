@@ -70,8 +70,6 @@ export default {
             roomId: 0,
             senderName: '',
             loading: false,
-            cursor: null,
-            endTime: null,
             account: 0,
             username: '',
         }
@@ -120,9 +118,7 @@ export default {
             this.loading = true
             let msgs
             try {
-                this.cursor = null
-                this.endTime = Date.now()
-                msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, { endTime: this.endTime })
+                msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, 0)
                 console.log('Fetched initial messages:', msgs)
                 if (!msgs || msgs.length < 20) {
                     this.messagesLoaded = true
@@ -138,12 +134,6 @@ export default {
             await this.$nextTick()
             if (msgs && msgs.length) {
                 this.messages = this.processMessages(msgs)
-                const first = msgs[0]
-                this.cursor = {
-                    time: Number(first.time || 0),
-                    id: String(first._id),
-                    ...(first.roomId === undefined ? {} : { roomId: Number(first.roomId) }),
-                }
             }
             // 等消息渲染完成后滚动到底部
             this.$nextTick(() => {
@@ -159,18 +149,9 @@ export default {
             if (this.loading) return
             this.loading = true
             try {
-                const msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, {
-                    before: this.cursor || undefined,
-                    endTime: this.endTime,
-                })
+                const msgs = await ipc.fetchMessagesBySender(this.roomId, this.senderId, this.messages.length)
                 if (msgs && msgs.length) {
                     this.messages = [...this.processMessages(msgs), ...this.messages]
-                    const first = msgs[0]
-                    this.cursor = {
-                        time: Number(first.time || 0),
-                        id: String(first._id),
-                        ...(first.roomId === undefined ? {} : { roomId: Number(first.roomId) }),
-                    }
                 }
                 if (!msgs || msgs.length < 20) {
                     this.messagesLoaded = true

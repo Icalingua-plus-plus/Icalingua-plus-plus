@@ -6,7 +6,6 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageHistoryWindow } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -90,7 +89,6 @@ import {
     getMainWindow,
     isAppLocked,
     loadMainWindow,
-    sendDatabaseUpgradeProgress,
     sendToLoginWindow,
     showLoginWindow,
     showRequestWindow,
@@ -112,7 +110,7 @@ let _sendPrivateMsg: {
     (user_id: number, message: Sendable, auto_escape?: boolean): Promise<Ret<{ message_id: string }>>
 }
 
-const loadedMessageWindows = new Map<number, MessageHistoryWindow>()
+let currentLoadedMessagesCount = 0
 let loggedIn = false
 let stopFetching = false
 
@@ -122,15 +120,6 @@ let lastReceivedMessageInfo = {
 }
 
 let isAutoFetching = false
-
-const updateLoadedMessageWindow = (roomId: number, options: MessagePageOptions, messages: Message[]) => {
-    if (!messages.length) return
-    const previous = options?.before ? loadedMessageWindows.get(roomId) : undefined
-    const oldestTime = Math.min(previous?.oldestTime ?? Number.POSITIVE_INFINITY, Number(messages[0].time || 0))
-    const endTime = previous?.endTime ?? options?.endTime ?? Date.now()
-    const loadedCount = (previous?.loadedCount || 0) + messages.length
-    loadedMessageWindows.set(roomId, { oldestTime, endTime, loadedCount })
-}
 
 // 群成员信息缓存
 const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
@@ -1119,18 +1108,10 @@ const initStorage = async () => {
     try {
         switch (loginForm.storageType) {
             case 'mdb':
-                storage = new MongoStorageProvider(
-                    loginForm.mdbConnStr,
-                    loginForm.username,
-                    path.join(app.getPath('userData'), 'data'),
-                )
+                storage = new MongoStorageProvider(loginForm.mdbConnStr, loginForm.username)
                 break
             case 'redis':
-                storage = new RedisStorageProvider(
-                    loginForm.rdsHost,
-                    `${loginForm.username}`,
-                    path.join(app.getPath('userData'), 'data'),
-                )
+                storage = new RedisStorageProvider(loginForm.rdsHost, `${loginForm.username}`)
                 break
             case 'sqlite':
                 storage = new SQLStorageProvider(
@@ -1151,7 +1132,6 @@ const initStorage = async () => {
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
                         database: loginForm.sqlDatabase,
-                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                     },
                     errorHandler,
                 )
@@ -1165,7 +1145,6 @@ const initStorage = async () => {
                         user: loginForm.sqlUsername,
                         password: loginForm.sqlPassword,
                         database: loginForm.sqlDatabase,
-                        searchDataPath: path.join(app.getPath('userData'), 'data'),
                     },
                     errorHandler,
                 )
@@ -1173,10 +1152,9 @@ const initStorage = async () => {
             default:
                 break
         }
-        if (storage) {
-            storage.onUpgradeProgress = (progress) => {
-                sendDatabaseUpgradeProgress(progress)
-                if (!progress.active) void updateAppMenu()
+        if (storage instanceof SQLStorageProvider) {
+            storage.onUpgradeProgress = (step, total, message) => {
+                sendToLoginWindow('dbUpgradeProgress', { step, total, message })
             }
         }
         await storage.connect()
@@ -1301,8 +1279,6 @@ interface OicqAdapter extends Adapter {
 }
 
 const adapter: OicqAdapter = {
-    isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
-    validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
     getDisabledFeatures(): Promise<SpecialFeature[]> {
         return Promise.resolve([])
     },
@@ -2003,8 +1979,8 @@ const adapter: OicqAdapter = {
         }
         return groupsAll
     },
-    async fetchMessages(roomId: number, options: MessagePageOptions) {
-        if (!options?.before) {
+    async fetchMessages(roomId: number, offset: number) {
+        if (!offset) {
             adapter.clearRoomUnread(roomId).then(updateTrayIcon)
             if (roomId < 0) {
                 const gid = -roomId
@@ -2019,18 +1995,18 @@ const adapter: OicqAdapter = {
                 ui.setShutUp(false)
             }
         }
-        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
-        updateLoadedMessageWindow(roomId, options || {}, messages)
+        currentLoadedMessagesCount = offset + 20
+        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
         }
-        if (messages.length && !options?.before && typeof messages[messages.length - 1]._id === 'string')
+        if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         return messages
     },
-    async fetchImageMessages(roomId: number, options: MessagePageOptions) {
-        const messages = (await storage.fetchImageMessages(roomId, options || {}, 30)) || []
+    async fetchImageMessages(roomId: number, offset: number, endTime?: number) {
+        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -2045,16 +2021,16 @@ const adapter: OicqAdapter = {
         }
         return messages
     },
-    async fetchMessagesBySender(roomId: number, senderId: number, options: MessagePageOptions) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), options || {}, 20)) || []
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number) {
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
         }
         return messages
     },
-    async searchMessages(roomId: number, keyword: string, options: MessagePageOptions) {
-        const messages = (await storage.searchMessages(roomId, keyword, options || {}, 20)) || []
+    async searchMessages(roomId: number, keyword: string, offset: number) {
+        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -2428,29 +2404,8 @@ const adapter: OicqAdapter = {
         const { messages, done } = await fetchLoop(60)
         await storage.addMessages(roomId, messages)
         let room = await storage.getRoom(roomId)
-        const loadedWindow = loadedMessageWindows.get(roomId)
-        if (roomId === ui.getSelectedRoomId()) {
-            const startTime = Math.min(
-                loadedWindow?.oldestTime ?? Number.POSITIVE_INFINITY,
-                ...messages.map((item) => item.time || 0),
-            )
-            if (Number.isFinite(startTime)) {
-                loadedMessageWindows.set(roomId, {
-                    oldestTime: startTime,
-                    endTime: loadedWindow?.endTime ?? Date.now(),
-                    loadedCount: (loadedWindow?.loadedCount || 0) + messages.length,
-                })
-            }
-            const refreshedWindow = loadedMessageWindows.get(roomId)
-            storage
-                .fetchMessagesInTimeRange(
-                    roomId,
-                    refreshedWindow?.oldestTime,
-                    refreshedWindow?.endTime,
-                    (refreshedWindow?.loadedCount || 0) + 20,
-                )
-                .then(ui.setMessages)
-        }
+        if (roomId === ui.getSelectedRoomId())
+            storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()

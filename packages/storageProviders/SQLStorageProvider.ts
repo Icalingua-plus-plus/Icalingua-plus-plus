@@ -7,11 +7,7 @@ import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
-import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
-import MessagePageOptions from '@icalingua/types/MessagePage'
-import { escapeSearchLikePattern, messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 import upg0to1 from './SQLUpgradeScript/0to1'
 import upg1to2 from './SQLUpgradeScript/1to2'
 import upg2to3 from './SQLUpgradeScript/2to3'
@@ -30,23 +26,8 @@ import upg14to15 from './SQLUpgradeScript/14to15'
 import upg15to16 from './SQLUpgradeScript/15to16'
 import upg16to17 from './SQLUpgradeScript/16to17'
 import upg17to18 from './SQLUpgradeScript/17to18'
-import upg18to19 from './SQLUpgradeScript/18to19'
-import upg19to20 from './SQLUpgradeScript/19to20'
 
-const dbVersionLatest = 20
-
-const sqliteAfterCreate = (conn: any, done: any) => {
-    conn.exec(
-        [
-            'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
-            'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
-            'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
-            'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
-            'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
-        ].join('; '),
-        (err: any) => done(err, conn),
-    )
-}
+const dbVersionLatest = 18
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -55,13 +36,11 @@ interface PgMyOpt {
     password: string
     database: string
     dataPath?: never
-    searchDataPath?: string
 }
 
 /** SQLite 存放 DB 文件需要的信息的类型定义 */
 interface SQLiteOpt {
     dataPath: string
-    searchDataPath?: string
     host?: never
     user?: never
     password?: never
@@ -74,13 +53,8 @@ export default class SQLStorageProvider implements StorageProvider {
     db: Knex
     errorHandle: Function
     /** 数据库升级进度回调，参数：(当前步骤, 总步骤, 描述) */
-    onUpgradeProgress: (progress: DatabaseUpgradeProgress) => void
+    onUpgradeProgress: (step: number, total: number, message: string) => void
     private qid: string
-    private searchIndex: SQLiteMessageSearchIndex
-    private messageSearchIndexReady = false
-    private messageSearchIndexRebuilding = false
-    private messageSearchIndexPreparation: Promise<void> | null = null
-    private closing = false
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
     constructor(
@@ -117,7 +91,18 @@ export default class SQLStorageProvider implements StorageProvider {
                     pool: {
                         min: 2,
                         max: 2,
-                        afterCreate: sqliteAfterCreate,
+                        afterCreate: (conn: any, done: any) => {
+                            conn.exec(
+                                [
+                                    'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
+                                    'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
+                                    'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
+                                    'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
+                                    'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
+                                ].join('; '),
+                                (err: any) => done(err, conn),
+                            )
+                        },
                     },
                 })
                 break
@@ -141,20 +126,6 @@ export default class SQLStorageProvider implements StorageProvider {
             default:
                 break
         }
-        const searchDataPath =
-            (connectOpt as any).searchDataPath || (connectOpt as any).dataPath || path.join(process.cwd(), 'data')
-        const searchDbPath = path.join(searchDataPath, 'databases', `${this.qid}_search.db`)
-        this.searchIndex = new SQLiteMessageSearchIndex(
-            searchDbPath,
-            {
-                loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
-                loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
-                loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
-                countMessages: () => this.countSearchMessages(),
-                reportProgress: (progress) => this.reportUpgradeProgress(progress),
-            },
-            this.errorHandle as (error: unknown) => void,
-        )
     }
 
     /** 私有方法，将 icalingua 的 room 转换成适合放在数据库里的格式 */
@@ -268,22 +239,13 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     /** 私有方法，用来根据当前数据库版本对数据库进行升级，从而在 Icalingua 使用的数据类型发生改变时，数据库可以存放下它们 */
-    private reportUpgradeProgress(progress: DatabaseUpgradeProgress) {
-        if (!this.onUpgradeProgress) return
-        try {
-            this.onUpgradeProgress(progress)
-        } catch (e) {
-            this.errorHandle(e)
-        }
-    }
-
     private async updateDB(dbVersion: number) {
         console.log('info', '正在升级数据库')
         const total = dbVersionLatest - dbVersion
         let step = 0
         const report = (msg: string) => {
             step++
-            this.reportUpgradeProgress({ active: true, step, total, message: msg })
+            if (this.onUpgradeProgress) this.onUpgradeProgress(step, total, msg)
         }
         // 这个 switch 居然不用 break，好耶！
         try {
@@ -353,12 +315,6 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 17:
                     report('升级数据库 v17 → v18')
                     await upg17to18(this.db)
-                case 18:
-                    report('升级数据库 v18 → v19')
-                    await upg18to19(this.db)
-                case 19:
-                    report('升级数据库 v19 → v20')
-                    await upg19to20(this.db)
                 default:
                     break
             }
@@ -366,77 +322,6 @@ export default class SQLStorageProvider implements StorageProvider {
         } catch (e) {
             this.errorHandle(e)
         }
-    }
-
-    private async loadSearchBatch(
-        cursor: SQLiteSearchCursor | undefined,
-        limit: number,
-    ): Promise<SQLiteSearchMessage[]> {
-        let query = this.db<MessageInSQLDB>('messages')
-            .select('_id', 'time', 'content')
-            .where('time', '>', 0)
-            .orderBy('time', 'asc')
-            .orderBy('_id', 'asc')
-            .limit(limit)
-        if (cursor) {
-            query = query.where((builder: any) => {
-                builder.where('time', '>', cursor.time).orWhere((sameTime: any) => {
-                    sameTime.where('time', cursor.time).andWhere('_id', '>', cursor.id)
-                })
-            })
-        }
-        return query
-    }
-
-    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
-        if (!times.length) return []
-        return this.db<MessageInSQLDB>('messages')
-            .select('_id', 'time', 'content')
-            .whereIn('time', times)
-            .where('time', '>', 0)
-    }
-
-    private async loadSearchTimeCounts(afterTime: number, limit: number) {
-        const rows = await this.db('messages')
-            .select('time')
-            .count({ messageCount: '_id' })
-            .where('time', '>', Math.trunc(afterTime || 0))
-            .groupBy('time')
-            .orderBy('time', 'asc')
-            .limit(Math.max(1, Math.trunc(limit)))
-        return rows.map((row: any) => ({
-            time: Math.trunc(Number(row.time)),
-            messageCount: Math.max(0, Number(row.messageCount || 0)),
-        }))
-    }
-
-    private async countSearchMessages(): Promise<number> {
-        const result: any = await this.db('messages').where('time', '>', 0).count({ count: '_id' }).first()
-        return Number(result?.count || Object.values(result || {})[0] || 0)
-    }
-
-    private async ensureMessageSearchSchema() {
-        await this.searchIndex.open()
-        this.messageSearchIndexReady = this.searchIndex.isReady
-        this.messageSearchIndexRebuilding = this.searchIndex.isRebuilding
-    }
-
-    isMessageSearchIndexReady(): boolean {
-        return this.searchIndex?.isReady === true
-    }
-
-    async validateMessageSearchIndex(): Promise<void> {
-        await this.searchIndex?.validate()
-    }
-
-    private async queuePendingSearchIndex(messages: Message[], needsRebuild = false) {
-        await this.searchIndex.queueMessages(messages, needsRebuild)
-    }
-
-    private async syncSearchIndex(messages: Message[]) {
-        await this.searchIndex.syncMessages(messages)
-        this.messageSearchIndexReady = this.searchIndex.isReady
-        this.messageSearchIndexRebuilding = this.searchIndex.isRebuilding
     }
 
     /** 实现 {@link StorageProvider} 类的 connect 方法。
@@ -485,7 +370,6 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('at').nullable()
                     table.boolean('autoDownload').nullable()
                     table.string('downloadPath').nullable()
-                    table.index(['unreadCount', 'priority', 'utime'])
                 })
             }
 
@@ -522,9 +406,6 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('subid').nullable()
                     table.string('recallInfo').nullable()
                     table.index(['roomId', 'time'])
-                    table.index(['roomId', 'time', '_id'])
-                    table.index(['senderId', 'roomId', 'time', '_id'])
-                    table.index(['time', '_id'])
                     //table.index(['subid', 'time'])
                 })
             }
@@ -558,16 +439,10 @@ export default class SQLStorageProvider implements StorageProvider {
             const dbVersion = await this.db<DBVersion>(`dbVersion`).select('dbVersion')
             // 若版本低于当前版本则启动升级函数
             if (dbVersion[0].dbVersion < dbVersionLatest) {
-                this.reportUpgradeProgress({
-                    active: true,
-                    step: 0,
-                    total: dbVersionLatest - dbVersion[0].dbVersion,
-                    message: '正在升级数据库...',
-                })
+                if (this.onUpgradeProgress)
+                    this.onUpgradeProgress(0, dbVersionLatest - dbVersion[0].dbVersion, '正在升级数据库...')
                 await this.updateDB(dbVersion[0].dbVersion)
             }
-
-            await this.ensureMessageSearchSchema()
 
             // 删除异常的聊天房间
             this.db(`rooms`).whereNull('roomId').delete()
@@ -794,9 +669,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessage(roomId: number, message: Message): Promise<any> {
         try {
-            await this.queuePendingSearchIndex([message])
             await this.db<Message>('messages').insert(this.msgConToDB(message, roomId)).onConflict().ignore()
-            await this.syncSearchIndex([message])
         } catch (e) {
             this.errorHandle(e)
         }
@@ -809,20 +682,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
-            const current = await this.db<MessageInSQLDB>('messages').where('_id', '=', String(messageId)).first()
-            if (!current) return
-            const currentMessage = this.msgConFromDB({ ...current, roomId })
-            const mergedMessage = { ...currentMessage, ...message, _id: current._id }
-            const searchContentChanged =
-                String(current.content || '') !== String(mergedMessage.content || '') ||
-                Number(current.time || 0) !== Number(mergedMessage.time || 0)
-            await this.queuePendingSearchIndex([mergedMessage as Message], searchContentChanged)
-            await this.db<Message>('messages')
-                .where('_id', '=', String(messageId))
-                .update(this.msgConToDB(mergedMessage, roomId))
-            if (searchContentChanged)
-                await this.searchIndex.requestRebuild(Number(mergedMessage.time || current.time || 0))
-            else await this.syncSearchIndex([mergedMessage as Message])
+            await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
         } catch (e) {
             this.errorHandle(e)
         }
@@ -835,48 +695,12 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any> {
         try {
-            const current = await this.db<MessageInSQLDB>('messages').where('_id', '=', String(messageId)).first()
-            const searchContentChanged =
-                String(current?.content || '') !== String(message.content || '') ||
-                Number(current?.time || 0) !== Number(message.time || 0)
-            await this.queuePendingSearchIndex([message], searchContentChanged)
             await this.db<Message>('messages')
-                .where('_id', '=', String(messageId))
+                .where('_id', '=', `${messageId}`)
                 .update(this.msgConToDB(message, roomId))
-            if (searchContentChanged) await this.searchIndex.requestRebuild(Number(message.time || current?.time || 0))
-            else await this.syncSearchIndex([message])
         } catch (e) {
             this.errorHandle(e)
         }
-    }
-
-    private applyPageOptions(query: any, options: MessagePageOptions, includeRoomId = false) {
-        if (options?.endTime !== undefined) query = query.where('time', '<=', options.endTime)
-        const cursor = options?.before
-        if (!cursor) return query
-        const cursorRoomId = cursor.roomId
-        return query.where((builder: any) => {
-            builder.where('time', '<', cursor.time).orWhere((sameTime: any) => {
-                sameTime.where('time', cursor.time)
-                if (includeRoomId && cursorRoomId !== undefined) {
-                    sameTime.andWhere((sameRoom: any) => {
-                        sameRoom
-                            .where('roomId', '<', cursorRoomId)
-                            .orWhere((sameRoomAndId: any) =>
-                                sameRoomAndId.where('roomId', cursorRoomId).andWhere('_id', '<', cursor.id),
-                            )
-                    })
-                } else {
-                    sameTime.andWhere('_id', '<', cursor.id)
-                }
-            })
-        })
-    }
-
-    private orderPageQuery(query: any, includeRoomId = false) {
-        query = query.orderBy('time', 'desc')
-        if (includeRoomId) query = query.orderBy('roomId', 'desc')
-        return query.orderBy('_id', 'desc')
     }
 
     /** 实现 {@link StorageProvider} 类的 `fetchMessage` 方法，
@@ -884,31 +708,13 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在进入房间时，该方法被调用。
      */
-    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
         try {
-            let query = this.db<MessageInSQLDB>('messages').where('roomId', roomId)
-            query = this.applyPageOptions(query, options)
-            const messages = await this.orderPageQuery(query).limit(limit).select('*')
-            return messages.reverse().map((message) => this.msgConFromDB(message))
-        } catch (e) {
-            this.errorHandle(e)
-        }
-    }
-
-    async fetchMessagesInTimeRange(
-        roomId: number,
-        startTime?: number,
-        endTime?: number,
-        limit?: number,
-    ): Promise<Message[]> {
-        try {
-            let query = this.db<MessageInSQLDB>('messages').where('roomId', roomId)
-            if (startTime !== undefined) query = query.where('time', '>=', startTime)
-            if (endTime !== undefined) query = query.where('time', '<=', endTime)
-            const messages = await this.orderPageQuery(query)
-                .modify((builder: any) => {
-                    if (limit !== undefined) builder.limit(limit)
-                })
+            const messages = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .orderBy('time', 'desc')
+                .limit(limit)
+                .offset(skip)
                 .select('*')
             return messages.reverse().map((message) => this.msgConFromDB(message))
         } catch (e) {
@@ -921,15 +727,10 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
      * @param senderId 发送者 ID（字符串）
-     * @param options 时间游标和固定时间上限的查询选项
+     * @param skip 跳过条数
      * @param limit 返回条数
      */
-    async fetchMessagesBySender(
-        roomId: number,
-        senderId: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[]> {
+    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
         try {
             let query = this.db<MessageInSQLDB>('messages').where('senderId', senderId)
             if (roomId === 0) {
@@ -938,10 +739,7 @@ export default class SQLStorageProvider implements StorageProvider {
             } else {
                 query = query.where('roomId', roomId)
             }
-            query = this.applyPageOptions(query, options, roomId === 0)
-            const messages = await this.orderPageQuery(query, roomId === 0)
-                .limit(limit)
-                .select('*')
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
             if (roomId === 0) {
                 // 所有群模式：保留 roomId 信息
                 return messages.reverse().map((message) => {
@@ -957,90 +755,25 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
-    private async searchMessagesFromSearchTimes(
-        roomId: number,
-        keyword: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[] | null> {
-        if (!this.searchIndex.isReady) return null
-        const normalized = normalizeSearchText(keyword)
-        if (!normalized || normalized.includes('\u0000')) return null
-
-        let upperTime = options?.endTime
-        if (options?.before) {
-            upperTime = upperTime === undefined ? options.before.time : Math.min(upperTime, options.before.time)
-        }
-        const result: Message[] = []
-        while (result.length < limit && (upperTime === undefined || upperTime >= 0)) {
-            const times = await this.searchIndex.searchTimes(normalized, {
-                maxTime: upperTime,
-                limit: 256,
-            })
-            if (times === null) return null
-            if (!times.length) break
-
-            let query = this.db<MessageInSQLDB>('messages').whereIn('time', times)
-            if (roomId !== 0) query = query.where('roomId', roomId)
-            query = this.applyPageOptions(query, options, roomId === 0)
-            const messages = await this.orderPageQuery(query, roomId === 0).select('*')
-            for (const message of messages) {
-                if (!messageMatchesKeyword(message, normalized)) continue
-                const messageRoomId = Number(message.roomId)
-                const converted = this.msgConFromDB(message)
-                if (roomId === 0 && converted) converted.roomId = messageRoomId
-                if (converted) result.push(converted)
-                if (result.length >= limit) break
-            }
-
-            const lastTime = Number(times[times.length - 1])
-            upperTime = lastTime - 1
-            if (lastTime <= 0) break
-        }
-        return result.slice(0, limit)
-    }
-
     /** 实现 {@link StorageProvider} 类的 `searchMessages` 方法，
      * 按关键字搜索消息记录。roomId 为 0 时搜索全部会话。
      *
      * @param roomId 房间 ID
      * @param keyword 搜索关键字
-     * @param options 时间游标和固定时间上限的查询选项
+     * @param skip 跳过条数
      * @param limit 返回条数
      */
-    async searchMessages(
-        roomId: number,
-        keyword: string,
-        options: MessagePageOptions,
-        limit: number,
-    ): Promise<Message[]> {
+    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
         try {
-            const normalized = normalizeSearchText(keyword)
-            if (normalized) {
-                const indexed = await this.searchMessagesFromSearchTimes(roomId, keyword, options, limit)
-                if (indexed !== null) return indexed
-            }
-
-            let query = this.db<MessageInSQLDB>('messages')
-            if (normalized) {
-                const escapedKeyword = escapeSearchLikePattern(normalized)
-                query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", ['%' + escapedKeyword + '%'])
-            }
+            let query = this.db<MessageInSQLDB>('messages').where('content', 'like', `%${keyword}%`)
             if (roomId !== 0) query = query.where('roomId', roomId)
-            query = this.applyPageOptions(query, options, roomId === 0)
-            const messages = await this.orderPageQuery(query, roomId === 0)
-                .limit(Math.max(limit * 4, limit))
-                .select('*')
-            const result: Message[] = []
-            for (const message of messages) {
-                if (normalized && !messageMatchesKeyword(message, normalized)) continue
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            return messages.map((message) => {
                 const messageRoomId = Number(message.roomId)
                 const converted = this.msgConFromDB(message)
                 if (roomId === 0 && converted) converted.roomId = messageRoomId
-                if (converted) result.push(converted)
-                if (result.length >= limit) break
-            }
-            return result
+                return converted
+            })
         } catch (e) {
             this.errorHandle(e)
         }
@@ -1050,14 +783,17 @@ export default class SQLStorageProvider implements StorageProvider {
      * 是对 `msg${roomId}` 的"查多个"操作，只返回包含图片的消息。
      *
      * 在浏览聊天图片时，该方法被调用。
+     * @param endTime 可选，只返回时间小于等于此值的消息（用于从指定月份开始加载）
      */
-    async fetchImageMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
         try {
             let query = this.db<MessageInSQLDB>('messages')
                 .where('roomId', roomId)
                 .where('files', 'like', '%"type":"image/%')
-            query = this.applyPageOptions(query, options)
-            const messages = await this.orderPageQuery(query).limit(limit).select('*')
+            if (endTime) {
+                query = query.where('time', '<=', endTime)
+            }
+            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
             return messages.map((message) => this.msgConFromDB(message))
         } catch (e) {
             this.errorHandle(e)
@@ -1130,14 +866,12 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
-            await this.queuePendingSearchIndex(messages)
             const msgToInsert = messages.map((message) => this.msgConToDB(message, roomId))
             const chunkedMessages = lodash.chunk(msgToInsert, 200)
             const pAry = chunkedMessages.map(async (chunkedMessage) => {
                 await this.db<Message>('messages').insert(chunkedMessage).onConflict('_id').ignore()
             })
             await Promise.all(pAry)
-            await this.syncSearchIndex(messages)
         } catch (e) {
             return e
         }
@@ -1148,14 +882,10 @@ export default class SQLStorageProvider implements StorageProvider {
      * 应在进程退出前调用。
      */
     async close(): Promise<void> {
-        this.closing = true
         try {
-            await this.searchIndex.close()
-        } catch (e) {
-            this.errorHandle(e)
-        }
-        try {
-            if (this.db) await this.db.destroy()
+            if (this.db) {
+                await this.db.destroy()
+            }
         } catch (e) {
             this.errorHandle(e)
         }
