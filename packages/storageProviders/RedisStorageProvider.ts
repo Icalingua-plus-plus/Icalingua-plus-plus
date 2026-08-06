@@ -8,7 +8,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 
 export default class RedisStorageProvider implements StorageProvider {
     qid: string
@@ -22,7 +22,7 @@ export default class RedisStorageProvider implements StorageProvider {
         this.connStr = connStr
         this.qid = `eqq:${id}`
         this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
-            loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
+            loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
             loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
             loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
             countMessages: () => this.countSearchMessages(),
@@ -95,76 +95,57 @@ export default class RedisStorageProvider implements StorageProvider {
         return this.getMessages(roomId, ids)
     }
 
-    private async loadSearchIdsAfter(roomId: number, time: number, id: string | undefined, limit: number) {
-        const key = this.roomMessageListKey(roomId)
-        const sameTimeIds =
-            time > 0 ? await (this.redis.zrangebyscore as any)(key, String(time), String(time)) : ([] as string[])
-        const sameTimeAfter = sameTimeIds.filter((value: string) => id === undefined || String(value) > id)
-        if (sameTimeAfter.length >= limit) return sameTimeAfter.slice(0, limit)
-        const laterIds = await (this.redis.zrangebyscore as any)(
-            key,
-            time > 0 ? `(${time}` : '(0',
-            '+inf',
-            'LIMIT',
-            0,
-            Math.max(1, limit - sameTimeAfter.length),
-        )
-        return sameTimeAfter.concat(laterIds)
-    }
-
-    private async loadSearchBatch(
-        cursor: SQLiteSearchCursor | undefined,
-        limit: number,
-    ): Promise<SQLiteSearchMessage[]> {
+    private async loadSearchTimes(afterTime: number, limit: number): Promise<number[]> {
         const rooms = await this.getSearchRooms()
-        let roomIndex = 0
-        let time = 0
-        let id: string | undefined
-        if (cursor) {
-            try {
-                const value = JSON.parse(cursor.id)
-                roomIndex = Math.max(0, Number(value.roomIndex || 0))
-                time = Math.max(0, Number(value.time ?? cursor.time ?? 0))
-                id = value.value === undefined ? undefined : String(value.value)
-            } catch {
-                return []
-            }
+        const roomTimes = await Promise.all(
+            rooms.map(async (room) => {
+                const key = this.roomMessageListKey(Number(room.roomId))
+                const times = new Set<number>()
+                let lowerTime = Math.trunc(afterTime || 0)
+                while (times.size < Math.max(1, Math.trunc(limit))) {
+                    const minScore = lowerTime > 0 ? `(${lowerTime}` : '(0'
+                    const values = await (this.redis.zrangebyscore as any)(
+                        key,
+                        minScore,
+                        '+inf',
+                        'WITHSCORES',
+                        'LIMIT',
+                        0,
+                        Math.max(1, Math.trunc(limit)),
+                    )
+                    if (!values.length) break
+                    const scores = Array.from(
+                        new Set<number>(
+                            values
+                                .filter((_: unknown, index: number) => index % 2 === 1)
+                                .map((value: unknown) => Math.trunc(Number(value)))
+                                .filter((time: number) => time > 0),
+                        ),
+                    )
+                    if (!scores.length) break
+                    scores.forEach((time) => times.add(time))
+                    const nextTime = Math.max(...scores)
+                    if (nextTime <= lowerTime) break
+                    lowerTime = nextTime
+                }
+                return times
+            }),
+        )
+        const times = new Set<number>()
+        for (const roomTimesForRoom of roomTimes) {
+            for (const time of roomTimesForRoom) times.add(time)
         }
-
-        while (roomIndex < rooms.length) {
-            const roomId = Number(rooms[roomIndex].roomId)
-            const ids = await this.loadSearchIdsAfter(roomId, time, id, Math.max(1, Math.trunc(limit)))
-            if (!ids.length) {
-                roomIndex++
-                time = 0
-                id = undefined
-                continue
-            }
-            const messages = await this.getMessages(roomId, ids)
-            const byId = new Map(messages.map((message) => [String(message._id), message]))
-            const result: SQLiteSearchMessage[] = []
-            for (const value of ids) {
-                const message = byId.get(String(value))
-                if (!message || Number(message.time || 0) <= 0) continue
-                result.push({
-                    ...message,
-                    id: JSON.stringify({ roomIndex, time: Number(message.time), value: String(message._id) }),
-                })
-            }
-            if (result.length) return result
-            roomIndex++
-            time = 0
-            id = undefined
-        }
-        return []
+        return Array.from(times)
+            .sort((left, right) => left - right)
+            .slice(0, Math.max(1, Math.trunc(limit)))
     }
 
     private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
         if (!times.length) return []
         const rooms = await this.getSearchRooms()
-        return (
-            await Promise.all(rooms.map((room) => this.getMessagesBySearchTimes(Number(room.roomId), times)))
-        ).flat()
+        return (await Promise.all(rooms.map((room) => this.getMessagesBySearchTimes(Number(room.roomId), times))))
+            .flat()
+            .map((message) => ({ time: message.time, content: message.content }))
     }
 
     private async loadSearchTimeCounts(afterTime: number, limit: number) {

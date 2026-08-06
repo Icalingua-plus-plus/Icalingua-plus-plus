@@ -7,7 +7,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 
 export default class MongoStorageProvider implements StorageProvider {
     id: string | number
@@ -21,7 +21,7 @@ export default class MongoStorageProvider implements StorageProvider {
         this.id = id
         this.connStr = connStr
         this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
-            loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
+            loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
             loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
             loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
             countMessages: () => this.countSearchMessages(),
@@ -115,46 +115,31 @@ export default class MongoStorageProvider implements StorageProvider {
         return (await this.getAllRooms()).slice().sort((left, right) => Number(left.roomId) - Number(right.roomId))
     }
 
-    private async loadSearchBatch(
-        cursor: SQLiteSearchCursor | undefined,
-        limit: number,
-    ): Promise<SQLiteSearchMessage[]> {
+    private async loadSearchTimes(afterTime: number, limit: number): Promise<number[]> {
         const rooms = await this.getSearchRooms()
-        let roomIndex = 0
-        let time = 0
-        let id: any = undefined
-        if (cursor) {
-            try {
-                const value = JSON.parse(cursor.id)
-                roomIndex = Math.max(0, Number(value.roomIndex || 0))
-                id = value.value
-                time = Math.max(0, Number(cursor.time || 0))
-            } catch {
-                return []
+        const roomTimes = await Promise.all(
+            rooms.map((room) =>
+                this.mdb
+                    .collection<any>('msg' + Number(room.roomId))
+                    .aggregate([
+                        { $match: { time: { $gt: Math.trunc(afterTime || 0) } } },
+                        { $group: { _id: '$time' } },
+                        { $sort: { _id: 1 } },
+                        { $limit: Math.max(1, Math.trunc(limit)) },
+                    ])
+                    .toArray(),
+            ),
+        )
+        const times = new Set<number>()
+        for (const rows of roomTimes) {
+            for (const row of rows) {
+                const time = Math.trunc(Number(row._id))
+                if (time > 0) times.add(time)
             }
         }
-
-        while (roomIndex < rooms.length) {
-            const roomId = Number(rooms[roomIndex].roomId)
-            const conditions: any[] = [{ time: { $gt: time } }]
-            if (id !== undefined && time > 0) conditions.push({ time, _id: { $gt: id } })
-            const messages = await this.mdb
-                .collection<any>('msg' + roomId)
-                .find({ $or: conditions }, { projection: { _id: 1, time: 1, content: 1 } })
-                .sort({ time: 1, _id: 1 })
-                .limit(Math.max(1, Math.trunc(limit)))
-                .toArray()
-            if (messages.length) {
-                return messages.map((message) => ({
-                    ...message,
-                    id: JSON.stringify({ roomIndex, value: message._id }),
-                }))
-            }
-            roomIndex++
-            time = 0
-            id = undefined
-        }
-        return []
+        return Array.from(times)
+            .sort((left, right) => left - right)
+            .slice(0, Math.max(1, Math.trunc(limit)))
     }
 
     private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
@@ -165,7 +150,7 @@ export default class MongoStorageProvider implements StorageProvider {
                 rooms.map((room) =>
                     this.mdb
                         .collection<any>('msg' + Number(room.roomId))
-                        .find({ time: { $in: times } }, { projection: { _id: 1, time: 1, content: 1 } })
+                        .find({ time: { $in: times } }, { projection: { _id: 0, time: 1, content: 1 } })
                         .toArray(),
                 ),
             )

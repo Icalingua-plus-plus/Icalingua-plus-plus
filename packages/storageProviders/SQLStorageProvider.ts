@@ -10,7 +10,7 @@ import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchCursor, SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 import upg0to1 from './SQLUpgradeScript/0to1'
 import upg1to2 from './SQLUpgradeScript/1to2'
 import upg2to3 from './SQLUpgradeScript/2to3'
@@ -32,8 +32,9 @@ import upg17to18 from './SQLUpgradeScript/17to18'
 import upg18to19 from './SQLUpgradeScript/18to19'
 import upg19to20 from './SQLUpgradeScript/19to20'
 import upg20to21 from './SQLUpgradeScript/20to21'
+import upg21to22 from './SQLUpgradeScript/21to22'
 
-const dbVersionLatest = 21
+const dbVersionLatest = 22
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -141,7 +142,7 @@ export default class SQLStorageProvider implements StorageProvider {
         this.searchIndex = new SQLiteMessageSearchIndex(
             searchDbPath,
             {
-                loadBatch: (cursor, limit) => this.loadSearchBatch(cursor, limit),
+                loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
                 loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
                 loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
                 countMessages: () => this.countSearchMessages(),
@@ -356,6 +357,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 20:
                     report('升级数据库 v20 → v21')
                     await upg20to21(this.db)
+                case 21:
+                    report('升级数据库 v21 → v22')
+                    await upg21to22(this.db)
                 default:
                     break
             }
@@ -365,30 +369,19 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
-    private async loadSearchBatch(
-        cursor: SQLiteSearchCursor | undefined,
-        limit: number,
-    ): Promise<SQLiteSearchMessage[]> {
-        let query = this.db<MessageInSQLDB>('messages')
-            .select('_id', 'time', 'content')
-            .where('time', '>', 0)
+    private async loadSearchTimes(afterTime: number, limit: number): Promise<number[]> {
+        const rows = await this.db<MessageInSQLDB>('messages')
+            .distinct('time')
+            .where('time', '>', Math.trunc(afterTime || 0))
             .orderBy('time', 'asc')
-            .orderBy('_id', 'asc')
-            .limit(limit)
-        if (cursor) {
-            query = query.where((builder: any) => {
-                builder.where('time', '>', cursor.time).orWhere((sameTime: any) => {
-                    sameTime.where('time', cursor.time).andWhere('_id', '>', cursor.id)
-                })
-            })
-        }
-        return query
+            .limit(Math.max(1, Math.trunc(limit)))
+        return rows.map((row: any) => Math.trunc(Number(row.time))).filter((time) => time > 0)
     }
 
     private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
         if (!times.length) return []
         return this.db<MessageInSQLDB>('messages')
-            .select('_id', 'time', 'content')
+            .select('time', 'content')
             .whereIn('time', times)
             .where('time', '>', 0)
     }
@@ -396,7 +389,7 @@ export default class SQLStorageProvider implements StorageProvider {
     private async loadSearchTimeCounts(afterTime: number, limit: number) {
         const rows = await this.db('messages')
             .select('time')
-            .count({ messageCount: '_id' })
+            .count({ messageCount: '*' })
             .where('time', '>', Math.trunc(afterTime || 0))
             .groupBy('time')
             .orderBy('time', 'asc')
@@ -408,7 +401,7 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     private async countSearchMessages(): Promise<number> {
-        const result: any = await this.db('messages').where('time', '>', 0).count({ count: '_id' }).first()
+        const result: any = await this.db('messages').where('time', '>', 0).count({ count: '*' }).first()
         return Number(result?.count || Object.values(result || {})[0] || 0)
     }
 
@@ -508,7 +501,6 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('recallInfo').nullable()
                     table.index(['roomId', 'time'])
                     //table.index(['subid', 'time'])
-                    table.index(['time', '_id'])
                 })
             }
 

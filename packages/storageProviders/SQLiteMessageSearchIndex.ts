@@ -5,14 +5,7 @@ import knex, { Knex } from 'knex'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import { normalizeSearchText } from './MessageSearchIndex'
 
-export interface SQLiteSearchCursor {
-    time: number
-    id: string
-}
-
 export interface SQLiteSearchMessage {
-    _id?: string | number
-    id?: string | number
     time?: number
     content?: unknown
 }
@@ -23,7 +16,7 @@ export interface SQLiteSearchTimeCount {
 }
 
 export interface SQLiteMessageSearchIndexCallbacks {
-    loadBatch: (cursor: SQLiteSearchCursor | undefined, limit: number) => Promise<SQLiteSearchMessage[]>
+    loadTimes: (afterTime: number, limit: number) => Promise<number[]>
     loadMessagesByTimes: (times: number[]) => Promise<SQLiteSearchMessage[]>
     loadMessageTimeCounts?: (afterTime: number, limit: number) => Promise<SQLiteSearchTimeCount[]>
     countMessages?: () => Promise<number>
@@ -67,9 +60,12 @@ const sqliteAfterCreate = (conn: any, done: any) => {
     )
 }
 
-const messageId = (message: SQLiteSearchMessage): string => String(message.id ?? message._id ?? '')
-
 const messageTime = (message: SQLiteSearchMessage): number => Math.trunc(Number(message.time || 0))
+
+interface BuildCursor {
+    time: number
+    legacy: boolean
+}
 
 /**
  * A disposable per-account FTS database.
@@ -423,11 +419,18 @@ export default class SQLiteMessageSearchIndex {
             const pendingRebuild = await db('search_pending_times').where('needsRebuild', 1).first()
             const ready = (await this.getState('ready')) === '1'
             let cursor = this.parseCursor(await this.getState('buildCursor'))
-
+            if (cursor?.legacy) {
+                // The old cursor also contained a room/message id. Its MongoDB and
+                // Redis variants were room-local, so resuming from only its time
+                // could skip older messages in later rooms. Rebuild once instead.
+                await this.resetFts()
+                cursor = undefined
+            }
             if (pendingRebuild || (!ready && !cursor)) {
                 await this.resetFts()
                 cursor = undefined
             }
+            let afterTime = cursor?.time || 0
             if (ready && !pendingRebuild && !cursor) {
                 await this.flushPendingTimes()
                 if (generation !== this.requestGeneration) continue
@@ -444,13 +447,17 @@ export default class SQLiteMessageSearchIndex {
             this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
             while (!this.closing) {
                 if (generation !== this.requestGeneration) break
-                const batch = await this.callbacks.loadBatch(cursor, searchBatchSize)
-                if (!batch.length) break
-                await this.insertBuildBatch(batch)
-                const last = batch[batch.length - 1]
-                cursor = { time: messageTime(last), id: messageId(last) }
-                await this.setState('buildCursor', JSON.stringify(cursor))
-                processed += batch.length
+                const times = await this.callbacks.loadTimes(afterTime, searchBatchSize)
+                const normalizedTimes = Array.from(
+                    new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > afterTime)),
+                ).sort((left, right) => left - right)
+                if (!normalizedTimes.length) break
+                const batchCount = await this.insertBuildBatch(normalizedTimes)
+                const lastTime = normalizedTimes[normalizedTimes.length - 1]
+                afterTime = lastTime
+                cursor = { time: lastTime, legacy: false }
+                await this.setState('buildCursor', JSON.stringify({ time: lastTime }))
+                processed += batchCount
                 this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
             }
             if (this.closing) return
@@ -564,11 +571,14 @@ export default class SQLiteMessageSearchIndex {
         })
     }
 
-    private async insertBuildBatch(messages: SQLiteSearchMessage[]): Promise<void> {
-        const times = Array.from(new Set(messages.map(messageTime).filter((time) => time > 0)))
-        if (!times.length) return
-        const currentMessages = await this.callbacks.loadMessagesByTimes(times)
-        await this.insertMessages(currentMessages.length ? currentMessages : messages)
+    private async insertBuildBatch(times: number[]): Promise<number> {
+        const normalizedTimes = Array.from(
+            new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
+        )
+        if (!normalizedTimes.length) return 0
+        const currentMessages = await this.callbacks.loadMessagesByTimes(normalizedTimes)
+        await this.insertMessages(currentMessages)
+        return currentMessages.length
     }
 
     private indexContent(value: unknown): string {
@@ -583,12 +593,16 @@ export default class SQLiteMessageSearchIndex {
         }
     }
 
-    private parseCursor(value: string | undefined): SQLiteSearchCursor | undefined {
+    private parseCursor(value: string | undefined): BuildCursor | undefined {
         if (!value) return undefined
         try {
             const cursor = JSON.parse(value)
-            if (Number.isFinite(Number(cursor?.time)) && cursor?.id !== undefined)
-                return { time: Number(cursor.time), id: String(cursor.id) }
+            if (Number.isFinite(Number(cursor?.time))) {
+                return {
+                    time: Math.max(0, Math.trunc(Number(cursor.time))),
+                    legacy: cursor?.id !== undefined,
+                }
+            }
         } catch {}
         return undefined
     }
