@@ -170,7 +170,7 @@ export const requestUpload = (
 export const uploadFile = (
     fileHash: string,
     offset: number,
-    chunk: Buffer,
+    chunk: Buffer | Uint8Array | number[],
     chunkHash: string,
     cb: (success: boolean) => void,
 ) => {
@@ -180,16 +180,18 @@ export const uploadFile = (
         return
     }
 
-    // 验证分片 hash
-    const actualHash = crypto.createHash('sha256').update(chunk).digest('hex')
-    if (actualHash !== chunkHash) {
-        cb(false)
-        return
-    }
-
     try {
+        // 非 JavaScript 客户端可能把 Socket.IO 二进制分片编码成字节数组。
+        // 仅将 JSON 字节数组转换为 Buffer；Buffer/Uint8Array 原样复用，避免额外拷贝。
+        const chunkData = Array.isArray(chunk) ? Buffer.from(chunk) : chunk
+        const actualHash = crypto.createHash('sha256').update(chunkData).digest('hex')
+        if (actualHash !== chunkHash) {
+            cb(false)
+            return
+        }
+
         // 直接写入文件对应位置
-        fs.writeSync(file.fd, chunk, 0, chunk.length, offset)
+        fs.writeSync(file.fd, chunkData, 0, chunkData.length, offset)
         file.uploadedOffsets.add(offset)
         file.lastActivity = Date.now()
         cb(true)
