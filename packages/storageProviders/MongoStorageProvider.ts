@@ -238,11 +238,11 @@ export default class MongoStorageProvider implements StorageProvider {
             const searchContentChanged =
                 String(current.content || '') !== String(merged.content || '') ||
                 Number(current.time || 0) !== Number(merged.time || 0)
-            await this.queueSearchMessages([merged], searchContentChanged)
             const { _id, ...fields } = merged as any
             const result = await collection.updateOne({ _id: current._id }, { $set: fields })
-            if (searchContentChanged) await this.searchIndex.requestRebuild()
-            else await this.syncSearchIndex([merged])
+            if (searchContentChanged) {
+                await this.searchIndex.requestRebuild([Number(current.time || 0), Number(merged.time || 0)])
+            } else await this.syncSearchIndex([merged])
             return result
         } catch (error) {}
     }

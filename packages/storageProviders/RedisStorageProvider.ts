@@ -327,10 +327,11 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在“编辑分组”等改变聊天分组时调用。
      */
     async updateChatGroup(name: string, chatGroup: Partial<ChatGroup>): Promise<void> {
-        const chatGroupInDB = JSON.parse(await this.redis.hget(`${this.qid}:chatGroups:rooms`, `${name}`))
+        const raw = await this.redis.hget(`${this.qid}:chatGroups:rooms`, `${name}`)
+        const chatGroupInDB = raw ? (JSON.parse(raw) as ChatGroup) : {}
         const chatGroupToUpdate = { ...chatGroupInDB, ...chatGroup }
         await this.redis.hset(`${this.qid}:chatGroups:rooms`, `${name}`, JSON.stringify(chatGroupToUpdate))
-        await this.redis.zadd(`${this.qid}:rooms:keyList`, chatGroupToUpdate.index, `${name}`)
+        await this.redis.zadd(`${this.qid}:rooms:keyList`, Number(chatGroupToUpdate.index || 0), `${name}`)
     }
 
     /** 实现 {@link StorageProvider} 类的 `addChatGroup` 方法，
@@ -395,15 +396,14 @@ export default class RedisStorageProvider implements StorageProvider {
         const searchContentChanged =
             String(msgInDB.content || '') !== String(msgToUpdate.content || '') ||
             Number(msgInDB.time || 0) !== Number(msgToUpdate.time || 0)
-        await this.queueSearchMessages([msgToUpdate], searchContentChanged)
         const result = await this.redis.hset(
             `${this.qid}:msg${roomId}:messages`,
             `${messageId}`,
             JSON.stringify(msgToUpdate),
         )
         if (searchContentChanged) {
-            await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, msgToUpdate.time, messageId)
-            await this.searchIndex.requestRebuild()
+            await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, Number(msgToUpdate.time || 0), messageId)
+            await this.searchIndex.requestRebuild([Number(msgInDB.time || 0), Number(msgToUpdate.time || 0)])
         } else {
             await this.syncSearchIndex([msgToUpdate])
         }

@@ -783,8 +783,14 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
+            const current = await this.db<Message>('messages').where('_id', '=', `${messageId}`).first()
             await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
-            if (message.content !== undefined || message.time !== undefined) await this.searchIndex.requestRebuild()
+            if (message.content !== undefined || message.time !== undefined) {
+                await this.searchIndex.requestRebuild([
+                    Number(current?.time || 0),
+                    Number(message.time !== undefined ? message.time : current?.time || 0),
+                ])
+            }
         } catch (e) {
             this.errorHandle(e)
         }
@@ -797,10 +803,16 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any> {
         try {
+            const current = await this.db<Message>('messages').where('_id', '=', `${messageId}`).first()
             await this.db<Message>('messages')
                 .where('_id', '=', `${messageId}`)
                 .update(this.msgConToDB(message, roomId))
-            if (message.content !== undefined || message.time !== undefined) await this.searchIndex.requestRebuild()
+            if (message.content !== undefined || message.time !== undefined) {
+                await this.searchIndex.requestRebuild([
+                    Number(current?.time || 0),
+                    Number(message.time !== undefined ? message.time : current?.time || 0),
+                ])
+            }
         } catch (e) {
             this.errorHandle(e)
         }

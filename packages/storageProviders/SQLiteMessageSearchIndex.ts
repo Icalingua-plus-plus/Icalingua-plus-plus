@@ -41,6 +41,10 @@ const messageSeparator = ' messageboundary '
 const searchFtsColumns = "content, content='', detail=full, columnsize=0, tokenize='unicode61'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
 const createSearchFtsIfNotExistsSql = `CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(${searchFtsColumns})`
+const createSearchFtsVocabSql = "CREATE VIRTUAL TABLE search_fts_vocab USING fts5vocab(search_fts, 'instance')"
+const createSearchFtsVocabIfNotExistsSql =
+    "CREATE VIRTUAL TABLE IF NOT EXISTS search_fts_vocab USING fts5vocab(search_fts, 'instance')"
+const legacyCursorRecoveryState = 'legacyCursorRecovery'
 
 const encodeSearchText = (value: unknown): string =>
     Array.from(normalizeSearchText(value))
@@ -89,6 +93,8 @@ export default class SQLiteMessageSearchIndex {
     private available = false
     private ready = false
     private rebuilding = false
+    private buildIndexedThroughTime = 0
+    private activeBuildTimes = new Set<number>()
 
     constructor(
         filePath: string,
@@ -144,6 +150,8 @@ export default class SQLiteMessageSearchIndex {
         this.available = false
         this.ready = false
         this.rebuilding = false
+        this.buildIndexedThroughTime = 0
+        this.activeBuildTimes.clear()
         const db = this.db
         this.db = null
         if (!db) return
@@ -170,6 +178,10 @@ export default class SQLiteMessageSearchIndex {
         if (!messages.length || !this.db) return
         const times = Array.from(new Set(messages.map(messageTime).filter((time) => time > 0)))
         if (!times.length) return
+        if (needsRebuild) {
+            await this.queueRebuildTimes(times)
+            return
+        }
         const queueVersion = randomUUID()
         try {
             await this.db.transaction(async (transaction) => {
@@ -177,11 +189,10 @@ export default class SQLiteMessageSearchIndex {
                     const rows = times.slice(offset, offset + searchBatchSize).map((time) => ({
                         time,
                         queueVersion,
-                        needsRebuild: needsRebuild ? 1 : 0,
+                        needsRebuild: 0,
                     }))
                     const pending = transaction('search_pending_times').insert(rows)
-                    if (needsRebuild) await pending.onConflict('time').merge({ queueVersion, needsRebuild: 1 })
-                    else await pending.onConflict('time').merge({ queueVersion })
+                    await pending.onConflict('time').merge({ queueVersion })
                 }
             })
             this.pendingWork = true
@@ -191,25 +202,54 @@ export default class SQLiteMessageSearchIndex {
         }
     }
 
-    async requestRebuild(time?: number): Promise<void> {
-        if (!this.db) return
+    async requestRebuild(times?: number | number[]): Promise<void> {
+        if (times === undefined) return
+        await this.queueRebuildTimes(Array.isArray(times) ? times : [times])
+    }
+
+    private async queueRebuildTimes(times: number[], startBuild = true, force = false): Promise<void> {
+        const db = this.db
+        if (!db) return
+        const normalizedTimes = Array.from(
+            new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
+        )
+        if (!normalizedTimes.length) return
         try {
-            this.requestGeneration++
-            await this.db.transaction(async (transaction) => {
-                await transaction('search_state').whereIn('key', ['ready', 'buildCursor']).delete()
-                await transaction('search_pending_times').delete()
-                if (time !== undefined && time > 0) {
-                    await transaction('search_pending_times').insert({
-                        time: Math.trunc(time),
-                        queueVersion: randomUUID(),
+            const ready = (await this.getState('ready')) === '1'
+            const cursor = this.parseCursor(await this.getState('buildCursor'))
+            const buildActive = Boolean(this.buildPromise) || this.rebuilding || !ready
+            const indexedTimes =
+                force || buildActive
+                    ? normalizedTimes
+                    : cursor
+                      ? normalizedTimes.filter(
+                            (time) =>
+                                time <= cursor.time ||
+                                this.buildIndexedThroughTime >= time ||
+                                this.activeBuildTimes.has(time),
+                        )
+                      : ready
+                        ? normalizedTimes
+                        : normalizedTimes.filter((time) => this.activeBuildTimes.has(time))
+            if (!indexedTimes.length) return
+            const queueVersion = randomUUID()
+            await db.transaction(async (transaction) => {
+                for (let offset = 0; offset < indexedTimes.length; offset += searchBatchSize) {
+                    const rows = indexedTimes.slice(offset, offset + searchBatchSize).map((time) => ({
+                        time,
+                        queueVersion,
                         needsRebuild: 1,
-                    })
+                    }))
+                    await transaction('search_pending_times')
+                        .insert(rows)
+                        .onConflict('time')
+                        .merge({ queueVersion, needsRebuild: 1 })
                 }
             })
-            this.pendingWork = time !== undefined && time > 0
+            this.pendingWork = true
             this.ready = false
             this.rebuilding = true
-            this.startBuild()
+            if (startBuild) this.startBuild()
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
         }
@@ -237,7 +277,7 @@ export default class SQLiteMessageSearchIndex {
         if (!times.length) return
         try {
             const currentMessages = await this.callbacks.loadMessagesByTimes(times)
-            await this.insertMessages(currentMessages.length ? currentMessages : messages)
+            await this.rebuildTimes(times, currentMessages.length ? currentMessages : messages)
             if (this.pendingWork) this.startBuild()
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
@@ -292,11 +332,14 @@ export default class SQLiteMessageSearchIndex {
             })
         }
         await db.raw(createSearchFtsIfNotExistsSql)
+        await db.raw(createSearchFtsVocabIfNotExistsSql)
         if ((await this.getState('format')) === searchIndexFormat) return
 
         await db.transaction(async (transaction) => {
+            await transaction.schema.dropTableIfExists('search_fts_vocab')
             await transaction.schema.dropTableIfExists('search_fts')
             await transaction.raw(createSearchFtsSql)
+            await transaction.raw(createSearchFtsVocabSql)
             await transaction.schema.dropTableIfExists('search_metadata')
             await transaction.schema.dropTableIfExists('search_pending')
             await transaction.schema.dropTableIfExists('search_grams')
@@ -344,6 +387,7 @@ export default class SQLiteMessageSearchIndex {
         this.report({ active: true, step: 0, total: 0, message: '正在校验消息搜索索引...' })
         let failed = false
         this.validationPromise = this.validateMessageCounts()
+            .then(() => undefined)
             .catch((error) => {
                 failed = true
                 if (!this.closing) this.errorHandle(error)
@@ -373,42 +417,151 @@ export default class SQLiteMessageSearchIndex {
             })
     }
 
-    private async validateMessageCounts(): Promise<void> {
+    private async validateMessageCounts(startBuild = true): Promise<boolean> {
         const db = this.db
         const loadMessageTimeCounts = this.callbacks.loadMessageTimeCounts
-        if (!db || !loadMessageTimeCounts) return
+        if (!db) return false
+        if (!loadMessageTimeCounts) return true
+
         const total = await this.getTotal()
-        const indexedTotalRow: any = await db('search_time_state').sum({ count: 'messageCount' }).first()
-        const indexedTotal = Number(indexedTotalRow?.count || Object.values(indexedTotalRow || {})[0] || 0)
-        let invalid = indexedTotal !== total
-        let afterTime = 0
-        let processed = 0
-        while (!this.closing) {
-            const counts = await loadMessageTimeCounts(afterTime, searchBatchSize)
-            if (!counts.length) break
-            const times = counts.map((item) => Math.trunc(Number(item.time))).filter((time) => time > 0)
-            if (!times.length) break
-            const indexedRows = await db('search_time_state').whereIn('time', times).select('time', 'messageCount')
-            const indexedCounts = new Map(
-                indexedRows.map((row: any) => [Number(row.time), Number(row.messageCount || 0)]),
-            )
-            for (const item of counts) {
-                const time = Math.trunc(Number(item.time))
-                const messageCount = Math.max(0, Math.trunc(Number(item.messageCount || 0)))
-                if (indexedCounts.get(time) !== messageCount) invalid = true
-            }
-            processed += counts.reduce((sum, item) => sum + Math.max(0, Number(item.messageCount || 0)), 0)
-            this.report({
-                active: true,
-                step: Math.min(processed, total || processed),
-                total: total || processed,
-                message: '正在校验消息搜索索引...',
-            })
-            const lastTime = times[times.length - 1]
-            if (lastTime <= afterTime || counts.length < searchBatchSize) break
-            afterTime = lastTime
+        const invalidTimes: number[] = []
+        const flushInvalidTimes = async () => {
+            if (!invalidTimes.length) return
+            const times = invalidTimes.splice(0, invalidTimes.length)
+            await this.queueRebuildTimes(times, startBuild, true)
         }
-        if (invalid) await this.requestRebuild()
+        const addInvalidTime = async (time: number) => {
+            if (time <= 0 || invalidTimes.includes(time)) return
+            invalidTimes.push(time)
+            if (invalidTimes.length >= searchBatchSize) await flushInvalidTimes()
+        }
+
+        let sourceAfterTime = 0
+        let indexedAfterTime = 0
+        let sourceBatch: SQLiteSearchTimeCount[] = []
+        let indexedBatch: Array<{ time: number; messageCount: number }> = []
+        let sourceOffset = 0
+        let indexedOffset = 0
+        let sourceDone = false
+        let indexedDone = false
+        let processed = 0
+        let sourceSinceReport = 0
+
+        const loadNextSourceBatch = async () => {
+            while (!sourceDone && sourceOffset >= sourceBatch.length) {
+                const loaded = await loadMessageTimeCounts(sourceAfterTime, searchBatchSize)
+                const normalized = new Map<number, number>()
+                for (const item of loaded) {
+                    const time = Math.trunc(Number(item.time))
+                    if (time <= sourceAfterTime) continue
+                    normalized.set(time, Math.max(0, Math.trunc(Number(item.messageCount || 0))))
+                }
+                sourceBatch = Array.from(normalized, ([time, messageCount]) => ({ time, messageCount })).sort(
+                    (left, right) => left.time - right.time,
+                )
+                sourceOffset = 0
+                if (!sourceBatch.length) {
+                    sourceDone = true
+                    return
+                }
+                const lastTime = sourceBatch[sourceBatch.length - 1].time
+                if (lastTime <= sourceAfterTime) {
+                    sourceDone = true
+                    sourceBatch = []
+                    return
+                }
+                sourceAfterTime = lastTime
+            }
+        }
+
+        const loadNextIndexedBatch = async () => {
+            while (!indexedDone && indexedOffset >= indexedBatch.length) {
+                const rows = await db('search_time_state')
+                    .where('time', '>', indexedAfterTime)
+                    .select('time', 'messageCount')
+                    .orderBy('time', 'asc')
+                    .limit(searchBatchSize)
+                const normalized = new Map<number, number>()
+                for (const row of rows) {
+                    const time = Math.trunc(Number(row.time))
+                    if (time <= indexedAfterTime) continue
+                    normalized.set(time, Math.max(0, Math.trunc(Number(row.messageCount || 0))))
+                }
+                indexedBatch = Array.from(normalized, ([time, messageCount]) => ({ time, messageCount })).sort(
+                    (left, right) => left.time - right.time,
+                )
+                indexedOffset = 0
+                if (!indexedBatch.length) {
+                    indexedDone = true
+                    return
+                }
+                const lastTime = indexedBatch[indexedBatch.length - 1].time
+                if (lastTime <= indexedAfterTime) {
+                    indexedDone = true
+                    indexedBatch = []
+                    return
+                }
+                indexedAfterTime = lastTime
+            }
+        }
+
+        await loadNextSourceBatch()
+        await loadNextIndexedBatch()
+        while (!this.closing && (!sourceDone || !indexedDone)) {
+            const source = sourceBatch[sourceOffset]
+            const indexed = indexedBatch[indexedOffset]
+            if (!source && !sourceDone) {
+                await loadNextSourceBatch()
+                continue
+            }
+            if (!indexed && !indexedDone) {
+                await loadNextIndexedBatch()
+                continue
+            }
+            if (!source) {
+                await addInvalidTime(indexed.time)
+                indexedOffset++
+            } else if (!indexed) {
+                await addInvalidTime(source.time)
+                processed += source.messageCount
+                sourceSinceReport++
+                sourceOffset++
+            } else if (source.time === indexed.time) {
+                if (source.messageCount !== indexed.messageCount) await addInvalidTime(source.time)
+                processed += source.messageCount
+                sourceSinceReport++
+                sourceOffset++
+                indexedOffset++
+            } else if (source.time < indexed.time) {
+                await addInvalidTime(source.time)
+                processed += source.messageCount
+                sourceSinceReport++
+                sourceOffset++
+            } else {
+                await addInvalidTime(indexed.time)
+                indexedOffset++
+            }
+            if (sourceSinceReport >= searchBatchSize) {
+                sourceSinceReport = 0
+                this.report({
+                    active: true,
+                    step: Math.min(processed, total || processed),
+                    total: total || processed,
+                    message: '正在校验消息搜索索引...',
+                })
+            }
+            if (sourceOffset >= sourceBatch.length) await loadNextSourceBatch()
+            if (indexedOffset >= indexedBatch.length) await loadNextIndexedBatch()
+        }
+        if (this.closing) return false
+        await flushInvalidTimes()
+        this.report({
+            active: true,
+            step: Math.min(processed, total || processed),
+            total: total || processed,
+            message: '正在校验消息搜索索引...',
+        })
+        return true
     }
 
     private async runBuild(): Promise<void> {
@@ -416,23 +569,31 @@ export default class SQLiteMessageSearchIndex {
         if (!db) return
         while (!this.closing) {
             const generation = this.requestGeneration
-            const pendingRebuild = await db('search_pending_times').where('needsRebuild', 1).first()
             const ready = (await this.getState('ready')) === '1'
             let cursor = this.parseCursor(await this.getState('buildCursor'))
+            let legacyRecovery = (await this.getState(legacyCursorRecoveryState)) === '1'
             if (cursor?.legacy) {
-                // The old cursor also contained a room/message id. Its MongoDB and
-                // Redis variants were room-local, so resuming from only its time
-                // could skip older messages in later rooms. Rebuild once instead.
+                legacyRecovery = true
+                await this.setState(legacyCursorRecoveryState, '1')
+            }
+            const hasIndexedRows = Boolean(await db('search_time_state').first())
+            const hasPending = Boolean(await db('search_pending_times').first())
+            if (!ready && !cursor && !hasPending && !hasIndexedRows) {
                 await this.resetFts()
                 cursor = undefined
             }
-            if (pendingRebuild || (!ready && !cursor)) {
-                await this.resetFts()
-                cursor = undefined
-            }
+            this.buildIndexedThroughTime = cursor?.time || 0
             let afterTime = cursor?.time || 0
-            if (ready && !pendingRebuild && !cursor) {
+            if (ready && !cursor) {
                 await this.flushPendingTimes()
+                if (generation !== this.requestGeneration) continue
+                if (legacyRecovery) {
+                    const validated = await this.validateMessageCounts(false)
+                    if (generation !== this.requestGeneration) continue
+                    await this.flushPendingTimes()
+                    if (!validated) continue
+                    await db('search_state').where('key', legacyCursorRecoveryState).delete()
+                }
                 if (generation !== this.requestGeneration) continue
                 this.rebuilding = false
                 this.ready = true
@@ -452,9 +613,10 @@ export default class SQLiteMessageSearchIndex {
                     new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > afterTime)),
                 ).sort((left, right) => left - right)
                 if (!normalizedTimes.length) break
-                const batchCount = await this.insertBuildBatch(normalizedTimes)
+                const batchCount = await this.insertBuildBatch(normalizedTimes, Boolean(cursor || hasIndexedRows))
                 const lastTime = normalizedTimes[normalizedTimes.length - 1]
                 afterTime = lastTime
+                this.buildIndexedThroughTime = lastTime
                 cursor = { time: lastTime, legacy: false }
                 await this.setState('buildCursor', JSON.stringify({ time: lastTime }))
                 processed += batchCount
@@ -464,10 +626,18 @@ export default class SQLiteMessageSearchIndex {
             if (generation !== this.requestGeneration) continue
             await this.flushPendingTimes()
             if (generation !== this.requestGeneration) continue
+            if (legacyRecovery) {
+                const validated = await this.validateMessageCounts(false)
+                if (generation !== this.requestGeneration) continue
+                await this.flushPendingTimes()
+                if (!validated) continue
+                await db('search_state').where('key', legacyCursorRecoveryState).delete()
+            }
+            if (generation !== this.requestGeneration) continue
             await this.optimize()
             if (generation !== this.requestGeneration) continue
             await db.transaction(async (transaction) => {
-                await transaction('search_state').where('key', 'buildCursor').delete()
+                await transaction('search_state').whereIn('key', ['buildCursor', legacyCursorRecoveryState]).delete()
                 await transaction('search_state')
                     .insert({ key: 'ready', value: '1' })
                     .onConflict('key')
@@ -484,8 +654,10 @@ export default class SQLiteMessageSearchIndex {
         const db = this.db
         if (!db) return
         await db.transaction(async (transaction) => {
+            await transaction.schema.dropTableIfExists('search_fts_vocab')
             await transaction.schema.dropTableIfExists('search_fts')
             await transaction.raw(createSearchFtsSql)
+            await transaction.raw(createSearchFtsVocabSql)
             await transaction('search_state').whereIn('key', ['ready', 'buildCursor']).delete()
             await transaction('search_time_state').delete()
             await transaction('search_pending_times').where('needsRebuild', 1).delete()
@@ -505,20 +677,23 @@ export default class SQLiteMessageSearchIndex {
                 return
             }
             const times = pending.map((row) => Number(row.time)).filter((time) => time > 0)
-            const messages = times.length ? await this.callbacks.loadMessagesByTimes(times) : []
-            await this.insertMessages(messages)
-            const foundTimes = new Set(messages.map(messageTime).filter((time) => time > 0))
-            await this.removeProcessedPendingTimes(pending, foundTimes.size ? foundTimes : new Set(times))
+            const forceRemoveTimes = new Set(
+                pending
+                    .filter((row) => Number(row.needsRebuild || 0) === 1)
+                    .map((row) => Number(row.time))
+                    .filter((time) => time > 0),
+            )
+            if (times.length) await this.rebuildTimes(times, undefined, true, forceRemoveTimes)
+            await this.removeProcessedPendingTimes(pending)
         }
     }
 
-    private async removeProcessedPendingTimes(pending: PendingSearchTime[], foundTimes: Set<number>): Promise<void> {
+    private async removeProcessedPendingTimes(pending: PendingSearchTime[]): Promise<void> {
         const db = this.db
         if (!db) return
         const grouped = new Map<string | null, number[]>()
         for (const row of pending) {
             const time = Number(row.time)
-            if (!foundTimes.has(time)) continue
             const queueVersion = row.queueVersion == null ? null : String(row.queueVersion)
             const times = grouped.get(queueVersion) || []
             times.push(time)
@@ -542,43 +717,85 @@ export default class SQLiteMessageSearchIndex {
         }
     }
 
-    private async insertMessages(messages: SQLiteSearchMessage[]): Promise<void> {
+    private async rebuildTimes(
+        times: number[],
+        messages?: SQLiteSearchMessage[],
+        removeExisting = true,
+        forceRemoveTimes?: Set<number>,
+    ): Promise<number> {
         const db = this.db
-        if (!db || !messages.length) return
+        if (!db) return 0
+        const normalizedTimes = Array.from(
+            new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
+        )
+        if (!normalizedTimes.length) return 0
+        const currentMessages = messages || (await this.callbacks.loadMessagesByTimes(normalizedTimes))
+        const normalizedTimeSet = new Set(normalizedTimes)
         const grouped = new Map<number, { contents: string[]; messageCount: number }>()
-        for (const message of messages) {
+        for (const message of currentMessages) {
             const time = messageTime(message)
-            if (time <= 0) continue
+            if (time <= 0 || !normalizedTimeSet.has(time)) continue
             const values = grouped.get(time) || { contents: [], messageCount: 0 }
             values.messageCount++
             const content = this.indexContent(message.content)
             if (content) values.contents.push(content)
             grouped.set(time, values)
         }
-        if (!grouped.size) return
         await db.transaction(async (transaction) => {
-            for (const [time, value] of grouped) {
+            const existingTimes = removeExisting
+                ? new Set(
+                      (await transaction('search_time_state').whereIn('time', normalizedTimes).select('time')).map(
+                          (row: any) => Number(row.time),
+                      ),
+                  )
+                : new Set<number>()
+            for (const time of normalizedTimes) {
+                if (removeExisting && (existingTimes.has(time) || forceRemoveTimes?.has(time)))
+                    await this.removeFtsRow(transaction, time)
+                const value = grouped.get(time)
+                if (!value) {
+                    await transaction('search_time_state').where('time', time).delete()
+                    continue
+                }
                 await transaction('search_time_state')
                     .insert({ time, messageCount: value.messageCount })
                     .onConflict('time')
                     .merge({ messageCount: value.messageCount })
                 const content = value.contents.filter(Boolean).join(messageSeparator)
-                await transaction.raw('INSERT OR REPLACE INTO search_fts(rowid, content) VALUES (?, ?)', [
-                    time,
-                    content,
-                ])
+                if (content) {
+                    await transaction.raw('INSERT INTO search_fts(rowid, content) VALUES (?, ?)', [time, content])
+                }
             }
         })
+        return currentMessages.length
     }
 
-    private async insertBuildBatch(times: number[]): Promise<number> {
+    private async removeFtsRow(transaction: Knex.Transaction, time: number): Promise<void> {
+        const terms = await transaction('search_fts_vocab')
+            .where('doc', time)
+            .select('term', 'offset')
+            .orderBy('offset', 'asc')
+        if (!terms.length) return
+        const content = terms.map((row: any) => String(row.term)).join(' ')
+        await transaction.raw("INSERT INTO search_fts(search_fts, rowid, content) VALUES ('delete', ?, ?)", [
+            time,
+            content,
+        ])
+    }
+
+    private async insertBuildBatch(times: number[], removeExisting: boolean): Promise<number> {
         const normalizedTimes = Array.from(
             new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
         )
         if (!normalizedTimes.length) return 0
-        const currentMessages = await this.callbacks.loadMessagesByTimes(normalizedTimes)
-        await this.insertMessages(currentMessages)
-        return currentMessages.length
+        this.activeBuildTimes = new Set(normalizedTimes)
+        try {
+            const currentMessages = await this.callbacks.loadMessagesByTimes(normalizedTimes)
+            await this.rebuildTimes(normalizedTimes, currentMessages, removeExisting)
+            return currentMessages.length
+        } finally {
+            this.activeBuildTimes.clear()
+        }
     }
 
     private indexContent(value: unknown): string {
