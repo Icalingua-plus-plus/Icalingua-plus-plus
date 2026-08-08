@@ -33,8 +33,14 @@ import upg18to19 from './SQLUpgradeScript/18to19'
 import upg19to20 from './SQLUpgradeScript/19to20'
 import upg20to21 from './SQLUpgradeScript/20to21'
 import upg21to22 from './SQLUpgradeScript/21to22'
+import upg22to23 from './SQLUpgradeScript/22to23'
 
-const dbVersionLatest = 22
+const dbVersionLatest = 23
+
+const normalizeRoomId = (roomId: unknown): string => {
+    const value = String(roomId || 0) || '0'
+    return /^-?\d+\.0$/.test(value) ? value.slice(0, -2) : value
+}
 
 /** PostgreSQL 和 MySQL/MariaDB 连接需要的信息的类型定义 */
 interface PgMyOpt {
@@ -160,12 +166,18 @@ export default class SQLStorageProvider implements StorageProvider {
     private roomConToDB(room: Partial<Room>): Record<string, any> {
         try {
             if (room) {
-                return {
+                const converted: Record<string, any> = {
                     ...room,
                     users: JSON.stringify(room.users),
                     lastMessage: JSON.stringify(room.lastMessage),
                     at: JSON.stringify(room.at),
                 }
+                if (room.roomId !== undefined && room.roomId !== null) {
+                    const roomId = normalizeRoomId(room.roomId)
+                    if (roomId === '0') return null
+                    converted.roomId = roomId
+                }
+                return converted
             }
             return null
         } catch (e) {
@@ -384,6 +396,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 21:
                     report('升级数据库 v21 → v22')
                     await upg21to22(this.db)
+                case 22:
+                    report('升级数据库 v22 → v23')
+                    await upg22to23(this.db)
                 default:
                     break
             }
@@ -500,7 +515,6 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('senderId')
                     table.string('username')
                     table.text('content').nullable()
-                    table.boolean('markdown').nullable()
                     table.text('code').nullable()
                     table.string('timestamp')
                     table.string('date')
@@ -523,7 +537,9 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('bubble_id').nullable()
                     table.bigInteger('subid').nullable()
                     table.string('recallInfo').nullable()
+                    table.boolean('markdown').nullable()
                     table.index(['roomId', 'time'])
+                    table.index(['senderId', 'roomId', 'time'])
                     //table.index(['subid', 'time'])
                 })
             }
@@ -595,7 +611,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async updateRoom(roomId: number, room: Partial<Room>): Promise<any> {
         try {
-            await this.db(`rooms`).where('roomId', '=', roomId).update(this.roomConToDB(room))
+            await this.db(`rooms`).where('roomId', '=', normalizeRoomId(roomId)).update(this.roomConToDB(room))
         } catch (e) {
             this.errorHandle(e)
         }
@@ -608,7 +624,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async removeRoom(roomId: number): Promise<any> {
         try {
-            await this.db(`rooms`).where('roomId', '=', roomId).delete()
+            await this.db(`rooms`).where('roomId', '=', normalizeRoomId(roomId)).delete()
         } catch (e) {
             this.errorHandle(e)
         }
@@ -636,8 +652,8 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getRoom(roomId: number): Promise<Room> {
         try {
-            const room = await this.db<Room>(`rooms`).where('roomId', '=', roomId).select('*')
-            return this.roomConFromDB(room[0])
+            const room = await this.db<Room>(`rooms`).where('roomId', '=', normalizeRoomId(roomId)).first()
+            return this.roomConFromDB(room)
         } catch (e) {
             this.errorHandle(e)
         }

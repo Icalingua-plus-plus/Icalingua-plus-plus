@@ -1871,7 +1871,9 @@ ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
     const win = getSenderWindow(event)
     const bounds = win.getContentBounds()
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
-    ;(await buildRoomMenu(await getRoom(roomId))).popup({
+    const room = await getRoom(roomId)
+    if (!room) return
+    ;(await buildRoomMenu(room)).popup({
         window: win,
         ...pos,
     })
