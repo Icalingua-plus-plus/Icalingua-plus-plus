@@ -35,32 +35,42 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'unicode61-1-2gram-none-contentless-delete-v4'
+const searchIndexFormat = 'trigram-interleaved-none-contentless-delete-v6'
 const searchBatchSize = 200
 const searchWriteYieldInterval = 50
 const searchMergePages = 128
-const messageSeparator = ' messageboundary '
+const interleavedSeparator = '\u0001'
+const messageSeparator = '\u0003'
 // detail=none omits token positions. Keep contentless_delete for row replacement;
 // SQLite rejects columnsize=0 together with contentless_delete=1.
-const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='unicode61'"
+const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='trigram'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
 const createSearchFtsIfNotExistsSql = `CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(${searchFtsColumns})`
 const legacyCursorRecoveryState = 'legacyCursorRecovery'
 
 const searchCharacters = (value: unknown): string[] => Array.from(normalizeSearchText(value))
 
-const encodeOneGram = (character: string): string => `g${character.codePointAt(0)!.toString(16)}`
+const encodeInterleavedOneGram = (character: string): string =>
+    `${interleavedSeparator}${character}${interleavedSeparator}`
 
-const encodeTwoGram = (left: string, right: string): string =>
-    `b${left.codePointAt(0)!.toString(16)}x${right.codePointAt(0)!.toString(16)}`
+const encodeInterleavedTwoGram = (left: string, right: string): string => `${left}${interleavedSeparator}${right}`
 
 const encodeSearchText = (value: unknown): string => {
     const characters = searchCharacters(value)
-    const grams = characters.map(encodeOneGram)
+    if (!characters.length) return ''
+    return `${interleavedSeparator}${characters.join(interleavedSeparator)}${interleavedSeparator}`
+}
+
+const encodeSearchQuery = (value: unknown): string | null => {
+    const characters = searchCharacters(value)
+    if (!characters.length) return null
+    if (characters.length === 1) return quoteSearchToken(encodeInterleavedOneGram(characters[0]))
+
+    const grams = new Set<string>()
     for (let index = 0; index + 1 < characters.length; index++) {
-        grams.push(encodeTwoGram(characters[index], characters[index + 1]))
+        grams.add(encodeInterleavedTwoGram(characters[index], characters[index + 1]))
     }
-    return grams.join(' ')
+    return Array.from(grams, quoteSearchToken).join(' AND ')
 }
 
 const quoteSearchToken = (token: string): string => `"${token.replace(/"/g, '""')}"`
@@ -954,14 +964,6 @@ export default class SQLiteMessageSearchIndex {
     }
 
     private buildMatchQuery(value: unknown): string | null {
-        const characters = searchCharacters(value)
-        if (!characters.length) return null
-        if (characters.length === 1) return quoteSearchToken(encodeOneGram(characters[0]))
-
-        const grams = new Set<string>()
-        for (let index = 0; index + 1 < characters.length; index++) {
-            grams.add(encodeTwoGram(characters[index], characters[index + 1]))
-        }
-        return Array.from(grams, quoteSearchToken).join(' AND ')
+        return encodeSearchQuery(value)
     }
 }
