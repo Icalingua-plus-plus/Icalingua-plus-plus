@@ -84,7 +84,7 @@ export default class SQLiteMessageSearchIndex {
     private readonly errorHandle: (error: unknown) => void
     private db: Knex | null = null
     private buildPromise: Promise<void> | null = null
-    private syncPromise: Promise<void> | null = null
+    private operationPromise: Promise<void> = Promise.resolve()
     private validationPromise: Promise<void> | null = null
     private requestGeneration = 0
     private buildRestartRequested = false
@@ -94,7 +94,9 @@ export default class SQLiteMessageSearchIndex {
     private ready = false
     private rebuilding = false
     private buildIndexedThroughTime = 0
-    private activeBuildTimes = new Set<number>()
+    private buildScanActive = false
+    private buildLoadingTimes = false
+    private activeBuildThroughTime = 0
 
     constructor(
         filePath: string,
@@ -131,8 +133,10 @@ export default class SQLiteMessageSearchIndex {
             })
             await this.ensureSchema()
             this.available = true
-            this.ready = (await this.getState('ready')) === '1'
+            const hasPending = Boolean(await this.db('search_pending_times').first())
+            this.ready = (await this.getState('ready')) === '1' && !hasPending
             this.rebuilding = !this.ready
+            this.pendingWork = hasPending
             this.startBuild()
         } catch (error) {
             this.available = false
@@ -151,7 +155,16 @@ export default class SQLiteMessageSearchIndex {
         this.ready = false
         this.rebuilding = false
         this.buildIndexedThroughTime = 0
-        this.activeBuildTimes.clear()
+        this.buildScanActive = false
+        this.buildLoadingTimes = false
+        this.activeBuildThroughTime = 0
+        try {
+            await this.buildPromise
+            await this.validationPromise
+            await this.operationPromise
+        } catch (error) {
+            this.errorHandle(error)
+        }
         const db = this.db
         this.db = null
         if (!db) return
@@ -174,9 +187,25 @@ export default class SQLiteMessageSearchIndex {
         await this.db('search_state').insert({ key, value }).onConflict('key').merge({ value })
     }
 
+    private enqueueOperation<T>(operation: () => Promise<T>): Promise<T> {
+        const result = this.operationPromise.then(operation, operation)
+        this.operationPromise = result.then(
+            () => undefined,
+            () => undefined,
+        )
+        return result
+    }
+
+    private pendingTimesForCurrentBuild(times: number[], force = false): number[] {
+        if (force || !this.rebuilding || !this.buildScanActive || this.buildLoadingTimes) return times
+        const indexedThroughTime = Math.max(this.buildIndexedThroughTime, this.activeBuildThroughTime)
+        return times.filter((time) => time <= indexedThroughTime)
+    }
+
     async queueMessages(messages: SQLiteSearchMessage[], needsRebuild = false): Promise<void> {
         if (!messages.length || !this.db) return
-        const times = Array.from(new Set(messages.map(messageTime).filter((time) => time > 0)))
+        const messageTimes = Array.from(new Set(messages.map(messageTime).filter((time) => time > 0)))
+        const times = this.pendingTimesForCurrentBuild(messageTimes)
         if (!times.length) return
         if (needsRebuild) {
             await this.queueRebuildTimes(times)
@@ -215,22 +244,7 @@ export default class SQLiteMessageSearchIndex {
         )
         if (!normalizedTimes.length) return
         try {
-            const ready = (await this.getState('ready')) === '1'
-            const cursor = this.parseCursor(await this.getState('buildCursor'))
-            const buildActive = Boolean(this.buildPromise) || this.rebuilding || !ready
-            const indexedTimes =
-                force || buildActive
-                    ? normalizedTimes
-                    : cursor
-                      ? normalizedTimes.filter(
-                            (time) =>
-                                time <= cursor.time ||
-                                this.buildIndexedThroughTime >= time ||
-                                this.activeBuildTimes.has(time),
-                        )
-                      : ready
-                        ? normalizedTimes
-                        : normalizedTimes.filter((time) => this.activeBuildTimes.has(time))
+            const indexedTimes = this.pendingTimesForCurrentBuild(normalizedTimes, force)
             if (!indexedTimes.length) return
             const queueVersion = randomUUID()
             await db.transaction(async (transaction) => {
@@ -257,14 +271,7 @@ export default class SQLiteMessageSearchIndex {
 
     async syncMessages(messages: SQLiteSearchMessage[]): Promise<void> {
         if (!messages.length || !this.db || !this.available) return
-        const previous = this.syncPromise || Promise.resolve()
-        const current = previous.catch(() => undefined).then(() => this.syncMessagesInternal(messages))
-        this.syncPromise = current
-        try {
-            await current
-        } finally {
-            if (this.syncPromise === current) this.syncPromise = null
-        }
+        await this.enqueueOperation(() => this.syncMessagesInternal(messages))
     }
 
     private async syncMessagesInternal(messages: SQLiteSearchMessage[]): Promise<void> {
@@ -276,11 +283,16 @@ export default class SQLiteMessageSearchIndex {
         const times = Array.from(new Set(messages.map(messageTime).filter((time) => time > 0)))
         if (!times.length) return
         try {
+            const pending = (await this.db('search_pending_times')
+                .whereIn('time', times)
+                .select('time', 'queueVersion', 'needsRebuild')) as PendingSearchTime[]
             const currentMessages = await this.callbacks.loadMessagesByTimes(times)
-            await this.rebuildTimes(times, currentMessages.length ? currentMessages : messages)
+            await this.rebuildTimes(times, currentMessages)
+            if (pending.length) await this.removeProcessedPendingTimes(pending)
             if (this.pendingWork) this.startBuild()
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
+            await this.queueRebuildTimes(times, true, true)
         }
     }
 
@@ -386,7 +398,9 @@ export default class SQLiteMessageSearchIndex {
         this.rebuilding = true
         this.report({ active: true, step: 0, total: 0, message: '正在校验消息搜索索引...' })
         let failed = false
-        this.validationPromise = this.validateMessageCounts()
+        const validationBarrier = this.enqueueOperation(async () => undefined)
+        this.validationPromise = validationBarrier
+            .then(() => this.validateMessageCounts())
             .then(() => undefined)
             .catch((error) => {
                 failed = true
@@ -578,19 +592,24 @@ export default class SQLiteMessageSearchIndex {
             }
             const hasIndexedRows = Boolean(await db('search_time_state').first())
             const hasPending = Boolean(await db('search_pending_times').first())
+            this.pendingWork = hasPending
             if (!ready && !cursor && !hasPending && !hasIndexedRows) {
-                await this.resetFts()
+                await this.enqueueOperation(() => this.resetFts())
                 cursor = undefined
             }
             this.buildIndexedThroughTime = cursor?.time || 0
             let afterTime = cursor?.time || 0
             if (ready && !cursor) {
-                await this.flushPendingTimes()
+                if (hasPending) {
+                    this.rebuilding = true
+                    this.ready = false
+                }
+                await this.flushPendingTimes(true)
                 if (generation !== this.requestGeneration) continue
                 if (legacyRecovery) {
                     const validated = await this.validateMessageCounts(false)
                     if (generation !== this.requestGeneration) continue
-                    await this.flushPendingTimes()
+                    await this.flushPendingTimes(true)
                     if (!validated) continue
                     await db('search_state').where('key', legacyCursorRecoveryState).delete()
                 }
@@ -603,46 +622,71 @@ export default class SQLiteMessageSearchIndex {
 
             this.rebuilding = true
             this.ready = false
-            const total = await this.getTotal()
-            let processed = 0
+            let processed = cursor ? await this.getIndexedMessageCount(cursor.time) : 0
+            const total = Math.max(await this.getTotal(), processed)
             this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
-            while (!this.closing) {
-                if (generation !== this.requestGeneration) break
-                const times = await this.callbacks.loadTimes(afterTime, searchBatchSize)
-                const normalizedTimes = Array.from(
-                    new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > afterTime)),
-                ).sort((left, right) => left - right)
-                if (!normalizedTimes.length) break
-                const batchCount = await this.insertBuildBatch(normalizedTimes, Boolean(cursor || hasIndexedRows))
-                const lastTime = normalizedTimes[normalizedTimes.length - 1]
-                afterTime = lastTime
-                this.buildIndexedThroughTime = lastTime
-                cursor = { time: lastTime, legacy: false }
-                await this.setState('buildCursor', JSON.stringify({ time: lastTime }))
-                processed += batchCount
-                this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
+            this.buildScanActive = true
+            try {
+                while (!this.closing) {
+                    if (generation !== this.requestGeneration) break
+                    this.buildLoadingTimes = true
+                    let times: number[]
+                    try {
+                        times = await this.callbacks.loadTimes(afterTime, searchBatchSize)
+                    } finally {
+                        this.buildLoadingTimes = false
+                    }
+                    const normalizedTimes = Array.from(
+                        new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > afterTime)),
+                    ).sort((left, right) => left - right)
+                    if (!normalizedTimes.length) break
+                    const lastTime = normalizedTimes[normalizedTimes.length - 1]
+                    this.activeBuildThroughTime = lastTime
+                    const batchCount = await this.enqueueOperation(() =>
+                        this.insertBuildBatch(normalizedTimes, Boolean(cursor || hasIndexedRows)),
+                    )
+                    this.activeBuildThroughTime = 0
+                    afterTime = lastTime
+                    this.buildIndexedThroughTime = lastTime
+                    cursor = { time: lastTime, legacy: false }
+                    await this.setState('buildCursor', JSON.stringify({ time: lastTime }))
+                    processed += batchCount
+                    this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
+                }
+            } finally {
+                this.buildScanActive = false
+                this.buildLoadingTimes = false
+                this.activeBuildThroughTime = 0
             }
             if (this.closing) return
             if (generation !== this.requestGeneration) continue
-            await this.flushPendingTimes()
+            await this.flushPendingTimes(true)
             if (generation !== this.requestGeneration) continue
             if (legacyRecovery) {
                 const validated = await this.validateMessageCounts(false)
                 if (generation !== this.requestGeneration) continue
-                await this.flushPendingTimes()
+                await this.flushPendingTimes(true)
                 if (!validated) continue
                 await db('search_state').where('key', legacyCursorRecoveryState).delete()
             }
             if (generation !== this.requestGeneration) continue
-            await this.optimize()
+            this.report({ active: true, step: 0, total: 0, message: '正在优化消息搜索索引...' })
+            await this.enqueueOperation(() => this.optimize())
             if (generation !== this.requestGeneration) continue
-            await db.transaction(async (transaction) => {
-                await transaction('search_state').whereIn('key', ['buildCursor', legacyCursorRecoveryState]).delete()
-                await transaction('search_state')
-                    .insert({ key: 'ready', value: '1' })
-                    .onConflict('key')
-                    .merge({ value: '1' })
-            })
+            const completed = await this.enqueueOperation(() =>
+                db.transaction(async (transaction) => {
+                    if (await transaction('search_pending_times').first()) return false
+                    await transaction('search_state')
+                        .whereIn('key', ['buildCursor', legacyCursorRecoveryState])
+                        .delete()
+                    await transaction('search_state')
+                        .insert({ key: 'ready', value: '1' })
+                        .onConflict('key')
+                        .merge({ value: '1' })
+                    return true
+                }),
+            )
+            if (!completed) continue
             this.ready = true
             this.rebuilding = false
             this.report({ active: false, step: 0, total: 0, message: '' })
@@ -664,27 +708,70 @@ export default class SQLiteMessageSearchIndex {
         })
     }
 
-    private async flushPendingTimes(): Promise<void> {
+    private async flushPendingTimes(reportProgress = false): Promise<void> {
         const db = this.db
         if (!db || !this.callbacks.loadMessagesByTimes) return
+        let processed = 0
+        let total = await this.getPendingCount()
+        if (reportProgress && total) {
+            this.report({ active: true, step: 0, total, message: '正在同步索引建立期间新增的消息...' })
+        }
         while (!this.closing) {
-            const pending = (await db('search_pending_times')
-                .select('time', 'queueVersion', 'needsRebuild')
-                .orderBy('time', 'asc')
-                .limit(searchBatchSize)) as PendingSearchTime[]
-            if (!pending.length) {
+            const batchSize = await this.enqueueOperation(async () => {
+                const pending = (await db('search_pending_times')
+                    .select('time', 'queueVersion', 'needsRebuild')
+                    .orderBy('time', 'asc')
+                    .limit(searchBatchSize)) as PendingSearchTime[]
+                if (!pending.length) return 0
+                const times = pending.map((row) => Number(row.time)).filter((time) => time > 0)
+                if (times.length) {
+                    const currentMessages = await this.callbacks.loadMessagesByTimes(times)
+                    const currentCounts = new Map<number, number>()
+                    for (const message of currentMessages) {
+                        const time = messageTime(message)
+                        if (time > 0) currentCounts.set(time, (currentCounts.get(time) || 0) + 1)
+                    }
+                    const indexedCounts = new Map<number, number>(
+                        (await db('search_time_state').whereIn('time', times).select('time', 'messageCount')).map(
+                            (row: any) => [Number(row.time), Number(row.messageCount || 0)],
+                        ),
+                    )
+                    const rebuildTimes = pending
+                        .filter(
+                            (row) =>
+                                Number(row.needsRebuild || 0) === 1 ||
+                                currentCounts.get(Number(row.time)) !== indexedCounts.get(Number(row.time)),
+                        )
+                        .map((row) => Number(row.time))
+                        .filter((time) => time > 0)
+                    if (rebuildTimes.length) {
+                        const forceRemoveTimes = new Set(
+                            pending
+                                .filter((row) => Number(row.needsRebuild || 0) === 1)
+                                .map((row) => Number(row.time))
+                                .filter((time) => time > 0),
+                        )
+                        await this.rebuildTimes(rebuildTimes, currentMessages, true, forceRemoveTimes)
+                    }
+                }
+                await this.removeProcessedPendingTimes(pending)
+                return pending.length
+            })
+            if (!batchSize) {
                 this.pendingWork = false
                 return
             }
-            const times = pending.map((row) => Number(row.time)).filter((time) => time > 0)
-            const forceRemoveTimes = new Set(
-                pending
-                    .filter((row) => Number(row.needsRebuild || 0) === 1)
-                    .map((row) => Number(row.time))
-                    .filter((time) => time > 0),
-            )
-            if (times.length) await this.rebuildTimes(times, undefined, true, forceRemoveTimes)
-            await this.removeProcessedPendingTimes(pending)
+            processed += batchSize
+            if (reportProgress) {
+                const remaining = await this.getPendingCount()
+                total = Math.max(total, processed + remaining)
+                this.report({
+                    active: true,
+                    step: Math.min(processed, total),
+                    total,
+                    message: '正在同步索引建立期间新增的消息...',
+                })
+            }
         }
     }
 
@@ -788,14 +875,9 @@ export default class SQLiteMessageSearchIndex {
             new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
         )
         if (!normalizedTimes.length) return 0
-        this.activeBuildTimes = new Set(normalizedTimes)
-        try {
-            const currentMessages = await this.callbacks.loadMessagesByTimes(normalizedTimes)
-            await this.rebuildTimes(normalizedTimes, currentMessages, removeExisting)
-            return currentMessages.length
-        } finally {
-            this.activeBuildTimes.clear()
-        }
+        const currentMessages = await this.callbacks.loadMessagesByTimes(normalizedTimes)
+        await this.rebuildTimes(normalizedTimes, currentMessages, removeExisting)
+        return currentMessages.length
     }
 
     private indexContent(value: unknown): string {
@@ -808,6 +890,23 @@ export default class SQLiteMessageSearchIndex {
         } catch {
             return 0
         }
+    }
+
+    private async getIndexedMessageCount(maxTime: number): Promise<number> {
+        const db = this.db
+        if (!db) return 0
+        const row = await db('search_time_state')
+            .where('time', '<=', Math.trunc(maxTime))
+            .sum({ messageCount: 'messageCount' })
+            .first()
+        return Math.max(0, Number(row?.messageCount || 0))
+    }
+
+    private async getPendingCount(): Promise<number> {
+        const db = this.db
+        if (!db) return 0
+        const row = await db('search_pending_times').count({ count: '*' }).first()
+        return Math.max(0, Number(row?.count || 0))
     }
 
     private parseCursor(value: string | undefined): BuildCursor | undefined {

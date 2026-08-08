@@ -209,6 +209,26 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    private async filterNewMessages(
+        messages: Message[],
+        database: Knex | Knex.Transaction = this.db,
+    ): Promise<Message[]> {
+        const uniqueMessages = new Map<string, Message>()
+        for (const message of messages) {
+            const id = String(message?._id)
+            if (!uniqueMessages.has(id)) uniqueMessages.set(id, message)
+        }
+        const existingIds = new Set<string>()
+        for (const ids of lodash.chunk(Array.from(uniqueMessages.keys()), 200)) {
+            if (!ids.length) continue
+            const rows = await database<MessageInSQLDB>('messages').whereIn('_id', ids).select('_id')
+            for (const row of rows) existingIds.add(String(row._id))
+        }
+        return Array.from(uniqueMessages, ([id, message]) => ({ id, message }))
+            .filter(({ id }) => !existingIds.has(id))
+            .map(({ message }) => message)
+    }
+
     /** 私有方法，将 message 从数据库内格式转换成 icalingua 使用的格式 */
     private msgConFromDB(message: Record<string, any>): Message {
         try {
@@ -769,8 +789,10 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessage(roomId: number, message: Message): Promise<any> {
         try {
-            await this.db<Message>('messages').insert(this.msgConToDB(message, roomId)).onConflict().ignore()
-            await this.searchIndex.syncMessages([message])
+            const newMessages = await this.filterNewMessages([message])
+            if (!newMessages.length) return
+            await this.db<Message>('messages').insert(this.msgConToDB(newMessages[0], roomId)).onConflict().ignore()
+            await this.searchIndex.syncMessages(newMessages)
         } catch (e) {
             this.errorHandle(e)
         }
@@ -1031,13 +1053,15 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
         try {
-            const msgToInsert = messages.map((message) => this.msgConToDB(message, roomId))
-            const chunkedMessages = lodash.chunk(msgToInsert, 200)
-            const pAry = chunkedMessages.map(async (chunkedMessage) => {
-                await this.db<Message>('messages').insert(chunkedMessage).onConflict('_id').ignore()
+            const newMessages = await this.db.transaction(async (transaction) => {
+                const candidates = await this.filterNewMessages(messages, transaction)
+                const msgToInsert = candidates.map((message) => this.msgConToDB(message, roomId))
+                for (const chunkedMessage of lodash.chunk(msgToInsert, 200)) {
+                    await transaction<Message>('messages').insert(chunkedMessage).onConflict('_id').ignore()
+                }
+                return candidates
             })
-            await Promise.all(pAry)
-            await this.searchIndex.syncMessages(messages)
+            await this.searchIndex.syncMessages(newMessages)
         } catch (e) {
             return e
         }

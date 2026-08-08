@@ -10,6 +10,13 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
 import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
 
+const insertMessageScript = [
+    "if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then return 0 end",
+    "redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])",
+    "redis.call('ZADD', KEYS[2], ARGV[3], ARGV[1])",
+    'return 1',
+].join('\n')
+
 export default class RedisStorageProvider implements StorageProvider {
     qid: string
     connStr: string
@@ -208,12 +215,33 @@ export default class RedisStorageProvider implements StorageProvider {
         return counts.reduce((total, count) => total + Number(count || 0), 0)
     }
 
-    private async queueSearchMessages(messages: Message[], needsRebuild = false): Promise<void> {
-        await this.searchIndex.queueMessages(messages, needsRebuild)
-    }
-
     private async syncSearchIndex(messages: Message[]): Promise<void> {
         await this.searchIndex.syncMessages(messages)
+    }
+
+    private async insertMessages(roomId: number, messages: Message[]): Promise<Message[]> {
+        if (!messages.length) return []
+        const pipeline = this.redis.pipeline()
+        for (const message of messages) {
+            pipeline.eval(
+                insertMessageScript,
+                2,
+                this.roomMessageKey(roomId),
+                this.roomMessageListKey(roomId),
+                String(message._id),
+                JSON.stringify(message),
+                String(Number(message.time || 0)),
+            )
+        }
+        const results = await pipeline.exec()
+        if (!results) throw new Error('Redis message insert pipeline did not return a result')
+        const insertedMessages = messages.filter(
+            (_message, index) => !results[index]?.[0] && Number(results[index]?.[1]) === 1,
+        )
+        await this.syncSearchIndex(insertedMessages)
+        const failed = results.find(([error]) => Boolean(error))
+        if (failed?.[0]) throw failed[0]
+        return insertedMessages
     }
 
     /** 实现 {@link StorageProvider} 类的 `getIgnoredChats` 方法，
@@ -377,10 +405,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在收到消息时被调用。
      */
     async addMessage(roomId: number, message: Message): Promise<void> {
-        await this.queueSearchMessages([message])
-        await this.redis.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
-        await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
-        await this.syncSearchIndex([message])
+        await this.insertMessages(roomId, [message])
     }
 
     /** 实现 {@link StorageProvider} 类的 `updateMessage` 方法，
@@ -645,14 +670,7 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在获取聊天历史消息时，该方法被调用。
      */
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
-        await this.queueSearchMessages(messages)
-        const pipeline = this.redis.pipeline()
-        for (const message of messages) {
-            pipeline.hset(`${this.qid}:msg${roomId}:messages`, `${message._id}`, JSON.stringify(message))
-            pipeline.zadd(`${this.qid}:msg${roomId}:msgIdList`, message.time, message._id)
-        }
-        if (messages.length) await pipeline.exec()
-        await this.syncSearchIndex(messages)
+        await this.insertMessages(roomId, messages)
     }
 
     /** 实现 {@link StorageProvider} 类的 `getUnreadCount` 方法，

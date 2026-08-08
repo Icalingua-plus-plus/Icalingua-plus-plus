@@ -195,26 +195,20 @@ export default class MongoStorageProvider implements StorageProvider {
         return counts.reduce((total, count) => total + Number(count || 0), 0)
     }
 
-    private async queueSearchMessages(messages: Message[], needsRebuild = false): Promise<void> {
-        await this.searchIndex.queueMessages(messages, needsRebuild)
-    }
-
     private async syncSearchIndex(messages: Message[]): Promise<void> {
         await this.searchIndex.syncMessages(messages)
     }
 
     async addMessage(roomId: number, message: Message): Promise<any> {
-        await this.queueSearchMessages([message])
-        let result
         try {
-            result = await this.mdb.collection('msg' + roomId).insertOne(message as object)
+            const { _id, ...fields } = message as any
+            const result = await this.mdb
+                .collection('msg' + roomId)
+                .updateOne({ _id: message._id }, { $setOnInsert: fields }, { upsert: true })
+            if (!result.upsertedCount) return
+            await this.syncSearchIndex([message])
+            return result
         } catch (error) {}
-        if (result) {
-            try {
-                await this.syncSearchIndex([message])
-            } catch (error) {}
-        }
-        return result
     }
 
     async addRoom(room: Room): Promise<any> {
@@ -484,22 +478,36 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async addMessages(roomId: number, messages: Message[]): Promise<any> {
-        await this.queueSearchMessages(messages)
-        let result
+        const uniqueMessages = new Map<string, Message>()
+        for (const message of messages) {
+            const key = `${typeof message._id}:${String(message._id)}`
+            if (!uniqueMessages.has(key)) uniqueMessages.set(key, message)
+        }
+        const messagesToInsert = Array.from(uniqueMessages.values())
+        if (!messagesToInsert.length) return
+        let result: any
+        let writeError: any
         try {
-            if (messages.length)
-                result = await this.mdb.collection('msg' + roomId).insertMany(messages as object[], { ordered: false })
+            result = await this.mdb.collection('msg' + roomId).bulkWrite(
+                messagesToInsert.map((message) => {
+                    const { _id, ...fields } = message as any
+                    return {
+                        updateOne: {
+                            filter: { _id: message._id },
+                            update: { $setOnInsert: fields },
+                            upsert: true,
+                        },
+                    }
+                }),
+                { ordered: false },
+            )
         } catch (error) {
-            result = error
+            writeError = error
+            result = (error as any)?.result
         }
-        if (result) {
-            try {
-                await this.syncSearchIndex(messages)
-            } catch (error) {
-                if (!result) result = error
-            }
-        }
-        return result
+        const insertedMessages = Object.keys(result?.upsertedIds || {}).map((index) => messagesToInsert[Number(index)])
+        await this.syncSearchIndex(insertedMessages.filter(Boolean))
+        return writeError || result
     }
 
     getRoom(roomId: number): Promise<Room> {
