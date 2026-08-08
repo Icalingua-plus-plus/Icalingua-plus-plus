@@ -268,7 +268,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules/better-sqlite3/build/Release/better_sqlite3.node
-          key: ${{ runner.os }}-armv7l-native-better-sqlite3-13.0.3
+          key: ${{ runner.os }}-armv7l-native-better-sqlite3-13.0.3-ubuntu20.04-cxx2a-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: get dist
         uses: actions/download-artifact@v4
@@ -301,6 +301,8 @@ jobs:
             # (7z-arm.exe does not exist), then rebuild only the native module we need
             pnpm install --frozen-lockfile --ignore-scripts
             cd ./node_modules/better-sqlite3
+            # Ubuntu 20.04's GCC supports the pre-standard C++20 spelling, but not c++20.
+            sed -i 's/-std=c++20/-std=c++2a/g' binding.gyp
             npm_config_arch=arm node ../node-gyp/bin/node-gyp.js rebuild --release --force_build=1 --arch=arm
 
       - name: Fix file ownership after Docker
