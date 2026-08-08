@@ -35,7 +35,7 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'trigram-interleaved-run-length-none-contentless-delete-v7'
+const searchIndexFormat = 'trigram-interleaved-run-length-none-contentless-delete-v8'
 const searchBatchSize = 200
 // Each bulk write below binds at most two values per time. Stay below the
 // lowest common SQLite variable limit even if searchBatchSize is increased.
@@ -45,7 +45,7 @@ const searchMergePages = 128
 const interleavedSeparator = '\u0001'
 const continuousTokenMarker = '\u0002'
 const messageSeparator = '\u0003'
-const continuousTokenLengths = [4, 8, 16, 32] as const
+const continuousTokenLengths = [3, 6, 12, 24] as const
 // detail=none omits token positions. Keep contentless_delete for row replacement;
 // SQLite rejects columnsize=0 together with contentless_delete=1.
 const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='trigram'"
