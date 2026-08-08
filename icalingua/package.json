@@ -184,7 +184,8 @@
             ]
         },
         "mac": {
-            "target": "dmg"
+            "target": "dmg",
+            "x64ArchFiles": "**/node_modules/better-sqlite3/prebuilds/*.node"
         },
         "npmRebuild": false,
         "afterPack": "./afterPack.cjs"
