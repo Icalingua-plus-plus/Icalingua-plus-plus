@@ -590,7 +590,9 @@ export default class SQLStorageProvider implements StorageProvider {
             await this.ensureMessageSearchSchema()
 
             // 删除异常的聊天房间
-            this.db(`rooms`).whereNull('roomId').delete()
+            await this.db(`rooms`).whereNull('roomId').delete()
+            // 删除roomId为0的房间
+            await this.db(`rooms`).where('roomId', '=', '0').delete()
         } catch (e) {
             this.errorHandle(e)
         }
