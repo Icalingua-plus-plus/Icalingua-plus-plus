@@ -684,8 +684,10 @@ export default class SQLiteMessageSearchIndex {
                 await db('search_state').where('key', legacyCursorRecoveryState).delete()
             }
             if (generation !== this.requestGeneration) continue
-            this.report({ active: true, step: 0, total: 0, message: '正在优化消息搜索索引...' })
-            await this.enqueueOperation(() => this.optimize())
+            // Skip the full FTS5 merge for large indexes. The pending-time flush
+            // and the ready-state transaction below are still required.
+            // this.report({ active: true, step: 0, total: 0, message: '正在优化消息搜索索引...' })
+            // await this.enqueueOperation(() => this.optimize())
             if (generation !== this.requestGeneration) continue
             const completed = await this.enqueueOperation(() =>
                 db.transaction(async (transaction) => {
