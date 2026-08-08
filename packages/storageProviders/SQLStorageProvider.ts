@@ -92,7 +92,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     })
                 }
                 this.db = knex({
-                    client: 'sqlite3',
+                    client: 'better-sqlite3',
                     connection: {
                         filename: `${path.join(dbPath, this.qid)}.db`,
                         charset: 'utf8mb4',
@@ -102,16 +102,20 @@ export default class SQLStorageProvider implements StorageProvider {
                         min: 2,
                         max: 2,
                         afterCreate: (conn: any, done: any) => {
-                            conn.exec(
-                                [
-                                    'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
-                                    'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
-                                    'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
-                                    'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
-                                    'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
-                                ].join('; '),
-                                (err: any) => done(err, conn),
-                            )
+                            try {
+                                conn.exec(
+                                    [
+                                        'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
+                                        'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
+                                        'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
+                                        'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
+                                        'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
+                                    ].join('; '),
+                                )
+                                done(null, conn)
+                            } catch (error) {
+                                done(error, conn)
+                            }
                         },
                     },
                 })

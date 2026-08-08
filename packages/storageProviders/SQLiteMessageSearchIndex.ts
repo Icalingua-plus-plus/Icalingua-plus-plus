@@ -35,15 +35,12 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'unicode61-1gram-full-contentless-v2'
+const searchIndexFormat = 'unicode61-1gram-full-contentless-delete-v3'
 const searchBatchSize = 200
 const messageSeparator = ' messageboundary '
-const searchFtsColumns = "content, content='', detail=full, columnsize=0, tokenize='unicode61'"
+const searchFtsColumns = "content, content='', contentless_delete=1, detail=full, tokenize='unicode61'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
 const createSearchFtsIfNotExistsSql = `CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(${searchFtsColumns})`
-const createSearchFtsVocabSql = "CREATE VIRTUAL TABLE search_fts_vocab USING fts5vocab(search_fts, 'instance')"
-const createSearchFtsVocabIfNotExistsSql =
-    "CREATE VIRTUAL TABLE IF NOT EXISTS search_fts_vocab USING fts5vocab(search_fts, 'instance')"
 const legacyCursorRecoveryState = 'legacyCursorRecovery'
 
 const encodeSearchText = (value: unknown): string =>
@@ -52,16 +49,20 @@ const encodeSearchText = (value: unknown): string =>
         .join(' ')
 
 const sqliteAfterCreate = (conn: any, done: any) => {
-    conn.exec(
-        [
-            'PRAGMA journal_mode = WAL',
-            'PRAGMA busy_timeout = 5000',
-            'PRAGMA synchronous = NORMAL',
-            'PRAGMA cache_size = -16384',
-            'PRAGMA mmap_size = 67108864',
-        ].join('; '),
-        (err: any) => done(err, conn),
-    )
+    try {
+        conn.exec(
+            [
+                'PRAGMA journal_mode = WAL',
+                'PRAGMA busy_timeout = 5000',
+                'PRAGMA synchronous = NORMAL',
+                'PRAGMA cache_size = -16384',
+                'PRAGMA mmap_size = 67108864',
+            ].join('; '),
+        )
+        done(null, conn)
+    } catch (error) {
+        done(error, conn)
+    }
 }
 
 const messageTime = (message: SQLiteSearchMessage): number => Math.trunc(Number(message.time || 0))
@@ -126,7 +127,7 @@ export default class SQLiteMessageSearchIndex {
         try {
             fs.mkdirSync(path.dirname(this.filePath), { recursive: true })
             this.db = knex({
-                client: 'sqlite3',
+                client: 'better-sqlite3',
                 connection: { filename: this.filePath, charset: 'utf8mb4' },
                 useNullAsDefault: true,
                 pool: { min: 1, max: 1, afterCreate: sqliteAfterCreate },
@@ -142,7 +143,9 @@ export default class SQLiteMessageSearchIndex {
             this.available = false
             this.ready = false
             this.rebuilding = false
+            const db = this.db
             this.db = null
+            if (db) await db.destroy().catch(() => undefined)
             if (!this.closing) this.errorHandle(error)
         }
     }
@@ -344,14 +347,12 @@ export default class SQLiteMessageSearchIndex {
             })
         }
         await db.raw(createSearchFtsIfNotExistsSql)
-        await db.raw(createSearchFtsVocabIfNotExistsSql)
         if ((await this.getState('format')) === searchIndexFormat) return
 
         await db.transaction(async (transaction) => {
             await transaction.schema.dropTableIfExists('search_fts_vocab')
             await transaction.schema.dropTableIfExists('search_fts')
             await transaction.raw(createSearchFtsSql)
-            await transaction.raw(createSearchFtsVocabSql)
             await transaction.schema.dropTableIfExists('search_metadata')
             await transaction.schema.dropTableIfExists('search_pending')
             await transaction.schema.dropTableIfExists('search_grams')
@@ -701,7 +702,6 @@ export default class SQLiteMessageSearchIndex {
             await transaction.schema.dropTableIfExists('search_fts_vocab')
             await transaction.schema.dropTableIfExists('search_fts')
             await transaction.raw(createSearchFtsSql)
-            await transaction.raw(createSearchFtsVocabSql)
             await transaction('search_state').whereIn('key', ['ready', 'buildCursor']).delete()
             await transaction('search_time_state').delete()
             await transaction('search_pending_times').where('needsRebuild', 1).delete()
@@ -745,13 +745,7 @@ export default class SQLiteMessageSearchIndex {
                         .map((row) => Number(row.time))
                         .filter((time) => time > 0)
                     if (rebuildTimes.length) {
-                        const forceRemoveTimes = new Set(
-                            pending
-                                .filter((row) => Number(row.needsRebuild || 0) === 1)
-                                .map((row) => Number(row.time))
-                                .filter((time) => time > 0),
-                        )
-                        await this.rebuildTimes(rebuildTimes, currentMessages, true, forceRemoveTimes)
+                        await this.rebuildTimes(rebuildTimes, currentMessages, true)
                     }
                 }
                 await this.removeProcessedPendingTimes(pending)
@@ -808,7 +802,6 @@ export default class SQLiteMessageSearchIndex {
         times: number[],
         messages?: SQLiteSearchMessage[],
         removeExisting = true,
-        forceRemoveTimes?: Set<number>,
     ): Promise<number> {
         const db = this.db
         if (!db) return 0
@@ -829,18 +822,10 @@ export default class SQLiteMessageSearchIndex {
             grouped.set(time, values)
         }
         await db.transaction(async (transaction) => {
-            const existingTimes = removeExisting
-                ? new Set(
-                      (await transaction('search_time_state').whereIn('time', normalizedTimes).select('time')).map(
-                          (row: any) => Number(row.time),
-                      ),
-                  )
-                : new Set<number>()
             for (const time of normalizedTimes) {
-                if (removeExisting && (existingTimes.has(time) || forceRemoveTimes?.has(time)))
-                    await this.removeFtsRow(transaction, time)
                 const value = grouped.get(time)
                 if (!value) {
+                    if (removeExisting) await transaction('search_fts').where('rowid', time).delete()
                     await transaction('search_time_state').where('time', time).delete()
                     continue
                 }
@@ -850,24 +835,16 @@ export default class SQLiteMessageSearchIndex {
                     .merge({ messageCount: value.messageCount })
                 const content = value.contents.filter(Boolean).join(messageSeparator)
                 if (content) {
-                    await transaction.raw('INSERT INTO search_fts(rowid, content) VALUES (?, ?)', [time, content])
+                    await transaction.raw('INSERT OR REPLACE INTO search_fts(rowid, content) VALUES (?, ?)', [
+                        time,
+                        content,
+                    ])
+                } else if (removeExisting) {
+                    await transaction('search_fts').where('rowid', time).delete()
                 }
             }
         })
         return currentMessages.length
-    }
-
-    private async removeFtsRow(transaction: Knex.Transaction, time: number): Promise<void> {
-        const terms = await transaction('search_fts_vocab')
-            .where('doc', time)
-            .select('term', 'offset')
-            .orderBy('offset', 'asc')
-        if (!terms.length) return
-        const content = terms.map((row: any) => String(row.term)).join(' ')
-        await transaction.raw("INSERT INTO search_fts(search_fts, rowid, content) VALUES ('delete', ?, ?)", [
-            time,
-            content,
-        ])
     }
 
     private async insertBuildBatch(times: number[], removeExisting: boolean): Promise<number> {
