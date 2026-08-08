@@ -15,6 +15,7 @@ export default class MongoStorageProvider implements StorageProvider {
     mdb: Db
     private mongoClient: MongoClient
     private searchIndex: SQLiteMessageSearchIndexWorker
+    private searchRoomsCache: Room[] | null = null
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     constructor(connStr: string, id: string | number, searchDataPath = path.join(process.cwd(), 'data')) {
@@ -67,6 +68,7 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async connect(): Promise<void> {
+        this.searchRoomsCache = null
         this.mongoClient = await MongoClient.connect(this.connStr)
         this.mdb = this.mongoClient.db('eqq' + this.id)
         await this.mdb.collection('rooms').createIndex('roomId', {
@@ -96,11 +98,14 @@ export default class MongoStorageProvider implements StorageProvider {
             background: true,
             unique: true,
         })
+        if (rooms.length)
+            this.searchRoomsCache = rooms.slice().sort((left, right) => Number(left.roomId) - Number(right.roomId))
         await this.searchIndex.open()
     }
 
     async close(): Promise<void> {
         await this.searchIndex.close()
+        this.searchRoomsCache = null
         if (this.mongoClient) {
             await this.mongoClient.close()
         }
@@ -115,30 +120,83 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     private async getSearchRooms(): Promise<Room[]> {
-        return (await this.getAllRooms()).slice().sort((left, right) => Number(left.roomId) - Number(right.roomId))
+        if (this.searchRoomsCache) return this.searchRoomsCache
+        const rooms = (await this.getAllRooms())
+            .slice()
+            .sort((left, right) => Number(left.roomId) - Number(right.roomId))
+        if (rooms.length) this.searchRoomsCache = rooms
+        return rooms
+    }
+
+    private async loadSearchTimesFromRoom(room: Room, afterTime: number, limit: number): Promise<number[]> {
+        // A $group before $limit must process the whole matching suffix. The
+        // sorted time-only scan can stop as soon as enough distinct times are found.
+        const roomLimit = Math.max(1, Math.trunc(limit))
+        const pageSize = Math.min(512, Math.max(32, roomLimit * 2))
+        const collection = this.mdb.collection<any>('msg' + Number(room.roomId))
+        const times: number[] = []
+        let cursorTime = Math.trunc(afterTime || 0)
+
+        while (times.length < roomLimit) {
+            const rows = await collection
+                .find({ time: { $gt: cursorTime } }, { projection: { _id: 0, time: 1 } })
+                .sort({ time: 1 })
+                .limit(pageSize)
+                .toArray()
+            if (!rows.length) break
+
+            let lastTime = cursorTime
+            for (const row of rows) {
+                const time = Math.trunc(Number(row.time))
+                if (!Number.isFinite(time) || time <= cursorTime) continue
+                lastTime = time
+                if (times[times.length - 1] !== time) times.push(time)
+                if (times.length >= roomLimit) break
+            }
+            if (lastTime <= cursorTime) break
+            cursorTime = lastTime
+            if (rows.length < pageSize) break
+        }
+
+        return times
+    }
+
+    private async loadSearchTimeCountsFromRoom(
+        room: Room,
+        afterTime: number,
+        limit: number,
+    ): Promise<Map<number, number>> {
+        const roomLimit = Math.max(1, Math.trunc(limit))
+        const cursor = this.mdb
+            .collection<any>('msg' + Number(room.roomId))
+            .find({ time: { $gt: Math.trunc(afterTime || 0) } }, { projection: { _id: 0, time: 1 } })
+            .sort({ time: 1 })
+            .batchSize(Math.min(512, Math.max(32, roomLimit * 2)))
+
+        const counts = new Map<number, number>()
+        try {
+            while (await cursor.hasNext()) {
+                const row = await cursor.next()
+                const time = Math.trunc(Number(row?.time))
+                if (!Number.isFinite(time) || time <= Math.trunc(afterTime || 0)) continue
+                if (!counts.has(time)) {
+                    if (counts.size >= roomLimit) break
+                    counts.set(time, 0)
+                }
+                counts.set(time, (counts.get(time) || 0) + 1)
+            }
+        } finally {
+            await cursor.close()
+        }
+        return counts
     }
 
     private async loadSearchTimes(afterTime: number, limit: number): Promise<number[]> {
         const rooms = await this.getSearchRooms()
-        const roomTimes = await Promise.all(
-            rooms.map((room) =>
-                this.mdb
-                    .collection<any>('msg' + Number(room.roomId))
-                    .aggregate([
-                        { $match: { time: { $gt: Math.trunc(afterTime || 0) } } },
-                        { $group: { _id: '$time' } },
-                        { $sort: { _id: 1 } },
-                        { $limit: Math.max(1, Math.trunc(limit)) },
-                    ])
-                    .toArray(),
-            ),
-        )
+        const roomTimes = await Promise.all(rooms.map((room) => this.loadSearchTimesFromRoom(room, afterTime, limit)))
         const times = new Set<number>()
         for (const rows of roomTimes) {
-            for (const row of rows) {
-                const time = Math.trunc(Number(row._id))
-                if (time > 0) times.add(time)
-            }
+            for (const time of rows) if (time > 0) times.add(time)
         }
         return Array.from(times)
             .sort((left, right) => left - right)
@@ -163,24 +221,13 @@ export default class MongoStorageProvider implements StorageProvider {
     private async loadSearchTimeCounts(afterTime: number, limit: number) {
         const rooms = await this.getSearchRooms()
         const roomCounts = await Promise.all(
-            rooms.map((room) =>
-                this.mdb
-                    .collection<any>('msg' + Number(room.roomId))
-                    .aggregate([
-                        { $match: { time: { $gt: Math.trunc(afterTime || 0) } } },
-                        { $group: { _id: '$time', messageCount: { $sum: 1 } } },
-                        { $sort: { _id: 1 } },
-                        { $limit: Math.max(1, Math.trunc(limit)) },
-                    ])
-                    .toArray(),
-            ),
+            rooms.map((room) => this.loadSearchTimeCountsFromRoom(room, afterTime, limit)),
         )
         const counts = new Map<number, number>()
-        for (const rows of roomCounts) {
-            for (const row of rows) {
-                const time = Math.trunc(Number(row._id))
+        for (const roomCount of roomCounts) {
+            for (const [time, messageCount] of roomCount) {
                 if (time <= 0) continue
-                counts.set(time, (counts.get(time) || 0) + Math.max(0, Number(row.messageCount || 0)))
+                counts.set(time, (counts.get(time) || 0) + messageCount)
             }
         }
         return Array.from(counts, ([time, messageCount]) => ({ time, messageCount }))
@@ -216,7 +263,9 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async addRoom(room: Room): Promise<any> {
         try {
-            return await this.mdb.collection('rooms').insertOne(room)
+            const result = await this.mdb.collection('rooms').insertOne(room)
+            this.searchRoomsCache = null
+            return result
         } catch (e) {}
     }
 
@@ -431,7 +480,9 @@ export default class MongoStorageProvider implements StorageProvider {
 
     async removeRoom(roomId: number): Promise<any> {
         try {
-            return await this.mdb.collection('rooms').findOneAndDelete({ roomId: roomId })
+            const result = await this.mdb.collection('rooms').findOneAndDelete({ roomId: roomId })
+            this.searchRoomsCache = null
+            return result
         } catch (e) {}
     }
 
