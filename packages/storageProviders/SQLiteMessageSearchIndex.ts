@@ -35,20 +35,35 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'unicode61-1gram-full-contentless-delete-v3'
+const searchIndexFormat = 'unicode61-1-2gram-none-contentless-delete-v4'
 const searchBatchSize = 200
 const searchWriteYieldInterval = 50
 const searchMergePages = 128
 const messageSeparator = ' messageboundary '
-const searchFtsColumns = "content, content='', contentless_delete=1, detail=full, tokenize='unicode61'"
+// detail=none omits token positions. Keep contentless_delete for row replacement;
+// SQLite rejects columnsize=0 together with contentless_delete=1.
+const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='unicode61'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
 const createSearchFtsIfNotExistsSql = `CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(${searchFtsColumns})`
 const legacyCursorRecoveryState = 'legacyCursorRecovery'
 
-const encodeSearchText = (value: unknown): string =>
-    Array.from(normalizeSearchText(value))
-        .map((character) => `g${character.codePointAt(0)!.toString(16)}`)
-        .join(' ')
+const searchCharacters = (value: unknown): string[] => Array.from(normalizeSearchText(value))
+
+const encodeOneGram = (character: string): string => `g${character.codePointAt(0)!.toString(16)}`
+
+const encodeTwoGram = (left: string, right: string): string =>
+    `b${left.codePointAt(0)!.toString(16)}x${right.codePointAt(0)!.toString(16)}`
+
+const encodeSearchText = (value: unknown): string => {
+    const characters = searchCharacters(value)
+    const grams = characters.map(encodeOneGram)
+    for (let index = 0; index + 1 < characters.length; index++) {
+        grams.push(encodeTwoGram(characters[index], characters[index + 1]))
+    }
+    return grams.join(' ')
+}
+
+const quoteSearchToken = (token: string): string => `"${token.replace(/"/g, '""')}"`
 
 const sqliteAfterCreate = (conn: any, done: any) => {
     try {
@@ -939,8 +954,14 @@ export default class SQLiteMessageSearchIndex {
     }
 
     private buildMatchQuery(value: unknown): string | null {
-        const encoded = encodeSearchText(value)
-        if (!encoded) return null
-        return `"${encoded.replace(/"/g, '""')}"`
+        const characters = searchCharacters(value)
+        if (!characters.length) return null
+        if (characters.length === 1) return quoteSearchToken(encodeOneGram(characters[0]))
+
+        const grams = new Set<string>()
+        for (let index = 0; index + 1 < characters.length; index++) {
+            grams.add(encodeTwoGram(characters[index], characters[index + 1]))
+        }
+        return Array.from(grams, quoteSearchToken).join(' AND ')
     }
 }
