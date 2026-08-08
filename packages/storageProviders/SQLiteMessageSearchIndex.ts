@@ -35,7 +35,7 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'trigram-interleaved-none-contentless-delete-v6'
+const searchIndexFormat = 'trigram-interleaved-run-length-none-contentless-delete-v7'
 const searchBatchSize = 200
 // Each bulk write below binds at most two values per time. Stay below the
 // lowest common SQLite variable limit even if searchBatchSize is increased.
@@ -43,7 +43,9 @@ const searchSqlParameterBudget = 900
 const searchWriteBatchSize = Math.min(searchBatchSize, Math.floor(searchSqlParameterBudget / 2))
 const searchMergePages = 128
 const interleavedSeparator = '\u0001'
+const continuousTokenMarker = '\u0002'
 const messageSeparator = '\u0003'
+const continuousTokenLengths = [4, 8, 16, 32] as const
 // detail=none omits token positions. Keep contentless_delete for row replacement;
 // SQLite rejects columnsize=0 together with contentless_delete=1.
 const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='trigram'"
@@ -58,10 +60,35 @@ const encodeInterleavedOneGram = (character: string): string =>
 
 const encodeInterleavedTwoGram = (left: string, right: string): string => `${left}${interleavedSeparator}${right}`
 
+// The length is stored as one code point (U+0004/U+0008/U+0010/U+0020), not
+// as decimal text such as "4" or "16", so every run token stays three code
+// points and is indexed by the trigram tokenizer as one token.
+const encodeContinuousToken = (character: string, length: number): string =>
+    `${continuousTokenMarker}${character}${String.fromCharCode(length)}`
+
+const forEachContinuousRun = (characters: string[], callback: (character: string, length: number) => void): void => {
+    for (let start = 0; start < characters.length;) {
+        const character = characters[start]
+        let end = start + 1
+        while (end < characters.length && characters[end] === character) end++
+        const length = end - start
+        if (length >= continuousTokenLengths[0]) callback(character, length)
+        start = end
+    }
+}
+
 const encodeSearchText = (value: unknown): string => {
     const characters = searchCharacters(value)
     if (!characters.length) return ''
-    return `${interleavedSeparator}${characters.join(interleavedSeparator)}${interleavedSeparator}`
+    const encoded = `${interleavedSeparator}${characters.join(interleavedSeparator)}${interleavedSeparator}`
+    const continuousTokens: string[] = []
+    forEachContinuousRun(characters, (character, length) => {
+        for (const tokenLength of continuousTokenLengths) {
+            if (length < tokenLength) break
+            continuousTokens.push(encodeContinuousToken(character, tokenLength))
+        }
+    })
+    return continuousTokens.length ? `${encoded}${continuousTokens.join('')}` : encoded
 }
 
 const encodeSearchQuery = (value: unknown): string | null => {
@@ -73,6 +100,15 @@ const encodeSearchQuery = (value: unknown): string | null => {
     for (let index = 0; index + 1 < characters.length; index++) {
         grams.add(encodeInterleavedTwoGram(characters[index], characters[index + 1]))
     }
+    forEachContinuousRun(characters, (character, length) => {
+        for (let index = continuousTokenLengths.length - 1; index >= 0; index--) {
+            const tokenLength = continuousTokenLengths[index]
+            if (length >= tokenLength) {
+                grams.add(encodeContinuousToken(character, tokenLength))
+                break
+            }
+        }
+    })
     return Array.from(grams, quoteSearchToken).join(' AND ')
 }
 
