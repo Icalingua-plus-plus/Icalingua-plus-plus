@@ -105,8 +105,8 @@ export default class SQLStorageProvider implements StorageProvider {
                     },
                     useNullAsDefault: true,
                     pool: {
-                        min: 2,
-                        max: 2,
+                        min: 1,
+                        max: 1,
                         afterCreate: (conn: any, done: any) => {
                             try {
                                 conn.exec(
@@ -205,20 +205,22 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     /** 私有方法，将 icalingua 的 message 转换成适合放在数据库里的格式 */
-    private msgConToDB(message: Message, roomId: number): Record<string, any> {
+    private msgConToDB(message: Partial<Message>, roomId?: number): Record<string, any> {
         try {
-            if (message)
-                return {
-                    ...message,
-                    senderId: `${message.senderId}`,
-                    _id: `${message._id}`,
-                    file: JSON.stringify(message.file),
-                    files: JSON.stringify(message.files),
-                    replyMessage: JSON.stringify(message.replyMessage),
-                    at: JSON.stringify(message.at),
-                    mirai: JSON.stringify(message.mirai),
-                    roomId,
+            if (message) {
+                const converted: Record<string, any> = { ...message }
+                if (message.senderId !== undefined && message.senderId !== null) {
+                    converted.senderId = `${message.senderId}`
                 }
+                if (message._id !== undefined && message._id !== null) converted._id = `${message._id}`
+                for (const field of ['file', 'files', 'replyMessage', 'at', 'mirai'] as const) {
+                    if (!Object.prototype.hasOwnProperty.call(message, field)) continue
+                    if (message[field] === undefined) delete converted[field]
+                    else converted[field] = JSON.stringify(message[field])
+                }
+                if (roomId !== undefined) converted.roomId = roomId
+                return converted
+            }
             return null
         } catch (e) {
             this.errorHandle(e)
@@ -344,38 +346,41 @@ export default class SQLStorageProvider implements StorageProvider {
                     report('升级数据库 v7 → v8')
                     await upg7to8(this.db)
                 case 8:
+                    report('升级数据库 v8 → v9')
                     if (dbVersion >= 7) {
-                        report('升级数据库 v8 → v9')
                         await upg8to9(this.db)
                     }
                 case 9:
+                    report('升级数据库 v9 → v10')
                     if (dbVersion >= 7) {
-                        report('升级数据库 v9 → v10')
                         await upg9to10(this.db)
                     }
                 case 10:
                     report('升级数据库 v10 → v11')
-                    await upg10to11(this.db)
-                case 11:
                     if (dbVersion >= 7) {
-                        report('升级数据库 v11 → v12')
+                        await upg10to11(this.db)
+                    }
+                case 11:
+                    report('升级数据库 v11 → v12')
+                    if (dbVersion >= 7) {
                         await upg11to12(this.db)
                     }
                 case 12:
+                    report('升级数据库 v12 → v13')
                     if (dbVersion >= 7) {
-                        report('升级数据库 v12 → v13')
                         await upg12to13(this.db)
                     }
                 case 13:
+                    report('升级数据库 v13 → v14')
                 //await upg13to14(this.db)
                 case 14:
+                    report('升级数据库 v14 → v15')
                     if (dbVersion >= 7) {
-                        report('升级数据库 v14 → v15')
                         await upg14to15(this.db)
                     }
                 case 15:
+                    report('升级数据库 v15 → v16')
                     if (dbVersion >= 7) {
-                        report('升级数据库 v15 → v16')
                         await upg15to16(this.db)
                     }
                 case 16:
@@ -826,7 +831,7 @@ export default class SQLStorageProvider implements StorageProvider {
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
             const current = await this.db<Message>('messages').where('_id', '=', `${messageId}`).first()
-            await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(message)
+            await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(this.msgConToDB(message))
             if (message.content !== undefined || message.time !== undefined) {
                 await this.searchIndex.requestRebuild([
                     Number(current?.time || 0),
