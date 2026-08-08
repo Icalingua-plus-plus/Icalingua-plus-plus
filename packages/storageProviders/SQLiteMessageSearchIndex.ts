@@ -37,7 +37,10 @@ interface PendingSearchTime {
 
 const searchIndexFormat = 'trigram-interleaved-none-contentless-delete-v6'
 const searchBatchSize = 200
-const searchWriteYieldInterval = 50
+// Each bulk write below binds at most two values per time. Stay below the
+// lowest common SQLite variable limit even if searchBatchSize is increased.
+const searchSqlParameterBudget = 900
+const searchWriteBatchSize = Math.min(searchBatchSize, Math.floor(searchSqlParameterBudget / 2))
 const searchMergePages = 128
 const interleavedSeparator = '\u0001'
 const messageSeparator = '\u0003'
@@ -873,30 +876,46 @@ export default class SQLiteMessageSearchIndex {
             grouped.set(time, values)
         }
         await db.transaction(async (transaction) => {
-            for (let index = 0; index < normalizedTimes.length; index++) {
-                const time = normalizedTimes[index]
-                const value = grouped.get(time)
-                if (!value) {
-                    if (removeExisting) await transaction('search_fts').where('rowid', time).delete()
-                    await transaction('search_time_state').where('time', time).delete()
-                    continue
-                }
-                await transaction('search_time_state')
-                    .insert({ time, messageCount: value.messageCount })
-                    .onConflict('time')
-                    .merge({ messageCount: value.messageCount })
-                const content = value.contents.filter(Boolean).join(messageSeparator)
-                if (content) {
-                    await transaction.raw('INSERT OR REPLACE INTO search_fts(rowid, content) VALUES (?, ?)', [
+            for (let offset = 0; offset < normalizedTimes.length; offset += searchWriteBatchSize) {
+                const batchTimes = normalizedTimes.slice(offset, offset + searchWriteBatchSize)
+                const batchRows = batchTimes.map((time) => {
+                    const value = grouped.get(time)
+                    return {
                         time,
-                        content,
-                    ])
-                } else if (removeExisting) {
-                    await transaction('search_fts').where('rowid', time).delete()
+                        messageCount: value?.messageCount ?? null,
+                        content: value?.contents.join(messageSeparator) || '',
+                    }
+                })
+                const stateRows = batchRows.filter((row) => row.messageCount !== null)
+                const ftsRows = stateRows.filter((row) => row.content)
+                const ftsDeleteTimes = removeExisting
+                    ? batchRows.filter((row) => !row.content).map(({ time }) => time)
+                    : []
+                const stateDeleteTimes = batchRows.filter((row) => row.messageCount === null).map(({ time }) => time)
+
+                if (stateRows.length) {
+                    await transaction('search_time_state')
+                        .insert(
+                            stateRows.map(({ time, messageCount }) => ({ time, messageCount: messageCount as number })),
+                        )
+                        .onConflict('time')
+                        .merge()
                 }
-                if ((index + 1) % searchWriteYieldInterval === 0 && index + 1 < normalizedTimes.length) {
-                    await yieldToWorkerEventLoop()
+                if (ftsRows.length) {
+                    const placeholders = ftsRows.map(() => '(?, ?)').join(', ')
+                    const bindings = ftsRows.flatMap(({ time, content }) => [time, content])
+                    await transaction.raw(
+                        `INSERT OR REPLACE INTO search_fts(rowid, content) VALUES ${placeholders}`,
+                        bindings,
+                    )
                 }
+                if (ftsDeleteTimes.length) {
+                    await transaction('search_fts').whereIn('rowid', ftsDeleteTimes).delete()
+                }
+                if (stateDeleteTimes.length) {
+                    await transaction('search_time_state').whereIn('time', stateDeleteTimes).delete()
+                }
+                if (offset + searchWriteBatchSize < normalizedTimes.length) await yieldToWorkerEventLoop()
             }
         })
         return currentMessages.length
