@@ -37,6 +37,8 @@ interface PendingSearchTime {
 
 const searchIndexFormat = 'unicode61-1gram-full-contentless-delete-v3'
 const searchBatchSize = 200
+const searchWriteYieldInterval = 50
+const searchMergePages = 128
 const messageSeparator = ' messageboundary '
 const searchFtsColumns = "content, content='', contentless_delete=1, detail=full, tokenize='unicode61'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
@@ -66,6 +68,8 @@ const sqliteAfterCreate = (conn: any, done: any) => {
 }
 
 const messageTime = (message: SQLiteSearchMessage): number => Math.trunc(Number(message.time || 0))
+
+const yieldToWorkerEventLoop = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
 
 interface BuildCursor {
     time: number
@@ -225,6 +229,7 @@ export default class SQLiteMessageSearchIndex {
                     }))
                     const pending = transaction('search_pending_times').insert(rows)
                     await pending.onConflict('time').merge({ queueVersion })
+                    if (offset + searchBatchSize < times.length) await yieldToWorkerEventLoop()
                 }
             })
             this.pendingWork = true
@@ -261,6 +266,7 @@ export default class SQLiteMessageSearchIndex {
                         .insert(rows)
                         .onConflict('time')
                         .merge({ queueVersion, needsRebuild: 1 })
+                    if (offset + searchBatchSize < indexedTimes.length) await yieldToWorkerEventLoop()
                 }
             })
             this.pendingWork = true
@@ -522,6 +528,7 @@ export default class SQLiteMessageSearchIndex {
 
         await loadNextSourceBatch()
         await loadNextIndexedBatch()
+        let comparisonsSinceYield = 0
         while (!this.closing && (!sourceDone || !indexedDone)) {
             const source = sourceBatch[sourceOffset]
             const indexed = indexedBatch[indexedOffset]
@@ -567,6 +574,11 @@ export default class SQLiteMessageSearchIndex {
             }
             if (sourceOffset >= sourceBatch.length) await loadNextSourceBatch()
             if (indexedOffset >= indexedBatch.length) await loadNextIndexedBatch()
+            comparisonsSinceYield++
+            if (comparisonsSinceYield >= searchBatchSize) {
+                comparisonsSinceYield = 0
+                await yieldToWorkerEventLoop()
+            }
         }
         if (this.closing) return false
         await flushInvalidTimes()
@@ -653,6 +665,7 @@ export default class SQLiteMessageSearchIndex {
                     await this.setState('buildCursor', JSON.stringify({ time: lastTime }))
                     processed += batchCount
                     this.report({ active: true, step: processed, total, message: '正在建立消息搜索索引...' })
+                    await yieldToWorkerEventLoop()
                 }
             } finally {
                 this.buildScanActive = false
@@ -766,6 +779,7 @@ export default class SQLiteMessageSearchIndex {
                     message: '正在同步索引建立期间新增的消息...',
                 })
             }
+            await yieldToWorkerEventLoop()
         }
     }
 
@@ -791,7 +805,17 @@ export default class SQLiteMessageSearchIndex {
         const db = this.db
         if (!db) return
         try {
-            await db.raw("INSERT INTO search_fts(search_fts) VALUES('optimize')")
+            let mergePages = -searchMergePages
+            while (!this.closing) {
+                const before = await db.raw('SELECT total_changes() AS changes')
+                await db.raw("INSERT INTO search_fts(search_fts, rank) VALUES('merge', ?)", [mergePages])
+                const after = await db.raw('SELECT total_changes() AS changes')
+                const beforeChanges = Number(before?.[0]?.changes || 0)
+                const afterChanges = Number(after?.[0]?.changes || 0)
+                if (afterChanges - beforeChanges < 2) break
+                mergePages = searchMergePages
+                await yieldToWorkerEventLoop()
+            }
             await db.raw('PRAGMA wal_checkpoint(TRUNCATE)')
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
@@ -822,7 +846,8 @@ export default class SQLiteMessageSearchIndex {
             grouped.set(time, values)
         }
         await db.transaction(async (transaction) => {
-            for (const time of normalizedTimes) {
+            for (let index = 0; index < normalizedTimes.length; index++) {
+                const time = normalizedTimes[index]
                 const value = grouped.get(time)
                 if (!value) {
                     if (removeExisting) await transaction('search_fts').where('rowid', time).delete()
@@ -841,6 +866,9 @@ export default class SQLiteMessageSearchIndex {
                     ])
                 } else if (removeExisting) {
                     await transaction('search_fts').where('rowid', time).delete()
+                }
+                if ((index + 1) % searchWriteYieldInterval === 0 && index + 1 < normalizedTimes.length) {
+                    await yieldToWorkerEventLoop()
                 }
             }
         })

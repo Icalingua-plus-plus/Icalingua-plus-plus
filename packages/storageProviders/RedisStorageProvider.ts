@@ -8,7 +8,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndexWorker, { SQLiteSearchMessage } from './SQLiteMessageSearchIndexWorker'
 
 const insertMessageScript = [
     "if redis.call('HEXISTS', KEYS[1], ARGV[1]) == 1 then return 0 end",
@@ -21,20 +21,23 @@ export default class RedisStorageProvider implements StorageProvider {
     qid: string
     connStr: string
     redis: Redis.Redis
-    private searchIndex: SQLiteMessageSearchIndex
+    private searchIndex: SQLiteMessageSearchIndexWorker
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     /** `constructor` 方法。 */
     constructor(connStr: string, id: string, searchDataPath = path.join(process.cwd(), 'data')) {
         this.connStr = connStr
         this.qid = `eqq:${id}`
-        this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
-            loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
-            loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
-            loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
-            countMessages: () => this.countSearchMessages(),
-            reportProgress: (progress) => this.reportUpgradeProgress(progress),
-        })
+        this.searchIndex = new SQLiteMessageSearchIndexWorker(
+            path.join(searchDataPath, 'databases', `eqq${id}_search.db`),
+            {
+                loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
+                loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
+                loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
+                countMessages: () => this.countSearchMessages(),
+                reportProgress: (progress) => this.reportUpgradeProgress(progress),
+            },
+        )
     }
 
     private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {

@@ -6,7 +6,8 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 const mainConfig: Configuration = {
     entry: {
-        main: path.join(__dirname, '../src/main/index.ts')
+        main: path.join(__dirname, '../src/main/index.ts'),
+        dbWorker: path.join(__dirname, '../../packages/storageProviders/DBWorkerEntry.ts')
     },
     externals: [
         ...Object.keys(dependencies || {})

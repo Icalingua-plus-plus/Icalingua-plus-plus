@@ -10,7 +10,13 @@ import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
+import SQLStorageProviderWorker from './SQLStorageProviderWorker'
+import type {
+    SQLiteMessageSearchIndexCallbacks,
+    SQLiteMessageSearchTimesOptions,
+    SQLiteSearchMessage,
+} from './SQLiteMessageSearchIndex'
 import upg0to1 from './SQLUpgradeScript/0to1'
 import upg1to2 from './SQLUpgradeScript/1to2'
 import upg2to3 from './SQLUpgradeScript/2to3'
@@ -62,6 +68,25 @@ interface SQLiteOpt {
     database?: never
 }
 
+interface MessageSearchIndex {
+    readonly isReady: boolean
+    open(): Promise<void>
+    close(): Promise<void>
+    validate(): Promise<void>
+    syncMessages(messages: SQLiteSearchMessage[]): Promise<void>
+    requestRebuild(times?: number | number[]): Promise<void>
+    searchTimes(keyword: string, options: SQLiteMessageSearchTimesOptions): Promise<number[] | null>
+}
+
+export type MessageSearchIndexFactory = (
+    filePath: string,
+    callbacks: SQLiteMessageSearchIndexCallbacks,
+    errorHandle: (error: unknown) => void,
+) => MessageSearchIndex
+
+const createMessageSearchIndexWorker: MessageSearchIndexFactory = (filePath, callbacks, errorHandle) =>
+    new SQLiteMessageSearchIndexWorker(filePath, callbacks, errorHandle)
+
 export default class SQLStorageProvider implements StorageProvider {
     id: string
     type: 'pg' | 'mysql' | 'sqlite3'
@@ -70,7 +95,7 @@ export default class SQLStorageProvider implements StorageProvider {
     /** 数据库升级进度回调，参数：(当前步骤, 总步骤, 描述) */
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
     private qid: string
-    private searchIndex: SQLiteMessageSearchIndex
+    private searchIndex: MessageSearchIndex
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
     constructor(
@@ -78,7 +103,16 @@ export default class SQLStorageProvider implements StorageProvider {
         type: 'pg' | 'mysql' | 'sqlite3',
         connectOpt: PgMyOpt | SQLiteOpt,
         errorHandle: Function = console.error,
+        searchIndexFactory?: MessageSearchIndexFactory,
     ) {
+        if (type === 'sqlite3' && !searchIndexFactory) {
+            return new SQLStorageProviderWorker(
+                id,
+                type,
+                connectOpt as SQLiteOpt,
+                errorHandle,
+            ) as unknown as SQLStorageProvider
+        }
         this.id = id
         this.qid = `eqq${id}`
         this.type = type
@@ -149,7 +183,7 @@ export default class SQLStorageProvider implements StorageProvider {
         const searchDataPath =
             (connectOpt as any).searchDataPath || (connectOpt as any).dataPath || path.join(process.cwd(), 'data')
         const searchDbPath = path.join(searchDataPath, 'databases', `${this.qid}_search.db`)
-        this.searchIndex = new SQLiteMessageSearchIndex(
+        this.searchIndex = (searchIndexFactory || createMessageSearchIndexWorker)(
             searchDbPath,
             {
                 loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),

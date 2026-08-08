@@ -7,26 +7,29 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
-import SQLiteMessageSearchIndex, { SQLiteSearchMessage } from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndexWorker, { SQLiteSearchMessage } from './SQLiteMessageSearchIndexWorker'
 
 export default class MongoStorageProvider implements StorageProvider {
     id: string | number
     connStr: string
     mdb: Db
     private mongoClient: MongoClient
-    private searchIndex: SQLiteMessageSearchIndex
+    private searchIndex: SQLiteMessageSearchIndexWorker
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     constructor(connStr: string, id: string | number, searchDataPath = path.join(process.cwd(), 'data')) {
         this.id = id
         this.connStr = connStr
-        this.searchIndex = new SQLiteMessageSearchIndex(path.join(searchDataPath, 'databases', `eqq${id}_search.db`), {
-            loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
-            loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
-            loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
-            countMessages: () => this.countSearchMessages(),
-            reportProgress: (progress) => this.reportUpgradeProgress(progress),
-        })
+        this.searchIndex = new SQLiteMessageSearchIndexWorker(
+            path.join(searchDataPath, 'databases', `eqq${id}_search.db`),
+            {
+                loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
+                loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
+                loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
+                countMessages: () => this.countSearchMessages(),
+                reportProgress: (progress) => this.reportUpgradeProgress(progress),
+            },
+        )
     }
 
     private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {
