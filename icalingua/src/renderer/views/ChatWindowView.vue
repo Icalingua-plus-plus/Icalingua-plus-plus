@@ -15,7 +15,8 @@
                     :messages-loaded="messagesLoaded"
                     :show-audio="true"
                     :show-reaction-emojis="false"
-                    :show-new-messages-divider="false"
+                    :show-new-messages-divider="!isInMiddle"
+                    :unread-divider-count="unreadDividerCount"
                     :load-first-room="true"
                     :accepted-files="'*'"
                     :message-actions="[]"
@@ -171,6 +172,7 @@ export default {
                 lastMessage: {},
             },
             messages: [],
+            unreadDividerCount: 0,
             messagesLoaded: false,
             dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             loading: true,
@@ -239,6 +241,7 @@ export default {
         // 获取房间信息
         const roomInfo = await ipc.getRoomInfo(this.roomId)
         if (roomInfo) {
+            this.unreadDividerCount = Math.max(Number(roomInfo.unreadCount) || 0, 0)
             this.room = {
                 ...roomInfo,
                 users: roomInfo.users || [],

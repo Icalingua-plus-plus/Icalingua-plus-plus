@@ -109,31 +109,30 @@
                             <message
                                 :current-user-id="currentUserId"
                                 :message="m"
-                                :index="i + visibleViewport.head"
-                                :messages="messages"
+                                :show-date="
+                                    i + visibleViewport.head > 0 &&
+                                    m.date !== messages[i + visibleViewport.head - 1].date
+                                "
+                                :message-offset="
+                                    i + visibleViewport.head > 0 &&
+                                    m.senderId !== messages[i + visibleViewport.head - 1].senderId
+                                "
                                 :audio-session="getAudioSession(m)"
                                 :edited-message="editedMessage"
-                                :message-actions="messageActions"
                                 :room-users="room.users"
                                 :text-messages="textMessages"
-                                :room-footer-ref="$refs.roomFooter"
-                                :new-messages="newMessages"
-                                :show-reaction-emojis="showReactionEmojis"
-                                :show-new-messages-divider="showNewMessagesDivider"
+                                :show-new-messages-divider="showNewMessagesDivider && unreadDividerMessageId === m._id"
                                 :text-formatting="textFormatting"
-                                :emojis-list="emojisList"
                                 :showForwardPanel="showForwardPanel"
-                                :selectUpdateKey="selectUpdateKey"
-                                :selectedMessage="selectedMessage"
+                                :selected="selectedMessageIds.has(m._id)"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
-                                :msgsToForward="msgsToForward"
                                 :usePanguJs="usePanguJsRecv"
                                 @open-file="openFile"
-                                @add-new-message="addNewMessage"
                                 @ctx="msgctx($event, m)"
                                 @avatar-ctx="avatarCtx(m, $event)"
                                 @download-image="$emit('download-image', $event)"
+                                @open-image="openMessageImage"
                                 @poke="$emit('pokegroup', m.senderId)"
                                 @open-forward="$emit('open-forward', $event)"
                                 @start-chat="(e, f) => $emit('start-chat', e, f)"
@@ -148,13 +147,7 @@
                                 :disableQLottie="disableQLottie"
                                 :record-path="recordPath"
                                 :isSteamVrRunning="isSteamVrRunning"
-                            >
-                                <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                                    <template v-if="name !== 'messages-top'">
-                                        <slot :name="name" v-bind="data" />
-                                    </template>
-                                </template>
-                            </message>
+                            />
                         </div>
                     </transition-group>
                     <transition name="vac-fade-message">
@@ -559,7 +552,6 @@ import { ipcRenderer, webUtils } from 'electron'
 
 import InfiniteLoading from 'vue-infinite-loading'
 import vClickOutside from 'v-click-outside'
-import emojis from 'vue-emoji-picker/src/emojis'
 
 import Loader from '../../components/Loader'
 import SvgIcon from '../../components/SvgIcon'
@@ -624,6 +616,7 @@ export default {
         showEmojis: { type: Boolean, required: true },
         showReactionEmojis: { type: Boolean, required: true },
         showNewMessagesDivider: { type: Boolean, required: true },
+        unreadDividerCount: { type: Number, default: 0 },
         showFooter: { type: Boolean, required: true },
         showHeader: { type: Boolean, default: true },
         acceptedFiles: { type: String, required: true },
@@ -660,13 +653,11 @@ export default {
             emojiOpened: false,
             scrollIcon: false,
             scrollMessagesCount: 0,
-            newMessages: [],
             keepKeyboardOpen: false,
             textareaCursorPosition: null,
             textMessages: require('../../locales').default,
             editAndResend: false,
             msgsToForward: [],
-            selectUpdateKey: 0,
             showForwardPanel: false,
             isQuickFaceOn: false,
             isQuickAtOn: false,
@@ -674,7 +665,6 @@ export default {
             faceDir,
             groupMembers: null,
             useAtKey: false,
-            selectedMessage: '',
             visibleViewport: {
                 head: 0,
                 tail: 0,
@@ -732,10 +722,6 @@ export default {
         }
     },
     computed: {
-        emojisList() {
-            const emojisTable = Object.keys(emojis).map((key) => emojis[key])
-            return Object.assign({}, ...emojisTable)
-        },
         room() {
             return this.rooms.find((room) => room.roomId === this.roomId) || {}
         },
@@ -754,6 +740,21 @@ export default {
             const height = w.height || w.innerHeight
             // 每条消息估算高度 60px，乘以 5 倍缓冲确保快速滚动不会出现空白
             return Math.ceil(height / 60) * 5
+        },
+        selectedMessageIds() {
+            return new Set(this.msgsToForward)
+        },
+        unreadDividerMessageId() {
+            let remaining = this.unreadDividerCount
+            if (remaining <= 0) return null
+
+            for (let index = this.messages.length - 1; index >= 0; index--) {
+                const message = this.messages[index]
+                if (!message || message.system) continue
+                remaining--
+                if (remaining === 0) return message._id
+            }
+            return null
         },
         audioRecordingStatus() {
             if (this.isAudioStarting) return '正在启动麦克风'
@@ -948,7 +949,6 @@ export default {
         },
     },
     async mounted() {
-        this.newMessages = []
         this.restoreMessageDraft()
 
         window.addEventListener('paste', (event) => {
@@ -1022,9 +1022,7 @@ export default {
         ipcRenderer.on('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
         ipcRenderer.on('startForward', (_, _id) => {
             if (this.showForwardPanel) return
-            this.selectedMessage = _id
-            this.msgsToForward.push(_id)
-            this.selectUpdateKey = 1
+            this.msgsToForward = [_id]
             this.showForwardPanel = true
         })
         ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
@@ -1069,9 +1067,9 @@ export default {
         }
         ipcRenderer.on('forwardSingleMessage', (_, _id) => {
             this.showForwardPanel = true
-            this.selectedMessage = _id
-            this.msgsToForward.push(_id)
-            this.selectUpdateKey = 1
+            if (!this.selectedMessageIds.has(_id)) {
+                this.msgsToForward = [...this.msgsToForward, _id]
+            }
         })
     },
     beforeDestroy() {
@@ -1704,14 +1702,14 @@ export default {
             this.closeForwardPanel()
         },
         closeForwardPanel() {
-            this.selectUpdateKey = 0
             this.showForwardPanel = false
             this.msgsToForward = []
-            this.selectedMessage = ''
             console.log('closeForwardPanel')
         },
         addmsgToForward(messageId) {
-            this.msgsToForward.push(messageId)
+            if (!this.selectedMessageIds.has(messageId)) {
+                this.msgsToForward = [...this.msgsToForward, messageId]
+            }
             console.log('addmsgToForward')
         },
         delmsgToForward(messageId) {
@@ -1867,9 +1865,6 @@ export default {
                 height: height,
                 width: width + 26,
             }
-        },
-        addNewMessage(message) {
-            this.newMessages.push(message)
         },
         resetMessage(disableMobileFocus = null, editFile = null) {
             this.$emit('typing-message', null)
@@ -2551,7 +2546,6 @@ export default {
 
             this.msgsToForward = nextForwardIds
             this.mouseSelectIds = selectedIds
-            this.selectUpdateKey++
         },
         scheduleMouseSelectUpdate() {
             if (this.mouseSelectFrame !== null) return
@@ -2626,6 +2620,31 @@ export default {
             } else {
                 ipcRenderer.send('openImage', src, this.localImageViewerByDefault)
             }
+        },
+        async openMessageImage({ url, messageId, imageIndex }) {
+            const messages = this.messages
+            const { singleImageMode } = await ipc.getSettings()
+            if (singleImageMode || this.localImageViewerByDefault) {
+                ipcRenderer.send('openImage', url, this.localImageViewerByDefault)
+                return
+            }
+
+            const images = []
+            for (const message of messages) {
+                if (message.files) {
+                    for (let index = 0; index < message.files.length; index++) {
+                        const file = message.files[index]
+                        if (file.type && file.type.startsWith('image')) {
+                            images.push(`${file.url}&message_id=${message._id}&img_index=${index}`)
+                        }
+                    }
+                } else if (message.file && message.file.type && message.file.type.startsWith('image')) {
+                    images.push(`${message.file.url}&message_id=${message._id}&img_index=0`)
+                }
+            }
+
+            const imageUrl = `${url}&message_id=${messageId}&img_index=${imageIndex}`
+            ipcRenderer.send('openImage', imageUrl, false, images)
         },
     },
 }

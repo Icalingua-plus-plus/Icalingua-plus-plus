@@ -4,7 +4,7 @@
             {{ message.date }}
         </div>
 
-        <div v-if="newMessage._id === message._id" class="vac-line-new">
+        <div v-if="showNewMessagesDivider" class="vac-line-new">
             {{ textMessages.NEW_MESSAGES }}
         </div>
 
@@ -151,15 +151,11 @@
                                     :showForwardPanel="showForwardPanel"
                                     :hide-chat-image-by-default="hideChatImageByDefault"
                                     :local-image-viewer-by-default="localImageViewerByDefault"
-                                    :messages="messages"
-                                    :message="message"
-                                    :img_index="part.fileIndex"
+                                    :message-id="message._id"
+                                    :image-index="part.fileIndex"
                                     @open-file="openFile"
-                                >
-                                    <template v-for="(i, name) in $scopedSlots" #[name]="data">
-                                        <slot :name="name" v-bind="data" />
-                                    </template>
-                                </message-image>
+                                    @open-image="$emit('open-image', $event)"
+                                />
                                 <format-message
                                     v-else
                                     :content="part.content"
@@ -192,15 +188,11 @@
                                 :showForwardPanel="showForwardPanel"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
-                                :messages="messages"
-                                :message="message"
-                                :img_index="i"
+                                :message-id="message._id"
+                                :image-index="i"
                                 @open-file="openFile"
-                            >
-                                <template v-for="(i, name) in $scopedSlots" #[name]="data">
-                                    <slot :name="name" v-bind="data" />
-                                </template>
-                            </message-image>
+                                @open-image="$emit('open-image', $event)"
+                            />
                         </template>
 
                         <message-image
@@ -214,15 +206,11 @@
                             :showForwardPanel="showForwardPanel"
                             :hide-chat-image-by-default="hideChatImageByDefault"
                             :local-image-viewer-by-default="localImageViewerByDefault"
-                            :messages="messages"
-                            :message="message"
-                            :img_index="0"
+                            :message-id="message._id"
+                            :image-index="0"
                             @open-file="openFile"
-                        >
-                            <template v-for="(i, name) in $scopedSlots" #[name]="data">
-                                <slot :name="name" v-bind="data" />
-                            </template>
-                        </message-image>
+                            @open-image="$emit('open-image', $event)"
+                        />
 
                         <message-video
                             v-else-if="isVideo"
@@ -370,24 +358,18 @@ export default {
     props: {
         currentUserId: { type: [String, Number], required: true },
         textMessages: { type: Object, required: true },
-        index: { type: Number, required: true },
         message: { type: Object, required: true },
-        messages: { type: Array, required: true },
+        showDate: { type: Boolean, default: false },
+        messageOffset: { type: Boolean, default: false },
         audioSession: { type: Object, default: null },
         editedMessage: { type: Object, required: true },
         roomUsers: { type: Array, default: () => [] },
-        roomFooterRef: { type: HTMLDivElement, default: null },
-        newMessages: { type: Array, default: () => [] },
-        showReactionEmojis: { type: Boolean, required: true },
         showNewMessagesDivider: { type: Boolean, required: true },
         textFormatting: { type: Boolean, required: true },
-        emojisList: { type: Object, required: true },
         showForwardPanel: { type: Boolean, required: true },
-        selectUpdateKey: { type: Number, require: true },
-        selectedMessage: { type: String, required: true },
+        selected: { type: Boolean, default: false },
         linkify: { type: Boolean, default: true },
         forwardResId: { type: String, required: false },
-        msgsToForward: { type: Array, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
         hideChatVideoByDefault: { type: Boolean, required: true },
         localImageViewerByDefault: { type: Boolean, required: true },
@@ -404,25 +386,17 @@ export default {
             messageHover: false,
             optionsOpened: false,
             emojiOpened: false,
-            newMessage: {},
             lottie: getLottieFace(this.message.content, this.message.time),
             lottieResult: getLottieFace(this.message.content, this.message.time, true),
             tgLogo: `file://${__static}/tg.svg`,
             copyButton: `file://${__static}/Copy.svg`,
             copyLinkButton: `file://${__static}/bx--link.svg`,
             replyButton: `file://${__static}/reply.svg`,
-            selected: false,
             recallInfoText: '',
         }
     },
 
     computed: {
-        showDate() {
-            return this.index > 0 && this.message.date !== this.messages[this.index - 1].date
-        },
-        messageOffset() {
-            return this.index > 0 && this.message.senderId !== this.messages[this.index - 1].senderId
-        },
         isMessageHover() {
             return this.editedMessage._id === this.message._id || this.hoverMessageId === this.message._id
         },
@@ -508,19 +482,6 @@ export default {
     },
 
     watch: {
-        newMessages(val) {
-            if (!val.length || !this.showNewMessagesDivider) return
-            this.newMessage = val.reduce((res, obj) => (obj.index < res.index ? obj : res))
-        },
-        selectUpdateKey: {
-            handler(newValue) {
-                if (!newValue) this.selected = false
-                else
-                    this.selected =
-                        this.message._id === this.selectedMessage || this.msgsToForward.includes(this.message._id)
-            },
-            immediate: true,
-        },
         'message.recallInfo': {
             handler(newValue) {
                 if (newValue) {
@@ -539,12 +500,6 @@ export default {
                 'Messages object is not valid! Must contain _id[String, Number], content[String, Number] and senderId[String, Number]',
             )
         }
-        if (!this.message.seen && this.message.senderId !== this.currentUserId) {
-            this.$emit('add-new-message', {
-                _id: this.message._id,
-                index: this.index,
-            })
-        }
         if (this.message.deleted && this.message.recallInfo) {
             const info = JSON.parse(this.message.recallInfo)
             const date = new Date(info.time).toLocaleString()
@@ -555,9 +510,9 @@ export default {
     methods: {
         selectMessage(event) {
             if (!this.showForwardPanel) return
-            this.selected = !this.selected
-            console.log('selectMessage', this.selected)
-            this.$emit(this.selected ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
+            const nextSelected = !this.selected
+            console.log('selectMessage', nextSelected)
+            this.$emit(nextSelected ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
             event.preventDefault()
         },
         onHoverMessage() {

@@ -134,7 +134,8 @@
                         :messages-loaded="messagesLoaded"
                         :show-audio="true"
                         :show-reaction-emojis="false"
-                        :show-new-messages-divider="false"
+                        :show-new-messages-divider="!isInMiddle"
+                        :unread-divider-count="unreadDividerCount"
                         :load-first-room="false"
                         :accepted-files="'*'"
                         :message-actions="[]"
@@ -436,6 +437,7 @@ export default {
             forwardMulti: false,
             forwardAnonymous: false,
             lastUnreadCount: 0,
+            unreadDividerCount: 0,
             lastUnreadCheck: 0,
             lastUnreadAt: false,
             lastUnreadCheck2: 0,
@@ -1258,6 +1260,7 @@ Chromium ${process.versions.chrome}`
                 ipc.updateRoom(this.selectedRoom.roomId, { at: false })
             }
             if (this.selectedRoom.roomId === room.roomId) return
+            this.unreadDividerCount = Math.max(Number(room.unreadCount) || 0, 0)
             // 记录导航历史
             if (!this.isNavigating) {
                 this.navBackStack.push(this.selectedRoom.roomId)
@@ -1371,6 +1374,7 @@ Chromium ${process.versions.chrome}`
             this.cancelPendingIncomingMessages()
             this.setMessageList([])
             this.lastUnreadCount = 0
+            this.unreadDividerCount = 0
             this.lastUnreadAt = false
             this.isInMiddle = false // 关闭房间时重置中间加载状态
             this.showPanel = 'contact'

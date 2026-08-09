@@ -80,9 +80,8 @@ export default {
         showForwardPanel: { type: Boolean, required: true },
         hideChatImageByDefault: { type: Boolean, required: false, default: false },
         localImageViewerByDefault: { type: Boolean, required: false, default: false },
-        messages: { type: Array, required: false },
-        message: { type: Object, required: false },
-        img_index: { type: Number, required: false },
+        messageId: { type: [String, Number], required: true },
+        imageIndex: { type: Number, default: 0 },
     },
 
     data() {
@@ -142,27 +141,13 @@ export default {
                 }
             }
         },
-        async openImage() {
+        openImage() {
             if (this.showForwardPanel) return
-            const singleImageMode = (await ipcRenderer.invoke('getSettings')).singleImageMode
-            if (!this.messages || singleImageMode || this.localImageViewerByDefault)
-                ipcRenderer.send('openImage', this.file.url, this.localImageViewerByDefault)
-            else {
-                let images = []
-                const imgUrl = this.file.url + `&message_id=${this.message._id}&img_index=${this.img_index}`
-                for (let i of this.messages) {
-                    if (i.files) {
-                        for (let j in i.files) {
-                            if (i.files[j].type.startsWith('image')) {
-                                images.push(i.files[j].url + `&message_id=${i._id}&img_index=${j}`)
-                            }
-                        }
-                    } else if (this.message[i].file && this.message[i].file.type.startsWith('image')) {
-                        images.push(i.file.url + `&message_id=${i._id}&img_index=0`)
-                    }
-                }
-                ipcRenderer.send('openImage', imgUrl, false, images)
-            }
+            this.$emit('open-image', {
+                url: this.file.url,
+                messageId: this.messageId,
+                imageIndex: this.imageIndex,
+            })
         },
     },
 }
