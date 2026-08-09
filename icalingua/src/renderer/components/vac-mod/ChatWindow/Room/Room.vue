@@ -2237,17 +2237,13 @@ export default {
                         console.error(e)
                     }
                 }
-                const fileURL = filePath ? filePath : URL.createObjectURL(file)
-                const blobFile = await fetch(fileURL).then((res) => res.blob())
                 const typeIndex = file.name.lastIndexOf('.')
 
                 const fileObj = {
-                    blob: blobFile,
                     name: file.name.substring(0, typeIndex),
                     size: file.size,
                     type: file.type,
                     extension: file.name.substring(typeIndex + 1),
-                    localUrl: fileURL,
                     path: filePath,
                 }
                 const extension = fileObj.extension.toLowerCase()
@@ -2261,17 +2257,27 @@ export default {
                     fileObj.type = ''
                 }
                 if (force) fileObj.type = ''
+
+                const isImage = isImageFile(fileObj)
+                const isVideo = isVideoFile(fileObj)
+                const isAudio = isAudioFile(fileObj)
+                const fileURL = filePath || (isImage || isVideo || isAudio ? URL.createObjectURL(file) : '')
+                fileObj.localUrl = fileURL
+
+                // File 本身就是惰性 Blob。仅图片和音频在发送阶段需要读取内容；
+                // 普通文件与视频走路径上传，避免添加附件时把大文件完整读入渲染进程。
+                if (isImage || isAudio) fileObj.blob = file
                 this.files.push(fileObj)
 
-                if (isImageFile(fileObj)) {
+                if (isImage) {
                     this.imageFiles.push(fileURL)
-                } else if (isVideoFile(fileObj)) {
+                } else if (isVideo) {
                     this.resetMediaFile()
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
                     setTimeout(() => this.onMediaLoad(), 50)
                     break
-                } else if (isAudioFile(fileObj)) {
+                } else if (isAudio) {
                     this.resetMediaFile()
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
