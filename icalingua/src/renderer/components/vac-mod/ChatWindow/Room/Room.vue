@@ -35,8 +35,10 @@
             @back-contact="$emit('back-contact')"
             @open-group-member-panel="$emit('open-group-member-panel')"
         >
-            <template v-for="(index, name) in $scopedSlots" v-if="name !== 'messages-top'" #[name]="data">
-                <slot :name="name" v-bind="data" />
+            <template v-for="(index, name) in $scopedSlots" #[name]="data">
+                <template v-if="name !== 'messages-top'">
+                    <slot :name="name" v-bind="data" />
+                </template>
             </template>
         </room-header>
 
@@ -148,7 +150,9 @@
                                 :isSteamVrRunning="isSteamVrRunning"
                             >
                                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                                    <slot :name="name" v-bind="data" />
+                                    <template v-if="name !== 'messages-top'">
+                                        <slot :name="name" v-bind="data" />
+                                    </template>
                                 </template>
                             </message>
                         </div>
@@ -239,7 +243,9 @@
                 @open-forward="$emit('open-forward', $event)"
             >
                 <template v-for="(index, name) in $scopedSlots" #[name]="data">
-                    <slot :name="name" v-bind="data" />
+                    <template v-if="name !== 'messages-top'">
+                        <slot :name="name" v-bind="data" />
+                    </template>
                 </template>
             </room-message-reply>
             <RoomForwardMessage
@@ -550,7 +556,6 @@
 import fs from 'fs'
 import path from 'path'
 import { ipcRenderer, webUtils } from 'electron'
-import _ from 'lodash'
 
 import InfiniteLoading from 'vue-infinite-loading'
 import vClickOutside from 'v-click-outside'
@@ -695,6 +700,8 @@ export default {
             mouseSelecting: false,
             mouseSelectArea: null,
             mouseSelectIds: null,
+            mouseSelectFrame: null,
+            mouseSelectBounds: null,
             isMessageEmpty: true,
             membersCount: 0,
             checkCanScrollTimer: null,
@@ -714,6 +721,14 @@ export default {
             audioRecordingStartedAt: 0,
             messageDraftSaveTimer: null,
             pendingMessageDraft: '',
+            messageListSnapshot: {
+                length: Array.isArray(this.messages) ? this.messages.length : 0,
+                firstId: Array.isArray(this.messages) && this.messages.length ? this.messages[0]._id : null,
+                lastId:
+                    Array.isArray(this.messages) && this.messages.length
+                        ? this.messages[this.messages.length - 1]._id
+                        : null,
+            },
         }
     },
     computed: {
@@ -794,15 +809,31 @@ export default {
             }
         },
         messages(newVal, oldVal) {
+            if (this.mouseSelecting) this.mouseSelectBounds = null
+            const currentSnapshot = {
+                length: newVal ? newVal.length : 0,
+                firstId: newVal && newVal.length ? newVal[0]._id : null,
+                lastId: newVal && newVal.length ? newVal[newVal.length - 1]._id : null,
+            }
+            const previousSnapshot =
+                oldVal === newVal
+                    ? this.messageListSnapshot
+                    : {
+                          length: oldVal ? oldVal.length : 0,
+                          firstId: oldVal && oldVal.length ? oldVal[0]._id : null,
+                          lastId: oldVal && oldVal.length ? oldVal[oldVal.length - 1]._id : null,
+                      }
+            this.messageListSnapshot = currentSnapshot
+
             const element = this.$refs.scrollContainer
             if (!element) return
 
-            const newLen = newVal ? newVal.length : 0
-            const oldLen = oldVal ? oldVal.length : 0
+            const newLen = currentSnapshot.length
+            const oldLen = previousSnapshot.length
             const offset = newLen - oldLen
 
             // 头部加载历史消息（最后一条消息相同 = 在前面插入了历史消息）
-            if (oldVal && oldLen && newVal && newLen && oldVal[oldLen - 1]._id === newVal[newLen - 1]._id) {
+            if (oldLen && newLen && previousSnapshot.lastId === currentSnapshot.lastId) {
                 const scrollTop = this.getTopScroll(element)
                 const scrollBottom = this.getBottomScroll(element)
                 if (scrollTop < scrollBottom) {
@@ -817,13 +848,13 @@ export default {
             }
 
             // 初始加载或不使用优化模式
-            if (!oldVal || !oldLen || this.optimizeMethod === 'none') {
+            if (!oldLen || this.optimizeMethod === 'none') {
                 this.visibleViewport.head = 0
                 this.visibleViewport.tail = newLen
             }
 
             // 新增单条消息
-            if (oldVal && newVal && oldLen === newLen - 1) {
+            if (oldLen === newLen - 1) {
                 this.loadingMessages = false
 
                 if (
@@ -849,7 +880,7 @@ export default {
 
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
-            } else if (newVal && newLen && !this.scrollIcon && !(oldVal && newLen === oldLen) && !this.canLoadAfter) {
+            } else if (newLen && !this.scrollIcon && newLen !== oldLen && !this.canLoadAfter) {
                 // 不在 gotoMessage 模式时才自动滚动到底部
                 this.queueScrollToBottom()
             }
@@ -1058,6 +1089,16 @@ export default {
             clearTimeout(this.checkCanScrollTimer)
             this.checkCanScrollTimer = null
         }
+        if (this.mouseSelectFrame !== null) {
+            cancelAnimationFrame(this.mouseSelectFrame)
+            this.mouseSelectFrame = null
+        }
+        if (this.mouseSelecting) {
+            window.removeEventListener('mousemove', this.continueMouseSelect)
+            window.removeEventListener('mouseup', this.endMouseSelect)
+            this.mouseSelecting = false
+        }
+        this.mouseSelectBounds = null
         this.clearAudioSessions()
     },
     methods: {
@@ -2302,6 +2343,7 @@ export default {
             ipc.popupAvatarMenu(_message, this.room, e)
         },
         containerScroll(e) {
+            if (this.mouseSelecting) this.mouseSelectBounds = null
             if (this.onScrolling) {
                 clearTimeout(this.onScrolling)
                 this.onScrolling = null
@@ -2452,40 +2494,78 @@ export default {
                 this.groupMembers = groupMembers
             } else this.membersCount = 0
         },
+        refreshMouseSelectBounds() {
+            const container = this.$refs.messagesContainer
+            if (!container) {
+                this.mouseSelectBounds = []
+                return
+            }
+
+            this.mouseSelectBounds = [...container.querySelectorAll('.vac-message-box')]
+                .map((msgBox) => {
+                    const msgCard = msgBox.querySelector('.vac-message-card')
+                    if (!msgCard) return null
+                    const { x, y, width, height } = msgCard.getBoundingClientRect()
+                    return {
+                        id: msgBox.id,
+                        x1: x,
+                        y1: y,
+                        x2: x + width,
+                        y2: y + height,
+                    }
+                })
+                .filter(Boolean)
+        },
         updateMouseSelectAreaStyleImmediately() {
             const el = this.$refs.mouseSelectArea
-            if (!el) return
-
             const area = this.mouseSelectArea
-            el.style.left = Math.min(area.x1, area.x2) + 'px'
-            el.style.top = Math.min(area.y1, area.y2) + 'px'
-            el.style.width = Math.abs(area.x1 - area.x2) + 'px'
-            el.style.height = Math.abs(area.y1 - area.y2) + 'px'
+            if (!el || !area) return
 
-            const container = this.$refs.messagesContainer
-            const selectedIds = [...container.querySelectorAll('.vac-message-box')]
-                .filter((msgBox) => {
-                    const msgCard = msgBox.querySelector('.vac-message-card')
-                    const { x: x1, y: y1, width: w, height: h } = msgCard.getBoundingClientRect()
-                    const x2 = x1 + w,
-                        y2 = y1 + h
-                    const [ax1, ax2] = [area.x1, area.x2].sort((a, b) => a - b)
-                    const [ay1, ay2] = [area.y1, area.y2].sort((a, b) => a - b)
-                    if (ax2 < x1 || x2 < ax1 || ay2 < y1 || y2 < ay1) return false
-                    return true
-                })
-                .map((msgBox) => msgBox.id)
+            const ax1 = Math.min(area.x1, area.x2)
+            const ax2 = Math.max(area.x1, area.x2)
+            const ay1 = Math.min(area.y1, area.y2)
+            const ay2 = Math.max(area.y1, area.y2)
+            el.style.left = ax1 + 'px'
+            el.style.top = ay1 + 'px'
+            el.style.width = ax2 - ax1 + 'px'
+            el.style.height = ay2 - ay1 + 'px'
 
-            if (!_.isEqual(selectedIds, this.mouseSelectIds)) {
-                this.$nextTick(() => {
-                    this.selectUpdateKey++
-                    this.msgsToForward = this.msgsToForward.filter((id) => !this.mouseSelectIds.includes(id))
-                    selectedIds.forEach((id) => {
-                        if (!this.msgsToForward.includes(id)) this.msgsToForward.push(id)
-                    })
-                    this.mouseSelectIds = selectedIds
-                })
+            if (this.mouseSelectBounds === null) this.refreshMouseSelectBounds()
+            const selectedIds = (this.mouseSelectBounds || [])
+                .filter((bound) => !(ax2 < bound.x1 || bound.x2 < ax1 || ay2 < bound.y1 || bound.y2 < ay1))
+                .map((bound) => bound.id)
+            const currentIds = this.mouseSelectIds || []
+            const selectionUnchanged =
+                selectedIds.length === currentIds.length && selectedIds.every((id, index) => id === currentIds[index])
+            if (selectionUnchanged) return
+
+            const oldMouseSelectIds = new Set(currentIds)
+            const nextForwardIds = (this.msgsToForward || []).filter((id) => !oldMouseSelectIds.has(id))
+            const nextForwardIdSet = new Set(nextForwardIds)
+            for (const id of selectedIds) {
+                if (!nextForwardIdSet.has(id)) {
+                    nextForwardIds.push(id)
+                    nextForwardIdSet.add(id)
+                }
             }
+
+            this.msgsToForward = nextForwardIds
+            this.mouseSelectIds = selectedIds
+            this.selectUpdateKey++
+        },
+        scheduleMouseSelectUpdate() {
+            if (this.mouseSelectFrame !== null) return
+            this.mouseSelectFrame = requestAnimationFrame(() => {
+                this.mouseSelectFrame = null
+                if (this.mouseSelecting) this.updateMouseSelectAreaStyleImmediately()
+            })
+        },
+        flushMouseSelectUpdate() {
+            if (this.mouseSelectFrame !== null) {
+                cancelAnimationFrame(this.mouseSelectFrame)
+                this.mouseSelectFrame = null
+            }
+            this.updateMouseSelectAreaStyleImmediately()
         },
         startMouseSelect(e) {
             if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') return
@@ -2508,6 +2588,7 @@ export default {
                 y2: y,
             }
             this.mouseSelectIds = []
+            this.mouseSelectBounds = null
 
             this.updateMouseSelectAreaStyleImmediately()
         },
@@ -2519,12 +2600,15 @@ export default {
             this.mouseSelectArea.x2 = x
             this.mouseSelectArea.y2 = y
 
-            this.updateMouseSelectAreaStyleImmediately()
+            this.scheduleMouseSelectUpdate()
         },
         endMouseSelect(e) {
             if (!this.mouseSelecting) return
 
-            this.continueMouseSelect(e)
+            const { pageX: x, pageY: y } = e
+            this.mouseSelectArea.x2 = x
+            this.mouseSelectArea.y2 = y
+            this.flushMouseSelectUpdate()
 
             this.mouseSelecting = false
 
@@ -2534,6 +2618,7 @@ export default {
             if (this.mouseSelectIds.length) {
                 this.showForwardPanel = true
             }
+            this.mouseSelectBounds = null
         },
         async openImage(src) {
             if (this.imageFiles.length > 1) {

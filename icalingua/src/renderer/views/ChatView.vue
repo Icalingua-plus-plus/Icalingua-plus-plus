@@ -403,6 +403,11 @@ export default {
         return {
             rooms: [],
             messages: [],
+            messageIndex: new Map(),
+            pendingIncomingMessages: [],
+            pendingIncomingIds: new Set(),
+            pendingIncomingRoomId: null,
+            pendingIncomingFrame: null,
             selectedRoomId: 0,
             account: 0,
             messagesLoaded: false,
@@ -803,65 +808,59 @@ export default {
             this._recomputeChatGroupsUnreadCount()
         })
         ipcRenderer.on('addMessage', (_, { roomId, message }) => {
-            message.__v_skip = true
             if (roomId !== this.selectedRoomId) return
-            const index = this.messages.findIndex((e) => e._id === message._id)
-            if (index !== -1) {
-                console.warning(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[index])
-                return
-            }
-            this.messages = [...this.messages, message]
-            if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
-            if (message.at && message.senderId != this.account) this.lastUnreadAt = true
-            if (message.system) {
-                const memberChangeText = ['加入了本群', '离开了本群', '踢了']
-                for (const text of memberChangeText) {
-                    if (message.content.includes(text)) {
-                        this.$refs.room.updateGroupMembers()
-                        break
-                    }
-                }
-            }
+            this.queueIncomingMessage(roomId, message)
         })
         ipcRenderer.on('deleteMessage', (_, messageId) => {
-            const message = this.messages.find((e) => e._id === messageId)
-            if (message) {
-                message.deleted = Date.now()
-                message.reveal = false
-                this.messages = [...this.messages]
+            const index = this.getMessageIndex(messageId)
+            if (index !== -1) {
+                this.$set(this.messages, index, {
+                    ...this.messages[index],
+                    deleted: Date.now(),
+                    reveal: false,
+                })
             }
         })
         ipcRenderer.on('hideMessage', (_, messageId) => {
-            const message = this.messages.find((e) => e._id === messageId)
-            if (message) {
-                message.hide = true
-                message.reveal = false
-                this.messages = [...this.messages]
+            const index = this.getMessageIndex(messageId)
+            if (index !== -1) {
+                this.$set(this.messages, index, {
+                    ...this.messages[index],
+                    hide: true,
+                    reveal: false,
+                })
             }
         })
         ipcRenderer.on('revealMessage', (_, messageId) => {
-            const message = this.messages.find((e) => e._id === messageId)
-            if (message) {
-                message.hide = false
-                message.reveal = true
-                this.messages = [...this.messages]
+            const index = this.getMessageIndex(messageId)
+            if (index !== -1) {
+                this.$set(this.messages, index, {
+                    ...this.messages[index],
+                    hide: false,
+                    reveal: true,
+                })
             }
         })
         ipcRenderer.on('renewMessage', (_, { messageId, message }) => {
-            const oldMessageIndex = this.messages.findIndex((e) => e._id === messageId)
-            if (oldMessageIndex !== -1 && message) {
-                this.messages[oldMessageIndex] = {
-                    ...this.messages[oldMessageIndex],
+            const index = this.getMessageIndex(messageId)
+            if (index !== -1 && message) {
+                this.$set(this.messages, index, {
+                    ...this.messages[index],
                     ...message,
-                }
-                this.messages = [...this.messages]
+                })
             }
         })
         ipcRenderer.on('renewMessageURL', (_, { messageId, URL }) => {
-            const message = this.messages.find((e) => e._id === messageId)
-            if (message && URL !== 'error') {
-                message.file.url = URL
-                this.messages = [...this.messages]
+            const index = this.getMessageIndex(messageId)
+            const message = index === -1 ? null : this.messages[index]
+            if (message && message.file && URL !== 'error') {
+                this.$set(this.messages, index, {
+                    ...message,
+                    file: {
+                        ...message.file,
+                        url: URL,
+                    },
+                })
             }
         })
         ipcRenderer.on('setOnline', () => (this.reconnecting = this.offline = false))
@@ -885,10 +884,11 @@ export default {
         ipcRenderer.on('setAllRooms', (_, p) => (this.rooms = p))
         ipcRenderer.on('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
         ipcRenderer.on('setMessages', (_, p) => {
-            for (const message of p) {
+            const messages = p || []
+            for (const message of messages) {
                 message.__v_skip = true
             }
-            this.messages = p
+            this.setMessageList(messages)
             this.messagesLoaded = false
         })
         ipcRenderer.on('startChat', (_, { id, name }) => this.startChat(id, name))
@@ -953,6 +953,97 @@ Chromium ${process.versions.chrome}`
         console.log('加载完成')
     },
     methods: {
+        rebuildMessageIndex(messages = this.messages) {
+            const index = new Map()
+            for (let i = 0; i < messages.length; i++) {
+                const message = messages[i]
+                if (message && message._id !== undefined && message._id !== null) index.set(message._id, i)
+            }
+            this.messageIndex = index
+        },
+        getMessageIndex(messageId) {
+            const index = this.messageIndex.get(messageId)
+            return index === undefined ? -1 : index
+        },
+        setMessageList(messages) {
+            this.messages = messages
+            this.rebuildMessageIndex(messages)
+        },
+        appendMessages(messages) {
+            if (!messages.length) return
+            const start = this.messages.length
+            this.messages.push(...messages)
+            for (let i = 0; i < messages.length; i++) {
+                this.messageIndex.set(messages[i]._id, start + i)
+            }
+        },
+        prependMessages(messages) {
+            if (!messages.length) return
+            this.messages.unshift(...messages)
+            this.rebuildMessageIndex()
+        },
+        cancelPendingIncomingMessages() {
+            if (this.pendingIncomingFrame !== null) {
+                cancelAnimationFrame(this.pendingIncomingFrame)
+                this.pendingIncomingFrame = null
+            }
+            this.pendingIncomingMessages = []
+            this.pendingIncomingIds.clear()
+            this.pendingIncomingRoomId = null
+        },
+        queueIncomingMessage(roomId, message) {
+            if (this.pendingIncomingRoomId !== null && this.pendingIncomingRoomId !== roomId) {
+                this.cancelPendingIncomingMessages()
+            }
+            this.pendingIncomingRoomId = roomId
+
+            const existingIndex = this.getMessageIndex(message._id)
+            if (existingIndex !== -1 || this.pendingIncomingIds.has(message._id)) {
+                if (existingIndex !== -1) {
+                    console.warn(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[existingIndex])
+                }
+                return
+            }
+
+            message.__v_skip = true
+            this.pendingIncomingMessages.push(message)
+            this.pendingIncomingIds.add(message._id)
+            if (this.pendingIncomingFrame !== null) return
+
+            this.pendingIncomingFrame = requestAnimationFrame(() => {
+                this.pendingIncomingFrame = null
+                this.flushIncomingMessages(roomId)
+            })
+        },
+        flushIncomingMessages(roomId = this.pendingIncomingRoomId) {
+            if (roomId === null || roomId !== this.pendingIncomingRoomId) return
+
+            const pendingMessages = this.pendingIncomingMessages
+            this.pendingIncomingMessages = []
+            this.pendingIncomingIds.clear()
+            this.pendingIncomingRoomId = null
+
+            if (roomId !== this.selectedRoomId) return
+            const newMessages = pendingMessages.filter((message) => this.getMessageIndex(message._id) === -1)
+            if (!newMessages.length) return
+
+            this.appendMessages(newMessages)
+            let groupMembersChanged = false
+            const memberChangeText = ['加入了本群', '离开了本群', '踢了']
+            for (const message of newMessages) {
+                if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
+                if (message.at && message.senderId != this.account) this.lastUnreadAt = true
+                if (
+                    message.system &&
+                    memberChangeText.some(
+                        (text) => typeof message.content === 'string' && message.content.includes(text),
+                    )
+                ) {
+                    groupMembersChanged = true
+                }
+            }
+            if (groupMembersChanged && this.$refs.room) this.$refs.room.updateGroupMembers()
+        },
         async sendMessage({
             content,
             roomId,
@@ -998,8 +1089,9 @@ Chromium ${process.versions.chrome}`
         },
         async fetchMessage(reset, number, at = false) {
             if (reset) {
+                this.cancelPendingIncomingMessages()
                 this.messagesLoaded = false
-                this.messages = []
+                this.setMessageList([])
             }
             const _roomId = this.selectedRoom.roomId
             let msgs2add
@@ -1009,6 +1101,7 @@ Chromium ${process.versions.chrome}`
                 console.error('fetchMessage failed:', e)
                 return
             }
+            const messagePages = [msgs2add]
             let nonSystemMessageCount = 0
             if (number) {
                 while (nonSystemMessageCount < number) {
@@ -1021,26 +1114,31 @@ Chromium ${process.versions.chrome}`
                         break
                     }
                     nonSystemMessageCount += msgs.filter((e) => !e.system).length
-                    msgs2add.unshift(...msgs)
+                    messagePages.unshift(msgs)
                     if (!msgs.length) {
                         this.$message.error('Message not found')
                         break
                     }
                 }
+                msgs2add = messagePages.flat()
             }
             setTimeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
-                const existingIds = new Set(this.messages.map((e) => e._id))
                 // 过滤掉已经存在的消息，而不是全部丢弃
                 // 旧逻辑 some+return 会导致 messagesLoaded 永远不被设为 true，
                 // 进而 Room.vue 的 loadingMessages 一直是 true，消息完全空白
-                const newMsgs = msgs2add.filter((e) => !existingIds.has(e._id))
+                const newIds = new Set()
+                const newMsgs = msgs2add.filter((message) => {
+                    if (this.messageIndex.has(message._id) || newIds.has(message._id)) return false
+                    newIds.add(message._id)
+                    return true
+                })
                 if (newMsgs.length) {
                     for (const msg of newMsgs) {
                         msg.__v_skip = true
                     }
-                    this.messages = [...newMsgs, ...this.messages]
+                    this.prependMessages(newMsgs)
                 } else {
                     this.messagesLoaded = true
                 }
@@ -1165,6 +1263,7 @@ Chromium ${process.versions.chrome}`
                 this.navBackStack.push(this.selectedRoom.roomId)
                 this.navForwardStack = []
             }
+            this.cancelPendingIncomingMessages()
             this.selectedRoomId = room.roomId
             this.isInMiddle = false // 切换房间时重置中间加载状态
             ipc.setSelectedRoom(room.roomId, room.roomName)
@@ -1190,7 +1289,7 @@ Chromium ${process.versions.chrome}`
             }
 
             // 先尝试在当前消息列表中查找
-            const existingIndex = this.messages.findIndex((m) => m._id === messageId)
+            const existingIndex = this.getMessageIndex(messageId)
             if (existingIndex !== -1) {
                 // 消息已存在，直接滚动并高亮
                 this.$nextTick(() => {
@@ -1206,7 +1305,7 @@ Chromium ${process.versions.chrome}`
             try {
                 const msgs = await ipc.fetchMessagesAround(roomId, messageId, 20, 20)
                 if (msgs && msgs.length > 0) {
-                    this.messages = msgs
+                    this.setMessageList(msgs)
                     this.messagesLoaded = false // 允许继续向上加载
                     this.isInMiddle = true // 标记从中间加载
                     this.$nextTick(() => {
@@ -1237,7 +1336,7 @@ Chromium ${process.versions.chrome}`
                     // 去掉第一条（就是 lastMessage 本身）
                     const newMsgs = msgs.slice(1)
                     if (newMsgs.length > 0) {
-                        this.messages = [...this.messages, ...newMsgs]
+                        this.appendMessages(newMsgs)
                     } else {
                         // 没有更多新消息了，退出中间模式
                         this.isInMiddle = false
@@ -1269,7 +1368,8 @@ Chromium ${process.versions.chrome}`
         },
         closeRoom() {
             this.selectedRoomId = 0
-            this.messages = []
+            this.cancelPendingIncomingMessages()
+            this.setMessageList([])
             this.lastUnreadCount = 0
             this.lastUnreadAt = false
             this.isInMiddle = false // 关闭房间时重置中间加载状态
@@ -1655,6 +1755,7 @@ Chromium ${process.versions.chrome}`
         })
     },
     beforeDestroy() {
+        this.cancelPendingIncomingMessages()
         if (this._chatGroupResizeObserver) {
             this._chatGroupResizeObserver.disconnect()
             this._chatGroupResizeObserver = null
