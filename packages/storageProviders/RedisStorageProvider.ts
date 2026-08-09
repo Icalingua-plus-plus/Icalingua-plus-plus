@@ -17,6 +17,8 @@ const insertMessageScript = [
     'return 1',
 ].join('\n')
 
+const redisMessageReadBatchSize = 1000
+
 export default class RedisStorageProvider implements StorageProvider {
     qid: string
     connStr: string
@@ -83,14 +85,17 @@ export default class RedisStorageProvider implements StorageProvider {
 
     private async getMessages(roomId: number, ids: string[]): Promise<Message[]> {
         if (!ids.length) return []
-        const messages = await Promise.all(
-            ids.map(async (id) => {
-                const raw = await this.redis.hget(this.roomMessageKey(roomId), String(id))
-                if (!raw) return null
-                return JSON.parse(raw) as Message
-            }),
-        )
-        return messages.filter(Boolean) as Message[]
+        const messages: Message[] = []
+        const key = this.roomMessageKey(roomId)
+        for (let offset = 0; offset < ids.length; offset += redisMessageReadBatchSize) {
+            const batchIds = ids.slice(offset, offset + redisMessageReadBatchSize)
+            const rawMessages = await this.redis.hmget(key, ...batchIds.map((id) => String(id)))
+            for (const raw of rawMessages) {
+                if (!raw) continue
+                messages.push(JSON.parse(raw) as Message)
+            }
+        }
+        return messages
     }
 
     private async getMessagesBySearchTimes(roomId: number, times: number[]): Promise<Message[]> {
@@ -521,12 +526,11 @@ export default class RedisStorageProvider implements StorageProvider {
             const result: Message[] = []
             let skipped = 0
             let maxTime: number | undefined
+            const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
             while (result.length < limit) {
                 const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
                 if (times === null) return null
                 if (!times.length) break
-                const roomIds =
-                    roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
                 const messages = (
                     await Promise.all(
                         roomIds.map(async (rid) => {
@@ -569,17 +573,12 @@ export default class RedisStorageProvider implements StorageProvider {
 
         const scanRoom = async (targetRoomId: number, includeRoomId: boolean): Promise<Message[]> => {
             const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${targetRoomId}:msgIdList`, 0, -1)
-            const matched: Message[] = []
-            for (const key of allMsgKeys) {
-                const msg = await this.redis.hget(`${this.qid}:msg${targetRoomId}:messages`, key)
-                if (!msg) continue
-                const message = JSON.parse(msg) as Message
-                if (message.content && message.content.toLowerCase().includes(lowerKeyword)) {
-                    if (includeRoomId) message.roomId = targetRoomId
-                    matched.push(message)
-                }
-            }
-            return matched
+            const messages = await this.getMessages(targetRoomId, allMsgKeys)
+            return messages.filter((message) => {
+                if (!messageMatchesKeyword(message, lowerKeyword)) return false
+                if (includeRoomId) message.roomId = targetRoomId
+                return true
+            })
         }
 
         const matched =

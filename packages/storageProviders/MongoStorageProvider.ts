@@ -6,7 +6,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
-import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
+import { normalizeSearchText } from './MessageSearchIndex'
 import SQLiteMessageSearchIndexWorker, {
     SQLiteSearchMessage,
     SQLiteSearchTimeCount,
@@ -614,25 +614,26 @@ export default class MongoStorageProvider implements StorageProvider {
             const result: Message[] = []
             let skipped = 0
             let maxTime: number | undefined
+            const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
+            const escapedKeyword = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             while (result.length < limit) {
                 const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
                 if (times === null) return null
                 if (!times.length) break
-                const roomIds =
-                    roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
                 const messages = (
                     await mapWithConcurrency(roomIds, mongoSearchReadConcurrency, async (rid) =>
                         this.mdb
                             .collection<any>('msg' + rid)
-                            .find({ time: { $in: times } })
+                            .find({
+                                time: { $in: times },
+                                content: { $regex: escapedKeyword, $options: 'i' },
+                            })
                             .toArray()
                             .then((values) =>
                                 values.map((message) => (roomId === 0 ? { ...message, roomId: rid } : message)),
                             ),
                     )
-                )
-                    .flat()
-                    .filter((message) => messageMatchesKeyword(message, normalized))
+                ).flat()
                 messages.sort((left, right) => {
                     const timeDifference = Number(right.time || 0) - Number(left.time || 0)
                     if (timeDifference) return timeDifference

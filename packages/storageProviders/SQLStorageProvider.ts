@@ -9,7 +9,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import StorageProvider from '@icalingua/types/StorageProvider'
-import { escapeSearchLikePattern, messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
+import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import SQLStorageProviderWorker from './SQLStorageProviderWorker'
 import type {
@@ -973,9 +973,10 @@ export default class SQLStorageProvider implements StorageProvider {
 
             let query = this.db<MessageInSQLDB>('messages').whereIn('time', times)
             if (roomId !== 0) query = query.where('roomId', roomId)
+            const escapedKeyword = escapeSearchLikePattern(normalized)
+            query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", [`%${escapedKeyword}%`])
             const messages = await query.orderBy('time', 'desc').select('*')
             for (const message of messages) {
-                if (!messageMatchesKeyword(message, normalized)) continue
                 if (skipped < skip) {
                     skipped++
                     continue
