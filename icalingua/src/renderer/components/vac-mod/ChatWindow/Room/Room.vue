@@ -697,6 +697,7 @@ export default {
             membersCount: 0,
             checkCanScrollTimer: null,
             scrollToBottomTimer: null,
+            textareaResizeScheduled: false,
             pasteIcon: `file://${__static}/Clipboard.svg`,
             audioSessions: {},
             audioPreviewSession: { audio: new Audio() },
@@ -987,7 +988,6 @@ export default {
                 if (event.target.className === 'vac-textarea') {
                     this.appendMessageText(event.dataTransfer.getData('text'))
                     this.focusTextarea()
-                    this.$nextTick(() => this.resizeTextarea())
                 }
             }
             if (event.dataTransfer.files.length) {
@@ -1034,12 +1034,10 @@ export default {
         this.lifecycleScope.onIpc('addMessageText', (_, message) => {
             this.appendMessageText(message)
             this.focusTextarea()
-            this.$nextTick(() => this.resizeTextarea())
         })
         this.lifecycleScope.onIpc('setMessageText', (_, message) => {
             this.setMessageText(message)
             this.focusTextarea()
-            this.$nextTick(() => this.resizeTextarea())
         })
         this.lifecycleScope.onIpc('pasteGif', (_, GifURL) => {
             this.onPasteGif(GifURL)
@@ -1076,6 +1074,7 @@ export default {
     },
     beforeDestroy() {
         this.lifecycleScope?.dispose()
+        this.textareaResizeScheduled = false
         this.saveMessageDraft(this.getMessageText(), true)
         this.disposeAudioRecorder()
         if (this.onScrolling) {
@@ -1356,8 +1355,15 @@ export default {
             this.scheduleTextareaResize()
         },
         scheduleTextareaResize() {
+            if (this.textareaResizeScheduled) return
+            this.textareaResizeScheduled = true
             this.$nextTick(() => {
-                this.lifecycleScope.animationFrame(() => this.resizeTextarea())
+                if (!this.textareaResizeScheduled) return
+                const frame = this.lifecycleScope.animationFrame(() => {
+                    this.textareaResizeScheduled = false
+                    this.resizeTextarea()
+                })
+                if (frame === null) this.textareaResizeScheduled = false
             })
         },
         appendMessageText(message) {
@@ -1919,7 +1925,7 @@ export default {
             this.editedMessage.file = null
             this.files = []
             this.focusTextarea()
-            this.$nextTick(() => this.resizeTextarea())
+            this.scheduleTextareaResize()
         },
         removeImage(idx) {
             this.imageFiles.splice(idx, 1)
@@ -2194,7 +2200,7 @@ export default {
             this.keepKeyboardOpen = true
             this.saveMessageDraft(message, !message)
             this.updateMessageEmptyState(message)
-            this.resizeTextarea()
+            this.scheduleTextareaResize()
             this.$emit('typing-message', message)
             const selectionStart = this.$refs.roomTextarea.selectionStart
             if (
