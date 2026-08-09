@@ -380,6 +380,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import groupMemberCache from '../utils/groupMemberCache'
 import { processFiles } from '../utils/processFiles'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
+import { createRoomUpdateBatch, mergeRoomUpdatesByUtime } from '../utils/roomUpdateBatch'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
@@ -482,6 +483,14 @@ export default {
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
+        const roomUpdateBatch = createRoomUpdateBatch({
+            schedule: (callback) => this.lifecycleScope.animationFrame(callback),
+            cancel: (frame) => this.lifecycleScope.cancelAnimationFrame(frame),
+            apply: (updates) => {
+                this.rooms = mergeRoomUpdatesByUtime(this.rooms, updates)
+            },
+        })
+        this.lifecycleScope.addCleanup(roomUpdateBatch.clear)
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
@@ -795,20 +804,7 @@ export default {
             this.sendRpsShown = true
         })
         this.lifecycleScope.onIpc('updateRoom', (_, room) => {
-            const oldRooms = this.rooms.filter((item) => item.roomId !== room.roomId)
-            let left = 0,
-                right = oldRooms.length - 1,
-                mid = 0
-            while (left <= right) {
-                mid = Math.floor((left + right) / 2)
-                if (room.utime > oldRooms[mid].utime) {
-                    right = mid - 1
-                } else {
-                    left = mid + 1
-                }
-            }
-            this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
-            this._recomputeChatGroupsUnreadCount()
+            roomUpdateBatch.queue(room)
         })
         this.lifecycleScope.onIpc('addMessage', (_, { roomId, message }) => {
             if (roomId !== this.selectedRoomId) return
@@ -884,7 +880,10 @@ export default {
             }
         })
         this.lifecycleScope.onIpc('updatePriority', (_, p) => (this.priority = p))
-        this.lifecycleScope.onIpc('setAllRooms', (_, p) => (this.rooms = p))
+        this.lifecycleScope.onIpc('setAllRooms', (_, p) => {
+            roomUpdateBatch.clear()
+            this.rooms = p
+        })
         this.lifecycleScope.onIpc('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
         this.lifecycleScope.onIpc('setMessages', (_, p) => {
             const messages = p || []
