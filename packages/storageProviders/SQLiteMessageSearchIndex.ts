@@ -37,6 +37,7 @@ interface PendingSearchTime {
 
 const searchIndexFormat = 'trigram-interleaved-run-length-none-contentless-delete-v8'
 const searchBatchSize = 200
+const searchProgressInterval = 500
 // Each bulk write below binds at most two values per time. Stay below the
 // lowest common SQLite variable limit even if searchBatchSize is increased.
 const searchSqlParameterBudget = 900
@@ -166,6 +167,9 @@ export default class SQLiteMessageSearchIndex {
     private buildScanActive = false
     private buildLoadingTimes = false
     private activeBuildThroughTime = 0
+    private pendingProgress: DatabaseUpgradeProgress | null = null
+    private progressTimer: ReturnType<typeof setTimeout> | null = null
+    private lastProgressReportAt = 0
 
     constructor(
         filePath: string,
@@ -192,6 +196,7 @@ export default class SQLiteMessageSearchIndex {
     async open(): Promise<void> {
         if (this.db) return
         this.closing = false
+        this.lastProgressReportAt = 0
         try {
             fs.mkdirSync(path.dirname(this.filePath), { recursive: true })
             this.db = knex({
@@ -220,6 +225,7 @@ export default class SQLiteMessageSearchIndex {
 
     async close(): Promise<void> {
         this.closing = true
+        this.clearProgressTimer()
         this.buildRestartRequested = false
         this.pendingWork = false
         this.available = false
@@ -1011,6 +1017,41 @@ export default class SQLiteMessageSearchIndex {
     }
 
     private report(progress: DatabaseUpgradeProgress): void {
+        if (!this.callbacks.reportProgress) return
+        this.pendingProgress = { ...progress }
+        if (!progress.active) {
+            this.clearProgressTimer()
+            this.lastProgressReportAt = Date.now()
+            this.emitProgress(progress)
+            return
+        }
+
+        const elapsed = Date.now() - this.lastProgressReportAt
+        if (!this.lastProgressReportAt || elapsed >= searchProgressInterval) {
+            this.flushProgress()
+            return
+        }
+        if (!this.progressTimer) {
+            this.progressTimer = setTimeout(() => this.flushProgress(), searchProgressInterval - elapsed)
+        }
+    }
+
+    private clearProgressTimer(): void {
+        if (this.progressTimer) clearTimeout(this.progressTimer)
+        this.progressTimer = null
+        this.pendingProgress = null
+    }
+
+    private flushProgress(): void {
+        const progress = this.pendingProgress
+        this.pendingProgress = null
+        this.progressTimer = null
+        if (!progress || this.closing) return
+        this.lastProgressReportAt = Date.now()
+        this.emitProgress(progress)
+    }
+
+    private emitProgress(progress: DatabaseUpgradeProgress): void {
         try {
             this.callbacks.reportProgress?.(progress)
         } catch (error) {
