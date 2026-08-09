@@ -365,7 +365,6 @@ import DialogAskCheckUpdate from '../components/DialogAskCheckUpdate.vue'
 import CommonGroupsDialog from '../components/CommonGroupsDialog.vue'
 import { Multipane, MultipaneResizer } from '../components/multipane'
 import path from 'path'
-import { ipcRenderer } from 'electron'
 import SideBarIcon from '../components/SideBarIcon.vue'
 import GroupChatIcon from '../components/GroupChatIcon.vue'
 import TheRoomsPanel from '../components/TheRoomsPanel.vue'
@@ -380,6 +379,7 @@ import createRoom from '../../utils/createRoom'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import groupMemberCache from '../utils/groupMemberCache'
 import { processFiles } from '../utils/processFiles'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
@@ -481,6 +481,7 @@ export default {
         }
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         //region set status
         const STORE_PATH = await ipc.getStorePath()
         const ver = await ipc.getVersion()
@@ -499,14 +500,14 @@ export default {
         this.stickerPanelHeight = settings.stickerPanelHeight || 320
         //endregion
         //region listener
-        ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+        this.lifecycleScope.onIpc('dbUpgradeProgress', (_, progress) => {
             this.dbUpgrade = progress
         })
-        document.addEventListener('dragover', (e) => {
+        this.lifecycleScope.onEvent(document, 'dragover', (e) => {
             e.preventDefault()
             e.stopPropagation()
         })
-        document.addEventListener('click', (e) => {
+        this.lifecycleScope.onEvent(document, 'click', (e) => {
             const stickers_panel = document.getElementsByClassName('panel panel-right')
             const vac_room_footer = document.getElementsByClassName('vac-room-footer')
             if (
@@ -519,7 +520,7 @@ export default {
             }
         })
         //mouse side buttons (back/forward)
-        document.addEventListener('mouseup', (e) => {
+        this.lifecycleScope.onEvent(document, 'mouseup', (e) => {
             if (e.button === 3) {
                 e.preventDefault()
                 this.navBack()
@@ -529,7 +530,7 @@ export default {
             }
         })
         //keyboard
-        document.addEventListener('keydown', (e) => {
+        this.lifecycleScope.onEvent(document, 'keydown', (e) => {
             if (e.isComposing) return
             if (e.repeat) {
                 return
@@ -631,7 +632,7 @@ export default {
 
         themes.$$DON_CALL$$fetchThemes(STORE_PATH)
 
-        ipcRenderer.on('setDisableChatGroupsSeeting', (_, p) => {
+        this.lifecycleScope.onIpc('setDisableChatGroupsSeeting', (_, p) => {
             this.disableChatGroups = p
             this.selectedChatGroup = 'chats'
             if (p) {
@@ -641,7 +642,7 @@ export default {
                 this._recomputeChatGroupsUnreadCount()
             }
         })
-        ipcRenderer.on('setDisableChatGroupsRedPointSeeting', (_, p) => {
+        this.lifecycleScope.onIpc('setDisableChatGroupsRedPointSeeting', (_, p) => {
             this.disableChatGroupsRedPoint = p
             if (!p) {
                 this._rebuildRoomToGroupIndex()
@@ -650,23 +651,23 @@ export default {
                 this.chatGroupsUnreadCount = {}
             }
         })
-        ipcRenderer.on('openGroupMemberPanel', (_, p) => {
+        this.lifecycleScope.onIpc('openGroupMemberPanel', (_, p) => {
             this.groupmemberShown = p.shown
             this.groupmemberPanelGin = p.gin
         })
-        ipcRenderer.on('closeLoading', () => {
+        this.lifecycleScope.onIpc('closeLoading', () => {
             this.loading = false
             this.uploadProgress = '0'
         })
-        ipcRenderer.on('notify', (_, p) => this.$notify(p))
-        ipcRenderer.on('addHistoryCount', (_, p) => {
+        this.lifecycleScope.onIpc('notify', (_, p) => this.$notify(p))
+        this.lifecycleScope.onIpc('addHistoryCount', (_, p) => {
             this.historyCount += p.count
             this.historyFetchingName = (p.roomId < 0 ? '群聊' : '私聊') + Math.abs(p.roomId)
         })
-        ipcRenderer.on('clearHistoryCount', () => (this.historyCount = 0))
-        ipcRenderer.on('notifyError', (_, p) => this.$notify.error(p))
-        ipcRenderer.on('notifySuccess', (_, p) => this.$notify.success(p))
-        ipcRenderer.on('notifyProgress', (_, { id, string }) => {
+        this.lifecycleScope.onIpc('clearHistoryCount', () => (this.historyCount = 0))
+        this.lifecycleScope.onIpc('notifyError', (_, p) => this.$notify.error(p))
+        this.lifecycleScope.onIpc('notifySuccess', (_, p) => this.$notify.success(p))
+        this.lifecycleScope.onIpc('notifyProgress', (_, { id, string }) => {
             const progressBar = this.$createElement('ProgressBar')
             const notification = this.$notify({
                 message: this.$createElement('div', [string, progressBar]),
@@ -680,19 +681,19 @@ export default {
             })
             this.notifyProgresses.set(id, { progressBar, notification })
         })
-        ipcRenderer.on('notifyProgressValue', (_, { id, value }) => {
+        this.lifecycleScope.onIpc('notifyProgressValue', (_, { id, value }) => {
             const instance = this.notifyProgresses.get(id)
             if (instance) {
                 instance.progressBar.componentInstance.setValue(value)
             }
         })
-        ipcRenderer.on('notifyProgressClose', (_, id) => {
+        this.lifecycleScope.onIpc('notifyProgressClose', (_, id) => {
             const instance = this.notifyProgresses.get(id)
             if (instance) {
                 instance.notification.close()
             }
         })
-        ipcRenderer.on('notifyDownloadComplete', (_, { fileName, filePath }) => {
+        this.lifecycleScope.onIpc('notifyDownloadComplete', (_, { fileName, filePath }) => {
             const message = this.$createElement(DownloadCompleteNotification, {
                 props: { fileName },
                 on: { open: () => ipc.openDownloadedFile(filePath) },
@@ -705,12 +706,12 @@ export default {
                 duration: 10000,
             })
         })
-        ipcRenderer.on('message', (_, p) => this.$message(p))
-        ipcRenderer.on('messageError', (_, p) => this.$message.error(p))
-        ipcRenderer.on('messageSuccess', (_, p) => this.$message.success(p))
-        ipcRenderer.on('setShutUp', (_, p) => (this.isShutUp = p))
-        ipcRenderer.on('chroom', (_, p) => this.chroom(p))
-        ipcRenderer.on('confirmIgnoreChat', (_, data) => {
+        this.lifecycleScope.onIpc('message', (_, p) => this.$message(p))
+        this.lifecycleScope.onIpc('messageError', (_, p) => this.$message.error(p))
+        this.lifecycleScope.onIpc('messageSuccess', (_, p) => this.$message.success(p))
+        this.lifecycleScope.onIpc('setShutUp', (_, p) => (this.isShutUp = p))
+        this.lifecycleScope.onIpc('chroom', (_, p) => this.chroom(p))
+        this.lifecycleScope.onIpc('confirmIgnoreChat', (_, data) => {
             const message = [
                 '屏蔽群聊将不再接受该群的消息。',
                 '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。',
@@ -723,7 +724,7 @@ export default {
                 ipc.ignoreChat(data)
             })
         })
-        ipcRenderer.on('confirmDeleteMessage', (_, { roomId, messageId }) => {
+        this.lifecycleScope.onIpc('confirmDeleteMessage', (_, { roomId, messageId }) => {
             this.$confirm('确定撤回群成员消息?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -732,7 +733,7 @@ export default {
                 ipc.deleteMessage(roomId, messageId)
             })
         })
-        ipcRenderer.on('confirmDeleteSticker', (_, filename) => {
+        this.lifecycleScope.onIpc('confirmDeleteSticker', (_, filename) => {
             this.$confirm('确定删除本 Sticker?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -741,7 +742,7 @@ export default {
                 fs.unlink(path.join(filename), () => this.$message('删除成功'))
             })
         })
-        ipcRenderer.on('confirmDeleteStickerDir', (_, dirname) => {
+        this.lifecycleScope.onIpc('confirmDeleteStickerDir', (_, dirname) => {
             this.$confirm('确定删除 Sticker 分类 ' + dirname + '?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -752,7 +753,7 @@ export default {
                 )
             })
         })
-        ipcRenderer.on('moveSticker', async (_, filename) => {
+        this.lifecycleScope.onIpc('moveSticker', async (_, filename) => {
             /** @type {string} */
             let value
             try {
@@ -787,13 +788,13 @@ export default {
             }
             this.$message.success('移动成功')
         })
-        ipcRenderer.on('sendDice', (_) => {
+        this.lifecycleScope.onIpc('sendDice', (_) => {
             this.sendDiceShown = true
         })
-        ipcRenderer.on('sendRps', (_) => {
+        this.lifecycleScope.onIpc('sendRps', (_) => {
             this.sendRpsShown = true
         })
-        ipcRenderer.on('updateRoom', (_, room) => {
+        this.lifecycleScope.onIpc('updateRoom', (_, room) => {
             const oldRooms = this.rooms.filter((item) => item.roomId !== room.roomId)
             let left = 0,
                 right = oldRooms.length - 1,
@@ -809,11 +810,11 @@ export default {
             this.rooms = [...oldRooms.slice(0, left), room, ...oldRooms.slice(left)]
             this._recomputeChatGroupsUnreadCount()
         })
-        ipcRenderer.on('addMessage', (_, { roomId, message }) => {
+        this.lifecycleScope.onIpc('addMessage', (_, { roomId, message }) => {
             if (roomId !== this.selectedRoomId) return
             this.queueIncomingMessage(roomId, message)
         })
-        ipcRenderer.on('deleteMessage', (_, messageId) => {
+        this.lifecycleScope.onIpc('deleteMessage', (_, messageId) => {
             const index = this.getMessageIndex(messageId)
             if (index !== -1) {
                 this.$set(this.messages, index, {
@@ -823,7 +824,7 @@ export default {
                 })
             }
         })
-        ipcRenderer.on('hideMessage', (_, messageId) => {
+        this.lifecycleScope.onIpc('hideMessage', (_, messageId) => {
             const index = this.getMessageIndex(messageId)
             if (index !== -1) {
                 this.$set(this.messages, index, {
@@ -833,7 +834,7 @@ export default {
                 })
             }
         })
-        ipcRenderer.on('revealMessage', (_, messageId) => {
+        this.lifecycleScope.onIpc('revealMessage', (_, messageId) => {
             const index = this.getMessageIndex(messageId)
             if (index !== -1) {
                 this.$set(this.messages, index, {
@@ -843,7 +844,7 @@ export default {
                 })
             }
         })
-        ipcRenderer.on('renewMessage', (_, { messageId, message }) => {
+        this.lifecycleScope.onIpc('renewMessage', (_, { messageId, message }) => {
             const index = this.getMessageIndex(messageId)
             if (index !== -1 && message) {
                 this.$set(this.messages, index, {
@@ -852,7 +853,7 @@ export default {
                 })
             }
         })
-        ipcRenderer.on('renewMessageURL', (_, { messageId, URL }) => {
+        this.lifecycleScope.onIpc('renewMessageURL', (_, { messageId, URL }) => {
             const index = this.getMessageIndex(messageId)
             const message = index === -1 ? null : this.messages[index]
             if (message && message.file && URL !== 'error') {
@@ -865,16 +866,16 @@ export default {
                 })
             }
         })
-        ipcRenderer.on('setOnline', () => (this.reconnecting = this.offline = false))
-        ipcRenderer.on('setOffline', (_, msg) => {
+        this.lifecycleScope.onIpc('setOnline', () => (this.reconnecting = this.offline = false))
+        this.lifecycleScope.onIpc('setOffline', (_, msg) => {
             this.offlineReason = msg
             this.offline = true
         })
-        ipcRenderer.on('clearCurrentRoomUnread', () => {
+        this.lifecycleScope.onIpc('clearCurrentRoomUnread', () => {
             this.selectedRoom.unreadCount = 0
             this._recomputeChatGroupsUnreadCount()
         })
-        ipcRenderer.on('clearRoomUnread', (_, roomId) => {
+        this.lifecycleScope.onIpc('clearRoomUnread', (_, roomId) => {
             const room = this.rooms.find((e) => e.roomId === roomId)
             if (room) {
                 room.unreadCount = 0
@@ -882,10 +883,10 @@ export default {
                 this._recomputeChatGroupsUnreadCount()
             }
         })
-        ipcRenderer.on('updatePriority', (_, p) => (this.priority = p))
-        ipcRenderer.on('setAllRooms', (_, p) => (this.rooms = p))
-        ipcRenderer.on('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
-        ipcRenderer.on('setMessages', (_, p) => {
+        this.lifecycleScope.onIpc('updatePriority', (_, p) => (this.priority = p))
+        this.lifecycleScope.onIpc('setAllRooms', (_, p) => (this.rooms = p))
+        this.lifecycleScope.onIpc('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
+        this.lifecycleScope.onIpc('setMessages', (_, p) => {
             const messages = p || []
             for (const message of messages) {
                 message.__v_skip = true
@@ -893,9 +894,9 @@ export default {
             this.setMessageList(messages)
             this.messagesLoaded = false
         })
-        ipcRenderer.on('startChat', (_, { id, name }) => this.startChat(id, name))
-        ipcRenderer.on('closePanel', () => (this.panel = ''))
-        ipcRenderer.on(
+        this.lifecycleScope.onIpc('startChat', (_, { id, name }) => this.startChat(id, name))
+        this.lifecycleScope.onIpc('closePanel', () => (this.panel = ''))
+        this.lifecycleScope.onIpc(
             'gotOnlineData',
             (_, { online, nick, uin, priority, sysInfo, updateCheck, isSteamVrRunning }) => {
                 this.offline = !online
@@ -913,44 +914,44 @@ Chromium ${process.versions.chrome}`
                 if (updateCheck === 'ask') this.dialogAskCheckUpdateVisible = true
 
                 // 预加载所有群的成员列表（用于查找共同群聊功能）
-                setTimeout(() => {
+                this.lifecycleScope.timeout(() => {
                     groupMemberCache.preloadAllGroups().catch((err) => {
                         console.error('Failed to preload group members:', err)
                     })
                 }, 3000) // 延迟3秒后开始预加载，避免影响启动速度
             },
         )
-        ipcRenderer.on('uploadProgress', (_, p) => {
+        this.lifecycleScope.onIpc('uploadProgress', (_, p) => {
             if (p > this.uploadProgress) {
                 this.uploadProgress = p
             }
         })
-        ipcRenderer.on('useSinglePanel', (_, b) => {
+        this.lifecycleScope.onIpc('useSinglePanel', (_, b) => {
             if (this.useSinglePanel && window.innerWidth > 720) {
                 this.$refs.roomPanel.style.width = '360px'
             }
             this.useSinglePanel = b
             this.handleResize({ target: { innerWidth: window.innerWidth } })
         })
-        ipcRenderer.on('setRemoveGroupNameEmotes', (_, b) => {
+        this.lifecycleScope.onIpc('setRemoveGroupNameEmotes', (_, b) => {
             this.removeGroupNameEmotes = b
         })
-        ipcRenderer.on('setUsePanguJsRecv', (_, b) => {
+        this.lifecycleScope.onIpc('setUsePanguJsRecv', (_, b) => {
             this.usePanguJsRecv = b
         })
-        ipcRenderer.on('setStickerPanelBottom', (_, b) => {
+        this.lifecycleScope.onIpc('setStickerPanelBottom', (_, b) => {
             this.stickerPanelBottom = b
         })
-        ipcRenderer.on('forwardSingleMessage', (_, message_id) => {
+        this.lifecycleScope.onIpc('forwardSingleMessage', (_, message_id) => {
             this.chooseForwardTarget(false, false)
         })
-        ipcRenderer.on('gotoMessage', async (_, { roomId, messageId }) => {
+        this.lifecycleScope.onIpc('gotoMessage', async (_, { roomId, messageId }) => {
             await this.gotoMessage(roomId, messageId)
         })
         ipc.setSelectedRoom(0, '')
         ipc.requestOnlineData()
 
-        window.addEventListener('resize', this.handleResize)
+        this.lifecycleScope.onEvent(window, 'resize', this.handleResize)
         this.handleResize({ target: { innerWidth: window.innerWidth } })
         console.log('加载完成')
     },
@@ -986,7 +987,7 @@ Chromium ${process.versions.chrome}`
         },
         cancelPendingIncomingMessages() {
             if (this.pendingIncomingFrame !== null) {
-                cancelAnimationFrame(this.pendingIncomingFrame)
+                this.lifecycleScope.cancelAnimationFrame(this.pendingIncomingFrame)
                 this.pendingIncomingFrame = null
             }
             this.pendingIncomingMessages = []
@@ -1012,7 +1013,7 @@ Chromium ${process.versions.chrome}`
             this.pendingIncomingIds.add(message._id)
             if (this.pendingIncomingFrame !== null) return
 
-            this.pendingIncomingFrame = requestAnimationFrame(() => {
+            this.pendingIncomingFrame = this.lifecycleScope.animationFrame(() => {
                 this.pendingIncomingFrame = null
                 this.flushIncomingMessages(roomId)
             })
@@ -1124,7 +1125,7 @@ Chromium ${process.versions.chrome}`
                 }
                 msgs2add = messagePages.flat()
             }
-            setTimeout(() => {
+            this.lifecycleScope.timeout(() => {
                 if (_roomId !== this.selectedRoom.roomId) return
 
                 // 过滤掉已经存在的消息，而不是全部丢弃
@@ -1148,14 +1149,14 @@ Chromium ${process.versions.chrome}`
                 if (at) {
                     const atMessages = this.messages.filter((e) => e.at)
                     if (atMessages.length) {
-                        setTimeout(() => {
+                        this.lifecycleScope.timeout(() => {
                             const _id = atMessages[atMessages.length - 1]._id
                             if (!_id) {
                                 this.$message.error('Message not found')
                                 return
                             }
                             console.log('last unread at message ID', _id)
-                            setTimeout(() => {
+                            this.lifecycleScope.timeout(() => {
                                 this.$refs.room.scrollToMessage(_id)
                             }, 0)
                         }, 0)
@@ -1416,13 +1417,15 @@ Chromium ${process.versions.chrome}`
                 if (next > max) next = max
                 this.stickerPanelHeight = next
             }
+            let removeMoveListener
+            let removeUpListener
             const onUp = () => {
-                window.removeEventListener('mousemove', onMove)
-                window.removeEventListener('mouseup', onUp)
+                removeMoveListener()
+                removeUpListener()
                 ipc.setStickerPanelHeight(this.stickerPanelHeight)
             }
-            window.addEventListener('mousemove', onMove)
-            window.addEventListener('mouseup', onUp)
+            removeMoveListener = this.lifecycleScope.onEvent(window, 'mousemove', onMove)
+            removeUpListener = this.lifecycleScope.onEvent(window, 'mouseup', onUp)
         },
         sendForward(id, name) {
             this.$refs.room.sendForward(id, name, this.forwardMulti, this.forwardAnonymous)
@@ -1500,7 +1503,7 @@ Chromium ${process.versions.chrome}`
         onChatGroupScroll(e) {
             this._chatGroupPendingScrollTop = e.target.scrollTop
             if (this._chatGroupScrollFrame) return
-            this._chatGroupScrollFrame = requestAnimationFrame(() => {
+            this._chatGroupScrollFrame = this.lifecycleScope.animationFrame(() => {
                 this._chatGroupScrollFrame = null
                 this._updateChatGroupScrollbarPosition(this._chatGroupPendingScrollTop)
             })
@@ -1765,10 +1768,11 @@ Chromium ${process.versions.chrome}`
             this._chatGroupResizeObserver = null
         }
         if (this._chatGroupScrollFrame) {
-            cancelAnimationFrame(this._chatGroupScrollFrame)
+            this.lifecycleScope.cancelAnimationFrame(this._chatGroupScrollFrame)
             this._chatGroupScrollFrame = null
         }
         if (this._onGroupMouseUp) this.onGroupThumbMouseUp()
+        this.lifecycleScope?.dispose()
     },
     watch: {
         chatGroups: {
@@ -1783,9 +1787,9 @@ Chromium ${process.versions.chrome}`
             console.log('lastUnreadCount', n)
             if (n !== 0) {
                 if (this.lastUnreadCheck) {
-                    clearTimeout(this.lastUnreadCheck)
+                    this.lifecycleScope.cancelTimeout(this.lastUnreadCheck)
                 }
-                this.lastUnreadCheck = setTimeout(() => {
+                this.lastUnreadCheck = this.lifecycleScope.timeout(() => {
                     console.log('Timeout')
                     this.lastUnreadCount = 0
                 }, 30000)
@@ -1795,9 +1799,9 @@ Chromium ${process.versions.chrome}`
             console.log('lastUnreadAt', n)
             if (n) {
                 if (this.lastUnreadCheck2) {
-                    clearTimeout(this.lastUnreadCheck2)
+                    this.lifecycleScope.cancelTimeout(this.lastUnreadCheck2)
                 }
-                this.lastUnreadCheck2 = setTimeout(() => {
+                this.lastUnreadCheck2 = this.lifecycleScope.timeout(() => {
                     console.log('Timeout')
                     this.lastUnreadAt = false
                 }, 30000)

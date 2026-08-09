@@ -20,6 +20,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import { XMLBuilder, XMLParser, XMLValidator } from 'fast-xml-parser'
 import highlightjs from 'highlight.js'
 import 'highlight.js/styles/a11y-dark.css'
@@ -38,7 +39,8 @@ export default {
         }
     },
     async created() {
-        ipcRenderer.on('setCardSource', (_, source, filename) => {
+        this.lifecycleScope = createRendererLifecycleScope()
+        this.lifecycleScope.onIpc('setCardSource', (_, source, filename) => {
             console.log(source, filename)
             this.source = source
             this.filename = filename
@@ -63,6 +65,9 @@ export default {
                 }
             }
         })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     computed: {
         highlighted() {

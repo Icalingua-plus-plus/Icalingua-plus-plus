@@ -16,8 +16,7 @@
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
-import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 
 export default {
     name: 'QrcodeDrawer',
@@ -28,15 +27,19 @@ export default {
         }
     },
     created() {
-        ipcRenderer.on('qrcodeLogin', async (_, url) => {
+        this.lifecycleScope = createRendererLifecycleScope()
+        this.lifecycleScope.onIpc('qrcodeLogin', async (_, url) => {
             console.log(url)
             this.image = url
             this.drawerVisible = true
         })
-        ipcRenderer.on('error', async (_, msg) => {
+        this.lifecycleScope.onIpc('error', async (_, msg) => {
             this.image = ''
             this.drawerVisible = false
         })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
 }
 </script>

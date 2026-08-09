@@ -48,6 +48,7 @@ import getAvatarUrl from '../../utils/getAvatarUrl'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import groupMemberCache from '../utils/groupMemberCache'
 import { ipcRenderer } from 'electron'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 
 export default {
     name: 'CommonGroupsDialog',
@@ -68,11 +69,15 @@ export default {
         },
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         this.removeEmotes = (await ipcRenderer.invoke('getSettings')).removeGroupNameEmotes || false
         // 监听打开对话框事件
-        ipcRenderer.on('showCommonGroups', async (_, userId, userName) => {
+        this.lifecycleScope.onIpc('showCommonGroups', async (_, userId, userName) => {
             await this.show(userId, userName)
         })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     methods: {
         async show(userId, userName) {

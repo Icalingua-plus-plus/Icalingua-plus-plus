@@ -567,6 +567,7 @@ import faceNames from '../../../../../../static/faceNames'
 import getStaticPath from '../../../../../utils/getStaticPath'
 
 import ipc from '../../../../utils/ipc'
+import { createRendererLifecycleScope } from '../../../../utils/rendererLifecycleScope'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
 import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
@@ -903,15 +904,15 @@ export default {
             }
 
             // 处理滚动到最后未读消息
-            if (this.checkCanScrollTimer) clearTimeout(this.checkCanScrollTimer)
+            if (this.checkCanScrollTimer) this.lifecycleScope.cancelTimeout(this.checkCanScrollTimer)
             if (this.scrollingTolastMessage) {
-                this.checkCanScrollTimer = setTimeout(() => {
+                this.checkCanScrollTimer = this.lifecycleScope.timeout(() => {
                     this.checkCanScrollTimer = null
                     const nonSystemMessages = this.messages.filter((msg) => !msg.system)
                     if (nonSystemMessages.length >= this.scrollingTolastMessage) {
                         const msgCount = this.scrollingTolastMessage
                         this.scrollingTolastMessage = 0
-                        setTimeout(() => {
+                        this.lifecycleScope.timeout(() => {
                             const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
                             if (!_id) {
                                 this.$message.error('Message not found')
@@ -925,7 +926,7 @@ export default {
 
             // 处理回复消息的定位
             if (this.scrollingToReplyMessage) {
-                setTimeout(() => {
+                this.lifecycleScope.timeout(() => {
                     const result = this.scrollToMessage(this.scrollingToReplyMessage, false, true)
                     if (result) {
                         // 成功定位，清除状态
@@ -935,7 +936,7 @@ export default {
                 }, 1000)
             }
 
-            setTimeout(() => (this.loadingHeadMessages = false), 0)
+            this.lifecycleScope.timeout(() => (this.loadingHeadMessages = false), 0)
         },
         messagesLoaded(val) {
             if (val) this.loadingMessages = false
@@ -951,7 +952,7 @@ export default {
     async mounted() {
         this.restoreMessageDraft()
 
-        window.addEventListener('paste', (event) => {
+        this.lifecycleScope.onEvent(window, 'paste', (event) => {
             console.log(event.clipboardData.files)
             const imageHTML = event.clipboardData.getData('text/html') || '.'
             console.log(imageHTML)
@@ -977,7 +978,7 @@ export default {
         })
 
         //drag and drop https://www.geeksforgeeks.org/drag-and-drop-files-in-electronjs/
-        document.addEventListener('drop', (event) => {
+        this.lifecycleScope.onEvent(document, 'drop', (event) => {
             event.preventDefault()
             event.stopPropagation()
             console.log(event)
@@ -1015,48 +1016,49 @@ export default {
         })
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         this.optimizeMethod = await ipc.getOptimizeMethodSetting()
         if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page')
             this.optimizeMethod = 'none'
         keyToSendMessage = await ipc.getKeyToSendMessage()
-        ipcRenderer.on('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
-        ipcRenderer.on('startForward', (_, _id) => {
+        this.lifecycleScope.onIpc('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
+        this.lifecycleScope.onIpc('startForward', (_, _id) => {
             if (this.showForwardPanel) return
             this.msgsToForward = [_id]
             this.showForwardPanel = true
         })
-        ipcRenderer.on('replyMessage', (_, message) => this.replyMessage(message))
-        ipcRenderer.on('setKeyToSendMessage', (_, key) => {
+        this.lifecycleScope.onIpc('replyMessage', (_, message) => this.replyMessage(message))
+        this.lifecycleScope.onIpc('setKeyToSendMessage', (_, key) => {
             keyToSendMessage = key
         })
-        ipcRenderer.on('addMessageText', (_, message) => {
+        this.lifecycleScope.onIpc('addMessageText', (_, message) => {
             this.appendMessageText(message)
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
-        ipcRenderer.on('setMessageText', (_, message) => {
+        this.lifecycleScope.onIpc('setMessageText', (_, message) => {
             this.setMessageText(message)
             this.focusTextarea()
             this.$nextTick(() => this.resizeTextarea())
         })
-        ipcRenderer.on('pasteGif', (_, GifURL) => {
+        this.lifecycleScope.onIpc('pasteGif', (_, GifURL) => {
             this.onPasteGif(GifURL)
             this.$emit('close-stickers-panel')
         })
         this.hideChatImageByDefault = await ipc.getHideChatImageByDefault()
-        ipcRenderer.on('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
+        this.lifecycleScope.onIpc('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
             this.hideChatImageByDefault = hideChatImageByDefault
         })
         this.hideChatVideoByDefault = await ipc.getHideChatVideoByDefault()
-        ipcRenderer.on('setHideChatVideoByDefault', (_, hideChatVideoByDefault) => {
+        this.lifecycleScope.onIpc('setHideChatVideoByDefault', (_, hideChatVideoByDefault) => {
             this.hideChatVideoByDefault = hideChatVideoByDefault
         })
         this.localImageViewerByDefault = (await ipc.getSettings()).localImageViewerByDefault
-        ipcRenderer.on('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {
+        this.lifecycleScope.onIpc('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {
             this.localImageViewerByDefault = localImageViewerByDefault
         })
         this.disableQLottie = (await ipc.getSettings()).disableQLottie
-        ipcRenderer.on('setDisableQLottie', (_, a) => {
+        this.lifecycleScope.onIpc('setDisableQLottie', (_, a) => {
             this.disableQLottie = a
         })
         const isAdapter = (await ipc.getSettings()).adapter === 'socketIo'
@@ -1065,7 +1067,7 @@ export default {
         } else {
             this.recordPath = 'file://' + (await ipc.getStorePath()) + '/records'
         }
-        ipcRenderer.on('forwardSingleMessage', (_, _id) => {
+        this.lifecycleScope.onIpc('forwardSingleMessage', (_, _id) => {
             this.showForwardPanel = true
             if (!this.selectedMessageIds.has(_id)) {
                 this.msgsToForward = [...this.msgsToForward, _id]
@@ -1073,22 +1075,23 @@ export default {
         })
     },
     beforeDestroy() {
+        this.lifecycleScope?.dispose()
         this.saveMessageDraft(this.getMessageText(), true)
         this.disposeAudioRecorder()
         if (this.onScrolling) {
-            clearTimeout(this.onScrolling)
+            this.lifecycleScope.cancelTimeout(this.onScrolling)
             this.onScrolling = null
         }
         if (this.scrollToBottomTimer) {
-            cancelAnimationFrame(this.scrollToBottomTimer)
+            this.lifecycleScope.cancelAnimationFrame(this.scrollToBottomTimer)
             this.scrollToBottomTimer = null
         }
         if (this.checkCanScrollTimer) {
-            clearTimeout(this.checkCanScrollTimer)
+            this.lifecycleScope.cancelTimeout(this.checkCanScrollTimer)
             this.checkCanScrollTimer = null
         }
         if (this.mouseSelectFrame !== null) {
-            cancelAnimationFrame(this.mouseSelectFrame)
+            this.lifecycleScope.cancelAnimationFrame(this.mouseSelectFrame)
             this.mouseSelectFrame = null
         }
         if (this.mouseSelecting) {
@@ -1173,14 +1176,14 @@ export default {
         },
         startAudioDurationTimer() {
             this.stopAudioDurationTimer()
-            this.audioDurationTimer = setInterval(() => {
+            this.audioDurationTimer = this.lifecycleScope.interval(() => {
                 if (!this.isAudioRecording) return
                 this.audioDuration = (Date.now() - this.audioRecordingStartedAt) / 1000
             }, 200)
         },
         stopAudioDurationTimer() {
             if (!this.audioDurationTimer) return
-            clearInterval(this.audioDurationTimer)
+            this.lifecycleScope.cancelInterval(this.audioDurationTimer)
             this.audioDurationTimer = null
         },
         formatAudioDuration(seconds) {
@@ -1318,7 +1321,7 @@ export default {
             this.pendingMessageDraft = message == null ? '' : String(message)
             if (immediate) {
                 if (this.messageDraftSaveTimer) {
-                    clearTimeout(this.messageDraftSaveTimer)
+                    this.lifecycleScope.cancelTimeout(this.messageDraftSaveTimer)
                     this.messageDraftSaveTimer = null
                 }
                 this.persistMessageDraft()
@@ -1326,7 +1329,7 @@ export default {
             }
 
             if (this.messageDraftSaveTimer) return
-            this.messageDraftSaveTimer = setTimeout(() => {
+            this.messageDraftSaveTimer = this.lifecycleScope.timeout(() => {
                 this.messageDraftSaveTimer = null
                 this.persistMessageDraft()
             }, messageDraftThrottleMs)
@@ -1354,7 +1357,7 @@ export default {
         },
         scheduleTextareaResize() {
             this.$nextTick(() => {
-                requestAnimationFrame(() => this.resizeTextarea())
+                this.lifecycleScope.animationFrame(() => this.resizeTextarea())
             })
         },
         appendMessageText(message) {
@@ -1681,7 +1684,7 @@ export default {
             if (!multi) {
                 messagesToSend.forEach((msg, index) => {
                     console.log(msg.message)
-                    setTimeout(
+                    this.lifecycleScope.timeout(
                         () => {
                             this.$emit('send-message', {
                                 roomId: target,
@@ -1725,7 +1728,7 @@ export default {
             if (message) {
                 message.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
-                setTimeout(() => {
+                this.lifecycleScope.timeout(() => {
                     message.parentElement.style = ''
                 }, 200)
             }
@@ -1787,7 +1790,7 @@ export default {
             if (message) {
                 message.scrollIntoView()
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
-                setTimeout(() => {
+                this.lifecycleScope.timeout(() => {
                     message.parentElement.style = ''
                 }, 3000)
                 return true
@@ -1811,7 +1814,7 @@ export default {
                         if (el) {
                             el.scrollIntoView()
                             el.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
-                            setTimeout(() => {
+                            this.lifecycleScope.timeout(() => {
                                 el.parentElement.style = ''
                             }, 3000)
                         }
@@ -1888,7 +1891,7 @@ export default {
             this.emojiOpened = false
             this.editAndResend = false
             this.preventKeyboardFromClosing()
-            setTimeout(() => this.focusTextarea(disableMobileFocus), 0)
+            this.lifecycleScope.timeout(() => this.focusTextarea(disableMobileFocus), 0)
         },
         async paste() {
             this.appendMessageText(await navigator.clipboard.readText())
@@ -1958,7 +1961,7 @@ export default {
             if (typeof id === 'string') {
                 this.useMessageContent(`[Face: ${id}]`)
             }
-            setTimeout(() => this.focusTextarea(), 0)
+            this.lifecycleScope.timeout(() => this.focusTextarea(), 0)
         },
         closeQuickAt() {
             this.isQuickAtOn = false
@@ -1984,14 +1987,14 @@ export default {
                 this.useMessageContent((this.useAtKey ? atName : atText) + ' ')
             }
             this.useAtKey = false
-            setTimeout(() => this.focusTextarea(), 0)
+            this.lifecycleScope.timeout(() => this.focusTextarea(), 0)
         },
         nomatchQuickAt(search) {
             if (!this.useAtKey) return
             this.isQuickAtOn = false
             this.useAtKey = false
             this.useMessageContent(search)
-            setTimeout(() => this.focusTextarea(), 0)
+            this.lifecycleScope.timeout(() => this.focusTextarea(), 0)
         },
         async sendMessage() {
             const message = this.getMessageText()
@@ -2065,7 +2068,7 @@ export default {
             this.resetMessage(true)
         },
         loadMoreMessages() {
-            setTimeout(
+            this.lifecycleScope.timeout(
                 () => {
                     if (this.loadingHeadMessages) return
                     if (!this.messages || this.messages.length === 0) return
@@ -2127,10 +2130,10 @@ export default {
 
                 if (isImageFile(message.file)) {
                     this.imageFiles = [message.file.url]
-                    setTimeout(() => this.onMediaLoad(), 0)
+                    this.lifecycleScope.timeout(() => this.onMediaLoad(), 0)
                 } else if (isVideoFile(message.file)) {
                     this.videoFiles = [message.file.url]
-                    setTimeout(() => this.onMediaLoad(), 50)
+                    this.lifecycleScope.timeout(() => this.onMediaLoad(), 50)
                 }
             }
 
@@ -2152,7 +2155,7 @@ export default {
             if (!element) return
             this.loadingMessages = false
             if (this.scrollToBottomTimer) {
-                cancelAnimationFrame(this.scrollToBottomTimer)
+                this.lifecycleScope.cancelAnimationFrame(this.scrollToBottomTimer)
                 this.scrollToBottomTimer = null
             }
             if (this.optimizeMethod !== 'none') {
@@ -2162,7 +2165,7 @@ export default {
             this.scrollMessagesCount = 0
             this.scrollIcon = false
             this.$nextTick(() => {
-                this.scrollToBottomTimer = requestAnimationFrame(() => {
+                this.scrollToBottomTimer = this.lifecycleScope.animationFrame(() => {
                     this.scrollToBottomTimer = null
                     element.scrollTo({ top: element.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
                 })
@@ -2275,13 +2278,13 @@ export default {
                     this.resetMediaFile()
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
-                    setTimeout(() => this.onMediaLoad(), 50)
+                    this.lifecycleScope.timeout(() => this.onMediaLoad(), 50)
                     break
                 } else if (isAudio) {
                     this.resetMediaFile()
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
-                    setTimeout(() => this.onMediaLoad(), 50)
+                    this.lifecycleScope.timeout(() => this.onMediaLoad(), 50)
                     break
                 } else {
                     this.resetMediaFile()
@@ -2291,7 +2294,7 @@ export default {
                 }
             }
 
-            setTimeout(() => {
+            this.lifecycleScope.timeout(() => {
                 this.fileDialog = false
                 this.focusTextarea()
             }, 500)
@@ -2315,7 +2318,7 @@ export default {
 
             this.files.push(fileObj)
             this.imageFiles.push(fileURL)
-            setTimeout(() => {
+            this.lifecycleScope.timeout(() => {
                 this.fileDialog = false
                 this.focusTextarea()
             }, 500)
@@ -2346,10 +2349,10 @@ export default {
         containerScroll(e) {
             if (this.mouseSelecting) this.mouseSelectBounds = null
             if (this.onScrolling) {
-                clearTimeout(this.onScrolling)
+                this.lifecycleScope.cancelTimeout(this.onScrolling)
                 this.onScrolling = null
             }
-            this.onScrolling = setTimeout(() => {
+            this.onScrolling = this.lifecycleScope.timeout(() => {
                 this.onScrolling = null
                 if (!e.target) return
 
@@ -2388,7 +2391,7 @@ export default {
         },
         loadHeadMessages(infiniteState) {
             if (this.optimizeMethod !== 'infinite-loading') return
-            setTimeout(
+            this.lifecycleScope.timeout(
                 () => {
                     this.infiniteState.head = infiniteState
                     if (this.loadingHeadMessages && this.visibleViewport.head === 0) return
@@ -2429,7 +2432,7 @@ export default {
             }
         },
         _loadMoreMessages(infiniteState) {
-            setTimeout(
+            this.lifecycleScope.timeout(
                 () => {
                     if (this.loadingHeadMessages) return
                     if (this.messagesLoaded || !this.room.roomId) {
@@ -2555,14 +2558,14 @@ export default {
         },
         scheduleMouseSelectUpdate() {
             if (this.mouseSelectFrame !== null) return
-            this.mouseSelectFrame = requestAnimationFrame(() => {
+            this.mouseSelectFrame = this.lifecycleScope.animationFrame(() => {
                 this.mouseSelectFrame = null
                 if (this.mouseSelecting) this.updateMouseSelectAreaStyleImmediately()
             })
         },
         flushMouseSelectUpdate() {
             if (this.mouseSelectFrame !== null) {
-                cancelAnimationFrame(this.mouseSelectFrame)
+                this.lifecycleScope.cancelAnimationFrame(this.mouseSelectFrame)
                 this.mouseSelectFrame = null
             }
             this.updateMouseSelectAreaStyleImmediately()

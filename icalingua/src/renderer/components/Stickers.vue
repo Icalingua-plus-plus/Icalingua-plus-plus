@@ -117,6 +117,7 @@
 import { VEmojiPicker } from 'v-emoji-picker'
 import { shell } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import fs from 'fs'
 import path from 'path'
 import md5 from 'md5'
@@ -192,6 +193,7 @@ export default {
         }
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
         this.RECENT_CATEGORY = RECENT_CATEGORY
         this.face_dir = path.join(getStaticPath(), 'face/')
@@ -207,8 +209,11 @@ export default {
         // Remote Stickers
         if (!(await ipc.getDisabledFeatures()).includes('RemoteStickers')) {
             this.supportRemote = true
-            setTimeout(async () => (this.remote_pics = await ipc.getRoamingStamp(true)), 10 * 1000)
-            setInterval(async () => (this.remote_pics = await ipc.getRoamingStamp(true)), 1000 * 60 * 60)
+            this.lifecycleScope.timeout(async () => (this.remote_pics = await ipc.getRoamingStamp(true)), 10 * 1000)
+            this.lifecycleScope.interval(
+                async () => (this.remote_pics = await ipc.getRoamingStamp(true)),
+                1000 * 60 * 60,
+            )
         }
 
         // Face
@@ -259,9 +264,13 @@ export default {
             }
         }
         updateDefaultDir()
-        fs.watch(this.default_dir, updateDefaultDir)
+        const defaultDirWatcher = fs.watch(this.default_dir, updateDefaultDir)
+        this.watchedPath[DEFAULT_CATEGORY] = defaultDirWatcher
+        this.lifecycleScope.addCleanup(() => defaultDirWatcher.close())
     },
     beforeDestroy() {
+        this.lifecycleScope?.dispose()
+        this.watchedPath = {}
         this._previewQueue = []
     },
     methods: {
@@ -367,7 +376,9 @@ export default {
             }
             updateDir()
             if (dir == DEFAULT_CATEGORY || dir in this.watchedPath) return
-            this.watchedPath[dir] = fs.watch(fullDir, updateDir)
+            const watcher = fs.watch(fullDir, updateDir)
+            this.watchedPath[dir] = watcher
+            this.lifecycleScope.addCleanup(() => watcher.close())
         },
         sendLocalSticker(img) {
             this.$emit('send', this.default_dir + img)

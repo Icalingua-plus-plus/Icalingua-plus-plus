@@ -44,8 +44,8 @@
 
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
-import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import '../utils/themes'
 
 export default {
@@ -75,13 +75,14 @@ export default {
         }
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         document.title = '查看发言记录'
         const settings = await ipc.getSettings()
         this.linkify = settings.linkify
         this.usePanguJsRecv = settings.usePanguJsRecv
         this.account = await ipc.getUin()
         this.username = await ipc.getNick()
-        ipcRenderer.on('initMemberHistory', async (event, { senderId, roomId, senderName }) => {
+        this.lifecycleScope.onIpc('initMemberHistory', async (event, { senderId, roomId, senderName }) => {
             this.senderId = senderId
             this.roomId = roomId
             this.senderName = senderName
@@ -110,6 +111,9 @@ export default {
             await this.fetchInitialMessages()
         })
     },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
+    },
     components: {
         Room,
     },
@@ -137,7 +141,7 @@ export default {
             }
             // 等消息渲染完成后滚动到底部
             this.$nextTick(() => {
-                setTimeout(() => {
+                this.lifecycleScope.timeout(() => {
                     if (this.$refs.room && this.$refs.room.$refs.scrollContainer) {
                         const el = this.$refs.room.$refs.scrollContainer
                         el.scrollTo({ top: el.scrollHeight })

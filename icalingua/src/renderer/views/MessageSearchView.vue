@@ -51,8 +51,8 @@
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import '../utils/themes'
 
 export default {
@@ -78,12 +78,16 @@ export default {
         },
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         document.title = '搜索聊天记录'
-        ipcRenderer.on('initMessageSearch', (event, { roomId, roomName }) => {
+        this.lifecycleScope.onIpc('initMessageSearch', (event, { roomId, roomName }) => {
             this.roomId = roomId
             this.roomName = roomName
             document.title = this.searchTitle
         })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     methods: {
         async doSearch() {

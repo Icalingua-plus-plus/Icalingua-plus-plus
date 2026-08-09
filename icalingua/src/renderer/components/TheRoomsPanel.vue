@@ -115,6 +115,7 @@
 import RoomEntry from './RoomEntry.vue'
 import ipc from '../utils/ipc'
 import { ipcRenderer } from 'electron'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import PinyinMatch from 'pinyin-match'
 
@@ -229,7 +230,7 @@ export default {
         },
         expandRoomSearch() {
             if (this._roomSearchBlurTimer) {
-                clearTimeout(this._roomSearchBlurTimer)
+                this.lifecycleScope.cancelTimeout(this._roomSearchBlurTimer)
                 this._roomSearchBlurTimer = null
             }
             this.roomSearchExpanded = true
@@ -237,8 +238,8 @@ export default {
         },
         collapseRoomSearch() {
             if (!this.compactRoomSearch) return
-            if (this._roomSearchBlurTimer) clearTimeout(this._roomSearchBlurTimer)
-            this._roomSearchBlurTimer = setTimeout(() => {
+            if (this._roomSearchBlurTimer) this.lifecycleScope.cancelTimeout(this._roomSearchBlurTimer)
+            this._roomSearchBlurTimer = this.lifecycleScope.timeout(() => {
                 this.roomSearchExpanded = false
                 this._roomSearchBlurTimer = null
             }, 0)
@@ -248,7 +249,7 @@ export default {
             this._pendingScrollTop = scrollTop
 
             if (!this._scrollFrame) {
-                this._scrollFrame = requestAnimationFrame(() => {
+                this._scrollFrame = this.lifecycleScope.animationFrame(() => {
                     this._scrollFrame = null
                     this._updateScrollbarPosition(this._pendingScrollTop)
                 })
@@ -335,13 +336,14 @@ export default {
         getAvatarUrl,
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         this.clearRoomsBehavior = await ipcRenderer.invoke('getClearRoomsBehavior')
         this.sortRoomsByPriority = (await ipc.getSettings()).sortRoomsByPriority || false
-        ipcRenderer.on('setSortRoomsByPriority', (_, sortRoomsByPriority) => {
+        this.lifecycleScope.onIpc('setSortRoomsByPriority', (_, sortRoomsByPriority) => {
             this.sortRoomsByPriority = sortRoomsByPriority
         })
 
-        ipcRenderer.on('setClearRoomsBehavior', (_, behavior) => {
+        this.lifecycleScope.onIpc('setClearRoomsBehavior', (_, behavior) => {
             this.clearRoomsBehavior = behavior
         })
     },
@@ -380,14 +382,15 @@ export default {
             this._resizeObserver = null
         }
         if (this._scrollFrame) {
-            cancelAnimationFrame(this._scrollFrame)
+            this.lifecycleScope.cancelAnimationFrame(this._scrollFrame)
             this._scrollFrame = null
         }
         if (this._roomSearchBlurTimer) {
-            clearTimeout(this._roomSearchBlurTimer)
+            this.lifecycleScope.cancelTimeout(this._roomSearchBlurTimer)
             this._roomSearchBlurTimer = null
         }
         if (this._onMouseUp) this.onThumbMouseUp()
+        this.lifecycleScope?.dispose()
     },
 }
 </script>

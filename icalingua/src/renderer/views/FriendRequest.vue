@@ -42,7 +42,7 @@
 import ipc from '../utils/ipc'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import removeEmotes from '../../utils/removeGroupNameEmotes'
-import { ipcRenderer } from 'electron'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 
 export default {
     name: 'FriendRequest',
@@ -54,10 +54,14 @@ export default {
     },
 
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         document.title = '验证消息'
         this.request = { ...this.request, ...(await ipc.getSystemMsg()) }
         this.removeGroupNameEmotes = (await ipc.getSettings()).removeGroupNameEmotes
-        ipcRenderer.on('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
+        this.lifecycleScope.onIpc('sendAddRequest', (e, data) => this.$set(this.request, data.flag, data))
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
 
     methods: {

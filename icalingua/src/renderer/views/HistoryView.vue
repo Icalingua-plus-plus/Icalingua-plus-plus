@@ -36,8 +36,8 @@
 
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
-import { ipcRenderer, remote } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import '../utils/themes'
 
 export default {
@@ -60,11 +60,12 @@ export default {
         }
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         document.title = '查看转发的消息记录'
         const settings = await ipc.getSettings()
         this.linkify = settings.linkify
         this.usePanguJsRecv = settings.usePanguJsRecv
-        ipcRenderer.on('loadMessages', (event, args) => {
+        this.lifecycleScope.onIpc('loadMessages', (event, args) => {
             this.room.roomName = 'Forwarded Messages'
             let lastSeq = 0
             let fake = false
@@ -82,10 +83,13 @@ export default {
             console.log(args)
             this.messages = [...args]
         })
-        ipcRenderer.on('setResId', (event, args) => {
+        this.lifecycleScope.onIpc('setResId', (event, args) => {
             console.log(args)
             this.resId = args
         })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     components: {
         Room,

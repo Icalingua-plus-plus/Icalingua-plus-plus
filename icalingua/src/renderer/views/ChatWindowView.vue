@@ -153,6 +153,7 @@ import Stickers from '../components/Stickers.vue'
 import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
 import { processFiles } from '../utils/processFiles'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import '../utils/themes'
 
 export default {
@@ -219,6 +220,7 @@ export default {
         },
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         // 从路由参数获取 roomId
         this.roomId = parseInt(this.$route.params.roomId)
         this.dbUpgrade = await ipc.getDbUpgradeProgress()
@@ -276,34 +278,22 @@ export default {
         ipc.clearChatWindowUnread(this.roomId)
     },
     beforeDestroy() {
-        // 移除 IPC 监听器
-        ipcRenderer.removeAllListeners('addMessage')
-        ipcRenderer.removeAllListeners('deleteMessage')
-        ipcRenderer.removeAllListeners('hideMessage')
-        ipcRenderer.removeAllListeners('revealMessage')
-        ipcRenderer.removeAllListeners('renewMessage')
-        ipcRenderer.removeAllListeners('setShutUp')
-        ipcRenderer.removeAllListeners('clearUnread')
-        ipcRenderer.removeAllListeners('gotoMessage')
-        ipcRenderer.removeAllListeners('sendDice')
-        ipcRenderer.removeAllListeners('sendRps')
-        ipcRenderer.removeAllListeners('closePanel')
-        ipcRenderer.removeAllListeners('dbUpgradeProgress')
+        this.lifecycleScope?.dispose()
     },
     methods: {
         setupIpcListeners() {
             // 阻止默认拖拽行为以支持文件拖入
-            document.addEventListener('dragover', (event) => {
+            this.lifecycleScope.onEvent(document, 'dragover', (event) => {
                 event.preventDefault()
                 event.stopPropagation()
             })
 
-            ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+            this.lifecycleScope.onIpc('dbUpgradeProgress', (_, progress) => {
                 this.dbUpgrade = progress
             })
 
             // 接收新消息
-            ipcRenderer.on('addMessage', (_, { roomId, message }) => {
+            this.lifecycleScope.onIpc('addMessage', (_, { roomId, message }) => {
                 if (roomId === this.roomId) {
                     const index = this.messages.findIndex((e) => e._id === message._id)
                     if (index !== -1) {
@@ -315,7 +305,7 @@ export default {
             })
 
             // 删除消息
-            ipcRenderer.on('deleteMessage', (_, messageId) => {
+            this.lifecycleScope.onIpc('deleteMessage', (_, messageId) => {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
                     this.messages[index].deleted = Date.now()
@@ -325,7 +315,7 @@ export default {
             })
 
             // 隐藏消息
-            ipcRenderer.on('hideMessage', (_, messageId) => {
+            this.lifecycleScope.onIpc('hideMessage', (_, messageId) => {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
                     this.messages[index].hide = true
@@ -335,7 +325,7 @@ export default {
             })
 
             // 显示消息
-            ipcRenderer.on('revealMessage', (_, messageId) => {
+            this.lifecycleScope.onIpc('revealMessage', (_, messageId) => {
                 const index = this.messages.findIndex((e) => e._id === messageId)
                 if (index !== -1) {
                     this.messages[index].hide = false
@@ -345,7 +335,7 @@ export default {
             })
 
             // 更新消息
-            ipcRenderer.on('renewMessage', (_, { roomId, messageId, message }) => {
+            this.lifecycleScope.onIpc('renewMessage', (_, { roomId, messageId, message }) => {
                 if (roomId === this.roomId) {
                     const index = this.messages.findIndex((e) => e._id === messageId)
                     if (index !== -1) {
@@ -356,17 +346,17 @@ export default {
             })
 
             // 禁言状态
-            ipcRenderer.on('setShutUp', (_, isShutUp) => {
+            this.lifecycleScope.onIpc('setShutUp', (_, isShutUp) => {
                 this.isShutUp = isShutUp
             })
 
             // 窗口聚焦时清除未读
-            ipcRenderer.on('clearUnread', () => {
+            this.lifecycleScope.onIpc('clearUnread', () => {
                 ipc.clearChatWindowUnread(this.roomId)
             })
 
             // 定位到指定消息
-            ipcRenderer.on('gotoMessage', async (_, messageId) => {
+            this.lifecycleScope.onIpc('gotoMessage', async (_, messageId) => {
                 console.log('gotoMessage event received:', messageId, 'ready:', this.ready, 'loading:', this.loading)
                 // 如果消息还没加载完，保存待定位的 ID
                 if (!this.ready || this.loading) {
@@ -379,17 +369,17 @@ export default {
             })
 
             // 发送骰子（菜单操作）
-            ipcRenderer.on('sendDice', (_) => {
+            this.lifecycleScope.onIpc('sendDice', (_) => {
                 this.sendDice(0)
             })
 
             // 发送猜拳（菜单操作）
-            ipcRenderer.on('sendRps', (_) => {
+            this.lifecycleScope.onIpc('sendRps', (_) => {
                 this.sendRps(0)
             })
 
             // 关闭表情面板
-            ipcRenderer.on('closePanel', () => {
+            this.lifecycleScope.onIpc('closePanel', () => {
                 this.panel = ''
             })
         },
@@ -640,13 +630,15 @@ export default {
                 if (next > max) next = max
                 this.stickerPanelHeight = next
             }
+            let removeMoveListener
+            let removeUpListener
             const onUp = () => {
-                window.removeEventListener('mousemove', onMove)
-                window.removeEventListener('mouseup', onUp)
+                removeMoveListener()
+                removeUpListener()
                 ipc.setStickerPanelHeight(this.stickerPanelHeight)
             }
-            window.addEventListener('mousemove', onMove)
-            window.addEventListener('mouseup', onUp)
+            removeMoveListener = this.lifecycleScope.onEvent(window, 'mousemove', onMove)
+            removeUpListener = this.lifecycleScope.onEvent(window, 'mouseup', onUp)
         },
     },
 }

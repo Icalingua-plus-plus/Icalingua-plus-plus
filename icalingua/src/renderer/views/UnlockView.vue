@@ -7,8 +7,8 @@
 </template>
 
 <script>
-import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 
 const displayStates = {
     failed: '解锁失败',
@@ -24,18 +24,22 @@ export default {
         }
     },
     created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         document.title = 'Icalingua++ 已锁定'
+        this.lifecycleScope.onIpc('unlock-fail', () => {
+            this.state = 'failed'
+        })
+        this.lifecycleScope.onIpc('unlock-succeed', () => {
+            this.password = ''
+            this.state = 'succeeded'
+        })
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     methods: {
         unlock() {
             ipc.unlock(this.password)
-            ipcRenderer.on('unlock-fail', () => {
-                this.state = 'failed'
-            })
-            ipcRenderer.on('unlock-succeed', () => {
-                this.password = ''
-                this.state = 'succeeded'
-            })
         },
     },
     computed: {

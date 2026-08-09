@@ -172,6 +172,7 @@
 <script>
 import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import md5 from 'md5'
 import QrcodeDrawer from '../components/QrcodeDrawer'
 
@@ -308,6 +309,7 @@ export default {
         },
     },
     async created() {
+        this.lifecycleScope = createRendererLifecycleScope()
         this.ver = await ipc.getVersion()
         this.dbUpgrade = await ipc.getDbUpgradeProgress()
         const _form = await ipc.getAccount()
@@ -327,9 +329,9 @@ export default {
                 }
             }
         }
-        ipcRenderer.on('error', (_, msg) => {
-            if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
-            if (qrLoginInterval) clearInterval(qrLoginInterval) && (qrLoginInterval = null)
+        this.lifecycleScope.onIpc('error', (_, msg) => {
+            this.clearLoginTimeout()
+            this.clearQrLoginInterval()
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
@@ -358,27 +360,42 @@ export default {
                     break
             }
         })
-        ipcRenderer.on('smsCodeVerify', (_, data) => {
-            if (loginTimeout) clearTimeout(loginTimeout)
+        this.lifecycleScope.onIpc('smsCodeVerify', (_, data) => {
+            this.clearLoginTimeout()
             const parsed = JSON.parse(data)
             console.log(parsed.url)
             this.shouldSubmitSmsCode = true
             this.verifyUrl = parsed.url
             this.phone = parsed.phone
         })
-        ipcRenderer.on('qrcodeLogin', async (_, url) => {
-            if (qrLoginInterval) clearInterval(qrLoginInterval)
-            qrLoginInterval = setInterval(() => {
+        this.lifecycleScope.onIpc('qrcodeLogin', async (_, url) => {
+            this.clearQrLoginInterval()
+            qrLoginInterval = this.lifecycleScope.interval(() => {
                 const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
                 ipcRenderer.send('createBot', submitForm)
             }, 5 * 1000)
         })
-        ipcRenderer.on('dbUpgradeProgress', (_, progress) => {
+        this.lifecycleScope.onIpc('dbUpgradeProgress', (_, progress) => {
             this.dbUpgrade = progress
-            if (loginTimeout) clearTimeout(loginTimeout) && (loginTimeout = null)
+            this.clearLoginTimeout()
         })
     },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
+        loginTimeout = null
+        qrLoginInterval = null
+    },
     methods: {
+        clearLoginTimeout() {
+            if (!loginTimeout) return
+            this.lifecycleScope.cancelTimeout(loginTimeout)
+            loginTimeout = null
+        },
+        clearQrLoginInterval() {
+            if (!qrLoginInterval) return
+            this.lifecycleScope.cancelInterval(qrLoginInterval)
+            qrLoginInterval = null
+        },
         onCategoryChange() {
             // 切换设备类型时，自动选择该类型的第一个协议版本
             const category = this.protocolCategories.find((c) => c.name === this.selectedProtocolCategory)
@@ -400,8 +417,8 @@ export default {
                         this.$message('使用新版本时建议使用 NT 上线以支持部分新功能')
                     }
                     if (this.form.password) {
-                        if (loginTimeout) clearTimeout(loginTimeout)
-                        loginTimeout = setTimeout(() => {
+                        this.clearLoginTimeout()
+                        loginTimeout = this.lifecycleScope.timeout(() => {
                             this.$alert(
                                 '登录时间似乎过长了，请检查网络是否正常，切换非同类协议请先删除 token，若仍无法登录请携带日志反馈',
                             )
@@ -433,16 +450,16 @@ export default {
         sendSmsCode() {
             ipcRenderer.send('submitSmsCode', 'sendSmsCode')
             this.sendTime = 60
-            const timer = setInterval(() => {
+            const timer = this.lifecycleScope.interval(() => {
                 if (this.sendTime === 0) {
-                    clearInterval(timer)
+                    this.lifecycleScope.cancelInterval(timer)
                     return
                 }
                 this.sendTime--
             }, 1000)
         },
         QRCodeVerify() {
-            if (loginTimeout) clearTimeout(loginTimeout)
+            this.clearLoginTimeout()
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
         cannotLogin() {
