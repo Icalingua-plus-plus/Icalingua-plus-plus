@@ -393,12 +393,15 @@ export default {
             try {
                 const offset = reset ? 0 : this.messages.length
                 const msgs = await ipc.fetchMessage(this.roomId, offset)
-                if (reset) {
-                    this.messages = msgs || []
-                } else {
-                    this.messages = [...(msgs || []), ...this.messages]
-                }
-                this.messagesLoaded = true
+                const messageIds = new Set(reset ? [] : this.messages.map((message) => message._id))
+                const newMessages = (msgs || []).filter((message) => {
+                    if (messageIds.has(message._id)) return false
+                    messageIds.add(message._id)
+                    return true
+                })
+
+                this.messages = reset ? newMessages : [...newMessages, ...this.messages]
+                this.messagesLoaded = newMessages.length === 0
             } catch (e) {
                 console.error('Failed to fetch messages:', e)
             } finally {
