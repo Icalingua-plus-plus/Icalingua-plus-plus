@@ -13,7 +13,7 @@
             @input="selectedIndex = 0"
             @blur="$nextTick(cancel)"
         />
-        <small>{{ matched.length }} {{ description }}</small>
+        <small>{{ matchedCount }} {{ description }}</small>
         <ul ref="list">
             <li
                 v-for="([name, id], index) in matched"
@@ -43,6 +43,10 @@ export default {
         description: String,
         searchMethod: String,
         inputSize: String,
+        countExcludedIds: {
+            type: Array,
+            default: () => [],
+        },
     },
     methods: {
         focus() {
@@ -84,6 +88,9 @@ export default {
         },
     },
     computed: {
+        matchedCount() {
+            return this.matched.filter(([, id]) => !this.countExcludedIds.includes(id)).length
+        },
         matched() {
             const matched =
                 this.searchMethod === 'includes'

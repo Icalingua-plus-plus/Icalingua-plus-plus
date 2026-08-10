@@ -401,6 +401,7 @@
                         ref="quickat"
                         v-show="isQuickAtOn && room.roomId < 0"
                         v-slot="{ id, name }"
+                        :count-excluded-ids="[0]"
                         :list="
                             groupMembers
                                 ? groupMembers.map(({ card, nickname, user_id }) => [
