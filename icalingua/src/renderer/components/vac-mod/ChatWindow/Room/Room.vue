@@ -384,6 +384,7 @@
                         ref="quickface"
                         v-show="isQuickFaceOn"
                         v-slot="{ id, name }"
+                        virtual-scroll
                         :list="faceNames"
                         description="face(s)"
                         searchMethod="startsWith"
@@ -402,6 +403,7 @@
                         v-show="isQuickAtOn && room.roomId < 0"
                         v-slot="{ id, name }"
                         :count-excluded-ids="[0]"
+                        virtual-scroll
                         :list="
                             groupMembers
                                 ? groupMembers.map(({ card, nickname, user_id }) => [
@@ -412,14 +414,19 @@
                         "
                         description="member(s)"
                         searchMethod="includes"
-                        inputSize="200"
+                        inputSize="280"
                         @cancel="closeQuickAt"
                         @confirm="useQuickAt"
                         @nomatch="nomatchQuickAt"
                     >
-                        <el-avatar size="small" v-if="id !== 0" :src="`https://q1.qlogo.cn/g?b=qq&nk=${id}&s=40`" />
-                        <p style="word-wrap: 'break-word'; margin-right: auto; margin-left: 5px">{{ name }}</p>
-                        <p v-if="id !== 0" style="font-family: 'monospace'">{{ id }}</p>
+                        <el-avatar
+                            v-if="id !== 0"
+                            class="quick-at-avatar"
+                            size="small"
+                            :src="`https://q1.qlogo.cn/g?b=qq&nk=${id}&s=40`"
+                        />
+                        <p class="quick-at-name" :title="name">{{ name }}</p>
+                        <p v-if="id !== 0" class="quick-at-id">{{ id }}</p>
                     </SearchInput>
                 </transition>
 
@@ -2632,6 +2639,27 @@ export default {
 </script>
 
 <style lang="scss">
+.quick-at-avatar {
+    flex: 0 0 auto;
+    margin-right: 5px;
+}
+
+.quick-at-name {
+    min-width: 0;
+    flex: 1 1 auto;
+    margin: 4px 0 0;
+    overflow-y: visible;
+    overflow-x: clip;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.quick-at-id {
+    flex: 0 0 auto;
+    margin: 4px 0 0;
+    font-family: monospace;
+}
+
 .vac-container-center {
     height: 100%;
     width: 100%;
