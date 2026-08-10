@@ -9,6 +9,7 @@
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "strict": false,
+        "noEmitOnError": true,
         "outDir": "build",
         "types": ["node"]
     },

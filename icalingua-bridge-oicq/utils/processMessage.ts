@@ -358,14 +358,14 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         if (!replyMessage) {
                             //get the message
                             let getRet
-                            if (m.data.message) {
+                            if (m.data.text) {
                                 getRet = {
                                     data: {
                                         sender: {
                                             nickname: String(user_id),
                                             user_id,
                                         },
-                                        message: m.data.message,
+                                        message: m.data.text,
                                     },
                                 }
                             } else {
