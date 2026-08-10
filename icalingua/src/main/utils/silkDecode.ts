@@ -1,9 +1,10 @@
 import axios from 'axios'
-import { fork } from 'child_process'
 import { app } from 'electron'
 import fs from 'fs'
+import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
 import errorHandler from './errorHandler'
+import runSilkChild from './silkChildProcess'
 
 export default async (url: string) => {
     const res = await axios.get<Buffer>(url, {
@@ -30,29 +31,14 @@ export default async (url: string) => {
             return md5 + '.ogg'
         }
         errorHandler(e)
+        throw e
     }
     return md5 + '.ogg'
 }
 
 const conventSilk = (rawFilePath: string, filePath: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        const child = fork(require('path').join(getStaticPath(), 'silkchild.js'))
-        child.on('message', (msg: string) => {
-            console.log('[silkDecode] Child success:', msg)
-            resolve()
-        })
-        child.on('error', (err) => {
-            console.error(err)
-            reject(err)
-        })
-        child.on('exit', (code, signal) => {
-            console.log(`[silkDecode] Child process exited with code ${code} and signal ${signal}`)
-            if (code !== 0)
-                reject(new Error(`[silkDecode] Child process exited with code ${code} and signal ${signal}`))
-        })
-        child.send({
-            rawFilePath,
-            filePath,
-        })
+    return runSilkChild(path.join(getStaticPath(), 'silkchild.js'), {
+        rawFilePath,
+        filePath,
     })
 }

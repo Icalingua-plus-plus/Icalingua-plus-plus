@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { fork } from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import runSilkChild from './silkChildProcess'
 
 // 获取 silkchild.js 的路径，兼容开发环境和 esbuild 打包后的环境
 const getSilkChildPath = (): string => {
@@ -43,24 +43,8 @@ export default async (url: string) => {
 }
 
 const conventSilk = (rawFilePath: string, filePath: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        const child = fork(getSilkChildPath())
-        child.on('message', (msg: string) => {
-            console.log('[silkDecode] Child success:', msg)
-            resolve()
-        })
-        child.on('error', (err) => {
-            console.error(err)
-            reject(err)
-        })
-        child.on('exit', (code, signal) => {
-            console.log(`[silkDecode] Child process exited with code ${code} and signal ${signal}`)
-            if (code !== 0)
-                reject(new Error(`[silkDecode] Child process exited with code ${code} and signal ${signal}`))
-        })
-        child.send({
-            rawFilePath,
-            filePath,
-        })
+    return runSilkChild(getSilkChildPath(), {
+        rawFilePath,
+        filePath,
     })
 }

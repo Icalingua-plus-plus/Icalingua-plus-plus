@@ -27,6 +27,8 @@ const base64decode = (str: string): string => {
     return Buffer.from(str, 'base64').toString('utf8')
 }
 
+const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error))
+
 let silkDecodeCompleter: SilkDecodeCompleter | null = null
 
 export const registerSilkDecodeCompleter = (completer: SilkDecodeCompleter) => {
@@ -78,7 +80,7 @@ const scheduleAsyncSilkDecode = (roomId: number, message: Message, url: string, 
                 message.content = clearDecodingPlaceholderContent(message.content)
             } catch (e) {
                 errorHandler(e, true)
-                message.content = '[语音转换失败]' + (e as Error).message + '\n' + url
+                message.content = '[语音转换失败]' + getErrorMessage(e) + '\n' + url
             }
             return
         }
@@ -115,7 +117,7 @@ const scheduleAsyncSilkDecode = (roomId: number, message: Message, url: string, 
             })
         } catch (e) {
             errorHandler(e, true)
-            message.content = '[语音转换失败]' + (e as Error).message + '\n' + url
+            message.content = '[语音转换失败]' + getErrorMessage(e) + '\n' + url
             try {
                 await completer.replaceMessage(roomId, messageId, message)
                 completer.renewMessage(roomId, String(messageId), {
@@ -533,7 +535,7 @@ const processMessage = async (
                         message.files.push(message.file)
                     } catch (e) {
                         errorHandler(e, true)
-                        message.content = '[语音转换失败]' + (e as Error).message + '\n' + recordUrl
+                        message.content = '[语音转换失败]' + getErrorMessage(e) + '\n' + recordUrl
                     }
                 }
                 break
