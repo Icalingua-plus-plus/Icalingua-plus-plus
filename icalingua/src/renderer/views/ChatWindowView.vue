@@ -387,9 +387,11 @@ export default {
             this.lifecycleScope.onIpc('deleteMessage', (_, messageId) => {
                 const index = this.getMessageIndex(messageId)
                 if (index !== -1) {
-                    this.messages[index].deleted = Date.now()
-                    this.messages[index].reveal = false
-                    this.messages = [...this.messages]
+                    this.$set(this.messages, index, {
+                        ...this.messages[index],
+                        deleted: Date.now(),
+                        reveal: false,
+                    })
                 } else
                     this.updateDeferredIncomingMessage(messageId, (message) => ({
                         ...message,
@@ -402,9 +404,11 @@ export default {
             this.lifecycleScope.onIpc('hideMessage', (_, messageId) => {
                 const index = this.getMessageIndex(messageId)
                 if (index !== -1) {
-                    this.messages[index].hide = true
-                    this.messages[index].reveal = false
-                    this.messages = [...this.messages]
+                    this.$set(this.messages, index, {
+                        ...this.messages[index],
+                        hide: true,
+                        reveal: false,
+                    })
                 } else
                     this.updateDeferredIncomingMessage(messageId, (message) => ({
                         ...message,
@@ -417,9 +421,11 @@ export default {
             this.lifecycleScope.onIpc('revealMessage', (_, messageId) => {
                 const index = this.getMessageIndex(messageId)
                 if (index !== -1) {
-                    this.messages[index].hide = false
-                    this.messages[index].reveal = true
-                    this.messages = [...this.messages]
+                    this.$set(this.messages, index, {
+                        ...this.messages[index],
+                        hide: false,
+                        reveal: true,
+                    })
                 } else
                     this.updateDeferredIncomingMessage(messageId, (message) => ({
                         ...message,
@@ -433,8 +439,7 @@ export default {
                 if (roomId === this.roomId) {
                     const index = this.getMessageIndex(messageId)
                     if (index !== -1) {
-                        this.messages[index] = { ...this.messages[index], ...message }
-                        this.messages = [...this.messages]
+                        this.$set(this.messages, index, { ...this.messages[index], ...message })
                     } else if (message) {
                         this.updateDeferredIncomingMessage(messageId, (current) => ({ ...current, ...message }))
                     }
