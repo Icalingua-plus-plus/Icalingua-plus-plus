@@ -4,6 +4,7 @@ import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { ipcMain, screen, shell } from 'electron'
 import getCharCount from '../../utils/getCharCount'
@@ -191,9 +192,9 @@ ipcMain.on('sendMessage', async (_, data) => {
 })
 ipcMain.on('deleteMessage', (_, roomId: number, messageId: string) => deleteMessage(roomId, messageId))
 ipcMain.on('hideMessage', (_, roomId: number, messageId: string) => hideMessage(roomId, messageId))
-ipcMain.handle('fetchMessage', (_, { roomId, offset }: { roomId: number; offset: number }) => {
-    offset === 0 && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
-    return adapter.fetchMessages(roomId, offset)
+ipcMain.handle('fetchMessage', (_, { roomId, options }: { roomId: number; options: MessagePageOptions }) => {
+    !options?.before && !options?.after && getConfig().fetchHistoryOnChatOpen && fetchLatestHistory(roomId)
+    return adapter.fetchMessages(roomId, options || {})
 })
 ipcMain.handle(
     'fetchImageMessages',

@@ -3,6 +3,7 @@ import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
+import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
@@ -219,6 +220,8 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     private async ensureRoomSearchTimeIndex(roomId: number): Promise<void> {
+        // FTS rebuilds scan every room by time only. Keep this narrow index and
+        // avoid making all-room cursor-index creation part of search startup.
         await this.mdb.collection('msg' + Number(roomId)).createIndex(
             { time: -1 },
             {
@@ -540,19 +543,54 @@ export default class MongoStorageProvider implements StorageProvider {
         return await this.updateMessage(roomId, messageId, message)
     }
 
-    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
-        const arr = await this.mdb
-            .collection<any>('msg' + roomId)
-            .find(
-                {},
-                {
-                    sort: [['time', -1]],
-                    skip,
-                    limit,
-                },
+    private compareMessageOrder(left: Message, right: Message): number {
+        const timeDifference = Number(left.time || 0) - Number(right.time || 0)
+        if (timeDifference) return timeDifference
+        const leftId = String(left._id)
+        const rightId = String(right._id)
+        return leftId < rightId ? -1 : leftId > rightId ? 1 : 0
+    }
+
+    private validateMessagePageOptions(options: MessagePageOptions): void {
+        if (options?.before && options?.after) throw new Error('Message page cannot use before and after together')
+    }
+
+    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+        this.validateMessagePageOptions(options)
+        const pageSize = Math.max(1, Math.trunc(limit))
+        const direction = options?.after ? 1 : -1
+        const cursor = options?.before || options?.after
+        const collection = this.mdb.collection<any>('msg' + roomId)
+        const candidates: Message[] = []
+
+        if (cursor) {
+            const cursorId = String(cursor.id)
+            const sameTime = (await collection.find({ time: cursor.time }).toArray()) as Message[]
+            candidates.push(
+                ...sameTime.filter((message) =>
+                    options.after ? String(message._id) > cursorId : String(message._id) < cursorId,
+                ),
             )
-            .toArray()
-        return arr.reverse()
+        }
+
+        if (candidates.length < pageSize) {
+            const timeQuery = cursor ? { time: { [options.after ? '$gt' : '$lt']: cursor.time } } : {}
+            const timeRows = await collection
+                .find(timeQuery, { projection: { _id: 0, time: 1 } })
+                .sort({ time: direction })
+                .limit(pageSize - candidates.length)
+                .toArray()
+            const times = Array.from(
+                new Set(timeRows.map((message) => Number(message.time)).filter((time) => Number.isFinite(time))),
+            )
+            if (times.length) {
+                candidates.push(...((await collection.find({ time: { $in: times } }).toArray()) as Message[]))
+            }
+        }
+
+        candidates.sort((left, right) => direction * this.compareMessageOrder(left, right))
+        const page = candidates.slice(0, pageSize)
+        return options?.after ? page : page.reverse()
     }
 
     /** 按发送者查询消息记录。
@@ -754,31 +792,31 @@ export default class MongoStorageProvider implements StorageProvider {
         } catch (e) {}
     }
 
+    private messageIdQuery(messageId: string | number): any {
+        const candidates: Array<string | number> = [messageId]
+        const stringId = String(messageId)
+        if (!candidates.includes(stringId)) candidates.push(stringId)
+        const numericId = Number(stringId)
+        if (Number.isSafeInteger(numericId) && String(numericId) === stringId && !candidates.includes(numericId)) {
+            candidates.push(numericId)
+        }
+        return { _id: { $in: candidates } }
+    }
+
     getMessage(roomId: number, messageId: string): Promise<Message> {
-        return this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
+        return this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
     }
 
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
-        // 先获取目标消息的时间
-        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne({ _id: messageId })
+        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
         if (!targetMsg) return []
 
-        const targetTime = targetMsg.time
-
-        // 获取目标消息之前的消息
-        const beforeMessages = await this.mdb
-            .collection<any>('msg' + roomId)
-            .find({ time: { $lt: targetTime } }, { sort: [['time', -1]], limit: before })
-            .toArray()
-
-        // 获取目标消息及之后的消息
-        const afterMessages = await this.mdb
-            .collection<any>('msg' + roomId)
-            .find({ time: { $gte: targetTime } }, { sort: [['time', 1]], limit: after + 1 })
-            .toArray()
-
-        // 合并并按时间排序
-        return [...beforeMessages.reverse(), ...afterMessages]
+        const cursor: MessageCursor = { time: Number(targetMsg.time || 0), id: targetMsg._id }
+        const [beforeMessages, afterMessages] = await Promise.all([
+            before > 0 ? this.fetchMessages(roomId, { before: cursor }, before) : Promise.resolve([]),
+            after > 0 ? this.fetchMessages(roomId, { after: cursor }, after) : Promise.resolve([]),
+        ])
+        return [...beforeMessages, targetMsg, ...afterMessages]
     }
 
     async addMessages(roomId: number, messages: Message[]): Promise<any> {

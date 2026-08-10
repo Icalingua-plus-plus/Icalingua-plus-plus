@@ -3,6 +3,7 @@ import Message from './Message'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import ChatGroup from './ChatGroup'
 import DatabaseUpgradeProgress from './DatabaseUpgradeProgress'
+import MessagePageOptions from './MessagePage'
 
 export default interface StorageProvider {
     connect(): Promise<void>
@@ -25,7 +26,7 @@ export default interface StorageProvider {
 
     replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any>
 
-    fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]>
+    fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]>
 
     fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]>
 

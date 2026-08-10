@@ -5,6 +5,7 @@ import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -282,16 +283,16 @@ const adapter: Adapter = {
         }
     },
 
-    async fetchMessages(roomId: number, offset: number): Promise<Message[]> {
+    async fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
         // 只读模式始终禁言
-        if (!offset) {
+        if (!options?.before && !options?.after) {
             ui.setShutUp(true)
         }
 
         // 刷新 rkey（如果需要）
         await refreshRkeyIfNeeded()
 
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
 
         // 替换消息中的 rkey
         for (const message of messages) {

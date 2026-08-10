@@ -2,6 +2,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import Room from '@icalingua/types/Room'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { getDBWorkerClient } from './DBWorkerClient'
@@ -118,8 +119,8 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         return this.call('replaceMessage', [roomId, messageId, message])
     }
 
-    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
-        return (await this.call<Message[]>('fetchMessages', [roomId, skip, limit])) || []
+    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+        return (await this.call<Message[]>('fetchMessages', [roomId, options, limit])) || []
     }
 
     async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {

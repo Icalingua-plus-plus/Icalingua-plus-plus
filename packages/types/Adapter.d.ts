@@ -9,6 +9,7 @@ import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
 import SpecialFeature from './SpecialFeature'
+import MessagePageOptions from './MessagePage'
 
 type CookiesDomain =
     | 'tenpay.com'
@@ -63,7 +64,7 @@ export default interface Adapter {
 
     getFriendsFallback(): Promise<SearchableFriend[]>
 
-    fetchMessages(roomId: number, offset: number): Promise<Message[]>
+    fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]>
 
     fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]>
 

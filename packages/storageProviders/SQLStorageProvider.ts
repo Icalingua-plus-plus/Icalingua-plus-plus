@@ -8,6 +8,7 @@ import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
+import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
@@ -906,15 +907,26 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在进入房间时，该方法被调用。
      */
-    async fetchMessages(roomId: number, skip: number, limit: number): Promise<Message[]> {
+    private applyMessageCursor(query: any, options: MessagePageOptions) {
+        if (options?.before && options?.after) throw new Error('Message page cannot use before and after together')
+        const cursor = options?.before || options?.after
+        if (!cursor) return query
+        const operator = options.after ? '>' : '<'
+        return query.whereRaw(`(??, ??) ${operator} (?, ?)`, ['time', '_id', cursor.time, String(cursor.id)])
+    }
+
+    private orderMessagePage(query: any, options: MessagePageOptions) {
+        const direction = options?.after ? 'asc' : 'desc'
+        return query.orderBy('time', direction).orderBy('_id', direction)
+    }
+
+    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
         try {
-            const messages = await this.db<MessageInSQLDB>('messages')
-                .where('roomId', roomId)
-                .orderBy('time', 'desc')
-                .limit(limit)
-                .offset(skip)
-                .select('*')
-            return messages.reverse().map((message) => this.msgConFromDB(message))
+            let query = this.db<MessageInSQLDB>('messages').where('roomId', roomId)
+            query = this.applyMessageCursor(query, options)
+            const messages = await this.orderMessagePage(query, options).limit(limit).select('*')
+            if (!options?.after) messages.reverse()
+            return messages.map((message) => this.msgConFromDB(message))
         } catch (e) {
             this.errorHandle(e)
         }
@@ -1083,35 +1095,19 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
         try {
-            // 先获取目标消息的时间
             const targetMsg = await this.db<MessageInSQLDB>('messages')
                 .where('_id', messageId)
                 .where('roomId', roomId)
-                .select('time')
+                .select('*')
                 .first()
             if (!targetMsg) return []
 
-            const targetTime = targetMsg.time
-
-            // 获取目标消息之前的消息（时间小于等于目标时间，按时间倒序取 before 条）
-            const beforeMessages = await this.db<MessageInSQLDB>('messages')
-                .where('roomId', roomId)
-                .where('time', '<', targetTime)
-                .orderBy('time', 'desc')
-                .limit(before)
-                .select('*')
-
-            // 获取目标消息及之后的消息（时间大于等于目标时间，按时间正序取 after + 1 条）
-            const afterMessages = await this.db<MessageInSQLDB>('messages')
-                .where('roomId', roomId)
-                .where('time', '>=', targetTime)
-                .orderBy('time', 'asc')
-                .limit(after + 1)
-                .select('*')
-
-            // 合并并按时间排序
-            const allMessages = [...beforeMessages.reverse(), ...afterMessages]
-            return allMessages.map((message) => this.msgConFromDB(message))
+            const cursor: MessageCursor = { time: Number(targetMsg.time || 0), id: targetMsg._id }
+            const [beforeMessages, afterMessages] = await Promise.all([
+                before > 0 ? this.fetchMessages(roomId, { before: cursor }, before) : Promise.resolve([]),
+                after > 0 ? this.fetchMessages(roomId, { after: cursor }, after) : Promise.resolve([]),
+            ])
+            return [...beforeMessages, this.msgConFromDB(targetMsg), ...afterMessages]
         } catch (e) {
             this.errorHandle(e)
         }

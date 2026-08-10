@@ -6,6 +6,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -1993,8 +1994,9 @@ const adapter: OicqAdapter = {
         }
         return groupsAll
     },
-    async fetchMessages(roomId: number, offset: number) {
-        if (!offset) {
+    async fetchMessages(roomId: number, options: MessagePageOptions) {
+        const initialPage = !options?.before && !options?.after
+        if (initialPage) {
             adapter.clearRoomUnread(roomId).then(updateTrayIcon)
             if (roomId < 0) {
                 const gid = -roomId
@@ -2009,13 +2011,14 @@ const adapter: OicqAdapter = {
                 ui.setShutUp(false)
             }
         }
-        currentLoadedMessagesCount = offset + 20
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
+        if (initialPage) currentLoadedMessagesCount = messages.length
+        else if (options?.before) currentLoadedMessagesCount += messages.length
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
         }
-        if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string')
+        if (messages.length && initialPage && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         return messages
     },
@@ -2426,7 +2429,7 @@ const adapter: OicqAdapter = {
         await storage.addMessages(roomId, messages)
         let room = await storage.getRoom(roomId)
         if (roomId === ui.getSelectedRoomId())
-            storage.fetchMessages(roomId, 0, currentLoadedMessagesCount + 20).then(ui.setMessages)
+            storage.fetchMessages(roomId, {}, currentLoadedMessagesCount + 20).then(ui.setMessages)
         if (done) {
             ui.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
             ui.clearHistoryCount()

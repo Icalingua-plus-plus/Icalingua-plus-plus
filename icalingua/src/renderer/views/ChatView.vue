@@ -161,6 +161,7 @@
                         :isSteamVrRunning="isSteamVrRunning"
                         :window-drag-enabled="hideTitleBar"
                         :canLoadAfter="isInMiddle"
+                        :pending-messages-count="deferredIncomingMessages.length"
                         @clear-last-unread-count="clearLastUnreadCount"
                         @clear-last-unread-at="clearLastUnreadAt"
                         @send-message="sendMessage"
@@ -173,6 +174,7 @@
                         @open-forward="openForward"
                         @fetch-messages="fetchMessage"
                         @fetch-messages-after="fetchMessageAfter"
+                        @return-to-latest="returnToLatest"
                         @open-group-member-panel="
                             ;((groupmemberShown = true), (groupmemberPanelGin = -selectedRoom.roomId))
                         "
@@ -381,6 +383,13 @@ import groupMemberCache from '../utils/groupMemberCache'
 import { processFiles } from '../utils/processFiles'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import { createRoomUpdateBatch, mergeRoomUpdatesByUtime } from '../utils/roomUpdateBatch'
+import {
+    compareMessageOrder,
+    getMessageCursor,
+    mergeMessageLists,
+    messageIdKey,
+    normalizeMessageList,
+} from '../utils/messageOrder'
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
@@ -410,6 +419,9 @@ export default {
             pendingIncomingIds: new Set(),
             pendingIncomingRoomId: null,
             pendingIncomingFrame: null,
+            deferredIncomingMessages: [],
+            deferredIncomingIds: new Set(),
+            messageLoadGeneration: 0,
             selectedRoomId: 0,
             account: 0,
             messagesLoaded: false,
@@ -818,7 +830,12 @@ export default {
                     deleted: Date.now(),
                     reveal: false,
                 })
-            }
+            } else
+                this.updateQueuedIncomingMessage(messageId, (message) => ({
+                    ...message,
+                    deleted: Date.now(),
+                    reveal: false,
+                }))
         })
         this.lifecycleScope.onIpc('hideMessage', (_, messageId) => {
             const index = this.getMessageIndex(messageId)
@@ -828,7 +845,12 @@ export default {
                     hide: true,
                     reveal: false,
                 })
-            }
+            } else
+                this.updateQueuedIncomingMessage(messageId, (message) => ({
+                    ...message,
+                    hide: true,
+                    reveal: false,
+                }))
         })
         this.lifecycleScope.onIpc('revealMessage', (_, messageId) => {
             const index = this.getMessageIndex(messageId)
@@ -838,7 +860,12 @@ export default {
                     hide: false,
                     reveal: true,
                 })
-            }
+            } else
+                this.updateQueuedIncomingMessage(messageId, (message) => ({
+                    ...message,
+                    hide: false,
+                    reveal: true,
+                }))
         })
         this.lifecycleScope.onIpc('renewMessage', (_, { messageId, message }) => {
             const index = this.getMessageIndex(messageId)
@@ -847,7 +874,7 @@ export default {
                     ...this.messages[index],
                     ...message,
                 })
-            }
+            } else if (message) this.updateQueuedIncomingMessage(messageId, (current) => ({ ...current, ...message }))
         })
         this.lifecycleScope.onIpc('renewMessageURL', (_, { messageId, URL }) => {
             const index = this.getMessageIndex(messageId)
@@ -860,6 +887,11 @@ export default {
                         url: URL,
                     },
                 })
+            } else if (URL !== 'error') {
+                this.updateQueuedIncomingMessage(messageId, (current) => ({
+                    ...current,
+                    file: current.file ? { ...current.file, url: URL } : current.file,
+                }))
             }
         })
         this.lifecycleScope.onIpc('setOnline', () => (this.reconnecting = this.offline = false))
@@ -886,10 +918,11 @@ export default {
         })
         this.lifecycleScope.onIpc('setAllChatGroups', (_, p) => (this.chatGroups = p || []))
         this.lifecycleScope.onIpc('setMessages', (_, p) => {
+            this.messageLoadGeneration++
+            this.cancelPendingIncomingMessages()
+            this.clearDeferredIncomingMessages()
+            this.isInMiddle = false
             const messages = p || []
-            for (const message of messages) {
-                message.__v_skip = true
-            }
             this.setMessageList(messages)
             this.messagesLoaded = false
         })
@@ -959,30 +992,87 @@ Chromium ${process.versions.chrome}`
             const index = new Map()
             for (let i = 0; i < messages.length; i++) {
                 const message = messages[i]
-                if (message && message._id !== undefined && message._id !== null) index.set(message._id, i)
+                if (message && message._id !== undefined && message._id !== null) {
+                    index.set(messageIdKey(message._id), i)
+                }
             }
             this.messageIndex = index
         },
         getMessageIndex(messageId) {
-            const index = this.messageIndex.get(messageId)
+            const index = this.messageIndex.get(messageIdKey(messageId))
             return index === undefined ? -1 : index
         },
         setMessageList(messages) {
-            this.messages = messages
-            this.rebuildMessageIndex(messages)
+            const normalized = normalizeMessageList(messages || [])
+            for (const message of normalized) message.__v_skip = true
+            this.messages = normalized
+            this.rebuildMessageIndex(normalized)
         },
         appendMessages(messages) {
             if (!messages.length) return
-            const start = this.messages.length
-            this.messages.push(...messages)
-            for (let i = 0; i < messages.length; i++) {
-                this.messageIndex.set(messages[i]._id, start + i)
+            const newMessages = normalizeMessageList(messages).filter(
+                (message) => this.getMessageIndex(message._id) === -1,
+            )
+            if (!newMessages.length) return
+            const lastMessage = this.messages[this.messages.length - 1]
+            if (!lastMessage || compareMessageOrder(lastMessage, newMessages[0]) <= 0) {
+                const start = this.messages.length
+                for (const message of newMessages) message.__v_skip = true
+                this.messages.push(...newMessages)
+                for (let i = 0; i < newMessages.length; i++) {
+                    this.messageIndex.set(messageIdKey(newMessages[i]._id), start + i)
+                }
+                return
             }
+            this.setMessageList(mergeMessageLists(this.messages, messages))
         },
         prependMessages(messages) {
             if (!messages.length) return
-            this.messages.unshift(...messages)
-            this.rebuildMessageIndex()
+            const newMessages = normalizeMessageList(messages).filter(
+                (message) => this.getMessageIndex(message._id) === -1,
+            )
+            if (!newMessages.length) return
+            const firstMessage = this.messages[0]
+            if (!firstMessage || compareMessageOrder(newMessages[newMessages.length - 1], firstMessage) < 0) {
+                for (const message of newMessages) message.__v_skip = true
+                this.messages.unshift(...newMessages)
+                this.rebuildMessageIndex()
+                return
+            }
+            this.setMessageList(mergeMessageLists(this.messages, messages))
+        },
+        clearDeferredIncomingMessages() {
+            this.deferredIncomingMessages = []
+            this.deferredIncomingIds.clear()
+        },
+        deferIncomingMessages(messages) {
+            for (const message of messages) {
+                const key = messageIdKey(message._id)
+                if (this.getMessageIndex(message._id) !== -1 || this.deferredIncomingIds.has(key)) continue
+                this.deferredIncomingMessages.push(message)
+                this.deferredIncomingIds.add(key)
+            }
+        },
+        flushDeferredIncomingMessages() {
+            if (!this.deferredIncomingMessages.length) return
+            const messages = this.deferredIncomingMessages
+            this.clearDeferredIncomingMessages()
+            this.appendMessages(messages)
+        },
+        consumeDeferredIncomingMessages(messages) {
+            if (!this.deferredIncomingMessages.length || !messages.length) return
+            const consumedIds = new Set(messages.map((message) => messageIdKey(message._id)))
+            this.deferredIncomingMessages = this.deferredIncomingMessages.filter(
+                (message) => !consumedIds.has(messageIdKey(message._id)),
+            )
+            for (const id of consumedIds) this.deferredIncomingIds.delete(id)
+        },
+        updateQueuedIncomingMessage(messageId, update) {
+            const key = messageIdKey(messageId)
+            for (const messages of [this.pendingIncomingMessages, this.deferredIncomingMessages]) {
+                const index = messages.findIndex((message) => messageIdKey(message._id) === key)
+                if (index !== -1) this.$set(messages, index, update(messages[index]))
+            }
         },
         cancelPendingIncomingMessages() {
             if (this.pendingIncomingFrame !== null) {
@@ -1000,7 +1090,8 @@ Chromium ${process.versions.chrome}`
             this.pendingIncomingRoomId = roomId
 
             const existingIndex = this.getMessageIndex(message._id)
-            if (existingIndex !== -1 || this.pendingIncomingIds.has(message._id)) {
+            const key = messageIdKey(message._id)
+            if (existingIndex !== -1 || this.pendingIncomingIds.has(key) || this.deferredIncomingIds.has(key)) {
                 if (existingIndex !== -1) {
                     console.warn(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[existingIndex])
                 }
@@ -1009,7 +1100,7 @@ Chromium ${process.versions.chrome}`
 
             message.__v_skip = true
             this.pendingIncomingMessages.push(message)
-            this.pendingIncomingIds.add(message._id)
+            this.pendingIncomingIds.add(key)
             if (this.pendingIncomingFrame !== null) return
 
             this.pendingIncomingFrame = this.lifecycleScope.animationFrame(() => {
@@ -1029,7 +1120,8 @@ Chromium ${process.versions.chrome}`
             const newMessages = pendingMessages.filter((message) => this.getMessageIndex(message._id) === -1)
             if (!newMessages.length) return
 
-            this.appendMessages(newMessages)
+            if (this.isInMiddle) this.deferIncomingMessages(newMessages)
+            else this.appendMessages(newMessages)
             let groupMembersChanged = false
             const memberChangeText = ['加入了本群', '离开了本群', '踢了']
             for (const message of newMessages) {
@@ -1057,13 +1149,15 @@ Chromium ${process.versions.chrome}`
             sticker,
             messageType,
         }) {
-            this.loading = true
             if (!room && !roomId) {
                 room = this.selectedRoom
                 roomId = room.roomId
             }
             if (!room) room = this.rooms.find((e) => e.roomId === roomId)
             if (!roomId) roomId = room.roomId
+
+            if (this.isInMiddle && roomId === this.selectedRoomId) await this.returnToLatest()
+            this.loading = true
 
             const hasImages = (files || []).some((file) => file.type.includes('image'))
             const compressImages = hasImages ? (await ipc.getSettings()).compressImages : false
@@ -1090,80 +1184,62 @@ Chromium ${process.versions.chrome}`
             await this.fetchMessage(false, this.lastUnreadCount, true)
         },
         async fetchMessage(reset, number, at = false) {
+            let generation = this.messageLoadGeneration
             if (reset) {
+                generation = ++this.messageLoadGeneration
+                this.loading = false
                 this.cancelPendingIncomingMessages()
+                this.clearDeferredIncomingMessages()
+                this.isInMiddle = false
                 this.messagesLoaded = false
                 this.setMessageList([])
             }
             const _roomId = this.selectedRoom.roomId
-            let msgs2add
+            let cursor = !reset && this.messages.length ? getMessageCursor(this.messages[0]) : null
+            const messagePages = []
+            let lastPage = []
+            let nonSystemMessageCount = 0
             try {
-                msgs2add = await ipc.fetchMessage(_roomId, this.messages.length)
+                do {
+                    const page = await ipc.fetchMessage(_roomId, cursor ? { before: cursor } : {})
+                    lastPage = page || []
+                    if (lastPage.length) cursor = getMessageCursor(lastPage[0])
+                    messagePages.unshift(lastPage)
+                    nonSystemMessageCount += lastPage.filter((message) => !message.system).length
+                    if (!number || nonSystemMessageCount >= number || !lastPage.length) break
+                    if (_roomId !== this.selectedRoom.roomId || generation !== this.messageLoadGeneration) return
+                } while (true)
             } catch (e) {
                 console.error('fetchMessage failed:', e)
                 return
             }
-            const messagePages = [msgs2add]
-            let nonSystemMessageCount = 0
-            if (number) {
-                while (nonSystemMessageCount < number) {
-                    if (_roomId !== this.selectedRoom.roomId) return
-                    let msgs
-                    try {
-                        msgs = await ipc.fetchMessage(_roomId, this.messages.length + msgs2add.length)
-                    } catch (e) {
-                        console.error('fetchMessage loop failed:', e)
-                        break
-                    }
-                    nonSystemMessageCount += msgs.filter((e) => !e.system).length
-                    messagePages.unshift(msgs)
-                    if (!msgs.length) {
-                        this.$message.error('Message not found')
-                        break
-                    }
-                }
-                msgs2add = messagePages.flat()
+            if (_roomId !== this.selectedRoom.roomId || generation !== this.messageLoadGeneration) return
+
+            const msgs2add = messagePages.flat()
+            const newIds = new Set()
+            const newMsgs = msgs2add.filter((message) => {
+                const key = messageIdKey(message._id)
+                if (this.getMessageIndex(message._id) !== -1 || newIds.has(key)) return false
+                newIds.add(key)
+                return true
+            })
+            if (newMsgs.length) this.prependMessages(newMsgs)
+            if (!lastPage.length || lastPage.length < 20) this.messagesLoaded = true
+
+            if (at) {
+                const atMessages = this.messages.filter((message) => message.at)
+                if (atMessages.length) {
+                    this.lifecycleScope.timeout(() => {
+                        const _id = atMessages[atMessages.length - 1]._id
+                        if (!_id) {
+                            this.$message.error('Message not found')
+                            return
+                        }
+                        console.log('last unread at message ID', _id)
+                        this.lifecycleScope.timeout(() => this.$refs.room?.scrollToMessage(_id), 0)
+                    }, 0)
+                } else this.$message.error('Message not found')
             }
-            this.lifecycleScope.timeout(() => {
-                if (_roomId !== this.selectedRoom.roomId) return
-
-                // 过滤掉已经存在的消息，而不是全部丢弃
-                // 旧逻辑 some+return 会导致 messagesLoaded 永远不被设为 true，
-                // 进而 Room.vue 的 loadingMessages 一直是 true，消息完全空白
-                const newIds = new Set()
-                const newMsgs = msgs2add.filter((message) => {
-                    if (this.messageIndex.has(message._id) || newIds.has(message._id)) return false
-                    newIds.add(message._id)
-                    return true
-                })
-                if (newMsgs.length) {
-                    for (const msg of newMsgs) {
-                        msg.__v_skip = true
-                    }
-                    this.prependMessages(newMsgs)
-                } else {
-                    this.messagesLoaded = true
-                }
-
-                if (at) {
-                    const atMessages = this.messages.filter((e) => e.at)
-                    if (atMessages.length) {
-                        this.lifecycleScope.timeout(() => {
-                            const _id = atMessages[atMessages.length - 1]._id
-                            if (!_id) {
-                                this.$message.error('Message not found')
-                                return
-                            }
-                            console.log('last unread at message ID', _id)
-                            this.lifecycleScope.timeout(() => {
-                                this.$refs.room.scrollToMessage(_id)
-                            }, 0)
-                        }, 0)
-                    } else {
-                        this.$message.error('Message not found')
-                    }
-                }
-            }, 0)
 
             return msgs2add[msgs2add.length - 1]
         },
@@ -1304,13 +1380,27 @@ Chromium ${process.versions.chrome}`
             }
 
             // 消息不在当前列表中，需要加载指定消息前后的消息
+            const generation = ++this.messageLoadGeneration
+            const previousMiddleState = this.isInMiddle
+            this.isInMiddle = true
             this.loading = true
             try {
                 const msgs = await ipc.fetchMessagesAround(roomId, messageId, 20, 20)
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
                 if (msgs && msgs.length > 0) {
                     this.setMessageList(msgs)
-                    this.messagesLoaded = false // 允许继续向上加载
-                    this.isInMiddle = true // 标记从中间加载
+                    this.consumeDeferredIncomingMessages(msgs)
+                    const targetIndex = this.getMessageIndex(messageId)
+                    if (targetIndex === -1) {
+                        this.$message.error('找不到该消息')
+                        this.isInMiddle = previousMiddleState
+                        if (!this.isInMiddle) this.flushDeferredIncomingMessages()
+                        return
+                    }
+                    this.messagesLoaded = targetIndex < 20
+                    // Keep the window detached from the live tail until an explicit
+                    // after-cursor request proves that no gap remains.
+                    this.isInMiddle = true
                     this.$nextTick(() => {
                         if (this.$refs.room) {
                             this.$refs.room.scrollToMessage(messageId)
@@ -1318,12 +1408,18 @@ Chromium ${process.versions.chrome}`
                     })
                 } else {
                     this.$message.error('找不到该消息')
+                    this.isInMiddle = previousMiddleState
+                    if (!this.isInMiddle) this.flushDeferredIncomingMessages()
                 }
             } catch (e) {
                 console.error('Failed to goto message:', e)
                 this.$message.error('定位消息失败')
+                if (generation === this.messageLoadGeneration) {
+                    this.isInMiddle = previousMiddleState
+                    if (!this.isInMiddle) this.flushDeferredIncomingMessages()
+                }
             } finally {
-                this.loading = false
+                if (generation === this.messageLoadGeneration) this.loading = false
             }
         },
         async fetchMessageAfter() {
@@ -1331,27 +1427,48 @@ Chromium ${process.versions.chrome}`
             const lastMessage = this.messages[this.messages.length - 1]
             if (!lastMessage) return
 
+            const generation = this.messageLoadGeneration
+            const roomId = this.selectedRoom.roomId
             this.loading = true
             try {
-                // 使用 fetchMessagesAround，before=0 表示只获取之后的消息
-                const msgs = await ipc.fetchMessagesAround(this.selectedRoom.roomId, lastMessage._id, 0, 20)
-                if (msgs && msgs.length > 1) {
-                    // 去掉第一条（就是 lastMessage 本身）
-                    const newMsgs = msgs.slice(1)
-                    if (newMsgs.length > 0) {
-                        this.appendMessages(newMsgs)
-                    } else {
-                        // 没有更多新消息了，退出中间模式
-                        this.isInMiddle = false
-                    }
-                } else {
-                    // 没有更多新消息了，退出中间模式
+                const msgs = await ipc.fetchMessage(roomId, { after: getMessageCursor(lastMessage) })
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
+                if (msgs?.length) {
+                    this.consumeDeferredIncomingMessages(msgs)
+                    this.appendMessages(msgs)
+                }
+                if (!msgs || msgs.length < 20) {
                     this.isInMiddle = false
+                    this.flushDeferredIncomingMessages()
                 }
             } catch (e) {
                 console.error('Failed to fetch messages after:', e)
             } finally {
-                this.loading = false
+                if (generation === this.messageLoadGeneration) this.loading = false
+            }
+        },
+        async returnToLatest() {
+            const roomId = this.selectedRoom.roomId
+            if (!roomId) return false
+
+            const generation = ++this.messageLoadGeneration
+            this.loading = true
+            try {
+                const messages = (await ipc.fetchMessage(roomId, {})) || []
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return false
+
+                this.setMessageList(messages)
+                this.isInMiddle = false
+                this.messagesLoaded = messages.length < 20
+                this.flushDeferredIncomingMessages()
+                this.$nextTick(() => this.$refs.room?.queueScrollToBottom(true))
+                return true
+            } catch (error) {
+                console.error('Failed to return to latest messages:', error)
+                this.$message.error('返回最新消息失败')
+                return false
+            } finally {
+                if (generation === this.messageLoadGeneration) this.loading = false
             }
         },
         pokeGroup(uin) {
@@ -1370,8 +1487,10 @@ Chromium ${process.versions.chrome}`
             ipc.stopFetchMessage()
         },
         closeRoom() {
+            this.messageLoadGeneration++
             this.selectedRoomId = 0
             this.cancelPendingIncomingMessages()
+            this.clearDeferredIncomingMessages()
             this.setMessageList([])
             this.lastUnreadCount = 0
             this.unreadDividerCount = 0

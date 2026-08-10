@@ -5,6 +5,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import OnlineData from '@icalingua/types/OnlineData'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -759,12 +760,14 @@ const adapter: Adapter = {
     fetch7DaysHistory() {
         socket.emit('fetch7DaysHistory')
     },
-    fetchMessages(roomId: number, offset: number): Promise<Message[]> {
-        if (!offset) adapter.clearCurrentRoomUnread()
+    fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]> {
+        const initialPage = !options?.before && !options?.after
+        if (initialPage) adapter.clearCurrentRoomUnread()
         updateTrayIcon()
-        currentLoadedMessagesCount = offset + 20
         return new Promise((resolve, reject) => {
-            socket.emit('fetchMessages', roomId, offset, (messages: Message[]) => {
+            socket.emit('fetchMessages', roomId, options || {}, (messages: Message[]) => {
+                if (initialPage) currentLoadedMessagesCount = messages.length
+                else if (options?.before) currentLoadedMessagesCount += messages.length
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })

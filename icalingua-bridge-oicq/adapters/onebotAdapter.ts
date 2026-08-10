@@ -29,6 +29,7 @@ import {
     Ret,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import {
     getMediaPartIndex,
@@ -1458,7 +1459,7 @@ const adapter: typeof oicqAdapter = {
         console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
         clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
         storage
-            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .fetchMessages(roomId, {}, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
     },
 
@@ -1475,8 +1476,14 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 存储动作
-    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
-        if (!offset) {
+    async fetchMessages(
+        roomId: number,
+        options: MessagePageOptions,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const initialPage = !options?.before && !options?.after
+        if (initialPage) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
@@ -1493,8 +1500,8 @@ const adapter: typeof oicqAdapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
-        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
+        if (messages.length && initialPage && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         for (const message of messages) {
             if (message.file?.url) {

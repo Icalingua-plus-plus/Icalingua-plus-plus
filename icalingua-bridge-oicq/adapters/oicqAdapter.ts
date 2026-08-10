@@ -5,6 +5,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -1718,8 +1719,14 @@ const adapter = {
         }
         resolve(groupsAll)
     },
-    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
-        if (!offset) {
+    async fetchMessages(
+        roomId: number,
+        options: MessagePageOptions,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const initialPage = !options?.before && !options?.after
+        if (initialPage) {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
@@ -1738,12 +1745,12 @@ const adapter = {
                 client.emit('setShutUp', false)
             }
         }
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
         }
-        if (messages.length && !offset && messages.length && typeof messages[messages.length - 1]._id === 'string')
+        if (messages.length && initialPage && typeof messages[messages.length - 1]._id === 'string')
             adapter.reportRead(<string>messages[messages.length - 1]._id)
         callback(messages)
     },
@@ -2146,7 +2153,7 @@ const adapter = {
         let room = await storage.getRoom(roomId)
         clients.messageSuccess(`${room.roomName}(${Math.abs(roomId)}) 已拉取 ${messages.length} 条消息`)
         storage
-            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .fetchMessages(roomId, {}, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
 
         //刷新未读数量

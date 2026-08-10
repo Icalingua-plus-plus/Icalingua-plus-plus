@@ -204,13 +204,17 @@
             </transition>
             <transition name="vac-bounce">
                 <div
-                    v-if="scrollIcon || (visibleViewport.tail !== messages.length && messages.length !== 0)"
+                    v-if="
+                        scrollIcon ||
+                        pendingMessagesCount ||
+                        (visibleViewport.tail !== messages.length && messages.length !== 0)
+                    "
                     class="vac-icon-scroll"
                     @click="scrollToBottom"
                 >
                     <transition name="vac-bounce">
-                        <div v-if="scrollMessagesCount" class="vac-badge-counter vac-messages-count">
-                            {{ scrollMessagesCount }}
+                        <div v-if="newMessagesCount" class="vac-badge-counter vac-messages-count">
+                            {{ newMessagesCount }}
                         </div>
                     </transition>
                     <slot name="scroll-icon">
@@ -636,6 +640,7 @@ export default {
         usePanguJsRecv: { type: Boolean, required: false, default: false },
         isSteamVrRunning: { type: Boolean, required: false, default: false },
         canLoadAfter: { type: Boolean, required: false, default: false },
+        pendingMessagesCount: { type: Number, required: false, default: 0 },
         standalone: { type: Boolean, default: false },
         windowDragEnabled: { type: Boolean, default: false },
     },
@@ -724,6 +729,9 @@ export default {
         }
     },
     computed: {
+        newMessagesCount() {
+            return Math.max(Number(this.scrollMessagesCount) || 0, Number(this.pendingMessagesCount) || 0)
+        },
         room() {
             return this.rooms.find((room) => room.roomId === this.roomId) || {}
         },
@@ -2154,6 +2162,10 @@ export default {
             return scrollHeight - clientHeight - scrollTop
         },
         scrollToBottom() {
+            if (this.canLoadAfter) {
+                this.$emit('return-to-latest')
+                return
+            }
             this.queueScrollToBottom(true)
         },
         queueScrollToBottom(smooth = false) {

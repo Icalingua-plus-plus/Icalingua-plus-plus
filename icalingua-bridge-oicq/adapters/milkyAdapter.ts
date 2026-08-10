@@ -28,6 +28,7 @@ import {
     PrivateMessageEventData,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import {
     getMediaPartIndex,
@@ -1421,7 +1422,7 @@ const adapter: typeof oicqAdapter = {
         console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
         clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
         storage
-            .fetchMessages(roomId, 0, currentLoadedMessagesCount + 20)
+            .fetchMessages(roomId, {}, currentLoadedMessagesCount + 20)
             .then((messages) => clients.setMessages(roomId, messages))
     },
     async getFriendsFallback(cb) {
@@ -1636,8 +1637,14 @@ const adapter: typeof oicqAdapter = {
     },
 
     // 存储相关
-    async fetchMessages(roomId: number, offset: number, client: Socket, callback: (arg0: Message[]) => void) {
-        if (!offset) {
+    async fetchMessages(
+        roomId: number,
+        options: MessagePageOptions,
+        client: Socket,
+        callback: (arg0: Message[]) => void,
+    ) {
+        const initialPage = !options?.before && !options?.after
+        if (initialPage) {
             storage.updateRoom(roomId, { unreadCount: 0, at: false })
             if (roomId < 0) {
                 try {
@@ -1653,12 +1660,12 @@ const adapter: typeof oicqAdapter = {
         }
         // 刷新 rkey（如果需要）
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchMessages(roomId, offset, 20)) || []
+        const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             processMessageRkey(message)
         }
-        if (messages.length && !offset && typeof messages[messages.length - 1]._id === 'string') {
+        if (messages.length && initialPage && typeof messages[messages.length - 1]._id === 'string') {
             adapter.reportRead(messages[messages.length - 1]._id as string)
         }
         callback(messages)

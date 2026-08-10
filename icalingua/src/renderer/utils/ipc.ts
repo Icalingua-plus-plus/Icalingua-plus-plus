@@ -4,6 +4,7 @@ import AtCacheItem from '@icalingua/types/AtCacheElem'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
@@ -70,8 +71,8 @@ const ipc = {
     async getUin(): Promise<number> {
         return await ipcRenderer.invoke('getUin')
     },
-    async fetchMessage(roomId: number, offset: number): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessage', { roomId, offset })
+    async fetchMessage(roomId: number, options: MessagePageOptions = {}): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchMessage', { roomId, options })
     },
     async fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchImageMessages', { roomId, offset, endTime })

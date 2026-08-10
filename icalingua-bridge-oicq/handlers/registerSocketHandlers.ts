@@ -1,4 +1,5 @@
 import Message from '@icalingua/types/Message'
+import MessagePageOptions from '@icalingua/types/MessagePage'
 import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
@@ -24,8 +25,8 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('fetch7DaysHistory', adapter.fetch7DaysHistory)
     socket.on(
         'fetchMessages',
-        (roomId: number, offset: number, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
-            adapter.fetchMessages(roomId, offset, socket, resolve),
+        (roomId: number, options: MessagePageOptions, resolve: (value: Message[] | PromiseLike<Message[]>) => void) =>
+            adapter.fetchMessages(roomId, options || {}, socket, resolve),
     )
     socket.on(
         'fetchImageMessages',
