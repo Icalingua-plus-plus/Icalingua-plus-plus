@@ -223,6 +223,9 @@ export default {
     setDisableChatGroupsRedPointSeeting(a: boolean) {
         sendToMainWindow('setDisableChatGroupsRedPointSeeting', a)
     },
+    setCountAtAllInChatGroups(enabled: boolean) {
+        sendToMainWindow('setCountAtAllInChatGroups', enabled)
+    },
     uploadProgress(progress: string) {
         sendToMainWindow('uploadProgress', progress)
     },

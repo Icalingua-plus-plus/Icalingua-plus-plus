@@ -22,7 +22,8 @@
         "dev": "cross-env NODE_ENV=development ts-node .electron-vue/dev-runner.ts",
         "test:message-formatting": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/components/vac-mod/utils/messageFormatting.test.ts src/renderer/components/vac-mod/utils/messageMarkdown.test.ts",
         "test:renderer-lifecycle": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/utils/rendererLifecycleScope.test.ts",
-        "test:room-update-batch": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/utils/roomUpdateBatch.test.ts"
+        "test:room-update-batch": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/utils/roomUpdateBatch.test.ts",
+        "test:chat-group-unread": "cross-env TS_NODE_PROJECT=tsconfig.json node --require ts-node/register/transpile-only --test src/renderer/utils/chatGroupUnread.test.ts"
     },
     "build": {
         "productName": "Icalingua++",

@@ -121,6 +121,7 @@ const defaultConfig: AllConfig = {
     disableChatGroups: false,
     singleImageMode: false,
     disableChatGroupsRedPoint: false,
+    countAtAllInChatGroups: true,
     localImageViewerByDefault: false,
     disableQLottie: false,
     disableNotification: false,
