@@ -11,6 +11,7 @@ export default interface Room {
         | [{ _id: 1; username: '1' }, { _id: 2; username: '2' }]
         | [{ _id: 1; username: '1' }, { _id: 2; username: '2' }, { _id: 3; username: '3' }]
     at?: boolean | 'all'
+    atMessageId?: string
     lastMessage: LastMessage
     autoDownload?: boolean
     downloadPath?: string

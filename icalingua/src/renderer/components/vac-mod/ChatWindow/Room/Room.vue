@@ -685,9 +685,6 @@ export default {
                 tail: null,
             },
             optimizeMethod: 'infinite-loading',
-            scrollingTolastMessage: 0,
-            scrollingToReplyMessage: null,
-            scrollingToReplyMessageRetryCount: 0,
             hideChatImageByDefault: false,
             hideChatVideoByDefault: false,
             localImageViewerByDefault: false,
@@ -700,8 +697,8 @@ export default {
             mouseSelectBounds: null,
             isMessageEmpty: true,
             membersCount: 0,
-            checkCanScrollTimer: null,
             scrollToBottomTimer: null,
+            scrollToBottomGeneration: 0,
             textareaResizeScheduled: false,
             pasteIcon: `file://${__static}/Clipboard.svg`,
             audioSessions: {},
@@ -802,9 +799,6 @@ export default {
                 this.loadingMessages = true
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
-                this.scrollingTolastMessage = 0
-                this.scrollingToReplyMessage = null
-                this.scrollingToReplyMessageRetryCount = 0
                 //this.resetMessage(true)
 
                 this.editAndResend = false
@@ -814,9 +808,6 @@ export default {
             } else if (newVal.roomId === 0) {
                 this.scrollIcon = false
                 this.scrollMessagesCount = 0
-                this.scrollingTolastMessage = 0
-                this.scrollingToReplyMessage = null
-                this.scrollingToReplyMessageRetryCount = 0
             }
         },
         messages(newVal, oldVal) {
@@ -910,39 +901,6 @@ export default {
                         this.infiniteState.tail.complete()
                     }
                 }
-            }
-
-            // 处理滚动到最后未读消息
-            if (this.checkCanScrollTimer) this.lifecycleScope.cancelTimeout(this.checkCanScrollTimer)
-            if (this.scrollingTolastMessage) {
-                this.checkCanScrollTimer = this.lifecycleScope.timeout(() => {
-                    this.checkCanScrollTimer = null
-                    const nonSystemMessages = this.messages.filter((msg) => !msg.system)
-                    if (nonSystemMessages.length >= this.scrollingTolastMessage) {
-                        const msgCount = this.scrollingTolastMessage
-                        this.scrollingTolastMessage = 0
-                        this.lifecycleScope.timeout(() => {
-                            const _id = nonSystemMessages[nonSystemMessages.length - msgCount]._id
-                            if (!_id) {
-                                this.$message.error('Message not found')
-                                return
-                            }
-                            this.scrollToMessage(_id)
-                        }, 0)
-                    }
-                }, 1000)
-            }
-
-            // 处理回复消息的定位
-            if (this.scrollingToReplyMessage) {
-                this.lifecycleScope.timeout(() => {
-                    const result = this.scrollToMessage(this.scrollingToReplyMessage, false, true)
-                    if (result) {
-                        // 成功定位，清除状态
-                        this.scrollingToReplyMessage = null
-                        this.scrollingToReplyMessageRetryCount = 0
-                    }
-                }, 1000)
             }
 
             this.lifecycleScope.timeout(() => (this.loadingHeadMessages = false), 0)
@@ -1081,6 +1039,7 @@ export default {
         })
     },
     beforeDestroy() {
+        this.scrollToBottomGeneration++
         this.lifecycleScope?.dispose()
         this.textareaResizeScheduled = false
         this.saveMessageDraft(this.getMessageText(), true)
@@ -1092,10 +1051,6 @@ export default {
         if (this.scrollToBottomTimer) {
             this.lifecycleScope.cancelAnimationFrame(this.scrollToBottomTimer)
             this.scrollToBottomTimer = null
-        }
-        if (this.checkCanScrollTimer) {
-            this.lifecycleScope.cancelTimeout(this.checkCanScrollTimer)
-            this.checkCanScrollTimer = null
         }
         if (this.mouseSelectFrame !== null) {
             this.lifecycleScope.cancelAnimationFrame(this.mouseSelectFrame)
@@ -1748,31 +1703,33 @@ export default {
             }
         },
         scrollToMessage(messageId, autoLoad = false, isRetry = false) {
+            this.cancelQueuedScrollToBottom()
+            const targetMessageId = String(messageId)
             let judgeSameMessage = () => false
-            const parsed = Buffer.from(String(messageId), 'base64')
+            const parsed = Buffer.from(targetMessageId, 'base64')
             let messageSeq = 0
             try {
-                if (messageId.length === 28) {
+                if (parsed.length === 21) {
                     //group
                     messageSeq = parsed.readUInt32BE(8)
-                } else {
+                } else if (parsed.length === 17) {
                     //c2c
                     messageSeq = parsed.readUInt32BE(4)
                 }
             } catch (e) {}
             if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page') {
                 judgeSameMessage = (a) => {
-                    const seqA = Number(a.split('|')[1])
+                    const seqA = Number(String(a).split('|')[1])
                     if (seqA !== messageSeq) return false
                     return true
                 }
             } else {
-                const parsedB = Buffer.from(messageId, 'base64')
+                const parsedB = parsed
                 judgeSameMessage = (a) => {
                     //shitcode?
-                    if (a === messageId) return true
+                    if (String(a) === targetMessageId) return true
                     try {
-                        const parsedA = Buffer.from(a, 'base64')
+                        const parsedA = Buffer.from(String(a), 'base64')
                         if (this.roomId < 0) {
                             // 群消息 ID 格式: | groupId(0) | senderId(4) | seq(8) | random(12) | time(16) | pktnum(20) |
                             // 如果 senderId 或 time 为 0（milky 适配器），则跳过这些字段的比较
@@ -1800,7 +1757,7 @@ export default {
                     } catch (e) {}
                 }
             }
-            const message = document.getElementById(messageId)
+            const message = document.getElementById(targetMessageId)
             if (message) {
                 message.scrollIntoView()
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
@@ -1837,27 +1794,10 @@ export default {
                 }
             }
 
-            // 消息未找到，尝试自动加载
+            // 回复消息未找到时，由外层先尝试加载附近历史，再按需切换到稳定的中间窗口。
             if (autoLoad && !isRetry) {
-                const maxRetries = 10
-                if (
-                    this.scrollingToReplyMessageRetryCount < maxRetries &&
-                    !(this.$route.name === 'history-page' || this.$route.name === 'member-history-page')
-                ) {
-                    this.scrollingToReplyMessageRetryCount++
-                    const loadCount = 200 // 每次加载200条消息
-                    console.log(
-                        `被回复的消息不在当前列表中，正在加载历史消息 (${this.scrollingToReplyMessageRetryCount}/${maxRetries})...`,
-                    )
-                    this.$message.info('尝试加载历史消息...')
-                    this.$emit('fetch-messages', false, loadCount)
-                    this.scrollingToReplyMessage = messageId
-                    return false
-                } else {
-                    // 达到最大重试次数
-                    this.scrollingToReplyMessage = null
-                    this.scrollingToReplyMessageRetryCount = 0
-                    this.$message.error('被回复的消息太远啦')
+                if (!(this.$route.name === 'history-page' || this.$route.name === 'member-history-page')) {
+                    this.$emit('locate-message', messageId)
                     return false
                 }
             }
@@ -2168,14 +2108,19 @@ export default {
             }
             this.queueScrollToBottom(true)
         },
-        queueScrollToBottom(smooth = false) {
-            const element = this.$refs.scrollContainer
-            if (!element) return
-            this.loadingMessages = false
+        cancelQueuedScrollToBottom() {
+            this.scrollToBottomGeneration++
             if (this.scrollToBottomTimer) {
                 this.lifecycleScope.cancelAnimationFrame(this.scrollToBottomTimer)
                 this.scrollToBottomTimer = null
             }
+        },
+        queueScrollToBottom(smooth = false) {
+            const element = this.$refs.scrollContainer
+            if (!element) return
+            this.loadingMessages = false
+            this.cancelQueuedScrollToBottom()
+            const generation = this.scrollToBottomGeneration
             if (this.optimizeMethod !== 'none') {
                 this.visibleViewport.tail = this.messages.length
                 this.visibleViewport.head = Math.max(this.messages.length - this.maxViewportLength, 0)
@@ -2183,28 +2128,21 @@ export default {
             this.scrollMessagesCount = 0
             this.scrollIcon = false
             this.$nextTick(() => {
+                if (generation !== this.scrollToBottomGeneration) return
                 this.scrollToBottomTimer = this.lifecycleScope.animationFrame(() => {
+                    if (generation !== this.scrollToBottomGeneration) return
                     this.scrollToBottomTimer = null
                     element.scrollTo({ top: element.scrollHeight, behavior: smooth ? 'smooth' : 'auto' })
                 })
             })
         },
         async scrollToLastMessage() {
-            if (this.lastUnreadCount > 100) {
-                this.$message('加载消息中，请耐心等待')
-            }
             const lastUnreadCount = this.lastUnreadCount
             if (lastUnreadCount === 0) return
-            const fetchNumber = Math.max(lastUnreadCount - this.messages.filter((e) => !e.system).length, 0)
-            console.log('Need fetch messages: ', fetchNumber)
-            this.$emit('fetch-messages', false, fetchNumber)
             this.$emit('clear-last-unread-count')
-            this.scrollingTolastMessage = lastUnreadCount
+            this.$emit('locate-unread-message', lastUnreadCount)
         },
         async scrollToLastAtMessage() {
-            if (this.lastUnreadCount > 100) {
-                this.$message('加载消息中，请耐心等待')
-            }
             this.$emit('clear-last-unread-at')
         },
         onChangeInput(event) {

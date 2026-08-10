@@ -312,7 +312,10 @@ const attachEventHandler = () => {
         processMessageRkey(message)
 
         const at = message.at
-        if (at) room.at = at
+        if (at) {
+            room.at = at
+            room.atMessageId = String(message._id)
+        }
 
         if (!room.priority) {
             room.priority = groupId ? 2 : 4
@@ -338,6 +341,7 @@ const attachEventHandler = () => {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
+        if (!room.at) room.atMessageId = null
 
         room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
@@ -1645,7 +1649,7 @@ const adapter: typeof oicqAdapter = {
     ) {
         const initialPage = !options?.before && !options?.after
         if (initialPage) {
-            storage.updateRoom(roomId, { unreadCount: 0, at: false })
+            storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
             if (roomId < 0) {
                 try {
                     await bot.getGroupInfo(-roomId)
@@ -1702,6 +1706,13 @@ const adapter: typeof oicqAdapter = {
             processMessageRkey(message)
         }
         callback(messages)
+    },
+    async resolveUnreadTargetMessageId(
+        roomId: number,
+        unreadCount: number,
+        callback: (messageId: string | null) => void,
+    ) {
+        callback(await storage.resolveUnreadTargetMessageId(roomId, unreadCount))
     },
     async fetchMessagesBySender(
         roomId: number,

@@ -9,6 +9,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
+import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, { SQLiteSearchMessage } from './SQLiteMessageSearchIndexWorker'
 
 const insertMessageScript = [
@@ -54,7 +55,21 @@ export default class RedisStorageProvider implements StorageProvider {
     /** `connect` 方法。在这里与数据库建立连接。 */
     async connect(): Promise<void> {
         this.redis = new Redis(this.connStr)
+        await this.repairRoomAtMessageIds()
         await this.searchIndex.open()
+    }
+
+    private async repairRoomAtMessageIds(): Promise<void> {
+        const rooms = await this.getAllRooms()
+        for (const room of rooms) {
+            if (!room.at || room.atMessageId) continue
+            try {
+                const atMessageId = await this.resolveRecentMessageId(room.roomId, room.unreadCount, true)
+                await this.updateRoom(room.roomId, atMessageId ? { atMessageId } : { at: false, atMessageId: null })
+            } catch (error) {
+                console.error('Failed to repair room atMessageId', room.roomId, error)
+            }
+        }
     }
 
     async close(): Promise<void> {
@@ -511,6 +526,39 @@ export default class RedisStorageProvider implements StorageProvider {
         return this.sortMessagesAscending(await this.getMessages(roomId, msgKeys))
     }
 
+    private async resolveRecentMessageId(roomId: number, unreadCount: number, atOnly: boolean): Promise<string | null> {
+        let remaining = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+        if (!remaining) return null
+
+        const listKey = this.roomMessageListKey(roomId)
+        const messageKey = this.roomMessageKey(roomId)
+        let offset = 0
+        while (remaining > 0) {
+            const batchSize = atOnly ? 100 : Math.min(redisMessageReadBatchSize, Math.max(100, remaining))
+            const ids = await this.redis.zrevrange(listKey, offset, offset + batchSize - 1)
+            if (!ids.length) return null
+            const rawMessages = await this.redis.hmget(messageKey, ...ids)
+
+            for (let index = 0; index < ids.length; index++) {
+                const rawMessage = rawMessages[index]
+                if (!rawMessage) continue
+                const message = JSON.parse(rawMessage) as Message
+                if (message.system) continue
+                remaining--
+                if ((!atOnly && remaining === 0) || (atOnly && message.at)) return String(ids[index])
+                if (remaining === 0) return null
+            }
+
+            if (ids.length < batchSize) return null
+            offset += ids.length
+        }
+        return null
+    }
+
+    async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        return this.resolveRecentMessageId(roomId, unreadCount, false)
+    }
+
     /** 按发送者查询消息记录。
      * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
      * @param senderId 发送者 ID（字符串）
@@ -681,8 +729,24 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在获取聊天历史消息时，该方法被调用。
      */
     async getMessage(roomId: number, messageId: string): Promise<Message> {
-        const msgString = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
-        return JSON.parse(msgString)
+        return this.findMessageRecord(roomId, messageId)
+    }
+
+    private async findMessageRecord(roomId: number, messageId: string): Promise<Message | null> {
+        const key = this.roomMessageKey(roomId)
+        const exactMessage = await this.redis.hget(key, `${messageId}`)
+        if (exactMessage) return JSON.parse(exactMessage) as Message
+
+        const time = messageIdTime(messageId)
+        if (time === null) return null
+        const targetTime = time * 1000
+        const ids = await this.redis.zrangebyscore(
+            this.roomMessageListKey(roomId),
+            targetTime - 2000,
+            targetTime + 2000,
+        )
+        const candidates = await this.getMessages(roomId, ids)
+        return candidates.find((candidate) => messageIdsEquivalent(candidate._id, messageId)) || null
     }
 
     /** 实现 {@link StorageProvider} 类的 `fetchMessagesAround` 方法，
@@ -691,9 +755,8 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在定位到指定消息时，该方法被调用。
      */
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
-        const targetMsgStr = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, `${messageId}`)
-        if (!targetMsgStr) return []
-        const targetMsg = JSON.parse(targetMsgStr) as Message
+        const targetMsg = await this.findMessageRecord(roomId, messageId)
+        if (!targetMsg) return []
         const cursor: MessageCursor = { time: Number(targetMsg.time || 0), id: targetMsg._id }
         const [beforeMessages, afterMessages] = await Promise.all([
             before > 0 ? this.fetchMessages(roomId, { before: cursor }, before) : Promise.resolve([]),

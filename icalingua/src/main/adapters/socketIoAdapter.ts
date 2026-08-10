@@ -196,6 +196,8 @@ const attachSocketEvents = () => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
             room.unreadCount = 0
+            room.at = false
+            room.atMessageId = null
             adapter.clearRoomUnread(room.roomId)
         }
         ui.updateRoom(room)
@@ -305,7 +307,9 @@ const attachSocketEvents = () => {
     })
     socket.on('syncRead', (roomId: number) => {
         ui.clearRoomUnread(roomId)
-        queueLocalStorageWrite((storage) => storage.updateRoom(roomId, { unreadCount: 0, at: false }))
+        queueLocalStorageWrite((storage) =>
+            storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null }),
+        )
     })
     socket.on('setMessages', ({ roomId, messages }: { roomId: number; messages: Message[] }) => {
         if (roomId === ui.getSelectedRoomId()) ui.setMessages(messages)
@@ -665,8 +669,9 @@ const adapter: Adapter = {
         if (room) {
             room.unreadCount = 0
             room.at = false
+            room.atMessageId = null
         }
-        adapter.updateRoom(roomId, { unreadCount: 0, at: false })
+        adapter.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
         updateTrayIcon()
     },
     markRoomUnread(roomId: number) {
@@ -675,8 +680,9 @@ const adapter: Adapter = {
         if (!room) return
         room.unreadCount = Math.max(room.unreadCount || 0, 1)
         room.at = false
+        room.atMessageId = null
         ui.updateRoom(room)
-        adapter.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        adapter.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
         updateTrayIcon()
     },
     async createBot(form: LoginForm) {
@@ -787,6 +793,11 @@ const adapter: Adapter = {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })
+        })
+    },
+    resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        return new Promise((resolve) => {
+            socket.emit('resolveUnreadTargetMessageId', roomId, unreadCount, resolve)
         })
     },
     fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {

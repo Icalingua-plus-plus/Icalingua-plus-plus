@@ -54,6 +54,7 @@
                     @open-forward="openForward"
                     @open-choose-file-type="openChooseFileType"
                     @fetch-messages="fetchMessage"
+                    @locate-message="locateMessage"
                     @fetch-messages-after="fetchMessageAfter"
                     @return-to-latest="returnToLatest"
                 >
@@ -164,6 +165,8 @@ import {
     normalizeMessageList,
 } from '../utils/messageOrder'
 import '../utils/themes'
+
+const NEARBY_MESSAGE_LOAD_LIMIT = 100
 
 export default {
     name: 'ChatWindowView',
@@ -475,7 +478,7 @@ export default {
             })
         },
 
-        async fetchMessage(reset) {
+        async fetchMessage(reset, number) {
             let generation = this.messageLoadGeneration
             if (reset) {
                 generation = ++this.messageLoadGeneration
@@ -485,14 +488,27 @@ export default {
                 this.setMessageList([])
                 this.messagesLoaded = false
             }
-            const cursor = !reset && this.messages.length ? getMessageCursor(this.messages[0]) : null
+            let cursor = !reset && this.messages.length ? getMessageCursor(this.messages[0]) : null
+            const messagePages = []
+            let lastPage = []
+            let nonSystemMessageCount = 0
             this.loading = true
             try {
-                const msgs = await ipc.fetchMessage(this.roomId, cursor ? { before: cursor } : {})
+                do {
+                    const page = await ipc.fetchMessage(this.roomId, cursor ? { before: cursor } : {})
+                    lastPage = page || []
+                    if (lastPage.length) cursor = getMessageCursor(lastPage[0])
+                    messagePages.unshift(lastPage)
+                    nonSystemMessageCount += lastPage.filter((message) => !message.system).length
+                    if (!number || nonSystemMessageCount >= number || !lastPage.length) break
+                    if (generation !== this.messageLoadGeneration) return
+                } while (true)
                 if (generation !== this.messageLoadGeneration) return
-                if (reset) this.setMessageList(msgs || [])
-                else this.mergeMessages(msgs || [])
-                this.messagesLoaded = !msgs || msgs.length < 20
+
+                const messages = messagePages.flat()
+                if (reset) this.setMessageList(messages)
+                else this.mergeMessages(messages)
+                this.messagesLoaded = !lastPage.length || lastPage.length < 20
             } catch (e) {
                 console.error('Failed to fetch messages:', e)
             } finally {
@@ -643,6 +659,24 @@ export default {
             return name.replace(/\[.*?\]/g, '').trim() || name
         },
 
+        async locateMessage(messageId) {
+            const roomId = this.roomId
+            const generation = ++this.messageLoadGeneration
+            this.loading = true
+            try {
+                await this.fetchMessage(false, NEARBY_MESSAGE_LOAD_LIMIT)
+                if (generation !== this.messageLoadGeneration || roomId !== this.roomId) return
+                await this.$nextTick()
+                if (this.$refs.room?.scrollToMessage(messageId, false, true)) return
+            } finally {
+                if (generation === this.messageLoadGeneration) this.loading = false
+            }
+
+            if (generation === this.messageLoadGeneration && roomId === this.roomId) {
+                await this.gotoMessage(messageId)
+            }
+        },
+
         async gotoMessage(messageId) {
             // 先尝试在当前消息列表中查找
             const existingIndex = this.getMessageIndex(messageId)
@@ -650,7 +684,7 @@ export default {
                 // 消息已存在，直接滚动并高亮
                 this.$nextTick(() => {
                     if (this.$refs.room) {
-                        this.$refs.room.scrollToMessage(messageId)
+                        this.$refs.room.scrollToMessage(messageId, false, true)
                     }
                 })
                 return
@@ -681,7 +715,7 @@ export default {
                     this.targetMessageId = messageId
                     this.$nextTick(() => {
                         if (this.$refs.room) {
-                            this.$refs.room.scrollToMessage(messageId)
+                            this.$refs.room.scrollToMessage(messageId, false, true)
                         }
                     })
                 } else {

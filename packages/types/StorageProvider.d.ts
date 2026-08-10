@@ -32,6 +32,8 @@ export default interface StorageProvider {
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
+    resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null>
+
     getMessage(roomId: number, messageId: string): Promise<Message>
 
     addMessages(roomId: number, messages: Message[]): Promise<any>

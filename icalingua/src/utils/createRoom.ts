@@ -6,6 +6,8 @@ export default (roomId: number, roomName: string): Room => {
         roomName,
         index: 0,
         unreadCount: 0,
+        at: false,
+        atMessageId: null,
         priority: roomId > 0 ? 4 : 2,
         utime: new Date().getTime(),
         users: [

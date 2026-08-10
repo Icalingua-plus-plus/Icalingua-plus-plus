@@ -11,6 +11,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
+import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import SQLStorageProviderWorker from './SQLStorageProviderWorker'
 import type {
@@ -41,8 +42,9 @@ import upg19to20 from './SQLUpgradeScript/19to20'
 import upg20to21 from './SQLUpgradeScript/20to21'
 import upg21to22 from './SQLUpgradeScript/21to22'
 import upg22to23 from './SQLUpgradeScript/22to23'
+import upg23to24 from './SQLUpgradeScript/23to24'
 
-const dbVersionLatest = 23
+const dbVersionLatest = 24
 
 const normalizeRoomId = (roomId: unknown): string => {
     const value = String(roomId || 0) || '0'
@@ -439,6 +441,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 22:
                     report('升级数据库 v22 → v23')
                     await upg22to23(this.db)
+                case 23:
+                    report('升级数据库 v23 → v24')
+                    await upg23to24(this.db)
                 default:
                     break
             }
@@ -540,6 +545,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.text('users')
                     table.text('lastMessage')
                     table.string('at').nullable()
+                    table.string('atMessageId').nullable()
                     table.boolean('autoDownload').nullable()
                     table.string('downloadPath').nullable()
                     table.index(['unreadCount', 'priority', 'utime'])
@@ -932,6 +938,27 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        try {
+            const count = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+            if (!count) return null
+
+            let query = this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where((builder) => builder.whereNull('system').orWhere('system', false))
+            query = this.orderMessagePage(query, {})
+
+            const target = await query
+                .offset(count - 1)
+                .select('_id')
+                .first()
+            return target?._id === undefined || target?._id === null ? null : String(target._id)
+        } catch (e) {
+            this.errorHandle(e)
+            return null
+        }
+    }
+
     /** 实现 {@link StorageProvider} 类的 `fetchMessagesBySender` 方法，
      * 按发送者查询消息记录。
      *
@@ -1075,14 +1102,28 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * 在获取聊天历史消息时，该方法被调用。
      */
+    private async findMessageRecord(roomId: number, messageId: string): Promise<MessageInSQLDB> {
+        const exactMessage = await this.db<MessageInSQLDB>('messages')
+            .where('_id', messageId)
+            .where('roomId', roomId)
+            .select('*')
+            .first()
+        if (exactMessage) return exactMessage
+
+        const time = messageIdTime(messageId)
+        if (time === null) return null
+        const targetTime = time * 1000
+        const candidates = await this.db<MessageInSQLDB>('messages')
+            .where('roomId', roomId)
+            .whereBetween('time', [targetTime - 2000, targetTime + 2000])
+            .select('*')
+        return candidates.find((candidate) => messageIdsEquivalent(candidate._id, messageId)) || null
+    }
+
     async getMessage(roomId: number, messageId: string): Promise<Message> {
         try {
-            const message = await this.db<MessageInSQLDB>('messages')
-                .where('_id', messageId)
-                .where('roomId', roomId)
-                .select('*')
-            if (message.length === 0) return null
-            return this.msgConFromDB(message[0])
+            const message = await this.findMessageRecord(roomId, messageId)
+            return message ? this.msgConFromDB(message) : null
         } catch (e) {
             this.errorHandle(e)
         }
@@ -1095,11 +1136,7 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
         try {
-            const targetMsg = await this.db<MessageInSQLDB>('messages')
-                .where('_id', messageId)
-                .where('roomId', roomId)
-                .select('*')
-                .first()
+            const targetMsg = await this.findMessageRecord(roomId, messageId)
             if (!targetMsg) return []
 
             const cursor: MessageCursor = { time: Number(targetMsg.time || 0), id: targetMsg._id }

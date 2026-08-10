@@ -85,6 +85,9 @@ const ipc = {
     ): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessagesAround', { roomId, messageId, before, after })
     },
+    async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        return await ipcRenderer.invoke('resolveUnreadTargetMessageId', { roomId, unreadCount })
+    },
     async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, offset })
     },

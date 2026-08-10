@@ -353,6 +353,10 @@ const adapter: Adapter = {
         return messages
     },
 
+    resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        return storage.resolveUnreadTargetMessageId(roomId, unreadCount)
+    },
+
     async getRoom(roomId: number): Promise<Room> {
         return await storage.getRoom(roomId)
     },
@@ -512,7 +516,8 @@ const adapter: Adapter = {
         if (!room) return
         room.unreadCount = Math.max(room.unreadCount || 0, 1)
         room.at = false
-        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        room.atMessageId = null
+        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
         ui.updateRoom(room)
         await updateTrayIcon()
     },

@@ -52,6 +52,7 @@ const sqlMethods = new Set([
     'fetchImageMessages',
     'getMessage',
     'fetchMessagesAround',
+    'resolveUnreadTargetMessageId',
     'addMessages',
     'close',
 ])

@@ -201,7 +201,10 @@ const eventHandlers = {
         }
 
         const at = message.at
-        if (at) room.at = at
+        if (at) {
+            room.at = at
+            room.atMessageId = String(message._id)
+        }
 
         if (!room.priority) {
             room.priority = groupId ? 2 : 4
@@ -228,6 +231,7 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
+        if (!room.at) room.atMessageId = null
         // 加上同一秒收到消息的id，防止消息乱序
         room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
@@ -791,7 +795,7 @@ const eventHandlers = {
     syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
         clients.syncRead(roomId)
-        storage.updateRoom(roomId, { unreadCount: 0, at: false })
+        storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
     },
     async syncRemark(data: SyncRemarkEventData) {
         if (data.sub_type === 'group') {
@@ -1730,6 +1734,7 @@ const adapter = {
             storage.updateRoom(roomId, {
                 unreadCount: 0,
                 at: false,
+                atMessageId: null,
             })
             if (roomId < 0) {
                 const gid = -roomId
@@ -1782,6 +1787,13 @@ const adapter = {
             await processMessageRkey(message)
         }
         callback(messages)
+    },
+    async resolveUnreadTargetMessageId(
+        roomId: number,
+        unreadCount: number,
+        callback: (messageId: string | null) => void,
+    ) {
+        callback(await storage.resolveUnreadTargetMessageId(roomId, unreadCount))
     },
     async fetchMessagesBySender(
         roomId: number,

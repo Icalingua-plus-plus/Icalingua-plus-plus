@@ -209,6 +209,12 @@ ipcMain.handle(
     },
 )
 ipcMain.handle(
+    'resolveUnreadTargetMessageId',
+    (_, { roomId, unreadCount }: { roomId: number; unreadCount: number }) => {
+        return adapter.resolveUnreadTargetMessageId(roomId, unreadCount)
+    },
+)
+ipcMain.handle(
     'fetchMessagesBySender',
     async (_, { roomId, senderId, offset }: { roomId: number; senderId: number; offset: number }) => {
         const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset)

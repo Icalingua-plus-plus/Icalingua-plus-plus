@@ -8,6 +8,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
 import { normalizeSearchText } from './MessageSearchIndex'
+import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, {
     SQLiteSearchMessage,
     SQLiteSearchTimeCount,
@@ -179,6 +180,7 @@ export default class MongoStorageProvider implements StorageProvider {
         )
         const rooms = await this.getAllRooms()
         await this.ensureSearchTimeIndexes(rooms)
+        await this.repairRoomAtMessageIds(rooms)
         await this.mdb.collection('ignoredChats').createIndex('id', {
             background: true,
             unique: true,
@@ -189,6 +191,20 @@ export default class MongoStorageProvider implements StorageProvider {
         })
         this.searchRoomsCache = rooms.slice().sort((left, right) => Number(left.roomId) - Number(right.roomId))
         await this.searchIndex.open()
+    }
+
+    private async repairRoomAtMessageIds(rooms: Room[]): Promise<void> {
+        for (const room of rooms) {
+            if (!room.at || room.atMessageId) continue
+            try {
+                const atMessageId = await this.resolveRecentMessageId(room.roomId, room.unreadCount, true)
+                const update: Partial<Room> = atMessageId ? { atMessageId } : { at: false, atMessageId: null }
+                Object.assign(room, update)
+                await this.updateRoom(room.roomId, update)
+            } catch (error) {
+                console.error('Failed to repair room atMessageId', room.roomId, error)
+            }
+        }
     }
 
     async close(): Promise<void> {
@@ -555,7 +571,12 @@ export default class MongoStorageProvider implements StorageProvider {
         if (options?.before && options?.after) throw new Error('Message page cannot use before and after together')
     }
 
-    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+    private async fetchMessagePage(
+        roomId: number,
+        options: MessagePageOptions,
+        limit: number,
+        projection?: Record<string, 0 | 1>,
+    ): Promise<Message[]> {
         this.validateMessagePageOptions(options)
         const pageSize = Math.max(1, Math.trunc(limit))
         const direction = options?.after ? 1 : -1
@@ -565,7 +586,9 @@ export default class MongoStorageProvider implements StorageProvider {
 
         if (cursor) {
             const cursorId = String(cursor.id)
-            const sameTime = (await collection.find({ time: cursor.time }).toArray()) as Message[]
+            const sameTime = (await collection
+                .find({ time: cursor.time }, projection ? { projection } : undefined)
+                .toArray()) as Message[]
             candidates.push(
                 ...sameTime.filter((message) =>
                     options.after ? String(message._id) > cursorId : String(message._id) < cursorId,
@@ -584,13 +607,55 @@ export default class MongoStorageProvider implements StorageProvider {
                 new Set(timeRows.map((message) => Number(message.time)).filter((time) => Number.isFinite(time))),
             )
             if (times.length) {
-                candidates.push(...((await collection.find({ time: { $in: times } }).toArray()) as Message[]))
+                candidates.push(
+                    ...((await collection
+                        .find({ time: { $in: times } }, projection ? { projection } : undefined)
+                        .toArray()) as Message[]),
+                )
             }
         }
 
         candidates.sort((left, right) => direction * this.compareMessageOrder(left, right))
         const page = candidates.slice(0, pageSize)
         return options?.after ? page : page.reverse()
+    }
+
+    async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
+        return this.fetchMessagePage(roomId, options, limit)
+    }
+
+    private async resolveRecentMessageId(roomId: number, unreadCount: number, atOnly: boolean): Promise<string | null> {
+        let remaining = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+        if (!remaining) return null
+
+        const pageSize = 100
+        let options: MessagePageOptions = {}
+        while (remaining > 0) {
+            const page = await this.fetchMessagePage(roomId, options, pageSize, {
+                _id: 1,
+                time: 1,
+                system: 1,
+                at: 1,
+            })
+            if (!page.length) return null
+
+            for (let index = page.length - 1; index >= 0; index--) {
+                const message = page[index]
+                if (message.system) continue
+                remaining--
+                if ((!atOnly && remaining === 0) || (atOnly && message.at)) return String(message._id)
+                if (remaining === 0) return null
+            }
+
+            if (page.length < pageSize) return null
+            const firstMessage = page[0]
+            options = { before: { time: Number(firstMessage.time || 0), id: firstMessage._id } }
+        }
+        return null
+    }
+
+    async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
+        return this.resolveRecentMessageId(roomId, unreadCount, false)
     }
 
     /** 按发送者查询消息记录。
@@ -803,12 +868,27 @@ export default class MongoStorageProvider implements StorageProvider {
         return { _id: { $in: candidates } }
     }
 
+    private async findMessageRecord(roomId: number, messageId: string): Promise<Message | null> {
+        const collection = this.mdb.collection<any>('msg' + roomId)
+        const exactMessage = await collection.findOne(this.messageIdQuery(messageId))
+        if (exactMessage) return exactMessage
+
+        const time = messageIdTime(messageId)
+        if (time === null) return null
+        const targetTime = time * 1000
+        const candidates = await collection
+            .find({ time: { $gte: targetTime - 2000, $lte: targetTime + 2000 } })
+            .sort({ time: 1 })
+            .toArray()
+        return candidates.find((candidate) => messageIdsEquivalent(candidate._id, messageId)) || null
+    }
+
     getMessage(roomId: number, messageId: string): Promise<Message> {
-        return this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
+        return this.findMessageRecord(roomId, messageId)
     }
 
     async fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]> {
-        const targetMsg = await this.mdb.collection<any>('msg' + roomId).findOne(this.messageIdQuery(messageId))
+        const targetMsg = await this.findMessageRecord(roomId, messageId)
         if (!targetMsg) return []
 
         const cursor: MessageCursor = { time: Number(targetMsg.time || 0), id: targetMsg._id }

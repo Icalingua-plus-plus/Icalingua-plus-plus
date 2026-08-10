@@ -214,7 +214,10 @@ const eventHandlers = {
         }
 
         const at = message.at
-        if (at) room.at = at
+        if (at) {
+            room.at = at
+            room.atMessageId = String(message._id)
+        }
 
         if (!room.priority) {
             room.priority = groupId ? 2 : 4
@@ -345,6 +348,7 @@ const eventHandlers = {
             room.unreadCount = 0
             room.at = false
         } else room.unreadCount++
+        if (!room.at) room.atMessageId = null
         // 加上同一秒收到消息的id，防止消息乱序
         room.utime = data.time * 1000 + lastReceivedMessageInfo.id
         room.lastMessage = lastMessage
@@ -2038,6 +2042,9 @@ const adapter: OicqAdapter = {
         }
         return messages
     },
+    resolveUnreadTargetMessageId(roomId: number, unreadCount: number) {
+        return storage.resolveUnreadTargetMessageId(roomId, unreadCount)
+    },
     async fetchMessagesBySender(roomId: number, senderId: number, offset: number) {
         const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
         // 替换消息中的 rkey
@@ -2182,7 +2189,7 @@ const adapter: OicqAdapter = {
     },
     async clearRoomUnread(roomId: number) {
         ui.clearRoomUnread(roomId)
-        await storage.updateRoom(roomId, { unreadCount: 0, at: false })
+        await storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
         await updateTrayIcon()
     },
     async markRoomUnread(roomId: number) {
@@ -2190,8 +2197,9 @@ const adapter: OicqAdapter = {
         if (!room) return
         room.unreadCount = Math.max(room.unreadCount || 0, 1)
         room.at = false
+        room.atMessageId = null
         ui.updateRoom(room)
-        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false })
+        await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
         await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {

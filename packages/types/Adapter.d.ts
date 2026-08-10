@@ -70,6 +70,8 @@ export default interface Adapter {
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
+    resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null>
+
     fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]>
 
     /** Use roomId 0 to search all conversations. Pass senderId to restrict results to one sender. */

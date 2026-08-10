@@ -164,6 +164,8 @@
                         :pending-messages-count="deferredIncomingMessages.length"
                         @clear-last-unread-count="clearLastUnreadCount"
                         @clear-last-unread-at="clearLastUnreadAt"
+                        @locate-message="locateMessage"
+                        @locate-unread-message="locateUnreadMessage"
                         @send-message="sendMessage"
                         @open-file="openImage"
                         @pokefriend="pokeFriend"
@@ -393,6 +395,8 @@ import {
 import fs from 'fs'
 import * as themes from '../utils/themes'
 
+const NEARBY_MESSAGE_LOAD_LIMIT = 100
+
 export default {
     components: {
         DialogAskCheckUpdate,
@@ -453,6 +457,7 @@ export default {
             unreadDividerCount: 0,
             lastUnreadCheck: 0,
             lastUnreadAt: false,
+            lastUnreadAtMessageId: null,
             lastUnreadCheck2: 0,
             selectedChatGroup: 'chats',
             chatGroups: [],
@@ -908,6 +913,7 @@ export default {
             if (room) {
                 room.unreadCount = 0
                 room.at = false
+                room.atMessageId = null
                 this._recomputeChatGroupsUnreadCount()
             }
         })
@@ -1126,7 +1132,10 @@ Chromium ${process.versions.chrome}`
             const memberChangeText = ['加入了本群', '离开了本群', '踢了']
             for (const message of newMessages) {
                 if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
-                if (message.at && message.senderId != this.account) this.lastUnreadAt = true
+                if (message.at && message.senderId != this.account) {
+                    this.lastUnreadAt = true
+                    this.lastUnreadAtMessageId = String(message._id)
+                }
                 if (
                     message.system &&
                     memberChangeText.some(
@@ -1180,10 +1189,68 @@ Chromium ${process.versions.chrome}`
             this.lastUnreadCount = 0
         },
         async clearLastUnreadAt() {
+            const atMessageId = this.lastUnreadAtMessageId
             this.lastUnreadAt = false
-            await this.fetchMessage(false, this.lastUnreadCount, true)
+            this.lastUnreadAtMessageId = null
+            if (!atMessageId) {
+                this.$message.error('找不到未读的 @ 消息')
+                return
+            }
+            await this.$nextTick()
+            if (this.$refs.room?.scrollToMessage(atMessageId, false, true)) return
+            await this.locateMessage(atMessageId)
         },
-        async fetchMessage(reset, number, at = false) {
+        async locateMessage(messageId) {
+            const roomId = this.selectedRoom.roomId
+            const generation = ++this.messageLoadGeneration
+            this.loading = true
+            try {
+                await this.fetchMessage(false, NEARBY_MESSAGE_LOAD_LIMIT)
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
+                await this.$nextTick()
+                if (this.$refs.room?.scrollToMessage(messageId, false, true)) return
+            } finally {
+                if (generation === this.messageLoadGeneration) this.loading = false
+            }
+
+            if (generation === this.messageLoadGeneration && roomId === this.selectedRoom.roomId) {
+                await this.gotoMessage(roomId, messageId)
+            }
+        },
+        async locateUnreadMessage(unreadCount, notFoundMessage = '找不到未读消息') {
+            const count = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+            if (!count) return
+            const roomId = this.selectedRoom.roomId
+            const generation = ++this.messageLoadGeneration
+
+            if (count <= NEARBY_MESSAGE_LOAD_LIMIT && !this.isInMiddle) {
+                const currentMessages = this.messages.filter((message) => !message.system)
+                const fetchNumber = Math.max(count - currentMessages.length, 0)
+                if (fetchNumber) await this.fetchMessage(false, fetchNumber)
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
+
+                const nonSystemMessages = this.messages.filter((message) => !message.system)
+                const target = nonSystemMessages[nonSystemMessages.length - count]
+                await this.$nextTick()
+                if (target && this.$refs.room?.scrollToMessage(target._id, false, true)) return
+                this.$message.error(notFoundMessage)
+                return
+            }
+
+            this.loading = true
+            try {
+                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, count)
+                if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
+                if (!targetMessageId) {
+                    this.$message.error(notFoundMessage)
+                    return
+                }
+                await this.gotoMessage(roomId, targetMessageId)
+            } finally {
+                if (generation === this.messageLoadGeneration) this.loading = false
+            }
+        },
+        async fetchMessage(reset, number) {
             let generation = this.messageLoadGeneration
             if (reset) {
                 generation = ++this.messageLoadGeneration
@@ -1225,21 +1292,6 @@ Chromium ${process.versions.chrome}`
             })
             if (newMsgs.length) this.prependMessages(newMsgs)
             if (!lastPage.length || lastPage.length < 20) this.messagesLoaded = true
-
-            if (at) {
-                const atMessages = this.messages.filter((message) => message.at)
-                if (atMessages.length) {
-                    this.lifecycleScope.timeout(() => {
-                        const _id = atMessages[atMessages.length - 1]._id
-                        if (!_id) {
-                            this.$message.error('Message not found')
-                            return
-                        }
-                        console.log('last unread at message ID', _id)
-                        this.lifecycleScope.timeout(() => this.$refs.room?.scrollToMessage(_id), 0)
-                    }, 0)
-                } else this.$message.error('Message not found')
-            }
 
             return msgs2add[msgs2add.length - 1]
         },
@@ -1331,9 +1383,11 @@ Chromium ${process.versions.chrome}`
             }
             this.lastUnreadCount = room.unreadCount
             this.lastUnreadAt = !!room.at
+            this.lastUnreadAtMessageId = room.atMessageId || null
             if (this.selectedRoom.roomId != 0) {
                 this.selectedRoom.at = false
-                ipc.updateRoom(this.selectedRoom.roomId, { at: false })
+                this.selectedRoom.atMessageId = null
+                ipc.updateRoom(this.selectedRoom.roomId, { at: false, atMessageId: null })
             }
             if (this.selectedRoom.roomId === room.roomId) return
             this.unreadDividerCount = Math.max(Number(room.unreadCount) || 0, 0)
@@ -1367,17 +1421,8 @@ Chromium ${process.versions.chrome}`
                 await this.chroom(room)
             }
 
-            // 先尝试在当前消息列表中查找
-            const existingIndex = this.getMessageIndex(messageId)
-            if (existingIndex !== -1) {
-                // 消息已存在，直接滚动并高亮
-                this.$nextTick(() => {
-                    if (this.$refs.room) {
-                        this.$refs.room.scrollToMessage(messageId)
-                    }
-                })
-                return
-            }
+            // 先尝试在当前消息列表中查找，Room 内部会兼容 random 等可变字段。
+            if (this.$refs.room?.scrollToMessage(messageId, false, true)) return
 
             // 消息不在当前列表中，需要加载指定消息前后的消息
             const generation = ++this.messageLoadGeneration
@@ -1390,22 +1435,19 @@ Chromium ${process.versions.chrome}`
                 if (msgs && msgs.length > 0) {
                     this.setMessageList(msgs)
                     this.consumeDeferredIncomingMessages(msgs)
+                    await this.$nextTick()
                     const targetIndex = this.getMessageIndex(messageId)
-                    if (targetIndex === -1) {
+                    const targetFound = this.$refs.room?.scrollToMessage(messageId, false, true)
+                    if (targetIndex === -1 && !targetFound) {
                         this.$message.error('找不到该消息')
                         this.isInMiddle = previousMiddleState
                         if (!this.isInMiddle) this.flushDeferredIncomingMessages()
                         return
                     }
-                    this.messagesLoaded = targetIndex < 20
+                    this.messagesLoaded = targetIndex !== -1 && targetIndex < 20
                     // Keep the window detached from the live tail until an explicit
                     // after-cursor request proves that no gap remains.
                     this.isInMiddle = true
-                    this.$nextTick(() => {
-                        if (this.$refs.room) {
-                            this.$refs.room.scrollToMessage(messageId)
-                        }
-                    })
                 } else {
                     this.$message.error('找不到该消息')
                     this.isInMiddle = previousMiddleState
@@ -1495,6 +1537,7 @@ Chromium ${process.versions.chrome}`
             this.lastUnreadCount = 0
             this.unreadDividerCount = 0
             this.lastUnreadAt = false
+            this.lastUnreadAtMessageId = null
             this.isInMiddle = false // 关闭房间时重置中间加载状态
             this.showPanel = 'contact'
             ipc.setSelectedRoom(0, '')
@@ -1922,6 +1965,7 @@ Chromium ${process.versions.chrome}`
                 this.lastUnreadCheck2 = this.lifecycleScope.timeout(() => {
                     console.log('Timeout')
                     this.lastUnreadAt = false
+                    this.lastUnreadAtMessageId = null
                 }, 30000)
             }
         },
