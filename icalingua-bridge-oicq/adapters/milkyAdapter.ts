@@ -1707,6 +1707,19 @@ const adapter: typeof oicqAdapter = {
         }
         callback(messages)
     },
+    async markMessageUnread(roomId: number, messageId: string, callback: (unreadCount: number) => void) {
+        try {
+            const room = await storage.getRoom(roomId)
+            if (!room) return callback(0)
+            const unreadCount = await storage.countUnreadMessagesFrom(roomId, messageId)
+            if (!unreadCount) return callback(0)
+            await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
+            callback(unreadCount)
+        } catch (error) {
+            console.error('Failed to mark message unread', error)
+            callback(0)
+        }
+    },
     async resolveUnreadTargetMessageId(
         roomId: number,
         unreadCount: number,

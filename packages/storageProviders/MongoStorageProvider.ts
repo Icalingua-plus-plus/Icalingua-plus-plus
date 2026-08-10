@@ -654,6 +654,30 @@ export default class MongoStorageProvider implements StorageProvider {
         return null
     }
 
+    async countUnreadMessagesFrom(roomId: number, messageId: string | number): Promise<number> {
+        const target = await this.getMessage(roomId, String(messageId))
+        if (!target) return 0
+
+        const targetTime = Number(target.time || 0)
+        const targetId = String(target._id)
+        const collection = this.mdb.collection<any>('msg' + roomId)
+        const [newerCount, sameTimeMessages] = await Promise.all([
+            collection.countDocuments({ system: { $ne: true }, time: { $gt: targetTime } }),
+            collection
+                .find(
+                    { system: { $ne: true }, time: targetTime },
+                    {
+                        projection: {
+                            _id: 1,
+                        },
+                    },
+                )
+                .toArray(),
+        ])
+        const sameTimeCount = sameTimeMessages.filter((message) => String(message._id) >= targetId).length
+        return Number(newerCount || 0) + sameTimeCount
+    }
+
     async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
         return this.resolveRecentMessageId(roomId, unreadCount, false)
     }

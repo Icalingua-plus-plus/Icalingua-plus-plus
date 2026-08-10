@@ -50,6 +50,7 @@ import {
     ignoreChat,
     makeForward,
     markRoomUnread,
+    markMessageUnread,
     pinRoom,
     removeChat,
     renewMessage,
@@ -2316,6 +2317,14 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                 },
             }),
         )
+        if (!history && !message.system) {
+            menu.append(
+                new MenuItem({
+                    label: '标记为未读',
+                    click: () => markMessageUnread(room.roomId, String(message._id)),
+                }),
+            )
+        }
         if (
             (message.senderId === getUin() || ((await isAdmin()) && message.role !== 'owner')) &&
             !history &&

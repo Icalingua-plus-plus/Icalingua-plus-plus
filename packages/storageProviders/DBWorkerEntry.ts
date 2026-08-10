@@ -53,6 +53,7 @@ const sqlMethods = new Set([
     'getMessage',
     'fetchMessagesAround',
     'resolveUnreadTargetMessageId',
+    'countUnreadMessagesFrom',
     'addMessages',
     'close',
 ])

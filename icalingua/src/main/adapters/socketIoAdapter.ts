@@ -685,6 +685,23 @@ const adapter: Adapter = {
         adapter.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
         updateTrayIcon()
     },
+    markMessageUnread(roomId: number, messageId: string) {
+        if (!socket) return
+        socket.emit('markMessageUnread', roomId, messageId, (unreadCount: number) => {
+            const count = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+            if (!count) return
+            const room = rooms.find((e) => e.roomId === roomId)
+            if (!room) return
+            room.unreadCount = count
+            room.at = false
+            room.atMessageId = null
+            ui.updateRoom(room)
+            queueLocalStorageWrite((storage) =>
+                storage.updateRoom(roomId, { unreadCount: count, at: false, atMessageId: null }),
+            )
+            updateTrayIcon()
+        })
+    },
     async createBot(form: LoginForm) {
         if (account) {
             //是登录远端

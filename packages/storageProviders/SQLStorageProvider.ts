@@ -938,6 +938,30 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    async countUnreadMessagesFrom(roomId: number, messageId: string | number): Promise<number> {
+        try {
+            const target = await this.getMessage(roomId, String(messageId))
+            if (!target) return 0
+
+            const targetTime = Number(target.time || 0)
+            const targetId = String(target._id)
+            const result = await this.db<MessageInSQLDB>('messages')
+                .where('roomId', roomId)
+                .where((builder) => builder.whereNull('system').orWhere('system', false))
+                .andWhere((builder) =>
+                    builder
+                        .where('time', '>', targetTime)
+                        .orWhere((sameTime) => sameTime.where('time', targetTime).andWhere('_id', '>=', targetId)),
+                )
+                .count({ count: '*' })
+                .first()
+            return Number(result?.count || 0)
+        } catch (e) {
+            this.errorHandle(e)
+            return 0
+        }
+    }
+
     async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
         try {
             const count = Math.max(0, Math.trunc(Number(unreadCount) || 0))

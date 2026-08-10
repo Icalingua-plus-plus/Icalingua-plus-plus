@@ -59,6 +59,7 @@ export const {
     clearCurrentRoomUnread,
     clearRoomUnread,
     markRoomUnread,
+    markMessageUnread,
     setRoomPriority,
     setRoomAutoDownload,
     setRoomAutoDownloadPath,

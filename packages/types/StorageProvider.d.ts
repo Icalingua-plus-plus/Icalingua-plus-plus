@@ -34,6 +34,9 @@ export default interface StorageProvider {
 
     resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null>
 
+    /** Count non-system messages from and including the specified message. */
+    countUnreadMessagesFrom(roomId: number, messageId: string | number): Promise<number>
+
     getMessage(roomId: number, messageId: string): Promise<Message>
 
     addMessages(roomId: number, messages: Message[]): Promise<any>

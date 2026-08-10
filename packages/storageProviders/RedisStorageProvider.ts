@@ -555,6 +555,22 @@ export default class RedisStorageProvider implements StorageProvider {
         return null
     }
 
+    async countUnreadMessagesFrom(roomId: number, messageId: string | number): Promise<number> {
+        const target = await this.getMessage(roomId, String(messageId))
+        if (!target) return 0
+
+        const targetTime = Number(target.time || 0)
+        const targetId = String(target._id)
+        const listKey = this.roomMessageListKey(roomId)
+        const [sameTimeIds, newerIds] = await Promise.all([
+            this.redis.zrangebyscore(listKey, targetTime, targetTime),
+            this.redis.zrangebyscore(listKey, `(${targetTime}`, '+inf'),
+        ])
+        const ids = [...sameTimeIds.filter((id) => String(id) >= targetId), ...newerIds]
+        const messages = await this.getMessages(roomId, ids)
+        return messages.filter((message) => !message.system).length
+    }
+
     async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
         return this.resolveRecentMessageId(roomId, unreadCount, false)
     }

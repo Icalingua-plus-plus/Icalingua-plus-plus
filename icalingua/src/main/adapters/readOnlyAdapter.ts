@@ -522,6 +522,19 @@ const adapter: Adapter = {
         await updateTrayIcon()
     },
 
+    async markMessageUnread(roomId: number, messageId: string): Promise<void> {
+        const room = await storage.getRoom(roomId)
+        if (!room) return
+        const unreadCount = await storage.countUnreadMessagesFrom(roomId, messageId)
+        if (!unreadCount) return
+        room.unreadCount = unreadCount
+        room.at = false
+        room.atMessageId = null
+        await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
+        ui.updateRoom(room)
+        await updateTrayIcon()
+    },
+
     setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): any {
         // 只读模式不允许修改
     },

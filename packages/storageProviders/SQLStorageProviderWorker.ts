@@ -149,6 +149,10 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         return (await this.call<Message[]>('fetchMessagesAround', [roomId, messageId, before, after])) || []
     }
 
+    async countUnreadMessagesFrom(roomId: number, messageId: string | number): Promise<number> {
+        return (await this.call<number>('countUnreadMessagesFrom', [roomId, messageId])) || 0
+    }
+
     async resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null> {
         return (await this.call<string | null>('resolveUnreadTargetMessageId', [roomId, unreadCount])) || null
     }

@@ -52,6 +52,9 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
         (roomId: number, unreadCount: number, resolve: (messageId: string | null) => void) =>
             adapter.resolveUnreadTargetMessageId(roomId, unreadCount, resolve),
     )
+    socket.on('markMessageUnread', (roomId: number, messageId: string, resolve: (unreadCount: number) => void) =>
+        adapter.markMessageUnread(roomId, messageId, resolve),
+    )
     socket.on(
         'fetchMessagesBySender',
         (
