@@ -31,6 +31,7 @@ import {
     showDeviceManagerWindow,
     showRequestWindow,
     showSetLockPasswordWindow,
+    tryToShowMainWindow,
 } from '../utils/windowManager'
 import {
     deleteMessage,
@@ -3310,8 +3311,8 @@ ipcMain.on('gotoMessage', async (_, roomId: number, messageId: string) => {
     const selectedRoom = await getSelectedRoom()
 
     if (selectedRoom && selectedRoom.roomId === roomId) {
-        // 当前房间已打开，直接在主窗口定位
-        ui.gotoMessage(roomId, messageId)
+        // 当前房间已打开，唤回主窗口后定位
+        tryToShowMainWindow(() => ui.gotoMessage(roomId, messageId))
     } else {
         // 打开新窗口并定位到消息
         const { openChatWindow } = await import('../utils/windowManager')
