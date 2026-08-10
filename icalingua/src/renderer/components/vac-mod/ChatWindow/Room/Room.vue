@@ -1771,7 +1771,8 @@ export default {
             }
             const message = document.getElementById(targetMessageId)
             if (message) {
-                message.scrollIntoView()
+                const scrollTarget = message.parentElement || message
+                scrollTarget.scrollIntoView()
                 message.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
                 this.lifecycleScope.timeout(() => {
                     message.parentElement.style = ''
@@ -1795,7 +1796,8 @@ export default {
                     this.$nextTick(() => {
                         const el = document.getElementById(this.messages[index]._id)
                         if (el) {
-                            el.scrollIntoView()
+                            const scrollTarget = el.parentElement || el
+                            scrollTarget.scrollIntoView()
                             el.parentElement.style = 'background: var(--chat-message-bg-color-reply)'
                             this.lifecycleScope.timeout(() => {
                                 el.parentElement.style = ''
