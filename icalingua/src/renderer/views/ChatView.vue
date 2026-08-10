@@ -136,6 +136,7 @@
                         :show-reaction-emojis="false"
                         :show-new-messages-divider="!isInMiddle"
                         :unread-divider-count="unreadDividerCount"
+                        :unread-divider-target-id="unreadDividerTargetId"
                         :load-first-room="false"
                         :accepted-files="'*'"
                         :message-actions="[]"
@@ -455,6 +456,8 @@ export default {
             forwardAnonymous: false,
             lastUnreadCount: 0,
             unreadDividerCount: 0,
+            unreadDividerTargetId: null,
+            unreadDividerSessionGeneration: 0,
             lastUnreadCheck: 0,
             lastUnreadAt: false,
             lastUnreadAtMessageId: null,
@@ -1189,6 +1192,23 @@ Chromium ${process.versions.chrome}`
         clearLastUnreadCount() {
             this.lastUnreadCount = 0
         },
+        async resolveUnreadDividerTarget(roomId, unreadCount, sessionGeneration = this.unreadDividerSessionGeneration) {
+            const count = Math.max(0, Math.trunc(Number(unreadCount) || 0))
+            if (!count) return null
+
+            try {
+                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, count)
+                if (sessionGeneration !== this.unreadDividerSessionGeneration || roomId !== this.selectedRoom.roomId)
+                    return null
+                if (targetMessageId === null || targetMessageId === undefined) return null
+
+                this.unreadDividerTargetId = messageIdKey(targetMessageId)
+                return this.unreadDividerTargetId
+            } catch (error) {
+                console.error('Failed to resolve unread divider target:', error)
+                return null
+            }
+        },
         async clearLastUnreadAt() {
             const atMessageId = this.lastUnreadAtMessageId
             this.lastUnreadAt = false
@@ -1224,6 +1244,11 @@ Chromium ${process.versions.chrome}`
             const roomId = this.selectedRoom.roomId
             const generation = ++this.messageLoadGeneration
 
+            if (this.unreadDividerTargetId !== null) {
+                await this.gotoMessage(roomId, this.unreadDividerTargetId)
+                return
+            }
+
             if (count <= NEARBY_MESSAGE_LOAD_LIMIT && !this.isInMiddle) {
                 const currentMessages = this.messages.filter((message) => !message.system)
                 const fetchNumber = Math.max(count - currentMessages.length, 0)
@@ -1232,6 +1257,7 @@ Chromium ${process.versions.chrome}`
 
                 const nonSystemMessages = this.messages.filter((message) => !message.system)
                 const target = nonSystemMessages[nonSystemMessages.length - count]
+                if (target) this.unreadDividerTargetId = messageIdKey(target._id)
                 await this.$nextTick()
                 if (target && this.$refs.room?.scrollToMessage(target._id, false, true)) return
                 this.$message.error(notFoundMessage)
@@ -1240,7 +1266,11 @@ Chromium ${process.versions.chrome}`
 
             this.loading = true
             try {
-                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, count)
+                const targetMessageId = await this.resolveUnreadDividerTarget(
+                    roomId,
+                    count,
+                    this.unreadDividerSessionGeneration,
+                )
                 if (generation !== this.messageLoadGeneration || roomId !== this.selectedRoom.roomId) return
                 if (!targetMessageId) {
                     this.$message.error(notFoundMessage)
@@ -1392,6 +1422,8 @@ Chromium ${process.versions.chrome}`
             }
             if (this.selectedRoom.roomId === room.roomId) return
             this.unreadDividerCount = Math.max(Number(room.unreadCount) || 0, 0)
+            this.unreadDividerSessionGeneration++
+            this.unreadDividerTargetId = null
             // 记录导航历史
             if (!this.isNavigating) {
                 this.navBackStack.push(this.selectedRoom.roomId)
@@ -1402,6 +1434,13 @@ Chromium ${process.versions.chrome}`
             this.isInMiddle = false // 切换房间时重置中间加载状态
             ipc.setSelectedRoom(room.roomId, room.roomName)
             this.fetchMessage(true)
+            if (this.unreadDividerCount > 0) {
+                this.resolveUnreadDividerTarget(
+                    room.roomId,
+                    this.unreadDividerCount,
+                    this.unreadDividerSessionGeneration,
+                )
+            }
 
             // 如果是群聊，更新群成员缓存
             if (room.roomId < 0) {
@@ -1537,6 +1576,8 @@ Chromium ${process.versions.chrome}`
             this.setMessageList([])
             this.lastUnreadCount = 0
             this.unreadDividerCount = 0
+            this.unreadDividerSessionGeneration++
+            this.unreadDividerTargetId = null
             this.lastUnreadAt = false
             this.lastUnreadAtMessageId = null
             this.isInMiddle = false // 关闭房间时重置中间加载状态

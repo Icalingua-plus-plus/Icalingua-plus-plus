@@ -121,7 +121,11 @@
                                 :edited-message="editedMessage"
                                 :room-users="room.users"
                                 :text-messages="textMessages"
-                                :show-new-messages-divider="showNewMessagesDivider && unreadDividerMessageId === m._id"
+                                :show-new-messages-divider="
+                                    (showNewMessagesDivider || unreadDividerTargetId !== null) &&
+                                    unreadDividerMessageId !== null &&
+                                    String(unreadDividerMessageId) === String(m._id)
+                                "
                                 :text-formatting="textFormatting"
                                 :showForwardPanel="showForwardPanel"
                                 :selected="selectedMessageIds.has(m._id)"
@@ -571,6 +575,7 @@ import faceNames from '../../../../../../static/faceNames'
 import getStaticPath from '../../../../../utils/getStaticPath'
 
 import ipc from '../../../../utils/ipc'
+import { messageIdKey } from '../../../../utils/messageOrder'
 import { createRendererLifecycleScope } from '../../../../utils/rendererLifecycleScope'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
@@ -622,6 +627,7 @@ export default {
         showReactionEmojis: { type: Boolean, required: true },
         showNewMessagesDivider: { type: Boolean, required: true },
         unreadDividerCount: { type: Number, default: 0 },
+        unreadDividerTargetId: { type: [String, Number], default: null },
         showFooter: { type: Boolean, required: true },
         showHeader: { type: Boolean, default: true },
         acceptedFiles: { type: String, required: true },
@@ -752,6 +758,12 @@ export default {
             return new Set(this.msgsToForward)
         },
         unreadDividerMessageId() {
+            if (this.unreadDividerTargetId !== null && this.unreadDividerTargetId !== undefined) {
+                const targetId = messageIdKey(this.unreadDividerTargetId)
+                const target = this.messages.find((message) => message && messageIdKey(message._id) === targetId)
+                return target ? target._id : null
+            }
+
             let remaining = this.unreadDividerCount
             if (remaining <= 0) return null
 

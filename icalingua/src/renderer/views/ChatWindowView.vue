@@ -17,6 +17,7 @@
                     :show-reaction-emojis="false"
                     :show-new-messages-divider="!isInMiddle"
                     :unread-divider-count="unreadDividerCount"
+                    :unread-divider-target-id="unreadDividerTargetId"
                     :load-first-room="true"
                     :accepted-files="'*'"
                     :message-actions="[]"
@@ -189,6 +190,7 @@ export default {
             deferredIncomingIds: new Set(),
             messageLoadGeneration: 0,
             unreadDividerCount: 0,
+            unreadDividerTargetId: null,
             messagesLoaded: false,
             dbUpgrade: { active: false, step: 0, total: 0, message: '' },
             loading: true,
@@ -261,6 +263,7 @@ export default {
         const roomInfo = await ipc.getRoomInfo(this.roomId)
         if (roomInfo) {
             this.unreadDividerCount = Math.max(Number(roomInfo.unreadCount) || 0, 0)
+            this.resolveUnreadDividerTarget()
             this.room = {
                 ...roomInfo,
                 users: roomInfo.users || [],
@@ -302,6 +305,21 @@ export default {
         this.lifecycleScope?.dispose()
     },
     methods: {
+        async resolveUnreadDividerTarget() {
+            if (this.unreadDividerCount <= 0) return null
+
+            const roomId = this.roomId
+            try {
+                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, this.unreadDividerCount)
+                if (roomId !== this.roomId || targetMessageId === null || targetMessageId === undefined) return null
+
+                this.unreadDividerTargetId = messageIdKey(targetMessageId)
+                return this.unreadDividerTargetId
+            } catch (error) {
+                console.error('Failed to resolve unread divider target:', error)
+                return null
+            }
+        },
         getMessageIndex(messageId) {
             const key = messageIdKey(messageId)
             return this.messages.findIndex((message) => messageIdKey(message._id) === key)
