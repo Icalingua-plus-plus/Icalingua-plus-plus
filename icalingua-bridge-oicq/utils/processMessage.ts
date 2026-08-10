@@ -1,7 +1,6 @@
 import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import Message from '@icalingua/types/Message'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
-import { base64decode } from 'nodejs-base64'
 import { AtElem, FileElem, FriendInfo, GroupMessageEventData, MemberBaseInfo } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import type oicqAdapter from '../adapters/oicqAdapter'
@@ -23,6 +22,13 @@ type SilkDecodeCompleter = {
     replaceMessage: (roomId: number, messageId: string | number, message: Message) => Promise<any>
     renewMessage: (roomId: number, messageId: string, message: Partial<Message>) => void
     getMessage?: (roomId: number, messageId: string) => Promise<Message | null>
+}
+
+const base64decode = (str: string): string => {
+    if (typeof str !== 'string') {
+        throw new Error('Input value must be a string.')
+    }
+    return Buffer.from(str, 'base64').toString('utf8')
 }
 
 let silkDecodeCompleter: SilkDecodeCompleter | null = null

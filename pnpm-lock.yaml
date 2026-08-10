@@ -40,9 +40,6 @@ importers:
       better-sqlite3:
         specifier: 13.0.3
         version: 13.0.3
-      bindings:
-        specifier: ^1.5.0
-        version: 1.5.0
       express:
         specifier: ^4.22.2
         version: 4.22.2
@@ -67,9 +64,6 @@ importers:
       mysql:
         specifier: ^2.18.1
         version: 2.18.1
-      nan:
-        specifier: ^2.28.0
-        version: 2.28.0
       node-fetch:
         specifier: 2.7.0
         version: 2.7.0
@@ -82,9 +76,6 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.22.0
-      pg-query-stream:
-        specifier: ^4.16.0
-        version: 4.16.0(pg@8.22.0)
       pinyin-match:
         specifier: ^1.2.10
         version: 1.2.10
@@ -119,9 +110,6 @@ importers:
       '@types/ioredis':
         specifier: ^4.28.10
         version: 4.28.10
-      '@types/lowdb':
-        specifier: ^1.0.15
-        version: 1.0.15
       '@types/md5':
         specifier: ^2.3.6
         version: 2.3.6
@@ -134,9 +122,6 @@ importers:
       '@types/pangu':
         specifier: ^4.0.2
         version: 4.0.2
-      '@types/uuid':
-        specifier: ^8.3.4
-        version: 8.3.4
       ajv:
         specifier: ^6.15.0
         version: 6.15.0
@@ -167,12 +152,6 @@ importers:
       electron-builder:
         specifier: ^26.15.3
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
-      electron-debug:
-        specifier: ^3.2.0
-        version: 3.2.0
-      electron-devtools-installer:
-        specifier: ^3.2.1
-        version: 3.2.1
       electron-dl:
         specifier: ^3.5.2
         version: 3.5.2
@@ -203,9 +182,6 @@ importers:
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
-      nodejs-base64:
-        specifier: ^2.0.0
-        version: 2.0.0
       prettier:
         specifier: ^3.9.1
         version: 3.9.1
@@ -233,9 +209,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      uuid:
-        specifier: ^8.3.2
-        version: 8.3.2
       v-click-outside:
         specifier: ^3.2.0
         version: 3.2.0
@@ -251,9 +224,6 @@ importers:
       vue-electron:
         specifier: ^1.0.6
         version: 1.0.6
-      vue-emoji-picker:
-        specifier: ^1.0.3
-        version: 1.0.3
       vue-infinite-loading:
         specifier: ^2.4.5
         version: 2.4.5(vue@2.7.16)
@@ -335,18 +305,12 @@ importers:
       mysql:
         specifier: ^2.18.1
         version: 2.18.1
-      nodejs-base64:
-        specifier: ^2.0.0
-        version: 2.0.0
       oicq-icalingua-plus-plus:
         specifier: ^1.26.17
         version: 1.26.17
       pg:
         specifier: ^8.22.0
         version: 8.22.0
-      pg-query-stream:
-        specifier: ^4.16.0
-        version: 4.16.0(pg@8.22.0)
       reconnecting-websocket:
         specifier: ^4.4.0
         version: 4.4.0
@@ -356,9 +320,6 @@ importers:
       socket.io:
         specifier: ^4.8.3
         version: 4.8.3
-      uuid:
-        specifier: ^8.3.2
-        version: 8.3.2
       winston:
         specifier: ^3.19.0
         version: 3.19.0
@@ -1473,12 +1434,6 @@ packages:
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
 
-  '@types/lodash@4.17.24':
-    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
-
-  '@types/lowdb@1.0.15':
-    resolution: {integrity: sha512-xaMNIveDCryK4UvnUJOc2BCOH0lPivdvWHrutsLryo9r9Id3RqZq2RDmT4eddiEPYzu7nJMw6nFIcVifcqjWqg==}
-
   '@types/md5@2.3.6':
     resolution: {integrity: sha512-WD69gNXtRBnpknfZcb4TRQ0XJQbUPZcai/Qdhmka3sxUR3Et8NrXoeAoknG/LghYHTf4ve795rInVYHBTQdNVA==}
 
@@ -1532,9 +1487,6 @@ packages:
 
   '@types/triple-beam@1.3.5':
     resolution: {integrity: sha512-6WaYesThRMCl19iryMYP7/x2OVgCtbIVflDGFpWnb9irXI3UjYE4AzmYuiUKY1AJstGijoY+MgUszMgRxIYTYw==}
-
-  '@types/uuid@8.3.4':
-    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
 
   '@types/webidl-conversions@7.0.3':
     resolution: {integrity: sha512-CiJJvcRtIgzadHCYXw7dqEnMNRjhGZlYK05Mj9OyktqV8uVT8fD2BFOB7S1uwBE3Kj2Z+4UyPmFw/Ixgw/LAlA==}
@@ -2449,24 +2401,9 @@ packages:
     engines: {node: '>=14.0.0'}
     hasBin: true
 
-  electron-debug@3.2.0:
-    resolution: {integrity: sha512-7xZh+LfUvJ52M9rn6N+tPuDw6oRAjxUj9SoxAZfJ0hVCXhZCsdkrSt7TgXOiWiEOBgEV8qwUIO/ScxllsPS7ow==}
-
-  electron-devtools-installer@3.2.1:
-    resolution: {integrity: sha512-FaCi+oDCOBTw0gJUsuw5dXW32b2Ekh5jO8lI1NRCQigo3azh2VogsIi0eelMVrP1+LkN/bewyH3Xoo1USjO0eQ==}
-
   electron-dl@3.5.2:
     resolution: {integrity: sha512-i104cl+u8yJ0lhpRAtUWfeGuWuL1PL6TBiw2gLf0MMIBjfgE485Ags2mcySx4uWU9P9uj/vsD3jd7X+w1lzZxw==}
     engines: {node: '>=12'}
-
-  electron-is-accelerator@0.1.2:
-    resolution: {integrity: sha512-fLGSAjXZtdn1sbtZxx52+krefmtNuVwnJCV2gNiVt735/ARUboMl8jnNC9fZEqQdlAv2ZrETfmBUsoQci5evJA==}
-
-  electron-is-dev@1.2.0:
-    resolution: {integrity: sha512-R1oD5gMBPS7PVU8gJwH6CtT0e6VSoD0+SzSnYpNm+dBkcijgA+K7VAMHDfnRq/lkKPZArpzplTW6jfiMYosdzw==}
-
-  electron-localshortcut@3.2.1:
-    resolution: {integrity: sha512-DWvhKv36GsdXKnaFFhEiK8kZZA+24/yFLgtTwJJHc7AFgDjNRIBJZ/jq62Y/dWv9E4ypYwrVWN2bVrCYw1uv7Q==}
 
   electron-publish@26.15.3:
     resolution: {integrity: sha512-g/2bn8YTavY4cuS5F+jOS7zmZbXXBV8KZ8yHKfJjFPoKtzBqrpCdNPxBd3tqdBwP7BVd0lGzf7Bk2s0KesWZ4Q==}
@@ -3002,9 +2939,6 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
 
-  immediate@3.0.6:
-    resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==}
-
   immutable@5.1.8:
     resolution: {integrity: sha512-TM5YqrGeTsVIPPpILzeqZ8D2Zc2TvNgSDi88zPF2a4cyqQdWV/wVWBDRDbNzzrLeRWScrFcOX9lW2iX6GOtUDw==}
 
@@ -3208,15 +3142,6 @@ packages:
   jsqr@1.4.0:
     resolution: {integrity: sha512-dxLob7q65Xg2DvstYkRpkYtmKm2sPJ9oFhrhmudT1dZvNFFTlroai3AWSpLey/w5vMcLBXRgOJsbXpdN9HzU/A==}
 
-  jszip@3.10.1:
-    resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
-
-  keyboardevent-from-electron-accelerator@2.0.0:
-    resolution: {integrity: sha512-iQcmNA0M4ETMNi0kG/q0h/43wZk7rMeKYrXP7sqKIJbHkTU8Koowgzv+ieR/vWJbOwxx5nDC3UnudZ0aLSu4VA==}
-
-  keyboardevents-areequal@0.2.2:
-    resolution: {integrity: sha512-Nv+Kr33T0mEjxR500q+I6IWisOQ0lK1GGOncV0kWE6n4KFmpcu7RUX5/2B0EUtX51Cb0HjZ9VJsSY3u4cBa0kw==}
-
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -3260,9 +3185,6 @@ packages:
 
   lazy-val@1.0.5:
     resolution: {integrity: sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q==}
-
-  lie@3.3.0:
-    resolution: {integrity: sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ==}
 
   lilconfig@3.1.3:
     resolution: {integrity: sha512-/vlFKAoH5Cgt3Ie+JLhRbwOsCQePABiU3tJ1egGvyQ+33R/vcwM2Zl2QR/LzjsBeItPt3oSVXapn+m4nQDvpzw==}
@@ -3560,9 +3482,6 @@ packages:
     resolution: {integrity: sha512-D9UOmYG3UH1V+ENW56t5QXBwJw1YEY18ruVeus89Rw+SyIgjPkCO84bRzO3uNIYosJbNwiabWVn48o3uJLjxFQ==}
     engines: {node: '>=18'}
 
-  nodejs-base64@2.0.0:
-    resolution: {integrity: sha512-rf83teAz8f251P+HQW0nZyIhIIKrTs8wz11n5+Dp1b+/oWCYSeCfNfbUqda5B0DhspBVXwJ7SPk8aghv/TFsjQ==}
-
   nopt@9.0.0:
     resolution: {integrity: sha512-Zhq3a+yFKrYwSBluL4H9XP3m3y5uvQkB/09CwDruCiRmR/UJYnn9W4R48ry0uGC70aeTPKLynBtscP9efFFcPw==}
     engines: {node: ^20.17.0 || >=22.9.0}
@@ -3660,9 +3579,6 @@ packages:
     resolution: {integrity: sha512-hEt02O4hUct5wtwg4H4KcWgDdm+l1bOaEy/hWzd8xtXB9BqxTWBBhb+2ImAtH4Cv4rPjV76xN3Zumqk3k3AhhQ==}
     engines: {node: '>=16.17'}
 
-  pako@1.0.11:
-    resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
-
   pangu@4.0.7:
     resolution: {integrity: sha512-weZKJIwwy5gjt4STGVUH9bix3BGk7wZ2ahtIypwe3e/mllsrIZIvtfLx1dPX56GcpZFOCFKmeqI1qVuB9enRzA==}
     hasBin: true
@@ -3720,11 +3636,6 @@ packages:
   pg-connection-string@2.6.1:
     resolution: {integrity: sha512-w6ZzNu6oMmIzEAYVw+RLK0+nqHPt8K3ZnknKi+g48Ak2pr3dtljJW3o+D/n2zzCG07Zoe9VOX3aiKpj+BN0pjg==}
 
-  pg-cursor@2.21.0:
-    resolution: {integrity: sha512-IYvk/j+Suhtbo/C3uOf4JLsLK/gWxOTUOmYbDsbKnLaVJDq+KwhwK6ngpRfiCk8eDMS3AmGQABZCv0cREEzHQw==}
-    peerDependencies:
-      pg: ^8
-
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
@@ -3736,11 +3647,6 @@ packages:
 
   pg-protocol@1.15.0:
     resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
-
-  pg-query-stream@4.16.0:
-    resolution: {integrity: sha512-vyqxAG4YVax43BCSfqcKxHSbh8YQshhVR0CjLNdo7MIM2UOqI+XsIYk0bVZJ0aKjQfjJQcGiGo9xK3hz0JcFyg==}
-    peerDependencies:
-      pg: ^8
 
   pg-types@2.2.0:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
@@ -4625,9 +4531,6 @@ packages:
     resolution: {integrity: sha512-BMiNwJbuWmqCpAM1FqxCTD7lXF97AvfQC8Kr/DIeA6VtvhJaMDupZ82+inbjl5yVP44PcxOuCSxye1QMS0wZyg==}
     engines: {node: '>=8'}
 
-  unzip-crx-3@0.2.0:
-    resolution: {integrity: sha512-0+JiUq/z7faJ6oifVB5nSwt589v1KCduqIJupNVDoWSXZtWDmjDGO3RAEOvwJ07w90aoXoP4enKsR7ecMrJtWQ==}
-
   unzipper@0.12.5:
     resolution: {integrity: sha512-tXYOi9R57Uj/2Z25SOs5RRSzq886MBQj2gY8dPL+xl/kv6s6SvByoKfAtvfVeEuhntWDgjd2o9p2lb4TVPAz0A==}
 
@@ -4682,9 +4585,6 @@ packages:
 
   vue-electron@1.0.6:
     resolution: {integrity: sha512-Ml/vsYi9fMEDqtLxL+4N96oxubpmuZuqwPprqlPHq9+0uOly2dJN+eLuD4db2UU7MMLarzR279xBNjpvMCowAA==}
-
-  vue-emoji-picker@1.0.3:
-    resolution: {integrity: sha512-t1UyrvPHKgWzj8maqNvMIHfY4B2Hn+filKTiy4ik+xweF0gKMx1r9C0YDg1zgaYnB6PBjctHwr9vwkipb4lUaw==}
 
   vue-hot-reload-api@2.3.4:
     resolution: {integrity: sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==}
@@ -4933,9 +4833,6 @@ packages:
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
-
-  yaku@0.16.7:
-    resolution: {integrity: sha512-Syu3IB3rZvKvYk7yTiyl1bo/jiEFaaStrgv1V2TIJTqYPStSMQVO8EQjg/z+DRzLq/4LIIharNT3iH1hylEIRw==}
 
   yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
@@ -6543,12 +6440,6 @@ snapshots:
     dependencies:
       '@types/node': 22.20.0
 
-  '@types/lodash@4.17.24': {}
-
-  '@types/lowdb@1.0.15':
-    dependencies:
-      '@types/lodash': 4.17.24
-
   '@types/md5@2.3.6': {}
 
   '@types/mime@1.3.5': {}
@@ -6605,8 +6496,6 @@ snapshots:
       '@types/node': 22.20.0
 
   '@types/triple-beam@1.3.5': {}
-
-  '@types/uuid@8.3.4': {}
 
   '@types/webidl-conversions@7.0.3': {}
 
@@ -6997,6 +6886,7 @@ snapshots:
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
+    optional: true
 
   bluebird@3.7.2: {}
 
@@ -7493,38 +7383,11 @@ snapshots:
       - electron-builder-squirrel-windows
       - supports-color
 
-  electron-debug@3.2.0:
-    dependencies:
-      electron-is-dev: 1.2.0
-      electron-localshortcut: 3.2.1
-    transitivePeerDependencies:
-      - supports-color
-
-  electron-devtools-installer@3.2.1:
-    dependencies:
-      rimraf: 3.0.2
-      semver: 7.8.5
-      tslib: 2.8.1
-      unzip-crx-3: 0.2.0
-
   electron-dl@3.5.2:
     dependencies:
       ext-name: 5.0.0
       pupa: 2.1.1
       unused-filename: 2.1.0
-
-  electron-is-accelerator@0.1.2: {}
-
-  electron-is-dev@1.2.0: {}
-
-  electron-localshortcut@3.2.1:
-    dependencies:
-      debug: 4.4.3
-      electron-is-accelerator: 0.1.2
-      keyboardevent-from-electron-accelerator: 2.0.0
-      keyboardevents-areequal: 0.2.2
-    transitivePeerDependencies:
-      - supports-color
 
   electron-publish@26.15.3:
     dependencies:
@@ -7849,7 +7712,8 @@ snapshots:
       strtok3: 6.3.0
       token-types: 4.2.1
 
-  file-uri-to-path@1.0.0: {}
+  file-uri-to-path@1.0.0:
+    optional: true
 
   filelist@1.0.6:
     dependencies:
@@ -8180,8 +8044,6 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  immediate@3.0.6: {}
-
   immutable@5.1.8: {}
 
   indent-string@4.0.0: {}
@@ -8348,17 +8210,6 @@ snapshots:
 
   jsqr@1.4.0: {}
 
-  jszip@3.10.1:
-    dependencies:
-      lie: 3.3.0
-      pako: 1.0.11
-      readable-stream: 2.3.8
-      setimmediate: 1.0.5
-
-  keyboardevent-from-electron-accelerator@2.0.0: {}
-
-  keyboardevents-areequal@0.2.2: {}
-
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -8398,10 +8249,6 @@ snapshots:
       shell-quote: 1.9.0
 
   lazy-val@1.0.5: {}
-
-  lie@3.3.0:
-    dependencies:
-      immediate: 3.0.6
 
   lilconfig@3.1.3: {}
 
@@ -8652,7 +8499,8 @@ snapshots:
       safe-buffer: 5.1.2
       sqlstring: 2.3.1
 
-  nan@2.28.0: {}
+  nan@2.28.0:
+    optional: true
 
   nanoid@3.3.15: {}
 
@@ -8703,8 +8551,6 @@ snapshots:
   node-int64@0.4.0: {}
 
   node-releases@2.0.53: {}
-
-  nodejs-base64@2.0.0: {}
 
   nopt@9.0.0:
     dependencies:
@@ -8801,8 +8647,6 @@ snapshots:
       is-network-error: 1.3.2
       retry: 0.13.1
 
-  pako@1.0.11: {}
-
   pangu@4.0.7: {}
 
   parseurl@1.3.3: {}
@@ -8838,10 +8682,6 @@ snapshots:
 
   pg-connection-string@2.6.1: {}
 
-  pg-cursor@2.21.0(pg@8.22.0):
-    dependencies:
-      pg: 8.22.0
-
   pg-int8@1.0.1: {}
 
   pg-pool@3.14.0(pg@8.22.0):
@@ -8849,11 +8689,6 @@ snapshots:
       pg: 8.22.0
 
   pg-protocol@1.15.0: {}
-
-  pg-query-stream@4.16.0(pg@8.22.0):
-    dependencies:
-      pg: 8.22.0
-      pg-cursor: 2.21.0(pg@8.22.0)
 
   pg-types@2.2.0:
     dependencies:
@@ -9718,12 +9553,6 @@ snapshots:
       modify-filename: 1.1.0
       path-exists: 4.0.0
 
-  unzip-crx-3@0.2.0:
-    dependencies:
-      jszip: 3.10.1
-      mkdirp: 0.5.6
-      yaku: 0.16.7
-
   unzipper@0.12.5:
     dependencies:
       bluebird: 3.7.2
@@ -9769,8 +9598,6 @@ snapshots:
   vue-devtools@5.1.4: {}
 
   vue-electron@1.0.6: {}
-
-  vue-emoji-picker@1.0.3: {}
 
   vue-hot-reload-api@2.3.4: {}
 
@@ -10122,8 +9949,6 @@ snapshots:
   xtend@4.0.2: {}
 
   y18n@5.0.8: {}
-
-  yaku@0.16.7: {}
 
   yallist@2.1.2: {}
 

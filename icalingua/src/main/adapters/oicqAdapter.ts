@@ -18,7 +18,6 @@ import { app, dialog, Notification as ElectronNotification } from 'electron'
 import { Notification } from 'freedesktop-notifications'
 import fs from 'fs'
 import crypto from 'crypto'
-import { base64decode } from 'nodejs-base64'
 import {
     Client,
     createClient,

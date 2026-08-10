@@ -15,7 +15,6 @@ import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
 import fs from 'fs'
 import crypto from 'crypto'
-import { base64decode } from 'nodejs-base64'
 import {
     Client,
     createClient,
