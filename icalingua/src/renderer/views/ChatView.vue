@@ -1131,6 +1131,7 @@ Chromium ${process.versions.chrome}`
             let groupMembersChanged = false
             const memberChangeText = ['加入了本群', '离开了本群', '踢了']
             for (const message of newMessages) {
+                if (this.unreadDividerCount > 0 && !message.system) this.unreadDividerCount++
                 if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
                 if (message.at && message.senderId != this.account) {
                     this.lastUnreadAt = true

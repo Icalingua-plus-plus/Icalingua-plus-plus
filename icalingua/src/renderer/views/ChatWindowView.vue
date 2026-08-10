@@ -376,8 +376,10 @@ export default {
                         console.warn(`[WARN] Duplicated message ID ${message._id}`, message, this.messages[index])
                         return
                     }
+                    if (this.deferredIncomingIds.has(messageIdKey(message._id))) return
                     if (this.isInMiddle) this.deferIncomingMessage(message)
                     else this.mergeMessages([message])
+                    if (this.unreadDividerCount > 0 && !message.system) this.unreadDividerCount++
                 }
             })
 
