@@ -126,8 +126,14 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         return (await this.call<Message[]>('fetchMessagesBySender', [roomId, senderId, skip, limit])) || []
     }
 
-    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
-        return (await this.call<Message[]>('searchMessages', [roomId, keyword, skip, limit])) || []
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        skip: number,
+        limit: number,
+        senderId?: string,
+    ): Promise<Message[]> {
+        return (await this.call<Message[]>('searchMessages', [roomId, keyword, skip, limit, senderId])) || []
     }
 
     async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {

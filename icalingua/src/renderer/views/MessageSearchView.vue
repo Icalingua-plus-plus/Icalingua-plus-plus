@@ -6,7 +6,7 @@
         <div class="search-bar">
             <el-input
                 v-model="keyword"
-                :placeholder="isGlobalSearch ? '搜索全部会话中的消息' : '输入关键词搜索当前会话'"
+                :placeholder="searchPlaceholder"
                 prefix-icon="el-icon-search"
                 clearable
                 size="medium"
@@ -61,6 +61,8 @@ export default {
         return {
             roomId: 0,
             roomName: '',
+            senderId: null,
+            senderName: '',
             keyword: '',
             messages: [],
             loading: false,
@@ -73,16 +75,29 @@ export default {
         isGlobalSearch() {
             return this.roomId === 0
         },
+        hasSenderFilter() {
+            return this.senderId !== null
+        },
         searchTitle() {
+            if (this.hasSenderFilter) {
+                const scopeName = this.isGlobalSearch ? '全部会话' : this.roomName
+                return `${scopeName} - 搜索 ${this.senderName || this.senderId} 的消息`
+            }
             return this.isGlobalSearch ? '全局消息搜索' : `${this.roomName} - 搜索聊天记录`
+        },
+        searchPlaceholder() {
+            if (this.hasSenderFilter) return `输入关键词搜索 ${this.senderName || this.senderId} 的消息`
+            return this.isGlobalSearch ? '搜索全部会话中的消息' : '输入关键词搜索当前会话'
         },
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
         document.title = '搜索聊天记录'
-        this.lifecycleScope.onIpc('initMessageSearch', (event, { roomId, roomName }) => {
+        this.lifecycleScope.onIpc('initMessageSearch', (event, { roomId, roomName, senderId, senderName }) => {
             this.roomId = roomId
             this.roomName = roomName
+            this.senderId = senderId ?? null
+            this.senderName = senderName || ''
             document.title = this.searchTitle
         })
     },
@@ -106,7 +121,12 @@ export default {
             if (!keyword) return
             this.loading = true
             try {
-                const msgs = await ipc.searchMessages(this.roomId, keyword, this.messages.length)
+                const msgs = await ipc.searchMessages(
+                    this.roomId,
+                    keyword,
+                    this.messages.length,
+                    this.hasSenderFilter ? this.senderId : undefined,
+                )
                 if (msgs && msgs.length) {
                     this.messages = [...this.messages, ...msgs]
                 }

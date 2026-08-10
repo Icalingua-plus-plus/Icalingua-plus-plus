@@ -1714,11 +1714,19 @@ const adapter: typeof oicqAdapter = {
         roomId: number,
         keyword: string,
         offset: number,
+        senderId: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        const messages =
+            (await storage.searchMessages(
+                roomId,
+                keyword,
+                offset,
+                20,
+                senderId === undefined ? undefined : String(senderId),
+            )) || []
         for (const message of messages) {
             processMessageRkey(message)
         }

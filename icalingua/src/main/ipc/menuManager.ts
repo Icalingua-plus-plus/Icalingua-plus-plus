@@ -176,7 +176,7 @@ const openMemberHistoryWindow = (senderId: number, roomId: number, senderName: s
     })
 }
 
-const openMessageSearchWindow = (roomId: number, roomName: string) => {
+const openMessageSearchWindow = (roomId: number, roomName: string, senderId?: number, senderName?: string) => {
     const size = screen.getPrimaryDisplay().size
     let width = size.width - 300
     if (width > 1440) width = 900
@@ -199,9 +199,45 @@ const openMessageSearchWindow = (roomId: number, roomName: string) => {
             shell.openExternal(details.url)
             return { action: 'deny' }
         })
-        win.webContents.send('initMessageSearch', { roomId, roomName })
+        win.webContents.send('initMessageSearch', { roomId, roomName, senderId, senderName })
     })
 }
+
+const openSenderMessageSearchWindow = async (senderId: number, senderName: string, roomId: number) => {
+    let roomName = '全部会话'
+    if (roomId !== 0) {
+        try {
+            const room = await getRoom(roomId)
+            roomName = room
+                ? roomId < 0 && getConfig().removeGroupNameEmotes
+                    ? removeGroupNameEmotes(room.roomName)
+                    : room.roomName
+                : `${roomId < 0 ? '群聊' : '私聊'} ${Math.abs(roomId)}`
+        } catch (e) {
+            roomName = `${roomId < 0 ? '群聊' : '私聊'} ${Math.abs(roomId)}`
+        }
+    }
+    openMessageSearchWindow(roomId, roomName, senderId, senderName)
+}
+
+const createSenderMessageSearchMenu = (senderId: number, senderName: string, roomId?: number) =>
+    new MenuItem({
+        label: '搜索 TA 的消息',
+        submenu: Menu.buildFromTemplate([
+            ...(roomId
+                ? [
+                      {
+                          label: '当前会话',
+                          click: () => openSenderMessageSearchWindow(senderId, senderName, roomId),
+                      },
+                  ]
+                : []),
+            {
+                label: '全部会话',
+                click: () => openSenderMessageSearchWindow(senderId, senderName, 0),
+            },
+        ]),
+    })
 
 {
     const initMenu = Menu.buildFromTemplate([
@@ -357,6 +393,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 openMessageSearchWindow(room.roomId, roomName)
             },
         },
+        ...(room.roomId > 0 ? [createSenderMessageSearchMenu(room.roomId, room.roomName, room.roomId)] : []),
         {
             label: `复制${avatarType} URL`,
             click: () => {
@@ -2805,6 +2842,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
             ]),
         }),
     )
+    menu.append(createSenderMessageSearchMenu(message.senderId, message.username, room.roomId))
     menu.append(
         new MenuItem({
             label: `屏蔽此人`,
@@ -2962,6 +3000,7 @@ ipcMain.on(
                         },
                     }),
                 )
+                menu.append(createSenderMessageSearchMenu(displayId, remark || name || String(displayId), displayId))
             }
         }
         menu.append(
@@ -3145,6 +3184,13 @@ ipcMain.on(
                         },
                     ]),
                 }),
+            )
+            menu.append(
+                createSenderMessageSearchMenu(
+                    displayId,
+                    remark || name || String(displayId),
+                    group ? -Number(group) : undefined,
+                ),
             )
         }
         menu.append(

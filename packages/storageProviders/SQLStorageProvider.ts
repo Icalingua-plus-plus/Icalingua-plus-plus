@@ -958,6 +958,7 @@ export default class SQLStorageProvider implements StorageProvider {
         keyword: string,
         skip: number,
         limit: number,
+        senderId?: string,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -973,6 +974,7 @@ export default class SQLStorageProvider implements StorageProvider {
 
             let query = this.db<MessageInSQLDB>('messages').whereIn('time', times)
             if (roomId !== 0) query = query.where('roomId', roomId)
+            if (senderId !== undefined) query = query.where('senderId', senderId)
             const escapedKeyword = escapeSearchLikePattern(normalized)
             query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", [`%${escapedKeyword}%`])
             const messages = await query.orderBy('time', 'desc').select('*')
@@ -1002,11 +1004,17 @@ export default class SQLStorageProvider implements StorageProvider {
      * @param skip 跳过条数
      * @param limit 返回条数
      */
-    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        skip: number,
+        limit: number,
+        senderId?: string,
+    ): Promise<Message[]> {
         try {
             const normalized = normalizeSearchText(keyword)
             if (normalized) {
-                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit)
+                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit, senderId)
                 if (indexed !== null) return indexed
             }
 
@@ -1016,6 +1024,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", [`%${escapedKeyword}%`])
             }
             if (roomId !== 0) query = query.where('roomId', roomId)
+            if (senderId !== undefined) query = query.where('senderId', senderId)
             const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
             return messages.map((message) => {
                 const messageRoomId = Number(message.roomId)

@@ -71,8 +71,8 @@ export default interface Adapter {
 
     fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]>
 
-    /** Use roomId 0 to search all conversations. */
-    searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]>
+    /** Use roomId 0 to search all conversations. Pass senderId to restrict results to one sender. */
+    searchMessages(roomId: number, keyword: string, offset: number, senderId?: number): Promise<Message[]>
 
     isMessageSearchIndexReady?(): boolean
 

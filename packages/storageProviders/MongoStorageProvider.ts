@@ -606,6 +606,7 @@ export default class MongoStorageProvider implements StorageProvider {
         keyword: string,
         skip: number,
         limit: number,
+        senderId?: string,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -627,6 +628,7 @@ export default class MongoStorageProvider implements StorageProvider {
                             .find({
                                 time: { $in: times },
                                 content: { $regex: escapedKeyword, $options: 'i' },
+                                ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
                             })
                             .toArray()
                             .then((values) =>
@@ -657,15 +659,24 @@ export default class MongoStorageProvider implements StorageProvider {
         }
     }
 
-    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        skip: number,
+        limit: number,
+        senderId?: string,
+    ): Promise<Message[]> {
         try {
             const normalized = normalizeSearchText(keyword)
             if (normalized) {
-                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit)
+                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit, senderId)
                 if (indexed !== null) return indexed
             }
             const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            const query = { content: { $regex: escapedKeyword, $options: 'i' } }
+            const query = {
+                content: { $regex: escapedKeyword, $options: 'i' },
+                ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
+            }
             if (roomId !== 0) {
                 return await this.mdb
                     .collection<any>('msg' + roomId)

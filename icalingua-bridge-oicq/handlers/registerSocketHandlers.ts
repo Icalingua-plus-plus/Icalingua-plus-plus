@@ -61,8 +61,13 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             roomId: number,
             keyword: string,
             offset: number,
-            resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.searchMessages(roomId, keyword, offset, socket, resolve),
+            senderIdOrResolve: number | undefined | ((value: Message[] | PromiseLike<Message[]>) => void),
+            resolve?: (value: Message[] | PromiseLike<Message[]>) => void,
+        ) => {
+            const senderId = typeof senderIdOrResolve === 'number' ? senderIdOrResolve : undefined
+            const callback = typeof senderIdOrResolve === 'function' ? senderIdOrResolve : resolve
+            if (callback) adapter.searchMessages(roomId, keyword, offset, senderId, socket, callback)
+        },
     )
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)
     socket.on('getForwardMsg', adapter.getForwardMsg)

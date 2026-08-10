@@ -518,6 +518,7 @@ export default class RedisStorageProvider implements StorageProvider {
         keyword: string,
         skip: number,
         limit: number,
+        senderId?: string,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -540,7 +541,11 @@ export default class RedisStorageProvider implements StorageProvider {
                     )
                 )
                     .flat()
-                    .filter((message) => messageMatchesKeyword(message, normalized))
+                    .filter(
+                        (message) =>
+                            messageMatchesKeyword(message, normalized) &&
+                            (senderId === undefined || message.senderId === Number(senderId)),
+                    )
                 messages.sort((left, right) => {
                     const timeDifference = Number(right.time || 0) - Number(left.time || 0)
                     if (timeDifference) return timeDifference
@@ -564,10 +569,16 @@ export default class RedisStorageProvider implements StorageProvider {
         }
     }
 
-    async searchMessages(roomId: number, keyword: string, skip: number, limit: number): Promise<Message[]> {
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        skip: number,
+        limit: number,
+        senderId?: string,
+    ): Promise<Message[]> {
         const lowerKeyword = normalizeSearchText(keyword)
         if (lowerKeyword) {
-            const indexed = await this.searchMessagesFromSearchIndex(roomId, lowerKeyword, skip, limit)
+            const indexed = await this.searchMessagesFromSearchIndex(roomId, lowerKeyword, skip, limit, senderId)
             if (indexed !== null) return indexed
         }
 
@@ -576,6 +587,7 @@ export default class RedisStorageProvider implements StorageProvider {
             const messages = await this.getMessages(targetRoomId, allMsgKeys)
             return messages.filter((message) => {
                 if (!messageMatchesKeyword(message, lowerKeyword)) return false
+                if (senderId !== undefined && message.senderId !== Number(senderId)) return false
                 if (includeRoomId) message.roomId = targetRoomId
                 return true
             })

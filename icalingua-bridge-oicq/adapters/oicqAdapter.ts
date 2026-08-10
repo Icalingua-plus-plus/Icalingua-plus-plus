@@ -1794,10 +1794,18 @@ const adapter = {
         roomId: number,
         keyword: string,
         offset: number,
+        senderId: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.searchMessages(roomId, keyword, offset, 20)) || []
+        const messages =
+            (await storage.searchMessages(
+                roomId,
+                keyword,
+                offset,
+                20,
+                senderId === undefined ? undefined : String(senderId),
+            )) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)

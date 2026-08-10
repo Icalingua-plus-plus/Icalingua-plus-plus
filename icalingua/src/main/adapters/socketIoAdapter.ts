@@ -794,12 +794,14 @@ const adapter: Adapter = {
             })
         })
     },
-    searchMessages(roomId: number, keyword: string, offset: number): Promise<Message[]> {
+    searchMessages(roomId: number, keyword: string, offset: number, senderId?: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('searchMessages', roomId, keyword, offset, (messages: Message[]) => {
+            const handleMessages = (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
-            })
+            }
+            if (senderId === undefined) socket.emit('searchMessages', roomId, keyword, offset, handleMessages)
+            else socket.emit('searchMessages', roomId, keyword, offset, senderId, handleMessages)
         })
     },
     getFirstUnreadRoom(): Promise<Room> {

@@ -233,8 +233,11 @@ ipcMain.handle(
 )
 ipcMain.handle(
     'searchMessages',
-    async (_, { roomId, keyword, offset }: { roomId: number; keyword: string; offset: number }) => {
-        const messages = await adapter.searchMessages(roomId, keyword, offset)
+    async (
+        _,
+        { roomId, keyword, offset, senderId }: { roomId: number; keyword: string; offset: number; senderId?: number },
+    ) => {
+        const messages = await adapter.searchMessages(roomId, keyword, offset, senderId)
         if (roomId === 0) {
             const roomIds = Array.from(
                 new Set(
