@@ -1525,6 +1525,16 @@ export const updateAppMenu = async () => {
                         },
                     },
                     {
+                        label: '未读统计 @全体',
+                        type: 'checkbox',
+                        checked: getConfig().countAtAllInChatGroups,
+                        click: (menuItem) => {
+                            getConfig().countAtAllInChatGroups = menuItem.checked
+                            saveConfigFile()
+                            ui.setCountAtAllInChatGroups(menuItem.checked)
+                        },
+                    },
+                    {
                         label: '启用高亮 URL 功能',
                         type: 'checkbox',
                         checked: getConfig().linkify,

@@ -385,6 +385,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import groupMemberCache from '../utils/groupMemberCache'
 import { processFiles } from '../utils/processFiles'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
+import { shouldCountChatGroupUnread } from '../utils/chatGroupUnread'
 import { createRoomUpdateBatch, mergeRoomUpdatesByUtime } from '../utils/roomUpdateBatch'
 import {
     compareMessageOrder,
@@ -469,6 +470,7 @@ export default {
             uploadProgress: '0',
             chatGroupsUnreadCount: {},
             disableChatGroupsRedPoint: false,
+            countAtAllInChatGroups: true,
             useSinglePanel: false,
             showSinglePanel: false,
             removeGroupNameEmotes: false,
@@ -519,6 +521,7 @@ export default {
         this.linkify = settings.linkify
         this.disableChatGroups = settings.disableChatGroups
         this.disableChatGroupsRedPoint = settings.disableChatGroupsRedPoint
+        this.countAtAllInChatGroups = settings.countAtAllInChatGroups
         this.roomPanelAvatarOnly = settings.roomPanelAvatarOnly
         this.roomPanelWidth = settings.roomPanelWidth
         this.useSinglePanel = settings.useSinglePanel
@@ -679,6 +682,10 @@ export default {
             } else {
                 this.chatGroupsUnreadCount = {}
             }
+        })
+        this.lifecycleScope.onIpc('setCountAtAllInChatGroups', (_, enabled) => {
+            this.countAtAllInChatGroups = enabled
+            this._recomputeChatGroupsUnreadCount()
         })
         this.lifecycleScope.onIpc('openGroupMemberPanel', (_, p) => {
             this.groupmemberShown = p.shown
@@ -1889,7 +1896,7 @@ Chromium ${process.versions.chrome}`
             const selectedId = this.selectedRoomId
             for (const e of this.rooms) {
                 if (selectedId && e.roomId === selectedId) continue
-                if (e.unreadCount > 0 && (e.priority >= this.priority || e.at)) {
+                if (shouldCountChatGroupUnread(e, this.priority, this.countAtAllInChatGroups)) {
                     unread['chats'] = (unread['chats'] || 0) + 1
                     if (e.roomId < 0) unread['group'] = (unread['group'] || 0) + 1
                     if (e.roomId > 0) unread['private'] = (unread['private'] || 0) + 1

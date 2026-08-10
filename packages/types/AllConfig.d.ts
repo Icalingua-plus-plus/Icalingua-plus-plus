@@ -37,6 +37,7 @@ type AllConfig = {
     disableChatGroups: boolean
     singleImageMode: boolean
     disableChatGroupsRedPoint: boolean
+    countAtAllInChatGroups: boolean
     localImageViewerByDefault: boolean
     disableQLottie: boolean
     disableNotification: boolean
