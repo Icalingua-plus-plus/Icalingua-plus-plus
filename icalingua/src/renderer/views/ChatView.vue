@@ -1441,13 +1441,6 @@ Chromium ${process.versions.chrome}`
                     this.unreadDividerSessionGeneration,
                 )
             }
-
-            // 如果是群聊，更新群成员缓存
-            if (room.roomId < 0) {
-                groupMemberCache.updateGroupCache(-room.roomId).catch((err) => {
-                    console.error('Failed to update group member cache:', err)
-                })
-            }
         },
         downloadImage: ipc.downloadImage,
         async gotoMessage(roomId, messageId) {

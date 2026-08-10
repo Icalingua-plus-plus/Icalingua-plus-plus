@@ -581,6 +581,7 @@ import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
 import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
 import Recorder from '../../utils/recorder'
+import groupMemberCache from '@/utils/groupMemberCache'
 
 const faceDir = path.join(getStaticPath(), 'face')
 const messageDraftStorageKey = 'icalingua:message-draft'
@@ -2446,7 +2447,7 @@ export default {
                     return
                 }
                 this.membersCount = group.member_count
-                const gms = await ipc.getGroupMembers(-roomId)
+                const gms = await groupMemberCache.getGroupMembers(-roomId, true)
                 const ownerMembers = []
                 const adminMembers = []
                 const normalMembers = []
