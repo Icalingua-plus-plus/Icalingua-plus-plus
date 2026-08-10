@@ -682,8 +682,11 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         menu.append(
             new MenuItem({
                 label: '全员禁言',
-                visible: (await isAdmin(room.roomId)) !== false,
                 async click() {
+                    if ((await isAdmin(room.roomId)) === false) {
+                        ui.messageError('您不是本群管理员，无法操作')
+                        return
+                    }
                     const win = newIcalinguaWindow({
                         height: 210,
                         width: 600,
