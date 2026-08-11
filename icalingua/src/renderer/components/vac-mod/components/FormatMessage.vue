@@ -55,7 +55,12 @@ import ForwardMessageCard from './ForwardMessageCard'
 
 const path = require('path')
 
-import { parseForwardCard, parseForwardResource, stripForwardPreview } from '../utils/forwardMessage'
+import {
+    createForwardOpenEvent,
+    parseForwardCard,
+    parseForwardResource,
+    stripForwardPreview,
+} from '../utils/forwardMessage'
 import { formatMessageParts, padFaceId } from '../utils/messageFormatting'
 
 export default {
@@ -101,9 +106,6 @@ export default {
         hasForwardCard() {
             return Boolean(this.code && this.code.trim())
         },
-        isForwardHistory() {
-            return this.$route && this.$route.name === 'history-page' && Boolean(this.forwardResId)
-        },
     },
 
     methods: {
@@ -120,16 +122,7 @@ export default {
             this.$emit('open-forward', this.createForwardEvent(message))
         },
         createForwardEvent(message) {
-            const { messages, resId, fileName } = this.forwardResource
-            const useNested = Boolean(this.forwardResId && (this.isForwardHistory || message.type === 'nestedforward'))
-            if (!useNested) return { resId: messages ?? resId ?? message.value }
-
-            const event = {
-                resId: this.forwardResId,
-                fileName: fileName || message.value,
-            }
-            if (resId) event.fallbackResId = resId
-            return event
+            return createForwardOpenEvent(message.type, message.value, this.forwardResource, this.forwardResId)
         },
         preZeroFill(num, size) {
             return padFaceId(num, size)

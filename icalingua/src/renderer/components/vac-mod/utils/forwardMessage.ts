@@ -12,6 +12,12 @@ export interface ForwardResource {
     fileName?: string
 }
 
+export interface ForwardOpenEvent {
+    resId: string | unknown[]
+    fileName?: string
+    fallbackResId?: string
+}
+
 export function parseForwardResource(code: string | undefined): ForwardResource {
     if (!code) return {}
 
@@ -31,6 +37,25 @@ export function parseForwardResource(code: string | undefined): ForwardResource 
         code.match(/\bm_resid\s*=\s*(['"])([\s\S]*?)\1/i)?.[2],
         code.match(/\bm_fileName\s*=\s*(['"])([\s\S]*?)\1/i)?.[2],
     )
+}
+
+export function createForwardOpenEvent(
+    messageType: string,
+    messageValue: string,
+    resource: ForwardResource,
+    parentResId?: string,
+): ForwardOpenEvent {
+    const { messages, resId, fileName } = resource
+    if (!parentResId || (!fileName && messageType !== 'nestedforward')) {
+        return { resId: messages ?? resId ?? messageValue }
+    }
+
+    const event: ForwardOpenEvent = {
+        resId: parentResId,
+        fileName: fileName || messageValue,
+    }
+    if (resId) event.fallbackResId = resId
+    return event
 }
 
 export function parseForwardCard(code: string | undefined): ForwardCardPreview {
