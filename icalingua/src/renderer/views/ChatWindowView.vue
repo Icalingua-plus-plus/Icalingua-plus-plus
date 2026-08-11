@@ -35,8 +35,8 @@
                     :linkify="linkify"
                     :account="account"
                     :username="username"
-                    :last-unread-count="0"
-                    :last-unread-at="false"
+                    :last-unread-count="lastUnreadCount"
+                    :last-unread-at="lastUnreadAt"
                     :showSinglePanel="false"
                     :removeHeaderEmotes="roomId < 0 && removeGroupNameEmotes"
                     :usePanguJsRecv="usePanguJsRecv"
@@ -56,6 +56,9 @@
                     @open-choose-file-type="openChooseFileType"
                     @fetch-messages="fetchMessage"
                     @locate-message="locateMessage"
+                    @locate-unread-message="locateUnreadMessage"
+                    @clear-last-unread-count="clearLastUnreadCount"
+                    @clear-last-unread-at="clearLastUnreadAt"
                     @fetch-messages-after="fetchMessageAfter"
                     @return-to-latest="returnToLatest"
                 >
@@ -189,6 +192,11 @@ export default {
             deferredIncomingMessages: [],
             deferredIncomingIds: new Set(),
             messageLoadGeneration: 0,
+            lastUnreadCount: 0,
+            lastUnreadCheck: 0,
+            lastUnreadAt: false,
+            lastUnreadAtMessageId: null,
+            lastUnreadCheck2: 0,
             unreadDividerCount: 0,
             unreadDividerTargetId: null,
             messagesLoaded: false,
@@ -235,6 +243,23 @@ export default {
                 }
             }
         },
+        lastUnreadCount(n) {
+            if (n !== 0) {
+                if (this.lastUnreadCheck) this.lifecycleScope.cancelTimeout(this.lastUnreadCheck)
+                this.lastUnreadCheck = this.lifecycleScope.timeout(() => {
+                    this.lastUnreadCount = 0
+                }, 30000)
+            }
+        },
+        lastUnreadAt(n) {
+            if (n) {
+                if (this.lastUnreadCheck2) this.lifecycleScope.cancelTimeout(this.lastUnreadCheck2)
+                this.lastUnreadCheck2 = this.lifecycleScope.timeout(() => {
+                    this.lastUnreadAt = false
+                    this.lastUnreadAtMessageId = null
+                }, 30000)
+            }
+        },
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
@@ -262,7 +287,11 @@ export default {
         // 获取房间信息
         const roomInfo = await ipc.getRoomInfo(this.roomId)
         if (roomInfo) {
-            this.unreadDividerCount = Math.max(Number(roomInfo.unreadCount) || 0, 0)
+            const unreadCount = Math.max(Number(roomInfo.unreadCount) || 0, 0)
+            this.lastUnreadCount = unreadCount
+            this.lastUnreadAt = !!roomInfo.at
+            this.lastUnreadAtMessageId = roomInfo.atMessageId || null
+            this.unreadDividerCount = unreadCount
             this.resolveUnreadDividerTarget()
             this.room = {
                 ...roomInfo,
@@ -305,12 +334,13 @@ export default {
         this.lifecycleScope?.dispose()
     },
     methods: {
-        async resolveUnreadDividerTarget() {
-            if (this.unreadDividerCount <= 0) return null
+        async resolveUnreadDividerTarget(unreadCount = this.unreadDividerCount) {
+            unreadCount = Math.max(Number(unreadCount) || 0, 0)
+            if (unreadCount <= 0) return null
 
             const roomId = this.roomId
             try {
-                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, this.unreadDividerCount)
+                const targetMessageId = await ipc.resolveUnreadTargetMessageId(roomId, unreadCount)
                 if (roomId !== this.roomId || targetMessageId === null || targetMessageId === undefined) return null
 
                 this.unreadDividerTargetId = messageIdKey(targetMessageId)
@@ -318,6 +348,59 @@ export default {
             } catch (error) {
                 console.error('Failed to resolve unread divider target:', error)
                 return null
+            }
+        },
+        clearLastUnreadCount() {
+            this.lastUnreadCount = 0
+        },
+        async clearLastUnreadAt() {
+            const atMessageId = this.lastUnreadAtMessageId
+            this.lastUnreadAt = false
+            this.lastUnreadAtMessageId = null
+            if (!atMessageId) {
+                this.$message.error('找不到未读的 @ 消息')
+                return
+            }
+            await this.$nextTick()
+            if (this.$refs.room?.scrollToMessage(atMessageId, false, true)) return
+            await this.locateMessage(atMessageId)
+        },
+        async locateUnreadMessage(unreadCount, notFoundMessage = '找不到未读消息') {
+            const count = Math.max(Number(unreadCount) || 0, 0)
+            if (!count) return
+            const generation = ++this.messageLoadGeneration
+
+            if (this.unreadDividerTargetId !== null) {
+                await this.gotoMessage(this.unreadDividerTargetId)
+                return
+            }
+
+            if (count <= NEARBY_MESSAGE_LOAD_LIMIT && !this.isInMiddle) {
+                const currentMessages = this.messages.filter((message) => !message.system)
+                const fetchNumber = Math.max(count - currentMessages.length, 0)
+                if (fetchNumber) await this.fetchMessage(false, fetchNumber)
+                if (generation !== this.messageLoadGeneration) return
+
+                const nonSystemMessages = this.messages.filter((message) => !message.system)
+                const target = nonSystemMessages[nonSystemMessages.length - count]
+                if (target) this.unreadDividerTargetId = messageIdKey(target._id)
+                await this.$nextTick()
+                if (target && this.$refs.room?.scrollToMessage(target._id, false, true)) return
+                this.$message.error(notFoundMessage)
+                return
+            }
+
+            this.loading = true
+            try {
+                const targetMessageId = await this.resolveUnreadDividerTarget(count)
+                if (generation !== this.messageLoadGeneration) return
+                if (!targetMessageId) {
+                    this.$message.error(notFoundMessage)
+                    return
+                }
+                await this.gotoMessage(targetMessageId)
+            } finally {
+                if (generation === this.messageLoadGeneration) this.loading = false
             }
         },
         getMessageIndex(messageId) {
@@ -398,6 +481,11 @@ export default {
                     if (this.isInMiddle) this.deferIncomingMessage(message)
                     else this.mergeMessages([message])
                     if (this.unreadDividerCount > 0 && !message.system) this.unreadDividerCount++
+                    if (this.lastUnreadCount >= 10 && !message.system) this.lastUnreadCount++
+                    if (message.at && message.senderId != this.account) {
+                        this.lastUnreadAt = true
+                        this.lastUnreadAtMessageId = String(message._id)
+                    }
                 }
             })
 
@@ -471,7 +559,8 @@ export default {
 
             // 窗口聚焦时清除未读
             this.lifecycleScope.onIpc('clearUnread', () => {
-                ipc.clearChatWindowUnread(this.roomId)
+                // 初始化期间先保留 roomInfo 中的未读/@快照，created 结束时再统一清除。
+                if (this.ready) ipc.clearChatWindowUnread(this.roomId)
             })
 
             // 定位到指定消息
