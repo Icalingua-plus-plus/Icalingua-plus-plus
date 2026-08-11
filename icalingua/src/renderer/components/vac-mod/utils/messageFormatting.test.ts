@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { parseForwardCard, parseForwardPreview, parseForwardResource, stripForwardPreview } from './forwardMessage'
+import {
+    createForwardOpenEvent,
+    parseForwardCard,
+    parseForwardPreview,
+    parseForwardResource,
+    stripForwardPreview,
+} from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
 
 test('parses message tokens and preserves line breaks', () => {
@@ -132,5 +138,19 @@ test('handles forwarded-message resource IDs and JSON previews', () => {
     assert.equal(
         parseForwardPreview('<msg><title>First</title><title><![CDATA[Second]]></title></msg>'),
         'First\nSecond\n',
+    )
+})
+
+test('opens nested forwarded-message cards with their own resource ID', () => {
+    assert.deepEqual(createForwardOpenEvent('forward', 'inner-id', { resId: 'inner-id' }, 'outer-id'), {
+        resId: 'inner-id',
+    })
+    assert.deepEqual(
+        createForwardOpenEvent('forward', 'inner-id', { resId: 'fallback-id', fileName: 'nested-file' }, 'outer-id'),
+        {
+            resId: 'outer-id',
+            fileName: 'nested-file',
+            fallbackResId: 'fallback-id',
+        },
     )
 })
