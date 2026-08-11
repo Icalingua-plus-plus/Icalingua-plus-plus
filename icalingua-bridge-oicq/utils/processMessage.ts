@@ -341,11 +341,11 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         }
                         let user_id: number, time: number
                         const parsed = Buffer.from(m.data.id, 'base64')
-                        if (m.data.id.length > 24) {
+                        if (parsed.length === 21) {
                             // Group
                             user_id = parsed.readUInt32BE(4)
                             time = parsed.readUInt32BE(16)
-                        } else if (m.data.id.length > 20) {
+                        } else if (parsed.length === 17) {
                             // C2C
                             user_id = parsed.readUInt32BE(0)
                             time = parsed.readUInt32BE(12)

@@ -203,6 +203,7 @@ const processMessage = async (
                     type: 'image/jpeg',
                     url,
                     order: message.content.length,
+                    isFace: m.data.type === 'face',
                 }
                 message.files.push(message.file)
                 break
@@ -216,6 +217,7 @@ const processMessage = async (
                     type: 'image/webp',
                     url,
                     order: message.content.length,
+                    isFace: true,
                 }
                 message.files.push(message.file)
                 break
@@ -238,11 +240,11 @@ const processMessage = async (
             case 'reply':
                 let user_id: number, time: number
                 const parsed = Buffer.from(m.data.id, 'base64')
-                if (m.data.id.length > 24) {
+                if (parsed.length === 21) {
                     // Group
                     user_id = parsed.readUInt32BE(4)
                     time = parsed.readUInt32BE(16)
-                } else {
+                } else if (parsed.length === 17) {
                     // C2C
                     user_id = parsed.readUInt32BE(0)
                     time = parsed.readUInt32BE(12)
