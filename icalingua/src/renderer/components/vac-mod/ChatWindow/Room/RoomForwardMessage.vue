@@ -66,7 +66,6 @@ export default {
     },
 
     props: {
-        messages: { type: Array, required: true },
         msgsToForward: { type: Array, required: true },
         showForwardPanel: { type: Boolean, required: true },
         account: { type: Number, required: true },
@@ -84,7 +83,7 @@ export default {
                 const waitTime = Math.floor(index / 5) * 1000
                 setTimeout(
                     () => {
-                        ipc.deleteMessage(this.roomId, msg)
+                        ipc.deleteMessage(this.roomId, msg._id)
                     },
                     index * 200 + waitTime,
                 )
@@ -92,18 +91,16 @@ export default {
             this.stopForward(false)
         },
         async downloadImages() {
-            const msgsToForward = this.msgsToForward
+            const msgsToForward = this.msgsToForward.slice()
             this.stopForward(false)
             let count = 0
-            for (const msg of this.messages) {
-                if (msgsToForward.includes(msg._id)) {
-                    if (msg.files && msg.files.length > 0) {
-                        for (const file of msg.files) {
-                            if (String(file.type).startsWith('image')) {
-                                count++
-                                ipc.downloadImage(file.url)
-                                await new Promise((resolve) => setTimeout(resolve, 1000))
-                            }
+            for (const msg of msgsToForward) {
+                if (msg.files && msg.files.length > 0) {
+                    for (const file of msg.files) {
+                        if (String(file.type).startsWith('image')) {
+                            count++
+                            ipc.downloadImage(file.url)
+                            await new Promise((resolve) => setTimeout(resolve, 1000))
                         }
                     }
                 }
@@ -115,25 +112,19 @@ export default {
             }
         },
         async batchPlusOne() {
-            const msgsToForward = this.msgsToForward
+            const msgsToForward = this.msgsToForward.slice()
             this.stopForward(false)
             let count = 0
-            for (const msg of this.messages) {
-                if (msgsToForward.includes(msg._id)) {
-                    const type = msg.file?.type
-                    if (
-                        !msg.flash &&
-                        !msg.markdown &&
-                        (!type || type.startsWith('image/') || type.startsWith('audio/'))
-                    ) {
-                        const msgToSend = createPlusOneMessage(msg, {
-                            roomId: this.roomId,
-                        })
-                        ipc.sendMessage(msgToSend)
-                        count++
-                        if (count < msgsToForward.length) {
-                            await new Promise((resolve) => setTimeout(resolve, 500))
-                        }
+            for (const msg of msgsToForward) {
+                const type = msg.file?.type
+                if (!msg.flash && !msg.markdown && (!type || type.startsWith('image/') || type.startsWith('audio/'))) {
+                    const msgToSend = createPlusOneMessage(msg, {
+                        roomId: this.roomId,
+                    })
+                    ipc.sendMessage(msgToSend)
+                    count++
+                    if (count < msgsToForward.length) {
+                        await new Promise((resolve) => setTimeout(resolve, 500))
                     }
                 }
             }

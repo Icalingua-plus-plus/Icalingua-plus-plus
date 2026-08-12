@@ -128,7 +128,7 @@
                                 "
                                 :text-formatting="textFormatting"
                                 :showForwardPanel="showForwardPanel"
-                                :selected="selectedMessageIds.has(m._id)"
+                                :selected="selectedMessageIds.has(String(m._id))"
                                 :linkify="linkify"
                                 :forward-res-id="forwardResId"
                                 :usePanguJs="usePanguJsRecv"
@@ -250,7 +250,6 @@
                 </template>
             </room-message-reply>
             <RoomForwardMessage
-                :messages="messages"
                 :showForwardPanel="showForwardPanel"
                 :msgsToForward="msgsToForward"
                 v-on="$listeners"
@@ -583,7 +582,7 @@ import faceNames from '../../../../../../static/faceNames'
 import getStaticPath from '../../../../../utils/getStaticPath'
 
 import ipc from '../../../../utils/ipc'
-import { messageIdKey } from '../../../../utils/messageOrder'
+import { compareMessageOrder, messageIdKey } from '../../../../utils/messageOrder'
 import { createRendererLifecycleScope } from '../../../../utils/rendererLifecycleScope'
 import { detectMobile, iOSDevice } from '../../utils/mobileDetection'
 import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
@@ -764,7 +763,11 @@ export default {
             return Math.ceil(height / 60) * 5
         },
         selectedMessageIds() {
-            return new Set(this.msgsToForward)
+            const ids = new Set()
+            for (const message of this.msgsToForward || []) {
+                if (message) ids.add(messageIdKey(message._id))
+            }
+            return ids
         },
         unreadDividerMessageId() {
             if (this.unreadDividerTargetId !== null && this.unreadDividerTargetId !== undefined) {
@@ -1011,7 +1014,9 @@ export default {
         this.lifecycleScope.onIpc('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
         this.lifecycleScope.onIpc('startForward', (_, _id) => {
             if (this.showForwardPanel) return
-            this.msgsToForward = [_id]
+            const message = this.findMessageById(_id)
+            if (!message) return
+            this.msgsToForward = [message]
             this.showForwardPanel = true
         })
         this.lifecycleScope.onIpc('replyMessage', (_, message) => this.replyMessage(message))
@@ -1053,10 +1058,10 @@ export default {
             this.recordPath = 'file://' + (await ipc.getStorePath()) + '/records'
         }
         this.lifecycleScope.onIpc('forwardSingleMessage', (_, _id) => {
+            const message = this.findMessageById(_id)
+            if (!message) return
             this.showForwardPanel = true
-            if (!this.selectedMessageIds.has(_id)) {
-                this.msgsToForward = [...this.msgsToForward, _id]
-            }
+            this.addmsgToForward(message)
         })
     },
     beforeDestroy() {
@@ -1491,15 +1496,15 @@ export default {
                 return
             }
             const ForwardMessages = []
+            const forwardedMessageIds = new Set()
+            const sortedMessages = (this.msgsToForward || []).slice().sort(compareMessageOrder)
+            for (const message of sortedMessages) {
+                const key = messageIdKey(message._id)
+                if (forwardedMessageIds.has(key)) continue
+                forwardedMessageIds.add(key)
+                ForwardMessages.push(message)
+            }
             const dm = target > 0
-
-            this.messages.forEach((message) => {
-                this.msgsToForward.forEach((msgId) => {
-                    if (message._id === msgId) {
-                        ForwardMessages.push(message)
-                    }
-                })
-            })
             const messagesToSend = []
             ForwardMessages.forEach((msg) => {
                 const singleMessage = {
@@ -1699,14 +1704,25 @@ export default {
             this.msgsToForward = []
             console.log('closeForwardPanel')
         },
-        addmsgToForward(messageId) {
-            if (!this.selectedMessageIds.has(messageId)) {
-                this.msgsToForward = [...this.msgsToForward, messageId]
+        findMessageById(messageId) {
+            const key = messageIdKey(messageId)
+            return this.messages.find((message) => message && messageIdKey(message._id) === key)
+        },
+        addmsgToForward(message) {
+            const selectedMessage = message && typeof message === 'object' ? message : this.findMessageById(message)
+            if (!selectedMessage) return
+            const key = messageIdKey(selectedMessage._id)
+            if (!this.selectedMessageIds.has(key)) {
+                this.msgsToForward = [...this.msgsToForward, selectedMessage]
             }
             console.log('addmsgToForward')
         },
-        delmsgToForward(messageId) {
-            this.msgsToForward = this.msgsToForward.filter((e) => e !== messageId)
+        delmsgToForward(message) {
+            const messageId = message && typeof message === 'object' ? message._id : message
+            const key = messageIdKey(messageId)
+            this.msgsToForward = this.msgsToForward.filter(
+                (selectedMessage) => selectedMessage && messageIdKey(selectedMessage._id) !== key,
+            )
             if (this.msgsToForward.length === 0) {
                 this.closeForwardPanel()
             }
@@ -2522,17 +2538,28 @@ export default {
                 selectedIds.length === currentIds.length && selectedIds.every((id, index) => id === currentIds[index])
             if (selectionUnchanged) return
 
-            const oldMouseSelectIds = new Set(currentIds)
-            const nextForwardIds = (this.msgsToForward || []).filter((id) => !oldMouseSelectIds.has(id))
-            const nextForwardIdSet = new Set(nextForwardIds)
+            const oldMouseSelectIds = new Set(currentIds.map((id) => messageIdKey(id)))
+            const nextForwardIds = new Set()
+            const nextForwardMessages = []
+            for (const message of this.msgsToForward || []) {
+                if (!message) continue
+                const key = messageIdKey(message._id)
+                if (!oldMouseSelectIds.has(key) && !nextForwardIds.has(key)) {
+                    nextForwardIds.add(key)
+                    nextForwardMessages.push(message)
+                }
+            }
+            const messagesById = new Map(this.messages.map((message) => [messageIdKey(message._id), message]))
             for (const id of selectedIds) {
-                if (!nextForwardIdSet.has(id)) {
-                    nextForwardIds.push(id)
-                    nextForwardIdSet.add(id)
+                const key = messageIdKey(id)
+                const message = messagesById.get(key)
+                if (message && !nextForwardIds.has(key)) {
+                    nextForwardIds.add(key)
+                    nextForwardMessages.push(message)
                 }
             }
 
-            this.msgsToForward = nextForwardIds
+            this.msgsToForward = nextForwardMessages
             this.mouseSelectIds = selectedIds
         },
         scheduleMouseSelectUpdate() {

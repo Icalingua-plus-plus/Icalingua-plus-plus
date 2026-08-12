@@ -512,7 +512,7 @@ export default {
             if (!this.showForwardPanel) return
             const nextSelected = !this.selected
             console.log('selectMessage', nextSelected)
-            this.$emit(nextSelected ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message._id)
+            this.$emit(nextSelected ? 'add-msg-to-forward' : 'del-msg-to-forward', this.message)
             event.preventDefault()
         },
         onHoverMessage() {
