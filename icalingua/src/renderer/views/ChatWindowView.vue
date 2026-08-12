@@ -85,44 +85,40 @@
             </div>
             <template v-if="stickerPanelBottom">
                 <div class="sticker-bottom-resizer" v-show="panel" @mousedown="startStickerHeightResize"></div>
-                <transition name="vac-fade-stickers">
+                <transition name="vac-stickers-panel-bottom">
                     <div
                         v-show="panel"
                         class="panel-bottom"
                         :style="{ height: stickerPanelHeight + 'px' }"
                         ref="stickerPanel"
                     >
-                        <transition name="vac-fade-stickers">
-                            <Stickers
-                                v-show="panel === 'stickers'"
-                                :open="panel === 'stickers'"
-                                :bottomMode="true"
-                                @send="sendSticker"
-                                @close="panel = ''"
-                                @selectEmoji="
-                                    $refs.room.useMessageContent($event.data)
-                                    $refs.room.focusTextarea()
-                                "
-                                @selectFace="
-                                    $refs.room.useMessageContent(`[Face: ${$event}]`)
-                                    $refs.room.focusTextarea()
-                                "
-                                @sendLottie="sendLottie"
-                            />
-                        </transition>
+                        <Stickers
+                            :open="panel === 'stickers'"
+                            :bottomMode="true"
+                            @send="sendSticker"
+                            @close="panel = ''"
+                            @selectEmoji="
+                                $refs.room.useMessageContent($event.data)
+                                $refs.room.focusTextarea()
+                            "
+                            @selectFace="
+                                $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                $refs.room.focusTextarea()
+                            "
+                            @sendLottie="sendLottie"
+                        />
                     </div>
                 </transition>
             </template>
-            <transition name="vac-fade-stickers" v-else>
-                <div
-                    :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                    v-show="panel"
-                    class="panel-right"
-                    ref="stickerPanel"
-                >
-                    <transition name="vac-fade-stickers">
+            <template v-else>
+                <transition name="vac-stickers-panel-side">
+                    <div
+                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                        v-show="panel"
+                        class="panel-right"
+                        ref="stickerPanel"
+                    >
                         <Stickers
-                            v-show="panel === 'stickers'"
                             :open="panel === 'stickers'"
                             @send="sendSticker"
                             @close="panel = ''"
@@ -136,9 +132,9 @@
                             "
                             @sendLottie="sendLottie"
                         />
-                    </transition>
-                </div>
-            </transition>
+                    </div>
+                </transition>
+            </template>
         </div>
         <el-dialog
             :title="tempFileName"
@@ -227,16 +223,20 @@ export default {
             // 底部模式下面板嵌入窗口内部，不再扩展窗口宽度
             if (this.stickerPanelBottom) return
             if (val && !oldVal) {
-                // 面板打开：等渲染完成后测量实际宽度再扩展窗口
+                // 面板打开：等渲染完成后读取内联宽度再扩展窗口，避免被 enter 状态的 0 宽度影响
                 this.$nextTick(() => {
+                    if (!this.panel || this.stickerPanelWidth > 0) return
                     const el = this.$refs.stickerPanel
                     if (el) {
-                        this.stickerPanelWidth = el.offsetWidth
-                        ipcRenderer.send('resizeChatWindow', this.stickerPanelWidth)
+                        const width = Number.parseFloat(el.style.width) || el.offsetWidth
+                        if (width > 0) {
+                            this.stickerPanelWidth = width
+                            ipcRenderer.send('resizeChatWindow', width)
+                        }
                     }
                 })
             } else if (!val && oldVal) {
-                // 面板关闭：缩回窗口
+                // 独立窗口右侧模式不使用动画，关闭时立即缩回窗口
                 if (this.stickerPanelWidth > 0) {
                     ipcRenderer.send('resizeChatWindow', -this.stickerPanelWidth)
                     this.stickerPanelWidth = 0
@@ -926,12 +926,14 @@ export default {
 .chat-window-root {
     height: 100vh;
     width: 100%;
+    overflow: hidden;
 }
 
 .chat-window-body {
     display: flex;
     height: 100vh;
     width: 100%;
+    overflow: hidden;
 }
 
 .chat-window-body-bottom {

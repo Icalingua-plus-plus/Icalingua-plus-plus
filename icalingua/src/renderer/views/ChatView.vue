@@ -230,47 +230,15 @@
                         v-show="panel && selectedRoomId"
                         @mousedown="startStickerHeightResize"
                     ></div>
-                    <transition name="vac-fade-stickers">
+                    <transition name="vac-stickers-panel-bottom">
                         <div
                             v-show="panel && selectedRoomId"
                             class="panel sticker-bottom-container"
                             :style="{ height: stickerPanelHeight + 'px' }"
                         >
-                            <transition name="vac-fade-stickers">
-                                <Stickers
-                                    v-show="panel === 'stickers'"
-                                    :open="panel === 'stickers'"
-                                    :bottomMode="true"
-                                    @send="sendSticker"
-                                    @close="panel = ''"
-                                    @selectEmoji="
-                                        $refs.room.useMessageContent($event.data)
-                                        $refs.room.focusTextarea()
-                                    "
-                                    @selectFace="
-                                        $refs.room.useMessageContent(`[Face: ${$event}]`)
-                                        $refs.room.focusTextarea()
-                                    "
-                                    @sendLottie="sendLottie"
-                                />
-                            </transition>
-                        </div>
-                    </transition>
-                </template>
-            </div>
-            <!-- 侧边模式（默认）：分隔条 + 右侧表情面板 -->
-            <template v-if="!stickerPanelBottom">
-                <MultipaneResizer class="resize-next" v-show="panel && selectedRoomId" />
-                <transition name="vac-fade-stickers">
-                    <div
-                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
-                        v-show="panel && selectedRoomId"
-                        class="panel panel-right"
-                    >
-                        <transition name="vac-fade-stickers">
                             <Stickers
-                                v-show="panel === 'stickers'"
                                 :open="panel === 'stickers'"
+                                :bottomMode="true"
                                 @send="sendSticker"
                                 @close="panel = ''"
                                 @selectEmoji="
@@ -283,7 +251,33 @@
                                 "
                                 @sendLottie="sendLottie"
                             />
-                        </transition>
+                        </div>
+                    </transition>
+                </template>
+            </div>
+            <!-- 侧边模式（默认）：分隔条 + 右侧表情面板 -->
+            <template v-if="!stickerPanelBottom">
+                <MultipaneResizer class="resize-next" v-show="panel && selectedRoomId" />
+                <transition name="vac-stickers-panel-side">
+                    <div
+                        :style="{ minWidth: '300px', width: '320px', maxWidth: '500px' }"
+                        v-show="panel && selectedRoomId"
+                        class="panel panel-right sticker-panel-popup"
+                    >
+                        <Stickers
+                            :open="panel === 'stickers'"
+                            @send="sendSticker"
+                            @close="panel = ''"
+                            @selectEmoji="
+                                $refs.room.useMessageContent($event.data)
+                                $refs.room.focusTextarea()
+                            "
+                            @selectFace="
+                                $refs.room.useMessageContent(`[Face: ${$event}]`)
+                                $refs.room.focusTextarea()
+                            "
+                            @sendLottie="sendLottie"
+                        />
                     </div>
                 </transition>
             </template>
@@ -2051,7 +2045,7 @@ Chromium ${process.versions.chrome}`
 .el-main {
     padding: 0;
     height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .el-aside {

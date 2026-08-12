@@ -13,17 +13,88 @@
 }
 
 // Stickers panel animation
-.vac-fade-stickers-enter {
-    opacity: 0;
+.vac-stickers-panel-side-enter-active,
+.vac-stickers-panel-side-leave-active,
+.vac-stickers-panel-bottom-enter-active,
+.vac-stickers-panel-bottom-leave-active {
+    overflow: hidden;
 }
 
-.vac-fade-stickers-enter-active {
-    transition: opacity 0.2s;
+.vac-stickers-panel-side-enter-active {
+    transition:
+        width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        min-width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        max-width 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.vac-fade-stickers-leave-active {
-    transition: opacity 0.2s;
-    opacity: 0;
+.vac-stickers-panel-side-leave-active {
+    transition:
+        width 0.2s cubic-bezier(0.4, 0, 1, 1),
+        min-width 0.2s cubic-bezier(0.4, 0, 1, 1),
+        max-width 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.vac-stickers-panel-side-enter,
+.vac-stickers-panel-side-leave-to {
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+}
+
+.vac-stickers-panel-bottom-enter-active {
+    transition:
+        height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        min-height 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.vac-stickers-panel-bottom-leave-active {
+    transition:
+        height 0.22s cubic-bezier(0.4, 0, 1, 1),
+        min-height 0.22s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.vac-stickers-panel-bottom-enter,
+.vac-stickers-panel-bottom-leave-to {
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vac-stickers-panel-side-enter-active,
+    .vac-stickers-panel-side-leave-active,
+    .vac-stickers-panel-bottom-enter-active,
+    .vac-stickers-panel-bottom-leave-active,
+    .sticker-panel-popup.vac-stickers-panel-side-enter-active,
+    .sticker-panel-popup.vac-stickers-panel-side-leave-active {
+        transition-duration: 0.01ms !important;
+    }
+}
+
+// Small-window sticker popup: keep the layout box fixed and animate the
+// composited panel itself so opening it cannot trigger scrollbars or reflow.
+@media screen and (max-width: 1200px) {
+    .sticker-panel-popup {
+        contain: paint;
+        overflow: hidden;
+    }
+
+    .sticker-panel-popup.vac-stickers-panel-side-enter-active,
+    .sticker-panel-popup.vac-stickers-panel-side-leave-active {
+        transform-origin: 100% 100%;
+        transition:
+            transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 0.16s ease;
+        will-change: transform, opacity;
+    }
+
+    .sticker-panel-popup.vac-stickers-panel-side-enter,
+    .sticker-panel-popup.vac-stickers-panel-side-leave-to {
+        width: 320px !important;
+        min-width: 300px !important;
+        max-width: 500px !important;
+        transform: scale(0.78);
+        opacity: 0;
+    }
 }
 
 // Image hover animation
