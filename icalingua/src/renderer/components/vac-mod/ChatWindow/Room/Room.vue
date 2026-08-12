@@ -1497,8 +1497,7 @@ export default {
             }
             const ForwardMessages = []
             const forwardedMessageIds = new Set()
-            const sortedMessages = (this.msgsToForward || []).slice().sort(compareMessageOrder)
-            for (const message of sortedMessages) {
+            for (const message of this.msgsToForward || []) {
                 const key = messageIdKey(message._id)
                 if (forwardedMessageIds.has(key)) continue
                 forwardedMessageIds.add(key)
@@ -1713,7 +1712,16 @@ export default {
             if (!selectedMessage) return
             const key = messageIdKey(selectedMessage._id)
             if (!this.selectedMessageIds.has(key)) {
-                this.msgsToForward = [...this.msgsToForward, selectedMessage]
+                const nextMessages = this.msgsToForward.slice()
+                let low = 0
+                let high = nextMessages.length
+                while (low < high) {
+                    const middle = (low + high) >>> 1
+                    if (compareMessageOrder(nextMessages[middle], selectedMessage) <= 0) low = middle + 1
+                    else high = middle
+                }
+                nextMessages.splice(low, 0, selectedMessage)
+                this.msgsToForward = nextMessages
             }
             console.log('addmsgToForward')
         },
@@ -2559,7 +2567,7 @@ export default {
                 }
             }
 
-            this.msgsToForward = nextForwardMessages
+            this.msgsToForward = nextForwardMessages.sort(compareMessageOrder)
             this.mouseSelectIds = selectedIds
         },
         scheduleMouseSelectUpdate() {
