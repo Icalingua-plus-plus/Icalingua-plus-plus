@@ -38,6 +38,7 @@ test('renders QQ TeX colors and bold text in display, inline, and quoted Markdow
 $$\\colorbox{#E8F5E9}{\\textcolor{#2E7D32}{\\textbf{ 🎣 已收竿 }}}$$
 抛竿14次 | $\\textcolor{#2E7D32}{\\textbf{✅钓获14条}}$ | 💨逃脱0条 | 💥断线0条
 灵力:0/999
+状态:$$\\colorbox{#F5F5F5}{\\textcolor{#424242}{\\textbf{⏸ 空闲}}}$$
 
 **📋 钓获清单（已结算入包）**
 > 🐟 $\\textcolor{#6A1B9A}{\\textbf{紫烟鳅}}$ ×3 最大 3.400万亿吨`
@@ -56,8 +57,19 @@ $$\\colorbox{#E8F5E9}{\\textcolor{#2E7D32}{\\textbf{ 🎣 已收竿 }}}$$
         html,
         /<blockquote><p>🐟 <span class="vac-markdown-math"><span class="vac-markdown-textcolor" style="color:#6A1B9A"><strong>紫烟鳅<\/strong><\/span><\/span>/,
     )
-    assert.doesNotMatch(html, /\$\$|\\(?:colorbox|textcolor|textbf)/)
+    assert.match(
+        html,
+        /状态:<span class="vac-markdown-math"><span class="vac-markdown-colorbox" style="background-color:#F5F5F5"><span class="vac-markdown-textcolor" style="color:#424242"><strong>⏸ 空闲<\/strong><\/span><\/span><\/span>/,
+    )
+    assert.doesNotMatch(html, /\$|\\(?:colorbox|textcolor|textbf)/)
     assert.doesNotMatch(html, /version|%7B/)
+})
+
+test('keeps unmatched double-dollar delimiters intact instead of splitting them', () => {
+    const html = renderMessageMarkdown('状态:$$未完成')
+
+    assert.match(html, /状态:\$\$未完成/)
+    assert.doesNotMatch(html, /vac-markdown-math/)
 })
 
 test('does not put unsafe TeX colors into inline styles', () => {

@@ -204,11 +204,18 @@ function renderInline(source: string, options: MessageMarkdownOptions): string {
     let index = 0
 
     while (index < source.length) {
-        const math =
-            source[index] === '$' && !source.startsWith('$$', index) ? readInlineLatexMath(source, index) : null
+        const math = source[index] === '$' ? readInlineLatexMath(source, index) : null
         if (math) {
             result.push(renderLatexMath(math.expression, false))
             index = math.end
+            continue
+        }
+
+        // Prefer the two-character delimiter as one token. An unmatched `$$` must not
+        // fall through and let its second `$` start a separate inline-math token.
+        if (source.startsWith('$$', index)) {
+            result.push('$$')
+            index += 2
             continue
         }
 
@@ -421,20 +428,30 @@ function readDisplayMathBlock(lines: string[], start: number): { expression: str
 }
 
 function readInlineLatexMath(source: string, start: number): LatexMath | null {
-    const end = findLatexDelimiter(source, start + 1, '$')
-    if (end <= start + 1) return null
+    const delimiter = source.startsWith('$$', start) ? '$$' : '$'
+    const contentStart = start + delimiter.length
+    const end = findLatexDelimiter(source, contentStart, delimiter)
+    if (end <= contentStart) return null
     return {
-        expression: source.slice(start + 1, end),
-        end: end + 1,
+        expression: source.slice(contentStart, end),
+        end: end + delimiter.length,
     }
 }
 
 function findLatexDelimiter(source: string, start: number, delimiter: string): number {
+    let state: 'content' | 'escaped' = 'content'
+
     for (let index = start; index <= source.length - delimiter.length; index++) {
-        if (source[index] === '\\') {
-            index++
+        if (state === 'escaped') {
+            state = 'content'
             continue
         }
+
+        if (source[index] === '\\') {
+            state = 'escaped'
+            continue
+        }
+
         if (source.startsWith(delimiter, index)) return index
     }
     return -1
