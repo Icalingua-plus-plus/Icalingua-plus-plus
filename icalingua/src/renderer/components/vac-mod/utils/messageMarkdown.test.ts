@@ -79,6 +79,14 @@ test('does not put unsafe TeX colors into inline styles', () => {
     assert.doesNotMatch(html, /javascript|style=/i)
 })
 
+test('renders grouped and declaration-style LaTeX tiny text', () => {
+    const html = renderMessageMarkdown('$\\tiny{小字}$ / $\\tiny 后续小字$')
+
+    assert.match(html, /<span class="vac-markdown-latex-tiny">小字<\/span>/)
+    assert.match(html, /<span class="vac-markdown-latex-tiny"> 后续小字<\/span>/)
+    assert.doesNotMatch(html, /\\tiny/)
+})
+
 test('renders every formatting type supported by QQ Markdown', () => {
     const html = renderMessageMarkdown(`# 一级标题
 ## 二级标题

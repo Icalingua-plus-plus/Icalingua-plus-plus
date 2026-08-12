@@ -143,6 +143,11 @@ export default {
         border-radius: 2px;
     }
 
+    .vac-markdown-latex-tiny {
+        font-size: 0.7em;
+        line-height: 1.2;
+    }
+
     .vac-markdown-underline {
         text-decoration: underline;
         text-underline-offset: 2px;

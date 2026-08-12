@@ -36,6 +36,7 @@ const LATEX_SIMPLE_FORMATS: Record<string, { close: string; open: string }> = {
     text: { open: '<span>', close: '</span>' },
     textbf: { open: '<strong>', close: '</strong>' },
     textit: { open: '<em>', close: '</em>' },
+    tiny: { open: '<span class="vac-markdown-latex-tiny">', close: '</span>' },
     underline: { open: '<span class="vac-markdown-underline">', close: '</span>' },
 }
 
@@ -320,6 +321,13 @@ function renderLatexExpression(source: string): string {
                     result.push(`${simpleFormat.open}${renderLatexExpression(group.content)}${simpleFormat.close}`)
                     index = group.end
                     continue
+                }
+
+                if (command.name === 'tiny') {
+                    result.push(
+                        `${simpleFormat.open}${renderLatexExpression(source.slice(command.end))}${simpleFormat.close}`,
+                    )
+                    break
                 }
             }
 
