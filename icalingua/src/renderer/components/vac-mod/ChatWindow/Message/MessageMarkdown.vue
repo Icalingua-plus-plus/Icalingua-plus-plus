@@ -126,6 +126,23 @@ export default {
         font-weight: 700;
     }
 
+    .vac-markdown-math {
+        white-space: pre-wrap;
+    }
+
+    .vac-markdown-math-display {
+        display: block;
+        width: fit-content;
+        max-width: 100%;
+        margin: 8px 0;
+    }
+
+    .vac-markdown-colorbox {
+        display: inline-block;
+        padding: 0.35em 0.85em;
+        border-radius: 2px;
+    }
+
     .vac-markdown-underline {
         text-decoration: underline;
         text-underline-offset: 2px;

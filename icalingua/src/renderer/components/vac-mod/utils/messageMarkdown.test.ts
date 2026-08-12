@@ -33,6 +33,40 @@ test('parses QQ inline commands and their reply flag', () => {
     assert.equal(parseMessageMarkdownInlineCommand('https://example.com/inlinecmd?command=%2Ftest'), null)
 })
 
+test('renders QQ TeX colors and bold text in display, inline, and quoted Markdown', () => {
+    const source = `[](%7B%22version%22%3A2%7D)
+$$\\colorbox{#E8F5E9}{\\textcolor{#2E7D32}{\\textbf{ 🎣 已收竿 }}}$$
+抛竿14次 | $\\textcolor{#2E7D32}{\\textbf{✅钓获14条}}$ | 💨逃脱0条 | 💥断线0条
+灵力:0/999
+
+**📋 钓获清单（已结算入包）**
+> 🐟 $\\textcolor{#6A1B9A}{\\textbf{紫烟鳅}}$ ×3 最大 3.400万亿吨`
+    const html = renderMessageMarkdown(source)
+
+    assert.match(html, /<div class="vac-markdown-math vac-markdown-math-display">/)
+    assert.match(
+        html,
+        /<span class="vac-markdown-colorbox" style="background-color:#E8F5E9"><span class="vac-markdown-textcolor" style="color:#2E7D32"><strong> 🎣 已收竿 <\/strong><\/span><\/span>/,
+    )
+    assert.match(
+        html,
+        /<span class="vac-markdown-textcolor" style="color:#2E7D32"><strong>✅钓获14条<\/strong><\/span>/,
+    )
+    assert.match(
+        html,
+        /<blockquote><p>🐟 <span class="vac-markdown-math"><span class="vac-markdown-textcolor" style="color:#6A1B9A"><strong>紫烟鳅<\/strong><\/span><\/span>/,
+    )
+    assert.doesNotMatch(html, /\$\$|\\(?:colorbox|textcolor|textbf)/)
+    assert.doesNotMatch(html, /version|%7B/)
+})
+
+test('does not put unsafe TeX colors into inline styles', () => {
+    const html = renderMessageMarkdown('$\\textcolor{javascript:alert(1)}{安全文本}$')
+
+    assert.match(html, /安全文本/)
+    assert.doesNotMatch(html, /javascript|style=/i)
+})
+
 test('renders every formatting type supported by QQ Markdown', () => {
     const html = renderMessageMarkdown(`# 一级标题
 ## 二级标题
