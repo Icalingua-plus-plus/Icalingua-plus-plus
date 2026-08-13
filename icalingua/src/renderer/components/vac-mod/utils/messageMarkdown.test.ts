@@ -45,23 +45,13 @@ $$\\colorbox{#E8F5E9}{\\textcolor{#2E7D32}{\\textbf{ 🎣 已收竿 }}}$$
     const html = renderMessageMarkdown(source)
 
     assert.match(html, /<div class="vac-markdown-math vac-markdown-math-display">/)
-    assert.match(
-        html,
-        /<span class="vac-markdown-colorbox" style="background-color:#E8F5E9"><span class="vac-markdown-textcolor" style="color:#2E7D32"><strong> 🎣 已收竿 <\/strong><\/span><\/span>/,
-    )
-    assert.match(
-        html,
-        /<span class="vac-markdown-textcolor" style="color:#2E7D32"><strong>✅钓获14条<\/strong><\/span>/,
-    )
-    assert.match(
-        html,
-        /<blockquote><p>🐟 <span class="vac-markdown-math"><span class="vac-markdown-textcolor" style="color:#6A1B9A"><strong>紫烟鳅<\/strong><\/span><\/span>/,
-    )
-    assert.match(
-        html,
-        /状态:<span class="vac-markdown-math"><span class="vac-markdown-colorbox" style="background-color:#F5F5F5"><span class="vac-markdown-textcolor" style="color:#424242"><strong>⏸ 空闲<\/strong><\/span><\/span><\/span>/,
-    )
-    assert.doesNotMatch(html, /\$|\\(?:colorbox|textcolor|textbf)/)
+    assert.match(html, /class="katex-display"/)
+    assert.match(html, /background-color:#E8F5E9/)
+    assert.match(html, /color:#2E7D32/)
+    assert.match(html, /background-color:#F5F5F5/)
+    assert.match(html, /color:#6A1B9A/)
+    assert.match(html, /<blockquote><p>🐟 <span class="vac-markdown-math">/)
+    assert.doesNotMatch(html, /katex-error/)
     assert.doesNotMatch(html, /version|%7B/)
 })
 
@@ -76,15 +66,46 @@ test('does not put unsafe TeX colors into inline styles', () => {
     const html = renderMessageMarkdown('$\\textcolor{javascript:alert(1)}{安全文本}$')
 
     assert.match(html, /安全文本/)
-    assert.doesNotMatch(html, /javascript|style=/i)
+    assert.doesNotMatch(html, /javascript/i)
+    assert.doesNotMatch(html, /katex-error/)
 })
 
 test('renders grouped and declaration-style LaTeX tiny text', () => {
     const html = renderMessageMarkdown('$\\tiny{小字}$ / $\\tiny 后续小字$')
 
-    assert.match(html, /<span class="vac-markdown-latex-tiny">小字<\/span>/)
-    assert.match(html, /<span class="vac-markdown-latex-tiny"> 后续小字<\/span>/)
-    assert.doesNotMatch(html, /\\tiny/)
+    assert.match(html, /class="[^\"]*katex-sizing[^\"]*size1[^\"]*"/)
+    assert.match(html, /小字/)
+    assert.match(html, /后续小字/)
+    assert.doesNotMatch(html, /katex-error/)
+})
+
+test('renders common LaTeX formulas, delimiters, operators, and aligned matrices', () => {
+    const html = renderMessageMarkdown(
+        [
+            '行内 $\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ 与 \\(\\alpha_1^2 + \\beta^2\\)',
+            '\\[',
+            '\\begin{aligned}',
+            'S_n &= \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2} \\\\',
+            'I &= \\int_0^1 x^2 \\, dx',
+            '\\end{aligned}',
+            '\\]',
+        ].join('\n'),
+    )
+
+    assert.match(html, /class="mfrac"/)
+    assert.match(html, /class="[^"]*sqrt[^"]*"/)
+    assert.match(html, /class="msupsub"/)
+    assert.match(html, /class="[^"]*op-symbol large-op[^"]*"/)
+    assert.match(html, /class="mtable"/)
+    assert.match(html, /class="katex-display"/)
+    assert.doesNotMatch(html, /katex-error/)
+})
+
+test('keeps untrusted LaTeX links disabled', () => {
+    const html = renderMessageMarkdown('$\\href{javascript:alert(1)}{危险链接}$')
+
+    assert.doesNotMatch(html, /<a\s/i)
+    assert.doesNotMatch(html, /href="javascript:/i)
 })
 
 test('renders every formatting type supported by QQ Markdown', () => {

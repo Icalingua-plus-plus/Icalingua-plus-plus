@@ -1,3 +1,5 @@
+import katex from 'katex'
+
 export interface MessageMarkdownOptions {
     hideImages?: boolean
 }
@@ -31,15 +33,6 @@ interface LatexMath {
 
 const LINK_PROTOCOLS = new Set(['http:', 'https:', 'mqqapi:', 'qqapi:', 'icalingua:'])
 const IMAGE_PROTOCOLS = new Set(['http:', 'https:'])
-const LATEX_SIMPLE_FORMATS: Record<string, { close: string; open: string }> = {
-    emph: { open: '<em>', close: '</em>' },
-    text: { open: '<span>', close: '</span>' },
-    textbf: { open: '<strong>', close: '</strong>' },
-    textit: { open: '<em>', close: '</em>' },
-    tiny: { open: '<span class="vac-markdown-latex-tiny">', close: '</span>' },
-    underline: { open: '<span class="vac-markdown-underline">', close: '</span>' },
-}
-
 export function renderMessageMarkdown(source: string, options: MessageMarkdownOptions = {}): string {
     const normalized = String(source || '')
         .replace(/\r\n?/g, '\n')
@@ -205,7 +198,12 @@ function renderInline(source: string, options: MessageMarkdownOptions): string {
     let index = 0
 
     while (index < source.length) {
-        const math = source[index] === '$' ? readInlineLatexMath(source, index) : null
+        const math =
+            source[index] === '$'
+                ? readInlineLatexMath(source, index)
+                : source.startsWith('\\(', index)
+                  ? readParenthesizedLatexMath(source, index)
+                  : null
         if (math) {
             result.push(renderLatexMath(math.expression, false))
             index = math.end
@@ -298,89 +296,53 @@ function matchFormatting(
 function renderLatexMath(expression: string, display: boolean): string {
     const className = display ? 'vac-markdown-math vac-markdown-math-display' : 'vac-markdown-math'
     const tag = display ? 'div' : 'span'
-    return `<${tag} class="${className}">${renderLatexExpression(expression)}</${tag}>`
+    try {
+        const rendered = katex.renderToString(sanitizeLatexColorCommands(expression), {
+            displayMode: display,
+            maxExpand: 1000,
+            maxSize: 20,
+            output: 'htmlAndMathml',
+            strict: 'ignore',
+            throwOnError: false,
+            trust: false,
+        })
+        return `<${tag} class="${className}">${rendered}</${tag}>`
+    } catch {
+        return `<${tag} class="${className} vac-markdown-math-error">${escapeHtml(expression)}</${tag}>`
+    }
 }
 
-function renderLatexExpression(source: string): string {
-    const result: string[] = []
+function sanitizeLatexColorCommands(source: string): string {
+    let result = ''
     let index = 0
 
     while (index < source.length) {
-        if (source[index] === '\\') {
-            const command = readLatexCommand(source, index)
-            if (!command) {
-                result.push('\\')
-                index++
-                continue
-            }
-
-            const simpleFormat = LATEX_SIMPLE_FORMATS[command.name]
-            if (simpleFormat) {
-                const group = readLatexGroup(source, command.end)
-                if (group) {
-                    result.push(`${simpleFormat.open}${renderLatexExpression(group.content)}${simpleFormat.close}`)
-                    index = group.end
-                    continue
-                }
-
-                if (command.name === 'tiny') {
-                    result.push(
-                        `${simpleFormat.open}${renderLatexExpression(source.slice(command.end))}${simpleFormat.close}`,
-                    )
-                    break
-                }
-            }
-
-            if (command.name === 'colorbox' || command.name === 'textcolor') {
-                const colorGroup = readLatexGroup(source, command.end)
-                const contentGroup = colorGroup && readLatexGroup(source, colorGroup.end)
-                if (colorGroup && contentGroup) {
-                    const content = renderLatexExpression(contentGroup.content)
-                    const color = sanitizeLatexColor(colorGroup.content.trim())
-                    if (color) {
-                        const property = command.name === 'colorbox' ? 'background-color' : 'color'
-                        const className =
-                            command.name === 'colorbox' ? 'vac-markdown-colorbox' : 'vac-markdown-textcolor'
-                        result.push(
-                            `<span class="${className}" style="${property}:${escapeAttribute(color)}">${content}</span>`,
-                        )
-                    } else {
-                        result.push(content)
-                    }
-                    index = contentGroup.end
-                    continue
-                }
-            }
-
-            if (command.name.length === 1 && command.name !== '\\') {
-                result.push(escapeHtml(command.name))
-            } else {
-                result.push(escapeHtml(`\\${command.name}`))
-            }
-            index = command.end
+        const command = source.slice(index).match(/^\\(colorbox|textcolor)\s*/)
+        if (!command) {
+            result += source[index]
+            index++
             continue
         }
 
-        if (source[index] === '\n') {
-            result.push('<br>')
-        } else {
-            result.push(escapeHtml(source[index]))
+        const colorGroup = readLatexGroup(source, index + command[0].length)
+        const contentGroup = colorGroup && readLatexGroup(source, colorGroup.end)
+        if (!colorGroup || !contentGroup) {
+            result += source[index]
+            index++
+            continue
         }
-        index++
+
+        const content = sanitizeLatexColorCommands(contentGroup.content)
+        const color = colorGroup.content.trim()
+        if (isSafeLatexColor(color)) {
+            result += `\\${command[1]}{${color}}{${content}}`
+        } else {
+            result += content
+        }
+        index = contentGroup.end
     }
 
-    return result.join('')
-}
-
-function readLatexCommand(source: string, start: number): { end: number; name: string } | null {
-    if (source[start] !== '\\' || start + 1 >= source.length) return null
-
-    const next = source[start + 1]
-    if (!/[A-Za-z]/.test(next)) return { name: next, end: start + 2 }
-
-    let end = start + 2
-    while (end < source.length && /[A-Za-z]/.test(source[end])) end++
-    return { name: source.slice(start + 1, end), end }
+    return result
 }
 
 function readLatexGroup(source: string, start: number): LatexGroup | null {
@@ -409,24 +371,29 @@ function readLatexGroup(source: string, start: number): LatexGroup | null {
     return null
 }
 
-function sanitizeLatexColor(rawColor: string): string | null {
-    return /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(rawColor) ? rawColor : null
+function isSafeLatexColor(color: string): boolean {
+    return /^(?:#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})|[a-z]+)$/i.test(color)
 }
 
 function readDisplayMathBlock(lines: string[], start: number): { expression: string; next: number } | null {
     const firstLine = lines[start].trim()
-    if (!firstLine.startsWith('$$')) return null
+    const delimiters = firstLine.startsWith('$$')
+        ? { close: '$$', open: '$$' }
+        : firstLine.startsWith('\\[')
+          ? { close: '\\]', open: '\\[' }
+          : null
+    if (!delimiters) return null
 
-    const firstContent = firstLine.slice(2)
-    const sameLineEnd = findLatexDelimiter(firstContent, 0, '$$')
-    if (sameLineEnd >= 0 && !firstContent.slice(sameLineEnd + 2).trim()) {
+    const firstContent = firstLine.slice(delimiters.open.length)
+    const sameLineEnd = findLatexDelimiter(firstContent, 0, delimiters.close)
+    if (sameLineEnd >= 0 && !firstContent.slice(sameLineEnd + delimiters.close.length).trim()) {
         return { expression: firstContent.slice(0, sameLineEnd), next: start + 1 }
     }
 
     const expressionLines = [firstContent]
     for (let index = start + 1; index < lines.length; index++) {
-        const end = findLatexDelimiter(lines[index], 0, '$$')
-        if (end >= 0 && !lines[index].slice(end + 2).trim()) {
+        const end = findLatexDelimiter(lines[index], 0, delimiters.close)
+        if (end >= 0 && !lines[index].slice(end + delimiters.close.length).trim()) {
             expressionLines.push(lines[index].slice(0, end))
             return { expression: expressionLines.join('\n'), next: index + 1 }
         }
@@ -446,6 +413,16 @@ function readInlineLatexMath(source: string, start: number): LatexMath | null {
     }
 }
 
+function readParenthesizedLatexMath(source: string, start: number): LatexMath | null {
+    const contentStart = start + 2
+    const end = findLatexDelimiter(source, contentStart, '\\)')
+    if (end <= contentStart) return null
+    return {
+        expression: source.slice(contentStart, end),
+        end: end + 2,
+    }
+}
+
 function findLatexDelimiter(source: string, start: number, delimiter: string): number {
     let state: 'content' | 'escaped' = 'content'
 
@@ -455,12 +432,12 @@ function findLatexDelimiter(source: string, start: number, delimiter: string): n
             continue
         }
 
+        if (source.startsWith(delimiter, index)) return index
+
         if (source[index] === '\\') {
             state = 'escaped'
             continue
         }
-
-        if (source.startsWith(delimiter, index)) return index
     }
     return -1
 }
@@ -544,7 +521,7 @@ function isBlockStart(line: string): boolean {
     return (
         /^\s{0,3}#{1,2}\s+/.test(line) ||
         /^\s*>/.test(line) ||
-        /^\s*\$\$/.test(line) ||
+        /^\s*(?:\$\$|\\\[)/.test(line) ||
         !!matchListLine(line) ||
         !!matchCodeFence(line) ||
         isHorizontalRule(line)

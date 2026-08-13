@@ -4,6 +4,7 @@
 
 <script>
 import { ipcRenderer } from 'electron'
+import 'katex/dist/katex.min.css'
 import { parseMessageMarkdownInlineCommand, renderMessageMarkdown } from '../../utils/messageMarkdown'
 
 export default {
@@ -127,25 +128,62 @@ export default {
     }
 
     .vac-markdown-math {
-        white-space: pre-wrap;
+        max-width: 100%;
+        white-space: normal;
+
+        .katex {
+            font-size: 1em;
+
+            // Keep QQ Markdown's historical tiny size instead of KaTeX's 0.5em default.
+            .katex-sizing.reset-size6.size1,
+            .fontsize-ensurer.reset-size6.size1 {
+                font-size: 0.7em;
+            }
+
+            .vlist:has(> span > .colorbox) > span > .boxpad {
+                padding: 0 0.85em;
+            }
+
+            // KaTeX stretches only the painted box. Reserve the old renderer's
+            // vertical padding on the outer atom so adjacent lines move with it.
+            .mord:has(> .vlist-t .colorbox) {
+                display: inline-block;
+                padding-block: 0.43em;
+            }
+
+            .colorbox {
+                overflow: visible;
+                border-radius: 2px;
+
+                &::before {
+                    position: absolute;
+                    inset: -0.43em 0;
+                    border-radius: inherit;
+                    background: inherit;
+                    content: '';
+                }
+            }
+        }
     }
 
     .vac-markdown-math-display {
         display: block;
-        width: fit-content;
+        width: 100%;
         max-width: 100%;
-        margin: 8px auto;
+        margin: 8px 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        > .katex-display {
+            width: max-content;
+            min-width: 100%;
+            margin: 0;
+        }
     }
 
-    .vac-markdown-colorbox {
-        display: inline-block;
-        padding: 0.35em 0.85em;
-        border-radius: 2px;
-    }
-
-    .vac-markdown-latex-tiny {
-        font-size: 0.7em;
-        line-height: 1.2;
+    .vac-markdown-math-error {
+        font-family: Consolas, 'Cascadia Mono', 'Microsoft YaHei Mono', monospace;
+        color: #cc0000;
     }
 
     .vac-markdown-underline {
