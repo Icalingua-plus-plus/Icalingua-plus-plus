@@ -963,11 +963,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const result = await this.db<MessageInSQLDB>('messages')
                 .where('roomId', roomId)
                 .where((builder) => builder.whereNull('system').orWhere('system', false))
-                .andWhere((builder) =>
-                    builder
-                        .where('time', '>', targetTime)
-                        .orWhere((sameTime) => sameTime.where('time', targetTime).andWhere('_id', '>=', targetId)),
-                )
+                .andWhereRaw('(??, ??) >= (?, ?)', ['time', '_id', targetTime, targetId])
                 .count({ count: '*' })
                 .first()
             return Number(result?.count || 0)
