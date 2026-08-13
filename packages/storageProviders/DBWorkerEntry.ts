@@ -29,6 +29,7 @@ interface PendingCallback {
 const sqlMethods = new Set([
     'connect',
     'validateMessageSearchIndex',
+    'searchMessageTimes',
     'addRoom',
     'updateRoom',
     'removeRoom',
@@ -57,6 +58,24 @@ const sqlMethods = new Set([
     'countUnreadMessagesFrom',
     'addMessages',
     'close',
+])
+
+const sqlReadMethods = new Set([
+    'getAllRooms',
+    'getRoom',
+    'getAllChatGroups',
+    'getUnreadCount',
+    'getFirstUnreadRoom',
+    'getIgnoredChats',
+    'isChatIgnored',
+    'fetchMessages',
+    'fetchMessagesBySender',
+    'searchMessages',
+    'fetchImageMessages',
+    'getMessage',
+    'fetchMessagesAround',
+    'resolveUnreadTargetMessageId',
+    'countUnreadMessagesFrom',
 ])
 
 const searchMethods = new Set([
@@ -120,9 +139,22 @@ const callParent = (targetId: string, name: string, args: unknown[]): Promise<un
 const createMessageSearchIndex: MessageSearchIndexFactory = (filePath, callbacks, errorHandle) =>
     new SQLiteMessageSearchIndexWorker(filePath, callbacks, errorHandle)
 
+const createRemoteMessageSearchIndex =
+    (targetId: string): MessageSearchIndexFactory =>
+    () => ({
+        isReady: true,
+        open: async () => undefined,
+        close: async () => undefined,
+        validate: async () => undefined,
+        syncMessages: async () => undefined,
+        requestRebuild: async () => undefined,
+        searchTimes: (keyword, options) =>
+            callParent(targetId, 'searchTimes', [keyword, options]) as Promise<number[] | null>,
+    })
+
 const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[]): WorkerTarget => {
     if (targets.has(targetId)) throw new Error(`DB Worker target already exists: ${targetId}`)
-    if (kind === 'sql') {
+    if (kind === 'sql' || kind === 'sqlReader') {
         const [id, type, connectOpt] = args as ConstructorParameters<typeof SQLStorageProvider>
         if (type !== 'sqlite3') throw new Error(`Only SQLite SQL providers may run in DB Worker: ${type}`)
         let target: WorkerTarget
@@ -130,8 +162,12 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
             id,
             type,
             connectOpt,
-            (error) => postErrorEvent(targetId, error),
-            createMessageSearchIndex,
+            (error) => {
+                postErrorEvent(targetId, error)
+                throw error
+            },
+            kind === 'sql' ? createMessageSearchIndex : createRemoteMessageSearchIndex(targetId),
+            kind === 'sqlReader',
         )
         target = { kind, instance, activeCalls: new Set(), disposing: false }
         instance.onUpgradeProgress = (progress) => {
@@ -217,7 +253,8 @@ const handleRequest = async (request: DBWorkerRequest): Promise<void> => {
             return
         }
 
-        const allowedMethods = target.kind === 'sql' ? sqlMethods : searchMethods
+        const allowedMethods =
+            target.kind === 'sql' ? sqlMethods : target.kind === 'sqlReader' ? sqlReadMethods : searchMethods
         if (!request.method || !allowedMethods.has(request.method)) {
             throw new Error(`Unsupported ${target.kind} DB Worker method: ${request.method}`)
         }

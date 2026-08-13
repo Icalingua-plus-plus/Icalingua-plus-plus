@@ -54,11 +54,11 @@ export default class DBWorkerClient {
     private nextRequestId = 1
     private closed = false
 
-    constructor() {
+    constructor(name = 'icalingua-db-worker') {
         const entry = resolveDBWorker()
         this.worker = new Worker(entry.filename, {
             eval: entry.eval,
-            name: 'icalingua-db-worker',
+            name,
         })
         this.worker.on('message', (message: DBWorkerIncomingMessage) => this.handleMessage(message))
         this.worker.on('error', (error) => this.fail(error))
@@ -102,6 +102,13 @@ export default class DBWorkerClient {
             this.callbacks.delete(targetId)
             this.eventHandlers.delete(targetId)
         }
+    }
+
+    async terminate(): Promise<void> {
+        if (!this.closed) this.fail(new Error('DB Worker terminated'))
+        this.callbacks.clear()
+        this.eventHandlers.clear()
+        await this.worker.terminate()
     }
 
     private request<T = void>(request: Omit<DBWorkerRequest, 'type' | 'id'>): Promise<T> {
@@ -163,6 +170,8 @@ export default class DBWorkerClient {
         this.closed = true
         for (const pending of this.pending.values()) pending.reject(error)
         this.pending.clear()
+        this.callbacks.clear()
+        this.eventHandlers.clear()
         this.worker.unref()
     }
 }

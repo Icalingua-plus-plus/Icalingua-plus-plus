@@ -1,4 +1,4 @@
-export type DBWorkerTargetKind = 'sql' | 'search'
+export type DBWorkerTargetKind = 'sql' | 'sqlReader' | 'search'
 
 export interface SerializedDBWorkerError {
     name: string

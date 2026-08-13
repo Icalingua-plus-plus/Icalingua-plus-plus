@@ -114,6 +114,7 @@ export default class SQLStorageProvider implements StorageProvider {
         connectOpt: PgMyOpt | SQLiteOpt,
         errorHandle: Function = console.error,
         searchIndexFactory?: MessageSearchIndexFactory,
+        sqliteReadOnly = false,
     ) {
         if (type === 'sqlite3' && !searchIndexFactory) {
             return new SQLStorageProviderWorker(
@@ -153,15 +154,15 @@ export default class SQLStorageProvider implements StorageProvider {
                         max: 1,
                         afterCreate: (conn: any, done: any) => {
                             try {
-                                conn.exec(
-                                    [
-                                        'PRAGMA journal_mode = WAL', // 读写并发，不阻塞
-                                        'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
-                                        'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
-                                        'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
-                                        'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
-                                    ].join('; '),
-                                )
+                                const pragmas = [
+                                    ...(sqliteReadOnly ? [] : ['PRAGMA journal_mode = WAL']), // 读写并发，不阻塞
+                                    'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
+                                    'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
+                                    'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
+                                    'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
+                                    ...(sqliteReadOnly ? ['PRAGMA query_only = ON'] : []),
+                                ]
+                                conn.exec(pragmas.join('; '))
                                 done(null, conn)
                             } catch (error) {
                                 done(error, conn)
@@ -514,6 +515,10 @@ export default class SQLStorageProvider implements StorageProvider {
 
     async validateMessageSearchIndex(): Promise<void> {
         await this.searchIndex?.validate()
+    }
+
+    async searchMessageTimes(keyword: string, options: SQLiteMessageSearchTimesOptions): Promise<number[] | null> {
+        return (await this.searchIndex?.searchTimes(keyword, options)) ?? null
     }
 
     /** 实现 {@link StorageProvider} 类的 connect 方法。
