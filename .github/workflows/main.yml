@@ -757,8 +757,8 @@ jobs:
       - name: pnpm install
         run: pnpm install --frozen-lockfile
 
-      - name: Compile
-        run: pnpm compile
+      - name: Build Bridge
+        run: pnpm build
 
       - name: upload artifacts
         uses: actions/upload-artifact@v4

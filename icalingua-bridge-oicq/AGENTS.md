@@ -44,8 +44,9 @@ icalingua-bridge-oicq/
 
 ```bash
 pnpm dev                    # Development (ts-node)
-pnpm compile               # Build Linux/macOS
-pnpm compile:win           # Build Windows
+pnpm build                 # Build Bridge (all platforms, recommended)
+pnpm compile               # Deprecated compatibility command (legacy tsc build)
+pnpm compile:win           # Deprecated compatibility command (legacy tsc build)
 pnpm start                 # Run production build
 docker compose up -d       # Deploy with MongoDB
 ```

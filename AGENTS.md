@@ -104,10 +104,11 @@ cd icalingua && pnpm dev
 # 构建客户端
 cd icalingua && pnpm build
 
-# 编译 Bridge (Linux/macOS)
-cd icalingua-bridge-oicq && pnpm compile
+# 构建 Bridge（所有平台，推荐）
+cd icalingua-bridge-oicq && pnpm build
 
-# 编译 Bridge (Windows)
+# 兼容旧脚本（已弃用，仍执行原来的 tsc 流程）
+cd icalingua-bridge-oicq && pnpm compile
 cd icalingua-bridge-oicq && pnpm compile:win
 
 # 启动 Bridge

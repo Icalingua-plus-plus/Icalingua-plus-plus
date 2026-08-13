@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="compile:bridge" type="js.build_tools.npm">
+  <configuration default="false" name="build:bridge" type="js.build_tools.npm">
     <package-json value="$PROJECT_DIR$/icalingua-bridge-oicq/package.json" />
     <command value="run" />
     <scripts>
-      <script value="compile" />
+      <script value="build" />
     </scripts>
     <node-interpreter value="project" />
     <envs />
