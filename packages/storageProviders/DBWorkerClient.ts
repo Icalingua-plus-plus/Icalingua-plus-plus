@@ -25,6 +25,7 @@ const resolveDBWorker = (): { filename: string; eval?: boolean } => {
     const candidates = [
         override,
         path.join(__dirname, 'dbWorker.js'),
+        path.join(__dirname, 'build', 'dbWorker.js'),
         path.join(__dirname, 'DBWorkerEntry.js'),
         path.join(__dirname, 'build', 'DBWorkerEntry.js'),
     ].filter(Boolean) as string[]
