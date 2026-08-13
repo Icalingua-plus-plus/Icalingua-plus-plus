@@ -44,6 +44,8 @@ export default class SQLiteMessageSearchIndexWorker {
                     {
                         loadMessageTimeCounts: Boolean(callbacks.loadMessageTimeCounts),
                         countMessages: Boolean(callbacks.countMessages),
+                        buildBatchSize: callbacks.buildBatchSize,
+                        validationBatchSize: callbacks.validationBatchSize,
                     },
                 ],
                 {

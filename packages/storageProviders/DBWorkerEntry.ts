@@ -1,6 +1,7 @@
 import { parentPort } from 'worker_threads'
 import SQLStorageProvider, { type MessageSearchIndexFactory } from './SQLStorageProvider'
 import SQLiteMessageSearchIndex from './SQLiteMessageSearchIndex'
+import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import {
     DBWorkerCallbackRequest,
     DBWorkerCallbackResponse,
@@ -113,8 +114,11 @@ const callParent = (targetId: string, name: string, args: unknown[]): Promise<un
     })
 }
 
+// Keep FTS work off the Worker that serves the primary SQLite database. Large
+// rebuilds and validation scans may take minutes, but room/message operations
+// must remain responsive while they run.
 const createMessageSearchIndex: MessageSearchIndexFactory = (filePath, callbacks, errorHandle) =>
-    new SQLiteMessageSearchIndex(filePath, callbacks, errorHandle)
+    new SQLiteMessageSearchIndexWorker(filePath, callbacks, errorHandle)
 
 const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[]): WorkerTarget => {
     if (targets.has(targetId)) throw new Error(`DB Worker target already exists: ${targetId}`)
@@ -137,7 +141,15 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
         return target
     }
 
-    const [filePath, callbackOptions] = args as [string, { loadMessageTimeCounts?: boolean; countMessages?: boolean }]
+    const [filePath, callbackOptions] = args as [
+        string,
+        {
+            loadMessageTimeCounts?: boolean
+            countMessages?: boolean
+            buildBatchSize?: number
+            validationBatchSize?: number
+        },
+    ]
     let target: WorkerTarget
     const instance = new SQLiteMessageSearchIndex(
         filePath,
@@ -153,9 +165,11 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
             ...(callbackOptions?.countMessages
                 ? { countMessages: () => callParent(targetId, 'countMessages', []) as Promise<number> }
                 : {}),
+            buildBatchSize: callbackOptions?.buildBatchSize,
+            validationBatchSize: callbackOptions?.validationBatchSize,
             reportProgress: (progress) => {
-                postEvent(targetId, 'progress', progress)
                 if (target) postTargetStatus(targetId, target)
+                postEvent(targetId, 'progress', progress)
             },
         },
         (error) => postErrorEvent(targetId, error),

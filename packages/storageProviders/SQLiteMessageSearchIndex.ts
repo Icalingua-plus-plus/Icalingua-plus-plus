@@ -21,6 +21,8 @@ export interface SQLiteMessageSearchIndexCallbacks {
     loadMessageTimeCounts?: (afterTime: number, limit: number) => Promise<SQLiteSearchTimeCount[]>
     countMessages?: () => Promise<number>
     reportProgress?: (progress: DatabaseUpgradeProgress) => void
+    buildBatchSize?: number
+    validationBatchSize?: number
 }
 
 export interface SQLiteMessageSearchTimesOptions {
@@ -514,6 +516,10 @@ export default class SQLiteMessageSearchIndex {
         if (!db) return false
         if (!loadMessageTimeCounts) return true
 
+        const validationBatchSize = Math.max(
+            searchBatchSize,
+            Math.trunc(this.callbacks.validationBatchSize || searchBatchSize),
+        )
         const total = await this.getTotal()
         const invalidTimes: number[] = []
         const flushInvalidTimes = async () => {
@@ -540,7 +546,7 @@ export default class SQLiteMessageSearchIndex {
 
         const loadNextSourceBatch = async () => {
             while (!sourceDone && sourceOffset >= sourceBatch.length) {
-                const loaded = await loadMessageTimeCounts(sourceAfterTime, searchBatchSize)
+                const loaded = await loadMessageTimeCounts(sourceAfterTime, validationBatchSize)
                 const normalized = new Map<number, number>()
                 for (const item of loaded) {
                     const time = Math.trunc(Number(item.time))
@@ -571,7 +577,7 @@ export default class SQLiteMessageSearchIndex {
                     .where('time', '>', indexedAfterTime)
                     .select('time', 'messageCount')
                     .orderBy('time', 'asc')
-                    .limit(searchBatchSize)
+                    .limit(validationBatchSize)
                 const normalized = new Map<number, number>()
                 for (const row of rows) {
                     const time = Math.trunc(Number(row.time))
@@ -664,6 +670,7 @@ export default class SQLiteMessageSearchIndex {
     private async runBuild(): Promise<void> {
         const db = this.db
         if (!db) return
+        const buildBatchSize = Math.max(searchBatchSize, Math.trunc(this.callbacks.buildBatchSize || searchBatchSize))
         while (!this.closing) {
             const generation = this.requestGeneration
             const ready = (await this.getState('ready')) === '1'
@@ -715,7 +722,7 @@ export default class SQLiteMessageSearchIndex {
                     this.buildLoadingTimes = true
                     let times: number[]
                     try {
-                        times = await this.callbacks.loadTimes(afterTime, searchBatchSize)
+                        times = await this.callbacks.loadTimes(afterTime, buildBatchSize)
                     } finally {
                         this.buildLoadingTimes = false
                     }

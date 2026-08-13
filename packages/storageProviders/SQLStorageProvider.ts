@@ -90,6 +90,13 @@ export type MessageSearchIndexFactory = (
 const createMessageSearchIndexWorker: MessageSearchIndexFactory = (filePath, callbacks, errorHandle) =>
     new SQLiteMessageSearchIndexWorker(filePath, callbacks, errorHandle)
 
+// Move larger pages across the Worker boundary, then split the source lookup
+// below the conservative 900-parameter budget used by WHERE IN. FTS writes are
+// still independently chunked by SQLiteMessageSearchIndex.
+const sqlSearchReadBatchSize = 800
+const sqlSearchBuildBatchSize = 4000
+const sqlSearchValidationBatchSize = 4000
+
 export default class SQLStorageProvider implements StorageProvider {
     id: string
     type: 'pg' | 'mysql' | 'sqlite3'
@@ -194,6 +201,8 @@ export default class SQLStorageProvider implements StorageProvider {
                 loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
                 countMessages: () => this.countSearchMessages(),
                 reportProgress: (progress) => this.reportUpgradeProgress(progress),
+                buildBatchSize: sqlSearchBuildBatchSize,
+                validationBatchSize: sqlSearchValidationBatchSize,
             },
             this.errorHandle as (error: unknown) => void,
         )
@@ -464,10 +473,16 @@ export default class SQLStorageProvider implements StorageProvider {
 
     private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
         if (!times.length) return []
-        return this.db<MessageInSQLDB>('messages')
-            .select('time', 'content')
-            .whereIn('time', times)
-            .where('time', '>', 0)
+        const messages: SQLiteSearchMessage[] = []
+        for (const batchTimes of lodash.chunk(times, sqlSearchReadBatchSize)) {
+            messages.push(
+                ...(await this.db<MessageInSQLDB>('messages')
+                    .select('time', 'content')
+                    .whereIn('time', batchTimes)
+                    .where('time', '>', 0)),
+            )
+        }
+        return messages
     }
 
     private async loadSearchTimeCounts(afterTime: number, limit: number) {
