@@ -1,10 +1,8 @@
 import { build } from 'esbuild'
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, cpSync } from 'fs'
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
 const external = Object.keys(pkg.dependencies || {}).filter((dep) => !dep.startsWith('@saltify/'))
-
-rmSync('./build', { recursive: true, force: true })
 
 await build({
     entryPoints: {
