@@ -804,6 +804,11 @@ export default {
             if (val) this.scheduleTextareaResize()
         },
         canLoadAfter(val) {
+            if (!val) {
+                // 到达最新消息后，向后请求可能返回空页，不能依赖 messages watcher 收尾。
+                this.settleTailLoading(false)
+                return
+            }
             // 当 canLoadAfter 变为 true 且已在底部时，自动触发加载
             if (
                 val &&
@@ -879,6 +884,17 @@ export default {
                 this.visibleViewport.tail = newLen
             }
 
+            // 向后加载完成不能依赖消息数组一定有变化：空页和随后到达的单条新消息
+            // 都可能让后面的单条消息分支提前 return。
+            if (this.loadingTailMessages) {
+                const hasMore = this.canLoadAfter && newLen > oldLen
+                if (hasMore) {
+                    this.visibleViewport.tail = newLen
+                    this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
+                }
+                this.settleTailLoading(hasMore)
+            }
+
             // 新增单条消息
             if (oldLen === newLen - 1) {
                 this.loadingMessages = false
@@ -909,22 +925,6 @@ export default {
             } else if (newLen && !this.scrollIcon && newLen !== oldLen && !this.canLoadAfter) {
                 // 不在 gotoMessage 模式时才自动滚动到底部
                 this.queueScrollToBottom()
-            }
-
-            // 处理向下加载完成
-            if (this.loadingTailMessages) {
-                this.loadingTailMessages = false
-                if (this.infiniteState.tail) {
-                    if (newLen > oldLen) {
-                        // 有新消息加载，继续允许加载
-                        this.visibleViewport.tail = newLen
-                        this.visibleViewport.head = Math.max(0, this.visibleViewport.tail - this.maxViewportLength)
-                        this.infiniteState.tail.loaded()
-                    } else {
-                        // 没有新消息了，完成加载
-                        this.infiniteState.tail.complete()
-                    }
-                }
             }
 
             this.lifecycleScope.timeout(() => (this.loadingHeadMessages = false), 0)
@@ -2416,6 +2416,15 @@ export default {
                 },
                 iOSDevice() ? 500 : 0,
             )
+        },
+        settleTailLoading(hasMore) {
+            const infiniteState = this.infiniteState.tail
+            this.loadingTailMessages = false
+            this.infiniteState.tail = null
+
+            if (!infiniteState) return
+            if (hasMore) infiniteState.loaded()
+            else infiniteState.complete()
         },
         loadTailMessages(infiniteState) {
             if (this.optimizeMethod !== 'infinite-loading') return
