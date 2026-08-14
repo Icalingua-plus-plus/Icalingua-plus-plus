@@ -207,13 +207,20 @@
         }
     }
 
+    function screenPixelRatio() {
+        return Math.max(1, window.devicePixelRatio || 1)
+    }
+
     function snapToDevicePixel(value) {
-        const ratio = window.devicePixelRatio || 1
+        const ratio = screenPixelRatio()
         return Math.max(1, Math.round(value * ratio) / ratio)
     }
 
     function imageSize() {
-        const ratio = _ratio * zoom
+        // _ratio * zoom is the physical image-pixel ratio. CSS pixels are
+        // device-independent on Windows, so divide by DPR before laying out
+        // the image to keep 100% at one source pixel per screen pixel.
+        const ratio = _ratio * zoom / screenPixelRatio()
         return {
             width: snapToDevicePixel(IMG.naturalWidth * ratio),
             height: snapToDevicePixel(IMG.naturalHeight * ratio),
@@ -265,7 +272,8 @@
             const rotated = Math.abs(rotate) % 180 === 90
             const width = rotated ? IMG.naturalHeight : IMG.naturalWidth
             const height = rotated ? IMG.naturalWidth : IMG.naturalHeight
-            _ratio = Math.min(viewport.width / width, viewport.height / height)
+            const pixelRatio = screenPixelRatio()
+            _ratio = Math.min(viewport.width * pixelRatio / width, viewport.height * pixelRatio / height)
         }
         else if (relative == false) {
             _ratio = 1
