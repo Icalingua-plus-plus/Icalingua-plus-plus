@@ -71,22 +71,30 @@
             </div>
         </div>
         <div class="stickers-body" v-if="panel === 'stickers'">
-            <div class="panel" ref="stickersPanel">
+            <div class="panel" ref="stickersPanel" @scroll.passive="onStickerScroll">
                 <div class="empty" v-show="!pics.length">
                     No stickers found
                     <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
                 </div>
-                <div class="grid" v-show="pics.length">
-                    <div v-for="i in pics" :key="i">
-                        <img
-                            :src="getStickerPreview(i)"
-                            :data-relative-path="i"
-                            @click="sendLocalSticker(i)"
-                            @click.right="localStickerMenu(i, $event)"
-                            @error="errorHandler"
-                            @mouseover="onmouseover"
-                            @mouseout="onmouseout"
-                        />
+                <div class="sticker-virtual-grid" v-show="pics.length" :style="{ height: stickerGridHeight + 'px' }">
+                    <div
+                        class="grid sticker-virtual-grid-content"
+                        :style="{
+                            transform: `translateY(${stickerGridOffset}px)`,
+                            gridTemplateColumns: `repeat(${stickerGridColumns}, minmax(0, 1fr))`,
+                        }"
+                    >
+                        <div v-for="i in visibleStickers" :key="i">
+                            <img
+                                :src="getStickerPreview(i)"
+                                :data-relative-path="i"
+                                @click="sendLocalSticker(i)"
+                                @click.right="localStickerMenu(i, $event)"
+                                @error="errorHandler"
+                                @mouseover="onmouseover"
+                                @mouseout="onmouseout"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,14 +172,50 @@ const RECENTS = {
 export default {
     name: 'Stickers',
     components: { VEmojiPicker },
+    computed: {
+        stickerGridRows() {
+            return this.stickerGridColumns > 0 ? Math.ceil(this.pics.length / this.stickerGridColumns) : 0
+        },
+        stickerGridHeight() {
+            return this.stickerGridRows * this.stickerGridItemSize
+        },
+        stickerGridStartRow() {
+            if (this.stickerGridItemSize <= 0) return 0
+            return Math.max(0, Math.floor(this.stickerScrollTop / this.stickerGridItemSize) - this.stickerBufferRows)
+        },
+        stickerGridEndRow() {
+            if (this.stickerGridItemSize <= 0) return 0
+            const viewportHeight = this.stickerPanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            return Math.min(
+                this.stickerGridRows,
+                Math.ceil((this.stickerScrollTop + viewportHeight) / this.stickerGridItemSize) + this.stickerBufferRows,
+            )
+        },
+        stickerGridOffset() {
+            return this.stickerGridStartRow * this.stickerGridItemSize
+        },
+        visibleStickers() {
+            const start = this.stickerGridStartRow * this.stickerGridColumns
+            const end = Math.min(this.pics.length, this.stickerGridEndRow * this.stickerGridColumns)
+            return this.pics.slice(start, end)
+        },
+    },
     watch: {
         panel() {
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
+            this.$nextTick(() => this.observeStickerPanel())
         },
         open() {
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
+            this.$nextTick(() => this.observeStickerPanel())
+        },
+        pics() {
+            this.$nextTick(() => this.updateStickerGridMetrics())
+        },
+        bottomMode() {
+            this.$nextTick(() => this.updateStickerGridMetrics())
         },
     },
     props: {
@@ -190,6 +234,11 @@ export default {
             recentFace: [],
             recentRemoteSticker: [],
             descSortStickersByTime: true,
+            stickerScrollTop: 0,
+            stickerPanelHeight: 0,
+            stickerGridColumns: 4,
+            stickerGridItemSize: 0,
+            stickerBufferRows: 2,
         }
     },
     async created() {
@@ -203,6 +252,9 @@ export default {
         this._previewQueue = []
         this._previewRunning = 0
         this._previewConcurrency = 2
+        this._stickerResizeObserver = null
+        this._observedStickerPanel = null
+        this._stickerRenderRange = ''
         this.panel = await ipc.getLastUsedStickerType()
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
 
@@ -268,7 +320,13 @@ export default {
         this.watchedPath[DEFAULT_CATEGORY] = defaultDirWatcher
         this.lifecycleScope.addCleanup(() => defaultDirWatcher.close())
     },
+    mounted() {
+        this.$nextTick(() => this.observeStickerPanel())
+    },
     beforeDestroy() {
+        this._stickerResizeObserver?.disconnect()
+        this._stickerResizeObserver = null
+        this._observedStickerPanel = null
         this.lifecycleScope?.dispose()
         this.watchedPath = {}
         this._previewQueue = []
@@ -287,6 +345,60 @@ export default {
         getFaceName(i) {
             return String(faceMap[parseInt(i)] || '').replace(/\//, '')
         },
+        getStickerGridColumns(width) {
+            if (!width) return this.bottomMode ? 1 : 4
+            return this.bottomMode ? Math.max(1, Math.floor(width / 72)) : 4
+        },
+        getStickerRenderRange(scrollTop) {
+            if (this.stickerGridItemSize <= 0) return '0:0'
+            const viewportHeight = this.stickerPanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            const start = Math.max(0, Math.floor(scrollTop / this.stickerGridItemSize) - this.stickerBufferRows)
+            const end = Math.min(
+                this.stickerGridRows,
+                Math.ceil((scrollTop + viewportHeight) / this.stickerGridItemSize) + this.stickerBufferRows,
+            )
+            return `${start}:${end}`
+        },
+        updateStickerGridMetrics() {
+            const panel = this.$refs.stickersPanel
+            if (!panel) return
+
+            const columns = this.getStickerGridColumns(panel.clientWidth)
+            this.stickerGridColumns = columns
+            this.stickerGridItemSize = panel.clientWidth / columns
+            this.stickerPanelHeight = panel.clientHeight
+
+            const maxScrollTop = Math.max(0, this.stickerGridHeight - this.stickerPanelHeight)
+            const scrollTop = Math.min(panel.scrollTop, maxScrollTop)
+            if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop
+            this.stickerScrollTop = scrollTop
+            this._stickerRenderRange = this.getStickerRenderRange(scrollTop)
+        },
+        observeStickerPanel() {
+            const panel = this.$refs.stickersPanel
+            if (this._observedStickerPanel && this._observedStickerPanel !== panel) {
+                this._stickerResizeObserver?.unobserve(this._observedStickerPanel)
+                this._observedStickerPanel = null
+            }
+            if (!panel) return
+
+            if (!this._stickerResizeObserver && typeof ResizeObserver !== 'undefined') {
+                this._stickerResizeObserver = new ResizeObserver(() => this.updateStickerGridMetrics())
+                this.lifecycleScope?.addCleanup(() => this._stickerResizeObserver?.disconnect())
+            }
+            if (this._stickerResizeObserver && this._observedStickerPanel !== panel) {
+                this._stickerResizeObserver.observe(panel)
+                this._observedStickerPanel = panel
+            }
+            this.updateStickerGridMetrics()
+        },
+        onStickerScroll(e) {
+            const scrollTop = e.target.scrollTop
+            const renderRange = this.getStickerRenderRange(scrollTop)
+            if (renderRange === this._stickerRenderRange) return
+            this._stickerRenderRange = renderRange
+            this.stickerScrollTop = scrollTop
+        },
         errorHandler(e) {
             // generate preview
             const relPath = e.target.dataset.relativePath
@@ -295,7 +407,7 @@ export default {
                 return
             }
             this.generatingPath.add(relPath)
-            this._previewQueue.push({ relPath, previewPath, imgEl: e.target })
+            this._previewQueue.push({ relPath, previewPath })
             this._processPreviewQueue()
         },
         _processPreviewQueue() {
@@ -305,7 +417,7 @@ export default {
                 this._generateSinglePreview(task)
             }
         },
-        async _generateSinglePreview({ relPath, previewPath, imgEl }) {
+        async _generateSinglePreview({ relPath, previewPath }) {
             try {
                 const img = document.createElement('img')
                 img.src = 'file://' + path.join(this.default_dir, relPath)
@@ -328,7 +440,12 @@ export default {
                     return
                 }
                 console.log('Preview generated for', relPath)
-                imgEl.src = imgEl.src
+                const panel = this.$refs.stickersPanel
+                if (panel) {
+                    Array.from(panel.querySelectorAll('img[data-relative-path]'))
+                        .filter((img) => img.dataset.relativePath === relPath)
+                        .forEach((img) => (img.src = img.src))
+                }
             } catch (err) {
                 console.error('Failed to load image for preview', relPath, err)
             } finally {
@@ -340,7 +457,12 @@ export default {
         changeCurrentDir(dir) {
             if (this.current_dir === dir) {
                 // 点击已选中的分组，滚动到顶部
-                if (this.$refs.stickersPanel) this.$refs.stickersPanel.scrollTop = 0
+                if (this.$refs.stickersPanel) {
+                    this.$refs.stickersPanel.scrollTop = 0
+                    this.stickerScrollTop = 0
+                    this._stickerRenderRange = ''
+                    this.$nextTick(() => this.updateStickerGridMetrics())
+                }
                 return
             }
             console.log('Stickers directory changed:', dir)
@@ -430,7 +552,14 @@ export default {
                 // 点击已选中的 tab，滚动对应面板到顶部
                 const refMap = { face: 'facePanel', remote: 'remotePanel', stickers: 'stickersPanel' }
                 const ref = this.$refs[refMap[type]]
-                if (ref) ref.scrollTop = 0
+                if (ref) {
+                    ref.scrollTop = 0
+                    if (type === 'stickers') {
+                        this.stickerScrollTop = 0
+                        this._stickerRenderRange = ''
+                        this.$nextTick(() => this.updateStickerGridMetrics())
+                    }
+                }
                 return
             }
             this.panel = type
@@ -582,6 +711,19 @@ export default {
         position: relative;
         background-color: var(--panel-background);
     }
+}
+
+.sticker-virtual-grid {
+    position: relative;
+    width: 100%;
+    overflow-anchor: none;
+}
+
+.sticker-virtual-grid-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
 }
 
 .face-panel {
