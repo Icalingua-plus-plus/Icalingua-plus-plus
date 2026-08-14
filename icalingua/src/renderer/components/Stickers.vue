@@ -51,42 +51,106 @@
                 </div>
             </div>
         </div>
-        <div v-show="panel === 'remote'" class="panel" ref="remotePanel">
+        <div v-show="panel === 'remote'" class="panel" ref="remotePanel" @scroll.passive="onRemoteScroll">
             <div class="subheader" v-show="recentRemoteSticker.length">最近使用</div>
             <div class="grid" v-show="recentRemoteSticker.length">
                 <div v-for="i in recentRemoteSticker" :key="i">
-                    <img :src="i" @click="sendRemoteSticker(i)" @click.right="remoteStickerMenu(i, $event)" />
+                    <img
+                        :src="getRemoteStickerPreview(i)"
+                        :data-remote-url="i"
+                        :data-preview-key="getRemotePreviewKey(i)"
+                        @click="sendRemoteSticker(i)"
+                        @click.right="remoteStickerMenu(i, $event)"
+                        @error="remoteErrorHandler"
+                        @mouseover="onRemoteStickerMouseover"
+                        @mouseout="onRemoteStickerMouseout"
+                    />
                 </div>
             </div>
             <div class="subheader" v-show="recentRemoteSticker.length">全部表情</div>
             <div class="empty" v-show="!remote_pics.length">No remote stickers found</div>
-            <div class="grid" v-show="remote_pics.length">
+            <div class="grid" v-if="remote_pics.length && !shouldVirtualizeRemote">
                 <div v-for="i in remote_pics" :key="i.id">
                     <img
-                        :src="i.url"
+                        :src="getRemoteStickerPreview(i.url)"
+                        :data-remote-url="i.url"
+                        :data-preview-key="getRemotePreviewKey(i.url)"
                         @click="sendRemoteSticker(i.url)"
                         @click.right="remoteStickerMenu(i.url, $event)"
+                        @error="remoteErrorHandler"
+                        @mouseover="onRemoteStickerMouseover"
+                        @mouseout="onRemoteStickerMouseout"
                     />
+                </div>
+            </div>
+            <div
+                v-else-if="remote_pics.length"
+                class="remote-virtual-grid"
+                ref="remoteVirtualGrid"
+                :style="{ height: remoteGridHeight + 'px' }"
+            >
+                <div
+                    class="grid remote-virtual-grid-content"
+                    :style="{
+                        transform: `translateY(${remoteGridOffset}px)`,
+                        gridTemplateColumns: `repeat(${remoteGridColumns}, minmax(0, 1fr))`,
+                    }"
+                >
+                    <div v-for="i in visibleRemoteStickers" :key="i.id">
+                        <img
+                            :src="getRemoteStickerPreview(i.url)"
+                            :data-remote-url="i.url"
+                            :data-preview-key="getRemotePreviewKey(i.url)"
+                            @click="sendRemoteSticker(i.url)"
+                            @click.right="remoteStickerMenu(i.url, $event)"
+                            @error="remoteErrorHandler"
+                            @mouseover="onRemoteStickerMouseover"
+                            @mouseout="onRemoteStickerMouseout"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
         <div class="stickers-body" v-if="panel === 'stickers'">
-            <div class="panel" ref="stickersPanel">
+            <div class="panel" ref="stickersPanel" @scroll.passive="onStickerScroll">
                 <div class="empty" v-show="!pics.length">
                     No stickers found
                     <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
                 </div>
-                <div class="grid" v-show="pics.length">
+                <div class="grid" v-if="pics.length && !shouldVirtualizeStickers">
                     <div v-for="i in pics" :key="i">
                         <img
                             :src="getStickerPreview(i)"
                             :data-relative-path="i"
+                            :data-preview-key="getStickerPreviewKey(i)"
                             @click="sendLocalSticker(i)"
                             @click.right="localStickerMenu(i, $event)"
                             @error="errorHandler"
                             @mouseover="onmouseover"
                             @mouseout="onmouseout"
                         />
+                    </div>
+                </div>
+                <div v-else-if="pics.length" class="sticker-virtual-grid" :style="{ height: stickerGridHeight + 'px' }">
+                    <div
+                        class="grid sticker-virtual-grid-content"
+                        :style="{
+                            transform: `translateY(${stickerGridOffset}px)`,
+                            gridTemplateColumns: `repeat(${stickerGridColumns}, minmax(0, 1fr))`,
+                        }"
+                    >
+                        <div v-for="i in visibleStickers" :key="i">
+                            <img
+                                :src="getStickerPreview(i)"
+                                :data-relative-path="i"
+                                :data-preview-key="getStickerPreviewKey(i)"
+                                @click="sendLocalSticker(i)"
+                                @click.right="localStickerMenu(i, $event)"
+                                @error="errorHandler"
+                                @mouseover="onmouseover"
+                                @mouseout="onmouseout"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -128,6 +192,7 @@ const faceMap = require('oicq-icalingua-plus-plus/lib/message/face').map
 
 const DEFAULT_CATEGORY = Symbol('DEFAULT')
 const RECENT_CATEGORY = Symbol('RECENT')
+const VIRTUAL_SCROLL_THRESHOLD = 100
 
 const RECENTS = {
     max: {
@@ -164,14 +229,99 @@ const RECENTS = {
 export default {
     name: 'Stickers',
     components: { VEmojiPicker },
+    computed: {
+        stickerGridRows() {
+            return this.stickerGridColumns > 0 ? Math.ceil(this.pics.length / this.stickerGridColumns) : 0
+        },
+        stickerGridHeight() {
+            return this.stickerGridRows * this.stickerGridItemSize
+        },
+        stickerGridStartRow() {
+            if (this.stickerGridItemSize <= 0) return 0
+            return Math.max(0, Math.floor(this.stickerScrollTop / this.stickerGridItemSize) - this.stickerBufferRows)
+        },
+        stickerGridEndRow() {
+            if (this.stickerGridItemSize <= 0) return 0
+            const viewportHeight = this.stickerPanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            return Math.min(
+                this.stickerGridRows,
+                Math.ceil((this.stickerScrollTop + viewportHeight) / this.stickerGridItemSize) + this.stickerBufferRows,
+            )
+        },
+        stickerGridOffset() {
+            return this.stickerGridStartRow * this.stickerGridItemSize
+        },
+        visibleStickers() {
+            const start = this.stickerGridStartRow * this.stickerGridColumns
+            const end = Math.min(this.pics.length, this.stickerGridEndRow * this.stickerGridColumns)
+            return this.pics.slice(start, end)
+        },
+        shouldVirtualizeStickers() {
+            return this.pics.length > VIRTUAL_SCROLL_THRESHOLD
+        },
+        remoteGridRows() {
+            return this.remoteGridColumns > 0 ? Math.ceil(this.remote_pics.length / this.remoteGridColumns) : 0
+        },
+        remoteGridHeight() {
+            return this.remoteGridRows * this.remoteGridItemSize
+        },
+        remoteGridStartRow() {
+            if (this.remoteGridItemSize <= 0) return 0
+            const gridScrollTop = Math.max(0, this.remoteScrollTop - this.remoteGridTop)
+            return Math.max(0, Math.floor(gridScrollTop / this.remoteGridItemSize) - this.remoteBufferRows)
+        },
+        remoteGridEndRow() {
+            if (this.remoteGridItemSize <= 0) return 0
+            const viewportHeight = this.remotePanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            const gridBottom = Math.max(0, this.remoteScrollTop + viewportHeight - this.remoteGridTop)
+            return Math.min(
+                this.remoteGridRows,
+                Math.ceil(gridBottom / this.remoteGridItemSize) + this.remoteBufferRows,
+            )
+        },
+        remoteGridOffset() {
+            return this.remoteGridStartRow * this.remoteGridItemSize
+        },
+        visibleRemoteStickers() {
+            const start = this.remoteGridStartRow * this.remoteGridColumns
+            const end = Math.min(this.remote_pics.length, this.remoteGridEndRow * this.remoteGridColumns)
+            return this.remote_pics.slice(start, end)
+        },
+        shouldVirtualizeRemote() {
+            return this.remote_pics.length > VIRTUAL_SCROLL_THRESHOLD
+        },
+    },
     watch: {
         panel() {
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
+            this.$nextTick(() => {
+                this.observeStickerPanel()
+                this.observeRemotePanel()
+            })
         },
         open() {
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
+            this.$nextTick(() => {
+                this.observeStickerPanel()
+                this.observeRemotePanel()
+            })
+        },
+        pics() {
+            this.$nextTick(() => this.updateStickerGridMetrics())
+        },
+        remote_pics() {
+            this.$nextTick(() => this.updateRemoteGridMetrics())
+        },
+        recentRemoteSticker() {
+            this.$nextTick(() => this.updateRemoteGridMetrics())
+        },
+        bottomMode() {
+            this.$nextTick(() => {
+                this.updateStickerGridMetrics()
+                this.updateRemoteGridMetrics()
+            })
         },
     },
     props: {
@@ -190,6 +340,17 @@ export default {
             recentFace: [],
             recentRemoteSticker: [],
             descSortStickersByTime: true,
+            stickerScrollTop: 0,
+            stickerPanelHeight: 0,
+            stickerGridColumns: 4,
+            stickerGridItemSize: 0,
+            stickerBufferRows: 2,
+            remoteScrollTop: 0,
+            remotePanelHeight: 0,
+            remoteGridTop: 0,
+            remoteGridColumns: 4,
+            remoteGridItemSize: 0,
+            remoteBufferRows: 2,
         }
     },
     async created() {
@@ -203,6 +364,12 @@ export default {
         this._previewQueue = []
         this._previewRunning = 0
         this._previewConcurrency = 2
+        this._stickerResizeObserver = null
+        this._observedStickerPanel = null
+        this._stickerRenderRange = ''
+        this._remoteResizeObserver = null
+        this._observedRemotePanel = null
+        this._remoteRenderRange = ''
         this.panel = await ipc.getLastUsedStickerType()
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
 
@@ -268,14 +435,37 @@ export default {
         this.watchedPath[DEFAULT_CATEGORY] = defaultDirWatcher
         this.lifecycleScope.addCleanup(() => defaultDirWatcher.close())
     },
+    mounted() {
+        this.$nextTick(() => {
+            this.observeStickerPanel()
+            this.observeRemotePanel()
+        })
+    },
     beforeDestroy() {
+        this._stickerResizeObserver?.disconnect()
+        this._stickerResizeObserver = null
+        this._observedStickerPanel = null
+        this._remoteResizeObserver?.disconnect()
+        this._remoteResizeObserver = null
+        this._observedRemotePanel = null
         this.lifecycleScope?.dispose()
         this.watchedPath = {}
         this._previewQueue = []
     },
     methods: {
         getStickerPreview(relPath) {
+            if (!this.preview_dir || !relPath) return ''
             return 'file://' + this.preview_dir + md5(relPath)
+        },
+        getStickerPreviewKey(relPath) {
+            return 'local:' + relPath
+        },
+        getRemoteStickerPreview(url) {
+            if (!this.preview_dir || !url) return ''
+            return 'file://' + this.preview_dir + md5(this.getRemotePreviewKey(url))
+        },
+        getRemotePreviewKey(url) {
+            return 'remote:' + url
         },
         getFacePreview(i) {
             let faceId = String(i)
@@ -287,15 +477,161 @@ export default {
         getFaceName(i) {
             return String(faceMap[parseInt(i)] || '').replace(/\//, '')
         },
+        getStickerGridColumns(width) {
+            if (!width) return this.bottomMode ? 1 : 4
+            return this.bottomMode ? Math.max(1, Math.floor(width / 72)) : 4
+        },
+        getStickerRenderRange(scrollTop) {
+            if (this.stickerGridItemSize <= 0) return '0:0'
+            const viewportHeight = this.stickerPanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            const start = Math.max(0, Math.floor(scrollTop / this.stickerGridItemSize) - this.stickerBufferRows)
+            const end = Math.min(
+                this.stickerGridRows,
+                Math.ceil((scrollTop + viewportHeight) / this.stickerGridItemSize) + this.stickerBufferRows,
+            )
+            return `${start}:${end}`
+        },
+        updateStickerGridMetrics() {
+            const panel = this.$refs.stickersPanel
+            if (!panel) return
+            if (!this.shouldVirtualizeStickers) {
+                this.stickerScrollTop = panel.scrollTop
+                this._stickerRenderRange = ''
+                return
+            }
+
+            const columns = this.getStickerGridColumns(panel.clientWidth)
+            this.stickerGridColumns = columns
+            this.stickerGridItemSize = panel.clientWidth / columns
+            this.stickerPanelHeight = panel.clientHeight
+
+            const maxScrollTop = Math.max(0, this.stickerGridHeight - this.stickerPanelHeight)
+            const scrollTop = Math.min(panel.scrollTop, maxScrollTop)
+            if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop
+            this.stickerScrollTop = scrollTop
+            this._stickerRenderRange = this.getStickerRenderRange(scrollTop)
+        },
+        observeStickerPanel() {
+            const panel = this.$refs.stickersPanel
+            if (this._observedStickerPanel && this._observedStickerPanel !== panel) {
+                this._stickerResizeObserver?.unobserve(this._observedStickerPanel)
+                this._observedStickerPanel = null
+            }
+            if (!panel) return
+
+            if (!this._stickerResizeObserver && typeof ResizeObserver !== 'undefined') {
+                this._stickerResizeObserver = new ResizeObserver(() => this.updateStickerGridMetrics())
+                this.lifecycleScope?.addCleanup(() => this._stickerResizeObserver?.disconnect())
+            }
+            if (this._stickerResizeObserver && this._observedStickerPanel !== panel) {
+                this._stickerResizeObserver.observe(panel)
+                this._observedStickerPanel = panel
+            }
+            this.updateStickerGridMetrics()
+        },
+        onStickerScroll(e) {
+            if (!this.shouldVirtualizeStickers) return
+            const scrollTop = e.target.scrollTop
+            const renderRange = this.getStickerRenderRange(scrollTop)
+            if (renderRange === this._stickerRenderRange) return
+            this._stickerRenderRange = renderRange
+            this.stickerScrollTop = scrollTop
+        },
+        getRemoteRenderRange(scrollTop) {
+            if (this.remoteGridItemSize <= 0) return '0:0'
+            const viewportHeight = this.remotePanelHeight || (this.bottomMode ? 320 : window.innerHeight)
+            const gridScrollTop = Math.max(0, scrollTop - this.remoteGridTop)
+            const gridBottom = Math.max(0, scrollTop + viewportHeight - this.remoteGridTop)
+            const start = Math.max(0, Math.floor(gridScrollTop / this.remoteGridItemSize) - this.remoteBufferRows)
+            const end = Math.min(
+                this.remoteGridRows,
+                Math.ceil(gridBottom / this.remoteGridItemSize) + this.remoteBufferRows,
+            )
+            return `${start}:${end}`
+        },
+        updateRemoteGridMetrics() {
+            const panel = this.$refs.remotePanel
+            if (!panel) return
+            if (!this.shouldVirtualizeRemote) {
+                this.remoteScrollTop = panel.scrollTop
+                this._remoteRenderRange = ''
+                return
+            }
+            const grid = this.$refs.remoteVirtualGrid
+            if (!grid) return
+
+            const columns = this.getStickerGridColumns(panel.clientWidth)
+            this.remoteGridColumns = columns
+            this.remoteGridItemSize = panel.clientWidth / columns
+            this.remotePanelHeight = panel.clientHeight
+            const panelRect = panel.getBoundingClientRect()
+            const gridRect = grid.getBoundingClientRect()
+            this.remoteGridTop = gridRect.top - panelRect.top + panel.scrollTop
+
+            const maxScrollTop = Math.max(0, this.remoteGridTop + this.remoteGridHeight - this.remotePanelHeight)
+            const scrollTop = Math.min(panel.scrollTop, maxScrollTop)
+            if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop
+            this.remoteScrollTop = scrollTop
+            this._remoteRenderRange = this.getRemoteRenderRange(scrollTop)
+        },
+        observeRemotePanel() {
+            const panel = this.$refs.remotePanel
+            if (this._observedRemotePanel && this._observedRemotePanel !== panel) {
+                this._remoteResizeObserver?.unobserve(this._observedRemotePanel)
+                this._observedRemotePanel = null
+            }
+            if (!panel) return
+
+            if (!this._remoteResizeObserver && typeof ResizeObserver !== 'undefined') {
+                this._remoteResizeObserver = new ResizeObserver(() => this.updateRemoteGridMetrics())
+                this.lifecycleScope?.addCleanup(() => this._remoteResizeObserver?.disconnect())
+            }
+            if (this._remoteResizeObserver && this._observedRemotePanel !== panel) {
+                this._remoteResizeObserver.observe(panel)
+                this._observedRemotePanel = panel
+            }
+            this.updateRemoteGridMetrics()
+        },
+        onRemoteScroll(e) {
+            if (!this.shouldVirtualizeRemote) return
+            const scrollTop = e.target.scrollTop
+            const renderRange = this.getRemoteRenderRange(scrollTop)
+            if (renderRange === this._remoteRenderRange) return
+            this._remoteRenderRange = renderRange
+            this.remoteScrollTop = scrollTop
+        },
         errorHandler(e) {
             // generate preview
             const relPath = e.target.dataset.relativePath
+            if (!this.default_dir || !this.preview_dir || !relPath) return
             const previewPath = this.getStickerPreview(relPath).replace(/^file:\/\//, '')
-            if (fs.existsSync(previewPath) || this.generatingPath.has(relPath)) {
+            this.queuePreview({
+                key: this.getStickerPreviewKey(relPath),
+                source: 'file://' + path.join(this.default_dir, relPath),
+                previewPath,
+            })
+        },
+        remoteErrorHandler(e) {
+            const url = e.target.dataset.remoteUrl
+            if (!url || !this.preview_dir || e.target.dataset.previewFallback === 'true') return
+            const previewUrl = this.getRemoteStickerPreview(url)
+            const previewPath = previewUrl.replace(/^file:\/\//, '')
+            if (fs.existsSync(previewPath)) {
+                e.target.src = previewUrl
                 return
             }
-            this.generatingPath.add(relPath)
-            this._previewQueue.push({ relPath, previewPath, imgEl: e.target })
+            this.queuePreview({
+                key: this.getRemotePreviewKey(url),
+                source: url,
+                previewPath,
+                fallback: url,
+            })
+        },
+        queuePreview({ key, source, previewPath, fallback }) {
+            if (!key || !source || !previewPath) return
+            if (fs.existsSync(previewPath) || this.generatingPath.has(key)) return
+            this.generatingPath.add(key)
+            this._previewQueue.push({ key, source, previewPath, fallback })
             this._processPreviewQueue()
         },
         _processPreviewQueue() {
@@ -305,10 +641,10 @@ export default {
                 this._generateSinglePreview(task)
             }
         },
-        async _generateSinglePreview({ relPath, previewPath, imgEl }) {
+        async _generateSinglePreview({ key, source, previewPath, fallback }) {
             try {
                 const img = document.createElement('img')
-                img.src = 'file://' + path.join(this.default_dir, relPath)
+                img.src = source
                 await new Promise((resolve, reject) => {
                     img.onload = resolve
                     img.onerror = reject
@@ -323,24 +659,49 @@ export default {
                 try {
                     await fs.promises.writeFile(previewPath, base64Data, 'base64')
                 } catch (err) {
-                    console.error('Failed to generate preview for', relPath, 'at', previewPath)
+                    console.error('Failed to generate preview for', key, 'at', previewPath)
                     console.error(err)
                     return
                 }
-                console.log('Preview generated for', relPath)
-                imgEl.src = imgEl.src
+                console.log('Preview generated for', key)
+                this.refreshPreviewImages(key)
             } catch (err) {
-                console.error('Failed to load image for preview', relPath, err)
+                console.error('Failed to load image for preview', key, err)
+                if (fallback) this.showPreviewFallback(key, fallback)
             } finally {
-                this.generatingPath.delete(relPath)
+                this.generatingPath.delete(key)
                 this._previewRunning--
                 this._processPreviewQueue()
             }
         },
+        refreshPreviewImages(key) {
+            const panels = [this.$refs.stickersPanel, this.$refs.remotePanel].filter(Boolean)
+            panels.forEach((panel) => {
+                Array.from(panel.querySelectorAll('img[data-preview-key]'))
+                    .filter((img) => img.dataset.previewKey === key)
+                    .forEach((img) => (img.src = img.src))
+            })
+        },
+        showPreviewFallback(key, source) {
+            const panels = [this.$refs.stickersPanel, this.$refs.remotePanel].filter(Boolean)
+            panels.forEach((panel) => {
+                Array.from(panel.querySelectorAll('img[data-preview-key]'))
+                    .filter((img) => img.dataset.previewKey === key)
+                    .forEach((img) => {
+                        img.dataset.previewFallback = 'true'
+                        img.src = source
+                    })
+            })
+        },
         changeCurrentDir(dir) {
             if (this.current_dir === dir) {
                 // 点击已选中的分组，滚动到顶部
-                if (this.$refs.stickersPanel) this.$refs.stickersPanel.scrollTop = 0
+                if (this.$refs.stickersPanel) {
+                    this.$refs.stickersPanel.scrollTop = 0
+                    this.stickerScrollTop = 0
+                    this._stickerRenderRange = ''
+                    this.$nextTick(() => this.updateStickerGridMetrics())
+                }
                 return
             }
             console.log('Stickers directory changed:', dir)
@@ -387,6 +748,7 @@ export default {
         sendRemoteSticker(img) {
             this.$emit('send', img)
             RECENTS.push('recentRemoteSticker', img)
+            this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
         },
         pickFace(face) {
             this.$emit('selectFace', face)
@@ -430,7 +792,18 @@ export default {
                 // 点击已选中的 tab，滚动对应面板到顶部
                 const refMap = { face: 'facePanel', remote: 'remotePanel', stickers: 'stickersPanel' }
                 const ref = this.$refs[refMap[type]]
-                if (ref) ref.scrollTop = 0
+                if (ref) {
+                    ref.scrollTop = 0
+                    if (type === 'stickers') {
+                        this.stickerScrollTop = 0
+                        this._stickerRenderRange = ''
+                        this.$nextTick(() => this.updateStickerGridMetrics())
+                    } else if (type === 'remote') {
+                        this.remoteScrollTop = 0
+                        this._remoteRenderRange = ''
+                        this.$nextTick(() => this.updateRemoteGridMetrics())
+                    }
+                }
                 return
             }
             this.panel = type
@@ -448,6 +821,14 @@ export default {
         },
         onmouseout(e) {
             e.target.src = this.getStickerPreview(e.target.dataset.relativePath)
+        },
+        onRemoteStickerMouseover(e) {
+            e.target.dataset.previewFallback = 'false'
+            e.target.src = e.target.dataset.remoteUrl
+        },
+        onRemoteStickerMouseout(e) {
+            e.target.dataset.previewFallback = 'false'
+            e.target.src = this.getRemoteStickerPreview(e.target.dataset.remoteUrl)
         },
     },
 }
@@ -582,6 +963,32 @@ export default {
         position: relative;
         background-color: var(--panel-background);
     }
+}
+
+.sticker-virtual-grid {
+    position: relative;
+    width: 100%;
+    overflow-anchor: none;
+}
+
+.sticker-virtual-grid-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
+.remote-virtual-grid {
+    position: relative;
+    width: 100%;
+    overflow-anchor: none;
+}
+
+.remote-virtual-grid-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
 }
 
 .face-panel {

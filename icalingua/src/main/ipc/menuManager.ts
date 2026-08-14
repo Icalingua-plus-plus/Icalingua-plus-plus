@@ -2460,6 +2460,15 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
             ) {
                 menu.append(
                     new MenuItem({
+                        label: '转发',
+                        visible: win === getMainWindow(),
+                        click: () => {
+                            ui.forwardSingleMessage(message._id as string)
+                        },
+                    }),
+                )
+                menu.append(
+                    new MenuItem({
                         label: `+1${message.code ? ' (普通消息)' : ''}`,
                         click: () => {
                             let messageType
@@ -2514,15 +2523,6 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                                 for (const url of imageUrls) ui.pasteGif(url)
                                 ui.replyMessage(message.replyMessage)
                             }
-                        },
-                    }),
-                )
-                menu.append(
-                    new MenuItem({
-                        label: '转发',
-                        visible: win === getMainWindow(),
-                        click: () => {
-                            ui.forwardSingleMessage(message._id as string)
                         },
                     }),
                 )
