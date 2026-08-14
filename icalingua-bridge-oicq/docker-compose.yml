@@ -18,10 +18,6 @@ services:
               target: /app/config.yaml
         ports:
             - '6789:6789'
-        depends_on:
-            - mongo
-        links:
-            - mongo
         networks:
             - icalingua-bridge-oicq-network
         restart: always
@@ -31,15 +27,6 @@ services:
             timeout: 30s
             retries: 5
             start_period: 30s
-
-    mongo:
-        container_name: mongo
-        image: mongo
-        volumes:
-            - ./data/db:/data/db
-        networks:
-            - icalingua-bridge-oicq-network
-        restart: always
 
 networks:
     icalingua-bridge-oicq-network:
