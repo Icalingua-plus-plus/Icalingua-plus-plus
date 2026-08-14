@@ -7,6 +7,9 @@
     "main": "./dist/electron/main.js",
     "desktopName": "icalingua.desktop",
     "homepage": "https://github.com/Icalingua-plus-plus/Icalingua-plus-plus",
+    "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+    },
     "scripts": {
         "deps:armv7l": "cd ../node_modules/better-sqlite3 && node ../node-gyp/bin/node-gyp.js rebuild --release --force_build=1 --arch=arm",
         "deps:win32": "cd ../node_modules/better-sqlite3 && cross-env npm_config_arch=ia32 node ../node-gyp/bin/node-gyp.js rebuild --release --force_build=1 --arch=ia32",
@@ -215,9 +218,9 @@
     },
     "devDependencies": {
         "@noble/ed25519": "1.7.1",
-        "@rspack/cli": "^1.7.12",
-        "@rspack/core": "^1.7.12",
-        "@rspack/dev-server": "^1.2.1",
+        "@rspack/cli": "^2.1.10",
+        "@rspack/core": "^2.1.10",
+        "@rspack/dev-server": "^2.2.0",
         "@types/ioredis": "^4.28.10",
         "@types/md5": "^2.3.6",
         "@types/minimist": "^1.2.5",
