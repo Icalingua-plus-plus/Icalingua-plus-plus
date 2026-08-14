@@ -69,10 +69,24 @@
             </div>
             <div class="subheader" v-show="recentRemoteSticker.length">全部表情</div>
             <div class="empty" v-show="!remote_pics.length">No remote stickers found</div>
+            <div class="grid" v-if="remote_pics.length && !shouldVirtualizeRemote">
+                <div v-for="i in remote_pics" :key="i.id">
+                    <img
+                        :src="getRemoteStickerPreview(i.url)"
+                        :data-remote-url="i.url"
+                        :data-preview-key="getRemotePreviewKey(i.url)"
+                        @click="sendRemoteSticker(i.url)"
+                        @click.right="remoteStickerMenu(i.url, $event)"
+                        @error="remoteErrorHandler"
+                        @mouseover="onRemoteStickerMouseover"
+                        @mouseout="onRemoteStickerMouseout"
+                    />
+                </div>
+            </div>
             <div
+                v-else-if="remote_pics.length"
                 class="remote-virtual-grid"
                 ref="remoteVirtualGrid"
-                v-show="remote_pics.length"
                 :style="{ height: remoteGridHeight + 'px' }"
             >
                 <div
@@ -103,7 +117,21 @@
                     No stickers found
                     <el-button v-show="current_dir !== RECENT_CATEGORY" @click="folder">Open stickers folder</el-button>
                 </div>
-                <div class="sticker-virtual-grid" v-show="pics.length" :style="{ height: stickerGridHeight + 'px' }">
+                <div class="grid" v-if="pics.length && !shouldVirtualizeStickers">
+                    <div v-for="i in pics" :key="i">
+                        <img
+                            :src="getStickerPreview(i)"
+                            :data-relative-path="i"
+                            :data-preview-key="getStickerPreviewKey(i)"
+                            @click="sendLocalSticker(i)"
+                            @click.right="localStickerMenu(i, $event)"
+                            @error="errorHandler"
+                            @mouseover="onmouseover"
+                            @mouseout="onmouseout"
+                        />
+                    </div>
+                </div>
+                <div v-else-if="pics.length" class="sticker-virtual-grid" :style="{ height: stickerGridHeight + 'px' }">
                     <div
                         class="grid sticker-virtual-grid-content"
                         :style="{
@@ -164,6 +192,7 @@ const faceMap = require('oicq-icalingua-plus-plus/lib/message/face').map
 
 const DEFAULT_CATEGORY = Symbol('DEFAULT')
 const RECENT_CATEGORY = Symbol('RECENT')
+const VIRTUAL_SCROLL_THRESHOLD = 100
 
 const RECENTS = {
     max: {
@@ -227,6 +256,9 @@ export default {
             const end = Math.min(this.pics.length, this.stickerGridEndRow * this.stickerGridColumns)
             return this.pics.slice(start, end)
         },
+        shouldVirtualizeStickers() {
+            return this.pics.length > VIRTUAL_SCROLL_THRESHOLD
+        },
         remoteGridRows() {
             return this.remoteGridColumns > 0 ? Math.ceil(this.remote_pics.length / this.remoteGridColumns) : 0
         },
@@ -254,6 +286,9 @@ export default {
             const start = this.remoteGridStartRow * this.remoteGridColumns
             const end = Math.min(this.remote_pics.length, this.remoteGridEndRow * this.remoteGridColumns)
             return this.remote_pics.slice(start, end)
+        },
+        shouldVirtualizeRemote() {
+            return this.remote_pics.length > VIRTUAL_SCROLL_THRESHOLD
         },
     },
     watch: {
@@ -459,6 +494,11 @@ export default {
         updateStickerGridMetrics() {
             const panel = this.$refs.stickersPanel
             if (!panel) return
+            if (!this.shouldVirtualizeStickers) {
+                this.stickerScrollTop = panel.scrollTop
+                this._stickerRenderRange = ''
+                return
+            }
 
             const columns = this.getStickerGridColumns(panel.clientWidth)
             this.stickerGridColumns = columns
@@ -490,6 +530,7 @@ export default {
             this.updateStickerGridMetrics()
         },
         onStickerScroll(e) {
+            if (!this.shouldVirtualizeStickers) return
             const scrollTop = e.target.scrollTop
             const renderRange = this.getStickerRenderRange(scrollTop)
             if (renderRange === this._stickerRenderRange) return
@@ -510,8 +551,14 @@ export default {
         },
         updateRemoteGridMetrics() {
             const panel = this.$refs.remotePanel
+            if (!panel) return
+            if (!this.shouldVirtualizeRemote) {
+                this.remoteScrollTop = panel.scrollTop
+                this._remoteRenderRange = ''
+                return
+            }
             const grid = this.$refs.remoteVirtualGrid
-            if (!panel || !grid) return
+            if (!grid) return
 
             const columns = this.getStickerGridColumns(panel.clientWidth)
             this.remoteGridColumns = columns
@@ -546,6 +593,7 @@ export default {
             this.updateRemoteGridMetrics()
         },
         onRemoteScroll(e) {
+            if (!this.shouldVirtualizeRemote) return
             const scrollTop = e.target.scrollTop
             const renderRange = this.getRemoteRenderRange(scrollTop)
             if (renderRange === this._remoteRenderRange) return
