@@ -5,6 +5,9 @@
     <style>
         body {
             background: black;
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
         }
 
         #DRAG {
@@ -99,6 +102,11 @@
             background-position: center center;
         }
 
+        #IMG {
+            display: block;
+            transform-origin: center center;
+        }
+
     </style>
     <title>图片查看</title>
     <link rel="stylesheet" href="file-manager/assets/basicContext.min.css">
@@ -186,54 +194,83 @@
     var centerY = -1
     var rotate = 0    // degree
     var zoom = 1
-    var scale = 1 // store the zoom before scaling
+    const MIN_IMAGE_RATIO = 0.2
+    const MAX_IMAGE_RATIO = 20
+    const WHEEL_PAN_MULTIPLIER = 2
 
     var toggle = false
+
+    function viewportSize() {
+        return {
+            width: Math.max(1, body.clientWidth),
+            height: Math.max(1, body.clientHeight),
+        }
+    }
+
+    function snapToDevicePixel(value) {
+        const ratio = window.devicePixelRatio || 1
+        return Math.max(1, Math.round(value * ratio) / ratio)
+    }
+
+    function imageSize() {
+        const ratio = _ratio * zoom
+        return {
+            width: snapToDevicePixel(IMG.naturalWidth * ratio),
+            height: snapToDevicePixel(IMG.naturalHeight * ratio),
+        }
+    }
+
+    function applyImageSize() {
+        const size = imageSize()
+        IMG.style.width = size.width + 'px'
+        IMG.style.height = size.height + 'px'
+        return size
+    }
+
+    function minimumImageRatio() {
+        return toggle ? Math.min(MIN_IMAGE_RATIO, _ratio) : MIN_IMAGE_RATIO
+    }
+
+    function normalizeZoom(value) {
+        const minZoom = minimumImageRatio() / _ratio
+        const maxZoom = MAX_IMAGE_RATIO / _ratio
+        if (!Number.isFinite(value)) return zoom
+        return Math.min(maxZoom, Math.max(minZoom, Number(value.toPrecision(12))))
+    }
 
     function deployLT() {
         if (centerX < 0 || centerY < 0) {
             centerX = 50
             centerY = 50
         }
-        var cX = centerX * body.clientWidth / 100
+        const viewport = viewportSize()
+        var cX = centerX * viewport.width / 100
         var hX = IMG.offsetWidth / 2
-        var cY = centerY * body.clientHeight / 100
+        var cY = centerY * viewport.height / 100
         var hY = IMG.offsetHeight / 2
-        IMG.style.left = cX - hX
-        IMG.style.right = cX + hX
-        IMG.style.top = cY - hY
-        IMG.style.bottom = cY + hY
+        IMG.style.left = cX - hX + 'px'
+        IMG.style.top = cY - hY + 'px'
+        IMG.style.right = ''
+        IMG.style.bottom = ''
     }
 
     function adapt(relative = null) {
-        var absX, absY
-
         centerX = 50
         centerY = 50
 
+        if (!IMG.naturalWidth || !IMG.naturalHeight) return
+
         if (relative) {
-            // force adjust
-            if (body.clientWidth - IMG.offsetWidth > body.clientHeight - IMG.offsetHeight) {
-                // use height
-                var ratio = IMG.offsetWidth / IMG.offsetHeight
-                IMG.style.height = body.clientHeight
-                IMG.style.width = IMG.offsetHeight * ratio
-                _ratio = body.clientHeight / IMG.naturalHeight
-            }
-            else {
-                var ratio = IMG.offsetHeight / IMG.offsetWidth
-                IMG.style.width = body.clientWidth
-                IMG.style.height = IMG.offsetWidth * ratio
-                _ratio = body.clientWidth / IMG.naturalWidth
-            }
+            const viewport = viewportSize()
+            const rotated = Math.abs(rotate) % 180 === 90
+            const width = rotated ? IMG.naturalHeight : IMG.naturalWidth
+            const height = rotated ? IMG.naturalWidth : IMG.naturalHeight
+            _ratio = Math.min(viewport.width / width, viewport.height / height)
         }
         else if (relative == false) {
-            // force adjust
-            IMG.style.width = IMG.naturalWidth
-            IMG.style.height = IMG.naturalHeight
             _ratio = 1
         }
-        const w = IMG.offsetWidth, h = IMG.offsetHheight
+        applyImageSize()
         deployLT()
     }
 
@@ -269,11 +306,12 @@
                 centerY = 50
             }
             
-            IMG.style.left = e.clientX - starT[0] + starTLT[0]
-            IMG.style.top = e.clientY - starT[1] + starTLT[1]
+            IMG.style.left = e.clientX - starT[0] + starTLT[0] + 'px'
+            IMG.style.top = e.clientY - starT[1] + starTLT[1] + 'px'
 
-            centerX = (IMG.offsetRight - IMG.offsetLeft) * 50 / body.clientWidth
-            centerY = (IMG.offsetBottom - IMG.offsetTop) * 50 / body.clientHeight
+            const viewport = viewportSize()
+            centerX = (IMG.offsetLeft + IMG.offsetWidth / 2) * 100 / viewport.width
+            centerY = (IMG.offsetTop + IMG.offsetHeight / 2) * 100 / viewport.height
         }
         else if (evCache.length == 2) {
             const ev0 = evCache[0], ev1 = evCache[1]
@@ -286,7 +324,10 @@
                 Math.pow(distanceY / firstPinchDistanceY, 2)
             ) / Math.SQRT2 
             
-            if (touchInitialZoom * ratio * _ratio >= 0.2 && touchInitialZoom * ratio * _ratio <= 20)
+            if (
+                touchInitialZoom * ratio * _ratio >= minimumImageRatio() &&
+                touchInitialZoom * ratio * _ratio <= MAX_IMAGE_RATIO
+            )
                 setZoom(e, touchInitialZoom * ratio)
         }
     }
@@ -325,7 +366,10 @@
                 RATIO_TIMER = null
             }, 2000)
         }
-        return 'rotate(' + rotate + 'deg) scale(' + zoom + ',' + zoom + ')'
+        // Scaling through CSS transform can expose Chromium's composited image
+        // tile boundaries at fractional ratios. Keep transforms for rotation
+        // only and resize the image itself in applyImageSize().
+        return rotate % 360 ? 'rotate(' + rotate + 'deg)' : 'none'
     }
 
     function resetZoom(showTip = true) {
@@ -337,38 +381,37 @@
     }
 
     function rotateAntiClockwise() {
-        rotate -= 90
-        if (!rotate % 360) rotate = 0
+        rotate = (rotate + 270) % 360
         IMG.style.transform = mkTransform(rotate, zoom)
     }
 
     function rotateClockwise() {
-        rotate += 90
-        if (!rotate % 360) rotate = 0
+        rotate = (rotate + 90) % 360
         IMG.style.transform = mkTransform(rotate, zoom)
     }
 
     function zoomIn(e, ratio=0.2) {
-        scale = zoom
-        zoom *= (1 + ratio)
-        if (zoom * _ratio > 20) zoom = 20 / _ratio
+        const oldSize = imageSize()
+        zoom = normalizeZoom(zoom * (1 + ratio))
+        applyImageSize()
         IMG.style.transform = mkTransform(rotate, zoom)
-        updatePosition(e)
+        updatePosition(e, oldSize)
     }
 
     function zoomOut(e, ratio=0.2) {
-        scale = zoom
-        zoom *= (1 - ratio)
-        if (zoom * _ratio < 0.2) zoom = 0.2 / _ratio
+        const oldSize = imageSize()
+        zoom = normalizeZoom(zoom / (1 + ratio))
+        applyImageSize()
         IMG.style.transform = mkTransform(rotate, zoom)
-        updatePosition(e)
+        updatePosition(e, oldSize)
     }
 
     function setZoom(e, target) {
-        scale = zoom
-        zoom = target
+        const oldSize = imageSize()
+        zoom = normalizeZoom(target)
+        applyImageSize()
         IMG.style.transform = mkTransform(rotate, zoom)
-        updatePosition(e)
+        updatePosition(e, oldSize)
     }
 
     function download() {
@@ -398,15 +441,21 @@
     }
 
     function reinit() {
-        IMG.src = url.split('&message_id=')[0]
         _ratio = 1
         centerX = -1    // to center, with % instead
         centerY = -1
         rotate = 0    // degree
         zoom = 1
-        scale = 1 // store the zoom before scaling
         toggle = false
-        IMG.style = 'position: absolute; z-index: 1; visibility: hidden;'
+        IMG.style.width = ''
+        IMG.style.height = ''
+        IMG.style.left = ''
+        IMG.style.top = ''
+        IMG.style.right = ''
+        IMG.style.bottom = ''
+        IMG.style.transform = 'none'
+        IMG.style.visibility = 'hidden'
+        IMG.src = url.split('&message_id=')[0]
     }
 
     function showTips(str) {
@@ -458,42 +507,61 @@
         IMG.style.visibility = 'visible'
     }
 
-    // ajust focus 
-    function updatePosition(e) {
-        var focus
-        if (e.type === "click") {
-            focus = { x: body.clientWidth / 2, y: body.clientHeight / 2 }
+    function zoomFocus(e) {
+        const viewport = viewportSize()
+        if (!e || e.type === 'click' || !Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) {
+            return { x: viewport.width / 2, y: viewport.height / 2 }
         }
-        else {
-            focus = { x: e.clientX, y: e.clientY }
-        }
+        return { x: e.clientX, y: e.clientY }
+    }
 
-        var dx = (focus.x - IMG.offsetLeft - IMG.width / 2) * (1 - zoom / scale);
-        var dy = (focus.y - IMG.offsetTop - IMG.height / 2) * (1 - zoom / scale);
+    // Adjust focus while changing the image's layout size rather than its
+    // composited transform scale.
+    function updatePosition(e, oldSize) {
+        const focus = zoomFocus(e)
+        const newSize = imageSize()
+        const oldLeft = parseFloat(IMG.style.left) || IMG.offsetLeft
+        const oldTop = parseFloat(IMG.style.top) || IMG.offsetTop
+        const radians = rotate * Math.PI / 180
+        const cos = Math.cos(radians)
+        const sin = Math.sin(radians)
+        const oldCenterX = oldLeft + oldSize.width / 2
+        const oldCenterY = oldTop + oldSize.height / 2
+        const screenX = focus.x - oldCenterX
+        const screenY = focus.y - oldCenterY
+        const localX = cos * screenX + sin * screenY
+        const localY = -sin * screenX + cos * screenY
+        const nextLocalX = localX * newSize.width / oldSize.width
+        const nextLocalY = localY * newSize.height / oldSize.height
+        const nextCenterX = focus.x - (cos * nextLocalX - sin * nextLocalY)
+        const nextCenterY = focus.y - (sin * nextLocalX + cos * nextLocalY)
 
-        IMG.style.left = IMG.offsetLeft + dx + 'px'
-        IMG.style.top = IMG.offsetTop + dy + 'px'
+        IMG.style.left = nextCenterX - newSize.width / 2 + 'px'
+        IMG.style.top = nextCenterY - newSize.height / 2 + 'px'
 
     }
 
     DRAG.onwheel = e => {
-        const isTouchPad = (Math.abs(event.deltaY) < 100) && !window.disableTouchPad
+        const isTouchPad = Math.abs(e.deltaY) < 100 && !window.disableTouchPad
+        const wheelDeltaX = Number.isFinite(e.wheelDeltaX) ? e.wheelDeltaX : -e.deltaX
+        const wheelDeltaY = Number.isFinite(e.wheelDeltaY) ? e.wheelDeltaY : -e.deltaY
         if (!e.ctrlKey && isTouchPad) {
-            IMG.style.top = IMG.offsetTop + e.wheelDeltaY + 'px'
-            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX + 'px'
+            IMG.style.top = IMG.offsetTop + wheelDeltaY * WHEEL_PAN_MULTIPLIER + 'px'
+            IMG.style.left = IMG.offsetLeft + wheelDeltaX * WHEEL_PAN_MULTIPLIER + 'px'
             return
         }
         if (e.shiftKey) {
-            IMG.style.top = IMG.offsetTop + e.wheelDeltaY / 5 + 'px'
-            IMG.style.left = IMG.offsetLeft + e.wheelDeltaX / 5 + 'px'
+            IMG.style.top = IMG.offsetTop + wheelDeltaY * WHEEL_PAN_MULTIPLIER / 5 + 'px'
+            IMG.style.left = IMG.offsetLeft + wheelDeltaX * WHEEL_PAN_MULTIPLIER / 5 + 'px'
             return
         }
         const deltaY = (isTouchPad && Math.abs(e.deltaY) < 30) ? e.deltaY * 10 : e.deltaY
+        const ratio = Math.min(0.8, Math.abs(deltaY) / viewportSize().height)
         if (deltaY < 0) {
-            zoomIn(e, -deltaY / body.clientHeight)
+            zoomIn(e, ratio)
         }
         else if (deltaY > 0) {
-            zoomOut(e, deltaY / body.clientHeight)
+            zoomOut(e, ratio)
         }
     }
 
