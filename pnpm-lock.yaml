@@ -13,8 +13,8 @@ importers:
   .:
     dependencies:
       '@actions/core':
-        specifier: 1.10.0
-        version: 1.10.0
+        specifier: 1.11.1
+        version: 1.11.1
       '@icalingua/storage-providers':
         specifier: workspace:*
         version: link:packages/storageProviders
@@ -358,11 +358,17 @@ importers:
 
 packages:
 
-  '@actions/core@1.10.0':
-    resolution: {integrity: sha512-2aZDDa3zrrZbP5ZYg159sNoLRb61nQ7awl5pSvIq5Qpj81vwDzdMRKzkWJGJuwVvWpvZKx7vspJALyvaaIQyug==}
+  '@actions/core@1.11.1':
+    resolution: {integrity: sha512-hXJCSrkwfA46Vd9Z3q4cpEpHB1rL5NG04+/rbqW9d3+CSvtB1tYe8UTpAlixa1vj0m/ULglfEK2UKxMGxCxv5A==}
+
+  '@actions/exec@1.1.1':
+    resolution: {integrity: sha512-+sCcHHbVdk93a0XT19ECtO/gIXoxvdsgQLzb2fE2/5sIZmWQuluYyjPQtrtTHdU1YzTZ7bAPN4sITq2xi1679w==}
 
   '@actions/http-client@2.2.3':
     resolution: {integrity: sha512-mx8hyJi/hjFvbPokCg4uRd4ZX78t+YyRPtnKWwIl+RzNaVuFpQHfmlGVfsKEJN8LwTCvL+DfVgAM04XaHkm6bA==}
+
+  '@actions/io@1.1.3':
+    resolution: {integrity: sha512-wi9JjgKLYS7U/z8PPbco+PvTb/nRWjeoFlJ1Qer83k/3C5PHQi28hiVdeE2kHXmIL99mQFawx8qt/JPjZilJ8Q==}
 
   '@aws-crypto/sha256-browser@5.2.0':
     resolution: {integrity: sha512-AXfN/lGotSQwu6HNcEsIASo7kWXZ5HYWvfOmSNKDsEqC4OashTp8alTmaz+F7TC2L083SFv5RdB+qU3Vs1kZqw==}
@@ -4879,15 +4885,21 @@ packages:
 
 snapshots:
 
-  '@actions/core@1.10.0':
+  '@actions/core@1.11.1':
     dependencies:
+      '@actions/exec': 1.1.1
       '@actions/http-client': 2.2.3
-      uuid: 8.3.2
+
+  '@actions/exec@1.1.1':
+    dependencies:
+      '@actions/io': 1.1.3
 
   '@actions/http-client@2.2.3':
     dependencies:
       tunnel: 0.0.6
       undici: 5.29.0
+
+  '@actions/io@1.1.3': {}
 
   '@aws-crypto/sha256-browser@5.2.0':
     dependencies:
