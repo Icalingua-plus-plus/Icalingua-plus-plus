@@ -196,6 +196,7 @@
     var zoom = 1
     const MIN_IMAGE_RATIO = 0.2
     const MAX_IMAGE_RATIO = 20
+    const ZOOM_STEP = 1.2
     const WHEEL_PAN_MULTIPLIER = 2
 
     var toggle = false
@@ -398,17 +399,17 @@
         IMG.style.transform = mkTransform(rotate, zoom)
     }
 
-    function zoomIn(e, ratio=0.2) {
+    function zoomIn(e) {
         const oldSize = imageSize()
-        zoom = normalizeZoom(zoom * (1 + ratio))
+        zoom = normalizeZoom(zoom * ZOOM_STEP)
         applyImageSize()
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e, oldSize)
     }
 
-    function zoomOut(e, ratio=0.2) {
+    function zoomOut(e) {
         const oldSize = imageSize()
-        zoom = normalizeZoom(zoom / (1 + ratio))
+        zoom = normalizeZoom(zoom / ZOOM_STEP)
         applyImageSize()
         IMG.style.transform = mkTransform(rotate, zoom)
         updatePosition(e, oldSize)
@@ -564,12 +565,11 @@
             return
         }
         const deltaY = (isTouchPad && Math.abs(e.deltaY) < 30) ? e.deltaY * 10 : e.deltaY
-        const ratio = Math.min(0.8, Math.abs(deltaY) / viewportSize().height)
         if (deltaY < 0) {
-            zoomIn(e, ratio)
+            zoomIn(e)
         }
         else if (deltaY > 0) {
-            zoomOut(e, ratio)
+            zoomOut(e)
         }
     }
 
