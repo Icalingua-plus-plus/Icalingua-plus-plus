@@ -14,10 +14,16 @@ import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchInd
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import SQLStorageProviderWorker from './SQLStorageProviderWorker'
+import {
+    createSQLiteMessageSearchSourceCallbacks,
+    type SQLiteMessageSearchSourceRequest,
+    type SQLiteMessageSearchSourceResult,
+} from './SQLiteMessageSearchSource'
 import type {
     SQLiteMessageSearchIndexCallbacks,
     SQLiteMessageSearchTimesOptions,
     SQLiteSearchMessage,
+    SQLiteSearchTimeCount,
 } from './SQLiteMessageSearchIndex'
 import upg0to1 from './SQLUpgradeScript/0to1'
 import upg1to2 from './SQLUpgradeScript/1to2'
@@ -197,10 +203,7 @@ export default class SQLStorageProvider implements StorageProvider {
         this.searchIndex = (searchIndexFactory || createMessageSearchIndexWorker)(
             searchDbPath,
             {
-                loadTimes: (afterTime, limit) => this.loadSearchTimes(afterTime, limit),
-                loadMessagesByTimes: (times) => this.loadSearchMessagesByTimes(times),
-                loadMessageTimeCounts: (afterTime, limit) => this.loadSearchTimeCounts(afterTime, limit),
-                countMessages: () => this.countSearchMessages(),
+                ...createSQLiteMessageSearchSourceCallbacks((request) => this.readMessageSearchSource(request)),
                 reportProgress: (progress) => this.reportUpgradeProgress(progress),
                 buildBatchSize: sqlSearchBuildBatchSize,
                 validationBatchSize: sqlSearchValidationBatchSize,
@@ -486,7 +489,7 @@ export default class SQLStorageProvider implements StorageProvider {
         return messages
     }
 
-    private async loadSearchTimeCounts(afterTime: number, limit: number) {
+    private async loadSearchTimeCounts(afterTime: number, limit: number): Promise<SQLiteSearchTimeCount[]> {
         const rows = await this.db('messages')
             .select('time')
             .count({ messageCount: '*' })
@@ -503,6 +506,20 @@ export default class SQLStorageProvider implements StorageProvider {
     private async countSearchMessages(): Promise<number> {
         const result: any = await this.db('messages').where('time', '>', 0).count({ count: '*' }).first()
         return Number(result?.count || Object.values(result || {})[0] || 0)
+    }
+
+    /** Internal Worker RPC used only to feed the disposable SQLite FTS sidecar. */
+    async readMessageSearchSource(request: SQLiteMessageSearchSourceRequest): Promise<SQLiteMessageSearchSourceResult> {
+        switch (request.operation) {
+            case 'loadTimes':
+                return this.loadSearchTimes(request.afterTime, request.limit)
+            case 'loadMessagesByTimes':
+                return this.loadSearchMessagesByTimes(request.times)
+            case 'loadMessageTimeCounts':
+                return this.loadSearchTimeCounts(request.afterTime, request.limit)
+            case 'countMessages':
+                return this.countSearchMessages()
+        }
     }
 
     private async ensureMessageSearchSchema(): Promise<void> {

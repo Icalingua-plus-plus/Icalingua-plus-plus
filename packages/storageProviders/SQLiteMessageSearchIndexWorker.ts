@@ -5,6 +5,11 @@ import type {
 } from './SQLiteMessageSearchIndex'
 import { getDBWorkerClient } from './DBWorkerClient'
 import { deserializeDBWorkerError, SerializedDBWorkerError } from './DBWorkerProtocol'
+import {
+    readSQLiteMessageSearchSource,
+    sqliteMessageSearchSourceMethod,
+    type SQLiteMessageSearchSourceRequest,
+} from './SQLiteMessageSearchSource'
 
 export type {
     SQLiteMessageSearchIndexCallbacks,
@@ -49,12 +54,8 @@ export default class SQLiteMessageSearchIndexWorker {
                     },
                 ],
                 {
-                    loadTimes: callbacks.loadTimes,
-                    loadMessagesByTimes: callbacks.loadMessagesByTimes,
-                    ...(callbacks.loadMessageTimeCounts
-                        ? { loadMessageTimeCounts: callbacks.loadMessageTimeCounts }
-                        : {}),
-                    ...(callbacks.countMessages ? { countMessages: callbacks.countMessages } : {}),
+                    [sqliteMessageSearchSourceMethod]: (request: SQLiteMessageSearchSourceRequest) =>
+                        readSQLiteMessageSearchSource(callbacks, request),
                 },
                 (name, payload) => this.handleEvent(name, payload),
             )

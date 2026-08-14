@@ -3,6 +3,12 @@ import SQLStorageProvider, { type MessageSearchIndexFactory } from './SQLStorage
 import SQLiteMessageSearchIndex from './SQLiteMessageSearchIndex'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import {
+    createSQLiteMessageSearchSourceCallbacks,
+    sqliteMessageSearchSourceMethod,
+    type SQLiteMessageSearchSourceCallbackOptions,
+    type SQLiteMessageSearchSourceResult,
+} from './SQLiteMessageSearchSource'
+import {
     DBWorkerCallbackRequest,
     DBWorkerCallbackResponse,
     DBWorkerEvent,
@@ -61,6 +67,7 @@ const sqlMethods = new Set([
 ])
 
 const sqlReadMethods = new Set([
+    sqliteMessageSearchSourceMethod,
     'getAllRooms',
     'getRoom',
     'getAllChatGroups',
@@ -133,11 +140,32 @@ const callParent = (targetId: string, name: string, args: unknown[]): Promise<un
     })
 }
 
+const createParentMessageSearchSource = (targetId: string, options?: SQLiteMessageSearchSourceCallbackOptions) =>
+    createSQLiteMessageSearchSourceCallbacks(
+        (request) =>
+            callParent(targetId, sqliteMessageSearchSourceMethod, [
+                request,
+            ]) as Promise<SQLiteMessageSearchSourceResult>,
+        options,
+    )
+
 // Keep FTS work off the Worker that serves the primary SQLite database. Large
 // rebuilds and validation scans may take minutes, but room/message operations
 // must remain responsive while they run.
-const createMessageSearchIndex: MessageSearchIndexFactory = (filePath, callbacks, errorHandle) =>
-    new SQLiteMessageSearchIndexWorker(filePath, callbacks, errorHandle)
+const createMessageSearchIndex =
+    (targetId: string): MessageSearchIndexFactory =>
+    (filePath, callbacks, errorHandle) =>
+        new SQLiteMessageSearchIndexWorker(
+            filePath,
+            {
+                ...callbacks,
+                ...createParentMessageSearchSource(targetId, {
+                    loadMessageTimeCounts: Boolean(callbacks.loadMessageTimeCounts),
+                    countMessages: Boolean(callbacks.countMessages),
+                }),
+            },
+            errorHandle,
+        )
 
 const createRemoteMessageSearchIndex =
     (targetId: string): MessageSearchIndexFactory =>
@@ -166,7 +194,7 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
                 postErrorEvent(targetId, error)
                 throw error
             },
-            kind === 'sql' ? createMessageSearchIndex : createRemoteMessageSearchIndex(targetId),
+            kind === 'sql' ? createMessageSearchIndex(targetId) : createRemoteMessageSearchIndex(targetId),
             kind === 'sqlReader',
         )
         target = { kind, instance, activeCalls: new Set(), disposing: false }
@@ -190,17 +218,10 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
     const instance = new SQLiteMessageSearchIndex(
         filePath,
         {
-            loadTimes: (afterTime, limit) => callParent(targetId, 'loadTimes', [afterTime, limit]) as Promise<number[]>,
-            loadMessagesByTimes: (times) => callParent(targetId, 'loadMessagesByTimes', [times]) as any,
-            ...(callbackOptions?.loadMessageTimeCounts
-                ? {
-                      loadMessageTimeCounts: (afterTime: number, limit: number) =>
-                          callParent(targetId, 'loadMessageTimeCounts', [afterTime, limit]) as any,
-                  }
-                : {}),
-            ...(callbackOptions?.countMessages
-                ? { countMessages: () => callParent(targetId, 'countMessages', []) as Promise<number> }
-                : {}),
+            ...createParentMessageSearchSource(targetId, {
+                loadMessageTimeCounts: Boolean(callbackOptions?.loadMessageTimeCounts),
+                countMessages: Boolean(callbackOptions?.countMessages),
+            }),
             buildBatchSize: callbackOptions?.buildBatchSize,
             validationBatchSize: callbackOptions?.validationBatchSize,
             reportProgress: (progress) => {

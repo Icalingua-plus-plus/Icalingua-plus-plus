@@ -8,6 +8,11 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import DBWorkerClient from './DBWorkerClient'
 import { DBWorkerTargetKind, deserializeDBWorkerError, SerializedDBWorkerError } from './DBWorkerProtocol'
 import { SQLiteMessageSearchTimesOptions } from './SQLiteMessageSearchIndex'
+import {
+    sqliteMessageSearchSourceMethod,
+    type SQLiteMessageSearchSourceRequest,
+    type SQLiteMessageSearchSourceResult,
+} from './SQLiteMessageSearchSource'
 
 interface SQLiteOpt {
     dataPath: string
@@ -36,7 +41,12 @@ interface ReadRequest {
     reject: (error: unknown) => void
 }
 
-type WriterTargetResult = { targetId: string } | { error: unknown }
+type WorkerTargetResult = { targetId: string } | { error: unknown }
+
+interface DedicatedWorkerTarget {
+    client: DBWorkerClientLike
+    targetPromise: Promise<WorkerTargetResult>
+}
 
 interface ReadWorkerLane {
     index: number
@@ -56,8 +66,8 @@ export default class SQLStorageProviderWorker implements StorageProvider {
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
     private readonly connectOpt: SQLiteOpt
     private readonly workerFactory: DBWorkerClientFactory
-    private readonly writer: DBWorkerClientLike
-    private readonly writerTargetPromise: Promise<WriterTargetResult>
+    private readonly searchSource: DedicatedWorkerTarget
+    private readonly writer: DedicatedWorkerTarget
     private readonly readLanes: ReadWorkerLane[]
     private readonly readQueue: ReadRequest[] = []
     private writeTail: Promise<void> = Promise.resolve()
@@ -76,11 +86,20 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         this.connectOpt = connectOpt
         this.errorHandle = errorHandle
         this.workerFactory = workerFactory
-        this.writer = this.workerFactory(`icalingua-db-write-${id}`)
-        this.writerTargetPromise = this.writer
-            .createTarget('sql', [id, type, connectOpt], {}, (name, payload) => this.handleEvent(name, payload))
-            .then((targetId) => ({ targetId }))
-            .catch((error) => ({ error }))
+        this.searchSource = this.createDedicatedTarget(`icalingua-db-fts-source-${id}`, 'sqlReader')
+        this.writer = this.createDedicatedTarget(
+            `icalingua-db-write-${id}`,
+            'sql',
+            {
+                [sqliteMessageSearchSourceMethod]: (request: SQLiteMessageSearchSourceRequest) =>
+                    this.callDedicatedTarget<SQLiteMessageSearchSourceResult>(
+                        this.searchSource,
+                        sqliteMessageSearchSourceMethod,
+                        [request],
+                    ),
+            },
+            (name, payload) => this.handleEvent(name, payload),
+        )
         this.readLanes = Array.from({ length: sqliteReadWorkerCount }, (_, index) => this.createReadLane(index))
     }
 
@@ -220,15 +239,34 @@ export default class SQLStorageProviderWorker implements StorageProvider {
             lane.client.terminate().catch((error) => this.reportBackgroundError(error)),
         )
         await this.writeTail
-        const target = await this.writerTargetPromise
+        await this.disposeDedicatedTarget(this.writer)
+        await this.disposeDedicatedTarget(this.searchSource)
+        await Promise.allSettled(readTerminations)
+    }
+
+    private createDedicatedTarget(
+        name: string,
+        kind: DBWorkerTargetKind,
+        callbacks: Record<string, (...args: any[]) => any> = {},
+        eventHandler?: (name: string, payload: unknown) => void,
+    ): DedicatedWorkerTarget {
+        const client = this.workerFactory(name)
+        const targetPromise = client
+            .createTarget(kind, [this.id, this.type, this.connectOpt], callbacks, eventHandler)
+            .then((targetId) => ({ targetId }))
+            .catch((error) => ({ error }))
+        return { client, targetPromise }
+    }
+
+    private async disposeDedicatedTarget(worker: DedicatedWorkerTarget): Promise<void> {
+        const target = await worker.targetPromise
         try {
-            if ('targetId' in target) await this.writer.disposeTarget(target.targetId)
+            if ('targetId' in target) await worker.client.disposeTarget(target.targetId)
         } catch (error) {
             this.reportBackgroundError(error)
         } finally {
-            await this.writer.terminate().catch((error) => this.reportBackgroundError(error))
+            await worker.client.terminate().catch((error) => this.reportBackgroundError(error))
         }
-        await Promise.allSettled(readTerminations)
     }
 
     private createReadLane(index: number): ReadWorkerLane {
@@ -322,14 +360,22 @@ export default class SQLStorageProviderWorker implements StorageProvider {
     }
 
     private async callWriter<T>(method: string, args: unknown[] = []): Promise<T | undefined> {
-        const target = await this.writerTargetPromise
-        if ('error' in target) throw this.reportForegroundError(target.error)
         try {
-            return await this.writer.callTarget<T>(target.targetId, method, args)
+            return await this.callDedicatedTarget<T>(this.writer, method, args)
         } catch (error) {
             if (this.closed) return undefined
             throw this.reportForegroundError(error)
         }
+    }
+
+    private async callDedicatedTarget<T>(
+        worker: DedicatedWorkerTarget,
+        method: string,
+        args: unknown[] = [],
+    ): Promise<T> {
+        const target = await worker.targetPromise
+        if ('error' in target) throw target.error
+        return worker.client.callTarget<T>(target.targetId, method, args)
     }
 
     private async searchMessageTimes(

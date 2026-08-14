@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { DBWorkerTargetKind } from './DBWorkerProtocol'
 import SQLStorageProviderWorker, { DBWorkerClientFactory, DBWorkerClientLike } from './SQLStorageProviderWorker'
+import { sqliteMessageSearchSourceMethod, type SQLiteMessageSearchSourceRequest } from './SQLiteMessageSearchSource'
 
 type MethodBehavior = (args: unknown[]) => unknown | Promise<unknown>
 
@@ -10,12 +11,18 @@ class FakeDBWorkerClient implements DBWorkerClientLike {
     readonly behaviors = new Map<string, MethodBehavior>()
     isClosed = false
     private kind: DBWorkerTargetKind
+    private callbacks: Record<string, (...args: any[]) => any> = {}
     private readonly blockedRejects = new Set<(error: Error) => void>()
 
     constructor(readonly name: string) {}
 
-    async createTarget(kind: DBWorkerTargetKind): Promise<string> {
+    async createTarget(
+        kind: DBWorkerTargetKind,
+        _args: unknown[],
+        callbacks: Record<string, (...args: any[]) => any> = {},
+    ): Promise<string> {
         this.kind = kind
+        this.callbacks = callbacks
         return `${this.name}-target`
     }
 
@@ -36,6 +43,12 @@ class FakeDBWorkerClient implements DBWorkerClientLike {
 
     block(): Promise<never> {
         return new Promise((_, reject) => this.blockedRejects.add(reject))
+    }
+
+    invokeCallback<T>(name: string, ...args: any[]): Promise<T> {
+        const callback = this.callbacks[name]
+        if (!callback) return Promise.reject(new Error(`Missing callback: ${name}`))
+        return Promise.resolve(callback(...args))
     }
 
     get targetKind(): DBWorkerTargetKind {
@@ -59,10 +72,12 @@ const createHarness = () => {
         factory,
     )
     const writer = clients.find((client) => client.name.includes('-write-'))
+    const searchSource = clients.find((client) => client.name.includes('-fts-source-'))
     const readers = clients.filter((client) => client.name.includes('-read-'))
     assert.ok(writer)
+    assert.ok(searchSource)
     assert.equal(readers.length, 2)
-    return { provider, writer, readers, errors }
+    return { provider, writer, searchSource, readers, errors }
 }
 
 const nextTurn = () => new Promise<void>((resolve) => setImmediate(resolve))
@@ -121,6 +136,57 @@ test('reads wait for earlier writes and writes stay strictly ordered', async () 
     assert.deepEqual(errors, [])
     assert.equal(writer.targetKind, 'sql')
     assert.ok(readers.every((reader) => reader.targetKind === 'sqlReader'))
+})
+
+test('FTS source callbacks use the dedicated read worker', async () => {
+    const { provider, writer, searchSource, readers, errors } = createHarness()
+    await provider.connect()
+
+    searchSource.behaviors.set(sqliteMessageSearchSourceMethod, ([request]: [SQLiteMessageSearchSourceRequest]) => {
+        switch (request.operation) {
+            case 'countMessages':
+                return 123
+            case 'loadTimes':
+                return [request.afterTime, request.limit]
+            case 'loadMessagesByTimes':
+                return request.times
+            case 'loadMessageTimeCounts':
+                return [{ time: request.afterTime, messageCount: request.limit }]
+        }
+    })
+    writer.behaviors.set('validateMessageSearchIndex', async () => {
+        assert.equal(await writer.invokeCallback(sqliteMessageSearchSourceMethod, { operation: 'countMessages' }), 123)
+        assert.deepEqual(
+            await writer.invokeCallback(sqliteMessageSearchSourceMethod, {
+                operation: 'loadTimes',
+                afterTime: 10,
+                limit: 20,
+            }),
+            [10, 20],
+        )
+        assert.deepEqual(
+            await writer.invokeCallback(sqliteMessageSearchSourceMethod, {
+                operation: 'loadMessagesByTimes',
+                times: [30, 40],
+            }),
+            [30, 40],
+        )
+        assert.deepEqual(
+            await writer.invokeCallback(sqliteMessageSearchSourceMethod, {
+                operation: 'loadMessageTimeCounts',
+                afterTime: 50,
+                limit: 60,
+            }),
+            [{ time: 50, messageCount: 60 }],
+        )
+    })
+
+    await provider.validateMessageSearchIndex()
+    assert.deepEqual(searchSource.calls, Array(4).fill(sqliteMessageSearchSourceMethod))
+    assert.ok(readers.every((reader) => reader.calls.length === 0))
+    assert.deepEqual(errors, [])
+
+    await provider.close()
 })
 
 test('foreground database failures reject instead of being converted to empty results', async () => {
