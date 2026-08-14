@@ -238,7 +238,7 @@
         "electron-builder": "^26.15.3",
         "electron-dl": "^3.5.2",
         "element-ui": "^2.15.14",
-        "file-type": "^16.5.4",
+        "file-type": "^21.3.4",
         "freedesktop-notifications": "^2.1.1",
         "ioredis": "^4.31.0",
         "linkifyjs": "4.1.3",

@@ -14,7 +14,7 @@ import crypto from 'crypto'
 import ChildProcess from 'child_process'
 import errorHandler from '../utils/errorHandler'
 import axios from 'axios'
-import fileType from 'file-type'
+import { fileTypeFromStream } from 'file-type'
 import { Readable } from 'stream'
 import fetch from 'node-fetch'
 import { Agent } from 'https'
@@ -195,7 +195,7 @@ const extFromMime = (mime: string) => {
     }
 }
 export const extFromStream = async (stream: Readable) => {
-    const type = await fileType.fromStream(stream)
+    const type = await fileTypeFromStream(stream)
     if (!type) {
         return null
     }

@@ -13,7 +13,7 @@ import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
 import axios from 'axios'
 import { app, dialog, Notification as ElectronNotification } from 'electron'
-import fileType from 'file-type'
+import { fileTypeFromBuffer } from 'file-type'
 import { Notification } from 'freedesktop-notifications'
 import fs from 'fs'
 import { sign } from '@noble/ed25519'
@@ -927,7 +927,7 @@ const adapter: Adapter = {
                 if (img.type?.startsWith('audio/') && img.fid) continue
                 if (img.url && !img.b64 && !/^https?:\/\//.test(img.url)) {
                     const fileContent = fs.readFileSync(img.url)
-                    const type = await fileType.fromBuffer(fileContent)
+                    const type = await fileTypeFromBuffer(fileContent)
                     img.b64 = 'data:' + type.mime + ';base64,' + fileContent.toString('base64')
                     img.url = null
                 }
