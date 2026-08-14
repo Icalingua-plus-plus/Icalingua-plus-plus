@@ -69,92 +69,198 @@ const debug = process.env.MILKY_DEBUG === 'true' ? console.log : () => {}
 const RKEY_SERVICES = ['https://ss.xingzhige.com/music_card/rkey', 'https://secret-service.bietiaop.com/rkeys']
 
 interface RkeyResponse {
-    private_rkey: string
-    group_rkey: string
-    expired_time: number
-    name?: string
+    readonly private_rkey: string
+    readonly group_rkey: string
+    readonly expired_time: number
+    readonly name?: string
 }
 
-let rkeyData: RkeyResponse | null = null
+type ImageAppId = '1406' | '1407'
 
-const fetchRkey = async (): Promise<RkeyResponse | null> => {
-    try {
-        const result = await new Promise<RkeyResponse>((resolve, reject) => {
-            let rejected = 0
-            const errors: Error[] = []
-            RKEY_SERVICES.forEach((url) => {
-                axios
-                    .get<RkeyResponse>(url, { timeout: 5000 })
-                    .then((res) => resolve(res.data))
-                    .catch((e) => {
-                        errors.push(e)
-                        rejected++
-                        if (rejected === RKEY_SERVICES.length) {
-                            reject(new Error('All rkey services failed'))
-                        }
-                    })
-            })
-        })
-        console.log('Rkey 已获取:', result.name || 'unknown')
-        return result
-    } catch (e) {
-        console.error('获取 Rkey 失败:', e)
+interface CachedMilkyRkey {
+    readonly value: string
+    readonly expiresAt: number
+}
+
+const MILKY_RKEY_CACHE_SECONDS = 60
+const RKEY_REFRESH_RETRY_SECONDS = 60
+
+let rkeyData: RkeyResponse | null = null
+let rkeyRefreshPromise: Promise<void> | null = null
+let lastRkeyRefreshAttempt = 0
+const milkyRkeyCache = new Map<ImageAppId, CachedMilkyRkey>()
+const milkyRkeyRefreshPromises = new Map<ImageAppId, Promise<string | null>>()
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
+
+const normalizeRkey = (value: string): string => (value.startsWith('&rkey=') ? value.slice('&rkey='.length) : value)
+
+const parseRkeyResponse = (value: unknown): RkeyResponse | null => {
+    if (!isRecord(value)) return null
+    const privateRkey = value.private_rkey
+    const groupRkey = value.group_rkey
+    const expiredTime = value.expired_time
+    const name = value.name
+    if (
+        typeof privateRkey !== 'string' ||
+        !normalizeRkey(privateRkey) ||
+        typeof groupRkey !== 'string' ||
+        !normalizeRkey(groupRkey) ||
+        typeof expiredTime !== 'number' ||
+        !Number.isFinite(expiredTime) ||
+        expiredTime <= Math.floor(Date.now() / 1000) ||
+        (name !== undefined && typeof name !== 'string')
+    ) {
         return null
     }
+    return {
+        private_rkey: privateRkey,
+        group_rkey: groupRkey,
+        expired_time: expiredTime,
+        name: typeof name === 'string' ? name : undefined,
+    }
+}
+
+const getErrorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error))
+
+const fetchRkey = async (): Promise<RkeyResponse | null> => {
+    const errors: string[] = []
+    for (const serviceUrl of RKEY_SERVICES) {
+        const serviceName = new URL(serviceUrl).hostname
+        try {
+            const response = await axios.get<unknown>(serviceUrl, { timeout: 5000 })
+            const result = parseRkeyResponse(response.data)
+            if (!result) {
+                errors.push(`${serviceName}: 响应缺少有效 rkey`)
+                continue
+            }
+            console.log('Rkey 已获取:', result.name || serviceName, {
+                expiredTime: result.expired_time,
+                expiredAt: new Date(result.expired_time * 1000).toISOString(),
+                remainingSeconds: result.expired_time - Math.floor(Date.now() / 1000),
+            })
+            return result
+        } catch (error) {
+            errors.push(`${serviceName}: ${getErrorMessage(error)}`)
+        }
+    }
+    console.error('获取 Rkey 失败:', errors.join('; '))
+    return null
 }
 
 const refreshRkeyIfNeeded = async () => {
     const now = Math.floor(Date.now() / 1000)
-    if (!rkeyData || rkeyData.expired_time - now < 600) {
-        rkeyData = await fetchRkey()
+    const remainingSeconds = rkeyData ? rkeyData.expired_time - now : null
+    const needsRefresh = remainingSeconds === null || remainingSeconds < 600
+    const retryAfterSeconds = Math.max(0, lastRkeyRefreshAttempt + RKEY_REFRESH_RETRY_SECONDS - now)
+    const shouldRefresh = needsRefresh && (retryAfterSeconds === 0 || rkeyRefreshPromise !== null)
+    console.log('Rkey 检查:', {
+        remainingSeconds,
+        shouldRefresh,
+        retryAfterSeconds,
+    })
+    if (!shouldRefresh) return
+    if (!rkeyRefreshPromise) {
+        lastRkeyRefreshAttempt = now
+        rkeyRefreshPromise = fetchRkey()
+            .then((nextRkey) => {
+                if (nextRkey) rkeyData = nextRkey
+            })
+            .finally(() => {
+                rkeyRefreshPromise = null
+            })
     }
+    await rkeyRefreshPromise
 }
 
-const replaceRkey = (url: string): string => {
-    if (!url) return url
-    if (!rkeyData) return url
-    if (
-        !url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
-        !url.startsWith('https://gchat.qpic.cn/download')
-    ) {
-        return url
+const getImageAppId = (value: string | null): ImageAppId | null => (value === '1406' || value === '1407' ? value : null)
+
+const applyRkey = (url: URL, rkey: string): string => {
+    url.searchParams.set('rkey', normalizeRkey(rkey))
+    return url.toString()
+}
+
+const getCachedRkey = (appid: ImageAppId): string | null => {
+    const now = Math.floor(Date.now() / 1000)
+    const milkyRkey = milkyRkeyCache.get(appid)
+    if (milkyRkey && milkyRkey.expiresAt > now) return milkyRkey.value
+    if (milkyRkey) milkyRkeyCache.delete(appid)
+    if (!rkeyData) return null
+    return appid === '1406' ? rkeyData.private_rkey : rkeyData.group_rkey
+}
+
+const fetchRkeyFromMilky = async (appid: ImageAppId, resourceId: string): Promise<string | null> => {
+    const cachedRkey = getCachedRkey(appid)
+    if (milkyRkeyCache.has(appid) && cachedRkey) return cachedRkey
+
+    let refreshPromise = milkyRkeyRefreshPromises.get(appid)
+    if (!refreshPromise) {
+        refreshPromise = bot
+            .getResourceTempUrl(resourceId)
+            .then((result) => {
+                const freshUrl = new URL(result.url)
+                const rkey = freshUrl.searchParams.get('rkey')
+                if (!rkey) throw new Error('Milky 返回的临时 URL 缺少 rkey')
+                milkyRkeyCache.set(appid, {
+                    value: rkey,
+                    expiresAt: Math.floor(Date.now() / 1000) + MILKY_RKEY_CACHE_SECONDS,
+                })
+                console.log('已通过 Milky 刷新图片 Rkey:', {
+                    appid,
+                    cacheSeconds: MILKY_RKEY_CACHE_SECONDS,
+                })
+                return rkey
+            })
+            .catch((error) => {
+                console.error('通过 Milky 刷新图片 Rkey 失败:', {
+                    appid,
+                    error: getErrorMessage(error),
+                })
+                return null
+            })
+            .finally(() => {
+                milkyRkeyRefreshPromises.delete(appid)
+            })
+        milkyRkeyRefreshPromises.set(appid, refreshPromise)
     }
+    return refreshPromise
+}
+
+const replaceRkey = async (url: string): Promise<string> => {
+    if (!url) return url
 
     try {
         const u = new URL(url)
-        let r = ''
-        switch (u.searchParams.get('appid')) {
-            case '1406': // private
-                r = rkeyData.private_rkey
-                break
-            case '1407': // group
-                r = rkeyData.group_rkey
-                break
-            default:
-                return url
+        if (
+            (u.hostname !== 'multimedia.nt.qq.com.cn' && u.hostname !== 'gchat.qpic.cn') ||
+            u.pathname !== '/download'
+        ) {
+            return url
         }
-        if (!r) return url
-        if (r.startsWith('&rkey=')) r = r.slice('&rkey='.length)
-        u.searchParams.set('rkey', r)
-        return u.toString()
-    } catch (e) {
+        const appid = getImageAppId(u.searchParams.get('appid'))
+        if (!appid) return url
+        const resourceId = u.searchParams.get('fileid')
+        const milkyRkey = resourceId ? await fetchRkeyFromMilky(appid, resourceId) : null
+        const rkey = milkyRkey || getCachedRkey(appid)
+        return rkey ? applyRkey(u, rkey) : url
+    } catch {
         return url
     }
 }
 
-const processMessageRkey = (message: Message): void => {
+const processMessageRkey = async (message: Message): Promise<void> => {
     if (message.file?.url) {
-        message.file.url = replaceRkey(message.file.url)
+        message.file.url = await replaceRkey(message.file.url)
     }
     if (Array.isArray(message.files)) {
         for (const file of message.files) {
             if (file.url) {
-                file.url = replaceRkey(file.url)
+                file.url = await replaceRkey(file.url)
             }
         }
     }
     if (message.replyMessage?.file?.url) {
-        message.replyMessage.file.url = replaceRkey(message.replyMessage.file.url)
+        message.replyMessage.file.url = await replaceRkey(message.replyMessage.file.url)
     }
 }
 
@@ -309,7 +415,7 @@ const attachEventHandler = () => {
         }
 
         await processMessage(oicqMessage, message, lastMessage, roomId)
-        processMessageRkey(message)
+        await processMessageRkey(message)
 
         const at = message.at
         if (at) {
@@ -960,7 +1066,7 @@ const adapter: typeof oicqAdapter = {
         clients.setAllChatGroups(await storage.getAllChatGroups())
         adapter.sendOnlineData()
         // 初始化 rkey 并定时刷新
-        refreshRkeyIfNeeded()
+        await refreshRkeyIfNeeded()
         setInterval(refreshRkeyIfNeeded, 1000 * 60 * 10)
         broadcast('login', { uin, nick: nickname, sysInfo: getSysInfo() })
     },
@@ -1310,6 +1416,7 @@ const adapter: typeof oicqAdapter = {
         }
     },
     async fetchHistory(messageId: string, roomId: number, currentLoadedMessagesCount: number) {
+        await refreshRkeyIfNeeded()
         console.log(`${roomId} 开始拉取消息`)
         clients.messageSuccess('开始拉取消息')
         let totalCount = 0
@@ -1328,6 +1435,7 @@ const adapter: typeof oicqAdapter = {
         let reachedMinDate = false
         try {
             while (true) {
+                await refreshRkeyIfNeeded()
                 const history = await bot.getHistoryMessages(scene as any, peerId, startSeq, 30)
                 console.log('history', history.messages.length, history.next_message_seq)
                 if (!history.messages || history.messages.length === 0) {
@@ -1369,7 +1477,7 @@ const adapter: typeof oicqAdapter = {
                     const oicqMessage = milkySegmentsToOicq(msg.segments)
                     try {
                         await processMessage(oicqMessage, message, {}, roomId, true)
-                        processMessageRkey(message)
+                        await processMessageRkey(message)
                         if (await storage.isChatIgnored(senderId)) message.hide = true
                         batchMessages.push(message)
                     } catch (e) {
@@ -1425,9 +1533,12 @@ const adapter: typeof oicqAdapter = {
         }
         console.log(`${roomId} 已拉取 ${totalCount} 条消息`)
         clients.messageSuccess(`已拉取 ${totalCount} 条消息`)
-        storage
-            .fetchMessages(roomId, {}, currentLoadedMessagesCount + 20)
-            .then((messages) => clients.setMessages(roomId, messages))
+        await refreshRkeyIfNeeded()
+        const messages = (await storage.fetchMessages(roomId, {}, currentLoadedMessagesCount + 20)) || []
+        for (const message of messages) {
+            await processMessageRkey(message)
+        }
+        clients.setMessages(roomId, messages)
     },
     async getFriendsFallback(cb) {
         const friends = await bot.getFriendList()
@@ -1667,7 +1778,7 @@ const adapter: typeof oicqAdapter = {
         const messages = (await storage.fetchMessages(roomId, options || {}, 20)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
-            processMessageRkey(message)
+            await processMessageRkey(message)
         }
         if (messages.length && initialPage && typeof messages[messages.length - 1]._id === 'string') {
             adapter.reportRead(messages[messages.length - 1]._id as string)
@@ -1686,7 +1797,7 @@ const adapter: typeof oicqAdapter = {
         const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
-            processMessageRkey(message)
+            await processMessageRkey(message)
         }
         callback(messages)
     },
@@ -1703,7 +1814,7 @@ const adapter: typeof oicqAdapter = {
         const messages = (await storage.fetchMessagesAround(roomId, messageId, before, after)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
-            processMessageRkey(message)
+            await processMessageRkey(message)
         }
         callback(messages)
     },
@@ -1737,7 +1848,7 @@ const adapter: typeof oicqAdapter = {
         await refreshRkeyIfNeeded()
         const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
         for (const message of messages) {
-            processMessageRkey(message)
+            await processMessageRkey(message)
         }
         callback(messages)
     },
@@ -1759,7 +1870,7 @@ const adapter: typeof oicqAdapter = {
                 senderId === undefined ? undefined : String(senderId),
             )) || []
         for (const message of messages) {
-            processMessageRkey(message)
+            await processMessageRkey(message)
         }
         callback(messages)
     },
@@ -2048,9 +2159,19 @@ const adapter: typeof oicqAdapter = {
             return 'error'
         }
     },
-    getNTPicURLbyFileid(fileId: string, appid: string, resolve): Promise<string> {
-        resolve(replaceRkey(`https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`))
-        return
+    async getNTPicURLbyFileid(fileId: string, appid: string, resolve): Promise<string> {
+        try {
+            const result = await bot.getResourceTempUrl(fileId)
+            resolve(result.url)
+            return result.url
+        } catch (error) {
+            console.error('获取图片临时 URL 失败:', getErrorMessage(error))
+            const fallbackUrl = await replaceRkey(
+                `https://multimedia.nt.qq.com.cn/download?appid=${appid}&fileid=${fileId}`,
+            )
+            resolve(fallbackUrl)
+            return fallbackUrl
+        }
     },
     async fetch7DaysHistory() {
         clients.messageError('Milky 适配器不支持该操作')
