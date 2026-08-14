@@ -862,6 +862,7 @@ export default {
             const newLen = currentSnapshot.length
             const oldLen = previousSnapshot.length
             const offset = newLen - oldLen
+            const wasLoadingTailMessages = this.loadingTailMessages
 
             // 头部加载历史消息（最后一条消息相同 = 在前面插入了历史消息）
             if (oldLen && newLen && previousSnapshot.lastId === currentSnapshot.lastId) {
@@ -899,6 +900,10 @@ export default {
             if (oldLen === newLen - 1) {
                 this.loadingMessages = false
 
+                // A one-message final tail page is pagination, not a live message.
+                // Keep the current position instead of taking the generic auto-scroll path.
+                if (wasLoadingTailMessages) return
+
                 if (
                     newVal[newLen - 1].senderId === this.currentUserId ||
                     (this.getBottomScroll(element) < 60 &&
@@ -922,7 +927,13 @@ export default {
 
             if (this.infiniteState.head) {
                 this.infiniteState.head.loaded()
-            } else if (newLen && !this.scrollIcon && newLen !== oldLen && !this.canLoadAfter) {
+            } else if (
+                newLen &&
+                !this.scrollIcon &&
+                newLen !== oldLen &&
+                !this.canLoadAfter &&
+                !wasLoadingTailMessages
+            ) {
                 // 不在 gotoMessage 模式时才自动滚动到底部
                 this.queueScrollToBottom()
             }

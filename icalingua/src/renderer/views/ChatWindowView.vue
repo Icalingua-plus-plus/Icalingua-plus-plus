@@ -864,8 +864,13 @@ export default {
                     this.mergeMessages(msgs)
                 }
                 if (!msgs || msgs.length < 20) {
-                    this.isInMiddle = false
                     this.flushDeferredIncomingMessages()
+                    // Let Room process the tail append while canLoadAfter is still true.
+                    // Otherwise its generic messages watcher mistakes this final page for
+                    // a normal live-message update and scrolls the whole window to bottom.
+                    await this.$nextTick()
+                    if (generation !== this.messageLoadGeneration) return
+                    this.isInMiddle = false
                 }
             } catch (e) {
                 console.error('Failed to fetch messages after:', e)
