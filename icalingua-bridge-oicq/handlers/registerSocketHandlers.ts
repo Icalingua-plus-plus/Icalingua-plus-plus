@@ -70,30 +70,21 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             roomId: number,
             keyword: string,
             offset: number,
-            senderIdOrResolve: number | undefined | ((value: Message[] | PromiseLike<Message[]>) => void),
-            startTimeOrResolve?: number | ((value: Message[] | PromiseLike<Message[]>) => void),
-            endTimeOrResolve?: number | ((value: Message[] | PromiseLike<Message[]>) => void),
-            resolve?: (value: Message[] | PromiseLike<Message[]>) => void,
+            senderId: number | undefined,
+            startTime: number | undefined,
+            endTime: number | undefined,
+            resolve: (value: Message[] | PromiseLike<Message[]>) => void,
         ) => {
-            const senderId = typeof senderIdOrResolve === 'number' ? senderIdOrResolve : undefined
-            let startTime: number | undefined
-            let endTime: number | undefined
-            let callback: ((value: Message[] | PromiseLike<Message[]>) => void) | undefined
-            if (typeof senderIdOrResolve === 'function') {
-                callback = senderIdOrResolve
-            } else if (typeof startTimeOrResolve === 'function') {
-                callback = startTimeOrResolve
-            } else {
-                startTime = typeof startTimeOrResolve === 'number' ? startTimeOrResolve : undefined
-                if (typeof endTimeOrResolve === 'function') {
-                    callback = endTimeOrResolve
-                } else {
-                    endTime = typeof endTimeOrResolve === 'number' ? endTimeOrResolve : undefined
-                    callback = resolve
-                }
-            }
-            if (callback)
-                adapter.searchMessages(roomId, keyword, offset, senderId, startTime, endTime, socket, callback)
+            adapter.searchMessages(
+                roomId,
+                keyword,
+                offset,
+                senderId ?? undefined,
+                startTime ?? undefined,
+                endTime ?? undefined,
+                socket,
+                resolve,
+            )
         },
     )
     socket.on('getFirstUnreadRoom', adapter.getFirstUnreadRoom)

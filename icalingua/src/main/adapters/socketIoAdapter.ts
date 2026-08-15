@@ -838,13 +838,7 @@ const adapter: Adapter = {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             }
-            if (startTime !== undefined || endTime !== undefined) {
-                socket.emit('searchMessages', roomId, keyword, offset, senderId, startTime, endTime, handleMessages)
-            } else if (senderId === undefined) {
-                socket.emit('searchMessages', roomId, keyword, offset, handleMessages)
-            } else {
-                socket.emit('searchMessages', roomId, keyword, offset, senderId, handleMessages)
-            }
+            socket.emit('searchMessages', roomId, keyword, offset, senderId, startTime, endTime, handleMessages)
         })
     },
     getFirstUnreadRoom(): Promise<Room> {
