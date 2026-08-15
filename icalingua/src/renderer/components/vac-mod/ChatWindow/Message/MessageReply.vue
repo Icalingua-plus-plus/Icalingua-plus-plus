@@ -115,7 +115,7 @@ export default {
 
     data() {
         return {
-            retried: false,
+            retriedFileIds: new Set(),
         }
     },
 
@@ -138,29 +138,31 @@ export default {
         },
         async onReplyImageError(file) {
             if (
-                !this.retried &&
-                file &&
-                file.url &&
-                file.url.includes('&fileid=') &&
-                (file.url.startsWith('https://multimedia.nt.qq.com.cn/download') ||
-                    file.url.startsWith('https://gchat.qpic.cn/download'))
+                !file ||
+                !file.url ||
+                (!file.url.startsWith('https://multimedia.nt.qq.com.cn/download') &&
+                    !file.url.startsWith('https://gchat.qpic.cn/download'))
             ) {
-                this.retried = true
-                try {
-                    const u = new URL(file.url)
-                    const fileid = u.searchParams.get('fileid')
-                    const appid = u.searchParams.get('appid') || '1407'
-                    if (fileid) {
-                        const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', fileid, appid)
-                        if (newUrl) {
-                            file.url = newUrl
-                            this.$forceUpdate()
-                            return
-                        }
-                    }
-                } catch (e) {
-                    console.error('回复图片刷新链接失败:', e)
+                return
+            }
+
+            try {
+                const u = new URL(file.url)
+                const fileid = u.searchParams.get('fileid')
+                const appid = u.searchParams.get('appid') || '1407'
+                if (!fileid) return
+
+                const retryKey = `${appid}:${fileid}`
+                if (this.retriedFileIds.has(retryKey)) return
+                this.retriedFileIds.add(retryKey)
+
+                const newUrl = await ipcRenderer.invoke('getNTPicURLbyFileid', fileid, appid)
+                if (newUrl && newUrl !== file.url) {
+                    file.url = newUrl
+                    this.$forceUpdate()
                 }
+            } catch (e) {
+                console.error('回复图片刷新链接失败:', e)
             }
         },
         openImage(file, e) {
