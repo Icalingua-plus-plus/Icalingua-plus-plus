@@ -1826,6 +1826,8 @@ const adapter = {
         keyword: string,
         offset: number,
         senderId: number | undefined,
+        startTime: number | undefined,
+        endTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
@@ -1836,6 +1838,8 @@ const adapter = {
                 offset,
                 20,
                 senderId === undefined ? undefined : String(senderId),
+                startTime,
+                endTime,
             )) || []
         // 替换消息中的 rkey
         for (const message of messages) {

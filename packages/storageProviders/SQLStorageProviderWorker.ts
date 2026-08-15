@@ -201,8 +201,20 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[]> {
-        return (await this.enqueueRead<Message[]>('searchMessages', [roomId, keyword, skip, limit, senderId])) || []
+        return (
+            (await this.enqueueRead<Message[]>('searchMessages', [
+                roomId,
+                keyword,
+                skip,
+                limit,
+                senderId,
+                startTime,
+                endTime,
+            ])) || []
+        )
     }
 
     async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {

@@ -825,14 +825,26 @@ const adapter: Adapter = {
             })
         })
     },
-    searchMessages(roomId: number, keyword: string, offset: number, senderId?: number): Promise<Message[]> {
+    searchMessages(
+        roomId: number,
+        keyword: string,
+        offset: number,
+        senderId?: number,
+        startTime?: number,
+        endTime?: number,
+    ): Promise<Message[]> {
         return new Promise((resolve, reject) => {
             const handleMessages = (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             }
-            if (senderId === undefined) socket.emit('searchMessages', roomId, keyword, offset, handleMessages)
-            else socket.emit('searchMessages', roomId, keyword, offset, senderId, handleMessages)
+            if (startTime !== undefined || endTime !== undefined) {
+                socket.emit('searchMessages', roomId, keyword, offset, senderId, startTime, endTime, handleMessages)
+            } else if (senderId === undefined) {
+                socket.emit('searchMessages', roomId, keyword, offset, handleMessages)
+            } else {
+                socket.emit('searchMessages', roomId, keyword, offset, senderId, handleMessages)
+            }
         })
     },
     getFirstUnreadRoom(): Promise<Room> {

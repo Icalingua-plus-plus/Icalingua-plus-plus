@@ -309,7 +309,14 @@ const adapter: Adapter = {
         }
         return messages
     },
-    async searchMessages(roomId: number, keyword: string, offset: number, senderId?: number): Promise<Message[]> {
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        offset: number,
+        senderId?: number,
+        startTime?: number,
+        endTime?: number,
+    ): Promise<Message[]> {
         await refreshRkeyIfNeeded()
         const messages =
             (await storage.searchMessages(
@@ -318,6 +325,8 @@ const adapter: Adapter = {
                 offset,
                 20,
                 senderId === undefined ? undefined : String(senderId),
+                startTime,
+                endTime,
             )) || []
         for (const message of messages) {
             processMessageRkey(message)

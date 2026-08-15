@@ -734,6 +734,8 @@ export default class MongoStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -741,11 +743,15 @@ export default class MongoStorageProvider implements StorageProvider {
         try {
             const result: Message[] = []
             let skipped = 0
-            let maxTime: number | undefined
+            let maxTime: number | undefined = endTime
             const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
             const escapedKeyword = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             while (result.length < limit) {
-                const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
+                const times = await this.searchIndex.searchTimes(normalized, {
+                    maxTime,
+                    minTime: startTime,
+                    limit: 256,
+                })
                 if (times === null) return null
                 if (!times.length) break
                 const messages = (
@@ -792,17 +798,35 @@ export default class MongoStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[]> {
         try {
             const normalized = normalizeSearchText(keyword)
             if (normalized) {
-                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit, senderId)
+                const indexed = await this.searchMessagesFromSearchIndex(
+                    roomId,
+                    normalized,
+                    skip,
+                    limit,
+                    senderId,
+                    startTime,
+                    endTime,
+                )
                 if (indexed !== null) return indexed
             }
             const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             const query = {
-                content: { $regex: escapedKeyword, $options: 'i' },
+                ...(normalized ? { content: { $regex: escapedKeyword, $options: 'i' } } : {}),
                 ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
+                ...(startTime === undefined && endTime === undefined
+                    ? {}
+                    : {
+                          time: {
+                              ...(startTime === undefined ? {} : { $gte: startTime }),
+                              ...(endTime === undefined ? {} : { $lte: endTime }),
+                          },
+                      }),
             }
             if (roomId !== 0) {
                 return await this.mdb

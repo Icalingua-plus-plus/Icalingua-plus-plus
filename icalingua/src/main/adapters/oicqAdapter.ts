@@ -2052,7 +2052,14 @@ const adapter: OicqAdapter = {
         }
         return messages
     },
-    async searchMessages(roomId: number, keyword: string, offset: number, senderId?: number) {
+    async searchMessages(
+        roomId: number,
+        keyword: string,
+        offset: number,
+        senderId?: number,
+        startTime?: number,
+        endTime?: number,
+    ) {
         const messages =
             (await storage.searchMessages(
                 roomId,
@@ -2060,6 +2067,8 @@ const adapter: OicqAdapter = {
                 offset,
                 20,
                 senderId === undefined ? undefined : String(senderId),
+                startTime,
+                endTime,
             )) || []
         // 替换消息中的 rkey
         for (const message of messages) {

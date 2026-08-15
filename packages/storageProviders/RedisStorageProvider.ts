@@ -626,6 +626,8 @@ export default class RedisStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -633,10 +635,14 @@ export default class RedisStorageProvider implements StorageProvider {
         try {
             const result: Message[] = []
             let skipped = 0
-            let maxTime: number | undefined
+            let maxTime: number | undefined = endTime
             const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
             while (result.length < limit) {
-                const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
+                const times = await this.searchIndex.searchTimes(normalized, {
+                    maxTime,
+                    minTime: startTime,
+                    limit: 256,
+                })
                 if (times === null) return null
                 if (!times.length) break
                 const messages = (
@@ -651,7 +657,9 @@ export default class RedisStorageProvider implements StorageProvider {
                     .filter(
                         (message) =>
                             messageMatchesKeyword(message, normalized) &&
-                            (senderId === undefined || message.senderId === Number(senderId)),
+                            (senderId === undefined || message.senderId === Number(senderId)) &&
+                            (startTime === undefined || Number(message.time || 0) >= startTime) &&
+                            (endTime === undefined || Number(message.time || 0) <= endTime),
                     )
                 messages.sort((left, right) => {
                     const timeDifference = Number(right.time || 0) - Number(left.time || 0)
@@ -682,10 +690,20 @@ export default class RedisStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[]> {
         const lowerKeyword = normalizeSearchText(keyword)
         if (lowerKeyword) {
-            const indexed = await this.searchMessagesFromSearchIndex(roomId, lowerKeyword, skip, limit, senderId)
+            const indexed = await this.searchMessagesFromSearchIndex(
+                roomId,
+                lowerKeyword,
+                skip,
+                limit,
+                senderId,
+                startTime,
+                endTime,
+            )
             if (indexed !== null) return indexed
         }
 
@@ -695,6 +713,8 @@ export default class RedisStorageProvider implements StorageProvider {
             return messages.filter((message) => {
                 if (!messageMatchesKeyword(message, lowerKeyword)) return false
                 if (senderId !== undefined && message.senderId !== Number(senderId)) return false
+                if (startTime !== undefined && Number(message.time || 0) < startTime) return false
+                if (endTime !== undefined && Number(message.time || 0) > endTime) return false
                 if (includeRoomId) message.roomId = targetRoomId
                 return true
             })

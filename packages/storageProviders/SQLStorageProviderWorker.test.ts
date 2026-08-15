@@ -189,6 +189,20 @@ test('FTS source callbacks use the dedicated read worker', async () => {
     await provider.close()
 })
 
+test('message search forwards sender and time bounds to a read worker', async () => {
+    const { provider, readers, errors } = createHarness()
+    await provider.connect()
+    readers[0].behaviors.set('searchMessages', (args) => {
+        assert.deepEqual(args, [123, 'keyword', 40, 20, '7', 1000, 2000])
+        return []
+    })
+
+    assert.deepEqual(await provider.searchMessages(123, 'keyword', 40, 20, '7', 1000, 2000), [])
+    assert.deepEqual(readers[0].calls, ['searchMessages'])
+    assert.deepEqual(errors, [])
+    await provider.close()
+})
+
 test('foreground database failures reject instead of being converted to empty results', async () => {
     const { provider, writer, readers, errors } = createHarness()
     const connectError = new Error('database unavailable')

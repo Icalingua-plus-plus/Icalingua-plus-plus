@@ -1055,6 +1055,8 @@ export default class SQLStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[] | null> {
         if (!this.searchIndex.isReady) return null
         const normalized = normalizeSearchText(keyword)
@@ -1062,15 +1064,17 @@ export default class SQLStorageProvider implements StorageProvider {
 
         const result: Message[] = []
         let skipped = 0
-        let maxTime: number | undefined
+        let maxTime: number | undefined = endTime
         while (result.length < limit) {
-            const times = await this.searchIndex.searchTimes(normalized, { maxTime, limit: 256 })
+            const times = await this.searchIndex.searchTimes(normalized, { maxTime, minTime: startTime, limit: 256 })
             if (times === null) return null
             if (!times.length) break
 
             let query = this.db<MessageInSQLDB>('messages').whereIn('time', times)
             if (roomId !== 0) query = query.where('roomId', roomId)
             if (senderId !== undefined) query = query.where('senderId', senderId)
+            if (startTime !== undefined) query = query.where('time', '>=', startTime)
+            if (endTime !== undefined) query = query.where('time', '<=', endTime)
             const escapedKeyword = escapeSearchLikePattern(normalized)
             query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", [`%${escapedKeyword}%`])
             const messages = await query.orderBy('time', 'desc').select('*')
@@ -1106,11 +1110,21 @@ export default class SQLStorageProvider implements StorageProvider {
         skip: number,
         limit: number,
         senderId?: string,
+        startTime?: number,
+        endTime?: number,
     ): Promise<Message[]> {
         try {
             const normalized = normalizeSearchText(keyword)
             if (normalized) {
-                const indexed = await this.searchMessagesFromSearchIndex(roomId, normalized, skip, limit, senderId)
+                const indexed = await this.searchMessagesFromSearchIndex(
+                    roomId,
+                    normalized,
+                    skip,
+                    limit,
+                    senderId,
+                    startTime,
+                    endTime,
+                )
                 if (indexed !== null) return indexed
             }
 
@@ -1121,6 +1135,8 @@ export default class SQLStorageProvider implements StorageProvider {
             }
             if (roomId !== 0) query = query.where('roomId', roomId)
             if (senderId !== undefined) query = query.where('senderId', senderId)
+            if (startTime !== undefined) query = query.where('time', '>=', startTime)
+            if (endTime !== undefined) query = query.where('time', '<=', endTime)
             const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
             return messages.map((message) => {
                 const messageRoomId = Number(message.roomId)

@@ -1857,6 +1857,8 @@ const adapter: typeof oicqAdapter = {
         keyword: string,
         offset: number,
         senderId: number | undefined,
+        startTime: number | undefined,
+        endTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
@@ -1868,6 +1870,8 @@ const adapter: typeof oicqAdapter = {
                 offset,
                 20,
                 senderId === undefined ? undefined : String(senderId),
+                startTime,
+                endTime,
             )) || []
         for (const message of messages) {
             await processMessageRkey(message)
