@@ -292,17 +292,29 @@ export default {
         },
     },
     watch: {
-        panel() {
+        panel(newPanel, oldPanel) {
+            if (oldPanel === 'stickers' && newPanel !== 'stickers') {
+                this.saveStickerScrollPosition()
+            }
+            if (oldPanel === 'remote' && newPanel !== 'remote') {
+                this.saveRemoteScrollPosition()
+            }
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
             this.$nextTick(() => {
+                if (!this.open) return
                 this.observeStickerPanel()
                 this.observeRemotePanel()
             })
         },
-        open() {
+        open(isOpen) {
             this.recentFace = RECENTS.get('recentFace')
             this.recentRemoteSticker = RECENTS.get('recentRemoteSticker')
+            if (!isOpen) {
+                this.saveStickerScrollPosition()
+                this.saveRemoteScrollPosition()
+                return
+            }
             this.$nextTick(() => {
                 this.observeStickerPanel()
                 this.observeRemotePanel()
@@ -367,9 +379,11 @@ export default {
         this._stickerResizeObserver = null
         this._observedStickerPanel = null
         this._stickerRenderRange = ''
+        this._savedStickerScrollTop = null
         this._remoteResizeObserver = null
         this._observedRemotePanel = null
         this._remoteRenderRange = ''
+        this._savedRemoteScrollTop = null
         this.panel = await ipc.getLastUsedStickerType()
         this.descSortStickersByTime = (await ipc.getSettings()).descSortStickersByTime
 
@@ -493,8 +507,12 @@ export default {
         },
         updateStickerGridMetrics() {
             const panel = this.$refs.stickersPanel
-            if (!panel) return
+            if (!panel || !this.open || !panel.clientWidth || !panel.clientHeight) return
             if (!this.shouldVirtualizeStickers) {
+                if (this._savedStickerScrollTop !== null) {
+                    panel.scrollTop = this._savedStickerScrollTop
+                    this._savedStickerScrollTop = null
+                }
                 this.stickerScrollTop = panel.scrollTop
                 this._stickerRenderRange = ''
                 return
@@ -506,10 +524,12 @@ export default {
             this.stickerPanelHeight = panel.clientHeight
 
             const maxScrollTop = Math.max(0, this.stickerGridHeight - this.stickerPanelHeight)
-            const scrollTop = Math.min(panel.scrollTop, maxScrollTop)
+            const requestedScrollTop = this._savedStickerScrollTop ?? panel.scrollTop
+            const scrollTop = Math.min(requestedScrollTop, maxScrollTop)
             if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop
             this.stickerScrollTop = scrollTop
             this._stickerRenderRange = this.getStickerRenderRange(scrollTop)
+            this._savedStickerScrollTop = null
         },
         observeStickerPanel() {
             const panel = this.$refs.stickersPanel
@@ -517,7 +537,7 @@ export default {
                 this._stickerResizeObserver?.unobserve(this._observedStickerPanel)
                 this._observedStickerPanel = null
             }
-            if (!panel) return
+            if (!panel || !this.open) return
 
             if (!this._stickerResizeObserver && typeof ResizeObserver !== 'undefined') {
                 this._stickerResizeObserver = new ResizeObserver(() => this.updateStickerGridMetrics())
@@ -528,6 +548,14 @@ export default {
                 this._observedStickerPanel = panel
             }
             this.updateStickerGridMetrics()
+        },
+        saveStickerScrollPosition() {
+            const panel = this.$refs.stickersPanel
+            this._savedStickerScrollTop = panel ? panel.scrollTop : this.stickerScrollTop
+        },
+        saveRemoteScrollPosition() {
+            const panel = this.$refs.remotePanel
+            this._savedRemoteScrollTop = panel ? panel.scrollTop : this.remoteScrollTop
         },
         onStickerScroll(e) {
             if (!this.shouldVirtualizeStickers) return
@@ -551,8 +579,12 @@ export default {
         },
         updateRemoteGridMetrics() {
             const panel = this.$refs.remotePanel
-            if (!panel) return
+            if (!panel || !this.open || !panel.clientWidth || !panel.clientHeight) return
             if (!this.shouldVirtualizeRemote) {
+                if (this._savedRemoteScrollTop !== null) {
+                    panel.scrollTop = this._savedRemoteScrollTop
+                    this._savedRemoteScrollTop = null
+                }
                 this.remoteScrollTop = panel.scrollTop
                 this._remoteRenderRange = ''
                 return
@@ -569,10 +601,12 @@ export default {
             this.remoteGridTop = gridRect.top - panelRect.top + panel.scrollTop
 
             const maxScrollTop = Math.max(0, this.remoteGridTop + this.remoteGridHeight - this.remotePanelHeight)
-            const scrollTop = Math.min(panel.scrollTop, maxScrollTop)
+            const requestedScrollTop = this._savedRemoteScrollTop ?? panel.scrollTop
+            const scrollTop = Math.min(requestedScrollTop, maxScrollTop)
             if (panel.scrollTop !== scrollTop) panel.scrollTop = scrollTop
             this.remoteScrollTop = scrollTop
             this._remoteRenderRange = this.getRemoteRenderRange(scrollTop)
+            this._savedRemoteScrollTop = null
         },
         observeRemotePanel() {
             const panel = this.$refs.remotePanel
@@ -580,7 +614,7 @@ export default {
                 this._remoteResizeObserver?.unobserve(this._observedRemotePanel)
                 this._observedRemotePanel = null
             }
-            if (!panel) return
+            if (!panel || !this.open) return
 
             if (!this._remoteResizeObserver && typeof ResizeObserver !== 'undefined') {
                 this._remoteResizeObserver = new ResizeObserver(() => this.updateRemoteGridMetrics())
@@ -699,6 +733,7 @@ export default {
                 if (this.$refs.stickersPanel) {
                     this.$refs.stickersPanel.scrollTop = 0
                     this.stickerScrollTop = 0
+                    this._savedStickerScrollTop = null
                     this._stickerRenderRange = ''
                     this.$nextTick(() => this.updateStickerGridMetrics())
                 }
@@ -796,10 +831,12 @@ export default {
                     ref.scrollTop = 0
                     if (type === 'stickers') {
                         this.stickerScrollTop = 0
+                        this._savedStickerScrollTop = null
                         this._stickerRenderRange = ''
                         this.$nextTick(() => this.updateStickerGridMetrics())
                     } else if (type === 'remote') {
                         this.remoteScrollTop = 0
+                        this._savedRemoteScrollTop = null
                         this._remoteRenderRange = ''
                         this.$nextTick(() => this.updateRemoteGridMetrics())
                     }
