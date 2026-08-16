@@ -192,6 +192,8 @@ const faceMap = require('oicq-icalingua-plus-plus/lib/message/face').map
 
 const DEFAULT_CATEGORY = Symbol('DEFAULT')
 const RECENT_CATEGORY = Symbol('RECENT')
+
+const ENABLE_STICKER_VIRTUAL_SCROLL = false
 const VIRTUAL_SCROLL_THRESHOLD = 100
 
 const RECENTS = {
@@ -257,7 +259,7 @@ export default {
             return this.pics.slice(start, end)
         },
         shouldVirtualizeStickers() {
-            return this.pics.length > VIRTUAL_SCROLL_THRESHOLD
+            return ENABLE_STICKER_VIRTUAL_SCROLL && this.pics.length > VIRTUAL_SCROLL_THRESHOLD
         },
         remoteGridRows() {
             return this.remoteGridColumns > 0 ? Math.ceil(this.remote_pics.length / this.remoteGridColumns) : 0
@@ -288,7 +290,7 @@ export default {
             return this.remote_pics.slice(start, end)
         },
         shouldVirtualizeRemote() {
-            return this.remote_pics.length > VIRTUAL_SCROLL_THRESHOLD
+            return ENABLE_STICKER_VIRTUAL_SCROLL && this.remote_pics.length > VIRTUAL_SCROLL_THRESHOLD
         },
     },
     watch: {
@@ -537,7 +539,7 @@ export default {
                 this._stickerResizeObserver?.unobserve(this._observedStickerPanel)
                 this._observedStickerPanel = null
             }
-            if (!panel || !this.open) return
+            if (!panel || !this.open || !ENABLE_STICKER_VIRTUAL_SCROLL) return
 
             if (!this._stickerResizeObserver && typeof ResizeObserver !== 'undefined') {
                 this._stickerResizeObserver = new ResizeObserver(() => this.updateStickerGridMetrics())
@@ -614,7 +616,7 @@ export default {
                 this._remoteResizeObserver?.unobserve(this._observedRemotePanel)
                 this._observedRemotePanel = null
             }
-            if (!panel || !this.open) return
+            if (!panel || !this.open || !ENABLE_STICKER_VIRTUAL_SCROLL) return
 
             if (!this._remoteResizeObserver && typeof ResizeObserver !== 'undefined') {
                 this._remoteResizeObserver = new ResizeObserver(() => this.updateRemoteGridMetrics())
