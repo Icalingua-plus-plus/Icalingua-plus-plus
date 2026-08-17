@@ -146,6 +146,7 @@ const processMessage = async (
     let lastReply = false
     let replyAnonymous = false
     let markdown = ''
+    let button_rows: Message['button_rows'] = []
     for (let i = 0; i < oicqMessage.length; i++) {
         const m = oicqMessage[i] || { type: 'unknown', data: {} }
         let appurl
@@ -627,6 +628,38 @@ const processMessage = async (
             case 'markdown':
                 markdown += m.data.markdown
                 break
+            case 'button':
+                try {
+                    if (m.data.rows && Array.isArray(m.data.rows)) {
+                        for (const row of m.data.rows) {
+                            const rowButtons = []
+                            if (row.buttons && Array.isArray(row.buttons)) {
+                                for (const button of row.buttons) {
+                                    let url = ''
+                                    if (button.action.type === 0) {
+                                        // URL
+                                        url = button.action.data || ''
+                                    } else if (button.action.type === 1) {
+                                        // callback
+                                        url = `icalingua://button/callback?command=${encodeURIComponent(button.action.data || '')}&id=${button.id}&appid=${m.data.appid}`
+                                    } else if (button.action.type === 2) {
+                                        // command
+                                        url = `mqqapi://aio/inlinecmd?command=${encodeURIComponent(button.action.data || '')}&enter=${button.action.enter}&reply=${button.action.reply}`
+                                    }
+                                    rowButtons.push({
+                                        label: button.render_data.label,
+                                        visited_label: button.render_data.visited_label,
+                                        url: url,
+                                    })
+                                }
+                            }
+                            button_rows.push(rowButtons)
+                        }
+                    }
+                } catch (e) {
+                    errorHandler(e, true)
+                }
+                break
             default:
                 console.log('[无法解析的消息]', m)
                 if (!getConfig().debugmode) break
@@ -655,6 +688,7 @@ const processMessage = async (
         message.markdown = true
         message.content = markdown
     }
+    if (button_rows.length) message.button_rows = button_rows
     return { message, lastMessage }
 }
 

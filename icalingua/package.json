@@ -207,7 +207,7 @@
         "mongodb": "^4.17.2",
         "mysql": "^2.18.1",
         "node-fetch": "2.7.0",
-        "oicq-icalingua-plus-plus": "^1.26.17",
+        "oicq-icalingua-plus-plus": "^1.26.19",
         "pangu": "^4.0.7",
         "pg": "^8.22.0",
         "pinyin-match": "^1.2.10",

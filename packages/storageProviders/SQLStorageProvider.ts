@@ -49,8 +49,9 @@ import upg20to21 from './SQLUpgradeScript/20to21'
 import upg21to22 from './SQLUpgradeScript/21to22'
 import upg22to23 from './SQLUpgradeScript/22to23'
 import upg23to24 from './SQLUpgradeScript/23to24'
+import upg24to25 from './SQLUpgradeScript/24to25'
 
-const dbVersionLatest = 24
+const dbVersionLatest = 25
 
 const normalizeRoomId = (roomId: unknown): string => {
     const value = String(roomId || 0) || '0'
@@ -263,7 +264,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     converted.senderId = `${message.senderId}`
                 }
                 if (message._id !== undefined && message._id !== null) converted._id = `${message._id}`
-                for (const field of ['file', 'files', 'replyMessage', 'at', 'mirai'] as const) {
+                for (const field of ['file', 'files', 'replyMessage', 'at', 'mirai', 'button_rows'] as const) {
                     if (!Object.prototype.hasOwnProperty.call(message, field)) continue
                     if (message[field] === undefined) delete converted[field]
                     else converted[field] = JSON.stringify(message[field])
@@ -311,6 +312,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     replyMessage: JSON.parse(message.replyMessage),
                     at: JSON.parse(message.at),
                     mirai: JSON.parse(message.mirai),
+                    button_rows: JSON.parse(message.button_rows),
                     markdown: !!message.markdown,
                 } as Message
             }
@@ -457,6 +459,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 23:
                     report('升级数据库 v23 → v24')
                     await upg23to24(this.db)
+                case 24:
+                    report('升级数据库 v24 → v25')
+                    await upg24to25(this.db)
                 default:
                     break
             }
@@ -621,6 +626,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('subid').nullable()
                     table.string('recallInfo').nullable()
                     table.boolean('markdown').nullable()
+                    table.text('button_rows').nullable()
                     table.index(['roomId', 'time'])
                     table.index(['senderId', 'roomId', 'time'])
                     //table.index(['subid', 'time'])

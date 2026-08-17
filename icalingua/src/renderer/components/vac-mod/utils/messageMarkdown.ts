@@ -56,6 +56,15 @@ export function parseMessageMarkdownInlineCommand(source: string): MessageMarkdo
     }
 }
 
+export function isExternalMessageUrl(source: string): boolean {
+    try {
+        const protocol = new URL(source).protocol
+        return protocol !== 'mqqapi:' && protocol !== 'icalingua:'
+    } catch {
+        return false
+    }
+}
+
 function renderBlocks(lines: string[], options: MessageMarkdownOptions): string {
     const result: string[] = []
     let index = 0
@@ -144,16 +153,8 @@ function renderBlocks(lines: string[], options: MessageMarkdownOptions): string 
             index++
         }
 
-        const actionLink = paragraphLines.length === 1 ? readMarkdownLink(paragraphLines[0], 0, false) : null
-        const isAction =
-            actionLink &&
-            actionLink.label.length > 0 &&
-            actionLink.end === paragraphLines[0].length &&
-            sanitizeUrl(actionLink.destination, false)
         result.push(
-            `<p${isAction ? ' class="vac-markdown-action"' : ''}>${paragraphLines
-                .map((paragraphLine) => renderInline(paragraphLine, options))
-                .join('<br>')}</p>`,
+            `<p>${paragraphLines.map((paragraphLine) => renderInline(paragraphLine, options)).join('<br>')}</p>`,
         )
     }
 
@@ -445,11 +446,14 @@ function findLatexDelimiter(source: string, start: number, delimiter: string): n
 function renderLink(label: string, destination: string, options: MessageMarkdownOptions): string {
     const safeDestination = sanitizeUrl(destination, false)
     if (!safeDestination) return renderInline(label, options)
-    return renderAnchor(renderInline(label, options), safeDestination, true)
+    return renderAnchor(renderInline(label, options), safeDestination, true, label)
 }
 
-function renderAnchor(label: string, destination: string, labelIsHtml = false): string {
-    return `<a href="${escapeAttribute(destination)}" target="_blank" rel="noopener noreferrer">${
+function renderAnchor(label: string, destination: string, labelIsHtml = false, titleLabel = destination): string {
+    const title = isExternalMessageUrl(destination)
+        ? ` title="${escapeAttribute(`${titleLabel} (${destination})`)}"`
+        : ''
+    return `<a href="${escapeAttribute(destination)}"${title} target="_blank" rel="noopener noreferrer">${
         labelIsHtml ? label : escapeHtml(label)
     }</a>`
 }
@@ -505,6 +509,10 @@ function sanitizeUrl(rawUrl: string, image: boolean): string | null {
     } catch {
         return null
     }
+}
+
+export function sanitizeMessageUrl(source: string): string | null {
+    return sanitizeUrl(source, false)
 }
 
 function matchListLine(line: string): ListMatch | null {

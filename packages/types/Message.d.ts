@@ -16,6 +16,14 @@ interface MessageFile {
     width?: number
 }
 
+export interface MessageButton {
+    label: string
+    visited_label?: string
+    url: string
+}
+
+export type MessageButtonRow = MessageButton[]
+
 export default interface Message {
     _id: string | number
     /** Present when a message is returned from a cross-room query. */
@@ -27,6 +35,8 @@ export default interface Message {
     content: string
     /** Render `content` using QQ Bot Markdown semantics. */
     markdown?: boolean
+    /** Parsed QQ Markdown button rows. */
+    button_rows?: MessageButtonRow[]
     code?: string
     timestamp?: string
     date?: string

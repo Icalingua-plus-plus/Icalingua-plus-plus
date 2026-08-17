@@ -286,6 +286,17 @@
                             </template>
                         </format-message>
 
+                        <message-buttons
+                            v-if="
+                                ((!message.deleted && !message.hide) || message.reveal) &&
+                                message.button_rows &&
+                                message.button_rows.length
+                            "
+                            :rows="message.button_rows"
+                            :show-forward-panel="showForwardPanel"
+                            @inline-command="$emit('inline-command', $event)"
+                        />
+
                         <div class="vac-text-timestamp" :title="message.date + ' ' + message.timestamp">
                             <span>{{ message.timestamp }}</span>
                         </div>
@@ -328,6 +339,7 @@ import MessageImage from './MessageImage'
 import MessageVideo from './MessageVideo'
 import MessageAudio from './MessageAudio'
 import MessageMarkdown from './MessageMarkdown'
+import MessageButtons from './MessageButtons'
 
 import getLottieFace from '../../../../utils/getLottieFace'
 
@@ -352,6 +364,7 @@ export default {
         MessageAudio,
         MessageVideo,
         MessageMarkdown,
+        MessageButtons,
         LottieAnimation,
     },
 

@@ -19,6 +19,16 @@ test('renders QQ Markdown cards and hides the version metadata line', () => {
     assert.doesNotMatch(html, /version|%7B/)
 })
 
+test('keeps a standalone Markdown link as a normal link', () => {
+    const html = renderMessageMarkdown('[打开链接](https://example.com)')
+
+    assert.match(
+        html,
+        /<p><a href="https:\/\/example\.com" title="打开链接 \(https:\/\/example\.com\)"[^>]*>打开链接<\/a><\/p>/,
+    )
+    assert.doesNotMatch(html, /vac-markdown-action/)
+})
+
 test('parses QQ inline commands and their reply flag', () => {
     assert.deepEqual(
         parseMessageMarkdownInlineCommand(

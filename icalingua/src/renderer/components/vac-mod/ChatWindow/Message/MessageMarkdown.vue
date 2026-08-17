@@ -5,7 +5,11 @@
 <script>
 import { ipcRenderer } from 'electron'
 import 'katex/dist/katex.min.css'
-import { parseMessageMarkdownInlineCommand, renderMessageMarkdown } from '../../utils/messageMarkdown'
+import {
+    isExternalMessageUrl,
+    parseMessageMarkdownInlineCommand,
+    renderMessageMarkdown,
+} from '../../utils/messageMarkdown'
 
 export default {
     name: 'MessageMarkdown',
@@ -64,6 +68,13 @@ export default {
                     return
                 }
 
+                if (isExternalMessageUrl(link.href)) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    this.confirmExternalUrl(link.href)
+                    return
+                }
+
                 event.stopPropagation()
                 return
             }
@@ -78,6 +89,18 @@ export default {
             event.preventDefault()
             event.stopPropagation()
             ipcRenderer.send('openImage', image.currentSrc || image.src, this.localImageViewerByDefault)
+        },
+        confirmExternalUrl(url) {
+            this.$confirm(`确定打开外部链接？\n${url}`, '打开外部链接', {
+                confirmButtonText: '打开',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+                .then((action) => {
+                    if (action !== 'confirm') return
+                    window.open(url, '_blank')
+                })
+                .catch(() => {})
         },
     },
 }
@@ -336,26 +359,25 @@ export default {
     .vac-markdown-image-alt {
         opacity: 0.7;
     }
+}
 
-    .vac-markdown-action {
-        margin: 8px 0;
+.vac-markdown-button {
+    display: flex;
+    min-height: 38px;
+    padding: 5px 12px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #1689e8;
+    border-radius: 5px;
+    box-sizing: border-box;
+    color: #1689e8;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
 
-        > a {
-            display: flex;
-            min-height: 38px;
-            padding: 5px 12px;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #1689e8;
-            border-radius: 5px;
-            box-sizing: border-box;
-            text-align: center;
-
-            &:hover {
-                background: rgba(22, 137, 232, 0.08);
-                text-decoration: none;
-            }
-        }
+    &:hover {
+        background: rgba(22, 137, 232, 0.08);
+        text-decoration: none;
     }
 }
 </style>
