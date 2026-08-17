@@ -82,6 +82,7 @@ export const {
     sendGroupSign,
     getDisabledFeatures,
     sendGroupPoke,
+    sendButtonCallback,
     getPrivateFileUrl,
 } = adapter
 

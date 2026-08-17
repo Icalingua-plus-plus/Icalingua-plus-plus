@@ -123,6 +123,7 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('setGroupKick', adapter.setGroupKick)
     socket.on('setGroupBan', adapter.setGroupBan)
     socket.on('setGroupAnonymousBan', adapter.setGroupAnonymousBan)
+    socket.on('sendButtonCallback', adapter.sendButtonCallback)
     socket.on('setGroupRemark', adapter.setGroupRemark)
     socket.on('setFriendRemark', adapter.setFriendRemark)
     socket.on('makeForward', adapter.makeForward)

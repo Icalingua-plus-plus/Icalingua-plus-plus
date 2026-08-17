@@ -1,5 +1,5 @@
 import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, Menu, MenuItem } from 'electron'
-import { clearCurrentRoomUnread, getCookies, sendOnlineData } from '../ipc/botAndStorage'
+import { clearCurrentRoomUnread, getCookies, sendButtonCallback, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig, saveConfigFile, MAIN_WINDOW_MIN_SIZE } from './configManager'
 import getWinUrl from '../../utils/getWinUrl'
 import { updateTrayIcon, updateTrayMenu } from './trayManager'
@@ -189,6 +189,27 @@ export const loadMainWindow = (show = process.env.NODE_ENV !== 'development' && 
                         id: qq === '1' ? 'all' : Number(qq),
                     })
                     ui.addMessageText(name + ' ')
+                }
+            } else if (action === 'button/callback') {
+                const groupId = Number(url1.searchParams.get('group_id'))
+                const msgSeq = Number(url1.searchParams.get('msg_seq'))
+                const appid = Number(url1.searchParams.get('appid'))
+                const id = url1.searchParams.get('id')
+                const data = url1.searchParams.get('command')
+
+                if (
+                    !Number.isSafeInteger(groupId) ||
+                    groupId <= 0 ||
+                    !Number.isSafeInteger(msgSeq) ||
+                    msgSeq < 0 ||
+                    !Number.isSafeInteger(appid) ||
+                    appid < 0 ||
+                    id === null ||
+                    data === null
+                ) {
+                    ui.messageError('按钮参数无效')
+                } else {
+                    sendButtonCallback(groupId, msgSeq, appid, id, data)
                 }
             } else {
                 ui.messageError(PROTOCOL_UNSUPPORT)

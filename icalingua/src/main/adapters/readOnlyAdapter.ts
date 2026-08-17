@@ -489,6 +489,9 @@ const adapter: Adapter = {
 
     sendGroupPoke(gin: number, uin: number): any {},
     sendGroupSign(gin: number): any {},
+    sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): any {
+        ui.messageError('暂不支持此功能')
+    },
 
     addRoom(room: Room): any {
         // 只读模式不允许添加

@@ -924,6 +924,9 @@ const adapter: Adapter = {
     sendGroupSign(gin: number) {
         socket.emit('sendGroupSign', gin)
     },
+    sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): any {
+        socket.emit('sendButtonCallback', groupId, msgSeq, appid, id, data)
+    },
     async sendMessage(data: SendMessageParams) {
         if (!data.roomId && !data.room) data.roomId = ui.getSelectedRoomId()
         // 将本地路径转为 base64

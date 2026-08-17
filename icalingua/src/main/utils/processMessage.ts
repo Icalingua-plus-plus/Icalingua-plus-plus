@@ -641,7 +641,18 @@ const processMessage = async (
                                         url = button.action.data || ''
                                     } else if (button.action.type === 1) {
                                         // callback
-                                        url = `icalingua://button/callback?command=${encodeURIComponent(button.action.data || '')}&id=${button.id}&appid=${m.data.appid}`
+                                        let msg_seq = 0
+                                        try {
+                                            const msgIdBuffer = Buffer.from(String(message._id || ''), 'base64')
+                                            if (msgIdBuffer.length === 21) {
+                                                msg_seq = msgIdBuffer.readUInt32BE(8)
+                                            } else if (msgIdBuffer.length === 17) {
+                                                msg_seq = msgIdBuffer.readUInt32BE(4)
+                                            }
+                                        } catch (e) {
+                                            logger.error(e)
+                                        }
+                                        url = `icalingua://button/callback?command=${encodeURIComponent(button.action.data || '')}&id=${button.id}&appid=${m.data.appid}&group_id=${Math.abs(roomId || 0)}&msg_seq=${msg_seq}`
                                     } else if (button.action.type === 2) {
                                         // command
                                         url = `mqqapi://aio/inlinecmd?command=${encodeURIComponent(button.action.data || '')}&enter=${button.action.enter}&reply=${button.action.reply}`

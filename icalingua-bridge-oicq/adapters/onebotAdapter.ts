@@ -846,6 +846,9 @@ const adapter: typeof oicqAdapter = {
     async sendGroupSign(gin: number) {
         await bot.sendGroupSign(gin)
     },
+    sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): any {
+        clients.messageError('暂不支持此功能')
+    },
     async getGroups(resolve) {
         const groups = await bot.getGroupList()
         const groupsAll: Array<GroupInfo & { sc: string }> = groups.map((it) => ({

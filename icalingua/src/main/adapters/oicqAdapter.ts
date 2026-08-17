@@ -2099,6 +2099,15 @@ const adapter: OicqAdapter = {
     async sendGroupSign(gin: number) {
         await bot.sendGroupSign(gin)
     },
+    async sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): Promise<void> {
+        const ret = await bot.sendButtonCallback(groupId, msgSeq, appid, id, data)
+        if (ret.error) {
+            console.log(ret.error)
+            ui.messageError('错误：' + ret.error.message)
+        } else {
+            ui.message('操作成功')
+        }
+    },
     addRoom(room: Room) {
         return storage.addRoom(room)
     },

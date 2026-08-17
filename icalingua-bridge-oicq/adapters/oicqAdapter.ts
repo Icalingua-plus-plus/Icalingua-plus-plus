@@ -1123,6 +1123,15 @@ const adapter = {
         if (uin === 0) bot.setGroupWholeBan(gin, duration > 0)
         else bot.setGroupBan(gin, uin, duration)
     },
+    async sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): Promise<void> {
+        const ret = await bot.sendButtonCallback(groupId, msgSeq, appid, id, data)
+        if (ret.error) {
+            console.log(ret.error)
+            clients.messageError('错误：' + ret.error.message)
+        } else {
+            clients.message('操作成功')
+        }
+    },
     setGroupAnonymousBan(gin: number, flag: string, duration?: number): any {
         bot.setGroupAnonymousBan(gin, flag, duration)
     },

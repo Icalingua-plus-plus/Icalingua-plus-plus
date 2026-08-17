@@ -102,6 +102,8 @@ export default interface Adapter {
 
     sendGroupSign(gin: number): any
 
+    sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): any
+
     addRoom(room: Room): any
 
     addChatGroup(chatGroup: ChatGroup): any

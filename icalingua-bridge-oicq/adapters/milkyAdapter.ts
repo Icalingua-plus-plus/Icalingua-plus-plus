@@ -2114,6 +2114,9 @@ const adapter: typeof oicqAdapter = {
     async sendGroupSign(gin) {
         clients.messageError('Milky 适配器不支持群签到')
     },
+    sendButtonCallback(groupId: number, msgSeq: number, appid: number, id: string, data: string): any {
+        clients.messageError('暂不支持此功能')
+    },
     async renewMessage(roomId, messageId, message) {
         const res = await adapter.getMsg(messageId)
         if (!res.error && res.data) {
