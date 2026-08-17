@@ -58,7 +58,13 @@ export default {
         },
         buttonLabel(button, rowIndex, buttonIndex) {
             const key = this.buttonKey(rowIndex, buttonIndex)
-            if (this.visitedButtons[key] && typeof button.visited_label === 'string') return button.visited_label
+            if (
+                this.visitedButtons[key] &&
+                typeof button.visited_label === 'string' &&
+                button.visited_label.length > 0
+            ) {
+                return button.visited_label
+            }
             return button.label || ''
         },
         buttonTitle(button, rowIndex, buttonIndex) {
