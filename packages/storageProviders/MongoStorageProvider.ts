@@ -387,8 +387,12 @@ export default class MongoStorageProvider implements StorageProvider {
             await mapWithConcurrency(entries, mongoSearchReadConcurrency, async ([roomId, roomSearchTimes]) =>
                 this.mdb
                     .collection<any>('msg' + roomId)
-                    .find({ time: { $in: roomSearchTimes } }, { projection: { _id: 0, time: 1, content: 1 } })
-                    .toArray(),
+                    .find(
+                        { time: { $in: roomSearchTimes } },
+                        { projection: { _id: 0, time: 1, content: 1, senderId: 1 } },
+                    )
+                    .toArray()
+                    .then((messages) => messages.map((message) => ({ ...message, roomId }))),
             )
         ).flat()
     }
@@ -750,6 +754,8 @@ export default class MongoStorageProvider implements StorageProvider {
                 const times = await this.searchIndex.searchTimes(normalized, {
                     maxTime,
                     minTime: startTime,
+                    roomId: roomId === 0 ? undefined : roomId,
+                    senderId,
                     limit: 256,
                 })
                 if (times === null) return null

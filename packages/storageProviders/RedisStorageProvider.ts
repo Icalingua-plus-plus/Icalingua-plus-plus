@@ -174,9 +174,19 @@ export default class RedisStorageProvider implements StorageProvider {
     private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
         if (!times.length) return []
         const rooms = await this.getSearchRooms()
-        return (await Promise.all(rooms.map((room) => this.getMessagesBySearchTimes(Number(room.roomId), times))))
-            .flat()
-            .map((message) => ({ time: message.time, content: message.content }))
+        return (
+            await Promise.all(
+                rooms.map(async (room) => {
+                    const roomId = Number(room.roomId)
+                    return (await this.getMessagesBySearchTimes(roomId, times)).map((message) => ({
+                        time: message.time,
+                        content: message.content,
+                        roomId,
+                        senderId: message.senderId,
+                    }))
+                }),
+            )
+        ).flat()
     }
 
     private async loadSearchTimeCounts(afterTime: number, limit: number) {
@@ -641,6 +651,8 @@ export default class RedisStorageProvider implements StorageProvider {
                 const times = await this.searchIndex.searchTimes(normalized, {
                     maxTime,
                     minTime: startTime,
+                    roomId: roomId === 0 ? undefined : roomId,
+                    senderId,
                     limit: 256,
                 })
                 if (times === null) return null

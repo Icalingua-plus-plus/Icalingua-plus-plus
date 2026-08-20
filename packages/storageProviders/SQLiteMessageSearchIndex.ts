@@ -8,6 +8,8 @@ import { normalizeSearchText } from './MessageSearchIndex'
 export interface SQLiteSearchMessage {
     time?: number
     content?: unknown
+    roomId?: number | string
+    senderId?: number | string
 }
 
 export interface SQLiteSearchTimeCount {
@@ -28,6 +30,8 @@ export interface SQLiteMessageSearchIndexCallbacks {
 export interface SQLiteMessageSearchTimesOptions {
     maxTime?: number
     minTime?: number
+    roomId?: number | string
+    senderId?: number | string
     limit: number
 }
 
@@ -37,7 +41,7 @@ interface PendingSearchTime {
     needsRebuild?: number
 }
 
-const searchIndexFormat = 'trigram-interleaved-run-length-none-contentless-delete-v8'
+const searchIndexFormat = 'trigram-interleaved-run-length-identifier-none-contentless-delete-v9'
 const searchBatchSize = 200
 const searchProgressInterval = 500
 // Each bulk write below binds at most two values per time. Stay below the
@@ -45,10 +49,20 @@ const searchProgressInterval = 500
 const searchSqlParameterBudget = 900
 const searchWriteBatchSize = Math.min(searchBatchSize, Math.floor(searchSqlParameterBudget / 2))
 const searchMergePages = 128
+const roomIdTokenCacheSize = 2048
+const senderIdTokenCacheSize = 262144
 const interleavedSeparator = '\u0001'
 const continuousTokenMarker = '\u0002'
 const messageSeparator = '\u0003'
+const roomIdTokenMarker = '\u0004'
+const senderIdTokenMarker = '\u0005'
 const continuousTokenLengths = [3, 6, 12, 24] as const
+// A field marker plus two private-use code points is one atomic trigram. The
+// combined alphabet covers signed QQ identifiers without sharing text tokens.
+const bmpPrivateUseSize = 0x1900
+const supplementaryPrivateUseSize = 0xfffe
+const identifierAlphabetSize = BigInt(bmpPrivateUseSize + supplementaryPrivateUseSize * 2)
+const identifierTokenCapacity = identifierAlphabetSize * identifierAlphabetSize
 // detail=none omits token positions. Keep contentless_delete for row replacement;
 // SQLite rejects columnsize=0 together with contentless_delete=1.
 const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='trigram'"
@@ -63,7 +77,7 @@ const encodeInterleavedOneGram = (character: string): string =>
 
 const encodeInterleavedTwoGram = (left: string, right: string): string => `${left}${interleavedSeparator}${right}`
 
-// The length is stored as one code point (U+0004/U+0008/U+0010/U+0020), not
+// The length is stored as one code point (U+0003/U+0006/U+000C/U+0018), not
 // as decimal text such as "4" or "16", so every run token stays three code
 // points and is indexed by the trigram tokenizer as one token.
 const encodeContinuousToken = (character: string, length: number): string =>
@@ -116,6 +130,100 @@ const encodeSearchQuery = (value: unknown): string | null => {
 }
 
 const quoteSearchToken = (token: string): string => `"${token.replace(/"/g, '""')}"`
+
+interface ParsedSearchIdentifier {
+    canonical: string
+    numeric: bigint
+}
+
+const rawSearchIdentifier = (value: unknown): string => String(value ?? '').trim()
+
+const isSearchIdentifier = (identifier: string): boolean => /^-?\d+$/.test(identifier)
+
+const parseSearchIdentifier = (identifier: string): ParsedSearchIdentifier | null => {
+    try {
+        const numeric = BigInt(identifier)
+        return { canonical: numeric.toString(), numeric }
+    } catch {
+        return null
+    }
+}
+
+const identifierCodePoint = (value: bigint): string => {
+    let index = Number(value)
+    if (index < bmpPrivateUseSize) return String.fromCodePoint(0xe000 + index)
+    index -= bmpPrivateUseSize
+    if (index < supplementaryPrivateUseSize) return String.fromCodePoint(0xf0000 + index)
+    return String.fromCodePoint(0x100000 + index - supplementaryPrivateUseSize)
+}
+
+const hashSearchIdentifier = (identifier: string): bigint => {
+    let hash = 14695981039346656037n
+    for (const character of Array.from(identifier)) {
+        hash ^= BigInt(character.codePointAt(0) || 0)
+        hash = BigInt.asUintN(64, hash * 1099511628211n)
+    }
+    return hash
+}
+
+const encodeParsedSearchIdentifier = (marker: string, identifier: ParsedSearchIdentifier): string => {
+    const pairedIdentifier = identifier.numeric >= 0n ? identifier.numeric * 2n : -identifier.numeric * 2n - 1n
+    const encodedIdentifier =
+        pairedIdentifier < identifierTokenCapacity
+            ? pairedIdentifier
+            : hashSearchIdentifier(identifier.canonical) % identifierTokenCapacity
+    return `${marker}${identifierCodePoint(encodedIdentifier / identifierAlphabetSize)}${identifierCodePoint(encodedIdentifier % identifierAlphabetSize)}`
+}
+
+export const encodeSearchIdentifierToken = (marker: string, value: unknown): string => {
+    const rawIdentifier = rawSearchIdentifier(value)
+    if (!isSearchIdentifier(rawIdentifier)) return ''
+    const identifier = parseSearchIdentifier(rawIdentifier)
+    return identifier ? encodeParsedSearchIdentifier(marker, identifier) : ''
+}
+
+/** A bounded FIFO cache for stable per-account identifier tokens. */
+export class SearchIdentifierTokenCache {
+    private readonly tokens = new Map<string, string>()
+
+    constructor(
+        private readonly marker: string,
+        readonly maxEntries: number,
+    ) {
+        if (!Number.isSafeInteger(maxEntries) || maxEntries <= 0) {
+            throw new RangeError('Search identifier token cache size must be a positive safe integer')
+        }
+    }
+
+    get size(): number {
+        return this.tokens.size
+    }
+
+    encode(value: unknown): string {
+        const cacheKey = rawSearchIdentifier(value)
+        const cached = this.tokens.get(cacheKey)
+        if (cached !== undefined) return cached
+        if (!isSearchIdentifier(cacheKey)) return ''
+        const identifier = parseSearchIdentifier(cacheKey)
+        if (!identifier) return ''
+        const token = encodeParsedSearchIdentifier(this.marker, identifier)
+        if (this.tokens.size >= this.maxEntries) {
+            const oldest = this.tokens.keys().next()
+            if (!oldest.done) this.tokens.delete(oldest.value)
+        }
+        this.tokens.set(cacheKey, token)
+        return token
+    }
+
+    clear(): void {
+        this.tokens.clear()
+    }
+}
+
+const encodeSearchIdentifierQuery = (cache: SearchIdentifierTokenCache, value: unknown): string | null => {
+    const encoded = cache.encode(value)
+    return encoded ? quoteSearchToken(encoded) : null
+}
 
 const sqliteAfterCreate = (conn: any, done: any) => {
     try {
@@ -172,6 +280,8 @@ export default class SQLiteMessageSearchIndex {
     private pendingProgress: DatabaseUpgradeProgress | null = null
     private progressTimer: ReturnType<typeof setTimeout> | null = null
     private lastProgressReportAt = 0
+    private readonly roomIdTokenCache = new SearchIdentifierTokenCache(roomIdTokenMarker, roomIdTokenCacheSize)
+    private readonly senderIdTokenCache = new SearchIdentifierTokenCache(senderIdTokenMarker, senderIdTokenCacheSize)
 
     constructor(
         filePath: string,
@@ -246,6 +356,8 @@ export default class SQLiteMessageSearchIndex {
         }
         const db = this.db
         this.db = null
+        this.roomIdTokenCache.clear()
+        this.senderIdTokenCache.clear()
         if (!db) return
         try {
             await db.destroy()
@@ -379,7 +491,7 @@ export default class SQLiteMessageSearchIndex {
 
     async searchTimes(keyword: string, options: SQLiteMessageSearchTimesOptions): Promise<number[] | null> {
         if (!this.db || !this.available || !this.ready) return null
-        const match = this.buildMatchQuery(keyword)
+        const match = this.buildMatchQuery(keyword, options)
         if (!match) return null
         try {
             let query = this.db('search_fts').select('rowid').whereRaw('search_fts MATCH ?', [match])
@@ -914,14 +1026,28 @@ export default class SQLiteMessageSearchIndex {
         if (!normalizedTimes.length) return 0
         const currentMessages = messages || (await this.callbacks.loadMessagesByTimes(normalizedTimes))
         const normalizedTimeSet = new Set(normalizedTimes)
-        const grouped = new Map<number, { contents: string[]; messageCount: number }>()
+        const grouped = new Map<
+            number,
+            { contents: string[]; roomIds: Set<string>; senderIds: Set<string>; messageCount: number }
+        >()
         for (const message of currentMessages) {
             const time = messageTime(message)
             if (time <= 0 || !normalizedTimeSet.has(time)) continue
-            const values = grouped.get(time) || { contents: [], messageCount: 0 }
+            const values = grouped.get(time) || {
+                contents: [],
+                roomIds: new Set<string>(),
+                senderIds: new Set<string>(),
+                messageCount: 0,
+            }
             values.messageCount++
             const content = this.indexContent(message.content)
-            if (content) values.contents.push(content)
+            if (content) {
+                values.contents.push(content)
+                const roomId = this.roomIdTokenCache.encode(message.roomId)
+                if (roomId) values.roomIds.add(roomId)
+                const senderId = this.senderIdTokenCache.encode(message.senderId)
+                if (senderId) values.senderIds.add(senderId)
+            }
             grouped.set(time, values)
         }
         await db.transaction(async (transaction) => {
@@ -932,7 +1058,9 @@ export default class SQLiteMessageSearchIndex {
                     return {
                         time,
                         messageCount: value?.messageCount ?? null,
-                        content: value?.contents.join(messageSeparator) || '',
+                        content: value
+                            ? [...value.contents, ...value.roomIds, ...value.senderIds].join(messageSeparator)
+                            : '',
                     }
                 })
                 const stateRows = batchRows.filter((row) => row.messageCount !== null)
@@ -1066,7 +1194,20 @@ export default class SQLiteMessageSearchIndex {
         }
     }
 
-    private buildMatchQuery(value: unknown): string | null {
-        return encodeSearchQuery(value)
+    private buildMatchQuery(value: unknown, options: SQLiteMessageSearchTimesOptions): string | null {
+        const textQuery = encodeSearchQuery(value)
+        if (!textQuery) return null
+        const clauses = [textQuery]
+        if (options.roomId !== undefined) {
+            const roomIdQuery = encodeSearchIdentifierQuery(this.roomIdTokenCache, options.roomId)
+            if (!roomIdQuery) return null
+            clauses.push(roomIdQuery)
+        }
+        if (options.senderId !== undefined) {
+            const senderIdQuery = encodeSearchIdentifierQuery(this.senderIdTokenCache, options.senderId)
+            if (!senderIdQuery) return null
+            clauses.push(senderIdQuery)
+        }
+        return clauses.join(' AND ')
     }
 }

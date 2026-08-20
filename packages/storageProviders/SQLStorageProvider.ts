@@ -486,7 +486,7 @@ export default class SQLStorageProvider implements StorageProvider {
         for (const batchTimes of lodash.chunk(times, sqlSearchReadBatchSize)) {
             messages.push(
                 ...(await this.db<MessageInSQLDB>('messages')
-                    .select('time', 'content')
+                    .select('time', 'content', 'roomId', 'senderId')
                     .whereIn('time', batchTimes)
                     .where('time', '>', 0)),
             )
@@ -1072,7 +1072,13 @@ export default class SQLStorageProvider implements StorageProvider {
         let skipped = 0
         let maxTime: number | undefined = endTime
         while (result.length < limit) {
-            const times = await this.searchIndex.searchTimes(normalized, { maxTime, minTime: startTime, limit: 256 })
+            const times = await this.searchIndex.searchTimes(normalized, {
+                maxTime,
+                minTime: startTime,
+                roomId: roomId === 0 ? undefined : roomId,
+                senderId,
+                limit: 256,
+            })
             if (times === null) return null
             if (!times.length) break
 
