@@ -84,6 +84,14 @@ interface ExistingSearchDatabaseInspection {
     hasRequiredSchema: boolean
 }
 
+interface SQLiteTableNameRow {
+    name: string
+}
+
+interface SQLiteStateValueRow {
+    value: unknown
+}
+
 const searchCharacters = (value: unknown): string[] => Array.from(normalizeSearchText(value))
 
 const encodeInterleavedOneGram = (character: string): string =>
@@ -288,11 +296,15 @@ const existingFiles = async (filePaths: string[]): Promise<{ files: string[]; er
 const inspectExistingSearchDatabase = (filePath: string): ExistingSearchDatabaseInspection => {
     const db = new BetterSqlite3(filePath, { fileMustExist: true })
     try {
-        const tableRows = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all()
-        const tables = new Set(tableRows.map((row: { name: unknown }) => String(row.name)))
+        const tableRows = db
+            .prepare<[], SQLiteTableNameRow>("SELECT name FROM sqlite_master WHERE type = 'table'")
+            .all()
+        const tables = new Set(tableRows.map((row) => row.name))
         let format: string | undefined
         if (tables.has('search_state')) {
-            const row = db.prepare("SELECT value FROM search_state WHERE key = 'format'").get()
+            const row = db
+                .prepare<[string], SQLiteStateValueRow>('SELECT value FROM search_state WHERE key = ?')
+                .get('format')
             if (row?.value !== undefined && row?.value !== null) format = String(row.value)
         }
         return {
