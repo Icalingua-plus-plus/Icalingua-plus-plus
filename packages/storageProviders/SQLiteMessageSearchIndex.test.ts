@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
+import knex, { Knex } from 'knex'
 import SQLiteMessageSearchIndex, {
     encodeSearchIdentifierToken,
     SearchIdentifierTokenCache,
@@ -60,6 +61,89 @@ const waitUntilReady = async (index: SQLiteMessageSearchIndex): Promise<void> =>
     }
     assert.fail('message search index did not become ready')
 }
+
+const closeDatabase = async (db: Knex | null): Promise<void> => {
+    if (db) await db.destroy().catch(() => undefined)
+}
+
+test('an incompatible FTS database is closed, deleted with retries, and rebuilt', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-version-'))
+    const filePath = path.join(directory, 'search.db')
+    let legacyDb: Knex | null = knex({
+        client: 'better-sqlite3',
+        connection: { filename: filePath },
+        useNullAsDefault: true,
+        pool: {
+            min: 1,
+            max: 1,
+            afterCreate: (connection: any, done: any) => {
+                try {
+                    connection.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000')
+                    done(null, connection)
+                } catch (error) {
+                    done(error, connection)
+                }
+            },
+        },
+    })
+    await legacyDb.schema.createTable('search_state', (table) => {
+        table.string('key').primary()
+        table.text('value').notNullable()
+    })
+    await legacyDb('search_state').insert({ key: 'format', value: 'legacy-incompatible-format' })
+    await legacyDb.schema.createTable('legacy_marker', (table) => table.integer('value'))
+
+    const messages: SQLiteSearchMessage[] = [
+        { time: 100, content: 'fresh index content', roomId: -1001, senderId: 2001 },
+    ]
+    const index = new SQLiteMessageSearchIndex(filePath, {
+        loadTimes: async (afterTime, limit) =>
+            messages
+                .map((message) => Number(message.time))
+                .filter((time) => time > afterTime)
+                .slice(0, limit),
+        loadMessagesByTimes: async (times) => messages.filter((message) => times.includes(Number(message.time))),
+        countMessages: async () => messages.length,
+    })
+    let releaseLegacyDatabase: Promise<void> | null = null
+    const releaseTimer = setTimeout(() => {
+        const db = legacyDb
+        legacyDb = null
+        releaseLegacyDatabase = closeDatabase(db)
+    }, 350)
+
+    try {
+        const startedAt = Date.now()
+        await index.open()
+        if (releaseLegacyDatabase) await releaseLegacyDatabase
+        await waitUntilReady(index)
+
+        if (process.platform === 'win32') assert.ok(Date.now() - startedAt >= 200)
+        assert.equal(
+            await index.getState('format'),
+            'trigram-interleaved-run-length-identifier-none-contentless-delete-v9',
+        )
+        assert.deepEqual(await index.searchTimes('fresh', { limit: 20 }), [100])
+
+        await index.close()
+        const rebuiltDb = knex({
+            client: 'better-sqlite3',
+            connection: { filename: filePath },
+            useNullAsDefault: true,
+        })
+        try {
+            assert.equal(await rebuiltDb.schema.hasTable('legacy_marker'), false)
+        } finally {
+            await rebuiltDb.destroy()
+        }
+    } finally {
+        clearTimeout(releaseTimer)
+        await index.close()
+        await closeDatabase(legacyDb)
+        if (releaseLegacyDatabase) await releaseLegacyDatabase
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
 
 test('roomId and senderId tokens constrain FTS candidates', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-identifiers-'))

@@ -44,6 +44,8 @@ interface PendingSearchTime {
 const searchIndexFormat = 'trigram-interleaved-run-length-identifier-none-contentless-delete-v9'
 const searchBatchSize = 200
 const searchProgressInterval = 500
+const searchDatabaseDeleteAttempts = 100
+const searchDatabaseDeleteRetryDelay = 250
 // Each bulk write below binds at most two values per time. Stay below the
 // lowest common SQLite variable limit even if searchBatchSize is increased.
 const searchSqlParameterBudget = 900
@@ -245,6 +247,57 @@ const sqliteAfterCreate = (conn: any, done: any) => {
 const messageTime = (message: SQLiteSearchMessage): number => Math.trunc(Number(message.time || 0))
 
 const yieldToWorkerEventLoop = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
+const wait = (milliseconds: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, milliseconds))
+
+const sqliteDatabaseFiles = (filePath: string): string[] => [
+    `${filePath}-wal`,
+    `${filePath}-shm`,
+    `${filePath}-journal`,
+    filePath,
+]
+
+const existingFiles = async (filePaths: string[]): Promise<{ files: string[]; error?: unknown }> => {
+    const files: string[] = []
+    let lastError: unknown
+    for (const filePath of filePaths) {
+        try {
+            await fs.promises.stat(filePath)
+            files.push(filePath)
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+                files.push(filePath)
+                lastError = error
+            }
+        }
+    }
+    return { files, error: lastError }
+}
+
+const deleteSQLiteDatabaseFiles = async (filePath: string): Promise<void> => {
+    const filePaths = sqliteDatabaseFiles(filePath)
+    let lastError: unknown
+    for (let attempt = 1; attempt <= searchDatabaseDeleteAttempts; attempt++) {
+        for (const targetPath of filePaths) {
+            try {
+                await fs.promises.unlink(targetPath)
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') lastError = error
+            }
+        }
+
+        const remaining = await existingFiles(filePaths)
+        if (!remaining.files.length) return
+        lastError = remaining.error || lastError
+        if (attempt < searchDatabaseDeleteAttempts) await wait(searchDatabaseDeleteRetryDelay)
+    }
+
+    const remaining = await existingFiles(filePaths)
+    if (!remaining.files.length) return
+    const reason = lastError instanceof Error ? `: ${lastError.message}` : ''
+    throw new Error(
+        `Failed to delete incompatible SQLite search database after ${searchDatabaseDeleteAttempts} attempts; remaining files: ${remaining.files.join(', ')}${reason}`,
+    )
+}
 
 interface BuildCursor {
     time: number
@@ -311,12 +364,14 @@ export default class SQLiteMessageSearchIndex {
         this.lastProgressReportAt = 0
         try {
             fs.mkdirSync(path.dirname(this.filePath), { recursive: true })
-            this.db = knex({
-                client: 'better-sqlite3',
-                connection: { filename: this.filePath, charset: 'utf8mb4' },
-                useNullAsDefault: true,
-                pool: { min: 1, max: 1, afterCreate: sqliteAfterCreate },
-            })
+            const databaseExisted = fs.existsSync(this.filePath)
+            this.db = this.createDatabase()
+            if (databaseExisted && (await this.getExistingFormat()) !== searchIndexFormat) {
+                await this.destroyDatabaseConnection()
+                await deleteSQLiteDatabaseFiles(this.filePath)
+                if (this.closing) return
+                this.db = this.createDatabase()
+            }
             await this.ensureSchema()
             this.available = true
             const hasPending = Boolean(await this.db('search_pending_times').first())
@@ -333,6 +388,21 @@ export default class SQLiteMessageSearchIndex {
             if (db) await db.destroy().catch(() => undefined)
             if (!this.closing) this.errorHandle(error)
         }
+    }
+
+    private createDatabase(): Knex {
+        return knex({
+            client: 'better-sqlite3',
+            connection: { filename: this.filePath, charset: 'utf8mb4' },
+            useNullAsDefault: true,
+            pool: { min: 1, max: 1, afterCreate: sqliteAfterCreate },
+        })
+    }
+
+    private async destroyDatabaseConnection(): Promise<void> {
+        const db = this.db
+        this.db = null
+        if (db) await db.destroy()
     }
 
     async close(): Promise<void> {
@@ -354,13 +424,10 @@ export default class SQLiteMessageSearchIndex {
         } catch (error) {
             this.errorHandle(error)
         }
-        const db = this.db
-        this.db = null
         this.roomIdTokenCache.clear()
         this.senderIdTokenCache.clear()
-        if (!db) return
         try {
-            await db.destroy()
+            await this.destroyDatabaseConnection()
         } catch (error) {
             this.errorHandle(error)
         }
@@ -538,19 +605,15 @@ export default class SQLiteMessageSearchIndex {
         }
         await db.raw(createSearchFtsIfNotExistsSql)
         if ((await this.getState('format')) === searchIndexFormat) return
+        await db('search_state').insert({ key: 'format', value: searchIndexFormat }).onConflict('key').merge()
+    }
 
-        await db.transaction(async (transaction) => {
-            await transaction.schema.dropTableIfExists('search_fts_vocab')
-            await transaction.schema.dropTableIfExists('search_fts')
-            await transaction.raw(createSearchFtsSql)
-            await transaction.schema.dropTableIfExists('search_metadata')
-            await transaction.schema.dropTableIfExists('search_pending')
-            await transaction.schema.dropTableIfExists('search_grams')
-            await transaction('search_pending_times').delete()
-            await transaction('search_time_state').delete()
-            await transaction('search_state').delete()
-            await transaction('search_state').insert({ key: 'format', value: searchIndexFormat })
-        })
+    private async getExistingFormat(): Promise<string | undefined> {
+        const db = this.db
+        if (!db || !(await db.schema.hasTable('search_state'))) return undefined
+        const row = await db('search_state').where('key', 'format').first()
+        if (row?.value === undefined || row?.value === null) return undefined
+        return String(row.value)
     }
 
     private startBuild(): void {
