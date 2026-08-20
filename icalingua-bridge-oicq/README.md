@@ -126,9 +126,94 @@ docker compose up -d
 
 关于反向代理的配置文件示例，可以参考仓库当前目录下的 [nginx.example.conf](https://github.com/Icalingua-plus-plus/Icalingua-plus-plus/blob/develop/icalingua-bridge-oicq/nginx.example.conf)。
 
+## 可选的第三方协议适配器（OneBot / Milky）
+
+Bridge 默认使用内置的 `oicq` 协议。OneBot 和 Milky 适配器是可选项，主要用于 QQ 已经由第三方机器人实现登录、且希望 Icalingua++ 与机器人共存的场景。它们不会在 Bridge 内直接登录 QQ，而是把 Bridge 连接到已经运行的 OneBot/Milky 服务。
+
+如果没有共存需求，推荐优先使用内置 `oicq` 协议：内置协议的功能覆盖最完整；第三方适配器能否执行某项操作还取决于对应的机器人实现，部分功能可能不可用或行为不同。
+
+### 适配器选择规则
+
+适配器配置写在 Bridge 的 `config.yaml` 中，不是 Icalingua++ 客户端的配置文件。单个 Bridge 实例只能选择一个上游协议：
+
+| Bridge 配置 | 实际使用的适配器 |
+| --- | --- |
+| 没有 `milky`，也没有 `onebot` | 内置 `oicq`（默认） |
+| 配置了 `onebot` | OneBot |
+| 配置了 `milky` | Milky |
+
+`milky` 的优先级高于 `onebot`。不要在同一个实例中同时填写两项；如果两项都存在，Bridge 会使用 Milky，忽略 OneBot。需要切回内置 OICQ 时，删除（或注释）`onebot` 和 `milky` 配置项即可。
+
+### OneBot 配置
+
+Bridge 会主动连接 `onebot` 指定的 WebSocket 地址，因此第三方机器人需要先启动一个兼容 OneBot v11 的 WebSocket 服务端。这里填写的是 `ws://` 或 `wss://` 地址，不是普通 HTTP API 地址。示例配置如下：
+
+```yaml
+host: 0.0.0.0
+pubKey: your-ed25519-public-key
+custom: false
+port: 6789
+
+# OneBot WebSocket 服务端地址
+onebot: 'ws://127.0.0.1:3001'
+```
+
+当前 OneBot 配置项是一个字符串 URL，不支持 `onebot: { url: ..., accessToken: ... }` 这样的对象写法。适配器不会额外设置 `Authorization` 请求头；如果所使用的 OneBot 实现规定通过 URL 查询参数鉴权，可以按该实现的要求把参数拼到 URL 中，例如：
+
+```yaml
+onebot: 'ws://127.0.0.1:3001/?access_token=replace-with-your-token'
+```
+
+具体路径、鉴权参数名和是否需要 `wss://` 以第三方机器人实现的配置为准。配置文件中的 token 属于敏感信息，不要提交到公开仓库；跨主机或公网连接时请使用加密连接，并继续为 Icalingua++ 与 Bridge 之间的连接配置 HTTPS 反向代理。
+
+### Milky 配置
+
+`milky` 可以写成不带鉴权的 URL 字符串，也可以写成带可选 token 的对象。这里的 `url` 是 Milky API 基地址。示例配置如下：
+
+```yaml
+host: 0.0.0.0
+pubKey: your-ed25519-public-key
+custom: false
+port: 6789
+
+milky:
+  url: 'http://127.0.0.1:8080'
+  accessToken: 'replace-with-your-token'
+```
+
+如果 Milky 服务端不需要 token，也可以使用短写法：
+
+```yaml
+milky: 'http://127.0.0.1:8080'
+```
+
+如果服务端部署在路径下，例如 API 基地址是 `http://127.0.0.1:8080/milky`，则填写该基地址，Bridge 会连接 `http://127.0.0.1:8080/milky/event`。请确认第三方服务同时提供兼容的 Milky API 和事件流，并保证 Bridge 所在机器能够访问它。
+
+### 启动和客户端连接
+
+1. 先启动第三方机器人服务，并确认 OneBot WebSocket 或 Milky API/SSE 地址可以从 Bridge 所在环境访问。
+2. 修改 Bridge 的 `config.yaml`，填写所需的 `onebot` 或 `milky` 配置项。
+3. 在 Bridge 目录启动服务。自编译或预打包版本都可以用 `-c` 指定配置文件：
+
+    ```bash
+    node build -c ./config.yaml
+    ```
+
+    Docker 部署仍然使用：
+
+    ```bash
+    docker compose up -d
+    ```
+
+    `docker-compose.yml` 会把宿主机的 `config.yaml` 挂载到容器内的 `/app/config.yaml`。如果第三方机器人运行在宿主机上，容器内的 `127.0.0.1` 指向容器自身，而不是宿主机；请改用 Docker 可达的宿主机地址，或把两个服务放入同一个 Docker network 后使用服务名连接。
+
+4. Icalingua++ 客户端仍然使用 `adapter: socketIo` 连接 Bridge；`onebot`/`milky` 只决定 Bridge 如何连接上游机器人。首次连接时按客户端提示完成数据库和会话配置。
+
+如果日志显示连接不上上游，优先检查协议前缀（OneBot 应为 `ws://`/`wss://`，Milky 应为 API 的 `http://`/`https://`）、容器网络地址、第三方服务是否已启动，以及鉴权配置是否匹配。
+
 ## 客户端连接方法
 
-保持 Icalingua++ 在未运行状态下，编辑 `config.yaml`（Linux：~/.config/icalingua/config.yaml，Windows：%AppData%\icalingua\config.yaml） 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
+保持 Icalingua++ 在未运行状态下，编辑 Icalingua++ 客户端的配置文件 `config.yaml`（Linux：~/.config/icalingua/config.yaml，Windows：%AppData%\icalingua\config.yaml） 或通过 `-c` 开关自定义的配置文件，修改以下配置项：
 
 ```yaml
 adapter: socketIo # 将 Icalingua++ 切换到自有协议
@@ -143,4 +228,4 @@ privateKey: # 安装的步骤中生成的私钥
 
 客户端与服务器建立连接后，服务器将当前时间戳的 MD5 发送给客户端。客户端使用私钥签名发送给服务端验证，服务端验证成功后开放通信
 
-注意这是个弱安全性的认证，如在不可信信道（如公网）中使用，**请务必使用 HTTPS 反向代理以建立可信传输信道！**
+注意这是个弱安全性的认证，且流量默认明文传输，如在不可信信道（如公网）中使用，**请务必使用 HTTPS 反向代理以建立可信传输信道！**
