@@ -356,7 +356,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         {
             label: `查看${avatarType}`,
             click: () => {
-                openImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false)
+                openImage(getAvatarUrl(room.roomId, false, true), false)
             },
         },
         {
@@ -399,7 +399,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
         {
             label: `复制${avatarType} URL`,
             click: () => {
-                clipboard.writeText(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'))
+                clipboard.writeText(getAvatarUrl(room.roomId, false, true))
             },
         },
         {
@@ -415,7 +415,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     .replace(/^[.\s]+/, '') // 去掉开头的点和空格（隐藏文件）
                     .slice(0, 50)
                 const basename = `${cleanRoomName}(${Math.abs(room.roomId)})的${avatarType}_${new Date().getTime()}`
-                downloadImage(getAvatarUrl(room.roomId).replace('&s=140', '&s=0'), false, basename)
+                downloadImage(getAvatarUrl(room.roomId, false, true), false, basename)
             },
         },
         {
@@ -2994,7 +2994,7 @@ ipcMain.on(
                 new MenuItem({
                     label: `查看${avatarType}`,
                     click: () => {
-                        openImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false)
+                        openImage(getAvatarUrl(roomId, false, true), false)
                     },
                 }),
             )
@@ -3005,7 +3005,7 @@ ipcMain.on(
                         const cleanRemark =
                             group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
                         const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
-                        downloadImage(getAvatarUrl(roomId).replace('&s=140', '&s=0'), false, basename)
+                        downloadImage(getAvatarUrl(roomId, false, true), false, basename)
                     },
                 }),
             )
@@ -3147,7 +3147,7 @@ ipcMain.on(
                 new MenuItem({
                     label: '查看头像',
                     click: () => {
-                        openImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false)
+                        openImage(getAvatarUrl(displayId, false, true), false)
                     },
                 }),
             )
@@ -3155,7 +3155,7 @@ ipcMain.on(
                 new MenuItem({
                     label: '复制头像 URL',
                     click: () => {
-                        clipboard.writeText(getAvatarUrl(displayId).replace('&s=140', '&s=0'))
+                        clipboard.writeText(getAvatarUrl(displayId, false, true))
                     },
                 }),
             )
@@ -3164,7 +3164,7 @@ ipcMain.on(
                     label: '下载头像',
                     click: () => {
                         const basename = `${remark}(${displayId})的头像_${new Date().getTime()}`
-                        downloadImage(getAvatarUrl(displayId).replace('&s=140', '&s=0'), false, basename)
+                        downloadImage(getAvatarUrl(displayId, false, true), false, basename)
                     },
                 }),
             )
