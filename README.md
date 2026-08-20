@@ -46,6 +46,29 @@ Icalingua 这个名字是日语中「光」和拉丁语中「语言」的组合�
 | Windows | `%AppData%\icalingua` |
 | macOS   | `~/Library/Application Support/icalingua`|
 
+### 客户端适配器
+
+客户端通过配置文件中的 `adapter` 字段选择运行模式：
+
+- `oicq`：默认模式，内置 `oicq`。
+- `readOnly`：只读取本机已有的聊天数据，不连接服务器，适合无法登录或无网络时浏览历史消息。
+- `socketIo`：通过 Socket.IO 连接 Bridge。Bridge 的部署、认证和客户端配置请参阅[Bridge Socket.IO 客户端连接教程](icalingua-bridge-oicq/README.md#客户端连接方法)。
+
+#### 开启只读模式
+
+退出客户端后，编辑客户端配置文件 `config.yaml`（路径见上文；也可以通过 `-c` / `--config` 指定），将 `adapter` 改为 `readOnly`，并填写需要查看的 QQ 号：
+
+```yaml
+adapter: readOnly
+
+account:
+  username: 123456789 # 与本地数据库对应的 QQ 号
+  password: ''
+  storageType: sqlite
+```
+
+只读模式只能浏览已经保存的房间、历史消息和本地搜索结果，不能发送消息、在线收消息、重新拉取历史记录或执行群/好友管理等在线操作。
+
 ### 自定义脚本、样式、主题、插件相关
 
 #### 自定义脚本
