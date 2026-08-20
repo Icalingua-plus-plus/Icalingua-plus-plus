@@ -28,6 +28,9 @@ importers:
         specifier: workspace:*
         version: link:icalingua-bridge-oicq
     devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^9.6.0
+        version: 9.6.0
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -1261,6 +1264,9 @@ packages:
 
   '@tybys/wasm-util@0.10.3':
     resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
+
+  '@types/better-sqlite3@9.6.0':
+    resolution: {integrity: sha512-ZEEwBSgMu7GYJOynoagg5X9JbxfL6dTJDsgViJIqh67jV44kyOr9RXfmFjLK5rzC4MWssP06t9hu/JwGDnUbCg==}
 
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
@@ -5682,6 +5688,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
+
+  '@types/better-sqlite3@9.6.0':
+    dependencies:
+      '@types/node': 22.20.1
 
   '@types/body-parser@1.19.6':
     dependencies:

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import knex, { Knex } from 'knex'
+import BetterSqlite3 from 'better-sqlite3'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import { normalizeSearchText } from './MessageSearchIndex'
 
@@ -70,7 +71,18 @@ const identifierTokenCapacity = identifierAlphabetSize * identifierAlphabetSize
 const searchFtsColumns = "content, content='', contentless_delete=1, detail=none, tokenize='trigram'"
 const createSearchFtsSql = `CREATE VIRTUAL TABLE search_fts USING fts5(${searchFtsColumns})`
 const createSearchFtsIfNotExistsSql = `CREATE VIRTUAL TABLE IF NOT EXISTS search_fts USING fts5(${searchFtsColumns})`
+const requiredSearchDatabaseTables = [
+    'search_state',
+    'search_pending_times',
+    'search_time_state',
+    'search_fts',
+] as const
 const legacyCursorRecoveryState = 'legacyCursorRecovery'
+
+interface ExistingSearchDatabaseInspection {
+    format?: string
+    hasRequiredSchema: boolean
+}
 
 const searchCharacters = (value: unknown): string[] => Array.from(normalizeSearchText(value))
 
@@ -273,6 +285,32 @@ const existingFiles = async (filePaths: string[]): Promise<{ files: string[]; er
     return { files, error: lastError }
 }
 
+const inspectExistingSearchDatabase = (filePath: string): ExistingSearchDatabaseInspection => {
+    const db = new BetterSqlite3(filePath, { fileMustExist: true })
+    try {
+        const tableRows = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all()
+        const tables = new Set(tableRows.map((row: { name: unknown }) => String(row.name)))
+        let format: string | undefined
+        if (tables.has('search_state')) {
+            const row = db.prepare("SELECT value FROM search_state WHERE key = 'format'").get()
+            if (row?.value !== undefined && row?.value !== null) format = String(row.value)
+        }
+        return {
+            format,
+            hasRequiredSchema: requiredSearchDatabaseTables.every((table) => tables.has(table)),
+        }
+    } finally {
+        db.close()
+    }
+}
+
+const isSQLiteCorruptionError = (error: unknown): boolean => {
+    const code = String((error as NodeJS.ErrnoException)?.code || '')
+    if (code === 'SQLITE_NOTADB' || code === 'SQLITE_CORRUPT' || code.startsWith('SQLITE_CORRUPT_')) return true
+    const message = error instanceof Error ? error.message : String(error || '')
+    return /database disk image is malformed|file is not a database|malformed database schema/i.test(message)
+}
+
 const deleteSQLiteDatabaseFiles = async (filePath: string): Promise<void> => {
     const filePaths = sqliteDatabaseFiles(filePath)
     let lastError: unknown
@@ -295,7 +333,7 @@ const deleteSQLiteDatabaseFiles = async (filePath: string): Promise<void> => {
     if (!remaining.files.length) return
     const reason = lastError instanceof Error ? `: ${lastError.message}` : ''
     throw new Error(
-        `Failed to delete incompatible SQLite search database after ${searchDatabaseDeleteAttempts} attempts; remaining files: ${remaining.files.join(', ')}${reason}`,
+        `Failed to delete SQLite search database after ${searchDatabaseDeleteAttempts} attempts; remaining files: ${remaining.files.join(', ')}${reason}`,
     )
 }
 
@@ -367,18 +405,24 @@ export default class SQLiteMessageSearchIndex {
             const databaseFiles = sqliteDatabaseFiles(this.filePath)
             const existingDatabaseFiles = await existingFiles(databaseFiles)
             const databaseExisted = existingDatabaseFiles.files.includes(this.filePath)
+            let reuseExistingDatabase = false
             if (!databaseExisted && existingDatabaseFiles.files.length) {
                 await deleteSQLiteDatabaseFiles(this.filePath)
                 if (this.closing) return
+            } else if (databaseExisted) {
+                try {
+                    const inspection = inspectExistingSearchDatabase(this.filePath)
+                    reuseExistingDatabase = inspection.format === searchIndexFormat && inspection.hasRequiredSchema
+                } catch (error) {
+                    if (!isSQLiteCorruptionError(error)) throw error
+                }
+                if (!reuseExistingDatabase) {
+                    await deleteSQLiteDatabaseFiles(this.filePath)
+                    if (this.closing) return
+                }
             }
             this.db = this.createDatabase()
-            if (databaseExisted && (await this.getExistingFormat()) !== searchIndexFormat) {
-                await this.destroyDatabaseConnection()
-                await deleteSQLiteDatabaseFiles(this.filePath)
-                if (this.closing) return
-                this.db = this.createDatabase()
-            }
-            await this.ensureSchema()
+            await this.ensureSchema(!reuseExistingDatabase)
             this.available = true
             const hasPending = Boolean(await this.db('search_pending_times').first())
             this.ready = (await this.getState('ready')) === '1' && !hasPending
@@ -585,7 +629,7 @@ export default class SQLiteMessageSearchIndex {
         if (this.validationPromise) await this.validationPromise
     }
 
-    private async ensureSchema(): Promise<void> {
+    private async ensureSchema(writeFormat: boolean): Promise<void> {
         const db = this.db
         if (!db) throw new Error('SQLite search database is unavailable')
         if (!(await db.schema.hasTable('search_state'))) {
@@ -610,16 +654,9 @@ export default class SQLiteMessageSearchIndex {
             })
         }
         await db.raw(createSearchFtsIfNotExistsSql)
-        if ((await this.getState('format')) === searchIndexFormat) return
-        await db('search_state').insert({ key: 'format', value: searchIndexFormat }).onConflict('key').merge()
-    }
-
-    private async getExistingFormat(): Promise<string | undefined> {
-        const db = this.db
-        if (!db || !(await db.schema.hasTable('search_state'))) return undefined
-        const row = await db('search_state').where('key', 'format').first()
-        if (row?.value === undefined || row?.value === null) return undefined
-        return String(row.value)
+        if (writeFormat) {
+            await db('search_state').insert({ key: 'format', value: searchIndexFormat }).onConflict('key').merge()
+        }
     }
 
     private startBuild(): void {

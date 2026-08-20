@@ -175,6 +175,110 @@ test('orphaned SQLite sidecar files are deleted before rebuilding a missing FTS 
     }
 })
 
+test('a current-format database missing a required table is deleted and rebuilt', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-missing-table-'))
+    const filePath = path.join(directory, 'search.db')
+    const staleDb = knex({
+        client: 'better-sqlite3',
+        connection: { filename: filePath },
+        useNullAsDefault: true,
+    })
+    await staleDb.schema.createTable('search_state', (table) => {
+        table.string('key').primary()
+        table.text('value').notNullable()
+    })
+    await staleDb('search_state').insert([
+        { key: 'format', value: 'trigram-interleaved-run-length-identifier-none-contentless-delete-v9' },
+        { key: 'ready', value: '1' },
+    ])
+    await staleDb.schema.createTable('search_pending_times', (table) => {
+        table.integer('time').primary()
+        table.integer('needsRebuild').notNullable().defaultTo(0)
+        table.string('queueVersion').nullable()
+    })
+    await staleDb.schema.createTable('search_time_state', (table) => {
+        table.integer('time').primary()
+        table.integer('messageCount').notNullable().defaultTo(0)
+    })
+    await staleDb.schema.createTable('stale_marker', (table) => table.integer('value'))
+    await staleDb.destroy()
+
+    const messages: SQLiteSearchMessage[] = [
+        { time: 300, content: 'rebuilt after missing table', roomId: -1001, senderId: 2001 },
+    ]
+    const index = new SQLiteMessageSearchIndex(filePath, {
+        loadTimes: async (afterTime, limit) =>
+            messages
+                .map((message) => Number(message.time))
+                .filter((time) => time > afterTime)
+                .slice(0, limit),
+        loadMessagesByTimes: async (times) => messages.filter((message) => times.includes(Number(message.time))),
+        countMessages: async () => messages.length,
+    })
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        assert.deepEqual(await index.searchTimes('missing table', { limit: 20 }), [300])
+
+        await index.close()
+        const rebuiltDb = knex({
+            client: 'better-sqlite3',
+            connection: { filename: filePath },
+            useNullAsDefault: true,
+        })
+        try {
+            assert.equal(await rebuiltDb.schema.hasTable('search_fts'), true)
+            assert.equal(await rebuiltDb.schema.hasTable('stale_marker'), false)
+        } finally {
+            await rebuiltDb.destroy()
+        }
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
+test('a corrupt SQLite search database is deleted and rebuilt', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-corrupt-'))
+    const filePath = path.join(directory, 'search.db')
+    fs.writeFileSync(
+        filePath,
+        Buffer.concat([Buffer.from('SQLite format 3\0'), Buffer.alloc(4096 - 'SQLite format 3\0'.length, 0x41)]),
+    )
+
+    const messages: SQLiteSearchMessage[] = [
+        { time: 400, content: 'rebuilt after corrupt database', roomId: -1001, senderId: 2001 },
+    ]
+    const errors: unknown[] = []
+    const index = new SQLiteMessageSearchIndex(
+        filePath,
+        {
+            loadTimes: async (afterTime, limit) =>
+                messages
+                    .map((message) => Number(message.time))
+                    .filter((time) => time > afterTime)
+                    .slice(0, limit),
+            loadMessagesByTimes: async (times) => messages.filter((message) => times.includes(Number(message.time))),
+            countMessages: async () => messages.length,
+        },
+        (error) => errors.push(error),
+    )
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        assert.deepEqual(errors, [])
+        assert.deepEqual(await index.searchTimes('corrupt database', { limit: 20 }), [400])
+
+        await index.close()
+        assert.equal(fs.readFileSync(filePath).subarray(0, 16).toString(), 'SQLite format 3\u0000')
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
 test('roomId and senderId tokens constrain FTS candidates', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-identifiers-'))
     const messages: SQLiteSearchMessage[] = [

@@ -14,6 +14,7 @@
   },
   "packageManager": "pnpm@10.34.4",
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2"
   },
