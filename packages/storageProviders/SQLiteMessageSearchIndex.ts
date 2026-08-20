@@ -364,7 +364,13 @@ export default class SQLiteMessageSearchIndex {
         this.lastProgressReportAt = 0
         try {
             fs.mkdirSync(path.dirname(this.filePath), { recursive: true })
-            const databaseExisted = fs.existsSync(this.filePath)
+            const databaseFiles = sqliteDatabaseFiles(this.filePath)
+            const existingDatabaseFiles = await existingFiles(databaseFiles)
+            const databaseExisted = existingDatabaseFiles.files.includes(this.filePath)
+            if (!databaseExisted && existingDatabaseFiles.files.length) {
+                await deleteSQLiteDatabaseFiles(this.filePath)
+                if (this.closing) return
+            }
             this.db = this.createDatabase()
             if (databaseExisted && (await this.getExistingFormat()) !== searchIndexFormat) {
                 await this.destroyDatabaseConnection()

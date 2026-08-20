@@ -145,6 +145,36 @@ test('an incompatible FTS database is closed, deleted with retries, and rebuilt'
     }
 })
 
+test('orphaned SQLite sidecar files are deleted before rebuilding a missing FTS database', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-orphans-'))
+    const filePath = path.join(directory, 'search.db')
+    const orphanedFiles = [`${filePath}-wal`, `${filePath}-shm`, `${filePath}-journal`]
+    for (const orphanedFile of orphanedFiles) fs.writeFileSync(orphanedFile, 'orphaned search database file')
+
+    const messages: SQLiteSearchMessage[] = [
+        { time: 200, content: 'rebuilt after orphan cleanup', roomId: -1001, senderId: 2001 },
+    ]
+    const index = new SQLiteMessageSearchIndex(filePath, {
+        loadTimes: async (afterTime, limit) =>
+            messages
+                .map((message) => Number(message.time))
+                .filter((time) => time > afterTime)
+                .slice(0, limit),
+        loadMessagesByTimes: async (times) => messages.filter((message) => times.includes(Number(message.time))),
+        countMessages: async () => messages.length,
+    })
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        assert.deepEqual(await index.searchTimes('orphan cleanup', { limit: 20 }), [200])
+        assert.equal(fs.existsSync(`${filePath}-journal`), false)
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
 test('roomId and senderId tokens constrain FTS candidates', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-identifiers-'))
     const messages: SQLiteSearchMessage[] = [
