@@ -11,6 +11,12 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
+import {
+    legacyAtMetadataName,
+    legacyAtMigrationVersion,
+    runLegacyAtMigration,
+    tryMigrateLegacyAtMessage,
+} from './LegacyAtMigration'
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker from './SQLiteMessageSearchIndexWorker'
 import SQLStorageProviderWorker from './SQLStorageProviderWorker'
@@ -80,12 +86,15 @@ interface SQLiteOpt {
 
 interface MessageSearchIndex {
     readonly isReady: boolean
+    onReady?: () => void
     open(): Promise<void>
     close(): Promise<void>
     validate(): Promise<void>
-    syncMessages(messages: SQLiteSearchMessage[]): Promise<void>
+    getSyncGeneration?(): Promise<number | null>
+    syncMessages(messages: SQLiteSearchMessage[], expectedGeneration?: number): Promise<void>
     requestRebuild(times?: number | number[]): Promise<void>
     searchTimes(keyword: string, options: SQLiteMessageSearchTimesOptions): Promise<number[] | null>
+    countTimes(keyword: string): Promise<number | null>
 }
 
 export type MessageSearchIndexFactory = (
@@ -103,6 +112,24 @@ const createMessageSearchIndexWorker: MessageSearchIndexFactory = (filePath, cal
 const sqlSearchReadBatchSize = 800
 const sqlSearchBuildBatchSize = 4000
 const sqlSearchValidationBatchSize = 4000
+const sqlMessageWriteBatchSize = 200
+const messageMetadataTable = 'dbMetadata'
+
+const parseMessageJsonField = (value: unknown): unknown => {
+    if (typeof value !== 'string') return value
+    try {
+        return JSON.parse(value)
+    } catch {
+        return value
+    }
+}
+
+const serializeMessageJsonField = (value: unknown, original: unknown): string | null => {
+    if (value === undefined || (value === null && (original === null || original === undefined))) {
+        return original === undefined ? null : (original as string | null)
+    }
+    return JSON.stringify(value)
+}
 
 export default class SQLStorageProvider implements StorageProvider {
     id: string
@@ -113,6 +140,9 @@ export default class SQLStorageProvider implements StorageProvider {
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
     private qid: string
     private searchIndex: MessageSearchIndex
+    private legacyAtMigrationStarted = false
+    private legacyAtMigrationPromise: Promise<void> | null = null
+    private closed = false
 
     /** `constructor` 方法。这里会判断数据库类型并建立连接。 */
     constructor(
@@ -211,6 +241,7 @@ export default class SQLStorageProvider implements StorageProvider {
             },
             this.errorHandle as (error: unknown) => void,
         )
+        this.searchIndex.onReady = () => this.scheduleLegacyAtMigration()
     }
 
     /** 私有方法，将 icalingua 的 room 转换成适合放在数据库里的格式 */
@@ -531,6 +562,83 @@ export default class SQLStorageProvider implements StorageProvider {
         await this.searchIndex.open()
     }
 
+    private async migrateLegacyAtBatch(times: number[]): Promise<void> {
+        const rows = await this.db<MessageInSQLDB>('messages')
+            .whereIn('time', times)
+            .select('_id', 'content', 'file', 'files')
+        const updates = rows
+            .map((row) => {
+                const migrated = tryMigrateLegacyAtMessage({
+                    content: row.content,
+                    file: parseMessageJsonField(row.file),
+                    files: parseMessageJsonField(row.files),
+                })
+                if (!migrated) return null
+                return {
+                    _id: String(row._id),
+                    content: migrated.content,
+                    file: migrated.mediaChanged
+                        ? serializeMessageJsonField(migrated.file, row.file)
+                        : (row.file as unknown as string | null),
+                    files: migrated.mediaChanged
+                        ? serializeMessageJsonField(migrated.files, row.files)
+                        : (row.files as unknown as string | null),
+                }
+            })
+            .filter((row): row is { _id: string; content: string; file: string | null; files: string | null } =>
+                Boolean(row?._id),
+            )
+        if (!updates.length) return
+
+        await this.db.transaction(async (transaction) => {
+            for (const updateBatch of lodash.chunk(updates, sqlMessageWriteBatchSize)) {
+                await transaction('messages').insert(updateBatch).onConflict('_id').merge(['content', 'file', 'files'])
+            }
+        })
+    }
+
+    private scheduleLegacyAtMigration(): void {
+        if (this.closed || this.legacyAtMigrationStarted) return
+        this.legacyAtMigrationStarted = true
+        this.legacyAtMigrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
+            .then(() => this.migrateLegacyAtMessages())
+            .catch((error) => {
+                if (this.closed) return
+                try {
+                    this.errorHandle(error)
+                } catch {}
+                try {
+                    this.reportUpgradeProgress({
+                        active: false,
+                        step: 0,
+                        total: 0,
+                        message: '',
+                    })
+                } catch {}
+            })
+    }
+
+    private async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed) return
+
+        await runLegacyAtMigration({
+            searchIndex: this.searchIndex,
+            isClosed: () => this.closed,
+            hasCompleted: async () => {
+                const metadata = await this.db(messageMetadataTable).where('name', legacyAtMetadataName).first()
+                return String(metadata?.value || '') === legacyAtMigrationVersion
+            },
+            migrateBatch: (times) => this.migrateLegacyAtBatch(times),
+            markCompleted: async () => {
+                await this.db(messageMetadataTable)
+                    .insert({ name: legacyAtMetadataName, value: legacyAtMigrationVersion })
+                    .onConflict('name')
+                    .merge({ value: legacyAtMigrationVersion })
+            },
+            reportProgress: (progress) => this.reportUpgradeProgress(progress),
+        })
+    }
+
     isMessageSearchIndexReady(): boolean {
         return this.searchIndex?.isReady === true
     }
@@ -655,6 +763,16 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.bigInteger('index')
                     table.text('rooms')
                     table.boolean('includeAllPersonal').defaultTo(false)
+                })
+            }
+
+            // 建表存放部分消息内容升级的元数据
+            const hasMessageMetadataTable = await this.db.schema.hasTable(messageMetadataTable)
+            if (!hasMessageMetadataTable) {
+                await this.db.schema.createTable(messageMetadataTable, (table) => {
+                    if (this.type === 'mysql') table.collate('utf8mb4_unicode_ci')
+                    table.string('name').primary()
+                    table.text('value').notNullable()
                 })
             }
 
@@ -1245,7 +1363,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const newMessages = await this.db.transaction(async (transaction) => {
                 const candidates = await this.filterNewMessages(messages, transaction)
                 const msgToInsert = candidates.map((message) => this.msgConToDB(message, roomId))
-                for (const chunkedMessage of lodash.chunk(msgToInsert, 200)) {
+                for (const chunkedMessage of lodash.chunk(msgToInsert, sqlMessageWriteBatchSize)) {
                     await transaction<Message>('messages').insert(chunkedMessage).onConflict('_id').ignore()
                 }
                 return candidates
@@ -1261,7 +1379,9 @@ export default class SQLStorageProvider implements StorageProvider {
      * 应在进程退出前调用。
      */
     async close(): Promise<void> {
+        this.closed = true
         try {
+            if (this.legacyAtMigrationPromise) await this.legacyAtMigrationPromise
             if (this.searchIndex) await this.searchIndex.close()
             if (this.db) {
                 await this.db.destroy()

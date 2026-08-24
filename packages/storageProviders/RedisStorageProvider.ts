@@ -8,6 +8,12 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
+import {
+    legacyAtMetadataName,
+    legacyAtMigrationVersion,
+    runLegacyAtMigration,
+    tryMigrateLegacyAtMessage,
+} from './LegacyAtMigration'
 import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, { SQLiteSearchMessage } from './SQLiteMessageSearchIndexWorker'
@@ -20,12 +26,34 @@ const insertMessageScript = [
 ].join('\n')
 
 const redisMessageReadBatchSize = 1000
+const redisMigrationRoomConcurrency = 8
+
+const mapWithConcurrencyAndYield = async <T, R>(
+    values: T[],
+    concurrency: number,
+    callback: (value: T, index: number) => Promise<R>,
+): Promise<R[]> => {
+    const results: R[] = []
+    const batchSize = Math.max(1, Math.trunc(concurrency))
+    for (let offset = 0; offset < values.length; offset += batchSize) {
+        results.push(
+            ...(await Promise.all(
+                values.slice(offset, offset + batchSize).map((value, index) => callback(value, offset + index)),
+            )),
+        )
+        if (offset + batchSize < values.length) await new Promise<void>((resolve) => setImmediate(resolve))
+    }
+    return results
+}
 
 export default class RedisStorageProvider implements StorageProvider {
     qid: string
     connStr: string
     redis: Redis.Redis
     private searchIndex: SQLiteMessageSearchIndexWorker
+    private legacyAtMigrationStarted = false
+    private legacyAtMigrationPromise: Promise<void> | null = null
+    private closed = false
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     /** `constructor` 方法。 */
@@ -42,6 +70,7 @@ export default class RedisStorageProvider implements StorageProvider {
                 reportProgress: (progress) => this.reportUpgradeProgress(progress),
             },
         )
+        this.searchIndex.onReady = () => this.scheduleLegacyAtMigration()
     }
 
     private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {
@@ -54,6 +83,7 @@ export default class RedisStorageProvider implements StorageProvider {
 
     /** `connect` 方法。在这里与数据库建立连接。 */
     async connect(): Promise<void> {
+        this.closed = false
         this.redis = new Redis(this.connStr)
         await this.repairRoomAtMessageIds()
         await this.searchIndex.open()
@@ -73,6 +103,8 @@ export default class RedisStorageProvider implements StorageProvider {
     }
 
     async close(): Promise<void> {
+        this.closed = true
+        if (this.legacyAtMigrationPromise) await this.legacyAtMigrationPromise
         await this.searchIndex.close()
         if (this.redis) {
             await this.redis.quit()
@@ -171,22 +203,26 @@ export default class RedisStorageProvider implements StorageProvider {
             .slice(0, Math.max(1, Math.trunc(limit)))
     }
 
-    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
+    private async loadSearchMessageGroupsByTimes(
+        times: number[],
+    ): Promise<Array<{ roomId: number; messages: Message[] }>> {
         if (!times.length) return []
         const rooms = await this.getSearchRooms()
-        return (
-            await Promise.all(
-                rooms.map(async (room) => {
-                    const roomId = Number(room.roomId)
-                    return (await this.getMessagesBySearchTimes(roomId, times)).map((message) => ({
-                        time: message.time,
-                        content: message.content,
-                        roomId,
-                        senderId: message.senderId,
-                    }))
-                }),
-            )
-        ).flat()
+        return mapWithConcurrencyAndYield(rooms, redisMigrationRoomConcurrency, async (room) => {
+            const roomId = Number(room.roomId)
+            return { roomId, messages: await this.getMessagesBySearchTimes(roomId, times) }
+        })
+    }
+
+    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
+        return (await this.loadSearchMessageGroupsByTimes(times)).flatMap(({ roomId, messages }) =>
+            messages.map((message) => ({
+                time: message.time,
+                content: message.content,
+                roomId,
+                senderId: message.senderId,
+            })),
+        )
     }
 
     private async loadSearchTimeCounts(afterTime: number, limit: number) {
@@ -251,6 +287,81 @@ export default class RedisStorageProvider implements StorageProvider {
 
     private async syncSearchIndex(messages: Message[]): Promise<void> {
         await this.searchIndex.syncMessages(messages)
+    }
+
+    private async migrateLegacyAtBatch(times: number[]): Promise<boolean> {
+        const syncGeneration = await this.searchIndex.getSyncGeneration()
+        const roomMessages = await this.loadSearchMessageGroupsByTimes(times)
+        const pipeline = this.redis.pipeline()
+        let operationCount = 0
+        for (const { roomId, messages } of roomMessages) {
+            for (const message of messages) {
+                const migrated = tryMigrateLegacyAtMessage(message)
+                if (!migrated || migrated.content === String(message.content ?? '')) continue
+                const migratedMessage = { ...message, content: migrated.content } as any
+                const mutableMessage = message as any
+                if (migrated.mediaChanged) {
+                    if (Object.prototype.hasOwnProperty.call(message, 'file')) migratedMessage.file = migrated.file
+                    if (Object.prototype.hasOwnProperty.call(message, 'files')) migratedMessage.files = migrated.files
+                }
+                pipeline.hset(this.roomMessageKey(roomId), String(message._id), JSON.stringify(migratedMessage))
+                message.content = migrated.content
+                if (migrated.mediaChanged) {
+                    if (Object.prototype.hasOwnProperty.call(message, 'file')) mutableMessage.file = migrated.file
+                    if (Object.prototype.hasOwnProperty.call(message, 'files')) mutableMessage.files = migrated.files
+                }
+                operationCount++
+            }
+        }
+        if (operationCount) {
+            const results = await pipeline.exec()
+            const failed = results?.find(([error]) => Boolean(error))
+            if (failed?.[0]) throw failed[0]
+        }
+        if (syncGeneration !== null) {
+            const completeTimeGroups = roomMessages.flatMap(({ roomId, messages }) =>
+                messages.map((message) => ({
+                    time: message.time,
+                    content: message.content,
+                    roomId,
+                    senderId: message.senderId,
+                })),
+            )
+            await this.searchIndex.syncMessages(completeTimeGroups, syncGeneration)
+            return true
+        }
+        return false
+    }
+
+    private metadataKey(): string {
+        return `${this.qid}:metadata`
+    }
+
+    private scheduleLegacyAtMigration(): void {
+        if (!this.redis || this.closed || this.legacyAtMigrationStarted) return
+        this.legacyAtMigrationStarted = true
+        this.legacyAtMigrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
+            .then(() => this.migrateLegacyAtMessages())
+            .catch((error) => {
+                if (this.closed) return
+                console.error('Failed to migrate legacy At messages in Redis', error)
+                this.reportUpgradeProgress({ active: false, step: 0, total: 0, message: '' })
+            })
+    }
+
+    private async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed || !this.redis) return
+        await runLegacyAtMigration({
+            searchIndex: this.searchIndex,
+            isClosed: () => this.closed,
+            hasCompleted: async () =>
+                (await this.redis.hget(this.metadataKey(), legacyAtMetadataName)) === legacyAtMigrationVersion,
+            migrateBatch: (times) => this.migrateLegacyAtBatch(times),
+            markCompleted: async () => {
+                await this.redis.hset(this.metadataKey(), legacyAtMetadataName, legacyAtMigrationVersion)
+            },
+            reportProgress: (progress) => this.reportUpgradeProgress(progress),
+        })
     }
 
     private async insertMessages(roomId: number, messages: Message[]): Promise<Message[]> {

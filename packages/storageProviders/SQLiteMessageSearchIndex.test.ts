@@ -323,3 +323,79 @@ test('roomId and senderId tokens constrain FTS candidates', async () => {
         fs.rmSync(directory, { recursive: true, force: true })
     }
 })
+
+test('counts and paginates legacy At timestamp candidates from FTS', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-legacy-at-'))
+    const messages: SQLiteSearchMessage[] = [
+        { time: 500, content: '<IcalinguaAt qq=42>Alice%20Chen</IcalinguaAt>', roomId: -1001, senderId: 2001 },
+        { time: 499, content: '<IcaAt qq=42>Alice Chen</IcaAt>', roomId: -1001, senderId: 2001 },
+    ]
+    const index = new SQLiteMessageSearchIndex(path.join(directory, 'search.db'), {
+        loadTimes: async (afterTime, limit) =>
+            Array.from(new Set(messages.map((message) => Number(message.time))))
+                .filter((time) => time > afterTime)
+                .sort((left, right) => left - right)
+                .slice(0, limit),
+        loadMessagesByTimes: async (times) => messages.filter((message) => times.includes(Number(message.time))),
+        countMessages: async () => messages.length,
+    })
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        assert.equal(await index.countTimes('IcalinguaAt'), 1)
+        assert.deepEqual(await index.searchTimes('IcalinguaAt', { limit: 20 }), [500])
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
+test('complete time groups reuse syncMessages and fall back after a concurrent FTS sync', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-snapshot-'))
+    const messages: SQLiteSearchMessage[] = [
+        { time: 500, content: '<IcalinguaAt qq=42>Alice%20Chen</IcalinguaAt>', roomId: -1001, senderId: 2001 },
+        { time: 500, content: 'other room content', roomId: -1002, senderId: 2002 },
+        { time: 500, content: '', roomId: -1003, senderId: 2003 },
+    ]
+    let sourceLoads = 0
+    const index = new SQLiteMessageSearchIndex(path.join(directory, 'search.db'), {
+        loadTimes: async (afterTime, limit) => (afterTime < 500 ? [500].slice(0, limit) : []),
+        loadMessagesByTimes: async (times) => {
+            sourceLoads++
+            return messages.filter((message) => times.includes(Number(message.time)))
+        },
+        countMessages: async () => messages.length,
+    })
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        sourceLoads = 0
+
+        const generation = await index.getSyncGeneration()
+        assert.notEqual(generation, null)
+        messages[0].content = '<IcaAt qq=42>Alice Chen</IcaAt>'
+        await index.syncMessages(messages, generation as number)
+        assert.equal(sourceLoads, 0)
+        assert.equal(await index.countTimes('IcalinguaAt'), 0)
+        assert.equal(await index.countTimes('IcaAt'), 1)
+        const timeState = await (index as any).db('search_time_state').where('time', 500).first()
+        assert.equal(Number(timeState.messageCount), 3)
+
+        const staleGeneration = await index.getSyncGeneration()
+        assert.notEqual(staleGeneration, null)
+        const staleCompleteTimeGroup = messages.map((message) => ({ ...message }))
+        messages[1].content = 'concurrent fresh content'
+        await index.syncMessages([{ time: 500 }])
+        const loadsBeforeStaleGroup = sourceLoads
+        await index.syncMessages(staleCompleteTimeGroup, staleGeneration as number)
+
+        assert.equal(sourceLoads, loadsBeforeStaleGroup + 1)
+        assert.deepEqual(await index.searchTimes('concurrent fresh', { limit: 20 }), [500])
+        assert.deepEqual(await index.searchTimes('other room content', { limit: 20 }), [])
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})

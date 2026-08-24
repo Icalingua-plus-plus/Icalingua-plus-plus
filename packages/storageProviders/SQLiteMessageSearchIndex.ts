@@ -375,6 +375,7 @@ export default class SQLiteMessageSearchIndex {
     private closing = false
     private available = false
     private ready = false
+    private readyNotified = false
     private rebuilding = false
     private buildIndexedThroughTime = 0
     private buildScanActive = false
@@ -383,8 +384,10 @@ export default class SQLiteMessageSearchIndex {
     private pendingProgress: DatabaseUpgradeProgress | null = null
     private progressTimer: ReturnType<typeof setTimeout> | null = null
     private lastProgressReportAt = 0
+    private syncGeneration = 0
     private readonly roomIdTokenCache = new SearchIdentifierTokenCache(roomIdTokenMarker, roomIdTokenCacheSize)
     private readonly senderIdTokenCache = new SearchIdentifierTokenCache(senderIdTokenMarker, senderIdTokenCacheSize)
+    onReady?: () => void
 
     constructor(
         filePath: string,
@@ -441,9 +444,11 @@ export default class SQLiteMessageSearchIndex {
             this.rebuilding = !this.ready
             this.pendingWork = hasPending
             this.startBuild()
+            this.notifyReady()
         } catch (error) {
             this.available = false
             this.ready = false
+            this.readyNotified = false
             this.rebuilding = false
             const db = this.db
             this.db = null
@@ -474,6 +479,7 @@ export default class SQLiteMessageSearchIndex {
         this.pendingWork = false
         this.available = false
         this.ready = false
+        this.readyNotified = false
         this.rebuilding = false
         this.buildIndexedThroughTime = 0
         this.buildScanActive = false
@@ -591,13 +597,20 @@ export default class SQLiteMessageSearchIndex {
         }
     }
 
-    async syncMessages(messages: SQLiteSearchMessage[]): Promise<void> {
-        if (!messages.length || !this.db || !this.available) return
-        await this.enqueueOperation(() => this.syncMessagesInternal(messages))
+    async getSyncGeneration(): Promise<number | null> {
+        if (!this.db || !this.available || !this.ready || this.rebuilding) return null
+        return this.enqueueOperation(async () => (this.ready && !this.rebuilding ? this.syncGeneration : null))
     }
 
-    private async syncMessagesInternal(messages: SQLiteSearchMessage[]): Promise<void> {
+    async syncMessages(messages: SQLiteSearchMessage[], expectedGeneration?: number): Promise<void> {
         if (!messages.length || !this.db || !this.available) return
+        await this.enqueueOperation(() => this.syncMessagesInternal(messages, expectedGeneration))
+    }
+
+    private async syncMessagesInternal(messages: SQLiteSearchMessage[], expectedGeneration?: number): Promise<void> {
+        if (!messages.length || !this.db || !this.available) return
+        const useCompleteTimeGroups = expectedGeneration !== undefined && expectedGeneration === this.syncGeneration
+        this.syncGeneration++
         if (!this.ready || this.rebuilding) {
             await this.queueMessages(messages)
             return
@@ -608,7 +621,7 @@ export default class SQLiteMessageSearchIndex {
             const pending = (await this.db('search_pending_times')
                 .whereIn('time', times)
                 .select('time', 'queueVersion', 'needsRebuild')) as PendingSearchTime[]
-            const currentMessages = await this.callbacks.loadMessagesByTimes(times)
+            const currentMessages = useCompleteTimeGroups ? messages : await this.callbacks.loadMessagesByTimes(times)
             await this.rebuildTimes(times, currentMessages)
             if (pending.length) await this.removeProcessedPendingTimes(pending)
             if (this.pendingWork) this.startBuild()
@@ -628,6 +641,22 @@ export default class SQLiteMessageSearchIndex {
             if (options.minTime !== undefined) query = query.where('rowid', '>=', Math.trunc(options.minTime))
             const rows = await query.orderBy('rowid', 'desc').limit(Math.max(1, Math.trunc(options.limit)))
             return rows.map((row: any) => Number(row.rowid)).filter((time: number) => Number.isFinite(time))
+        } catch (error) {
+            if (!this.closing) this.errorHandle(error)
+            return null
+        }
+    }
+
+    async countTimes(keyword: string): Promise<number | null> {
+        if (!this.db || !this.available || !this.ready) return null
+        const match = this.buildMatchQuery(keyword, { limit: 1 })
+        if (!match) return null
+        try {
+            const row: any = await this.db('search_fts')
+                .whereRaw('search_fts MATCH ?', [match])
+                .count({ count: '*' })
+                .first()
+            return Math.max(0, Number(row?.count || Object.values(row || {})[0] || 0))
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
             return null
@@ -736,6 +765,7 @@ export default class SQLiteMessageSearchIndex {
                 }
                 this.ready = true
                 this.rebuilding = false
+                this.notifyReady()
                 this.report({ active: false, step: 0, total: 0, message: '' })
             })
     }
@@ -936,6 +966,7 @@ export default class SQLiteMessageSearchIndex {
                 if (generation !== this.requestGeneration) continue
                 this.rebuilding = false
                 this.ready = true
+                this.notifyReady()
                 this.report({ active: false, step: 0, total: 0, message: '' })
                 return
             }
@@ -1012,6 +1043,7 @@ export default class SQLiteMessageSearchIndex {
             if (!completed) continue
             this.ready = true
             this.rebuilding = false
+            this.notifyReady()
             this.report({ active: false, step: 0, total: 0, message: '' })
             return
         }
@@ -1307,6 +1339,16 @@ export default class SQLiteMessageSearchIndex {
     private emitProgress(progress: DatabaseUpgradeProgress): void {
         try {
             this.callbacks.reportProgress?.(progress)
+        } catch (error) {
+            if (!this.closing) this.errorHandle(error)
+        }
+    }
+
+    private notifyReady(): void {
+        if (!this.isReady || this.readyNotified) return
+        this.readyNotified = true
+        try {
+            this.onReady?.()
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
         }

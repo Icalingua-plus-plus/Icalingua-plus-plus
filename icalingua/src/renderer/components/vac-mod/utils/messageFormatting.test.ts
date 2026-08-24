@@ -9,6 +9,7 @@ import {
     stripForwardPreview,
 } from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
+import { convertLegacyIcalinguaAt, encodeIcalinguaAt } from '../../../../utils/icalinguaAt'
 
 test('parses message tokens and preserves line breaks', () => {
     assert.deepEqual(parseMessageText('hello\n[Face: 12]\n[Forward: resource]'), [
@@ -47,7 +48,7 @@ test('linkifies every URL without swallowing surrounding text', () => {
 })
 
 test('formats @ mentions and keeps trailing empty lines visible', () => {
-    const parts = formatMessageParts('<IcalinguaAt qq=42>Alice%20Chen</IcalinguaAt>\n')
+    const parts = formatMessageParts('<IcaAt qq=42>Alice Chen</IcaAt>\n')
 
     assert.deepEqual(parts, [
         {
@@ -61,6 +62,52 @@ test('formats @ mentions and keeps trailing empty lines visible', () => {
     ])
 })
 
+test('renders legacy IcalinguaAt markers, including in reply content', () => {
+    assert.deepEqual(formatMessageParts('reply: <IcalinguaAt qq=42>Alice%20%26%20Bob</IcalinguaAt>'), [
+        { value: 'reply: ' },
+        {
+            href: 'icalingua://at?name=Alice%20%26%20Bob&qq=42',
+            title: 'Alice & Bob(42)',
+            type: 'at',
+            value: 'Alice & Bob',
+        },
+    ])
+})
+
+test('uses XML escaping for new @ markers', () => {
+    assert.equal(
+        encodeIcalinguaAt(42, `A&B <C> "D" 'E'`),
+        '<IcaAt qq=42>A&amp;B &lt;C&gt; &quot;D&quot; &apos;E&apos;</IcaAt>',
+    )
+    assert.deepEqual(formatMessageParts('<IcaAt qq=42>A&amp;B &lt;C&gt; &quot;D&quot; &apos;E&apos;</IcaAt>'), [
+        {
+            href: "icalingua://at?name=A%26B%20%3CC%3E%20%22D%22%20'E'&qq=42",
+            title: 'A&B <C> "D" \'E\'(42)',
+            type: 'at',
+            value: `A&B <C> "D" 'E'`,
+        },
+    ])
+})
+
+test('converts legacy @ markers to the current format and reports offsets', () => {
+    const legacy = '<IcalinguaAt qq=42>Alice%20%26%20Bob</IcalinguaAt>'
+    const legacy2 = '<IcalinguaAt qq=7>Bob%2EChen</IcalinguaAt>'
+    const converted = encodeIcalinguaAt(42, 'Alice & Bob')
+    const converted2 = encodeIcalinguaAt(7, 'Bob.Chen')
+    const replacements: Array<[number, number, number]> = []
+
+    assert.equal(
+        convertLegacyIcalinguaAt(`x${legacy}m${legacy2}y`, (index, replacedLength, replacementLength) => {
+            replacements.push([index, replacedLength, replacementLength])
+        }),
+        `x${converted}m${converted2}y`,
+    )
+    assert.deepEqual(replacements, [
+        [1, legacy.length, converted.length],
+        [converted.length + 2, legacy2.length, converted2.length],
+    ])
+})
+
 test('downgrades QLottie and applies spacing only to plain text', () => {
     assert.deepEqual(formatMessageParts('[QLottie: 7,123]', { disableQLottie: true }), [{ type: 'face', value: '123' }])
     assert.deepEqual(formatMessageParts('[QLottie: 7,123,9]', { disableQLottie: true }), [
@@ -69,8 +116,8 @@ test('downgrades QLottie and applies spacing only to plain text', () => {
 
     assert.equal(formatMessageParts('中文ABC', { usePanguJs: true })[0].value, '中文 ABC')
     assert.equal(
-        formatMessageParts('<IcalinguaAt qq=invalid>中文ABC</IcalinguaAt>', { usePanguJs: true })[0].value,
-        '<IcalinguaAt qq=invalid>中文ABC</IcalinguaAt>',
+        formatMessageParts('<IcaAt qq=invalid>中文ABC</IcaAt>', { usePanguJs: true })[0].value,
+        '<IcaAt qq=invalid>中文ABC</IcaAt>',
     )
 })
 
@@ -85,7 +132,7 @@ test('keeps malformed formatting markers readable', () => {
         { value: '[Face: invalid] ' },
         { type: 'face', value: '12' },
     ])
-    assert.doesNotThrow(() => formatMessageParts('<IcalinguaAt qq=42>%E0%A4</IcalinguaAt>'))
+    assert.doesNotThrow(() => formatMessageParts('<IcaAt qq=42>%E0%A4</IcaAt>'))
 })
 
 test('handles newline-heavy messages without recursion', () => {

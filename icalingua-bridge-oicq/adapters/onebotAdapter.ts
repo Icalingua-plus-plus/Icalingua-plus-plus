@@ -31,6 +31,7 @@ import {
 import Message from '@icalingua/types/Message'
 import MessagePageOptions from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
+import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
 import {
     getMediaPartIndex,
     shiftMediaOrdersAfterTextReplacement,
@@ -979,24 +980,20 @@ const adapter: typeof oicqAdapter = {
             })
         }
         if (content) {
-            // 转换新 @
-            const icalinguaAtRegex = /<IcalinguaAt qq=(\d+)>([^<]*)<\/IcalinguaAt>/
-            while (icalinguaAtRegex.test(content)) {
-                const icalinguaAt = icalinguaAtRegex.exec(content)
-                try {
-                    const atQQ = Number(icalinguaAt[1])
-                    const name = decodeURIComponent(icalinguaAt[2])
-                    if (!name) break
-                    at.push({
-                        id: atQQ === 1 ? 'all' : atQQ,
-                        text: name,
-                    })
-                    shiftMediaOrdersAfterTextReplacement(media, icalinguaAt.index, icalinguaAt[0].length, name.length)
-                    content = content.replace(icalinguaAt[0], name)
-                } catch (e) {
-                    console.error(e)
-                    break
-                }
+            content = convertLegacyIcalinguaAt(content, (index, replacedLength, replacementLength) =>
+                shiftMediaOrdersAfterTextReplacement(media, index, replacedLength, replacementLength),
+            )
+            // 转换 @ 标记
+            let icalinguaAt = findIcalinguaAtMarkup(content)
+            while (icalinguaAt) {
+                const name = decodeIcalinguaAtName(icalinguaAt.encodedName)
+                at.push({
+                    id: icalinguaAt.qq === 1 ? 'all' : icalinguaAt.qq,
+                    text: name,
+                })
+                shiftMediaOrdersAfterTextReplacement(media, icalinguaAt.index, icalinguaAt.raw.length, name.length)
+                content = content.replace(icalinguaAt.raw, name)
+                icalinguaAt = findIcalinguaAtMarkup(content)
             }
             //这里是处理@人和表情 markup 的逻辑
             const FACE_REGEX = /\[Face: (\d+)]/

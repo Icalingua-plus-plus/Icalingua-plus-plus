@@ -182,7 +182,7 @@ export const loadMainWindow = (show = process.env.NODE_ENV !== 'development' && 
         } else if (url1.protocol === 'icalingua:') {
             if (action === 'at') {
                 const qq = url1.searchParams.get('qq')
-                const name = decodeURIComponent(url1.searchParams.get('name'))
+                const name = url1.searchParams.get('name') || ''
                 if (qq) {
                     atCache.push({
                         text: name,

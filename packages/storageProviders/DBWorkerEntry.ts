@@ -92,8 +92,10 @@ const searchMethods = new Set([
     'setState',
     'queueMessages',
     'requestRebuild',
+    'getSyncGeneration',
     'syncMessages',
     'searchTimes',
+    'countTimes',
     'validate',
 ])
 
@@ -178,6 +180,7 @@ const createRemoteMessageSearchIndex =
         requestRebuild: async () => undefined,
         searchTimes: (keyword, options) =>
             callParent(targetId, 'searchTimes', [keyword, options]) as Promise<number[] | null>,
+        countTimes: async () => null,
     })
 
 const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[]): WorkerTarget => {

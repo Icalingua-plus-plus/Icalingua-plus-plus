@@ -7,6 +7,12 @@ import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
+import {
+    legacyAtMetadataName,
+    legacyAtMigrationVersion,
+    runLegacyAtMigration,
+    tryMigrateLegacyAtMessage,
+} from './LegacyAtMigration'
 import { normalizeSearchText } from './MessageSearchIndex'
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, {
@@ -70,6 +76,24 @@ const mapWithConcurrency = async <T, R>(
     return results
 }
 
+const mapWithConcurrencyAndYield = async <T, R>(
+    values: T[],
+    concurrency: number,
+    callback: (value: T, index: number) => Promise<R>,
+): Promise<R[]> => {
+    const results: R[] = []
+    const batchSize = Math.max(1, Math.trunc(concurrency))
+    for (let offset = 0; offset < values.length; offset += batchSize) {
+        results.push(
+            ...(await Promise.all(
+                values.slice(offset, offset + batchSize).map((value, index) => callback(value, offset + index)),
+            )),
+        )
+        if (offset + batchSize < values.length) await new Promise<void>((resolve) => setImmediate(resolve))
+    }
+    return results
+}
+
 const pushTimeHeap = (heap: MongoTimeHeapEntry[], entry: MongoTimeHeapEntry): void => {
     heap.push(entry)
     let index = heap.length - 1
@@ -111,6 +135,9 @@ export default class MongoStorageProvider implements StorageProvider {
     private searchTimeScan: MongoTimeScanState | null = null
     private searchTimeCountScan: MongoTimeCountScanState | null = null
     private searchBatchRoomsByTime: Map<number, number[]> | null = null
+    private legacyAtMigrationStarted = false
+    private legacyAtMigrationPromise: Promise<void> | null = null
+    private closed = false
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
 
     constructor(connStr: string, id: string | number, searchDataPath = path.join(process.cwd(), 'data')) {
@@ -126,6 +153,7 @@ export default class MongoStorageProvider implements StorageProvider {
                 reportProgress: (progress) => this.reportUpgradeProgress(progress),
             },
         )
+        this.searchIndex.onReady = () => this.scheduleLegacyAtMigration()
     }
 
     private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {
@@ -163,6 +191,7 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async connect(): Promise<void> {
+        this.closed = false
         this.searchRoomsCache = null
         this.searchTimeScan = null
         this.searchBatchRoomsByTime = null
@@ -208,6 +237,8 @@ export default class MongoStorageProvider implements StorageProvider {
     }
 
     async close(): Promise<void> {
+        this.closed = true
+        if (this.legacyAtMigrationPromise) await this.legacyAtMigrationPromise
         await this.searchIndex.close()
         await this.closeSearchTimeCountScan()
         this.searchTimeScan = null
@@ -362,7 +393,10 @@ export default class MongoStorageProvider implements StorageProvider {
         return times
     }
 
-    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
+    private async loadSearchMessageGroupsByTimes(
+        times: number[],
+        includeMedia = false,
+    ): Promise<Array<{ roomId: number; messages: any[] }>> {
         const normalizedTimes = Array.from(
             new Set(times.map((time) => Math.trunc(Number(time))).filter((time) => time > 0)),
         )
@@ -383,18 +417,35 @@ export default class MongoStorageProvider implements StorageProvider {
             for (const room of rooms) roomTimes.set(Number(room.roomId), normalizedTimes)
         }
         const entries = Array.from(roomTimes)
-        return (
-            await mapWithConcurrency(entries, mongoSearchReadConcurrency, async ([roomId, roomSearchTimes]) =>
-                this.mdb
-                    .collection<any>('msg' + roomId)
-                    .find(
-                        { time: { $in: roomSearchTimes } },
-                        { projection: { _id: 0, time: 1, content: 1, senderId: 1 } },
-                    )
-                    .toArray()
-                    .then((messages) => messages.map((message) => ({ ...message, roomId }))),
-            )
-        ).flat()
+        return mapWithConcurrencyAndYield(entries, mongoSearchReadConcurrency, async ([roomId, roomSearchTimes]) => ({
+            roomId,
+            messages: await this.mdb
+                .collection<any>('msg' + roomId)
+                .find(
+                    { time: { $in: roomSearchTimes } },
+                    {
+                        projection: {
+                            _id: 1,
+                            time: 1,
+                            content: 1,
+                            senderId: 1,
+                            ...(includeMedia ? { file: 1, files: 1 } : {}),
+                        },
+                    },
+                )
+                .toArray(),
+        }))
+    }
+
+    private async loadSearchMessagesByTimes(times: number[]): Promise<SQLiteSearchMessage[]> {
+        return (await this.loadSearchMessageGroupsByTimes(times)).flatMap(({ roomId, messages }) =>
+            messages.map((message) => ({
+                time: message.time,
+                content: message.content,
+                roomId,
+                senderId: message.senderId,
+            })),
+        )
     }
 
     private async closeSearchTimeCountScan(): Promise<void> {
@@ -511,6 +562,99 @@ export default class MongoStorageProvider implements StorageProvider {
 
     private async syncSearchIndex(messages: Message[]): Promise<void> {
         await this.searchIndex.syncMessages(messages)
+    }
+
+    private async migrateLegacyAtBatch(times: number[]): Promise<boolean> {
+        const syncGeneration = await this.searchIndex.getSyncGeneration()
+        const messageGroups = await this.loadSearchMessageGroupsByTimes(times, true)
+        let completeTimeGroupsReliable = syncGeneration !== null
+        await mapWithConcurrencyAndYield(messageGroups, mongoSearchReadConcurrency, async ({ roomId, messages }) => {
+            const collection = this.mdb.collection<any>('msg' + roomId)
+            const migratedMessages = new Map<string, ReturnType<typeof tryMigrateLegacyAtMessage>>()
+            const operations = messages
+                .map((message) => {
+                    const migrated = tryMigrateLegacyAtMessage(message)
+                    if (!message._id || !migrated || migrated.content === String(message.content ?? '')) return null
+                    const messageId = String(message._id)
+                    migratedMessages.set(messageId, migrated)
+                    const update: Record<string, unknown> = { content: migrated.content }
+                    if (migrated.mediaChanged) {
+                        if (Object.prototype.hasOwnProperty.call(message, 'file')) update.file = migrated.file
+                        if (Object.prototype.hasOwnProperty.call(message, 'files')) update.files = migrated.files
+                    }
+                    return {
+                        updateOne: {
+                            filter: { _id: message._id, content: message.content },
+                            update: { $set: update },
+                        },
+                    }
+                })
+                .filter((operation): operation is NonNullable<typeof operation> => operation !== null)
+            if (operations.length) {
+                const result = await collection.bulkWrite(operations, { ordered: false })
+                if (typeof result?.modifiedCount === 'number' && result.modifiedCount !== operations.length) {
+                    completeTimeGroupsReliable = false
+                }
+            }
+            if (completeTimeGroupsReliable) {
+                for (const message of messages) {
+                    const migrated = migratedMessages.get(String(message._id))
+                    if (!migrated) continue
+                    message.content = migrated.content
+                    if (migrated.mediaChanged) {
+                        if (Object.prototype.hasOwnProperty.call(message, 'file')) message.file = migrated.file
+                        if (Object.prototype.hasOwnProperty.call(message, 'files')) message.files = migrated.files
+                    }
+                }
+            }
+        })
+        if (completeTimeGroupsReliable && syncGeneration !== null) {
+            const completeTimeGroups = messageGroups.flatMap(({ roomId, messages }) =>
+                messages.map((message) => ({
+                    time: message.time,
+                    content: message.content,
+                    roomId,
+                    senderId: message.senderId,
+                })),
+            )
+            await this.searchIndex.syncMessages(completeTimeGroups, syncGeneration)
+            return true
+        }
+        return false
+    }
+
+    private scheduleLegacyAtMigration(): void {
+        if (!this.mdb || this.closed || this.legacyAtMigrationStarted) return
+        this.legacyAtMigrationStarted = true
+        this.legacyAtMigrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
+            .then(() => this.migrateLegacyAtMessages())
+            .catch((error) => {
+                if (this.closed) return
+                console.error('Failed to migrate legacy At messages in MongoDB', error)
+                this.reportUpgradeProgress({ active: false, step: 0, total: 0, message: '' })
+            })
+    }
+
+    private async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed || !this.mdb) return
+        const metadata = this.mdb.collection<any>(mongoSearchMetadataCollection)
+        await runLegacyAtMigration({
+            searchIndex: this.searchIndex,
+            isClosed: () => this.closed,
+            hasCompleted: async () => {
+                const state = await metadata.findOne({ _id: legacyAtMetadataName })
+                return String(state?.value || '') === legacyAtMigrationVersion
+            },
+            migrateBatch: (times) => this.migrateLegacyAtBatch(times),
+            markCompleted: async () => {
+                await metadata.updateOne(
+                    { _id: legacyAtMetadataName },
+                    { $set: { value: legacyAtMigrationVersion, updatedAt: new Date() } },
+                    { upsert: true },
+                )
+            },
+            reportProgress: (progress) => this.reportUpgradeProgress(progress),
+        })
     }
 
     async addMessage(roomId: number, message: Message): Promise<any> {

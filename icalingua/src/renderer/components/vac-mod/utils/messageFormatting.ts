@@ -1,5 +1,6 @@
 import * as linkify from 'linkifyjs'
 import pangu from 'pangu'
+import { convertLegacyIcalinguaAt, decodeIcalinguaAtName } from '../../../../utils/icalinguaAt'
 
 linkify.registerCustomProtocol('mqqapi')
 linkify.registerCustomProtocol('qqapi')
@@ -60,8 +61,8 @@ const PSEUDO_MARKDOWN_RULES: readonly PseudoMarkdownRule[] = [
     },
     {
         type: 'at',
-        start: '<IcalinguaAt qq=',
-        end: '</IcalinguaAt>',
+        start: '<IcaAt qq=',
+        end: '</IcaAt>',
         allowedContent: /^[^\r\n]+$/,
     },
     {
@@ -111,7 +112,7 @@ export function formatMessageParts(
     content: string,
     { linkify: shouldLinkify = true, disableQLottie = false, usePanguJs = false }: MessageFormattingOptions = {},
 ): MessagePart[] {
-    const normalizedContent = disableQLottie ? downgradeQLottie(content) : content
+    const normalizedContent = convertLegacyIcalinguaAt(disableQLottie ? downgradeQLottie(content) : content)
     const parts = parseMessageText(normalizedContent, shouldLinkify)
 
     // HTML 需要额外一个换行才能显示末尾的空白行。
@@ -209,25 +210,17 @@ function formatAtPart(part: MessagePart): MessagePart {
     const qq = Number(part.value.slice(0, separatorIndex))
 
     if (separatorIndex < 0 || !Number.isFinite(qq) || qq <= 0) {
-        return { ...part, value: `<IcalinguaAt qq=${part.value}</IcalinguaAt>` }
+        return { ...part, value: `<IcaAt qq=${part.value}</IcaAt>` }
     }
 
     const encodedName = part.value.slice(separatorIndex + 1)
-    const name = decodeAtName(encodedName)
+    const name = decodeIcalinguaAtName(encodedName)
 
     return {
         ...part,
         value: name,
-        href: `icalingua://at?name=${encodedName}&qq=${qq}`,
+        href: `icalingua://at?name=${encodeURIComponent(name)}&qq=${qq}`,
         title: qq === 1 ? name : `${name}(${qq})`,
-    }
-}
-
-function decodeAtName(encodedName: string): string {
-    try {
-        return decodeURIComponent(encodedName)
-    } catch {
-        return encodedName
     }
 }
 

@@ -31,8 +31,10 @@ export default class SQLiteMessageSearchIndexWorker {
     private readonly targetPromise: Promise<string | null>
     private available = false
     private ready = false
+    private readyNotified = false
     private rebuilding = false
     private closed = false
+    onReady?: () => void
 
     constructor(
         filePath: string,
@@ -86,6 +88,7 @@ export default class SQLiteMessageSearchIndexWorker {
         this.closed = true
         this.available = false
         this.ready = false
+        this.readyNotified = false
         this.rebuilding = false
         const targetId = await this.targetPromise
         if (!targetId) return
@@ -112,12 +115,20 @@ export default class SQLiteMessageSearchIndexWorker {
         await this.call<void>('requestRebuild', [times])
     }
 
-    async syncMessages(messages: SQLiteSearchMessage[]): Promise<void> {
-        await this.call<void>('syncMessages', [messages])
+    async getSyncGeneration(): Promise<number | null> {
+        return (await this.call<number | null>('getSyncGeneration')) ?? null
+    }
+
+    async syncMessages(messages: SQLiteSearchMessage[], expectedGeneration?: number): Promise<void> {
+        await this.call<void>('syncMessages', [messages, expectedGeneration])
     }
 
     async searchTimes(keyword: string, options: SQLiteMessageSearchTimesOptions): Promise<number[] | null> {
         return (await this.call<number[] | null>('searchTimes', [keyword, options])) ?? null
+    }
+
+    async countTimes(keyword: string): Promise<number | null> {
+        return (await this.call<number | null>('countTimes', [keyword])) ?? null
     }
 
     async validate(): Promise<void> {
@@ -139,9 +150,19 @@ export default class SQLiteMessageSearchIndexWorker {
     private handleEvent(name: string, payload: unknown): void {
         if (name === 'status') {
             const status = payload as SearchIndexStatus
+            const wasReady = this.isReady
             this.available = status.available
             this.ready = status.ready
             this.rebuilding = status.rebuilding
+            if (!wasReady && this.isReady && !this.readyNotified) {
+                this.readyNotified = true
+                try {
+                    this.onReady?.()
+                } catch (error) {
+                    this.errorHandle(error)
+                }
+            }
+            if (!this.isReady) this.readyNotified = false
             return
         }
         if (name === 'progress') {

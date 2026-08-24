@@ -589,6 +589,11 @@ import { isImageFile, isVideoFile, isAudioFile } from '../../utils/mediaFile'
 import { getOrderedMessageParts } from '../../utils/messageMediaOrder'
 import Recorder from '../../utils/recorder'
 import groupMemberCache from '@/utils/groupMemberCache'
+import {
+    convertLegacyIcalinguaAt,
+    decodeIcalinguaAtName,
+    findIcalinguaAtMarkup,
+} from '../../../../../utils/icalinguaAt'
 
 const faceDir = path.join(getStaticPath(), 'face')
 const messageDraftStorageKey = 'icalingua:message-draft'
@@ -1559,10 +1564,12 @@ export default {
                             }
 
                             let partContent = messagePart.content
-                            const icalinguaAtRegex = /<IcalinguaAt qq=\d+>([^<]*)<\/IcalinguaAt>/
-                            while (icalinguaAtRegex.test(partContent)) {
-                                const icalinguaAt = icalinguaAtRegex.exec(partContent)
-                                partContent = partContent.replace(icalinguaAt[0], decodeURIComponent(icalinguaAt[1]))
+                            partContent = convertLegacyIcalinguaAt(partContent)
+                            let icalinguaAt = findIcalinguaAtMarkup(partContent)
+                            while (icalinguaAt) {
+                                const name = decodeIcalinguaAtName(icalinguaAt.encodedName)
+                                partContent = partContent.replace(icalinguaAt.raw, name)
+                                icalinguaAt = findIcalinguaAtMarkup(partContent)
                             }
 
                             const FACE_REGEX = /\[Face: (\d+)]/

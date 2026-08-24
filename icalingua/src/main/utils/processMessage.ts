@@ -12,6 +12,7 @@ import errorHandler from './errorHandler'
 import silkDecode from './silkDecode'
 import logger from './winstonLogger'
 import sleep from '../../utils/sleep'
+import { encodeIcalinguaAt } from '../../utils/icalinguaAt'
 
 /** 语音异步解码完成后的落库/推送回调，由 adapter 在 storage 初始化后注册 */
 type SilkDecodeCompleter = {
@@ -176,7 +177,7 @@ const processMessage = async (
                 }
                 if (m.type === 'at') {
                     const atQQ = m.data.qq === 'all' ? 1 : m.data.qq
-                    text = `<IcalinguaAt qq=${atQQ}>${encodeURIComponent(text).replace(/\./g, '%2E')}</IcalinguaAt>`
+                    text = encodeIcalinguaAt(atQQ, text)
                 }
                 message.content += text
                 break

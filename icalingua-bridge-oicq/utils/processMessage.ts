@@ -11,6 +11,7 @@ import formatDate from './formatDate'
 import { ImgPttElemPlus, MessageElemPlus } from '../types/MessageElemPlus'
 import { formatForwardMessageBodyPrefix, getForwardMessagePrompt } from './forwardMessageMeta'
 import sleep from './sleep'
+import { encodeIcalinguaAt } from './icalinguaAt'
 
 type LastMessageLike = {
     content?: string
@@ -190,7 +191,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         }
                         if (m.type === 'at') {
                             const atQQ = m.data.qq === 'all' ? 1 : m.data.qq
-                            text = `<IcalinguaAt qq=${atQQ}>${encodeURIComponent(text).replace(/\./g, '%2E')}</IcalinguaAt>`
+                            text = encodeIcalinguaAt(atQQ, text)
                         }
                         message.content += text
                         break
