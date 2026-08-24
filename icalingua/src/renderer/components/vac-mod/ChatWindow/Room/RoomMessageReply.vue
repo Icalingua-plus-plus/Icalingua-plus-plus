@@ -15,6 +15,7 @@
                             :showForwardPanel="showForwardPanel"
                             :code="messageReply.code"
                             :usePanguJs="usePanguJs"
+                            :legacy-at-compat="true"
                             @open-forward="$emit('open-forward', $event)"
                         />
                     </div>

@@ -78,6 +78,7 @@ export default {
         code: { type: String, required: false },
         disableQLottie: { type: Boolean, required: false },
         usePanguJs: { type: Boolean, required: false, default: false },
+        legacyAtCompat: { type: Boolean, default: false },
     },
 
     data() {
@@ -92,6 +93,7 @@ export default {
                 linkify: this.linkify,
                 disableQLottie: this.disableQLottie,
                 usePanguJs: this.usePanguJs,
+                legacyAtCompat: this.legacyAtCompat,
             })
         },
         displayContent() {

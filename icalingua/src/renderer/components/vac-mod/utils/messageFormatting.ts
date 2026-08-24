@@ -19,6 +19,7 @@ export interface MessageFormattingOptions {
     linkify?: boolean
     disableQLottie?: boolean
     usePanguJs?: boolean
+    legacyAtCompat?: boolean
 }
 
 type PseudoMarkdownType = Exclude<MessagePartType, 'url'>
@@ -110,9 +111,15 @@ export function parseMessageText(text: string, shouldLinkify = true): MessagePar
 
 export function formatMessageParts(
     content: string,
-    { linkify: shouldLinkify = true, disableQLottie = false, usePanguJs = false }: MessageFormattingOptions = {},
+    {
+        linkify: shouldLinkify = true,
+        disableQLottie = false,
+        usePanguJs = false,
+        legacyAtCompat = false,
+    }: MessageFormattingOptions = {},
 ): MessagePart[] {
-    const normalizedContent = convertLegacyIcalinguaAt(disableQLottie ? downgradeQLottie(content) : content)
+    const downgradedContent = disableQLottie ? downgradeQLottie(content) : content
+    const normalizedContent = legacyAtCompat ? convertLegacyIcalinguaAt(downgradedContent) : downgradedContent
     const parts = parseMessageText(normalizedContent, shouldLinkify)
 
     // HTML 需要额外一个换行才能显示末尾的空白行。

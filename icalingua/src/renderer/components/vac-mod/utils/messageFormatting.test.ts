@@ -62,16 +62,26 @@ test('formats @ mentions and keeps trailing empty lines visible', () => {
     ])
 })
 
-test('renders legacy IcalinguaAt markers, including in reply content', () => {
-    assert.deepEqual(formatMessageParts('reply: <IcalinguaAt qq=42>Alice%20%26%20Bob</IcalinguaAt>'), [
-        { value: 'reply: ' },
-        {
-            href: 'icalingua://at?name=Alice%20%26%20Bob&qq=42',
-            title: 'Alice & Bob(42)',
-            type: 'at',
-            value: 'Alice & Bob',
-        },
-    ])
+test('leaves legacy IcalinguaAt markers unchanged by default', () => {
+    const legacy = 'reply: <IcalinguaAt qq=42>Alice%20%26%20Bob</IcalinguaAt>'
+    assert.deepEqual(formatMessageParts(legacy), [{ value: legacy }])
+})
+
+test('renders legacy IcalinguaAt markers when compatibility is enabled', () => {
+    assert.deepEqual(
+        formatMessageParts('reply: <IcalinguaAt qq=42>Alice%20%26%20Bob</IcalinguaAt>', {
+            legacyAtCompat: true,
+        }),
+        [
+            { value: 'reply: ' },
+            {
+                href: 'icalingua://at?name=Alice%20%26%20Bob&qq=42',
+                title: 'Alice & Bob(42)',
+                type: 'at',
+                value: 'Alice & Bob',
+            },
+        ],
+    )
 })
 
 test('uses XML escaping for new @ markers', () => {

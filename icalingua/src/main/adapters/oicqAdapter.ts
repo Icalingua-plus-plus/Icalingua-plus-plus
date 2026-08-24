@@ -67,7 +67,7 @@ import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
 import getStaticPath from '../../utils/getStaticPath'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import sleep from '../../utils/sleep'
-import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../../utils/icalinguaAt'
+import { decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../../utils/icalinguaAt'
 import { getUin } from '../ipc/botAndStorage'
 import { download } from '../ipc/downloadManager'
 import { updateAppMenu } from '../ipc/menuManager'
@@ -1664,9 +1664,6 @@ const adapter: OicqAdapter = {
                 )
         }
         if (content) {
-            content = convertLegacyIcalinguaAt(content, (index, replacedLength, replacementLength) =>
-                shiftMediaOrdersAfterTextReplacement(media, index, replacedLength, replacementLength),
-            )
             // 转换 @ 标记
             let icalinguaAt = findIcalinguaAtMarkup(content)
             while (icalinguaAt) {

@@ -52,6 +52,7 @@
                     :forward-res-id="forwardResId"
                     :code="message.replyMessage.code"
                     :usePanguJs="usePanguJs"
+                    :legacy-at-compat="true"
                     @open-forward="$emit('open-forward', $event)"
                 />
             </div>
@@ -84,6 +85,7 @@
                     :forward-res-id="forwardResId"
                     :code="message.replyMessage.code"
                     :usePanguJs="usePanguJs"
+                    :legacy-at-compat="true"
                     @open-forward="$emit('open-forward', $event)"
                 />
             </div>
