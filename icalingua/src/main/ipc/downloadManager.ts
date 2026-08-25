@@ -80,6 +80,8 @@ export const loadConfig = (config: Aria2Config) => {
 
 const downloads = new Map<string, DownloadItem>()
 
+export const getDefaultDownloadPath = () => getConfig().downloadPath || app.getPath('downloads')
+
 const formatFileSize = (size: number) => {
     if (size < 1024) return size + 'B'
     else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + 'KB'
@@ -117,14 +119,16 @@ const registerDownload = (item: DownloadItem, url: string, fileName: string) => 
 
 export const download = async (url: string, out: string, dir?: string, saveAs = false) => {
     url = new URL(url).href
+    const defaultDownloadPath = getDefaultDownloadPath()
     if (saveAs) {
         const result = await dialog.showSaveDialog(BrowserWindow.getFocusedWindow() || getMainWindow(), {
-            defaultPath: dir ? path.join(dir, out) : out,
+            defaultPath: path.join(dir || defaultDownloadPath, out),
         })
         if (result.canceled) return
         out = path.basename(result.filePath)
         dir = path.dirname(result.filePath)
     }
+    dir = dir || defaultDownloadPath
     const ext = path.extname(out)
     const base = path.basename(out, ext)
     let i = 1
@@ -243,8 +247,7 @@ export const downloadImage = async (url: string, saveAs = false, basename = '') 
         basename = 'QQ_Image_' + new Date().getTime()
     }
     const out = basename + '.' + (await getImageExt(url))
-    const dir = app.getPath('downloads')
-    await download(url, out, aria2 ? null : dir, saveAs)
+    await download(url, out, undefined, saveAs)
 }
 
 export const downloadImage2Open = async (url: string) => {

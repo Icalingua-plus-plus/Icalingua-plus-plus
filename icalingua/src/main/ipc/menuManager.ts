@@ -68,7 +68,13 @@ import {
     canValidateMessageSearchIndex,
     validateMessageSearchIndex,
 } from './botAndStorage'
-import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
+import {
+    download,
+    downloadFileByMessageData,
+    downloadImage,
+    getDefaultDownloadPath,
+    getImageExt,
+} from './downloadManager'
 import openImage from './openImage'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -148,6 +154,27 @@ const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' |
     getConfig().clearRoomsBehavior = behavior
     saveConfigFile()
     ui.setClearRoomsBehavior(behavior)
+    updateAppMenu()
+}
+
+const setDefaultDownloadPath = () => {
+    const selection = dialog.showOpenDialogSync(getMainWindow(), {
+        title: '设置默认下载目录',
+        properties: ['openDirectory'],
+        defaultPath: getDefaultDownloadPath(),
+    })
+    if (!selection || !selection.length) return
+
+    getConfig().downloadPath = selection[0]
+    saveConfigFile()
+    updateAppMenu()
+}
+
+const resetDefaultDownloadPath = () => {
+    if (!getConfig().downloadPath) return
+
+    getConfig().downloadPath = ''
+    saveConfigFile()
     updateAppMenu()
 }
 
@@ -1357,6 +1384,25 @@ export const updateAppMenu = async () => {
                     })
                     win.loadURL(getWinUrl() + '#/aria2')
                 },
+            }),
+            new MenuItem({
+                label: '默认下载目录',
+                submenu: [
+                    {
+                        label: `当前目录：${getDefaultDownloadPath()}${getConfig().downloadPath ? '' : '（系统默认）'}`,
+                        enabled: false,
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '选择目录',
+                        click: setDefaultDownloadPath,
+                    },
+                    {
+                        label: '恢复系统默认',
+                        enabled: !!getConfig().downloadPath,
+                        click: resetDefaultDownloadPath,
+                    },
+                ],
             }),
             new MenuItem({
                 label: '发送消息快捷键',

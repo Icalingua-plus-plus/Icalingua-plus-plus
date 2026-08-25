@@ -145,6 +145,7 @@ const defaultConfig: AllConfig = {
     stickerPanelHeight: 320,
     compressImages: false,
     bridgeLocalDatabaseSync: false,
+    downloadPath: '',
 }
 if (!fs.existsSync(configFilePath) && fs.existsSync(oldConfigFilePath)) {
     migrateData()
