@@ -397,6 +397,14 @@ function Y(t) {
 function J(t, e = new Date()) {
     return Y.call(e, t);
 }
+function sanitizeDownloadDirectoryName(t) {
+    const e = String(t || "")
+        .replace(/[^\u4e00-\u9fa5a-zA-Z0-9._()\- ]/g, "_")
+        .replace(/\.+/g, ".")
+        .replace(/^[.\s]+/, "")
+        .slice(0, 50);
+    return e || "_";
+}
 var Q = ({ socket: t }) => {
     const [e, r] = c.exports.useState(!0),
         [n, o] = c.exports.useState("/"),
@@ -461,8 +469,7 @@ var Q = ({ socket: t }) => {
                 onChange: (u) => {
                     selectedRowKeysRef.current = u;
                     setSelectedCount(u.length);
-                },
-                getCheckboxProps: (u) => ({ disabled: "is_dir" in u })
+                }
             }),
             []
         );
@@ -540,41 +547,82 @@ var Q = ({ socket: t }) => {
         currentDir = a;
         B(0), o(u), d(a), z(""), (selectedRowKeysRef.current = []), setSelectedCount(0), setSelectionResetKey((m) => m + 1);
     }
+    async function collectFolderFiles(folder, directorySegments, tasks, directories) {
+        const directory = directorySegments.join("/");
+        directories.add(directory);
+        const entries = await t.ls(folder.fid, 0);
+        for (const entry of entries || []) {
+            if ("is_dir" in entry) {
+                await collectFolderFiles(
+                    entry,
+                    [...directorySegments, sanitizeDownloadDirectoryName(entry.name)],
+                    tasks,
+                    directories
+                );
+            } else {
+                tasks.push({ file: entry, dir: directory });
+            }
+        }
+    }
     async function batchDownload() {
-        const files = selectedRowKeysRef.current
+        const selectedItems = selectedRowKeysRef.current
             .map((u) => F.find((a) => a.fid === u))
-            .filter((u) => u && !("is_dir" in u));
-        if (!files.length) return;
+            .filter(Boolean);
+        if (!selectedItems.length) return;
 
         let successCount = 0;
         let failedCount = 0;
-        for (let m = 0; m < files.length; m++) {
-            const u = files[m];
+        const tasks = [];
+        const directories = new Set();
+        for (const item of selectedItems) {
+            if ("is_dir" in item) {
+                try {
+                    await collectFolderFiles(item, [sanitizeDownloadDirectoryName(item.name)], tasks, directories);
+                } catch (a) {
+                    failedCount++;
+                }
+            } else {
+                tasks.push({ file: item, dir: undefined });
+            }
+        }
+        for (const directory of directories) {
+            if (window["createDownloadDirectory"]) window["createDownloadDirectory"](directory);
+        }
+        for (let m = 0; m < tasks.length; m++) {
+            const task = tasks[m];
             try {
-                const result = await t.download(u.fid);
-                if (!result || result.url === "error") {
+                const result = await t.download(task.file.fid);
+                if (!result || !result.url || result.url === "error") {
                     failedCount++;
                 } else {
-                    window["download"] ? window["download"](result.url, result.name, undefined, false) : console.log("error", result);
-                    successCount++;
+                    const outputName = result.name || task.file.name;
+                    if (window["download"]) {
+                        window["download"](result.url, outputName, task.dir, false);
+                        successCount++;
+                    } else {
+                        console.log("error", result);
+                        failedCount++;
+                    }
                 }
             } catch (a) {
                 failedCount++;
             }
-            if (m < files.length - 1) await new Promise((a) => setTimeout(a, 300));
+            if (m < tasks.length - 1) await new Promise((a) => setTimeout(a, 300));
         }
         selectedRowKeysRef.current = [];
         setSelectedCount(0), setSelectionResetKey((m) => m + 1);
-        if (successCount) {
+        if (successCount || directories.size) {
             y.success({
                 message: "已发送下载任务",
-                description: `已发送 ${successCount} 个下载任务`
+                description: successCount
+                    ? `已发送 ${successCount} 个下载任务${directories.size ? `，已创建 ${directories.size} 个目录` : ""}`
+                    : `已创建 ${directories.size} 个下载目录`
             });
         }
         if (failedCount) {
             y.error({
                 message: "部分文件下载失败",
-                description: `${failedCount} 个文件未能发送下载任务`
+                description: `${failedCount} 个下载项未能发送下载任务`
             });
         }
     }
