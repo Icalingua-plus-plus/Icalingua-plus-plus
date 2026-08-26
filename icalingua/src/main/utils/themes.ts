@@ -32,12 +32,14 @@ export function getThemeBackgroundColor() {
 export function refreshTheme() {
     windowMgr.sendToMainWindow('theme:refresh')
     windowMgr.sendToAllChatWindows('theme:refresh')
+    windowMgr.sendToSettingsWindow('theme:refresh')
 }
 
 export function useTheme(theme: string) {
     syncNativeThemeSource()
     windowMgr.sendToMainWindow('theme:use', theme)
     windowMgr.sendToAllChatWindows('theme:use', theme)
+    windowMgr.sendToSettingsWindow('theme:use', theme)
 }
 
 ipcMain.on('theme:list-complete', (_, list) => {

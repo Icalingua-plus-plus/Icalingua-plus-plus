@@ -22,6 +22,7 @@ import {
     isAppLocked,
     lockMainWindow,
     setMainWindowTitleBarHidden,
+    showSettingsWindow,
     tryToShowMainWindow,
 } from './windowManager'
 import openImage from '../ipc/openImage'
@@ -130,6 +131,12 @@ const _updateTrayMenu = async () => {
         )
         menu.append(new MenuItem({ type: 'separator' }))
     }
+    menu.append(
+        new MenuItem({
+            label: '设置',
+            click: showSettingsWindow,
+        }),
+    )
     menu.append(
         new MenuItem({
             label: '通知设置',

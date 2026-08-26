@@ -13,6 +13,11 @@ import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-p
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 
+type SettingsPatch = Omit<Partial<AllConfig>, 'account'> & {
+    account?: Partial<AllConfig['account']>
+    hideTitleBar?: boolean
+}
+
 const ipc = {
     sendMessage(data) {
         return ipcRenderer.send('sendMessage', data)
@@ -31,6 +36,15 @@ const ipc = {
     },
     async getSettings(): Promise<AllConfig> {
         return await ipcRenderer.invoke('getSettings')
+    },
+    async updateSettings(patch: SettingsPatch): Promise<AllConfig> {
+        return await ipcRenderer.invoke('updateSettings', patch)
+    },
+    async chooseDownloadPath(): Promise<string | null> {
+        return await ipcRenderer.invoke('chooseDownloadPath')
+    },
+    async resetDownloadPath(): Promise<string> {
+        return await ipcRenderer.invoke('resetDownloadPath')
     },
     async getAria2Settings(): Promise<Aria2Config> {
         return (await this.getSettings()).aria2
@@ -104,6 +118,24 @@ const ipc = {
     openGlobalMessageSearch() {
         ipcRenderer.send('openGlobalMessageSearch')
     },
+    openSettings() {
+        ipcRenderer.send('openSettings')
+    },
+    openIgnoreManage() {
+        ipcRenderer.send('openIgnoreManage')
+    },
+    openAria2Settings() {
+        ipcRenderer.send('openAria2Settings')
+    },
+    openSetLockPassword() {
+        ipcRenderer.send('openSetLockPassword')
+    },
+    openMakeForwardDebug() {
+        ipcRenderer.send('openMakeForwardDebug')
+    },
+    openNotificationHelp() {
+        ipcRenderer.send('openNotificationHelp')
+    },
     openMemberHistory(senderId: number, roomId: number, senderName: string) {
         ipcRenderer.send('openMemberHistory', senderId, roomId, senderName)
     },
@@ -134,6 +166,9 @@ const ipc = {
     },
     async getVersion(): Promise<string> {
         return await ipcRenderer.invoke('getVersion')
+    },
+    async getBuildInfo(): Promise<{ version: string; isProduction: boolean }> {
+        return await ipcRenderer.invoke('getBuildInfo')
     },
     async getDbUpgradeProgress(): Promise<DatabaseUpgradeProgress> {
         return await ipcRenderer.invoke('getDbUpgradeProgress')

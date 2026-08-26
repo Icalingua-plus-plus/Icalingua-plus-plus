@@ -20,6 +20,7 @@ import ChatWindowView from '../views/ChatWindowView.vue'
 import ImageGalleryView from '../views/ImageGalleryView.vue'
 import MemberHistoryView from '../views/MemberHistoryView.vue'
 import MessageSearchView from '../views/MessageSearchView.vue'
+import SettingsView from '../views/SettingsView.vue'
 
 Vue.use(Router)
 
@@ -64,6 +65,11 @@ export default new Router({
             path: '/aria2',
             name: 'aria2-page',
             component: Aria2Settings,
+        },
+        {
+            path: '/settings',
+            name: 'settings-page',
+            component: SettingsView,
         },
         {
             path: '/ignoreManage',

@@ -41,6 +41,10 @@ export function useTheme(theme: string) {
     updateThemes()
 }
 
+export function getThemeList() {
+    return Object.keys(availableThemes)
+}
+
 function setupThemeStyles(style: any) {
     let themeStyle = document.getElementById(THEME_STYLE_ID) as HTMLStyleElement
     if (!themeStyle) {

@@ -19,6 +19,10 @@ let mainWindow: BrowserWindow
 let requestWindow: BrowserWindow
 let deviceManagerWindow: BrowserWindow
 let unlockWindow: BrowserWindow
+let setLockPasswordWindow: BrowserWindow
+let settingsWindow: BrowserWindow
+let ignoreManageWindow: BrowserWindow
+let aria2SettingsWindow: BrowserWindow
 let isLocked: boolean = false
 let unlockCallback: Function
 let titleBarUpdatePromise: Promise<void> | null = null
@@ -416,15 +420,112 @@ export const sendToRequestWindow = (channel: string, payload?: any) => {
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.webContents.send(channel, payload)
 }
 export const getMainWindow = () => mainWindow
-export const showSetLockPasswordWindow = () => {
-    const setLockPasswordWindow = newIcalinguaWindow(
+export const sendToSettingsWindow = (channel: string, payload?: any) => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send(channel, payload)
+}
+export const showSettingsWindow = () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.show()
+        settingsWindow.focus()
+        return settingsWindow
+    }
+
+    const workArea = screen.getPrimaryDisplay().workAreaSize
+    settingsWindow = newIcalinguaWindow(
         {
-            height: 160,
+            width: Math.min(1040, Math.max(800, workArea.width - 160)),
+            height: Math.min(760, Math.max(600, workArea.height - 120)),
+            minWidth: 800,
+            minHeight: 600,
+            backgroundColor: themes.getThemeBackgroundColor(),
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true,
+                webSecurity: false,
+                contextIsolation: false,
+            },
+        },
+        { stableTitle: 'Icalingua++ Settings' },
+    )
+
+    settingsWindow.on('closed', () => {
+        settingsWindow = null
+    })
+    settingsWindow.webContents.on('did-finish-load', () => {
+        settingsWindow?.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        const themeData = themes.getThemeData()
+        if (settingsWindow && themeData && Object.keys(themeData).length) {
+            settingsWindow.webContents.send('theme:sync-theme-data', themeData)
+        }
+    })
+    settingsWindow.loadURL(getWinUrl() + '#/settings')
+    return settingsWindow
+}
+export const showIgnoreManageWindow = () => {
+    if (ignoreManageWindow && !ignoreManageWindow.isDestroyed()) {
+        ignoreManageWindow.show()
+        ignoreManageWindow.focus()
+        return ignoreManageWindow
+    }
+
+    const size = screen.getPrimaryDisplay().size
+    ignoreManageWindow = newIcalinguaWindow(
+        {
+            height: size.height - 200,
+            width: 500,
+            autoHideMenuBar: true,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+        },
+        { stableTitle: 'Icalingua++ IgnoreManage' },
+    )
+    ignoreManageWindow.on('closed', () => {
+        ignoreManageWindow = null
+    })
+    ignoreManageWindow.loadURL(getWinUrl() + '#/ignoreManage')
+    return ignoreManageWindow
+}
+export const showAria2SettingsWindow = () => {
+    if (aria2SettingsWindow && !aria2SettingsWindow.isDestroyed()) {
+        aria2SettingsWindow.show()
+        aria2SettingsWindow.focus()
+        return aria2SettingsWindow
+    }
+
+    aria2SettingsWindow = newIcalinguaWindow(
+        {
+            height: 485,
+            width: 500,
+            maximizable: false,
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
+            autoHideMenuBar: true,
+        },
+        { stableTitle: 'Icalingua++ Aria2Settings' },
+    )
+    aria2SettingsWindow.on('closed', () => {
+        aria2SettingsWindow = null
+    })
+    aria2SettingsWindow.loadURL(getWinUrl() + '#/aria2')
+    return aria2SettingsWindow
+}
+export const showSetLockPasswordWindow = () => {
+    if (setLockPasswordWindow && !setLockPasswordWindow.isDestroyed()) {
+        setLockPasswordWindow.show()
+        setLockPasswordWindow.focus()
+        return setLockPasswordWindow
+    }
+
+    setLockPasswordWindow = newIcalinguaWindow(
+        {
+            height: 200,
             width: 500,
             autoHideMenuBar: true,
             maximizable: false,
-            modal: true,
-            parent: mainWindow,
             webPreferences: {
                 contextIsolation: false,
                 nodeIntegration: true,
@@ -432,7 +533,12 @@ export const showSetLockPasswordWindow = () => {
         },
         { stableTitle: 'Icalingua++ SetLockPassword' },
     )
+    const currentWindow = setLockPasswordWindow
+    setLockPasswordWindow.on('closed', () => {
+        if (setLockPasswordWindow === currentWindow) setLockPasswordWindow = null
+    })
     setLockPasswordWindow.loadURL(getWinUrl() + '#/setLockPassword')
+    return setLockPasswordWindow
 }
 export const lockMainWindow = () => {
     const { lockPassword } = getConfig()
@@ -520,6 +626,10 @@ export const destroyWindow = () => {
     if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
     if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) deviceManagerWindow.destroy()
+    if (setLockPasswordWindow && !setLockPasswordWindow.isDestroyed()) setLockPasswordWindow.destroy()
+    if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.destroy()
+    if (ignoreManageWindow && !ignoreManageWindow.isDestroyed()) ignoreManageWindow.destroy()
+    if (aria2SettingsWindow && !aria2SettingsWindow.isDestroyed()) aria2SettingsWindow.destroy()
 }
 export const getLoginWindow = () => loginWindow
 export const getMainWindowScreen = () => {
@@ -630,6 +740,14 @@ export const sendToAllChatWindows = (channel: string, payload?: any) => {
         if (!win.isDestroyed()) {
             win.webContents.send(channel, payload)
         }
+    })
+}
+
+/** 将新的缩放比例同步到主窗口和已打开的独立聊天窗口。 */
+export const setZoomFactorForAllWindows = (factor: number) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.setZoomFactor(factor)
+    chatWindows.forEach((win) => {
+        if (!win.isDestroyed()) win.webContents.setZoomFactor(factor)
     })
 }
 

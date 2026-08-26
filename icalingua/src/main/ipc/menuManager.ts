@@ -28,9 +28,12 @@ import {
     getMainWindow,
     getRoomIdByWindow,
     lockMainWindow,
+    showAria2SettingsWindow,
     showDeviceManagerWindow,
+    showIgnoreManageWindow,
     showRequestWindow,
     showSetLockPasswordWindow,
+    showSettingsWindow,
     tryToShowMainWindow,
 } from '../utils/windowManager'
 import {
@@ -68,13 +71,7 @@ import {
     canValidateMessageSearchIndex,
     validateMessageSearchIndex,
 } from './botAndStorage'
-import {
-    download,
-    downloadFileByMessageData,
-    downloadImage,
-    getDefaultDownloadPath,
-    getImageExt,
-} from './downloadManager'
+import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
 import openImage from './openImage'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -143,39 +140,22 @@ export const setOnlineStatus = (status: OnlineStatusType) => {
     updateTrayMenu()
     saveConfigFile()
 }
-const setKeyToSendMessage = (key: 'Enter' | 'CtrlEnter' | 'ShiftEnter') => {
-    getConfig().keyToSendMessage = key
-    saveConfigFile()
-    ui.setKeyToSendMessage(key)
-    updateAppMenu()
-}
 
-const setClearRoomsBehavior = (behavior: 'AllUnpined' | '1WeekAgo' | '1DayAgo' | '1HourAgo' | 'disabled') => {
-    getConfig().clearRoomsBehavior = behavior
-    saveConfigFile()
-    ui.setClearRoomsBehavior(behavior)
-    updateAppMenu()
-}
-
-const setDefaultDownloadPath = () => {
-    const selection = dialog.showOpenDialogSync(getMainWindow(), {
-        title: '设置默认下载目录',
-        properties: ['openDirectory'],
-        defaultPath: getDefaultDownloadPath(),
-    })
-    if (!selection || !selection.length) return
-
-    getConfig().downloadPath = selection[0]
-    saveConfigFile()
-    updateAppMenu()
-}
-
-const resetDefaultDownloadPath = () => {
-    if (!getConfig().downloadPath) return
-
-    getConfig().downloadPath = ''
-    saveConfigFile()
-    updateAppMenu()
+export const showMakeForwardDebugWindow = async () => {
+    if (version.isProduction || !getConfig().debugmode) return
+    const win = newIcalinguaWindow(
+        {
+            height: 520,
+            width: 600,
+            autoHideMenuBar: true,
+            webPreferences: {
+                contextIsolation: false,
+                nodeIntegration: true,
+            },
+        },
+        { stableTitle: 'Icalingua++ MakeForward Debug' },
+    )
+    await win.loadURL(getWinUrl() + '#/makeForward')
 }
 
 const openMemberHistoryWindow = (senderId: number, roomId: number, senderName: string) => {
@@ -1038,7 +1018,56 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
     return menu
 }
 
-let versionClickTimes = 0
+const buildSettingsMenu = async () => [
+    new MenuItem({
+        label: '在线状态',
+        visible: !(await getDisabledFeatures()).includes('OnlineStatus'),
+        submenu: [
+            {
+                type: 'radio' as const,
+                label: '在线',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.Online,
+                click: () => setOnlineStatus(OnlineStatusType.Online),
+            },
+            {
+                type: 'radio' as const,
+                label: '离开',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.Afk,
+                click: () => setOnlineStatus(OnlineStatusType.Afk),
+            },
+            {
+                type: 'radio' as const,
+                label: '隐身',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
+                click: () => setOnlineStatus(OnlineStatusType.Hide),
+            },
+            {
+                type: 'radio' as const,
+                label: '忙碌',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.Busy,
+                click: () => setOnlineStatus(OnlineStatusType.Busy),
+            },
+            {
+                type: 'radio' as const,
+                label: 'Q我吧',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.Qme,
+                click: () => setOnlineStatus(OnlineStatusType.Qme),
+            },
+            {
+                type: 'radio' as const,
+                label: '请勿打扰',
+                checked: getConfig().account.onlineStatus === OnlineStatusType.DontDisturb,
+                click: () => setOnlineStatus(OnlineStatusType.DontDisturb),
+            },
+        ],
+    }),
+    new MenuItem({ type: 'separator' }),
+    new MenuItem({
+        label: '设置中心',
+        accelerator: 'CommandOrControl+,',
+        click: showSettingsWindow,
+    }),
+]
 
 export const updateAppMenu = async () => {
     let globalMenu = {
@@ -1046,15 +1075,7 @@ export const updateAppMenu = async () => {
         app: [
             new MenuItem({
                 label: version.version,
-                enabled: !version.isProduction && getConfig().debugmode === false && versionClickTimes < 3,
-                click: () => {
-                    versionClickTimes++
-                    setTimeout(() => {
-                        versionClickTimes--
-                        updateAppMenu()
-                    }, 10000)
-                    updateAppMenu()
-                },
+                enabled: false,
             }),
             new MenuItem({
                 label: 'GitHub',
@@ -1306,611 +1327,7 @@ export const updateAppMenu = async () => {
             ],
         }),
         // 设置
-        options: [
-            new MenuItem({
-                label: '在线状态',
-                visible: !(await getDisabledFeatures()).includes('OnlineStatus'),
-                submenu: [
-                    {
-                        type: 'radio',
-                        label: '在线',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Online,
-                        click: () => setOnlineStatus(OnlineStatusType.Online),
-                    },
-                    {
-                        type: 'radio',
-                        label: '离开',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Afk,
-                        click: () => setOnlineStatus(OnlineStatusType.Afk),
-                    },
-                    {
-                        type: 'radio',
-                        label: '隐身',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Hide,
-                        click: () => setOnlineStatus(OnlineStatusType.Hide),
-                    },
-                    {
-                        type: 'radio',
-                        label: '忙碌',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Busy,
-                        click: () => setOnlineStatus(OnlineStatusType.Busy),
-                    },
-                    {
-                        type: 'radio',
-                        label: 'Q我吧',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.Qme,
-                        click: () => setOnlineStatus(OnlineStatusType.Qme),
-                    },
-                    {
-                        type: 'radio',
-                        label: '请勿打扰',
-                        checked: getConfig().account.onlineStatus === OnlineStatusType.DontDisturb,
-                        click: () => setOnlineStatus(OnlineStatusType.DontDisturb),
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '设置解锁口令',
-                click: showSetLockPasswordWindow,
-            }),
-            new MenuItem({
-                label: '管理屏蔽的会话',
-                click: () => {
-                    const size = screen.getPrimaryDisplay().size
-                    const win = newIcalinguaWindow({
-                        height: size.height - 200,
-                        width: 500,
-                        autoHideMenuBar: true,
-                        webPreferences: {
-                            nodeIntegration: true,
-                            contextIsolation: false,
-                        },
-                    })
-                    win.loadURL(getWinUrl() + '#/ignoreManage')
-                },
-            }),
-            new MenuItem({
-                label: 'Aria2 下载管理器设置',
-                click: () => {
-                    const win = newIcalinguaWindow({
-                        height: 485,
-                        width: 500,
-                        maximizable: false,
-                        webPreferences: {
-                            nodeIntegration: true,
-                            contextIsolation: false,
-                        },
-                        autoHideMenuBar: true,
-                    })
-                    win.loadURL(getWinUrl() + '#/aria2')
-                },
-            }),
-            new MenuItem({
-                label: '默认下载目录',
-                submenu: [
-                    {
-                        label: `当前目录：${getDefaultDownloadPath()}${getConfig().downloadPath ? '' : '（系统默认）'}`,
-                        enabled: false,
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '选择目录',
-                        click: setDefaultDownloadPath,
-                    },
-                    {
-                        label: '恢复系统默认',
-                        enabled: !!getConfig().downloadPath,
-                        click: resetDefaultDownloadPath,
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '发送消息快捷键',
-                submenu: [
-                    {
-                        type: 'radio',
-                        label: 'Enter',
-                        checked: getConfig().keyToSendMessage === 'Enter',
-                        click: () => setKeyToSendMessage('Enter'),
-                    },
-                    {
-                        type: 'radio',
-                        label: 'Ctrl + Enter',
-                        checked: getConfig().keyToSendMessage === 'CtrlEnter',
-                        click: () => setKeyToSendMessage('CtrlEnter'),
-                    },
-                    {
-                        type: 'radio',
-                        label: 'Shift + Enter',
-                        checked: getConfig().keyToSendMessage === 'ShiftEnter',
-                        click: () => setKeyToSendMessage('ShiftEnter'),
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '清理会话按钮',
-                submenu: (
-                    [
-                        ['disabled', '禁用'],
-                        ['1WeekAgo', '一周前'],
-                        ['1DayAgo', '一天前'],
-                        ['1HourAgo', '一小时前'],
-                        ['AllUnpined', '所有未置顶'],
-                    ] as const
-                ).map(([name, label]) => ({
-                    type: 'radio',
-                    label,
-                    checked: getConfig().clearRoomsBehavior === name,
-                    click: () => setClearRoomsBehavior(name),
-                })),
-            }),
-            new MenuItem({
-                label: '自动登录',
-                type: 'checkbox',
-                checked: getConfig().account.autologin,
-                click: (menuItem) => {
-                    getConfig().account.autologin = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '启动时检查更新',
-                type: 'checkbox',
-                checked: getConfig().updateCheck === true,
-                click: (menuItem) => {
-                    getConfig().updateCheck = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '禁用 Ctrl+Q 退出快捷键',
-                type: 'checkbox',
-                checked: getConfig().disableQuitShortcut,
-                click: (menuItem) => {
-                    getConfig().disableQuitShortcut = menuItem.checked
-                    updateAppMenu()
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '匿名发送群消息',
-                type: 'checkbox',
-                checked: getConfig().anonymous === true,
-                visible: getConfig().sendRawMessage === false,
-                click: (menuItem) => {
-                    getConfig().anonymous = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '发送高清语音',
-                type: 'checkbox',
-                checked: getConfig().sendSilkAudio === true,
-                click: (menuItem) => {
-                    getConfig().sendSilkAudio = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '压缩发送图片',
-                sublabel: 'JPG（75% 质量）',
-                type: 'checkbox',
-                checked: getConfig().compressImages === true,
-                click: (menuItem) => {
-                    getConfig().compressImages = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '启用插件',
-                type: 'checkbox',
-                checked: getConfig().custom === true,
-                visible: getConfig().adapter === 'oicq', // TODO: 修改 Bridge 的配置
-                click: (menuItem) => {
-                    getConfig().custom = menuItem.checked
-                    saveConfigFile()
-                },
-            }),
-            new MenuItem({
-                label: '定制聊天界面',
-                submenu: [
-                    {
-                        label: '隐藏聊天图片',
-                        type: 'checkbox',
-                        checked: getConfig().hideChatImageByDefault,
-                        click: (menuItem) => {
-                            getConfig().hideChatImageByDefault = menuItem.checked
-                            saveConfigFile()
-                            ui.message('聊天图片已自动' + (menuItem.checked ? '隐藏' : '显示'))
-                            ui.setHideChatImageByDefault(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '隐藏聊天视频',
-                        type: 'checkbox',
-                        checked: getConfig().hideChatVideoByDefault,
-                        click: (menuItem) => {
-                            getConfig().hideChatVideoByDefault = menuItem.checked
-                            saveConfigFile()
-                            ui.message('聊天视频已自动' + (menuItem.checked ? '隐藏' : '显示'))
-                            ui.setHideChatVideoByDefault(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '禁用超级表情',
-                        type: 'checkbox',
-                        checked: getConfig().disableQLottie,
-                        click: (menuItem) => {
-                            getConfig().disableQLottie = menuItem.checked
-                            saveConfigFile()
-                            ui.setDisableQLottie(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '禁用同会话多图切换',
-                        type: 'checkbox',
-                        checked: getConfig().singleImageMode,
-                        click: (menuItem) => {
-                            getConfig().singleImageMode = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '禁用聊天分组功能',
-                        type: 'checkbox',
-                        checked: getConfig().disableChatGroups,
-                        click: (menuItem) => {
-                            getConfig().disableChatGroups = menuItem.checked
-                            saveConfigFile()
-                            ui.setDisableChatGroupsSeeting(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '关闭分组会话红点',
-                        type: 'checkbox',
-                        checked: getConfig().disableChatGroupsRedPoint,
-                        click: (menuItem) => {
-                            getConfig().disableChatGroupsRedPoint = menuItem.checked
-                            saveConfigFile()
-                            ui.setDisableChatGroupsRedPointSeeting(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '未读统计 @全体',
-                        type: 'checkbox',
-                        checked: getConfig().countAtAllInChatGroups,
-                        click: (menuItem) => {
-                            getConfig().countAtAllInChatGroups = menuItem.checked
-                            saveConfigFile()
-                            ui.setCountAtAllInChatGroups(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '启用高亮 URL 功能',
-                        type: 'checkbox',
-                        checked: getConfig().linkify,
-                        click: (menuItem) => {
-                            getConfig().linkify = menuItem.checked
-                            saveConfigFile()
-                            ui.message('高亮 URL 功能已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效')
-                        },
-                    },
-                    {
-                        label: '默认使用本地图片查看器',
-                        type: 'checkbox',
-                        checked: getConfig().localImageViewerByDefault,
-                        click: (menuItem) => {
-                            getConfig().localImageViewerByDefault = menuItem.checked
-                            saveConfigFile()
-                            ui.message(
-                                '默认使用' + (menuItem.checked ? '本地图片查看器' : '内置图片查看器') + '查看图片',
-                            )
-                            ui.setLocalImageViewerByDefault(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '启用自适应单面板模式',
-                        type: 'checkbox',
-                        checked: getConfig().useSinglePanel,
-                        click: (menuItem) => {
-                            getConfig().useSinglePanel = menuItem.checked
-                            saveConfigFile()
-                            ui.message(
-                                menuItem.checked
-                                    ? '已开启，将在宽度较低时使用单面板模式'
-                                    : '默认不开启，可以手动调整联系人栏到单头像模式',
-                            )
-                            ui.useSinglePanel(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '移除群名里的表情',
-                        type: 'checkbox',
-                        checked: getConfig().removeGroupNameEmotes,
-                        click: (menuItem) => {
-                            getConfig().removeGroupNameEmotes = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                            updateTrayIcon()
-                            ui.setRemoveGroupNameEmotes(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '按通知优先级排序会话',
-                        type: 'checkbox',
-                        checked: getConfig().sortRoomsByPriority,
-                        click: (menuItem) => {
-                            getConfig().sortRoomsByPriority = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                            ui.setSortRoomsByPriority(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '时间倒序排列 Stickers',
-                        type: 'checkbox',
-                        checked: getConfig().descSortStickersByTime,
-                        click: (menuItem) => {
-                            getConfig().descSortStickersByTime = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                            ui.message(
-                                '时间倒序排列 Stickers 已' + (menuItem.checked ? '开启' : '关闭') + '，重新加载后生效',
-                            )
-                        },
-                    },
-                    {
-                        label: '表情面板固定在底部',
-                        sublabel: '横排显示在聊天区下方，可拖拽调整高度',
-                        type: 'checkbox',
-                        checked: getConfig().stickerPanelBottom,
-                        click: (menuItem) => {
-                            getConfig().stickerPanelBottom = menuItem.checked
-                            saveConfigFile()
-                            ui.setStickerPanelBottom(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '禁用图片查看器触摸板新手势',
-                        type: 'checkbox',
-                        checked: getConfig().disableImgViewTouchPad,
-                        click: (menuItem) => {
-                            getConfig().disableImgViewTouchPad = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '查看消息时使用 Pangu.js',
-                        sublabel: '在中英文间添加空格',
-                        type: 'checkbox',
-                        checked: getConfig().usePanguJsRecv,
-                        click: (menuItem) => {
-                            getConfig().usePanguJsRecv = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                            updateTrayMenu()
-                            ui.setUsePanguJsRecv(menuItem.checked)
-                        },
-                    },
-                    {
-                        label: '发送消息时使用 Pangu.js',
-                        sublabel: '不包括 +1',
-                        type: 'checkbox',
-                        checked: getConfig().usePanguJsSend,
-                        click: (menuItem) => {
-                            getConfig().usePanguJsSend = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '禁用文件类型选择框',
-                        sublabel: '拖拽复制默认识别媒体',
-                        type: 'checkbox',
-                        checked: getConfig().disableChooseFileType,
-                        click: (menuItem) => {
-                            getConfig().disableChooseFileType = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: 'DEBUG MODE',
-                visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
-                submenu: [
-                    {
-                        label: 'ENABLED',
-                        type: 'checkbox',
-                        checked: getConfig().debugmode === true,
-                        visible: !version.isProduction && (versionClickTimes >= 3 || getConfig().debugmode === true),
-                        click: (menuItem) => {
-                            getConfig().debugmode = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    },
-                    {
-                        label: '合并转发 DEBUG',
-                        visible: getConfig().debugmode === true,
-                        async click() {
-                            const win = newIcalinguaWindow({
-                                height: 520,
-                                width: 600,
-                                autoHideMenuBar: true,
-                                webPreferences: {
-                                    contextIsolation: false,
-                                    nodeIntegration: true,
-                                },
-                            })
-                            await win.loadURL(getWinUrl() + '#/makeForward')
-                        },
-                    },
-                    {
-                        label: 'Send raw OICQ message',
-                        type: 'checkbox',
-                        checked: getConfig().sendRawMessage === true,
-                        visible: getConfig().debugmode === true,
-                        click: (menuItem) => {
-                            getConfig().sendRawMessage = menuItem.checked
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '历史消息相关',
-                submenu: [
-                    {
-                        label: '切换会话窗口时自动获取历史消息',
-                        type: 'checkbox',
-                        checked: getConfig().fetchHistoryOnChatOpen,
-                        click: (menuItem) => {
-                            getConfig().fetchHistoryOnChatOpen = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '启动时自动获取历史消息',
-                        type: 'checkbox',
-                        checked: getConfig().fetchHistoryOnStart,
-                        visible: getConfig().adapter === 'oicq', // Bridge is enabled by default
-                        click: (menuItem) => {
-                            getConfig().fetchHistoryOnStart = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '将 Bridge 数据同步到本地数据库',
-                        sublabel: '使用与本地模式相同的 SQLite 数据库',
-                        type: 'checkbox',
-                        checked: getConfig().bridgeLocalDatabaseSync,
-                        visible: getConfig().adapter === 'socketIo',
-                        click: (menuItem) => {
-                            getConfig().bridgeLocalDatabaseSync = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                    {
-                        label: '静默获取历史消息',
-                        sublabel: '隐藏刷屏的提示',
-                        type: 'checkbox',
-                        checked: getConfig().silentFetchHistory,
-                        click: (menuItem) => {
-                            getConfig().silentFetchHistory = menuItem.checked
-                            saveConfigFile()
-                        },
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '性能优化方式',
-                submenu: [
-                    {
-                        label: 'infinite-loading (默认)',
-                        sublabel: '较慢，但更稳定',
-                        type: 'radio',
-                        checked: getConfig().optimizeMethod == 'infinite-loading',
-                        click() {
-                            getConfig().optimizeMethod = 'infinite-loading'
-                            ui.setOptimizeMethodSetting('infinite-loading')
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    },
-                    {
-                        label: '滚动 (实验性)',
-                        sublabel: '预加载，有 BUG',
-                        type: 'radio',
-                        checked: getConfig().optimizeMethod == 'scroll',
-                        click() {
-                            getConfig().optimizeMethod = 'scroll'
-                            ui.setOptimizeMethodSetting('scroll')
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    },
-                    {
-                        label: '关闭 (不推荐)',
-                        sublabel: '不优化，快进到卡死 (',
-                        type: 'radio',
-                        checked: getConfig().optimizeMethod == 'none',
-                        click() {
-                            ui.chroom(0)
-                            ui.message(
-                                '不建议关闭性能优化，关闭后长时间挂机或浏览历史记录极易导致前端卡死。' +
-                                    '关闭后若前端卡死，可尝试杀死渲染进程并重新加载，亦可直接重启。',
-                            )
-                            getConfig().optimizeMethod = 'none'
-                            ui.setOptimizeMethodSetting('none')
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    },
-                ],
-            }),
-            new MenuItem({
-                label: '主题',
-                submenu: (() => {
-                    let rsp: Electron.MenuItemConstructorOptions[] = [
-                        {
-                            label: '跟随系统',
-                            type: 'radio',
-                            checked: getConfig().theme == 'auto',
-                            click() {
-                                getConfig().theme = 'auto'
-                                themes.autoSetTheme()
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        },
-                    ]
-                    for (let theme of themes.getThemeList()) {
-                        rsp.push({
-                            label: theme,
-                            type: 'radio',
-                            checked: getConfig().theme == theme,
-                            click: ((t) => () => {
-                                getConfig().theme = t
-                                themes.useTheme(t)
-                                saveConfigFile()
-                                updateAppMenu()
-                            })(theme),
-                        })
-                    }
-                    return rsp
-                })(),
-            }),
-            new MenuItem({
-                label: '缩放比例',
-                submenu: [100, 110, 125, 150, 175, 200, 0].map((factor) => {
-                    if (factor === 0) {
-                        return {
-                            type: 'radio',
-                            label: `${getConfig().zoomFactor}%`,
-                            checked: true,
-                            visible: ![100, 110, 125, 150, 175, 200].includes(getConfig().zoomFactor),
-                            click: () => {
-                                getMainWindow().webContents.setZoomFactor(getConfig().zoomFactor / 100)
-                                saveConfigFile()
-                                updateAppMenu()
-                            },
-                        }
-                    }
-                    return {
-                        type: 'radio',
-                        label: `${factor}%`,
-                        checked: getConfig().zoomFactor === factor,
-                        click: () => {
-                            getMainWindow().webContents.setZoomFactor(factor / 100)
-                            getConfig().zoomFactor = factor
-                            saveConfigFile()
-                            updateAppMenu()
-                        },
-                    }
-                }),
-            }),
-        ],
+        options: await buildSettingsMenu(),
         //捷径
         shortcuts: Object.entries(getConfig().shortcuts).map(
             ([key, value]) =>
@@ -1961,6 +1378,7 @@ export const updateAppMenu = async () => {
     }
     Menu.setApplicationMenu(menu)
 }
+
 /** 获取 IPC 事件发送者所在的窗口，用于正确定位右键菜单（而非总是使用主窗口） */
 const getSenderWindow = (event: Electron.IpcMainEvent): BrowserWindow =>
     BrowserWindow.fromWebContents(event.sender) || getMainWindow()
