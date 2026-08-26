@@ -11,7 +11,7 @@ import getCharCount from '../../utils/getCharCount'
 import getWinUrl from '../../utils/getWinUrl'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import oicqAdapter from '../adapters/oicqAdapter'
-import socketIoAdapter from '../adapters/socketIoAdapter'
+import socketIoAdapter, { uploadGroupFileToBridge } from '../adapters/socketIoAdapter'
 import readOnlyAdapter from '../adapters/readOnlyAdapter'
 import atCache from '../utils/atCache'
 import { getConfig } from '../utils/configManager'
@@ -22,6 +22,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import { spacingSendMessage } from '../../utils/panguSpacing'
 import silkEncode from '../utils/silkEncode'
 import fs from 'fs'
+import path from 'path'
 import ui from '../utils/ui'
 import { openChatWindow, isRoomInChatWindow, focusChatWindow } from '../utils/windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -119,6 +120,34 @@ ipcMain.handle('getNTPicURLbyFileid', async (_, fileId: string, appid: string) =
     })
     return Promise.race([adapter.getNTPicURLbyFileid(fileId, appid), timeoutPromise])
 })
+ipcMain.handle(
+    'uploadGroupFile',
+    async (event, requestId: string, groupId: number, filePath: string, pid: string, fileName: string) => {
+        if (!Number.isSafeInteger(Number(groupId)) || Number(groupId) <= 0) throw new Error('群号无效')
+        if (typeof filePath !== 'string' || !filePath) throw new Error('文件路径无效')
+        const stat = await fs.promises.stat(filePath)
+        if (!stat.isFile()) throw new Error('只能上传文件')
+        const targetPid = typeof pid === 'string' && pid ? pid : '/'
+        const targetName =
+            String(fileName || path.basename(filePath))
+                .replace(/[\\/]/g, '_')
+                .replace(/\u0000/g, '_')
+                .trim() || 'file'
+        const reportProgress = (progress: number) => event.sender.send('uploadGroupFileProgress', requestId, progress)
+        reportProgress(0)
+        if (getConfig().adapter === 'socketIo') {
+            await uploadGroupFileToBridge(Number(groupId), filePath, targetPid, targetName, reportProgress)
+        } else if (getConfig().adapter === 'oicq') {
+            await oicqAdapter
+                .acquireGfs(Number(groupId))
+                .upload(filePath, targetPid, targetName, (progress) => reportProgress(Number(progress)))
+        } else {
+            throw new Error('当前适配器不支持群文件上传')
+        }
+        reportProgress(100)
+        return { ok: true }
+    },
+)
 ipcMain.on('createBot', (event, form: LoginForm) => createBot(form))
 ipcMain.on('randomDevice', (event, username: number) => {
     randomDevice(username)

@@ -4,7 +4,7 @@ import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
-import { requestUpload, uploadFile } from '../utils/uploadFileManager'
+import { deleteUploadedFile, getUploadedFilePath, requestUpload, uploadFile } from '../utils/uploadFileManager'
 
 export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('validateMessageSearchIndex', async (resolve?: (value: { ok: boolean; error?: string }) => void) => {
@@ -141,6 +141,31 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('getDisabledFeatures', (cb) => cb(adapter.disabledFeatures))
     socket.on('requestUpload', requestUpload)
     socket.on('uploadFile', uploadFile)
+    socket.on(
+        'uploadGroupFile',
+        async (
+            fileHash: string,
+            gid: number,
+            pid: string,
+            fileName: string,
+            cb: (result: { ok: boolean; error?: string }) => void,
+        ) => {
+            const filePath = getUploadedFilePath(fileHash)
+            if (!filePath) {
+                cb({ ok: false, error: '文件上传失败：找不到已上传的文件' })
+                return
+            }
+            try {
+                await adapter.acquireGfs(gid).upload(filePath, pid || '/', fileName)
+                cb({ ok: true })
+            } catch (error) {
+                console.error('group file upload error:', error)
+                cb({ ok: false, error: error instanceof Error ? error.message : String(error) })
+            } finally {
+                deleteUploadedFile(fileHash)
+            }
+        },
+    )
     socket.on('getLoginDevices', adapter.getLoginDevices)
     socket.on('deleteLoginDevice', adapter.deleteLoginDevice)
     socket.on('getPrivateFileUrl', adapter.getPrivateFileUrl)
