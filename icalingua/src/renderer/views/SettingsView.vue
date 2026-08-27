@@ -233,12 +233,22 @@
                         </div>
                         <div class="setting-row">
                             <div class="setting-copy">
-                                <strong>移除群名中的表情</strong>
-                                <span>去掉那些乱码的表情代码</span>
+                                <strong>启用图片查看器触摸板手势</strong>
+                                <span>在图片查看器中支持使用触摸板缩放和切换</span>
                             </div>
                             <el-switch
-                                :value="settings.removeGroupNameEmotes"
-                                @change="updateSetting('removeGroupNameEmotes', $event)"
+                                :value="!settings.disableImgViewTouchPad"
+                                @change="updateSetting('disableImgViewTouchPad', !$event)"
+                            />
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-copy">
+                                <strong>禁用文件类型选择框</strong>
+                                <span>拖拽文件时不要求选择文件类型</span>
+                            </div>
+                            <el-switch
+                                :value="settings.disableChooseFileType"
+                                @change="updateSetting('disableChooseFileType', $event)"
                             />
                         </div>
                     </div>
@@ -285,12 +295,22 @@
                         </div>
                         <div class="setting-row">
                             <div class="setting-copy">
-                                <strong>按通知优先级排序会话</strong>
-                                <span>让高优先级的会话更容易被看到</span>
+                                <strong>启用自适应单面板模式</strong>
+                                <span>窗口较窄时自动切换到单面板布局</span>
                             </div>
                             <el-switch
-                                :value="settings.sortRoomsByPriority"
-                                @change="updateSetting('sortRoomsByPriority', $event)"
+                                :value="settings.useSinglePanel"
+                                @change="updateSetting('useSinglePanel', $event)"
+                            />
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-copy">
+                                <strong>移除群名中的表情</strong>
+                                <span>去掉那些乱码的表情代码</span>
+                            </div>
+                            <el-switch
+                                :value="settings.removeGroupNameEmotes"
+                                @change="updateSetting('removeGroupNameEmotes', $event)"
                             />
                         </div>
                         <div class="setting-row">
@@ -311,36 +331,6 @@
                             <el-switch
                                 :value="settings.descSortStickersByTime"
                                 @change="updateSetting('descSortStickersByTime', $event)"
-                            />
-                        </div>
-                        <div class="setting-row">
-                            <div class="setting-copy">
-                                <strong>启用图片查看器触摸板手势</strong>
-                                <span>在图片查看器中支持使用触摸板缩放和切换</span>
-                            </div>
-                            <el-switch
-                                :value="!settings.disableImgViewTouchPad"
-                                @change="updateSetting('disableImgViewTouchPad', !$event)"
-                            />
-                        </div>
-                        <div class="setting-row">
-                            <div class="setting-copy">
-                                <strong>禁用文件类型选择框</strong>
-                                <span>拖拽文件时不要求选择文件类型</span>
-                            </div>
-                            <el-switch
-                                :value="settings.disableChooseFileType"
-                                @change="updateSetting('disableChooseFileType', $event)"
-                            />
-                        </div>
-                        <div class="setting-row">
-                            <div class="setting-copy">
-                                <strong>启用自适应单面板模式</strong>
-                                <span>窗口较窄时自动切换到单面板布局</span>
-                            </div>
-                            <el-switch
-                                :value="settings.useSinglePanel"
-                                @change="updateSetting('useSinglePanel', $event)"
                             />
                         </div>
                     </div>
@@ -393,7 +383,7 @@
                         <div class="setting-row">
                             <div class="setting-copy">
                                 <strong>匿名发送群消息</strong>
-                                <span>仅在当前协议支持且未启用 raw 模式时生效</span>
+                                <span>仅在当前协议支持时生效</span>
                             </div>
                             <el-switch
                                 :value="settings.anonymous"
@@ -464,7 +454,7 @@
                         <div class="setting-row priority-row">
                             <div class="setting-copy">
                                 <strong>通知优先级</strong>
-                                <span>数值越高，越靠前显示和提醒</span>
+                                <span>大等于本优先级的会话会弹出消息通知</span>
                             </div>
                             <el-radio-group
                                 :value="settings.priority"
@@ -475,6 +465,16 @@
                                     {{ priority }}
                                 </el-radio-button>
                             </el-radio-group>
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-copy">
+                                <strong>按通知优先级排序会话</strong>
+                                <span>让高优先级的会话更容易被看到</span>
+                            </div>
+                            <el-switch
+                                :value="settings.sortRoomsByPriority"
+                                @change="updateSetting('sortRoomsByPriority', $event)"
+                            />
                         </div>
                         <div class="setting-row">
                             <div class="setting-copy">
@@ -794,7 +794,7 @@ export default {
                 { id: 'appearance', label: '界面', description: '主题与窗口', icon: 'el-icon-monitor' },
                 { id: 'chat', label: '聊天', description: '显示与侧栏', icon: 'el-icon-chat-line-round' },
                 { id: 'messages', label: '消息', description: '发送与阅读', icon: 'el-icon-edit' },
-                { id: 'notifications', label: '通知', description: '提醒策略', icon: 'el-icon-bell' },
+                { id: 'notifications', label: '通知', description: '提醒与排序', icon: 'el-icon-bell' },
                 { id: 'history', label: '历史与性能', description: '加载与优化', icon: 'el-icon-time' },
                 { id: 'services', label: '下载与服务', description: '目录与管理', icon: 'el-icon-download' },
                 { id: 'advanced', label: '高级', description: '扩展与运行', icon: 'el-icon-connection' },
