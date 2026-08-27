@@ -840,6 +840,13 @@ export default {
         const content = this.$refs.content
         this.lifecycleScope.onEvent(content, 'scroll', this.updateActiveSection, { passive: true })
         this.lifecycleScope.onEvent(content, 'scrollend', this.finishSectionNavigation, { passive: true })
+        this.lifecycleScope.onIpc('settings:aria2-updated', (_, aria2) => {
+            if (aria2 && typeof aria2 === 'object') this.$set(this.settings, 'aria2', aria2)
+        })
+        this.lifecycleScope.onIpc('settings:lock-password-updated', (_, hasLockPassword) => {
+            if (typeof hasLockPassword === 'boolean')
+                this.$set(this.settings, 'lockPassword', hasLockPassword ? 'configured' : '')
+        })
     },
     beforeDestroy() {
         if (this.navigationTimer) this.lifecycleScope?.cancelTimeout(this.navigationTimer)

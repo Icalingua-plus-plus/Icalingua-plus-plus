@@ -7,7 +7,7 @@ import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
 import ui from '../utils/ui'
-import { getMainWindow } from '../utils/windowManager'
+import { getMainWindow, sendToSettingsWindow } from '../utils/windowManager'
 import { getGroupFileMeta, getPrivateFileUrl } from './botAndStorage'
 import fs from 'fs'
 import crypto from 'crypto'
@@ -371,5 +371,6 @@ ipcMain.on('setAria2Config', (_, config: Aria2Config) => {
     getConfig().aria2 = config
     loadConfig(config)
     saveConfigFile()
+    sendToSettingsWindow('settings:aria2-updated', config)
 })
 ipcMain.on('saveTextAs', (_, text, filename) => saveTextAs(text, filename))

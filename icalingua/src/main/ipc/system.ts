@@ -16,6 +16,7 @@ import {
     showIgnoreManageWindow,
     showSetLockPasswordWindow,
     showSettingsWindow,
+    sendToSettingsWindow,
 } from '../utils/windowManager'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import { showMakeForwardDebugWindow, updateAppMenu } from './menuManager'
@@ -253,6 +254,7 @@ ipcMain.on('setLockPassword', (_, password: string) => {
     const salt = crypto.randomBytes(16).toString('hex')
     getConfig().lockPassword = md5(password + salt) + '|' + salt
     saveConfigFile()
+    sendToSettingsWindow('settings:lock-password-updated', Boolean(getConfig().lockPassword))
 })
 
 ipcMain.on('setStickerPanelHeight', (_, height: number) => {
