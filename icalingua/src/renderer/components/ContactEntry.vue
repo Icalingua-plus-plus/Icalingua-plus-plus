@@ -35,7 +35,7 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 export default {
     name: 'ContactEntry',
-    props: ['id', 'name', 'remark', 'group', 'type', 'removeEmotes', 'role'],
+    props: ['id', 'name', 'remark', 'groupContext', 'type', 'removeEmotes', 'role'],
     computed: {
         displayId() {
             return Math.abs(this.id)
@@ -53,9 +53,9 @@ export default {
     methods: {
         ctx(e) {
             if (this.type === 'groupmember') {
-                ipc.popupGroupMemberMenu(e, this.remark, this.name, this.displayId, this.group)
+                ipc.popupGroupMemberMenu(e, this.remark, this.name, this.displayId, this.groupContext)
             } else {
-                ipc.popupContactMenu(e, this.remark, this.name, this.displayId, this.group)
+                ipc.popupContactMenu(e, this.remark, this.name, this.displayId, this.groupContext)
             }
         },
         getAvatarUrl,

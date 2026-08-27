@@ -49,7 +49,7 @@
                         :id="-i.group_id"
                         :name="i.group_name"
                         :remark="i.group_remark || i.group_name"
-                        :group="i"
+                        :group-context="{ groupId: i.group_id, ownerId: i.owner_id }"
                         :removeEmotes="removeGroupNameEmotes"
                         v-show="i.sc.includes(searchContext) || PinyinMatch(i.sc, searchContext)"
                         @click="$emit('click', -i.group_id, i.group_name)"

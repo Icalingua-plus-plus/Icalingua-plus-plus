@@ -1,7 +1,7 @@
 import Message from '@icalingua/types/Message'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import Room from '@icalingua/types/Room'
-import SearchableGroup from '@icalingua/types/SearchableGroup'
+import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import axios from 'axios'
 import { app, clipboard, dialog, ipcMain, Menu, MenuItem, nativeImage, screen, shell, BrowserWindow } from 'electron'
 import fs from 'fs'
@@ -264,7 +264,7 @@ const createSenderMessageSearchMenu = (senderId: number, senderName: string, roo
     Menu.setApplicationMenu(initMenu)
 }
 
-const buildRoomMenu = async (room: Room): Promise<Menu> => {
+const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWindow()): Promise<Menu> => {
     const pinTitle = room.index ? '解除置顶' : '置顶'
     const updateRoomPriority = (lev: 1 | 2 | 3 | 4 | 5) => setRoomPriority(room.roomId, lev)
     const avatarType = room.roomId < 0 ? '群头像' : '头像'
@@ -439,7 +439,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                 {
                     label: '设置下载路径',
                     click: () => {
-                        const selection = dialog.showOpenDialogSync(getMainWindow(), {
+                        const selection = dialog.showOpenDialogSync(parentWindow, {
                             title: '设置下载路径',
                             properties: ['openDirectory'],
                             defaultPath: room.downloadPath,
@@ -476,7 +476,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     await newIcalinguaWindow({
                         ...windowOptions,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: parentWindow,
                     }).loadURL(
                         getWinUrl() +
                             '#/remarkNameEdit/' +
@@ -497,7 +497,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                     await newIcalinguaWindow({
                         ...windowOptions,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: parentWindow,
                     }).loadURL(
                         getWinUrl() +
                             '#/remarkNameEdit/' +
@@ -626,7 +626,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         width: 600,
                         autoHideMenuBar: true,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: parentWindow,
                         webPreferences: {
                             contextIsolation: false,
                             nodeIntegration: true,
@@ -701,7 +701,7 @@ const buildRoomMenu = async (room: Room): Promise<Menu> => {
                         autoHideMenuBar: true,
                         maximizable: false,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: parentWindow,
                         webPreferences: {
                             contextIsolation: false,
                             nodeIntegration: true,
@@ -1380,8 +1380,11 @@ export const updateAppMenu = async () => {
 }
 
 /** 获取 IPC 事件发送者所在的窗口，用于正确定位右键菜单（而非总是使用主窗口） */
-const getSenderWindow = (event: Electron.IpcMainEvent): BrowserWindow =>
-    BrowserWindow.fromWebContents(event.sender) || getMainWindow()
+const getSenderWindow = (event: Electron.IpcMainEvent): BrowserWindow => {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender)
+    if (senderWindow && !senderWindow.isDestroyed()) return senderWindow
+    return getMainWindow()
+}
 
 ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
     const win = getSenderWindow(event)
@@ -1389,7 +1392,7 @@ ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const room = await getRoom(roomId)
     if (!room) return
-    ;(await buildRoomMenu(room)).popup({
+    ;(await buildRoomMenu(room, win)).popup({
         window: win,
         ...pos,
     })
@@ -1554,18 +1557,22 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                 new MenuItem({
                     label: `查看代码`,
                     click: () => {
-                        const win = newIcalinguaWindow({
+                        const codeWindow = newIcalinguaWindow({
                             autoHideMenuBar: true,
-                            parent: getMainWindow(),
+                            parent: win,
                             webPreferences: {
                                 contextIsolation: false,
                                 nodeIntegration: true,
                             },
                         })
-                        win.webContents.once('did-finish-load', () => {
-                            win.webContents.send('setCardSource', message.code, `卡片消息_${new Date().getTime()}`)
+                        codeWindow.webContents.once('did-finish-load', () => {
+                            codeWindow.webContents.send(
+                                'setCardSource',
+                                message.code,
+                                `卡片消息_${new Date().getTime()}`,
+                            )
                         })
-                        win.loadURL(getWinUrl() + '#/cardSource')
+                        codeWindow.loadURL(getWinUrl() + '#/cardSource')
                     },
                 }),
             )
@@ -1800,7 +1807,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
             )
         }
         if (
-            (message.senderId === getUin() || ((await isAdmin()) && message.role !== 'owner')) &&
+            (message.senderId === getUin() || ((await isAdmin(room.roomId)) && message.role !== 'owner')) &&
             !history &&
             !message.deleted
         )
@@ -1809,7 +1816,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     label: '撤回',
                     visible:
                         message.time > Date.now() - 1000 * 60 * 2 ||
-                        ((await isAdmin()) && (message.senderId === getUin() || message.role !== 'owner')),
+                        ((await isAdmin(room.roomId)) && (message.senderId === getUin() || message.role !== 'owner')),
                     click: () => {
                         if (message.senderId === getUin()) {
                             deleteMessage(room.roomId, message._id as string)
@@ -1825,13 +1832,13 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     label: '一分钟后撤回',
                     visible:
                         message.time > Date.now() - 1000 * 60 * 1 ||
-                        ((await isAdmin()) && (message.senderId === getUin() || message.role !== 'owner')),
+                        ((await isAdmin(room.roomId)) && (message.senderId === getUin() || message.role !== 'owner')),
                     click: () => {
                         setTimeout(() => deleteMessage(room.roomId, message._id as string), 1000 * 60)
                     },
                 }),
             )
-        if ((await isAdmin()) && !history && !message.deleted) {
+        if ((await isAdmin(room.roomId)) && !history && !message.deleted) {
             if (room.roomId < 0) {
                 menu.append(
                     new MenuItem({
@@ -2338,27 +2345,27 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
     )
     if (
         message.senderId !== getUin() &&
-        ((await isAdmin()) === 'owner' ||
-            ((await isAdmin()) === 'admin' && message.role !== 'owner' && message.role !== 'admin'))
+        ((await isAdmin(room.roomId)) === 'owner' ||
+            ((await isAdmin(room.roomId)) === 'admin' && message.role !== 'owner' && message.role !== 'admin'))
     ) {
         menu.append(
             new MenuItem({
                 label: `禁言`,
                 visible: room.roomId !== 0,
                 click: async () => {
-                    const win = newIcalinguaWindow({
+                    const actionWindow = newIcalinguaWindow({
                         height: 210,
                         width: 600,
                         autoHideMenuBar: true,
                         maximizable: false,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: win,
                         webPreferences: {
                             contextIsolation: false,
                             nodeIntegration: true,
                         },
                     })
-                    await win.loadURL(
+                    await actionWindow.loadURL(
                         getWinUrl() +
                             '#/muteUser/' +
                             -room.roomId +
@@ -2383,19 +2390,19 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
                 label: `移出本群`,
                 visible: room.roomId !== 0,
                 click: async () => {
-                    const win = newIcalinguaWindow({
+                    const actionWindow = newIcalinguaWindow({
                         height: 150,
                         width: 500,
                         autoHideMenuBar: true,
                         maximizable: false,
                         modal: true,
-                        parent: getMainWindow(),
+                        parent: win,
                         webPreferences: {
                             contextIsolation: false,
                             nodeIntegration: true,
                         },
                     })
-                    await win.loadURL(
+                    await actionWindow.loadURL(
                         getWinUrl() +
                             '#/kickAndExit/kick/' +
                             -room.roomId +
@@ -2418,11 +2425,12 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
 })
 ipcMain.on(
     'popupContactMenu',
-    (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    (event, e, remark?: string, name?: string, displayId?: number, groupContext?: GroupMenuContext) => {
         const win = getSenderWindow(event)
         const bounds = win.getContentBounds()
         const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
         const menu = new Menu()
+        const groupId = groupContext?.groupId
         if (remark) {
             menu.append(
                 new MenuItem({
@@ -2443,7 +2451,7 @@ ipcMain.on(
                 }),
             )
         }
-        const roomId = group ? -displayId : displayId
+        const roomId = groupId ? -groupId : displayId
         if (displayId) {
             menu.append(
                 new MenuItem({
@@ -2453,7 +2461,7 @@ ipcMain.on(
                     },
                 }),
             )
-            const avatarType = group ? '群头像' : '头像'
+            const avatarType = groupId ? '群头像' : '头像'
             menu.append(
                 new MenuItem({
                     label: `查看${avatarType}`,
@@ -2467,14 +2475,14 @@ ipcMain.on(
                     label: `下载${avatarType}`,
                     click: () => {
                         const cleanRemark =
-                            group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
+                            groupId && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark
                         const basename = `${cleanRemark}(${Math.abs(displayId)})的${avatarType}_${new Date().getTime()}`
                         downloadImage(getAvatarUrl(roomId, false, true), false, basename)
                     },
                 }),
             )
             // 添加"查看共同群聊"选项（仅对好友显示）
-            if (!group) {
+            if (!groupId) {
                 menu.append(
                     new MenuItem({
                         label: '查看共同群聊',
@@ -2492,38 +2500,39 @@ ipcMain.on(
         }
         menu.append(
             new MenuItem({
-                label: group ? '屏蔽消息' : '屏蔽此人',
+                label: groupContext ? '屏蔽消息' : '屏蔽此人',
                 click: () => {
                     ui.confirmIgnoreChat({
                         id: roomId,
-                        name: group && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
+                        name:
+                            groupContext && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
                     })
                 },
             }),
         )
-        if (group) {
+        if (groupContext) {
             menu.append(
                 new MenuItem({
-                    label: group.owner_id === getUin() ? '解散本群' : '退出本群',
+                    label: groupContext.ownerId === getUin() ? '解散本群' : '退出本群',
                     click: async () => {
-                        const win = newIcalinguaWindow({
+                        const actionWindow = newIcalinguaWindow({
                             height: 130,
                             width: 500,
                             autoHideMenuBar: true,
                             maximizable: false,
                             modal: true,
-                            parent: getMainWindow(),
+                            parent: win,
                             webPreferences: {
                                 contextIsolation: false,
                                 nodeIntegration: true,
                             },
                         })
-                        await win.loadURL(
+                        await actionWindow.loadURL(
                             getWinUrl() +
                                 '#/kickAndExit/' +
-                                (group.owner_id === getUin() ? 'dismiss' : 'exit') +
+                                (groupContext.ownerId === getUin() ? 'dismiss' : 'exit') +
                                 '/' +
-                                displayId +
+                                groupContext.groupId +
                                 '/0/' +
                                 querystring.escape(
                                     getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(remark) : remark,
@@ -2573,11 +2582,19 @@ ipcMain.on('copyImage', (_, url: string) => copyImage(url))
 
 ipcMain.on(
     'popupGroupMemberMenu',
-    async (event, e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) => {
+    async (event, e, remark?: string, name?: string, displayId?: number, groupContext?: GroupMenuContext) => {
         const win = getSenderWindow(event)
         const bounds = win.getContentBounds()
         const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
         const menu = new Menu()
+        const groupId = groupContext?.groupId || 0
+        const groupRoomId = groupId > 0 ? -groupId : 0
+        const groupRoom = groupRoomId < 0 ? await getRoom(groupRoomId) : null
+        const groupRoomName = groupRoom
+            ? getConfig().removeGroupNameEmotes
+                ? removeGroupNameEmotes(groupRoom.roomName)
+                : groupRoom.roomName
+            : String(groupId)
         if (remark) {
             menu.append(
                 new MenuItem({
@@ -2649,14 +2666,14 @@ ipcMain.on(
                 new MenuItem({
                     label: '查看发言记录',
                     submenu: Menu.buildFromTemplate([
-                        ...(group
+                        ...(groupContext
                             ? [
                                   {
                                       label: '当前群',
                                       click: () => {
                                           openMemberHistoryWindow(
                                               displayId,
-                                              -Number(group),
+                                              groupRoomId,
                                               remark || name || String(displayId),
                                           )
                                       },
@@ -2673,11 +2690,7 @@ ipcMain.on(
                 }),
             )
             menu.append(
-                createSenderMessageSearchMenu(
-                    displayId,
-                    remark || name || String(displayId),
-                    group ? -Number(group) : undefined,
-                ),
+                createSenderMessageSearchMenu(displayId, remark || name || String(displayId), groupRoomId || undefined),
             )
         }
         menu.append(
@@ -2691,7 +2704,7 @@ ipcMain.on(
                 },
             }),
         )
-        if (group) {
+        if (groupContext) {
             menu.append(
                 new MenuItem({
                     label: '@ TA',
@@ -2709,41 +2722,36 @@ ipcMain.on(
                 new MenuItem({
                     label: '戳一戳',
                     click: () => {
-                        sendGroupPoke(Number(group), displayId)
+                        sendGroupPoke(groupId, displayId)
                         ui.openGroupMemberPanel(false)
                     },
                 }),
             )
-            const selectedRoom = await getSelectedRoom()
             menu.append(
                 new MenuItem({
                     label: '禁言',
-                    visible: -selectedRoom.roomId === Number(group) && (await isAdmin()) !== false,
+                    visible: groupRoomId < 0 && (await isAdmin(groupRoomId)) !== false,
                     click: async () => {
-                        const win = newIcalinguaWindow({
+                        const actionWindow = newIcalinguaWindow({
                             height: 300,
                             width: 600,
                             autoHideMenuBar: true,
                             maximizable: false,
                             modal: true,
-                            parent: getMainWindow(),
+                            parent: win,
                             webPreferences: {
                                 contextIsolation: false,
                                 nodeIntegration: true,
                             },
                         })
-                        await win.loadURL(
+                        await actionWindow.loadURL(
                             getWinUrl() +
                                 '#/muteUser/' +
-                                group +
+                                groupId +
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(
-                                    getConfig().removeGroupNameEmotes
-                                        ? removeGroupNameEmotes(selectedRoom.roomName)
-                                        : selectedRoom.roomName,
-                                ) +
+                                querystring.escape(groupRoomName) +
                                 '/' +
                                 querystring.escape(remark || String(displayId)) +
                                 '/' +
@@ -2755,32 +2763,28 @@ ipcMain.on(
             menu.append(
                 new MenuItem({
                     label: '移出本群',
-                    visible: -selectedRoom.roomId === Number(group) && (await isAdmin()) !== false,
+                    visible: groupRoomId < 0 && (await isAdmin(groupRoomId)) !== false,
                     click: async () => {
-                        const win = newIcalinguaWindow({
+                        const actionWindow = newIcalinguaWindow({
                             height: 150,
                             width: 500,
                             autoHideMenuBar: true,
                             maximizable: false,
                             modal: true,
-                            parent: getMainWindow(),
+                            parent: win,
                             webPreferences: {
                                 contextIsolation: false,
                                 nodeIntegration: true,
                             },
                         })
-                        await win.loadURL(
+                        await actionWindow.loadURL(
                             getWinUrl() +
                                 '#/kickAndExit/kick/' +
-                                group +
+                                groupId +
                                 '/' +
                                 displayId +
                                 '/' +
-                                querystring.escape(
-                                    getConfig().removeGroupNameEmotes
-                                        ? removeGroupNameEmotes(selectedRoom.roomName)
-                                        : selectedRoom.roomName,
-                                ) +
+                                querystring.escape(groupRoomName) +
                                 '/' +
                                 querystring.escape(remark || String(displayId)),
                         )

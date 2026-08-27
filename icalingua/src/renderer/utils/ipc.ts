@@ -7,6 +7,7 @@ import Message from '@icalingua/types/Message'
 import MessagePageOptions from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
+import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { ipcRenderer } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
@@ -227,11 +228,11 @@ const ipc = {
     popupStickerDirMenu(dirName: string, e) {
         ipcRenderer.send('popupStickerDirMenu', dirName, { x: e.screenX, y: e.screenY })
     },
-    popupContactMenu(e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
-        ipcRenderer.send('popupContactMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, group)
+    popupContactMenu(e, remark?: string, name?: string, displayId?: number, groupContext?: GroupMenuContext) {
+        ipcRenderer.send('popupContactMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, groupContext)
     },
-    popupGroupMemberMenu(e, remark?: string, name?: string, displayId?: number, group?: SearchableGroup) {
-        ipcRenderer.send('popupGroupMemberMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, group)
+    popupGroupMemberMenu(e, remark?: string, name?: string, displayId?: number, groupContext?: GroupMenuContext) {
+        ipcRenderer.send('popupGroupMemberMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, groupContext)
     },
     popupMessageMenu(e, room: Room, message: Message, sect?: string, history?: boolean) {
         ipcRenderer.send('popupMessageMenu', { x: e.screenX, y: e.screenY }, room, message, sect, history)
