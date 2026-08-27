@@ -27,8 +27,9 @@ ipcMain.handle('getBuildInfo', () => ({ version: version.version, isProduction: 
 ipcMain.handle('getDbUpgradeProgress', () => getDatabaseUpgradeProgress())
 ipcMain.handle('getSettings', () => getConfig())
 
-const chooseDefaultDownloadPath = () => {
-    const selection = dialog.showOpenDialogSync(getMainWindow(), {
+const chooseDefaultDownloadPath = (parentWindow?: BrowserWindow | null) => {
+    const dialogParent = parentWindow && !parentWindow.isDestroyed() ? parentWindow : getMainWindow()
+    const selection = dialog.showOpenDialogSync(dialogParent, {
         title: '设置默认下载目录',
         properties: ['openDirectory'],
         defaultPath: getDefaultDownloadPath(),
@@ -200,7 +201,10 @@ ipcMain.handle('updateSettings', async (event, patch: Record<string, any>) => {
     return config
 })
 
-ipcMain.handle('chooseDownloadPath', () => chooseDefaultDownloadPath() || null)
+ipcMain.handle('chooseDownloadPath', (event) => {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender)
+    return chooseDefaultDownloadPath(senderWindow) || null
+})
 ipcMain.handle('resetDownloadPath', () => resetDefaultDownloadPath() || getDefaultDownloadPath())
 ipcMain.on('openSettings', showSettingsWindow)
 ipcMain.on('openIgnoreManage', showIgnoreManageWindow)
