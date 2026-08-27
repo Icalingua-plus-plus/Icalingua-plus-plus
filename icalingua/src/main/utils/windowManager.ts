@@ -413,6 +413,9 @@ export const sendDatabaseUpgradeProgress = (
         mainWindow.webContents.send('dbUpgradeProgress', databaseUpgradeProgress)
 }
 export const getDatabaseUpgradeProgress = (): DatabaseUpgradeProgress => ({ ...databaseUpgradeProgress })
+export const sendToWindow = (targetWindow: BrowserWindow | undefined, channel: string, ...payload: any[]) => {
+    if (targetWindow && !targetWindow.isDestroyed()) targetWindow.webContents.send(channel, ...payload)
+}
 export const sendToMainWindow = (channel: string, payload?: any) => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
 }

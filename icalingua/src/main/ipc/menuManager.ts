@@ -34,6 +34,7 @@ import {
     showRequestWindow,
     showSetLockPasswordWindow,
     showSettingsWindow,
+    sendToWindow,
     tryToShowMainWindow,
 } from '../utils/windowManager'
 import {
@@ -683,7 +684,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
             new MenuItem({
                 label: '群成员',
                 async click() {
-                    ui.openGroupMemberPanel(true, -room.roomId)
+                    sendToWindow(parentWindow, 'openGroupMemberPanel', { shown: true, gin: -room.roomId })
                 },
             }),
         )
@@ -823,7 +824,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
             new MenuItem({
                 label: '查看共同群聊',
                 click: () => {
-                    getMainWindow().webContents.send('showCommonGroups', room.roomId, room.roomName)
+                    showCommonGroupsInMainWindow(room.roomId, room.roomName)
                 },
             }),
         )
@@ -1384,6 +1385,12 @@ const getSenderWindow = (event: Electron.IpcMainEvent): BrowserWindow => {
     const senderWindow = BrowserWindow.fromWebContents(event.sender)
     if (senderWindow && !senderWindow.isDestroyed()) return senderWindow
     return getMainWindow()
+}
+
+const showCommonGroupsInMainWindow = (userId?: number, userName?: string) => {
+    tryToShowMainWindow(() => {
+        sendToWindow(getMainWindow(), 'showCommonGroups', userId, userName)
+    })
 }
 
 ipcMain.on('popupRoomMenu', async (event, roomId: number, e) => {
@@ -2308,9 +2315,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
     menu.append(
         new MenuItem({
             label: `查看共同群聊`,
-            click: () => {
-                getMainWindow().webContents.send('showCommonGroups', message.senderId, message.username)
-            },
+            click: () => showCommonGroupsInMainWindow(message.senderId, message.username),
         }),
     )
     menu.append(
@@ -2486,13 +2491,7 @@ ipcMain.on(
                 menu.append(
                     new MenuItem({
                         label: '查看共同群聊',
-                        click: () => {
-                            getMainWindow().webContents.send(
-                                'showCommonGroups',
-                                displayId,
-                                remark || name || String(displayId),
-                            )
-                        },
+                        click: () => showCommonGroupsInMainWindow(displayId, remark || name || String(displayId)),
                     }),
                 )
                 menu.append(createSenderMessageSearchMenu(displayId, remark || name || String(displayId), displayId))
@@ -2587,7 +2586,8 @@ ipcMain.on(
         const bounds = win.getContentBounds()
         const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
         const menu = new Menu()
-        const groupId = groupContext?.groupId || 0
+        const groupId = Number(groupContext?.groupId) || 0
+        const hasGroupContext = groupId > 0
         const groupRoomId = groupId > 0 ? -groupId : 0
         const groupRoom = groupRoomId < 0 ? await getRoom(groupRoomId) : null
         const groupRoomName = groupRoom
@@ -2653,20 +2653,14 @@ ipcMain.on(
             menu.append(
                 new MenuItem({
                     label: '查看共同群聊',
-                    click: () => {
-                        getMainWindow().webContents.send(
-                            'showCommonGroups',
-                            displayId,
-                            remark || name || String(displayId),
-                        )
-                    },
+                    click: () => showCommonGroupsInMainWindow(displayId, remark || name || String(displayId)),
                 }),
             )
             menu.append(
                 new MenuItem({
                     label: '查看发言记录',
                     submenu: Menu.buildFromTemplate([
-                        ...(groupContext
+                        ...(hasGroupContext
                             ? [
                                   {
                                       label: '当前群',
@@ -2697,14 +2691,11 @@ ipcMain.on(
             new MenuItem({
                 label: '屏蔽此人',
                 click: () => {
-                    ui.confirmIgnoreChat({
-                        id: displayId,
-                        name: remark,
-                    })
+                    sendToWindow(win, 'confirmIgnoreChat', { id: displayId, name: remark })
                 },
             }),
         )
-        if (groupContext) {
+        if (hasGroupContext) {
             menu.append(
                 new MenuItem({
                     label: '@ TA',
@@ -2713,8 +2704,8 @@ ipcMain.on(
                             text: '@' + (remark || String(displayId)),
                             id: displayId,
                         })
-                        ui.addMessageText('@' + (remark || String(displayId)) + ' ')
-                        ui.openGroupMemberPanel(false)
+                        sendToWindow(win, 'addMessageText', '@' + (remark || String(displayId)) + ' ')
+                        sendToWindow(win, 'openGroupMemberPanel', { shown: false, gin: groupId })
                     },
                 }),
             )
@@ -2723,7 +2714,7 @@ ipcMain.on(
                     label: '戳一戳',
                     click: () => {
                         sendGroupPoke(groupId, displayId)
-                        ui.openGroupMemberPanel(false)
+                        sendToWindow(win, 'openGroupMemberPanel', { shown: false, gin: groupId })
                     },
                 }),
             )

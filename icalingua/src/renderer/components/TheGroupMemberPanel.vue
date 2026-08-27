@@ -13,7 +13,7 @@
                 :key="i.user_id"
                 :id="i.user_id"
                 :remark="i.card"
-                :group-context="{ groupId: i.group_id }"
+                :group-context="i.group_id ? { groupId: i.group_id } : undefined"
                 :role="i.role"
                 type="groupmember"
                 :name="i.name"

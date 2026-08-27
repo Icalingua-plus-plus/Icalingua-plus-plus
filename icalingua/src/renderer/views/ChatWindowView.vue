@@ -61,6 +61,7 @@
                     @clear-last-unread-at="clearLastUnreadAt"
                     @fetch-messages-after="fetchMessageAfter"
                     @return-to-latest="returnToLatest"
+                    @open-group-member-panel="openGroupMemberPanel"
                 >
                     <template v-slot:menu-icon>
                         <i class="el-icon-more"></i>
@@ -136,6 +137,14 @@
                 </transition>
             </template>
         </div>
+        <el-dialog title="群成员" :visible.sync="groupmemberShown" top="5vh" width="80%" class="dialog">
+            <TheGroupMemberPanel
+                @dblclick="openMemberChat"
+                :groupmemberShown="groupmemberShown"
+                :gin="groupmemberPanelGin"
+                v-if="groupmemberShown"
+            />
+        </el-dialog>
         <el-dialog
             :title="tempFileName"
             :visible.sync="chooseFileTypeShown"
@@ -153,6 +162,7 @@
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
+import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
 import { processFiles } from '../utils/processFiles'
@@ -173,6 +183,7 @@ export default {
     components: {
         Room,
         Stickers,
+        TheGroupMemberPanel,
     },
     data() {
         return {
@@ -216,6 +227,8 @@ export default {
             chooseFileTypeShown: false, // 选择文件类型对话框
             tempFile: null, // 临时文件
             tempFileName: '', // 临时文件名
+            groupmemberShown: false,
+            groupmemberPanelGin: 0,
         }
     },
     watch: {
@@ -364,6 +377,21 @@ export default {
             await this.$nextTick()
             if (this.$refs.room?.scrollToMessage(atMessageId, false, true)) return
             await this.locateMessage(atMessageId)
+        },
+        openGroupMemberPanel() {
+            if (this.roomId < 0) {
+                this.groupmemberPanelGin = -this.roomId
+                this.groupmemberShown = true
+            }
+        },
+        async openMemberChat(id) {
+            if (!id) return
+            this.groupmemberShown = false
+            if (await ipc.isRoomInChatWindow(id)) {
+                ipc.focusChatWindow(id)
+            } else {
+                ipc.openRoomInNewWindow(id)
+            }
         },
         async locateUnreadMessage(unreadCount, notFoundMessage = '找不到未读消息') {
             const count = Math.max(Number(unreadCount) || 0, 0)
@@ -555,6 +583,30 @@ export default {
             // 禁言状态
             this.lifecycleScope.onIpc('setShutUp', (_, isShutUp) => {
                 this.isShutUp = isShutUp
+            })
+
+            this.lifecycleScope.onIpc('openGroupMemberPanel', (_, panel) => {
+                if (panel?.shown) {
+                    if (this.roomId < 0) {
+                        this.groupmemberPanelGin = Number(panel.gin) || -this.roomId
+                        this.groupmemberShown = true
+                    }
+                } else {
+                    this.groupmemberShown = false
+                }
+            })
+            this.lifecycleScope.onIpc('confirmIgnoreChat', (_, data) => {
+                const message = [
+                    '屏蔽群聊将不再接受该群的消息。',
+                    '屏蔽个人将不再接受此人发送的私聊消息，且会自动隐藏其发送的群消息。',
+                ]
+                this.$confirm(message[data.id > 0 ? 1 : 0], `确定屏蔽 ${data.name}(${Math.abs(data.id)}) 的消息?`, {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    ipc.ignoreChat(data)
+                })
             })
 
             // 窗口聚焦时清除未读
