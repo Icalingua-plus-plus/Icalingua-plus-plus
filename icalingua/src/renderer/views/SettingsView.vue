@@ -713,14 +713,24 @@
                                 @change="updateSetting('sendRawMessage', $event)"
                             />
                         </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-heading">
+                            <span class="card-icon slate"><i class="el-icon-info"></i></span>
+                            <div>
+                                <h3>运行信息</h3>
+                                <p>用于确认当前客户端和运行环境</p>
+                            </div>
+                        </div>
                         <div class="info-grid">
+                            <div class="info-item wide environment-item">
+                                <span>运行环境</span>
+                                <strong :title="runtimeEnvironment">{{ runtimeEnvironment }}</strong>
+                            </div>
                             <div class="info-item wide">
                                 <span>数据目录</span>
-                                <strong>{{ storePath || '—' }}</strong>
-                            </div>
-                            <div class="info-item">
-                                <span>当前适配器</span>
-                                <strong>{{ adapterLabel }}</strong>
+                                <strong :title="storePath">{{ storePath || '—' }}</strong>
                             </div>
                             <div class="info-item">
                                 <span>版本</span>
@@ -736,6 +746,10 @@
                             <div class="info-item">
                                 <span>构建模式</span>
                                 <strong>{{ isProduction ? '生产构建' : '开发/调试构建' }}</strong>
+                            </div>
+                            <div class="info-item">
+                                <span>当前适配器</span>
+                                <strong>{{ adapterLabel }}</strong>
                             </div>
                         </div>
                     </div>
@@ -816,6 +830,18 @@ export default {
                 readOnly: '只读模式',
             }
             return labels[this.settings.adapter] || this.settings.adapter || '—'
+        },
+        runtimeEnvironment() {
+            const platformLabels = {
+                win32: 'Windows',
+                darwin: 'macOS',
+                linux: 'Linux',
+            }
+            const platform = platformLabels[process.platform] || process.platform
+            const versions = process.versions || {}
+            return `${platform} ${process.arch} · Electron ${versions.electron || '—'} · Chromium ${
+                versions.chrome || '—'
+            } · Node ${versions.node || '—'}`
         },
         downloadPathLabel() {
             return this.settings.downloadPath || '跟随系统 Downloads 文件夹'
@@ -1546,6 +1572,7 @@ export default {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 9px;
+    border-top: 1px solid var(--settings-border);
     padding: 16px 0 18px;
 }
 
@@ -1572,6 +1599,14 @@ export default {
     font-weight: 500;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.environment-item strong {
+    overflow: visible;
+    line-height: 1.4;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .version-trigger {
@@ -1625,18 +1660,28 @@ export default {
 .settings-page :deep(.setting-row > .el-switch .el-switch__core) {
     width: 40px !important;
     height: 20px;
-    border-color: var(--settings-border);
+    border: 0;
+    border-radius: 10px;
     background-color: rgba(127, 127, 127, 0.22);
+    transition: background-color 0.3s;
 }
 
 .settings-page :deep(.setting-row > .el-switch .el-switch__core::after) {
+    top: 2px;
+    left: 2px;
     width: 16px;
     height: 16px;
+    margin-left: 0;
     background-color: var(--settings-panel);
+    transition: left 0.3s;
+}
+
+.settings-page :deep(.setting-row > .el-switch.is-checked .el-switch__core::after) {
+    left: 22px;
+    margin-left: 0;
 }
 
 .settings-page :deep(.el-switch.is-checked .el-switch__core) {
-    border-color: var(--settings-accent);
     background-color: var(--settings-accent);
 }
 
