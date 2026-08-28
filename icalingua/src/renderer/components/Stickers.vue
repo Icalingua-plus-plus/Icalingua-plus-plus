@@ -419,7 +419,6 @@ export default {
             await fs.promises.mkdir(this.preview_dir)
         }
         const updateDefaultDir = async () => {
-            if (this.current_dir != DEFAULT_CATEGORY) return
             /** @type {[string, fs.Stats][]} */
             let fileAndStats
             try {
@@ -432,10 +431,30 @@ export default {
                 console.error('Failed to update sticker dir', DEFAULT_CATEGORY, err)
                 return
             }
-            this.subdirs = fileAndStats
+            const subdirs = fileAndStats
                 .filter(([_, stat]) => stat.isDirectory())
                 .map(([i, _]) => i)
                 .sort()
+            this.subdirs = subdirs
+
+            // 清理已经删除的分类监听，避免同名分类重新创建后无法重新监听。
+            for (const dir of Object.keys(this.watchedPath)) {
+                if (!subdirs.includes(dir)) {
+                    this.watchedPath[dir]?.close()
+                    delete this.watchedPath[dir]
+                }
+            }
+
+            // 删除当前分类后回到 Default，避免继续显示已经不存在目录中的表情。
+            if (
+                this.current_dir !== DEFAULT_CATEGORY &&
+                this.current_dir !== RECENT_CATEGORY &&
+                !subdirs.includes(this.current_dir)
+            ) {
+                this.current_dir = DEFAULT_CATEGORY
+            }
+            if (this.current_dir != DEFAULT_CATEGORY) return
+
             if (!this.descSortStickersByTime) {
                 this.pics = fileAndStats.filter(([_, stat]) => stat.isFile()).map(([i, _]) => i)
             } else {
