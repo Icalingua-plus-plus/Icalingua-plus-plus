@@ -164,6 +164,8 @@ import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import { ipcRenderer } from 'electron'
+import fs from 'fs'
+import path from 'path'
 import ipc from '../utils/ipc'
 import { processFiles } from '../utils/processFiles'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
@@ -195,6 +197,7 @@ export default {
                 unreadCount: 0,
                 lastMessage: {},
             },
+            storePath: '',
             messages: [],
             deferredIncomingMessages: [],
             deferredIncomingIds: new Set(),
@@ -281,6 +284,7 @@ export default {
         // 在首次 await 前注册，避免主进程的定位事件先于异步初始化到达。
         this.setupIpcListeners()
         this.dbUpgrade = await ipc.getDbUpgradeProgress()
+        this.storePath = await ipc.getStorePath()
 
         // 获取设置
         const settings = await ipc.getSettings()
@@ -583,6 +587,77 @@ export default {
             // 禁言状态
             this.lifecycleScope.onIpc('setShutUp', (_, isShutUp) => {
                 this.isShutUp = isShutUp
+            })
+
+            this.lifecycleScope.onIpc('messageError', (_, message) => this.$message.error(message))
+            this.lifecycleScope.onIpc('messageSuccess', (_, message) => this.$message.success(message))
+
+            this.lifecycleScope.onIpc('confirmDeleteMessage', (_, { roomId, messageId }) => {
+                this.$confirm('确定撤回群成员消息?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    ipc.deleteMessage(roomId, messageId)
+                })
+            })
+
+            this.lifecycleScope.onIpc('confirmDeleteSticker', (_, filename) => {
+                this.$confirm('确定删除本 Sticker?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    fs.unlink(path.join(filename), () => this.$message('删除成功'))
+                })
+            })
+
+            this.lifecycleScope.onIpc('confirmDeleteStickerDir', (_, dirname) => {
+                this.$confirm('确定删除 Sticker 分类 ' + dirname + '?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }).then(() => {
+                    fs.rmdir(path.join(this.storePath, 'stickers', dirname), { recursive: true }, () =>
+                        this.$message('删除成功'),
+                    )
+                })
+            })
+
+            this.lifecycleScope.onIpc('moveSticker', async (_, filename) => {
+                /** @type {string} */
+                let value
+                try {
+                    ;({ value } = await this.$prompt(
+                        '若目录不存在则会自动创建，留空则移动到默认分类',
+                        '输入 Sticker 分类目录名称',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                        },
+                    ))
+                    value = value ? value.trim() : 'Default'
+                } catch (action) {
+                    return
+                }
+                if (value == 'Recent') {
+                    this.$message.error('请勿使用这个分类名称')
+                    return
+                }
+                const defaultDir = path.join(this.storePath, 'stickers')
+                const newDir = value == 'Default' ? defaultDir : path.join(defaultDir, value)
+                try {
+                    if (!fs.existsSync(newDir)) {
+                        await fs.promises.mkdir(newDir)
+                    }
+                    await fs.promises.rename(filename, path.join(newDir, path.basename(filename)))
+                } catch (err) {
+                    console.error('Failed to move sticker', filename, 'to', newDir)
+                    console.error(err)
+                    this.$message.error('移动失败')
+                    return
+                }
+                this.$message.success('移动成功')
             })
 
             this.lifecycleScope.onIpc('openGroupMemberPanel', (_, panel) => {

@@ -341,7 +341,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
         {
             label: '屏蔽消息',
             click: () =>
-                ui.confirmIgnoreChat({
+                sendToWindow(parentWindow, 'confirmIgnoreChat', {
                     id: room.roomId,
                     name:
                         room.roomId < 0 && getConfig().removeGroupNameEmotes
@@ -468,7 +468,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
                 if (room.roomId < 0) {
                     const groupInfo = await getGroup(-room.roomId)
                     if (!groupInfo) {
-                        ui.messageError('您不是本群成员，无法为本群添加备注')
+                        sendToWindow(parentWindow, 'messageError', '您不是本群成员，无法为本群添加备注')
                         return
                     }
                     const groupName = getConfig().removeGroupNameEmotes
@@ -492,7 +492,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
                 } else {
                     const friendInfo = await getFriend(room.roomId)
                     if (!friendInfo) {
-                        ui.messageError('该联系人还不是您的好友，无法为该联系人添加备注')
+                        sendToWindow(parentWindow, 'messageError', '该联系人还不是您的好友，无法为该联系人添加备注')
                         return
                     }
                     await newIcalinguaWindow({
@@ -693,7 +693,7 @@ const buildRoomMenu = async (room: Room, parentWindow: BrowserWindow = getMainWi
                 label: '全员禁言',
                 async click() {
                     if ((await isAdmin(room.roomId)) === false) {
-                        ui.messageError('您不是本群管理员，无法操作')
+                        sendToWindow(parentWindow, 'messageError', '您不是本群管理员，无法操作')
                         return
                     }
                     const win = newIcalinguaWindow({
@@ -1828,7 +1828,10 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                         if (message.senderId === getUin()) {
                             deleteMessage(room.roomId, message._id as string)
                         } else {
-                            ui.confirmDeleteMessage(room.roomId, message._id as string)
+                            sendToWindow(win, 'confirmDeleteMessage', {
+                                roomId: room.roomId,
+                                messageId: message._id as string,
+                            })
                         }
                     },
                 }),
@@ -1861,9 +1864,9 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                             }).then((retPacket) => {
                                 const ret = pb.decode(retPacket)[4]
                                 if (ret[1]) {
-                                    ui.messageError(ret[1].toString())
+                                    sendToWindow(win, 'messageError', ret[1].toString())
                                 } else {
-                                    ui.messageSuccess('设置精华成功')
+                                    sendToWindow(win, 'messageSuccess', '设置精华成功')
                                 }
                             })
                         },
@@ -1883,9 +1886,9 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                             }).then((retPacket) => {
                                 const ret = pb.decode(retPacket)[4]
                                 if (ret[1]) {
-                                    ui.messageError(ret[1].toString())
+                                    sendToWindow(win, 'messageError', ret[1].toString())
                                 } else {
-                                    ui.messageSuccess('移出精华成功')
+                                    sendToWindow(win, 'messageSuccess', '移出精华成功')
                                 }
                             })
                         },
@@ -2172,14 +2175,14 @@ ipcMain.on('popupStickerItemMenu', (event, itemName: string, itemList: Array<str
             label: '移动到分类',
             type: 'normal',
             click() {
-                ui.moveSticker(itemName)
+                sendToWindow(win, 'moveSticker', itemName)
             },
         })
         menu.push({
             label: '删除',
             type: 'normal',
             click() {
-                ui.confirmDeleteSticker(itemName)
+                sendToWindow(win, 'confirmDeleteSticker', itemName)
             },
         })
     }
@@ -2195,7 +2198,7 @@ ipcMain.on('popupStickerDirMenu', (event, dirName: string, e) => {
         type: 'normal',
         enabled: dirName !== 'Default',
         click() {
-            ui.confirmDeleteStickerDir(dirName)
+            sendToWindow(win, 'confirmDeleteStickerDir', dirName)
         },
     })
 
@@ -2345,7 +2348,7 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
     menu.append(
         new MenuItem({
             label: `屏蔽此人`,
-            click: () => ui.confirmIgnoreChat({ id: message.senderId, name: message.username }),
+            click: () => sendToWindow(win, 'confirmIgnoreChat', { id: message.senderId, name: message.username }),
         }),
     )
     if (
