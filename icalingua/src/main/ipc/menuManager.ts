@@ -2312,7 +2312,22 @@ ipcMain.on('popupAvatarMenu', async (event, message: Message, room: Room, ev) =>
     menu.append(
         new MenuItem({
             label: `发起私聊`,
-            click: () => ui.startChat(message.senderId, message.username),
+            click: async () => {
+                if (win === getMainWindow()) {
+                    ui.startChat(message.senderId, message.username)
+                    return
+                }
+
+                const room = await getRoom(message.senderId)
+                if (!room) return
+                const { openChatWindow } = await import('../utils/windowManager')
+                const roomName =
+                    room.roomId < 0 && getConfig().removeGroupNameEmotes
+                        ? removeGroupNameEmotes(room.roomName)
+                        : room.roomName
+                await openChatWindow(message.senderId, roomName)
+                if (ui.getSelectedRoomId() === message.senderId) ui.chroom(0)
+            },
         }),
     )
     menu.append(
