@@ -667,6 +667,7 @@ export default {
             loadingHeadMessages: false,
             loadingTailMessages: false,
             files: [],
+            attachedObjectUrls: new Set(),
             imageFiles: [],
             videoFiles: [],
             mediaDimensions: null,
@@ -1100,6 +1101,7 @@ export default {
             this.mouseSelecting = false
         }
         this.mouseSelectBounds = null
+        this.releaseAttachedObjectUrls()
         this.clearAudioSessions()
     },
     methods: {
@@ -1960,6 +1962,7 @@ export default {
         },
         resetMessage(disableMobileFocus = null, editFile = null) {
             this.$emit('typing-message', null)
+            this.releaseAttachedObjectUrls()
 
             if (editFile) {
                 this.files = []
@@ -1991,7 +1994,8 @@ export default {
             if (!type) return
 
             const blob = await read[0].getType(type)
-            const url = URL.createObjectURL(blob)
+            if (this._isBeingDestroyed || this._isDestroyed) return
+            const url = this.registerAttachedObjectUrl(URL.createObjectURL(blob))
             this.imageFiles.push(url)
             this.files.push({
                 name: '粘贴的图片',
@@ -2001,7 +2005,20 @@ export default {
             })
             this.focusTextarea()
         },
+        registerAttachedObjectUrl(url) {
+            if (typeof url === 'string' && url.startsWith('blob:')) this.attachedObjectUrls.add(url)
+            return url
+        },
+        releaseAttachedObjectUrl(url) {
+            if (!this.attachedObjectUrls.has(url)) return
+            URL.revokeObjectURL(url)
+            this.attachedObjectUrls.delete(url)
+        },
+        releaseAttachedObjectUrls(urls = this.attachedObjectUrls) {
+            for (const url of urls) this.releaseAttachedObjectUrl(url)
+        },
         resetMediaFile() {
+            this.releaseAttachedObjectUrls()
             this.mediaDimensions = null
             this.imageFiles = []
             this.videoFiles = []
@@ -2011,6 +2028,10 @@ export default {
             this.scheduleTextareaResize()
         },
         removeImage(idx) {
+            const file = this.files[idx]
+            this.releaseAttachedObjectUrl(this.imageFiles[idx])
+            this.releaseAttachedObjectUrl(file?.localUrl)
+            this.releaseAttachedObjectUrl(file?.url)
             this.imageFiles.splice(idx, 1)
             this.files.splice(idx, 1)
             if (!this.imageFiles.length && !this.files.length) {
@@ -2355,24 +2376,28 @@ export default {
                 const isImage = isImageFile(fileObj)
                 const isVideo = isVideoFile(fileObj)
                 const isAudio = isAudioFile(fileObj)
-                const fileURL = filePath || (isImage || isVideo || isAudio ? URL.createObjectURL(file) : '')
+                const generatedObjectUrl = !filePath && (isImage || isVideo || isAudio)
+                const fileURL = filePath || (generatedObjectUrl ? URL.createObjectURL(file) : '')
                 fileObj.localUrl = fileURL
 
                 // File 本身就是惰性 Blob。仅图片和音频在发送阶段需要读取内容；
                 // 普通文件与视频走路径上传，避免添加附件时把大文件完整读入渲染进程。
                 if (isImage || isAudio) fileObj.blob = file
-                this.files.push(fileObj)
 
                 if (isImage) {
+                    if (generatedObjectUrl) this.registerAttachedObjectUrl(fileURL)
+                    this.files.push(fileObj)
                     this.imageFiles.push(fileURL)
                 } else if (isVideo) {
                     this.resetMediaFile()
+                    if (generatedObjectUrl) this.registerAttachedObjectUrl(fileURL)
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
                     this.lifecycleScope.timeout(() => this.onMediaLoad(), 50)
                     break
                 } else if (isAudio) {
                     this.resetMediaFile()
+                    if (generatedObjectUrl) this.registerAttachedObjectUrl(fileURL)
                     this.files = [fileObj]
                     this.videoFiles.push(fileURL)
                     this.lifecycleScope.timeout(() => this.onMediaLoad(), 50)
@@ -2394,7 +2419,8 @@ export default {
             this.fileDialog = true
 
             const blobFile = await fetch(GifURL).then((res) => res.blob())
-            const fileURL = URL.createObjectURL(blobFile)
+            if (this._isBeingDestroyed || this._isDestroyed) return
+            const fileURL = this.registerAttachedObjectUrl(URL.createObjectURL(blobFile))
             const typeIndex = GifURL.lastIndexOf('.')
 
             const fileObj = {
