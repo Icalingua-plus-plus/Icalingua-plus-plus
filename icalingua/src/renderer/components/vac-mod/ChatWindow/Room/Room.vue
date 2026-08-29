@@ -1020,11 +1020,12 @@ export default {
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
-        this.optimizeMethod = await ipc.getOptimizeMethodSetting()
-        if (this.$route.name === 'history-page' || this.$route.name === 'member-history-page')
-            this.optimizeMethod = 'none'
+        const routeOptimizeMethod = this.$route.name === 'history-page' ? 'none' : null
+        this.optimizeMethod = routeOptimizeMethod || (await ipc.getOptimizeMethodSetting())
         keyToSendMessage = await ipc.getKeyToSendMessage()
-        this.lifecycleScope.onIpc('setOptimizeMethodSetting', (_, method) => (this.optimizeMethod = method))
+        this.lifecycleScope.onIpc('setOptimizeMethodSetting', (_, method) => {
+            if (!routeOptimizeMethod) this.optimizeMethod = method
+        })
         this.lifecycleScope.onIpc('startForward', (_, _id) => {
             if (this.showForwardPanel) return
             const message = this.findMessageById(_id)
