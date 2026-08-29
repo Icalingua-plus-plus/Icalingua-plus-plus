@@ -83,7 +83,7 @@ import {
     splitContentByMediaOrder,
 } from '../utils/messageMediaOrder'
 import processMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
-import { createTray, updateTrayIcon } from '../utils/trayManager'
+import { createTray, requestTrayIconUpdate, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import {
@@ -367,7 +367,7 @@ const eventHandlers = {
         ui.updateRoom(room)
         storage.addMessage(roomId, message)
         await storage.updateRoom(roomId, room)
-        updateTrayIcon()
+        requestTrayIconUpdate()
         if (getConfig().custom && data.post_type === 'message') {
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')

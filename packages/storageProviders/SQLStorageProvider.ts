@@ -946,13 +946,13 @@ export default class SQLStorageProvider implements StorageProvider {
      */
     async getFirstUnreadRoom(priority: number): Promise<Room> {
         try {
-            const unreadRooms = await this.db<Room>(`rooms`)
+            const unreadRoom = await this.db<Room>(`rooms`)
                 .where('unreadCount', '>', 0)
                 .where('priority', '>=', priority)
                 .orderBy('utime', 'desc')
                 .select('*')
-            if (unreadRooms.length >= 1) return unreadRooms[0]
-            return null
+                .first()
+            return unreadRoom || null
         } catch (e) {
             this.errorHandle(e)
         }
