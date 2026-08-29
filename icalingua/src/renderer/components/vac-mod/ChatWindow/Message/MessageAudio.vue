@@ -162,6 +162,7 @@ export default {
         },
     },
     mounted() {
+        this.audioSession.onMount?.()
         const audio = this.getAudio()
         if (!audio) return
         this.bindAudio()
@@ -172,10 +173,12 @@ export default {
         if (this.isAudioActive(audio)) this.startProgressTimer()
     },
     beforeDestroy() {
+        const audio = this.getAudio()
         this.stopProgressTimer()
         this.clearSeekThrottle()
         this.unbindDragListeners()
         this.unbindAudio()
+        this.audioSession.onUnmount?.(audio)
     },
     methods: {
         getAudio() {

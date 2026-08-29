@@ -1475,13 +1475,88 @@ export default {
             })
             this.editAndResend = lastMessage._id
         },
+        createAudioSession(messageId) {
+            const session = {
+                audio: new Audio(),
+                mountedCount: 0,
+                releaseTimer: null,
+                eventHandlers: null,
+                disposed: false,
+                onMount: null,
+                onUnmount: null,
+            }
+
+            const scheduleRelease = () => this.scheduleAudioSessionRelease(messageId, session)
+            session.eventHandlers = {
+                play: () => this.cancelAudioSessionRelease(session),
+                pause: scheduleRelease,
+                ended: scheduleRelease,
+                error: scheduleRelease,
+            }
+            Object.entries(session.eventHandlers).forEach(([eventName, handler]) => {
+                session.audio.addEventListener(eventName, handler)
+            })
+
+            session.onMount = () => {
+                if (session.disposed) return
+                session.mountedCount++
+                this.cancelAudioSessionRelease(session)
+            }
+            session.onUnmount = () => {
+                if (session.disposed) return
+                session.mountedCount = Math.max(0, session.mountedCount - 1)
+                if (!session.mountedCount) this.scheduleAudioSessionRelease(messageId, session)
+            }
+
+            return session
+        },
+        isAudioSessionPlaying(session) {
+            const audio = session?.audio
+            return !!audio && !audio.paused && !audio.ended && !audio.error
+        },
+        cancelAudioSessionRelease(session) {
+            if (!session || session.releaseTimer === null || session.releaseTimer === undefined) return
+            this.lifecycleScope?.cancelTimeout(session.releaseTimer)
+            session.releaseTimer = null
+        },
+        scheduleAudioSessionRelease(messageId, session) {
+            if (session.disposed || session.mountedCount || session.releaseTimer !== null) return
+
+            const release = () => {
+                session.releaseTimer = null
+                if (session.disposed || session.mountedCount || this.isAudioSessionPlaying(session)) return
+                this.releaseAudioSession(messageId, session)
+            }
+            const timer = this.lifecycleScope?.timeout(release, 0)
+            if (timer !== null && timer !== undefined) session.releaseTimer = timer
+            else release()
+        },
+        disposeAudioSession(session) {
+            if (!session || session.disposed) return
+            session.disposed = true
+            this.cancelAudioSessionRelease(session)
+            if (session.eventHandlers) {
+                Object.entries(session.eventHandlers).forEach(([eventName, handler]) => {
+                    session.audio.removeEventListener(eventName, handler)
+                })
+                session.eventHandlers = null
+            }
+            this.resetAudioSession(session)
+            session.onMount = null
+            session.onUnmount = null
+            session.mountedCount = 0
+        },
+        releaseAudioSession(messageId, session) {
+            if (this.audioSessions[messageId] !== session) return
+            if (session.mountedCount || this.isAudioSessionPlaying(session)) return
+            this.disposeAudioSession(session)
+            this.$delete(this.audioSessions, messageId)
+        },
         getAudioSession(message) {
             if (!message || !message._id || !message.file || !isAudioFile(message.file)) return null
             if (message.file.name === 'decoding' || message.file.url === 'decoding') return null
             if (!this.audioSessions[message._id]) {
-                this.$set(this.audioSessions, message._id, {
-                    audio: new Audio(),
-                })
+                this.$set(this.audioSessions, message._id, this.createAudioSession(message._id))
             }
             return this.audioSessions[message._id]
         },
@@ -1493,7 +1568,7 @@ export default {
             audio.load()
         },
         clearAudioSessions() {
-            Object.values(this.audioSessions).forEach((session) => this.resetAudioSession(session))
+            Object.values(this.audioSessions).forEach((session) => this.disposeAudioSession(session))
             this.audioSessions = {}
         },
         sendForward(target, name, multi = true, anonymous = false) {
