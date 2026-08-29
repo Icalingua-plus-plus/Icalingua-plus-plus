@@ -145,6 +145,7 @@
                 v-if="groupmemberShown"
             />
         </el-dialog>
+        <StickerMoveDialog ref="stickerMoveDialog" />
         <el-dialog
             :title="tempFileName"
             :visible.sync="chooseFileTypeShown"
@@ -162,6 +163,7 @@
 <script>
 import Room from '../components/vac-mod/ChatWindow/Room/Room.vue'
 import Stickers from '../components/Stickers.vue'
+import StickerMoveDialog from '../components/StickerMoveDialog.vue'
 import TheGroupMemberPanel from '../components/TheGroupMemberPanel.vue'
 import { ipcRenderer } from 'electron'
 import fs from 'fs'
@@ -185,6 +187,7 @@ export default {
     components: {
         Room,
         Stickers,
+        StickerMoveDialog,
         TheGroupMemberPanel,
     },
     data() {
@@ -624,40 +627,8 @@ export default {
                 })
             })
 
-            this.lifecycleScope.onIpc('moveSticker', async (_, filename) => {
-                /** @type {string} */
-                let value
-                try {
-                    ;({ value } = await this.$prompt(
-                        '若目录不存在则会自动创建，留空则移动到默认分类',
-                        '输入 Sticker 分类目录名称',
-                        {
-                            confirmButtonText: '确定',
-                            cancelButtonText: '取消',
-                        },
-                    ))
-                    value = value ? value.trim() : 'Default'
-                } catch (action) {
-                    return
-                }
-                if (value == 'Recent') {
-                    this.$message.error('请勿使用这个分类名称')
-                    return
-                }
-                const defaultDir = path.join(this.storePath, 'stickers')
-                const newDir = value == 'Default' ? defaultDir : path.join(defaultDir, value)
-                try {
-                    if (!fs.existsSync(newDir)) {
-                        await fs.promises.mkdir(newDir)
-                    }
-                    await fs.promises.rename(filename, path.join(newDir, path.basename(filename)))
-                } catch (err) {
-                    console.error('Failed to move sticker', filename, 'to', newDir)
-                    console.error(err)
-                    this.$message.error('移动失败')
-                    return
-                }
-                this.$message.success('移动成功')
+            this.lifecycleScope.onIpc('moveSticker', (_, filename) => {
+                this.$refs.stickerMoveDialog?.open(filename)
             })
 
             this.lifecycleScope.onIpc('openGroupMemberPanel', (_, panel) => {
