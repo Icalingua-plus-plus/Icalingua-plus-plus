@@ -7,9 +7,19 @@ interface TestRoom {
     roomId: number
     utime: number
     value: string
+    unreadCount: number
+    at: boolean
+    atMessageId: string | null
 }
 
-const room = (roomId: number, utime: number, value = String(roomId)): TestRoom => ({ roomId, utime, value })
+const room = (roomId: number, utime: number, value = String(roomId)): TestRoom => ({
+    roomId,
+    utime,
+    value,
+    unreadCount: 1,
+    at: true,
+    atMessageId: 'message',
+})
 
 test('queues one frame and keeps the latest update for each room', () => {
     const scheduledCallbacks = new Map<number, () => void>()
@@ -64,5 +74,40 @@ test('merges a frame of updates while preserving descending utime order', () => 
         room(3, 90),
         room(5, 90),
         room(4, 60, 'new'),
+    ])
+})
+
+test('patches only the queued read state and keeps the latest room preview', () => {
+    let scheduledCallback: (() => void) | undefined
+    const applied: ReadonlyArray<TestRoom>[] = []
+    const batch = createRoomUpdateBatch<TestRoom>({
+        schedule: (callback) => {
+            scheduledCallback = callback
+            return 1
+        },
+        cancel: () => {},
+        apply: (updates) => applied.push(updates),
+    })
+
+    batch.queue(room(1, 100, 'new preview'))
+    batch.queue(room(2, 200, 'keep'))
+    batch.patch(1, (pendingRoom) => ({
+        ...pendingRoom,
+        unreadCount: 0,
+        at: false,
+        atMessageId: null,
+    }))
+    scheduledCallback?.()
+
+    assert.deepEqual(applied, [
+        [
+            {
+                ...room(1, 100, 'new preview'),
+                unreadCount: 0,
+                at: false,
+                atMessageId: null,
+            },
+            room(2, 200, 'keep'),
+        ],
     ])
 })

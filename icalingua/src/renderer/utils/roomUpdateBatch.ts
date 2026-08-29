@@ -60,11 +60,16 @@ export function createRoomUpdateBatch<T extends OrderedRoom>({ schedule, cancel,
         if (frame === null) pendingUpdates.clear()
     }
 
+    const patch = (roomId: number, updater: (room: T) => T) => {
+        const room = pendingUpdates.get(roomId)
+        if (room) pendingUpdates.set(roomId, updater(room))
+    }
+
     const clear = () => {
         if (frame !== null) cancel(frame)
         frame = null
         pendingUpdates.clear()
     }
 
-    return { queue, clear }
+    return { queue, patch, clear }
 }

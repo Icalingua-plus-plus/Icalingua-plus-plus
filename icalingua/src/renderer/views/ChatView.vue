@@ -880,10 +880,25 @@ export default {
             this.offline = true
         })
         this.lifecycleScope.onIpc('clearCurrentRoomUnread', () => {
-            this.selectedRoom.unreadCount = 0
+            const room = this.selectedRoom
+            roomUpdateBatch.patch(room.roomId, (pendingRoom) => ({
+                ...pendingRoom,
+                unreadCount: 0,
+                at: false,
+                atMessageId: null,
+            }))
+            room.unreadCount = 0
+            room.at = false
+            room.atMessageId = null
             this._recomputeChatGroupsUnreadCount()
         })
         this.lifecycleScope.onIpc('clearRoomUnread', (_, roomId) => {
+            roomUpdateBatch.patch(roomId, (pendingRoom) => ({
+                ...pendingRoom,
+                unreadCount: 0,
+                at: false,
+                atMessageId: null,
+            }))
             const room = this.rooms.find((e) => e.roomId === roomId)
             if (room) {
                 room.unreadCount = 0
