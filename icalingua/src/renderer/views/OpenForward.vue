@@ -25,7 +25,7 @@ export default {
     },
     methods: {
         view() {
-            ipc.openForward(this.res, this.m_fileName)
+            ipc.openForward(this.res, this.m_fileName || 'MultiMsg')
             window.close()
         },
     },
