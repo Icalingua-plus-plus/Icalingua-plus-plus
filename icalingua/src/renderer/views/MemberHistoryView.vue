@@ -76,17 +76,37 @@ export default {
             account: 0,
             username: '',
             historyRequestId: 0,
+            memberHistorySetupReady: false,
+            pendingMemberHistory: null,
         }
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
         document.title = '查看发言记录'
-        const settings = await ipc.getSettings()
-        this.linkify = settings.linkify
-        this.usePanguJsRecv = settings.usePanguJsRecv
-        this.account = await ipc.getUin()
-        this.username = await ipc.getNick()
-        this.lifecycleScope.onIpc('initMemberHistory', (event, payload) => this.initializeMemberHistory(payload))
+        // 主进程在 did-finish-load 后只发送一次初始化事件，必须先注册监听器，避免被前面的 await 丢弃。
+        this.lifecycleScope.onIpc('initMemberHistory', (event, payload) => {
+            if (!this.memberHistorySetupReady) {
+                this.pendingMemberHistory = payload
+                return
+            }
+            this.startMemberHistoryInitialization(payload)
+        })
+        try {
+            const settings = await ipc.getSettings()
+            this.linkify = settings.linkify
+            this.usePanguJsRecv = settings.usePanguJsRecv
+            this.account = await ipc.getUin()
+            this.username = await ipc.getNick()
+        } catch (e) {
+            console.error('Failed to initialize member history view:', e)
+        } finally {
+            this.memberHistorySetupReady = true
+            if (this.pendingMemberHistory !== null && !this._isBeingDestroyed && !this._isDestroyed) {
+                const payload = this.pendingMemberHistory
+                this.pendingMemberHistory = null
+                this.startMemberHistoryInitialization(payload)
+            }
+        }
     },
     beforeDestroy() {
         this.historyRequestId++
@@ -96,6 +116,15 @@ export default {
         Room,
     },
     methods: {
+        startMemberHistoryInitialization(payload) {
+            if (this._isBeingDestroyed || this._isDestroyed) return
+            this.initializeMemberHistory(payload).catch((error) => {
+                console.error('Failed to initialize member history:', error)
+                if (this._isBeingDestroyed || this._isDestroyed) return
+                this.loading = false
+                this.ready = true
+            })
+        },
         async initializeMemberHistory({ senderId, roomId, senderName }) {
             const requestId = ++this.historyRequestId
             this.senderId = senderId
