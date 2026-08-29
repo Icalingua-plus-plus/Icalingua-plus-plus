@@ -111,6 +111,7 @@
                             <message
                                 :current-user-id="currentUserId"
                                 :message="m"
+                                :date-refresh-key="dateRefreshKey"
                                 :show-date="
                                     i + visibleViewport.head > 0 &&
                                     m.date !== messages[i + visibleViewport.head - 1].date
@@ -603,6 +604,10 @@ let keyToSendMessage
 // scroll
 const scrollOffset = 300
 
+function getCurrentDateKey(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+}
+
 export default {
     name: 'Room',
     components: {
@@ -733,6 +738,8 @@ export default {
             audioRecordingStartedAt: 0,
             messageDraftSaveTimer: null,
             pendingMessageDraft: '',
+            dateRefreshKey: getCurrentDateKey(),
+            dateRefreshTimer: null,
             messageListSnapshot: {
                 length: Array.isArray(this.messages) ? this.messages.length : 0,
                 firstId: Array.isArray(this.messages) && this.messages.length ? this.messages[0]._id : null,
@@ -1029,6 +1036,7 @@ export default {
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
+        this.scheduleDateRefresh()
         const routeOptimizeMethod = this.$route.name === 'history-page' ? 'none' : null
         this.optimizeMethod = routeOptimizeMethod || (await ipc.getOptimizeMethodSetting())
         keyToSendMessage = await ipc.getKeyToSendMessage()
@@ -1115,6 +1123,18 @@ export default {
         this.clearAudioSessions()
     },
     methods: {
+        scheduleDateRefresh() {
+            const now = new Date()
+            const nextDay = new Date(now)
+            nextDay.setHours(24, 0, 0, 100)
+            const delay = Math.max(nextDay.getTime() - now.getTime(), 1000)
+
+            this.dateRefreshTimer = this.lifecycleScope.timeout(() => {
+                this.dateRefreshTimer = null
+                this.dateRefreshKey = getCurrentDateKey()
+                this.scheduleDateRefresh()
+            }, delay)
+        },
         createAudioRecorder() {
             if (this.audioRecorder) return this.audioRecorder
 

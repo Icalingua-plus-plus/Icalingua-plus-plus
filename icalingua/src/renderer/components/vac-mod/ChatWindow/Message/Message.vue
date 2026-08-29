@@ -298,7 +298,7 @@
                         />
 
                         <div class="vac-text-timestamp" :title="message.date + ' ' + message.timestamp">
-                            <span>{{ message.timestamp }}</span>
+                            <span>{{ formattedTimestamp }}</span>
                         </div>
                     </div>
                     <div :class="{ vrButtons: true, self: message.senderId === currentUserId }" v-if="isSteamVrRunning">
@@ -390,6 +390,7 @@ export default {
         recordPath: { type: String, required: true },
         usePanguJs: { type: Boolean, required: false, default: false },
         isSteamVrRunning: { type: Boolean, required: false, default: false },
+        dateRefreshKey: { type: Number, default: 0 },
     },
 
     data() {
@@ -491,6 +492,25 @@ export default {
                 !this.message.flash &&
                 (!type || type.startsWith('image/') || type.startsWith('audio/'))
             )
+        },
+        formattedTimestamp() {
+            const date = this.message.date
+            if (!date) return this.message.timestamp
+
+            const fullTimestamp = `${date} ${this.message.timestamp}`
+            if (date.length !== 10 || date[4] !== '/' || date[7] !== '/') return fullTimestamp
+
+            const year = Number(date.slice(0, 4))
+            const month = Number(date.slice(5, 7))
+            const day = Number(date.slice(8, 10))
+            if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
+                return fullTimestamp
+            }
+
+            const now = this.dateRefreshKey ? new Date(this.dateRefreshKey) : new Date()
+            if (year !== now.getFullYear()) return fullTimestamp
+            if (month === now.getMonth() + 1 && day === now.getDate()) return this.message.timestamp
+            return `${month}/${day} ${this.message.timestamp}`
         },
     },
 
