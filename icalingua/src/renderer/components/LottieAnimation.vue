@@ -25,6 +25,7 @@ import {
     queueRender,
     onRenderComplete,
 } from '../utils/lottieWebmCache'
+import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 
 const lottieJsonCache = new Map()
 
@@ -96,6 +97,10 @@ export default {
         videoUrl: null,
         isReplaying: false,
     }),
+    created() {
+        this.lifecycleScope = createRendererLifecycleScope()
+        this.lifecycleScope.addCleanup(() => this.cancelRenderComplete())
+    },
     computed: {
         isTwoSegment() {
             return this.pathResult && this.pathResult !== this.path
@@ -110,6 +115,9 @@ export default {
         if (!this.videoUrl) {
             this.$nextTick(() => this.queueWebmRender())
         }
+    },
+    beforeDestroy() {
+        this.lifecycleScope?.dispose()
     },
     destroyed() {
         if (this.observer) {
@@ -126,6 +134,11 @@ export default {
         }
     },
     methods: {
+        cancelRenderComplete() {
+            if (!this._cancelRenderComplete) return
+            this._cancelRenderComplete()
+            this._cancelRenderComplete = null
+        },
         init() {
             this.style = {
                 width: this.width !== -1 ? `${this.width}px` : '100%',
@@ -272,6 +285,8 @@ export default {
          * 由 lottieWebmCache 串行执行，不阻塞前台
          */
         queueWebmRender() {
+            if (this._isBeingDestroyed || this._isDestroyed) return
+            this.cancelRenderComplete()
             if (!isWebmSupported() || !this.path) {
                 console.log('[LottieAnim]', 'WebM not supported or no path')
                 return
@@ -290,28 +305,34 @@ export default {
             queueRender(this.path, this.pathResult || undefined, jsonData, resultData)
             // 如果渲染已完成（缓存命中），queueRender 内部会 skip
             // 这里注册监听，下次渲染完成后自动切换到视频模式
-            onRenderComplete(this.path, this.pathResult || undefined, jsonData, resultData, () => {
-                this.videoUrl = getCacheUrl(jsonData, resultData)
-                if (this.anim) {
-                    this.anim.destroy()
-                    this.anim = null
-                }
-                // v-if 切换后 DOM 重建，需要重新观察新元素
-                this.$nextTick(() => {
-                    if (this.observer && this.$el) {
-                        this.observer.disconnect()
-                        this.observer.observe(this.$el)
+            this._cancelRenderComplete = onRenderComplete(
+                this.path,
+                this.pathResult || undefined,
+                jsonData,
+                resultData,
+                () => {
+                    this.videoUrl = getCacheUrl(jsonData, resultData)
+                    if (this.anim) {
+                        this.anim.destroy()
+                        this.anim = null
                     }
-                    // 根据当前可见性决定播放或暂停
-                    if (this.$refs.videoEl) {
-                        if (this.isVisible) {
-                            this.$refs.videoEl.play()
-                        } else {
-                            this.$refs.videoEl.pause()
+                    // v-if 切换后 DOM 重建，需要重新观察新元素
+                    this.$nextTick(() => {
+                        if (this.observer && this.$el) {
+                            this.observer.disconnect()
+                            this.observer.observe(this.$el)
                         }
-                    }
-                })
-            })
+                        // 根据当前可见性决定播放或暂停
+                        if (this.$refs.videoEl) {
+                            if (this.isVisible) {
+                                this.$refs.videoEl.play()
+                            } else {
+                                this.$refs.videoEl.pause()
+                            }
+                        }
+                    })
+                },
+            )
         },
         onVideoLoaded() {
             if (this.$refs.videoEl) {
@@ -369,6 +390,7 @@ export default {
     watch: {
         path() {
             // 完整清理旧状态
+            this.cancelRenderComplete()
             this.videoUrl = null
             if (this.anim) {
                 this.anim.destroy()

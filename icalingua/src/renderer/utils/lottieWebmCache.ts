@@ -113,16 +113,28 @@ export function onRenderComplete(
     jsonData: LottieJsonData,
     resultData: LottieJsonData | null | undefined,
     cb: RenderCompleteCallback,
-): void {
+): () => void {
     const key = getCacheKey(jsonData, resultData)
     // 渲染已完成且缓存存在 → 立即回调
     if (!pendingKeys.has(key) && hasCache(jsonData, resultData)) {
         cb()
-        return
+        return () => {}
     }
     // 渲染中 → 注册监听，完成后回调
+    const listener: RenderCompleteCallback = () => cb()
     if (!listeners.has(key)) listeners.set(key, new Set())
-    listeners.get(key)!.add(cb)
+    listeners.get(key)!.add(listener)
+
+    let cancelled = false
+    return () => {
+        if (cancelled) return
+        cancelled = true
+
+        const callbacks = listeners.get(key)
+        if (!callbacks) return
+        callbacks.delete(listener)
+        if (!callbacks.size) listeners.delete(key)
+    }
 }
 
 function notifyByCacheKey(key: string): void {
