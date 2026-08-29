@@ -104,6 +104,8 @@
                         <div
                             v-for="(m, i) in messages.slice(visibleViewport.head, visibleViewport.tail)"
                             :key="m._id"
+                            class="vac-message-item"
+                            :data-message-index="i + visibleViewport.head"
                             @dblclick="replyMessage(m, $event)"
                         >
                             <message
@@ -823,6 +825,13 @@ export default {
         loadingMessages(val) {
             if (val) this.infiniteState.head = null
             else if (!val) this.focusTextarea(true)
+        },
+        visibleViewport: {
+            deep: true,
+            handler() {
+                if (!this.mouseSelecting) return
+                this.mouseSelectBounds = null
+            },
         },
         async room(newVal, oldVal) {
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
@@ -2635,10 +2644,14 @@ export default {
             this.mouseSelectBounds = [...container.querySelectorAll('.vac-message-box')]
                 .map((msgBox) => {
                     const msgCard = msgBox.querySelector('.vac-message-card')
-                    if (!msgCard) return null
+                    const messageItem = msgBox.closest('.vac-message-item')
+                    const messageIndex = messageItem ? Number(messageItem.dataset.messageIndex) : -1
+                    const message = Number.isInteger(messageIndex) ? this.messages[messageIndex] : null
+                    if (!msgCard || !message) return null
                     const { x, y, width, height } = msgCard.getBoundingClientRect()
                     return {
                         id: msgBox.id,
+                        message,
                         x1: x,
                         y1: y,
                         x2: x + width,
@@ -2662,9 +2675,10 @@ export default {
             el.style.height = ay2 - ay1 + 'px'
 
             if (this.mouseSelectBounds === null) this.refreshMouseSelectBounds()
-            const selectedIds = (this.mouseSelectBounds || [])
-                .filter((bound) => !(ax2 < bound.x1 || bound.x2 < ax1 || ay2 < bound.y1 || bound.y2 < ay1))
-                .map((bound) => bound.id)
+            const selectedBounds = (this.mouseSelectBounds || []).filter(
+                (bound) => !(ax2 < bound.x1 || bound.x2 < ax1 || ay2 < bound.y1 || bound.y2 < ay1),
+            )
+            const selectedIds = selectedBounds.map((bound) => bound.id)
             const currentIds = this.mouseSelectIds || []
             const selectionUnchanged =
                 selectedIds.length === currentIds.length && selectedIds.every((id, index) => id === currentIds[index])
@@ -2681,11 +2695,11 @@ export default {
                     nextForwardMessages.push(message)
                 }
             }
-            const messagesById = new Map(this.messages.map((message) => [messageIdKey(message._id), message]))
-            for (const id of selectedIds) {
-                const key = messageIdKey(id)
-                const message = messagesById.get(key)
-                if (message && !nextForwardIds.has(key)) {
+            for (const bound of selectedBounds) {
+                const message = bound.message
+                if (!message) continue
+                const key = messageIdKey(bound.id)
+                if (!nextForwardIds.has(key)) {
                     nextForwardIds.add(key)
                     nextForwardMessages.push(message)
                 }
