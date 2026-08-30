@@ -254,8 +254,16 @@ ipcMain.handle(
 )
 ipcMain.handle(
     'fetchMessagesBySender',
-    async (_, { roomId, senderId, offset }: { roomId: number; senderId: number; offset: number }) => {
-        const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset)
+    async (
+        _,
+        {
+            roomId,
+            senderId,
+            offset,
+            snapshotTime,
+        }: { roomId: number; senderId: number; offset: number; snapshotTime?: number },
+    ) => {
+        const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset, snapshotTime)
         if (roomId === 0) {
             // 所有群模式：为每条消息附加群头像和群名
             for (const msg of messages) {

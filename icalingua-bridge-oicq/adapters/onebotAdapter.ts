@@ -1595,10 +1595,11 @@ const adapter: typeof oicqAdapter = {
         roomId: number,
         senderId: number,
         offset: number,
+        snapshotTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
         for (const message of messages) {
             if (message.file?.url) {
                 message.file.url = replaceRkey(message.file?.url)

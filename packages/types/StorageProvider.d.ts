@@ -67,7 +67,13 @@ export default interface StorageProvider {
 
     getAllChatGroups(): Promise<ChatGroup[]>
 
-    fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]>
+    fetchMessagesBySender(
+        roomId: number,
+        senderId: string,
+        skip: number,
+        limit: number,
+        snapshotTime?: number,
+    ): Promise<Message[]>
 
     /** Use roomId 0 to search all conversations; global results include their original roomId. */
     searchMessages(

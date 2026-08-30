@@ -1818,10 +1818,11 @@ const adapter = {
         roomId: number,
         senderId: number,
         offset: number,
+        snapshotTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)

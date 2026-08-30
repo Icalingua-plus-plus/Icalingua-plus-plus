@@ -833,13 +833,23 @@ export default class MongoStorageProvider implements StorageProvider {
     /** 按发送者查询消息记录。
      * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
      * @param senderId 发送者 ID（字符串）
+     * @param snapshotTime 可选，只返回此时间及之前的消息
      */
-    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+    async fetchMessagesBySender(
+        roomId: number,
+        senderId: string,
+        skip: number,
+        limit: number,
+        snapshotTime?: number,
+    ): Promise<Message[]> {
         const normalizedSkip = Number.isFinite(skip) ? Math.max(0, Math.trunc(skip)) : 0
         const normalizedLimit = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : 0
+        const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
         if (!normalizedLimit) return []
 
         try {
+            const senderQuery: Record<string, any> = { senderId: Number(senderId) }
+            if (normalizedSnapshotTime !== undefined) senderQuery.time = { $lte: normalizedSnapshotTime }
             if (roomId === 0) {
                 // 所有群模式：每个群只读取当前全局分页所需的前置结果，避免拉取该发送者的全部历史
                 const rooms = await this.getSearchRooms()
@@ -849,13 +859,10 @@ export default class MongoStorageProvider implements StorageProvider {
                 const roomMessages = await mapWithConcurrency(groupRooms, mongoSearchReadConcurrency, async (room) => {
                     const msgs = await this.mdb
                         .collection<any>('msg' + room.roomId)
-                        .find(
-                            { senderId: Number(senderId) },
-                            {
-                                sort: [['time', -1]],
-                                limit: roomLimit,
-                            },
-                        )
+                        .find(senderQuery, {
+                            sort: [['time', -1]],
+                            limit: roomLimit,
+                        })
                         .toArray()
                     for (const msg of msgs) {
                         msg.roomId = room.roomId
@@ -868,14 +875,11 @@ export default class MongoStorageProvider implements StorageProvider {
             } else {
                 const arr = await this.mdb
                     .collection<any>('msg' + roomId)
-                    .find(
-                        { senderId: Number(senderId) },
-                        {
-                            sort: [['time', -1]],
-                            skip: normalizedSkip,
-                            limit: normalizedLimit,
-                        },
-                    )
+                    .find(senderQuery, {
+                        sort: [['time', -1]],
+                        skip: normalizedSkip,
+                        limit: normalizedLimit,
+                    })
                     .toArray()
                 return arr.reverse()
             }

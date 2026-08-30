@@ -76,6 +76,7 @@ export default {
             account: 0,
             username: '',
             historyRequestId: 0,
+            snapshotTime: null,
             memberHistorySetupReady: false,
             pendingMemberHistory: null,
         }
@@ -130,6 +131,7 @@ export default {
             this.senderId = senderId
             this.roomId = roomId
             this.senderName = senderName
+            this.snapshotTime = Date.now()
             this.room.roomId = senderId
             this.messages = []
             this.messagesLoaded = false
@@ -224,7 +226,7 @@ export default {
             this.loading = true
             let msgs = []
             try {
-                const result = await ipc.fetchMessagesBySender(this.roomId, this.senderId, 0)
+                const result = await ipc.fetchMessagesBySender(this.roomId, this.senderId, 0, this.snapshotTime)
                 msgs = Array.isArray(result) ? result : []
             } catch (e) {
                 console.error('Failed to fetch initial messages:', e)
@@ -247,7 +249,12 @@ export default {
             this.loading = true
             const requestId = this.historyRequestId
             try {
-                const result = await ipc.fetchMessagesBySender(this.roomId, this.senderId, this.messages.length)
+                const result = await ipc.fetchMessagesBySender(
+                    this.roomId,
+                    this.senderId,
+                    this.messages.length,
+                    this.snapshotTime,
+                )
                 const msgs = Array.isArray(result) ? result : []
                 if (!this.isCurrentHistoryRequest(requestId)) return
 

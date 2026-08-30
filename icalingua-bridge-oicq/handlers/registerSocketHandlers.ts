@@ -69,8 +69,9 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             roomId: number,
             senderId: number,
             offset: number,
+            snapshotTime: number | undefined,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.fetchMessagesBySender(roomId, senderId, offset, socket, resolve),
+        ) => adapter.fetchMessagesBySender(roomId, senderId, offset, snapshotTime, socket, resolve),
     )
     socket.on(
         'searchMessages',

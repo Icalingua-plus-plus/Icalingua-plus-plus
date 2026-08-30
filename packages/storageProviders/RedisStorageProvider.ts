@@ -697,10 +697,18 @@ export default class RedisStorageProvider implements StorageProvider {
     /** 按发送者查询消息记录。
      * @param roomId 房间 ID，为 0 时查询所有群（roomId < 0）
      * @param senderId 发送者 ID（字符串）
+     * @param snapshotTime 可选，只返回此时间及之前的消息
      */
-    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+    async fetchMessagesBySender(
+        roomId: number,
+        senderId: string,
+        skip: number,
+        limit: number,
+        snapshotTime?: number,
+    ): Promise<Message[]> {
         const normalizedSkip = Number.isFinite(skip) ? Math.max(0, Math.trunc(skip)) : 0
         const normalizedLimit = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : 0
+        const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
         if (!normalizedLimit) return []
 
         const senderIdNum = Number(senderId)
@@ -712,11 +720,23 @@ export default class RedisStorageProvider implements StorageProvider {
             const matched: Message[] = []
             let offset = 0
             while (matched.length < scanLimit) {
-                const ids = await this.redis.zrevrange(listKey, offset, offset + redisMessageReadBatchSize - 1)
+                const ids =
+                    normalizedSnapshotTime === undefined
+                        ? await this.redis.zrevrange(listKey, offset, offset + redisMessageReadBatchSize - 1)
+                        : await this.redis.zrevrangebyscore(
+                              listKey,
+                              normalizedSnapshotTime,
+                              '-inf',
+                              'LIMIT',
+                              offset,
+                              redisMessageReadBatchSize,
+                          )
                 if (!ids.length) break
 
                 const messages = await this.getMessages(rid, ids)
                 for (const message of messages) {
+                    if (normalizedSnapshotTime !== undefined && Number(message.time || 0) > normalizedSnapshotTime)
+                        continue
                     if (message.senderId !== senderIdNum) continue
                     if (roomId === 0) (message as any).roomId = rid
                     matched.push(message)

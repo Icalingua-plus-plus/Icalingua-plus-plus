@@ -1149,8 +1149,15 @@ export default class SQLStorageProvider implements StorageProvider {
      * @param senderId 发送者 ID（字符串）
      * @param skip 跳过条数
      * @param limit 返回条数
+     * @param snapshotTime 可选，只返回此时间及之前的消息
      */
-    async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+    async fetchMessagesBySender(
+        roomId: number,
+        senderId: string,
+        skip: number,
+        limit: number,
+        snapshotTime?: number,
+    ): Promise<Message[]> {
         try {
             let query = this.db<MessageInSQLDB>('messages').where('senderId', senderId)
             if (roomId === 0) {
@@ -1159,6 +1166,8 @@ export default class SQLStorageProvider implements StorageProvider {
             } else {
                 query = query.where('roomId', roomId)
             }
+            const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
+            if (normalizedSnapshotTime !== undefined) query = query.where('time', '<=', normalizedSnapshotTime)
             const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
             if (roomId === 0) {
                 // 所有群模式：保留 roomId 信息

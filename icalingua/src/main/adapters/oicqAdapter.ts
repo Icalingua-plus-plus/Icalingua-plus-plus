@@ -2042,8 +2042,8 @@ const adapter: OicqAdapter = {
     resolveUnreadTargetMessageId(roomId: number, unreadCount: number) {
         return storage.resolveUnreadTargetMessageId(roomId, unreadCount)
     },
-    async fetchMessagesBySender(roomId: number, senderId: number, offset: number) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+    async fetchMessagesBySender(roomId: number, senderId: number, offset: number, snapshotTime?: number) {
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)

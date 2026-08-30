@@ -1840,11 +1840,12 @@ const adapter: typeof oicqAdapter = {
         roomId: number,
         senderId: number,
         offset: number,
+        snapshotTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
         for (const message of messages) {
             await processMessageRkey(message)
         }

@@ -987,14 +987,14 @@ const adapter: Adapter = {
             socket.emit('resolveUnreadTargetMessageId', roomId, unreadCount, resolve)
         })
     },
-    fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+    fetchMessagesBySender(roomId: number, senderId: number, offset: number, snapshotTime?: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
             let settled = false
             const timer = setTimeout(() => {
                 settled = true
                 reject(new Error('fetchMessagesBySender 响应超时'))
             }, FETCH_MESSAGES_BY_SENDER_TIMEOUT)
-            socket.emit('fetchMessagesBySender', roomId, senderId, offset, (messages: Message[]) => {
+            socket.emit('fetchMessagesBySender', roomId, senderId, offset, snapshotTime, (messages: Message[]) => {
                 if (settled) return
                 settled = true
                 clearTimeout(timer)

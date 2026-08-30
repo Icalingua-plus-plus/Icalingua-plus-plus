@@ -301,9 +301,14 @@ const adapter: Adapter = {
 
         return messages
     },
-    async fetchMessagesBySender(roomId: number, senderId: number, offset: number): Promise<Message[]> {
+    async fetchMessagesBySender(
+        roomId: number,
+        senderId: number,
+        offset: number,
+        snapshotTime?: number,
+    ): Promise<Message[]> {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20)) || []
+        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
         for (const message of messages) {
             processMessageRkey(message)
         }
