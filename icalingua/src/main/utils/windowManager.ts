@@ -108,141 +108,7 @@ export const loadMainWindow = (show = process.env.NODE_ENV !== 'development' && 
         5000,
     )
 
-    mainWindow.webContents.setWindowOpenHandler((details) => {
-        const url1 = new URL(details.url)
-        const action = (url1.hostname + url1.pathname).replace(/^\/\//, '')
-        if (url1.hostname == 'qun.qq.com') {
-            ;(async () => {
-                const size = screen.getPrimaryDisplay().size
-                const win = newIcalinguaWindow({
-                    height: size.height - 200,
-                    width: 500,
-                    autoHideMenuBar: true,
-                    webPreferences: {
-                        contextIsolation: false,
-                        preload: path.join(getStaticPath(), 'homeworkPreload.js'),
-                    },
-                })
-                const cookies = await getCookies('qun.qq.com')
-                for (const i in cookies) {
-                    await win.webContents.session.cookies.set({
-                        url: 'https://qun.qq.com',
-                        name: i,
-                        value: cookies[i],
-                    })
-                }
-
-                await win.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
-            })()
-        } else if (url1.hostname == 'docs.qq.com') {
-            ;(async () => {
-                const win1 = newIcalinguaWindow({
-                    autoHideMenuBar: true,
-                })
-                const cookies = await getCookies('docs.qq.com')
-                for (const i in cookies) {
-                    await win1.webContents.session.cookies.set({
-                        url: 'https://docs.qq.com',
-                        name: i,
-                        value: cookies[i],
-                    })
-                }
-                win1.webContents.setWindowOpenHandler((details) => {
-                    return { action: 'deny' }
-                })
-                win1.webContents.on('will-navigate', (event, url) => {
-                    const parsedUrl = new URL(url)
-                    parsedUrl.hostname !== 'docs.qq.com' &&
-                        !parsedUrl.hostname.endsWith('.myqcloud.com') &&
-                        event.preventDefault()
-                })
-                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
-            })()
-        } else if (url1.hostname == 'ti.qq.com') {
-            ;(async () => {
-                const size = screen.getPrimaryDisplay().size
-                const win1 = newIcalinguaWindow({
-                    height: size.height - 200,
-                    width: 500,
-                    autoHideMenuBar: true,
-                })
-                const cookies = await getCookies('ti.qq.com')
-                for (const i in cookies) {
-                    await win1.webContents.session.cookies.set({
-                        url: 'https://ti.qq.com',
-                        name: i,
-                        value: cookies[i],
-                    })
-                }
-                win1.webContents.setWindowOpenHandler((details) => {
-                    return { action: 'deny' }
-                })
-                win1.webContents.on('will-navigate', (event, url) => {
-                    const parsedUrl = new URL(url)
-                    parsedUrl.hostname !== 'ti.qq.com' && event.preventDefault()
-                })
-                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
-            })()
-        } else if (url1.protocol === 'icalingua:') {
-            if (action === 'at') {
-                const qq = url1.searchParams.get('qq')
-                const name = url1.searchParams.get('name') || ''
-                if (qq) {
-                    atCache.push({
-                        text: name,
-                        id: qq === '1' ? 'all' : Number(qq),
-                    })
-                    ui.addMessageText(name + ' ')
-                }
-            } else if (action === 'button/callback') {
-                const groupId = Number(url1.searchParams.get('group_id'))
-                const msgSeq = Number(url1.searchParams.get('msg_seq'))
-                const appid = Number(url1.searchParams.get('appid'))
-                const id = url1.searchParams.get('id')
-                const data = url1.searchParams.get('command')
-
-                if (
-                    !Number.isSafeInteger(groupId) ||
-                    groupId <= 0 ||
-                    !Number.isSafeInteger(msgSeq) ||
-                    msgSeq < 0 ||
-                    !Number.isSafeInteger(appid) ||
-                    appid < 0 ||
-                    id === null ||
-                    data === null
-                ) {
-                    ui.messageError('按钮参数无效')
-                } else {
-                    sendButtonCallback(groupId, msgSeq, appid, id, data)
-                }
-            } else {
-                ui.messageError(PROTOCOL_UNSUPPORT)
-            }
-        } else if (url1.protocol === 'mqqapi:') {
-            if (action === 'aio/inlinecmd') {
-                const command = url1.searchParams.get('command')
-                if (command) ui.setMessageText(command)
-            } else if (action === 'group/invite_join') {
-                showRequestWindow()
-            } else {
-                ui.messageError(PROTOCOL_UNSUPPORT)
-            }
-        } else if (url1.protocol === 'qqapi:') {
-            if (action === 'card/show_pslcard') {
-                const qq = url1.searchParams.get('uin')
-                if (qq) {
-                    ui.chroom(Number(qq))
-                }
-            } else {
-                ui.messageError(PROTOCOL_UNSUPPORT)
-            }
-        } else {
-            shell.openExternal(details.url)
-        }
-        return {
-            action: 'deny',
-        }
-    })
+    registerWindowOpenHandler(mainWindow)
 
     mainWindow.webContents.on('did-finish-load', () => {
         mainWindow.webContents.setZoomFactor(getConfig().zoomFactor / 100)
@@ -416,6 +282,152 @@ export const getDatabaseUpgradeProgress = (): DatabaseUpgradeProgress => ({ ...d
 export const sendToWindow = (targetWindow: BrowserWindow | undefined, channel: string, ...payload: any[]) => {
     if (targetWindow && !targetWindow.isDestroyed()) targetWindow.webContents.send(channel, ...payload)
 }
+
+/** 为主窗口和独立窗口注册统一的链接处理器。 */
+function registerWindowOpenHandler(targetWindow: BrowserWindow) {
+    targetWindow.webContents.setWindowOpenHandler((details) => {
+        const url1 = new URL(details.url)
+        const action = (url1.hostname + url1.pathname).replace(/^\/\//, '')
+        if (url1.hostname == 'qun.qq.com') {
+            ;(async () => {
+                const size = screen.getPrimaryDisplay().size
+                const win = newIcalinguaWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                        contextIsolation: false,
+                        preload: path.join(getStaticPath(), 'homeworkPreload.js'),
+                    },
+                })
+                const cookies = await getCookies('qun.qq.com')
+                for (const i in cookies) {
+                    await win.webContents.session.cookies.set({
+                        url: 'https://qun.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+
+                await win.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
+            })()
+        } else if (url1.hostname == 'docs.qq.com') {
+            ;(async () => {
+                const win1 = newIcalinguaWindow({
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('docs.qq.com')
+                for (const i in cookies) {
+                    await win1.webContents.session.cookies.set({
+                        url: 'https://docs.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                win1.webContents.setWindowOpenHandler((details) => {
+                    return { action: 'deny' }
+                })
+                win1.webContents.on('will-navigate', (event, url) => {
+                    const parsedUrl = new URL(url)
+                    parsedUrl.hostname !== 'docs.qq.com' &&
+                        !parsedUrl.hostname.endsWith('.myqcloud.com') &&
+                        event.preventDefault()
+                })
+                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
+            })()
+        } else if (url1.hostname == 'ti.qq.com') {
+            ;(async () => {
+                const size = screen.getPrimaryDisplay().size
+                const win1 = newIcalinguaWindow({
+                    height: size.height - 200,
+                    width: 500,
+                    autoHideMenuBar: true,
+                })
+                const cookies = await getCookies('ti.qq.com')
+                for (const i in cookies) {
+                    await win1.webContents.session.cookies.set({
+                        url: 'https://ti.qq.com',
+                        name: i,
+                        value: cookies[i],
+                    })
+                }
+                win1.webContents.setWindowOpenHandler((details) => {
+                    return { action: 'deny' }
+                })
+                win1.webContents.on('will-navigate', (event, url) => {
+                    const parsedUrl = new URL(url)
+                    parsedUrl.hostname !== 'ti.qq.com' && event.preventDefault()
+                })
+                await win1.loadURL(details.url, { userAgent: 'QQ/8.9.63.11390' })
+            })()
+        } else if (url1.protocol === 'icalingua:') {
+            if (action === 'at') {
+                const qq = url1.searchParams.get('qq')
+                const name = url1.searchParams.get('name') || ''
+                if (qq) {
+                    atCache.push({
+                        text: name,
+                        id: qq === '1' ? 'all' : Number(qq),
+                    })
+                    sendToWindow(targetWindow, 'addMessageText', name + ' ')
+                }
+            } else if (action === 'button/callback') {
+                const groupId = Number(url1.searchParams.get('group_id'))
+                const msgSeq = Number(url1.searchParams.get('msg_seq'))
+                const appid = Number(url1.searchParams.get('appid'))
+                const id = url1.searchParams.get('id')
+                const data = url1.searchParams.get('command')
+
+                if (
+                    !Number.isSafeInteger(groupId) ||
+                    groupId <= 0 ||
+                    !Number.isSafeInteger(msgSeq) ||
+                    msgSeq < 0 ||
+                    !Number.isSafeInteger(appid) ||
+                    appid < 0 ||
+                    id === null ||
+                    data === null
+                ) {
+                    sendToWindow(targetWindow, 'messageError', '按钮参数无效')
+                } else {
+                    sendButtonCallback(groupId, msgSeq, appid, id, data)
+                }
+            } else {
+                sendToWindow(targetWindow, 'messageError', PROTOCOL_UNSUPPORT)
+            }
+        } else if (url1.protocol === 'mqqapi:') {
+            if (action === 'aio/inlinecmd') {
+                const command = url1.searchParams.get('command')
+                if (command) sendToWindow(targetWindow, 'setMessageText', command)
+            } else if (action === 'group/invite_join') {
+                showRequestWindow()
+            } else {
+                sendToWindow(targetWindow, 'messageError', PROTOCOL_UNSUPPORT)
+            }
+        } else if (url1.protocol === 'qqapi:') {
+            if (action === 'card/show_pslcard') {
+                const qq = url1.searchParams.get('uin')
+                if (qq) {
+                    if (targetWindow === mainWindow) {
+                        ui.chroom(Number(qq))
+                    } else {
+                        // 在新的独立窗口中打开 QQ 号对应的群聊
+                        const roomId = Number(qq)
+                        openChatWindow(roomId, String(roomId))
+                    }
+                }
+            } else {
+                sendToWindow(targetWindow, 'messageError', PROTOCOL_UNSUPPORT)
+            }
+        } else {
+            shell.openExternal(details.url)
+        }
+        return {
+            action: 'deny',
+        }
+    })
+}
+
 export const sendToMainWindow = (channel: string, payload?: any) => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
 }
@@ -830,13 +842,10 @@ export const openChatWindow = async (roomId: number, roomName: string, gotoMessa
         }
     })
 
-    await win.loadURL(getWinUrl() + '#/chatWindow/' + roomId)
-
     // 处理窗口内链接打开
-    win.webContents.setWindowOpenHandler((details) => {
-        shell.openExternal(details.url)
-        return { action: 'deny' }
-    })
+    registerWindowOpenHandler(win)
+
+    await win.loadURL(getWinUrl() + '#/chatWindow/' + roomId)
 }
 
 /** Recreate detached chat windows to apply BrowserWindow title bar options. */

@@ -59,7 +59,7 @@ export function parseMessageMarkdownInlineCommand(source: string): MessageMarkdo
 export function isExternalMessageUrl(source: string): boolean {
     try {
         const protocol = new URL(source).protocol
-        return protocol !== 'mqqapi:' && protocol !== 'icalingua:'
+        return protocol !== 'mqqapi:' && protocol !== 'icalingua:' && protocol !== 'qqapi:'
     } catch {
         return false
     }
