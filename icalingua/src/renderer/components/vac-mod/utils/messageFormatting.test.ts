@@ -9,7 +9,7 @@ import {
     stripForwardPreview,
 } from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
-import { convertLegacyIcalinguaAt, encodeIcalinguaAt } from '../../../../utils/icalinguaAt'
+import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, encodeIcalinguaAt } from '../../../../utils/icalinguaAt'
 
 test('parses message tokens and preserves line breaks', () => {
     assert.deepEqual(parseMessageText('hello\n[Face: 12]\n[Forward: resource]'), [
@@ -97,6 +97,7 @@ test('uses XML escaping for new @ markers', () => {
             value: `A&B <C> "D" 'E'`,
         },
     ])
+    assert.equal(decodeIcalinguaAtName('&#65; &#x41; &AMP;'), '&#65; &#x41; &AMP;')
 })
 
 test('converts legacy @ markers to the current format and reports offsets', () => {

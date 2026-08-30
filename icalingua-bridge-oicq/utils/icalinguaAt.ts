@@ -5,14 +5,6 @@ export interface IcalinguaAtMarkup {
     index: number
 }
 
-const XML_ENTITIES: Record<string, string> = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&apos;': "'",
-}
-
 const AT_MARKUP_REGEX = /<IcaAt qq=(\d+)>([^<]*)<\/IcaAt>/
 const LEGACY_AT_MARKUP_PATTERN = /<IcalinguaAt qq=(\d+)>([\s\S]*?)<\/IcalinguaAt>/g
 
@@ -34,19 +26,21 @@ export function escapeXml(value: string): string {
     })
 }
 
-/** Decode XML named and numeric entities without recursively decoding the result. */
+/** Decode XML entities emitted by escapeXml without recursively decoding the result. */
 export function decodeXml(value: string): string {
-    return value.replace(/&(?:amp|lt|gt|quot|apos|#(?:x[0-9a-f]+|[0-9]+));/gi, (entity) => {
-        const normalizedEntity = entity.toLowerCase()
-        const namedEntity = XML_ENTITIES[normalizedEntity]
-        if (namedEntity !== undefined) return namedEntity
-
-        const numericPart = normalizedEntity.slice(2, -1)
-        const codePoint = numericPart.startsWith('x')
-            ? Number.parseInt(numericPart.slice(1), 16)
-            : Number.parseInt(numericPart, 10)
-        if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff) return entity
-        return String.fromCodePoint(codePoint)
+    return value.replace(/&(?:amp|lt|gt|quot|apos);/g, (entity) => {
+        switch (entity) {
+            case '&amp;':
+                return '&'
+            case '&lt;':
+                return '<'
+            case '&gt;':
+                return '>'
+            case '&quot;':
+                return '"'
+            default:
+                return "'"
+        }
     })
 }
 
