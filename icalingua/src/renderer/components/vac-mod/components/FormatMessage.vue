@@ -14,6 +14,7 @@
                     :href="message.href"
                     :target="message.href ? '_blank' : null"
                     :title="message.title"
+                    @click="handleLinkClick($event, message)"
                     @dragstart="
                         (a) => {
                             if (message.type === 'at') a.preventDefault()
@@ -62,6 +63,7 @@ import {
     stripForwardPreview,
 } from '../utils/forwardMessage'
 import { formatMessageParts, padFaceId } from '../utils/messageFormatting'
+import { isExternalMessageUrl } from '../utils/messageMarkdown'
 
 export default {
     name: 'FormatMessage',
@@ -118,6 +120,34 @@ export default {
             if (message.type === 'forward') return `[Forward: ${message.value}]`
             if (message.type === 'nestedforward') return `[NestedForward: ${message.value}]`
             return message.value
+        },
+        handleLinkClick(event, message) {
+            if (!message.href) return
+            if (this.showForwardPanel) {
+                event.preventDefault()
+                return
+            }
+
+            if (isExternalMessageUrl(message.href)) {
+                event.preventDefault()
+                event.stopPropagation()
+                this.confirmExternalUrl(message.href)
+                return
+            }
+
+            event.stopPropagation()
+        },
+        confirmExternalUrl(url) {
+            this.$confirm(`确定打开外部链接？\n${url}`, '打开外部链接', {
+                confirmButtonText: '打开',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+                .then((action) => {
+                    if (action !== 'confirm') return
+                    window.open(url, '_blank')
+                })
+                .catch(() => {})
         },
         openForwardCard(message) {
             if (this.showForwardPanel || !this.isForwardMessage(message)) return
