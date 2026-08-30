@@ -14,6 +14,8 @@ export default interface StorageProvider {
 
     validateMessageSearchIndex?(): Promise<void>
 
+    migrateLegacyAtMessages?(): Promise<void>
+
     updateRoom(roomId: number, room: Partial<Room>): Promise<any>
 
     addMessage(roomId: number, message: Message): Promise<any>

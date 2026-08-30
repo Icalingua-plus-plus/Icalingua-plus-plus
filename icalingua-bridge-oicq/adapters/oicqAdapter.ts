@@ -73,7 +73,7 @@ import {
     splitContentByMediaOrder,
 } from '../utils/messageMediaOrder'
 import sleep from '../utils/sleep'
-import { decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
+import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import formatDuration from '../utils/formatDuration'
@@ -1062,6 +1062,7 @@ const processMessageRkey = async (message: Message): Promise<void> => {
 const adapter = {
     isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
     validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
+    migrateLegacyAtMessages: () => storage?.migrateLegacyAtMessages?.() || Promise.resolve(),
     loggedIn: false,
     disabledFeatures: [] as SpecialFeature[],
     async getMsgNewURL(id: string, resolve): Promise<string> {
@@ -1407,6 +1408,9 @@ const adapter = {
                 )
         }
         if (content) {
+            content = convertLegacyIcalinguaAt(content, (index, replacedLength, replacementLength) => {
+                shiftMediaOrdersAfterTextReplacement(media, index, replacedLength, replacementLength)
+            })
             // 转换 @ 标记
             let icalinguaAt = findIcalinguaAtMarkup(content)
             while (icalinguaAt) {

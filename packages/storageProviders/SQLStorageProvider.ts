@@ -140,7 +140,6 @@ export default class SQLStorageProvider implements StorageProvider {
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
     private qid: string
     private searchIndex: MessageSearchIndex
-    private legacyAtMigrationStarted = false
     private legacyAtMigrationPromise: Promise<void> | null = null
     private closed = false
 
@@ -241,7 +240,6 @@ export default class SQLStorageProvider implements StorageProvider {
             },
             this.errorHandle as (error: unknown) => void,
         )
-        this.searchIndex.onReady = () => this.scheduleLegacyAtMigration()
     }
 
     /** 私有方法，将 icalingua 的 room 转换成适合放在数据库里的格式 */
@@ -563,62 +561,62 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     private async migrateLegacyAtBatch(times: number[]): Promise<void> {
-        const rows = await this.db<MessageInSQLDB>('messages')
-            .whereIn('time', times)
-            .select('_id', 'content', 'file', 'files')
-        const updates = rows
-            .map((row) => {
-                const migrated = tryMigrateLegacyAtMessage({
-                    content: row.content,
-                    file: parseMessageJsonField(row.file),
-                    files: parseMessageJsonField(row.files),
-                })
-                if (!migrated) return null
-                return {
-                    _id: String(row._id),
-                    content: migrated.content,
-                    file: migrated.mediaChanged
-                        ? serializeMessageJsonField(migrated.file, row.file)
-                        : (row.file as unknown as string | null),
-                    files: migrated.mediaChanged
-                        ? serializeMessageJsonField(migrated.files, row.files)
-                        : (row.files as unknown as string | null),
+        const messageIds = (await this.db<MessageInSQLDB>('messages').whereIn('time', times).select('_id'))
+            .map((row) => String(row._id))
+            .filter(Boolean)
+        for (const messageIdBatch of lodash.chunk(messageIds, sqlMessageWriteBatchSize)) {
+            await this.db.transaction(async (transaction) => {
+                // Re-read while the short transaction owns the SQLite connection. A
+                // normal update that arrived while the migration was yielding must
+                // win instead of being overwritten by a stale migration snapshot.
+                const rows = await transaction<MessageInSQLDB>('messages')
+                    .whereIn('_id', messageIdBatch)
+                    .select('_id', 'content', 'file', 'files')
+                const updates = rows
+                    .map((row) => {
+                        const migrated = tryMigrateLegacyAtMessage({
+                            content: row.content,
+                            file: parseMessageJsonField(row.file),
+                            files: parseMessageJsonField(row.files),
+                        })
+                        if (!migrated) return null
+                        return {
+                            _id: String(row._id),
+                            content: migrated.content,
+                            file: migrated.mediaChanged
+                                ? serializeMessageJsonField(migrated.file, row.file)
+                                : (row.file as unknown as string | null),
+                            files: migrated.mediaChanged
+                                ? serializeMessageJsonField(migrated.files, row.files)
+                                : (row.files as unknown as string | null),
+                        }
+                    })
+                    .filter((row): row is { _id: string; content: string; file: string | null; files: string | null } =>
+                        Boolean(row?._id),
+                    )
+                if (updates.length) {
+                    await transaction('messages').insert(updates).onConflict('_id').merge(['content', 'file', 'files'])
                 }
             })
-            .filter((row): row is { _id: string; content: string; file: string | null; files: string | null } =>
-                Boolean(row?._id),
-            )
-        if (!updates.length) return
-
-        await this.db.transaction(async (transaction) => {
-            for (const updateBatch of lodash.chunk(updates, sqlMessageWriteBatchSize)) {
-                await transaction('messages').insert(updateBatch).onConflict('_id').merge(['content', 'file', 'files'])
-            }
-        })
+            await new Promise<void>((resolve) => setImmediate(resolve))
+        }
     }
 
-    private scheduleLegacyAtMigration(): void {
-        if (this.closed || this.legacyAtMigrationStarted) return
-        this.legacyAtMigrationStarted = true
-        this.legacyAtMigrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
-            .then(() => this.migrateLegacyAtMessages())
-            .catch((error) => {
-                if (this.closed) return
-                try {
-                    this.errorHandle(error)
-                } catch {}
-                try {
-                    this.reportUpgradeProgress({
-                        active: false,
-                        step: 0,
-                        total: 0,
-                        message: '',
-                    })
-                } catch {}
+    async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed || !this.searchIndex?.isReady) return
+        if (this.legacyAtMigrationPromise) return this.legacyAtMigrationPromise
+
+        let migrationPromise: Promise<void>
+        migrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
+            .then(() => this.runLegacyAtMigration())
+            .finally(() => {
+                if (this.legacyAtMigrationPromise === migrationPromise) this.legacyAtMigrationPromise = null
             })
+        this.legacyAtMigrationPromise = migrationPromise
+        return migrationPromise
     }
 
-    private async migrateLegacyAtMessages(): Promise<void> {
+    private async runLegacyAtMigration(): Promise<void> {
         if (this.closed) return
 
         await runLegacyAtMigration({

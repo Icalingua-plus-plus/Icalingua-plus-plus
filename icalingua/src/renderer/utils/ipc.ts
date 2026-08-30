@@ -174,6 +174,9 @@ const ipc = {
     async getDbUpgradeProgress(): Promise<DatabaseUpgradeProgress> {
         return await ipcRenderer.invoke('getDbUpgradeProgress')
     },
+    async migrateLegacyAtMessages() {
+        return await ipcRenderer.invoke('migrateLegacyAtMessages')
+    },
     download(url: string, out: string, dir?: string) {
         ipcRenderer.send('download', url, out, dir)
     },

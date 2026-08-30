@@ -71,6 +71,8 @@ import {
     sendGroupPoke,
     canValidateMessageSearchIndex,
     validateMessageSearchIndex,
+    canMigrateLegacyAtMessages,
+    migrateLegacyAtMessages,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
 import openImage from './openImage'
@@ -1131,6 +1133,24 @@ export const updateAppMenu = async () => {
                     await updateAppMenu()
                     await validation
                     await updateAppMenu()
+                },
+            }),
+            new MenuItem({
+                label: '迁移旧版 @ 消息',
+                visible: canMigrateLegacyAtMessages(),
+                click: async () => {
+                    try {
+                        const migration = migrateLegacyAtMessages()
+                        await updateAppMenu()
+                        await migration
+                    } catch (error) {
+                        console.error('迁移旧版 @ 消息失败', error)
+                        ui.messageError(
+                            `迁移旧版 @ 消息失败：${error instanceof Error ? error.message : String(error)}`,
+                        )
+                    } finally {
+                        await updateAppMenu()
+                    }
                 },
             }),
             new MenuItem({

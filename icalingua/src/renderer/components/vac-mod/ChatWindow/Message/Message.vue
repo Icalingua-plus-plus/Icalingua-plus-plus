@@ -166,6 +166,7 @@
                                     :code="message.code"
                                     :disableQLottie="disableQLottie"
                                     :usePanguJs="usePanguJs"
+                                    :legacy-at-compat="true"
                                     @open-forward="$emit('open-forward', $event)"
                                 >
                                     <template #deleted-icon="data">
@@ -279,6 +280,7 @@
                             :code="message.code"
                             :disableQLottie="disableQLottie"
                             :usePanguJs="usePanguJs"
+                            :legacy-at-compat="true"
                             @open-forward="$emit('open-forward', $event)"
                         >
                             <template #deleted-icon="data">

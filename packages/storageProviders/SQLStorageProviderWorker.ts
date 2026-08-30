@@ -111,6 +111,16 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         await this.callWriter<void>('validateMessageSearchIndex')
     }
 
+    async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed || !this.searchIndexReady) return
+        // Keep the migration on the single primary writer. The migration core yields
+        // between timestamp batches, so later calls can be dispatched to this same
+        // Worker without making a second SQLite connection or extending writeTail.
+        await this.writeTail
+        if (this.closed) return
+        await this.callWriter<void>('migrateLegacyAtMessages')
+    }
+
     async connect(): Promise<void> {
         await this.enqueueWrite<void>('connect')
     }

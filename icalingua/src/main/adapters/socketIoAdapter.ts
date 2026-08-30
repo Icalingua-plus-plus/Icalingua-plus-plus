@@ -636,6 +636,21 @@ const adapter: Adapter = {
         }
         return localStorage?.validateMessageSearchIndex?.() || Promise.resolve()
     },
+    migrateLegacyAtMessages: () => {
+        if (loggedIn && remoteMessageSearchIndexReady) {
+            remoteMessageSearchIndexReady = false
+            return new Promise<void>((resolve, reject) => {
+                socket.emit('migrateLegacyAtMessages', (result?: { ok?: boolean; error?: string }) => {
+                    if (result?.ok === false) {
+                        reject(new Error(result.error || '旧版 @ 消息迁移失败'))
+                        return
+                    }
+                    resolve()
+                })
+            })
+        }
+        return localStorage?.migrateLegacyAtMessages?.() || Promise.resolve()
+    },
     getMsgNewURL(id: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
     },

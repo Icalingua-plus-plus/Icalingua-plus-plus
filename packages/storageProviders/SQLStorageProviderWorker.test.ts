@@ -12,6 +12,7 @@ class FakeDBWorkerClient implements DBWorkerClientLike {
     isClosed = false
     private kind: DBWorkerTargetKind
     private callbacks: Record<string, (...args: any[]) => any> = {}
+    private eventHandler?: (name: string, payload: unknown) => void
     private readonly blockedRejects = new Set<(error: Error) => void>()
 
     constructor(readonly name: string) {}
@@ -20,9 +21,11 @@ class FakeDBWorkerClient implements DBWorkerClientLike {
         kind: DBWorkerTargetKind,
         _args: unknown[],
         callbacks: Record<string, (...args: any[]) => any> = {},
+        eventHandler?: (name: string, payload: unknown) => void,
     ): Promise<string> {
         this.kind = kind
         this.callbacks = callbacks
+        this.eventHandler = eventHandler
         return `${this.name}-target`
     }
 
@@ -51,6 +54,10 @@ class FakeDBWorkerClient implements DBWorkerClientLike {
         return Promise.resolve(callback(...args))
     }
 
+    emitEvent(name: string, payload: unknown): void {
+        this.eventHandler?.(name, payload)
+    }
+
     get targetKind(): DBWorkerTargetKind {
         return this.kind
     }
@@ -77,7 +84,7 @@ const createHarness = () => {
     assert.ok(writer)
     assert.ok(searchSource)
     assert.equal(readers.length, 2)
-    return { provider, writer, searchSource, readers, errors }
+    return { provider, writer, searchSource, readers, clients, errors }
 }
 
 const nextTurn = () => new Promise<void>((resolve) => setImmediate(resolve))
@@ -136,6 +143,35 @@ test('reads wait for earlier writes and writes stay strictly ordered', async () 
     assert.deepEqual(errors, [])
     assert.equal(writer.targetKind, 'sql')
     assert.ok(readers.every((reader) => reader.targetKind === 'sqlReader'))
+})
+
+test('legacy At migration shares the writer without blocking later writes', async () => {
+    const { provider, writer, clients, errors } = createHarness()
+    await provider.connect()
+    ;(provider as any).searchIndexReady = true
+    assert.equal(clients.length, 4)
+    assert.equal(clients.filter((client) => client.targetKind === 'sql').length, 1)
+    const progresses: unknown[] = []
+    provider.onUpgradeProgress = (progress) => progresses.push(progress)
+
+    let migrationStarted = false
+    writer.behaviors.set('migrateLegacyAtMessages', () => {
+        migrationStarted = true
+        return writer.block()
+    })
+    const migrationPromise = provider.migrateLegacyAtMessages()
+    await nextTurn()
+    assert.equal(migrationStarted, true)
+    writer.emitEvent('upgradeProgress', { active: true, step: 1, total: 3, message: '迁移中' })
+    assert.deepEqual(progresses, [{ active: true, step: 1, total: 3, message: '迁移中' }])
+
+    writer.behaviors.set('addRoom', () => ({ roomId: 2 }))
+    assert.deepEqual(await provider.addRoom({ roomId: 2 } as any), { roomId: 2 })
+    assert.deepEqual(writer.calls, ['connect', 'migrateLegacyAtMessages', 'addRoom'])
+
+    await provider.close()
+    await migrationPromise
+    assert.deepEqual(errors, [])
 })
 
 test('FTS source callbacks use the dedicated read worker', async () => {

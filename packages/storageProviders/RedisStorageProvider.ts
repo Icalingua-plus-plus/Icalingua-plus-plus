@@ -51,7 +51,6 @@ export default class RedisStorageProvider implements StorageProvider {
     connStr: string
     redis: Redis.Redis
     private searchIndex: SQLiteMessageSearchIndexWorker
-    private legacyAtMigrationStarted = false
     private legacyAtMigrationPromise: Promise<void> | null = null
     private closed = false
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
@@ -70,7 +69,6 @@ export default class RedisStorageProvider implements StorageProvider {
                 reportProgress: (progress) => this.reportUpgradeProgress(progress),
             },
         )
-        this.searchIndex.onReady = () => this.scheduleLegacyAtMigration()
     }
 
     private reportUpgradeProgress(progress: DatabaseUpgradeProgress): void {
@@ -337,19 +335,21 @@ export default class RedisStorageProvider implements StorageProvider {
         return `${this.qid}:metadata`
     }
 
-    private scheduleLegacyAtMigration(): void {
-        if (!this.redis || this.closed || this.legacyAtMigrationStarted) return
-        this.legacyAtMigrationStarted = true
-        this.legacyAtMigrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
-            .then(() => this.migrateLegacyAtMessages())
-            .catch((error) => {
-                if (this.closed) return
-                console.error('Failed to migrate legacy At messages in Redis', error)
-                this.reportUpgradeProgress({ active: false, step: 0, total: 0, message: '' })
+    async migrateLegacyAtMessages(): Promise<void> {
+        if (this.closed || !this.redis || !this.searchIndex?.isReady) return
+        if (this.legacyAtMigrationPromise) return this.legacyAtMigrationPromise
+
+        let migrationPromise: Promise<void>
+        migrationPromise = new Promise<void>((resolve) => setImmediate(resolve))
+            .then(() => this.runLegacyAtMigration())
+            .finally(() => {
+                if (this.legacyAtMigrationPromise === migrationPromise) this.legacyAtMigrationPromise = null
             })
+        this.legacyAtMigrationPromise = migrationPromise
+        return migrationPromise
     }
 
-    private async migrateLegacyAtMessages(): Promise<void> {
+    private async runLegacyAtMigration(): Promise<void> {
         if (this.closed || !this.redis) return
         await runLegacyAtMigration({
             searchIndex: this.searchIndex,

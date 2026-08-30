@@ -15,6 +15,14 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             resolve?.({ ok: false, error: error instanceof Error ? error.message : String(error) })
         }
     })
+    socket.on('migrateLegacyAtMessages', async (resolve?: (value: { ok: boolean; error?: string }) => void) => {
+        try {
+            await adapter.migrateLegacyAtMessages?.()
+            resolve?.({ ok: true })
+        } catch (error) {
+            resolve?.({ ok: false, error: error instanceof Error ? error.message : String(error) })
+        }
+    })
     socket.on('addRoom', adapter.addRoom)
     socket.on('addChatGroup', adapter.addChatGroup)
     socket.on('updateChatGroup', adapter.updateChatGroup)

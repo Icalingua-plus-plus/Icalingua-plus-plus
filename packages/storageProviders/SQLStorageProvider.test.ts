@@ -6,11 +6,10 @@ import test from 'node:test'
 import SQLStorageProvider, { MessageSearchIndexFactory } from './SQLStorageProvider'
 import { SQLiteSearchMessage, SQLiteMessageSearchTimesOptions } from './SQLiteMessageSearchIndex'
 
-test('migrates legacy At messages after FTS readiness and records completion', async () => {
+test('does not auto-migrate legacy At messages and supports manual migration', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-legacy-at-'))
     let index: {
         isReady: boolean
-        onReady?: () => void
     } & Record<string, any>
     let searchPage = 0
     const syncedTimes: number[][] = []
@@ -68,14 +67,10 @@ test('migrates legacy At messages after FTS readiness and records completion', a
             content: mediaLegacyContent,
             files: JSON.stringify([{ type: 'image/png', order: mediaLegacyContent.indexOf(' tail') }]),
         })
-        index.onReady?.()
+        assert.equal(await provider.db('dbMetadata').where('name', 'messageAtMarkupVersion').first(), undefined)
 
-        let metadata: any
-        for (let attempt = 0; attempt < 100; attempt++) {
-            metadata = await provider.db('dbMetadata').where('name', 'messageAtMarkupVersion').first()
-            if (metadata) break
-            await new Promise((resolve) => setTimeout(resolve, 10))
-        }
+        await provider.migrateLegacyAtMessages()
+        const metadata = await provider.db('dbMetadata').where('name', 'messageAtMarkupVersion').first()
 
         const version = await provider.db('dbVersion').first()
         assert.equal(Number(version?.dbVersion), 25)

@@ -35,6 +35,7 @@ interface PendingCallback {
 const sqlMethods = new Set([
     'connect',
     'validateMessageSearchIndex',
+    'migrateLegacyAtMessages',
     'searchMessageTimes',
     'addRoom',
     'updateRoom',

@@ -30,7 +30,7 @@ import {
 import Message from '@icalingua/types/Message'
 import MessagePageOptions from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
-import { decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
+import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
 import {
     getMediaPartIndex,
     shiftMediaOrdersAfterTextReplacement,
@@ -1038,6 +1038,7 @@ const attachEventHandler = () => {
 const adapter: typeof oicqAdapter = {
     isMessageSearchIndexReady: () => storage?.isMessageSearchIndexReady?.() === true,
     validateMessageSearchIndex: () => storage?.validateMessageSearchIndex?.() || Promise.resolve(),
+    migrateLegacyAtMessages: () => storage?.migrateLegacyAtMessages?.() || Promise.resolve(),
     loggedIn: false,
     async createBot(form: LoginForm) {
         loginForm = form
@@ -1249,6 +1250,9 @@ const adapter: typeof oicqAdapter = {
         }
 
         if (content) {
+            content = convertLegacyIcalinguaAt(content, (index, replacedLength, replacementLength) => {
+                shiftMediaOrdersAfterTextReplacement(media, index, replacedLength, replacementLength)
+            })
             // 转换 @ 标记
             let icalinguaAt = findIcalinguaAtMarkup(content)
             while (icalinguaAt) {

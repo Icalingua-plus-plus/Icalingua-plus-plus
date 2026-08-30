@@ -88,6 +88,8 @@ export default interface Adapter {
 
     validateMessageSearchIndex?(): Promise<void>
 
+    migrateLegacyAtMessages?(): Promise<void>
+
     sliderLogin(ticket: string): void
 
     reLogin(): void

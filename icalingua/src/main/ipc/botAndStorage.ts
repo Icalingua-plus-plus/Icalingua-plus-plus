@@ -93,6 +93,13 @@ export const validateMessageSearchIndex = async () => {
     await adapter?.validateMessageSearchIndex?.()
 }
 
+export const canMigrateLegacyAtMessages = () =>
+    typeof adapter?.migrateLegacyAtMessages === 'function' && adapter?.isMessageSearchIndexReady?.() === true
+
+export const migrateLegacyAtMessages = async () => {
+    await adapter?.migrateLegacyAtMessages?.()
+}
+
 export const fetchLatestHistory = (roomId: number) => {
     let buffer: Buffer
     let uid = roomId
@@ -420,6 +427,10 @@ ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('getGroups', () => adapter.getGroups())
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
+ipcMain.handle('migrateLegacyAtMessages', async () => {
+    if (!canMigrateLegacyAtMessages()) throw new Error('消息搜索索引尚未就绪')
+    await migrateLegacyAtMessages()
+})
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
 ipcMain.on('requestOnlineData', adapter.sendOnlineData)
 ipcMain.handle('getLoginDevices', async () => await adapter.getLoginDevices())
