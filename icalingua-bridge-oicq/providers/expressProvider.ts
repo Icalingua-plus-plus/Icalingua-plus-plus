@@ -10,12 +10,17 @@ const parser = json({
     limit: '100mb',
 })
 
+const requireSendToken = (req, res, next) => {
+    if (!sendImgTokenManager.verify(req.params.token)) {
+        return res.sendStatus(403)
+    }
+    next()
+}
+
 export const initExpress = (adapter: typeof oicqAdapter) => {
-    app.post('/api/:token/sendMessage', parser, (req, res) => {
-        if (req.params.token && sendImgTokenManager.verify(req.params.token)) {
-            adapter.sendMessage(req.body)
-            res.sendStatus(202).end()
-        } else res.sendStatus(403).end()
+    app.post('/api/:token/sendMessage', requireSendToken, parser, (req, res) => {
+        adapter.sendMessage(req.body)
+        res.sendStatus(202).end()
     })
 }
 
