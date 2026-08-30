@@ -698,7 +698,7 @@ export default class MongoStorageProvider implements StorageProvider {
             const result = await collection.updateOne({ _id: current._id }, { $set: fields })
             if (searchContentChanged) {
                 await this.searchIndex.requestRebuild([Number(current.time || 0), Number(merged.time || 0)])
-            } else await this.syncSearchIndex([merged])
+            }
             return result
         } catch (error) {}
     }

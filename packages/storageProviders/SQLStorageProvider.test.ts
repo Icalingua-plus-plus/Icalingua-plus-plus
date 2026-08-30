@@ -96,3 +96,67 @@ test('does not auto-migrate legacy At messages and supports manual migration', a
         fs.rmSync(directory, { recursive: true, force: true })
     }
 })
+
+test('does not rebuild FTS when replacing a message only changes recall metadata', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-recall-'))
+    const rebuildTimes: number[][] = []
+    const factory: MessageSearchIndexFactory = (_filePath, _callbacks, _errorHandle) => {
+        const index = {
+            isReady: false,
+            async open() {
+                this.isReady = true
+            },
+            async close() {},
+            async validate() {},
+            async syncMessages() {},
+            async requestRebuild(times?: number | number[]) {
+                if (times === undefined) return
+                rebuildTimes.push(Array.isArray(times) ? times : [times])
+            },
+            async searchTimes() {
+                return []
+            },
+            async countTimes() {
+                return 0
+            },
+        }
+        return index as any
+    }
+    const provider = new SQLStorageProvider(
+        'recall-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        factory,
+    )
+
+    try {
+        await provider.connect()
+        await provider.db('messages').insert({
+            _id: 'recalled-message',
+            content: 'unchanged content',
+            time: 100,
+            roomId: -1001,
+            senderId: '42',
+        })
+
+        await provider.replaceMessage(-1001, 'recalled-message', {
+            _id: 'recalled-message',
+            content: 'unchanged content',
+            time: 100,
+            deleted: true,
+            reveal: false,
+            recallInfo: JSON.stringify({ time: Date.now(), operator_id: '42' }),
+        } as any)
+
+        assert.deepEqual(rebuildTimes, [])
+
+        await provider.updateMessage(-1001, 'recalled-message', { content: 'updated content' })
+        assert.deepEqual(rebuildTimes, [[100, 100]])
+    } finally {
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})

@@ -574,8 +574,6 @@ export default class RedisStorageProvider implements StorageProvider {
         if (searchContentChanged) {
             await this.redis.zadd(`${this.qid}:msg${roomId}:msgIdList`, Number(msgToUpdate.time || 0), messageId)
             await this.searchIndex.requestRebuild([Number(msgInDB.time || 0), Number(msgToUpdate.time || 0)])
-        } else {
-            await this.syncSearchIndex([msgToUpdate])
         }
         return result
     }

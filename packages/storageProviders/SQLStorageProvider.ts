@@ -1028,17 +1028,19 @@ export default class SQLStorageProvider implements StorageProvider {
     /** 实现 {@link StorageProvider} 类的 `updateMessage` 方法，
      * 是对 `msg${roomId}` 的“改”操作。
      *
-     * 在“用户撤回消息”等需要改动消息内容的事件中被调用。
+     * 在“用户撤回消息”等需要改动消息状态或内容的事件中被调用。
      */
     async updateMessage(roomId: number, messageId: string | number, message: Partial<Message>): Promise<any> {
         try {
             const current = await this.db<Message>('messages').where('_id', '=', `${messageId}`).first()
+            const nextContent = message.content !== undefined ? message.content : current?.content
+            const nextTime = message.time !== undefined ? message.time : current?.time
+            const searchContentChanged =
+                String(current?.content || '') !== String(nextContent || '') ||
+                Number(current?.time || 0) !== Number(nextTime || 0)
             await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(this.msgConToDB(message))
-            if (message.content !== undefined || message.time !== undefined) {
-                await this.searchIndex.requestRebuild([
-                    Number(current?.time || 0),
-                    Number(message.time !== undefined ? message.time : current?.time || 0),
-                ])
+            if (searchContentChanged) {
+                await this.searchIndex.requestRebuild([Number(current?.time || 0), Number(nextTime || 0)])
             }
         } catch (e) {
             this.errorHandle(e)
@@ -1053,14 +1055,16 @@ export default class SQLStorageProvider implements StorageProvider {
     async replaceMessage(roomId: number, messageId: string | number, message: Message): Promise<any> {
         try {
             const current = await this.db<Message>('messages').where('_id', '=', `${messageId}`).first()
+            const nextContent = message.content !== undefined ? message.content : current?.content
+            const nextTime = message.time !== undefined ? message.time : current?.time
+            const searchContentChanged =
+                String(current?.content || '') !== String(nextContent || '') ||
+                Number(current?.time || 0) !== Number(nextTime || 0)
             await this.db<Message>('messages')
                 .where('_id', '=', `${messageId}`)
                 .update(this.msgConToDB(message, roomId))
-            if (message.content !== undefined || message.time !== undefined) {
-                await this.searchIndex.requestRebuild([
-                    Number(current?.time || 0),
-                    Number(message.time !== undefined ? message.time : current?.time || 0),
-                ])
+            if (searchContentChanged) {
+                await this.searchIndex.requestRebuild([Number(current?.time || 0), Number(nextTime || 0)])
             }
         } catch (e) {
             this.errorHandle(e)
