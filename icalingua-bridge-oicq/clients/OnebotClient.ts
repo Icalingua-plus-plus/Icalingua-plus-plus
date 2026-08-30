@@ -4,6 +4,8 @@ import { Gender, MessageElem, Sendable } from 'oicq-icalingua-plus-plus'
 import WebSocket from 'ws'
 import ReconnectingWebSocket from 'reconnecting-websocket'
 
+const ONEBOT_API_TIMEOUT = 60 * 1000
+
 type BaseEvent = {
     self_id: number
     time: number
@@ -143,7 +145,14 @@ export default class extends EventEmitter<{
     ]
 }> {
     private socket: ReconnectingWebSocket
-    private readonly echoMap: { [key: string]: { resolve: (result: any) => void; reject: (result: any) => void } } = {}
+    private readonly echoMap = new Map<
+        string,
+        {
+            resolve: (result: any) => void
+            reject: (result: any) => void
+            timeout: NodeJS.Timeout
+        }
+    >()
 
     public constructor(private readonly url: string) {
         super()
@@ -156,19 +165,43 @@ export default class extends EventEmitter<{
             })
             this.socket.onopen = resolve
             this.socket.onmessage = (event) => this.handleWebSocketMessage(event.data.toString())
+            this.socket.onerror = (event) => {
+                this.rejectPendingRequests(new Error(`OneBot WebSocket error: ${event.message}`))
+            }
+            this.socket.onclose = (event) => {
+                const reason = event.reason ? `: ${event.reason}` : ''
+                this.rejectPendingRequests(new Error(`OneBot WebSocket closed${reason}`))
+            }
         })
+    }
+
+    private takePendingRequest(echo: string) {
+        const pending = this.echoMap.get(echo)
+        if (!pending) return undefined
+        this.echoMap.delete(echo)
+        clearTimeout(pending.timeout)
+        return pending
+    }
+
+    private rejectPendingRequests(error: Error) {
+        const pendingRequests = Array.from(this.echoMap.values())
+        this.echoMap.clear()
+        for (const pending of pendingRequests) {
+            clearTimeout(pending.timeout)
+            pending.reject(error)
+        }
     }
 
     private async handleWebSocketMessage(message: string) {
         // console.log('receive', message)
         const data = JSON.parse(message)
         if (data.echo) {
-            const promise = this.echoMap[data.echo]
-            if (!promise) return
+            const pending = this.takePendingRequest(String(data.echo))
+            if (!pending) return
             if (data.status === 'ok') {
-                promise.resolve(data.data)
+                pending.resolve(data.data)
             } else {
-                promise.reject(data.msg + '\n' + data.wording)
+                pending.reject(data.msg + '\n' + data.wording)
             }
             return
         } else if (data.post_type === 'message' || data.post_type === 'message_sent') {
@@ -198,8 +231,17 @@ export default class extends EventEmitter<{
     private async callApi<T>(action: string, params: { [key: string]: any } = {}) {
         return new Promise<T>((resolve, reject) => {
             const echo = `${new Date().getTime()}${random(100000, 999999)}`
-            this.echoMap[echo] = { resolve, reject }
-            this.socket.send(JSON.stringify({ action, params, echo }))
+            const timeout = setTimeout(() => {
+                const pending = this.takePendingRequest(echo)
+                pending?.reject(new Error(`OneBot API request timed out: ${action}`))
+            }, ONEBOT_API_TIMEOUT)
+            this.echoMap.set(echo, { resolve, reject, timeout })
+            try {
+                this.socket.send(JSON.stringify({ action, params, echo }))
+            } catch (error) {
+                const pending = this.takePendingRequest(echo)
+                pending?.reject(error)
+            }
             // console.log('send', JSON.stringify({ action, params, echo }))
         })
     }
