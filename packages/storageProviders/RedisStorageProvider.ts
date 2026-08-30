@@ -699,18 +699,32 @@ export default class RedisStorageProvider implements StorageProvider {
      * @param senderId 发送者 ID（字符串）
      */
     async fetchMessagesBySender(roomId: number, senderId: string, skip: number, limit: number): Promise<Message[]> {
+        const normalizedSkip = Number.isFinite(skip) ? Math.max(0, Math.trunc(skip)) : 0
+        const normalizedLimit = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : 0
+        if (!normalizedLimit) return []
+
         const senderIdNum = Number(senderId)
+        const scanLimit = normalizedSkip + normalizedLimit
+        if (!Number.isSafeInteger(scanLimit)) return []
+
         const scanRoom = async (rid: number): Promise<Message[]> => {
-            const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${rid}:msgIdList`, 0, -1)
+            const listKey = this.roomMessageListKey(rid)
             const matched: Message[] = []
-            for (const key of allMsgKeys) {
-                const msg = await this.redis.hget(`${this.qid}:msg${rid}:messages`, key)
-                if (!msg) continue
-                const message = JSON.parse(msg) as Message
-                if (message.senderId === senderIdNum) {
+            let offset = 0
+            while (matched.length < scanLimit) {
+                const ids = await this.redis.zrevrange(listKey, offset, offset + redisMessageReadBatchSize - 1)
+                if (!ids.length) break
+
+                const messages = await this.getMessages(rid, ids)
+                for (const message of messages) {
+                    if (message.senderId !== senderIdNum) continue
                     if (roomId === 0) (message as any).roomId = rid
                     matched.push(message)
+                    if (matched.length >= scanLimit) break
                 }
+
+                offset += ids.length
+                if (ids.length < redisMessageReadBatchSize) break
             }
             return matched
         }
@@ -719,19 +733,16 @@ export default class RedisStorageProvider implements StorageProvider {
             // 所有群模式
             const rooms = await this.getAllRooms()
             const groupRooms = rooms.filter((r) => r.roomId < 0)
-            const allMessages: Message[] = []
-            await Promise.all(
-                groupRooms.map(async (room) => {
-                    const msgs = await scanRoom(room.roomId)
-                    allMessages.push(...msgs)
-                }),
+            const roomMessages = await mapWithConcurrencyAndYield(groupRooms, redisMigrationRoomConcurrency, (room) =>
+                scanRoom(room.roomId),
             )
+            const allMessages = roomMessages.flat()
             allMessages.sort((a, b) => b.time - a.time)
-            return allMessages.slice(skip, skip + limit).reverse()
+            return allMessages.slice(normalizedSkip, normalizedSkip + normalizedLimit).reverse()
         } else {
             const allMatched = await scanRoom(roomId)
             allMatched.sort((a, b) => b.time - a.time)
-            return allMatched.slice(skip, skip + limit).reverse()
+            return allMatched.slice(normalizedSkip, normalizedSkip + normalizedLimit).reverse()
         }
     }
 
