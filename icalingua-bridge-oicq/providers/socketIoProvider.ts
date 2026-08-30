@@ -1,6 +1,7 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { verify } from '@noble/ed25519'
+import { randomBytes } from 'crypto'
 import { config, userConfig } from './configManager'
 import registerSocketHandlers from '../handlers/registerSocketHandlers'
 import md5 from 'md5'
@@ -36,15 +37,22 @@ export const init = (adapter: typeof oicqAdapter) => {
     initExpress(adapter)
     io.on('connection', (socket) => {
         console.log('new client connected')
-        //客户端对这个服务器发来的时间用私钥签名给服务端验证
-        const salt = md5(new Date().getTime().toString())
+        // 客户端对每个连接的随机 challenge 用私钥签名
+        const salt = md5(new Date().getTime().toString() + randomBytes(16).toString('hex'))
         //socket.onAny(console.log)
         socket.emit('requireAuth', salt, {
             version,
             protocolVersion,
         })
+        const authTimeout = setTimeout(() => {
+            console.log('客户端验证超时')
+            socket.emit('authFailed')
+            socket.disconnect()
+        }, 30 * 1000)
+        socket.once('disconnect', () => clearTimeout(authTimeout))
         socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
             try {
+                clearTimeout(authTimeout)
                 switch (role) {
                     case 'main':
                         if (await verify(sign, salt, config.pubKey)) {
@@ -72,6 +80,11 @@ export const init = (adapter: typeof oicqAdapter) => {
                             socket.emit('authFailed')
                             socket.disconnect()
                         }
+                        break
+                    default:
+                        console.log('客户端验证失败')
+                        socket.emit('authFailed')
+                        socket.disconnect()
                         break
                 }
             } catch (e) {
