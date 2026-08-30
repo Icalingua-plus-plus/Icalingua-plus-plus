@@ -91,7 +91,10 @@ const ensureLocalStorage = (accountUin = uin): Promise<SQLStorageProvider | null
             },
             errorHandler,
         )
-        storage.onUpgradeProgress = (progress) => sendDatabaseUpgradeProgress(progress)
+        storage.onUpgradeProgress = (progress) => {
+            sendDatabaseUpgradeProgress(progress)
+            if (!progress.active) void updateAppMenu()
+        }
         await storage.connect()
         localStorage = storage
         console.log(`Bridge 本地数据库同步已启用：${accountUin}`)

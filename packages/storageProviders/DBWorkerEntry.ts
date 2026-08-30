@@ -203,8 +203,11 @@ const createTarget = (targetId: string, kind: DBWorkerTargetKind, args: unknown[
         )
         target = { kind, instance, activeCalls: new Set(), disposing: false }
         instance.onUpgradeProgress = (progress) => {
-            postEvent(targetId, 'upgradeProgress', progress)
+            // The outer SQLStorageProviderWorker caches FTS readiness from this
+            // status event. Publish it before progress listeners rebuild menus,
+            // otherwise they can observe the old `ready = false` value.
             postTargetStatus(targetId, target)
+            postEvent(targetId, 'upgradeProgress', progress)
         }
         return target
     }
