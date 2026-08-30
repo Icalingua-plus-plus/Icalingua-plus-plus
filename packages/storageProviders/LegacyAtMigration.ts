@@ -5,7 +5,7 @@ const legacyAtMarkupPattern = /<IcalinguaAt qq=(\d+)>([\s\S]*?)<\/IcalinguaAt>/g
 export const legacyAtSearchKeyword = '<IcalinguaAt qq='
 export const legacyAtMigrationVersion = '1'
 export const legacyAtMetadataName = 'messageAtMarkupVersion'
-export const legacyAtMigrationBatchSize = 200
+export const legacyAtMigrationBatchSize = 20
 
 export interface LegacyAtMessageLike {
     content?: unknown
