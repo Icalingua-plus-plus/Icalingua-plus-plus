@@ -254,8 +254,8 @@ const sqliteAfterCreate = (conn: any, done: any) => {
                 'PRAGMA journal_mode = WAL',
                 'PRAGMA busy_timeout = 5000',
                 'PRAGMA synchronous = NORMAL',
-                'PRAGMA cache_size = -16384',
-                'PRAGMA mmap_size = 67108864',
+                'PRAGMA cache_size = -8192',
+                'PRAGMA mmap_size = 33554432',
             ].join('; '),
         )
         done(null, conn)

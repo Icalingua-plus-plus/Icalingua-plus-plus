@@ -195,8 +195,8 @@ export default class SQLStorageProvider implements StorageProvider {
                                     ...(sqliteReadOnly ? [] : ['PRAGMA journal_mode = WAL']), // 读写并发，不阻塞
                                     'PRAGMA busy_timeout = 5000', // 写入遇锁等待 5 秒
                                     'PRAGMA synchronous = NORMAL', // WAL 下 NORMAL 就够安全，比 FULL 快一倍写入
-                                    'PRAGMA cache_size = -16384', // 16MB 页缓存，加速大量消息的查询
-                                    'PRAGMA mmap_size = 67108864', // 64MB 内存映射，减少磁盘 I/O
+                                    'PRAGMA cache_size = -8192', // 8MB 页缓存，加速大量消息的查询
+                                    'PRAGMA mmap_size = 33554432', // 32MB 内存映射，减少磁盘 I/O
                                     ...(sqliteReadOnly ? ['PRAGMA query_only = ON'] : []),
                                 ]
                                 conn.exec(pragmas.join('; '))
