@@ -110,7 +110,7 @@ const createMessageSearchIndexWorker: MessageSearchIndexFactory = (filePath, cal
 // below the conservative 900-parameter budget used by WHERE IN. FTS writes are
 // still independently chunked by SQLiteMessageSearchIndex.
 const sqlSearchReadBatchSize = 800
-const sqlSearchBuildBatchSize = 4000
+const sqlSearchBuildBatchSize = 200
 const sqlSearchValidationBatchSize = 4000
 const sqlMessageWriteBatchSize = 200
 const messageMetadataTable = 'dbMetadata'
