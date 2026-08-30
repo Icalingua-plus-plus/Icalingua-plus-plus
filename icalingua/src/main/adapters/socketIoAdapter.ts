@@ -30,7 +30,7 @@ import { getConfig } from '../utils/configManager'
 import errorHandler from '../utils/errorHandler'
 import getBuildInfo from '../utils/getBuildInfo'
 import isInlineReplySupported from '../utils/isInlineReplySupported'
-import { createTray, requestTrayIconUpdate, updateTrayIcon } from '../utils/trayManager'
+import { createTray, updateTrayIcon } from '../utils/trayManager'
 import ui from '../utils/ui'
 import { checkUpdate, getCachedUpdate } from '../utils/updateChecker'
 import {
@@ -193,7 +193,7 @@ const attachSocketEvents = () => {
         sendDatabaseUpgradeProgress(progress, 'bridge')
         if (!progress.active) void updateAppMenu()
     })
-    socket.on('updateRoom', (room: Room) => {
+    socket.on('updateRoom', async (room: Room) => {
         if (room.roomId === ui.getSelectedRoomId() && getMainWindow().isFocused() && getMainWindow().isVisible()) {
             //把它点掉
             room.unreadCount = 0
@@ -211,7 +211,7 @@ const attachSocketEvents = () => {
             errorHandler(e, true)
         }
         queueLocalStorageWrite((storage) => upsertLocalRoom(storage, room))
-        requestTrayIconUpdate()
+        await updateTrayIcon()
         updateNoctaliaRoom(room)
     })
     socket.on('addMessage', ({ roomId, message }: { roomId: number; message: Message }) => {
