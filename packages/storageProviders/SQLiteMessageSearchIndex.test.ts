@@ -399,3 +399,59 @@ test('complete time groups reuse syncMessages and fall back after a concurrent F
         fs.rmSync(directory, { recursive: true, force: true })
     }
 })
+
+test('content/time rebuilds keep the existing FTS snapshot searchable', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-online-rebuild-'))
+    const filePath = path.join(directory, 'search.db')
+    const messages: SQLiteSearchMessage[] = [
+        { time: 600, content: 'old searchable content', roomId: -1001, senderId: 2001 },
+    ]
+    let rebuildStarted = false
+    let releaseRebuild!: () => void
+    const rebuildGate = new Promise<void>((resolve) => {
+        releaseRebuild = resolve
+    })
+    let blockRebuild = false
+    const index = new SQLiteMessageSearchIndex(filePath, {
+        loadTimes: async (afterTime, limit) => (afterTime < 600 ? [600].slice(0, limit) : []),
+        loadMessagesByTimes: async (times) => {
+            if (blockRebuild) {
+                rebuildStarted = true
+                await rebuildGate
+            }
+            return messages.filter((message) => times.includes(Number(message.time)))
+        },
+        countMessages: async () => messages.length,
+    })
+
+    try {
+        await index.open()
+        await waitUntilReady(index)
+        assert.deepEqual(await index.searchTimes('old searchable', { limit: 20 }), [600])
+
+        messages[0].content = 'new searchable content'
+        blockRebuild = true
+        void index.requestRebuild(600)
+        for (let attempt = 0; attempt < 100 && !rebuildStarted; attempt++) {
+            await new Promise((resolve) => setTimeout(resolve, 5))
+        }
+        assert.equal(rebuildStarted, true)
+        assert.equal(index.isReady, true)
+        assert.equal(index.isRebuilding, false)
+        assert.deepEqual(await index.searchTimes('old searchable', { limit: 20 }), [600])
+
+        releaseRebuild()
+        for (let attempt = 0; attempt < 100; attempt++) {
+            const matches = await index.searchTimes('new searchable', { limit: 20 })
+            if (matches?.length === 1 && matches[0] === 600) break
+            await new Promise((resolve) => setTimeout(resolve, 5))
+        }
+        assert.deepEqual(await index.searchTimes('new searchable', { limit: 20 }), [600])
+        assert.deepEqual(await index.searchTimes('old searchable', { limit: 20 }), [])
+        assert.equal(index.isReady, true)
+        assert.equal(index.isRebuilding, false)
+    } finally {
+        await index.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})

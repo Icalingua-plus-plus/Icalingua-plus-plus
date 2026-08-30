@@ -367,6 +367,7 @@ export default class SQLiteMessageSearchIndex {
     private readonly errorHandle: (error: unknown) => void
     private db: Knex | null = null
     private buildPromise: Promise<void> | null = null
+    private onlineRebuildPromise: Promise<void> | null = null
     private operationPromise: Promise<void> = Promise.resolve()
     private validationPromise: Promise<void> | null = null
     private requestGeneration = 0
@@ -488,6 +489,7 @@ export default class SQLiteMessageSearchIndex {
         try {
             await this.buildPromise
             await this.validationPromise
+            await this.onlineRebuildPromise
             await this.operationPromise
         } catch (error) {
             this.errorHandle(error)
@@ -559,11 +561,30 @@ export default class SQLiteMessageSearchIndex {
     }
 
     async requestRebuild(times?: number | number[]): Promise<void> {
-        if (times === undefined) return
-        await this.queueRebuildTimes(Array.isArray(times) ? times : [times])
+        if (times === undefined || !this.db || !this.available) return
+
+        // Persist the affected groups before scheduling their online rebuild so
+        // a process exit can still recover them on the next startup. A
+        // content/time change only invalidates these groups; it must not make
+        // the rest of the existing FTS snapshot unavailable.
+        await this.enqueueOperation(async () => {
+            if (!this.db || !this.available) return
+            const normalizedTimes = Array.isArray(times) ? times : [times]
+            if (!this.ready || this.rebuilding || this.buildPromise) {
+                await this.queueRebuildTimes(normalizedTimes)
+                return
+            }
+            await this.queueRebuildTimes(normalizedTimes, false, false, true)
+        })
+        this.startOnlineRebuild()
     }
 
-    private async queueRebuildTimes(times: number[], startBuild = true, force = false): Promise<void> {
+    private async queueRebuildTimes(
+        times: number[],
+        startBuild = true,
+        force = false,
+        keepReady = false,
+    ): Promise<void> {
         const db = this.db
         if (!db) return
         const normalizedTimes = Array.from(
@@ -589,12 +610,47 @@ export default class SQLiteMessageSearchIndex {
                 }
             })
             this.pendingWork = true
-            this.ready = false
-            this.rebuilding = true
+            if (!keepReady) {
+                this.ready = false
+                this.rebuilding = true
+            }
             if (startBuild) this.startBuild()
         } catch (error) {
             if (!this.closing) this.errorHandle(error)
         }
+    }
+
+    private startOnlineRebuild(): void {
+        if (
+            this.closing ||
+            !this.db ||
+            !this.available ||
+            !this.ready ||
+            this.rebuilding ||
+            this.buildPromise ||
+            this.onlineRebuildPromise
+        )
+            return
+
+        this.onlineRebuildPromise = this.flushPendingTimes(false)
+            .catch((error) => {
+                if (this.closing) return
+                this.pendingWork = true
+                this.ready = false
+                this.rebuilding = true
+                try {
+                    this.errorHandle(error)
+                } catch {
+                    // The failed online update is persisted in the pending
+                    // table; continue with the normal recovery build.
+                }
+                this.startBuild()
+            })
+            .finally(() => {
+                this.onlineRebuildPromise = null
+                if (!this.closing && this.pendingWork && this.ready && !this.rebuilding && !this.buildPromise)
+                    this.startOnlineRebuild()
+            })
     }
 
     async getSyncGeneration(): Promise<number | null> {
