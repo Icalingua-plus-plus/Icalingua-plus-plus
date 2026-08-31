@@ -69,10 +69,6 @@ import {
     sendGroupSign,
     getDisabledFeatures,
     sendGroupPoke,
-    canValidateMessageSearchIndex,
-    validateMessageSearchIndex,
-    canMigrateLegacyAtMessages,
-    migrateLegacyAtMessages,
 } from './botAndStorage'
 import { download, downloadFileByMessageData, downloadImage, getImageExt } from './downloadManager'
 import openImage from './openImage'
@@ -1124,34 +1120,6 @@ export const updateAppMenu = async () => {
                 label: '搜索全部聊天记录',
                 accelerator: 'CommandOrControl+Shift+F',
                 click: () => openMessageSearchWindow(0, '全部会话'),
-            }),
-            new MenuItem({
-                label: '校验消息搜索索引',
-                visible: canValidateMessageSearchIndex(),
-                click: async () => {
-                    const validation = validateMessageSearchIndex()
-                    await updateAppMenu()
-                    await validation
-                    await updateAppMenu()
-                },
-            }),
-            new MenuItem({
-                label: '迁移旧版 @ 消息',
-                visible: getConfig().debugmode && canMigrateLegacyAtMessages(),
-                click: async () => {
-                    try {
-                        const migration = migrateLegacyAtMessages()
-                        await updateAppMenu()
-                        await migration
-                    } catch (error) {
-                        console.error('迁移旧版 @ 消息失败', error)
-                        ui.messageError(
-                            `迁移旧版 @ 消息失败：${error instanceof Error ? error.message : String(error)}`,
-                        )
-                    } finally {
-                        await updateAppMenu()
-                    }
-                },
             }),
             new MenuItem({
                 label: '获取最近会话的历史消息',

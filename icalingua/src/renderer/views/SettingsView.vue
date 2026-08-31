@@ -754,8 +754,36 @@
                         </div>
                     </div>
 
-                    <div class="action-grid" v-if="!isProduction">
+                    <div class="action-grid">
                         <button
+                            class="action-card"
+                            type="button"
+                            :disabled="!messageSearchIndexReady || !!messageSearchIndexAction"
+                            @click="validateMessageSearchIndex"
+                        >
+                            <span class="action-icon blue"><i class="el-icon-search"></i></span>
+                            <span class="action-copy">
+                                <strong>校验消息搜索索引</strong>
+                                <small>{{ messageSearchIndexHint }}</small>
+                            </span>
+                            <i class="el-icon-arrow-right"></i>
+                        </button>
+                        <button
+                            v-if="!isProduction"
+                            class="action-card"
+                            type="button"
+                            :disabled="!settings.debugmode || !messageSearchIndexReady || !!messageSearchIndexAction"
+                            @click="migrateLegacyAtMessages"
+                        >
+                            <span class="action-icon pink"><i class="el-icon-refresh"></i></span>
+                            <span class="action-copy">
+                                <strong>迁移旧版 @ 消息</strong>
+                                <small>{{ legacyAtMigrationHint }}</small>
+                            </span>
+                            <i class="el-icon-arrow-right"></i>
+                        </button>
+                        <button
+                            v-if="!isProduction"
                             class="action-card"
                             type="button"
                             :disabled="!settings.debugmode"
@@ -803,6 +831,8 @@ export default {
             versionClickTimes: 0,
             versionClickTimer: null,
             debugModeEnabling: false,
+            messageSearchIndexReady: false,
+            messageSearchIndexAction: '',
             navigation: [
                 { id: 'general', label: '通用', description: '启动与操作', icon: 'el-icon-setting' },
                 { id: 'appearance', label: '界面', description: '主题与窗口', icon: 'el-icon-monitor' },
@@ -846,19 +876,32 @@ export default {
         downloadPathLabel() {
             return this.settings.downloadPath || '跟随系统 Downloads 文件夹'
         },
+        messageSearchIndexHint() {
+            if (this.messageSearchIndexAction === 'validate') return '正在校验消息搜索索引...'
+            if (this.messageSearchIndexAction === 'migrate') return '正在迁移旧版 @ 消息...'
+            return this.messageSearchIndexReady ? '检查消息与搜索索引的一致性' : '消息搜索索引尚未就绪'
+        },
+        legacyAtMigrationHint() {
+            if (this.messageSearchIndexAction === 'migrate') return '正在迁移旧版 @ 消息...'
+            if (this.messageSearchIndexAction === 'validate') return '请等待索引校验完成'
+            if (!this.settings.debugmode) return '开启调试模式后可用'
+            return this.messageSearchIndexReady ? '将旧版 @ 标记迁移为当前格式' : '消息搜索索引尚未就绪'
+        },
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
         document.title = '设置中心'
-        const [settings, buildInfo, storePath] = await Promise.all([
+        const [settings, buildInfo, storePath, messageSearchIndexReady] = await Promise.all([
             ipc.getSettings(),
             ipc.getBuildInfo(),
             ipc.getStorePath(),
+            ipc.isMessageSearchIndexReady(),
         ])
         this.settings = settings
         this.version = buildInfo.version
         this.isProduction = buildInfo.isProduction
         this.storePath = storePath
+        this.messageSearchIndexReady = messageSearchIndexReady
         themes.$$DON_CALL$$fetchThemes(storePath)
         this.themeOptions = ['auto', ...themes.getThemeList()]
     },
@@ -872,6 +915,10 @@ export default {
         this.lifecycleScope.onIpc('settings:lock-password-updated', (_, hasLockPassword) => {
             if (typeof hasLockPassword === 'boolean')
                 this.$set(this.settings, 'lockPassword', hasLockPassword ? 'configured' : '')
+        })
+        this.lifecycleScope.onIpc('dbUpgradeProgress', (_, progress) => {
+            if (progress?.active) this.messageSearchIndexReady = false
+            else void this.refreshMessageSearchIndexReady()
         })
     },
     beforeDestroy() {
@@ -966,6 +1013,51 @@ export default {
         async resetDownloadPath() {
             this.settings.downloadPath = ''
             await ipc.resetDownloadPath()
+        },
+        async refreshMessageSearchIndexReady() {
+            this.messageSearchIndexReady = await ipc.isMessageSearchIndexReady()
+        },
+        async validateMessageSearchIndex() {
+            if (this.messageSearchIndexAction || !this.messageSearchIndexReady) return
+
+            this.messageSearchIndexAction = 'validate'
+            try {
+                await ipc.validateMessageSearchIndex()
+                this.$message.success('消息搜索索引校验完成')
+            } catch (error) {
+                this.$message.error('消息搜索索引校验失败：' + (error.message || error))
+            } finally {
+                this.messageSearchIndexAction = ''
+                await this.refreshMessageSearchIndexReady()
+            }
+        },
+        async migrateLegacyAtMessages() {
+            if (this.messageSearchIndexAction || !this.settings.debugmode || !this.messageSearchIndexReady) return
+
+            try {
+                await this.$confirm(
+                    '该迁移性能较差，需要扫描历史消息，可能耗时很久并明显占用 CPU 和磁盘资源，期间客户端可能出现卡顿。确定继续吗？',
+                    '性能警告',
+                    {
+                        confirmButtonText: '继续迁移',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                    },
+                )
+            } catch {
+                return
+            }
+
+            this.messageSearchIndexAction = 'migrate'
+            try {
+                await ipc.migrateLegacyAtMessages()
+                this.$message.success('旧版 @ 消息迁移完成')
+            } catch (error) {
+                this.$message.error('旧版 @ 消息迁移失败：' + (error.message || error))
+            } finally {
+                this.messageSearchIndexAction = ''
+                await this.refreshMessageSearchIndexReady()
+            }
         },
         async updateOptimizeMethod(method) {
             if (method === 'none') {

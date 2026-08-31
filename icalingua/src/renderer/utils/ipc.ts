@@ -179,7 +179,13 @@ const ipc = {
     async getDbUpgradeProgress(): Promise<DatabaseUpgradeProgress> {
         return await ipcRenderer.invoke('getDbUpgradeProgress')
     },
-    async migrateLegacyAtMessages() {
+    async isMessageSearchIndexReady(): Promise<boolean> {
+        return await ipcRenderer.invoke('isMessageSearchIndexReady')
+    },
+    async validateMessageSearchIndex(): Promise<void> {
+        return await ipcRenderer.invoke('validateMessageSearchIndex')
+    },
+    async migrateLegacyAtMessages(): Promise<void> {
         return await ipcRenderer.invoke('migrateLegacyAtMessages')
     },
     download(url: string, out: string, dir?: string) {

@@ -434,6 +434,11 @@ ipcMain.handle('getFriend', (_, uin: number) => adapter.getFriend(uin))
 ipcMain.handle('getGroup', (_, gin: number) => adapter.getGroup(gin))
 ipcMain.handle('getGroupMembers', (_, gin: number) => adapter.getGroupMembers(gin))
 ipcMain.handle('getGroups', () => adapter.getGroups())
+ipcMain.handle('isMessageSearchIndexReady', () => canValidateMessageSearchIndex())
+ipcMain.handle('validateMessageSearchIndex', async () => {
+    if (!canValidateMessageSearchIndex()) throw new Error('消息搜索索引尚未就绪')
+    await validateMessageSearchIndex()
+})
 ipcMain.handle('pushAtCache', (_, at: AtCacheItem) => atCache.push(at))
 ipcMain.handle('migrateLegacyAtMessages', async () => {
     if (!canMigrateLegacyAtMessages()) throw new Error('消息搜索索引尚未就绪')
