@@ -160,3 +160,69 @@ test('does not rebuild FTS when replacing a message only changes recall metadata
         fs.rmSync(directory, { recursive: true, force: true })
     }
 })
+
+test('does not wait for FTS synchronization while legacy At migration is active', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-legacy-at-write-'))
+    let releaseSync: () => void = () => undefined
+    let syncStarted = false
+    let syncFinished = false
+    const syncBlock = new Promise<void>((resolve) => {
+        releaseSync = resolve
+    })
+    const factory: MessageSearchIndexFactory = (_filePath, _callbacks, _errorHandle) => {
+        const index = {
+            isReady: false,
+            async open() {
+                this.isReady = true
+            },
+            async close() {},
+            async validate() {},
+            async syncMessages() {
+                syncStarted = true
+                await syncBlock
+                syncFinished = true
+            },
+            async requestRebuild() {},
+            async searchTimes() {
+                return []
+            },
+            async countTimes() {
+                return 0
+            },
+        }
+        return index as any
+    }
+    const provider = new SQLStorageProvider(
+        'legacy-at-write-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        factory,
+    )
+
+    try {
+        await provider.connect()
+        ;(provider as any).legacyAtMigrationPromise = Promise.resolve()
+        await provider.addMessage(-1001, {
+            _id: 'incoming-during-legacy-at-migration',
+            time: 100,
+            roomId: -1001,
+            content: 'message received during migration',
+            files: [],
+        } as any)
+        await new Promise<void>((resolve) => setImmediate(resolve))
+        assert.equal(syncStarted, true)
+        assert.equal(syncFinished, false)
+        assert.ok(await provider.db('messages').where('_id', 'incoming-during-legacy-at-migration').first())
+
+        releaseSync()
+        await new Promise<void>((resolve) => setImmediate(resolve))
+        assert.equal(syncFinished, true)
+    } finally {
+        releaseSync()
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})

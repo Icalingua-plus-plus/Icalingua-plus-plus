@@ -5,7 +5,7 @@ const legacyAtMarkupPattern = /<IcalinguaAt qq=(\d+)>([\s\S]*?)<\/IcalinguaAt>/g
 export const legacyAtSearchKeyword = '<IcalinguaAt qq='
 export const legacyAtMigrationVersion = '1'
 export const legacyAtMetadataName = 'messageAtMarkupVersion'
-export const legacyAtMigrationBatchSize = 20
+export const legacyAtMigrationBatchSize = 200
 
 export interface LegacyAtMessageLike {
     content?: unknown
@@ -55,6 +55,8 @@ const decodeLegacyAtName = (value: string): string => {
 }
 
 type LegacyAtTextReplacementCallback = (index: number, replacedLength: number, replacementLength: number) => void
+
+const yieldToMigrationPeers = (): Promise<void> => new Promise((resolve) => setImmediate(resolve))
 
 /** One-time database migration for the removed URI-encoded At markup. */
 export const migrateLegacyAtContent = (content: unknown, onReplacement?: LegacyAtTextReplacementCallback): string => {
@@ -168,6 +170,9 @@ export async function runLegacyAtMigration(options: LegacyAtMigrationOptions): P
             if (!normalizedTimes.length) break
 
             const ftsSynchronized = await options.migrateBatch(normalizedTimes)
+            // Let foreground database requests run after the primary-store part
+            // of a batch and before the potentially expensive FTS synchronization.
+            await yieldToMigrationPeers()
             if (ftsSynchronized !== true) {
                 // Rewrite complete timestamp groups so the FTS sidecar is repaired
                 // even if the process stopped after the primary-store write.
@@ -184,7 +189,7 @@ export async function runLegacyAtMigration(options: LegacyAtMigrationOptions): P
             const lastTime = normalizedTimes[normalizedTimes.length - 1]
             if (lastTime <= 0) break
             maxTime = lastTime - 1
-            await new Promise<void>((resolve) => setImmediate(resolve))
+            await yieldToMigrationPeers()
         }
 
         if (options.isClosed()) return
