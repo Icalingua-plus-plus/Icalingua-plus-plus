@@ -1137,7 +1137,7 @@ export const updateAppMenu = async () => {
             }),
             new MenuItem({
                 label: '迁移旧版 @ 消息',
-                visible: canMigrateLegacyAtMessages(),
+                visible: getConfig().debugmode && canMigrateLegacyAtMessages(),
                 click: async () => {
                     try {
                         const migration = migrateLegacyAtMessages()
