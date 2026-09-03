@@ -43,7 +43,7 @@
         "minimist": "^1.2.8",
         "mongodb": "^4.17.2",
         "mysql": "^2.18.1",
-        "oicq-icalingua-plus-plus": "^1.26.22",
+        "oicq-icalingua-plus-plus": "^1.26.24",
         "pg": "^8.22.0",
         "reconnecting-websocket": "^4.4.0",
         "silk-ilpp": "^1.0.1",
