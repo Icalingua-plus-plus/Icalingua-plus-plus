@@ -487,7 +487,7 @@ const attachSocketEvents = () => {
             height: 500,
             width: 500,
             webPreferences: {
-                nodeIntegration: true,
+                nodeIntegration: false,
                 contextIsolation: false,
             },
         })
@@ -516,8 +516,9 @@ const attachSocketEvents = () => {
             height: 500,
             width: 500,
             webPreferences: {
-                nodeIntegration: true,
+                nodeIntegration: false,
                 contextIsolation: false,
+                preload: path.join(getStaticPath(), '/sliderPreload.js'),
             },
         })
         const inject = fs.readFileSync(path.join(getStaticPath(), '/sliderinj.js'), 'utf-8')

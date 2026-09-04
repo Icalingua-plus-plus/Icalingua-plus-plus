@@ -1056,8 +1056,9 @@ const loginHandlers = {
             height: 500,
             width: 500,
             webPreferences: {
-                nodeIntegration: true,
+                nodeIntegration: false,
                 contextIsolation: false,
+                preload: path.join(getStaticPath(), '/sliderPreload.js'),
             },
         })
         const inject = fs.readFileSync(path.join(getStaticPath(), '/sliderinj.js'), 'utf-8')
@@ -1114,7 +1115,7 @@ const loginHandlers = {
             height: 500,
             width: 500,
             webPreferences: {
-                nodeIntegration: true,
+                nodeIntegration: false,
                 contextIsolation: false,
             },
         })
@@ -1123,6 +1124,9 @@ const loginHandlers = {
             veriWin.webContents.executeJavaScript(inject)
         })
         veriWin.loadURL(data.url)
+        veriWin.on('close', () => {
+            bot.login()
+        })
     },
 }
 //endregion

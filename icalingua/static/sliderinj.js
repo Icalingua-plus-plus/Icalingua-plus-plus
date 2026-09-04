@@ -15,7 +15,7 @@
                     let content = decodeURIComponent(j);
                     let obj = JSON.parse(content);
                     console.log(obj);
-                    require('electron').ipcRenderer.send('sliderLogin', obj.ticket + ',' + obj.randstr);
+                    window.sliderLogin(obj.ticket + ',' + obj.randstr);
                     window.close()
                     break;
                 } catch (ignore) {
