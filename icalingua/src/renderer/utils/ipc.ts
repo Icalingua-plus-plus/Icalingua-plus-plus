@@ -209,6 +209,9 @@ const ipc = {
     reLogin() {
         ipcRenderer.send('reLogin')
     },
+    createQRCodeVerify(verifyUrl: string, uin?: string | number) {
+        return ipcRenderer.invoke('createQRCodeVerify', verifyUrl, uin)
+    },
     updatePriority(level: 1 | 2 | 3 | 4 | 5) {
         ipcRenderer.send('updatePriority', level)
     },

@@ -161,6 +161,14 @@
                     <el-button @click="reLoginAfterNtVerify" type="primary">已验证，重新登录</el-button>
                 </div>
             </template>
+            <template v-else-if="qrVerifyUrl">
+                <p>请使用手机 QQ 扫描二维码并完成验证</p>
+                <canvas ref="smsQrCode" class="nt-verify-qrcode" role="img" aria-label="扫码验证二维码"></canvas>
+                <div class="buttons">
+                    <el-button @click="reLoginAfterQrVerify" type="primary">已验证，重新登录</el-button>
+                    <el-button @click="backToSmsVerify">返回短信验证</el-button>
+                </div>
+            </template>
             <template v-else>
                 <p v-if="phone">{{ sendTime !== -1 ? '已' : '' }}向 {{ phone }} 发送验证码</p>
                 <el-input
@@ -175,7 +183,14 @@
                     <el-button @click="sendSmsCode" :disabled="sendTime !== 0" v-else>
                         重发{{ sendTime !== 0 ? ` (${sendTime}s)` : '' }}
                     </el-button>
-                    <el-button v-if="verifyUrl" @click="QRCodeVerify">扫码验证</el-button>
+                    <el-button
+                        v-if="verifyUrl"
+                        @click="QRCodeVerify"
+                        :loading="qrVerifyLoading"
+                        :disabled="qrVerifyLoading"
+                    >
+                        扫码验证
+                    </el-button>
                 </div>
             </template>
         </el-drawer>
@@ -217,6 +232,9 @@ export default {
             verifyUrl: '',
             phone: '',
             sendTime: -1,
+            qrVerifyUrl: '',
+            qrVerifyLoading: false,
+            qrVerifyGeneration: 0,
             selectedProtocolCategory: 'Android Phone',
             protocolCategories: [
                 {
@@ -353,6 +371,7 @@ export default {
             this.clearLoginTimeout()
             this.clearQrLoginInterval()
             this.clearSmsCodeInterval()
+            this.resetQrVerify()
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
@@ -388,6 +407,7 @@ export default {
         this.lifecycleScope.onIpc('smsCodeVerify', (_, data) => {
             this.clearLoginTimeout()
             this.clearSmsCodeInterval()
+            this.resetQrVerify()
             const parsed = JSON.parse(data)
             this.smsCode = ''
             this.sendTime = -1
@@ -433,13 +453,17 @@ export default {
             this.lifecycleScope.cancelInterval(smsCodeInterval)
             smsCodeInterval = null
         },
-        renderNtVerifyQrCode() {
-            const canvas = this.$refs.ntQrCode
-            if (!canvas || !this.isNtLogin) return
+        resetQrVerify() {
+            this.qrVerifyGeneration++
+            this.qrVerifyUrl = ''
+            this.qrVerifyLoading = false
+        },
+        renderQrCode(canvas, content, errorMessage) {
+            if (!canvas || !content) return
 
             try {
                 const qrCode = new QRCode(-1, QRErrorCorrectLevel.M)
-                qrCode.addData(this.verifyUrl)
+                qrCode.addData(content)
                 qrCode.make()
 
                 const quietZone = 4
@@ -470,8 +494,15 @@ export default {
             } catch (e) {
                 canvas.width = 0
                 canvas.height = 0
-                this.$message.error('无法生成 NT 登录二维码：' + (e.message || e))
+                this.$message.error(errorMessage + (e.message || e))
             }
+        },
+        renderNtVerifyQrCode() {
+            if (!this.isNtLogin) return
+            this.renderQrCode(this.$refs.ntQrCode, this.verifyUrl, '无法生成 NT 登录二维码：')
+        },
+        renderSmsVerifyQrCode() {
+            this.renderQrCode(this.$refs.smsQrCode, this.qrVerifyUrl, '无法生成扫码验证二维码：')
         },
         onCategoryChange() {
             // 切换设备类型时，自动选择该类型的第一个协议版本
@@ -546,10 +577,36 @@ export default {
             this.disabled = true
             ipcRenderer.send('reLogin')
         },
-        QRCodeVerify() {
-            if (this.isNtLogin) return
+        async QRCodeVerify() {
+            if (this.isNtLogin || !this.verifyUrl || this.qrVerifyLoading || this.qrVerifyUrl) return
             this.clearLoginTimeout()
-            ipcRenderer.send('QRCodeVerify', this.verifyUrl)
+            const generation = ++this.qrVerifyGeneration
+            this.qrVerifyLoading = true
+            try {
+                const result = await ipc.createQRCodeVerify(this.verifyUrl, this.form.username)
+                if (generation !== this.qrVerifyGeneration) return
+
+                this.qrVerifyUrl = result.qrUrl
+                await this.$nextTick()
+                if (generation !== this.qrVerifyGeneration) return
+                this.renderSmsVerifyQrCode()
+            } catch (e) {
+                if (generation === this.qrVerifyGeneration) {
+                    this.$message.error('无法获取扫码验证二维码：' + (e.message || e))
+                }
+            } finally {
+                if (generation === this.qrVerifyGeneration) this.qrVerifyLoading = false
+            }
+        },
+        backToSmsVerify() {
+            this.resetQrVerify()
+        },
+        reLoginAfterQrVerify() {
+            if (!this.qrVerifyUrl) return
+            this.resetQrVerify()
+            this.shouldSubmitSmsCode = false
+            this.disabled = true
+            ipc.reLogin()
         },
         cannotLogin() {
             this.$confirm(

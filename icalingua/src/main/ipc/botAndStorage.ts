@@ -23,6 +23,7 @@ import { spacingSendMessage } from '../../utils/panguSpacing'
 import silkEncode from '../utils/silkEncode'
 import fs from 'fs'
 import path from 'path'
+import axios from 'axios'
 import ui from '../utils/ui'
 import { openChatWindow, isRoomInChatWindow, focusChatWindow } from '../utils/windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
@@ -116,6 +117,85 @@ export const getCookies = async (domain: CookiesDomain): Promise<Cookies> => {
     return Object.fromEntries(strCookies.split('; ').map((pair) => pair.replace(/;$/, '').split('=')))
 }
 
+type GuaranteeResponse = {
+    ErrorCode?: number | string
+    ErrorInfo?: string
+    str_url?: string
+}
+
+const guaranteeApiUrl = 'https://accounts.qq.com/safe/verify/proxy/domain/oidb.tim.qq.com/v3/oidbinterface/oidb_0xc9e_8'
+const guaranteeApiHeaders = {
+    'Qname-Service': '1104449:131072',
+    'Qname-Space': 'Production',
+    'Content-Type': 'application/json',
+}
+
+const decodeGuaranteeValue = (value: string) => {
+    try {
+        return decodeURIComponent(value)
+    } catch {
+        return value
+    }
+}
+
+const getGuaranteeLoginInfo = (verifyUrl: string, fallbackUin?: string | number) => {
+    if (typeof verifyUrl !== 'string' || !verifyUrl) throw new Error('验证地址无效')
+
+    let parsedUrl: URL
+    try {
+        parsedUrl = new URL(verifyUrl.replace(/&amp;/g, '&'))
+    } catch {
+        throw new Error('验证地址无效')
+    }
+
+    const sig = decodeGuaranteeValue(parsedUrl.searchParams.get('sig') || parsedUrl.searchParams.get('login_sig') || '')
+    const uin = parsedUrl.searchParams.get('uin') || (fallbackUin == null ? '' : String(fallbackUin))
+    if (!sig) throw new Error('验证地址缺少登录签名')
+    if (!uin) throw new Error('验证地址缺少账号')
+    return { sig, uin }
+}
+
+const getGuaranteeQrUrl = (qrUrl: string) => {
+    const match = qrUrl.match(/[?&]str_url=([^&]+)/)
+    if (match) return decodeGuaranteeValue(match[1])
+
+    try {
+        const parsedUrl = new URL(qrUrl)
+        const token = parsedUrl.searchParams.get('str_url')
+        if (token) return token
+    } catch {
+        // 兼容接口返回未编码或不是完整 URL 的情况，交给下面的正则提取。
+    }
+
+    const decodedUrl = decodeGuaranteeValue(qrUrl)
+    if (decodedUrl !== qrUrl) return getGuaranteeQrUrl(decodedUrl)
+    return ''
+}
+
+const createGuaranteeQrCode = async (verifyUrl: string, fallbackUin?: string | number) => {
+    const { sig, uin } = getGuaranteeLoginInfo(verifyUrl, fallbackUin)
+    const response = await axios.post<GuaranteeResponse>(
+        `${guaranteeApiUrl}?uid=${encodeURIComponent(uin)}&getqrcode=1&sdkappid=39998&actype=2`,
+        {
+            str_dev_auth_token: sig,
+            uint32_flag: 1,
+        },
+        {
+            headers: guaranteeApiHeaders,
+            timeout: 10000,
+        },
+    )
+    const data = response.data || {}
+    const errorCodeValue = Number(data.ErrorCode ?? 0)
+    const errorCode = Number.isFinite(errorCodeValue) ? errorCodeValue : -1
+    if (errorCode !== 0) throw new Error(data.ErrorInfo || `CreateGuarantee 请求失败 (${data.ErrorCode})`)
+
+    const rawQrUrl = String(data.str_url || '')
+    const qrUrl = getGuaranteeQrUrl(rawQrUrl)
+    if (!qrUrl) throw new Error('CreateGuarantee 未返回二维码地址')
+    return { qrUrl }
+}
+
 ipcMain.handle('getDisabledFeatures', () => getDisabledFeatures())
 ipcMain.handle('getUin', () => getUin())
 ipcMain.handle('getNick', () => getNickname())
@@ -160,24 +240,8 @@ ipcMain.on('randomDevice', (event, username: number) => {
     randomDevice(username)
 })
 ipcMain.on('submitSmsCode', (event, smsCode: string) => submitSmsCode(smsCode))
-ipcMain.on('QRCodeVerify', (event, url: string) => {
-    const veriWin = newIcalinguaWindow({
-        height: 500,
-        width: 500,
-        webPreferences: {},
-    })
-    veriWin.on('closed', () => {
-        reLogin()
-    })
-    veriWin.webContents.on('did-finish-load', function () {
-        veriWin.webContents.executeJavaScript(
-            'console.log=(a)=>{' +
-                'if(typeof a === "string"&&' +
-                'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                'window.close()}',
-        )
-    })
-    veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
+ipcMain.handle('createQRCodeVerify', async (_, verifyUrl: string, uin?: string | number) => {
+    return await createGuaranteeQrCode(verifyUrl, uin)
 })
 ipcMain.handle('getFriendsAndGroups', async () => {
     const groups = await getGroups()
