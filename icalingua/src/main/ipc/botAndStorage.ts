@@ -155,21 +155,23 @@ const getGuaranteeLoginInfo = (verifyUrl: string, fallbackUin?: string | number)
     return { sig, uin }
 }
 
-const getGuaranteeQrUrl = (qrUrl: string) => {
-    const match = qrUrl.match(/[?&]str_url=([^&]+)/)
-    if (match) return decodeGuaranteeValue(match[1])
+const getGuaranteeQrUrl = (strUrl: string, uin: string) => {
+    const trimmedStrUrl = strUrl.trim()
+    if (/^https?:\/\//i.test(trimmedStrUrl)) return trimmedStrUrl
 
-    try {
-        const parsedUrl = new URL(qrUrl)
-        const token = parsedUrl.searchParams.get('str_url')
-        if (token) return token
-    } catch {
-        // 兼容接口返回未编码或不是完整 URL 的情况，交给下面的正则提取。
-    }
+    const decodedStrUrl = decodeGuaranteeValue(trimmedStrUrl)
+    if (/^https?:\/\//i.test(decodedStrUrl)) return decodedStrUrl
 
-    const decodedUrl = decodeGuaranteeValue(qrUrl)
-    if (decodedUrl !== qrUrl) return getGuaranteeQrUrl(decodedUrl)
-    return ''
+    const params = new URLSearchParams({
+        _wv: '3',
+        _wwv: '1',
+        str_url: decodedStrUrl,
+        envfrom: 'double-check',
+        verify_id: 'undefined',
+        verify_scene: 'undefined',
+        uin,
+    })
+    return `https://accounts.qq.com/safe/scanresult?${params.toString()}`
 }
 
 const createGuaranteeQrCode = async (verifyUrl: string, fallbackUin?: string | number) => {
@@ -190,8 +192,9 @@ const createGuaranteeQrCode = async (verifyUrl: string, fallbackUin?: string | n
     const errorCode = Number.isFinite(errorCodeValue) ? errorCodeValue : -1
     if (errorCode !== 0) throw new Error(data.ErrorInfo || `CreateGuarantee 请求失败 (${data.ErrorCode})`)
 
-    const rawQrUrl = String(data.str_url || '')
-    const qrUrl = getGuaranteeQrUrl(rawQrUrl)
+    const rawStrUrl = String(data.str_url || '').trim()
+    if (!rawStrUrl) throw new Error('CreateGuarantee 未返回二维码地址')
+    const qrUrl = getGuaranteeQrUrl(rawStrUrl, uin)
     if (!qrUrl) throw new Error('CreateGuarantee 未返回二维码地址')
     return { qrUrl }
 }
