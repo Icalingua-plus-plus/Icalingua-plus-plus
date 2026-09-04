@@ -1,4 +1,13 @@
 /* msgbox: https://blog.csdn.net/superfans98/article/details/125046385 */
+function escapeHtmlText(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function showmsgbox(id) {
     this.obj = id;
     this.result = "";
@@ -58,6 +67,7 @@ showmsgbox.prototype = {
         } else {
             width_str = "width: fit-content; margin:0 auto;max-width:85%;"
         }
+        var safeMessage = escapeHtmlText(message);
         var html = ''
         if (style == '' || typeof style == 'undefined') {
             style = 'info';
@@ -65,23 +75,23 @@ showmsgbox.prototype = {
         if (style == 'right' || style == 'wrong' || style == 'error' || style == 'confirm' || style == 'info') {
             html = '<div data-rnd="' + rnd + '" id="cover_' + rnd + '" style="position: fixed;z-index: 4999;top: 0;right: 0;left: 0;bottom: 0;background: rgba(0,0,0,0.6);"></div><div style="position: fixed; ' + width_str + ' z-index: 5000; top: 50%; left: 16px; right: 16px; -webkit-transform: translate(0,-50%); transform: translate(0,-50%); background-color: #fff; text-align: center; border-radius: 12px; overflow: hidden; display: -webkit-box; display: -webkit-flex;  -webkit-flex-direction: column; -webkit-box-orient: vertical; -webkit-box-direction: normal; flex-direction: column; max-height: 90%;"><div style="min-height: 40px; padding: 32px 24px 0; font-weight: 700;display: flex;-webkit-box-orient: vertical; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 24px; margin-bottom: 28px; font-size: 18px; line-height: 1.4; word-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; color: rgba(0,0,0,0.5); color: #444;padding: 32px 24px 0;">'
             if (style == 'confirm' || style == 'error' || style == 'wrong' || style == 'info') {
-                html += '<img id="img_' + rnd + '" src=\'' + infostyle + '\' style="top: 50%; position: absolute; left: 10px; transform: translateY(-100%);display: inline-block; vertical-align: middle; width: 2.4em; height: 2.4em;"><div style="text-align:left; margin-left:40px; position:relative;" id="wm_content_' + rnd + '">' + message + '</div></div><div style="position:relative; border-top:1px solid #ccc;display:flex;">';
+                html += '<img id="img_' + rnd + '" src=\'' + infostyle + '\' style="top: 50%; position: absolute; left: 10px; transform: translateY(-100%);display: inline-block; vertical-align: middle; width: 2.4em; height: 2.4em;"><div style="text-align:left; margin-left:40px; position:relative;" id="wm_content_' + rnd + '">' + safeMessage + '</div></div><div style="position:relative; border-top:1px solid #ccc;display:flex;">';
                 if (typeof config.button != 'undefined') {
                     for (var x in config.button) {
-                        html += '<a style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1; display: block; padding:11px 0; line-height: 1.41176471; font-size: 17px; color: #576b95; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: rgba(0,0,0,0); position: relative; overflow: hidden;cursor:pointer;' + (x > 0 ? 'border-left:1px solid #ccc;' : '') + '" class="btn_' + rnd + '" data-rnd="' + rnd + '" data-btn_index=' + x + '>' + config.button[x] + '</a>'
+                        html += '<a style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1; display: block; padding:11px 0; line-height: 1.41176471; font-size: 17px; color: #576b95; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: rgba(0,0,0,0); position: relative; overflow: hidden;cursor:pointer;' + (x > 0 ? 'border-left:1px solid #ccc;' : '') + '" class="btn_' + rnd + '" data-rnd="' + rnd + '" data-btn_index=' + x + '>' + escapeHtmlText(config.button[x]) + '</a>'
                     }
                 } else {
                     html += '<a style="width:100%;padding:11px 0; display:block;font-size: 17px; color: #576b95; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: rgba(0,0,0,0); overflow: hidden; cursor:pointer"' + 'class="btn_' + rnd + '" data-rnd="' + rnd + '">确定</a>';
                 }
                 html += "</div>";
             } else {
-                html += '<img id="img_' + rnd + '" src=\'' + infostyle + '\' style="top: 50%; position: absolute; left: 10px; transform: translateY(-45%);display: inline-block; vertical-align: middle; width: 2.4em; height: 2.4em; cursor:pointer" onclick="document.body.removeChild(document.getElementById(' + rnd + '));"><div style="text-align:left; margin-left:40px;position:relative;" id="wm_content_' + rnd + '">' + message + '</div></div>';
+                html += '<img id="img_' + rnd + '" src=\'' + infostyle + '\' style="top: 50%; position: absolute; left: 10px; transform: translateY(-45%);display: inline-block; vertical-align: middle; width: 2.4em; height: 2.4em; cursor:pointer" onclick="document.body.removeChild(document.getElementById(' + rnd + '));"><div style="text-align:left; margin-left:40px;position:relative;" id="wm_content_' + rnd + '">' + safeMessage + '</div></div>';
             }
         } else if (style == 'input') {
             html = '<div id="mask' + rnd + '" style="position: fixed;z-index: 4999;top: 0;right: 0;left: 0;bottom: 0;background: rgba(0,0,0,0.6);"></div><div style="position: fixed; ' + width_str + ' z-index: 5000; top: 50%; left: 16px; right: 16px; -webkit-transform: translate(0,-50%); transform: translate(0,-50%); background-color: #fff; text-align: center; border-radius: 12px; overflow: hidden; display: -webkit-box; display: -webkit-flex;  -webkit-flex-direction: column; -webkit-box-orient: vertical; -webkit-box-direction: normal; flex-direction: column; max-height: 90%;"><div style="min-height: 40px; padding: 32px 24px 0; font-weight: 700;display: flex;-webkit-box-orient: vertical; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 24px; margin-bottom: 28px; font-size: 18px; line-height: 1.4; word-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; color: rgba(0,0,0,0.5); color: #444;padding: 32px 24px 0;">'
-            html += '<div style="text-align:left; position:relative;"><div style="margin-bottom:10px" id="wm_content_' + rnd + '">' + message + '</div><input type="text" id="input' + rnd + '" style="width:100%;height:40px;" value="' + (typeof config.default == 'undefined' ? '' : config.default) + '" /></div></div><div style="position:relative; border-top:1px solid #ccc;display:flex;">';
+            html += '<div style="text-align:left; position:relative;"><div style="margin-bottom:10px" id="wm_content_' + rnd + '">' + safeMessage + '</div><input type="text" id="input' + rnd + '" style="width:100%;height:40px;" value="' + escapeHtmlText(typeof config.default == 'undefined' ? '' : config.default) + '" /></div></div><div style="position:relative; border-top:1px solid #ccc;display:flex;">';
             for (var x in config.button) {
-                html += '<a style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1; display: block; padding:11px 0; line-height: 1.41176471; font-size: 17px; color: #576b95; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: rgba(0,0,0,0); position: relative; cursor:pointer;overflow: hidden;' + (x > 0 ? 'border-left:1px solid #ccc;' : '') + '" class="btn_' + rnd + '" data-rnd="' + rnd + '" data-btn_index=' + x + '>' + config.button[x] + '</a>'
+                html += '<a style="-webkit-box-flex: 1; -webkit-flex: 1; flex: 1; display: block; padding:11px 0; line-height: 1.41176471; font-size: 17px; color: #576b95; font-weight: 700; text-decoration: none; -webkit-tap-highlight-color: rgba(0,0,0,0); position: relative; cursor:pointer;overflow: hidden;' + (x > 0 ? 'border-left:1px solid #ccc;' : '') + '" class="btn_' + rnd + '" data-rnd="' + rnd + '" data-btn_index=' + x + '>' + escapeHtmlText(config.button[x]) + '</a>'
             }
             html += "</div>";
         }
@@ -166,7 +176,7 @@ showmsgbox.prototype = {
     },
     showtext: function (text) {
         try {
-            document.getElementById('wm_content_' + this.id).innerHTML = text;
+            document.getElementById('wm_content_' + this.id).textContent = String(text == null ? '' : text);
         } catch (e) {
             console.error("catched error:" + e);
         }
