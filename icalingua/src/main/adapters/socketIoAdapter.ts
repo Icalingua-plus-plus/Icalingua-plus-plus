@@ -17,7 +17,15 @@ import { fileTypeFromBuffer } from 'file-type'
 import { Notification } from 'freedesktop-notifications'
 import fs from 'fs'
 import { sign } from '@noble/ed25519'
-import { DeviceEventData, FakeMessage, FileElem, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
+import {
+    DeviceEventData,
+    FakeMessage,
+    FileElem,
+    FriendInfo,
+    GroupInfo,
+    MemberInfo,
+    LoginAuthEventData,
+} from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import { io, Socket } from 'socket.io-client'
 import formatDate from '../../utils/formatDate'
@@ -473,24 +481,24 @@ const attachSocketEvents = () => {
         })
         app.quit()
     })
-    socket.on('login-verify', async (url: string) => {
+    socket.on('login-verify', async (data: LoginAuthEventData) => {
+        console.log(data)
         const veriWin = newIcalinguaWindow({
             height: 500,
             width: 500,
-            webPreferences: {},
+            webPreferences: {
+                nodeIntegration: true,
+                contextIsolation: false,
+            },
         })
         veriWin.on('close', () => {
             socket.emit('login-verify-reLogin')
         })
+        const inject = `window.__INITIAL_STATE__.deviceInfo = ${JSON.stringify(data.device)};`
         veriWin.webContents.on('did-finish-load', function () {
-            veriWin.webContents.executeJavaScript(
-                'console.log=(a)=>{' +
-                    'if(typeof a === "string"&&' +
-                    'a.includes("手Q扫码验证[新设备] - 验证成功页[兼容老版本] - 点击「前往登录QQ」"))' +
-                    'window.close()}',
-            )
+            veriWin.webContents.executeJavaScript(inject)
         })
-        veriWin.loadURL(url.replace('safe/verify', 'safe/qrcode'))
+        veriWin.loadURL(data.url)
     })
     socket.on('login-qrcodeLogin', (url: string) => {
         sendToLoginWindow('qrcodeLogin', url)

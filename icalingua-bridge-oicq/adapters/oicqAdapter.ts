@@ -56,6 +56,7 @@ import {
     SyncMessageEventData,
     SyncReadedEventData,
     SyncRemarkEventData,
+    LoginAuthEventData,
 } from 'oicq-icalingua-plus-plus'
 import path from 'path'
 import { Socket } from 'socket.io'
@@ -911,6 +912,10 @@ const loginHandlers = {
         console.log(data)
         broadcast('login-smsCodeVerify', data)
     },
+    auth(data: LoginAuthEventData) {
+        console.log(data)
+        broadcast('login-verify', data)
+    },
     qrcode(data: QrcodeEventData) {
         const url = 'data:image/png;base64,' + data.image.toString('base64')
         broadcast('login-qrcodeLogin', url)
@@ -1014,6 +1019,7 @@ const attachLoginHandler = () => {
     bot.on('system.login.error', loginHandlers.onErr)
     bot.on('system.login.device', loginHandlers.verify)
     bot.on('system.login.qrcode', loginHandlers.qrcode)
+    bot.on('system.login.auth', loginHandlers.auth)
 }
 //endregion
 
@@ -1647,6 +1653,7 @@ const adapter = {
                 sign_api_key: form.signAPIKey,
                 force_algo_T544: form.forceAlgoT544,
                 useNT: form.useNT,
+                forceWt: form.forceWt,
                 apk_info: Number(form.protocol) === -1 ? apkInfo : undefined,
             })
             _sendPrivateMsg = bot.sendPrivateMsg

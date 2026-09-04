@@ -15,7 +15,7 @@
                     let content = decodeURIComponent(j);
                     let obj = JSON.parse(content);
                     console.log(obj);
-                    require('electron').ipcRenderer.send('sliderLogin', obj.ticket)
+                    require('electron').ipcRenderer.send('sliderLogin', obj.ticket + ',' + obj.randstr);
                     window.close()
                     break;
                 } catch (ignore) {
@@ -47,17 +47,5 @@
                 desc.set.call(this, v)
             }
         })
-    })();
-
-    (() => {
-        let UserAgent = "${MIRAI_SELENIUM-USERAGENT}";
-        if (UserAgent !== "${MIRAI_SELENIUM-USERAGENT}") {
-            Object.defineProperty(Navigator.prototype, "userAgent", {
-                get() {
-                    return UserAgent
-                }
-            });
-            document.querySelectorAll("script").forEach(it => it.remove());
-        }
     })();
 })()

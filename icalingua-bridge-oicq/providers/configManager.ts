@@ -33,6 +33,7 @@ const emptyLoginForm: LoginForm = {
     protocol: 5,
     autologin: false,
     onlineStatus: OnlineStatusType.Online,
+    forceWt: false,
     apkInfo: '',
 }
 

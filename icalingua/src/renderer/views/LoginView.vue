@@ -74,6 +74,10 @@
                 <span class="el-form-item__label">Use NT's register</span>
                 <el-switch v-model="form.useNT" />
             </el-form-item>
+            <el-form-item prop="forceWt">
+                <span class="el-form-item__label">Force WT login</span>
+                <el-switch v-model="form.forceWt" />
+            </el-form-item>
             <el-form-item prop="apkInfo" v-show="form.protocol === '-1'">
                 <span class="el-form-item__label">Custom APK Info (JSON)</span>
                 <el-tooltip content="可选，自定义 oicq 协议参数" placement="top">
@@ -142,7 +146,7 @@
         <QrcodeDrawer @login="onSubmit('loginForm')" />
         <el-drawer
             class="sms-drawer"
-            title="短信验证"
+            :title="isNtLogin ? 'NT 登录验证' : '短信验证'"
             :visible="shouldSubmitSmsCode"
             direction="btt"
             :close-on-press-escape="false"
@@ -150,21 +154,30 @@
             :wrapper-closable="false"
             size="100%"
         >
-            <p v-if="phone">{{ sendTime !== -1 ? '已' : '' }}向 {{ phone }} 发送验证码</p>
-            <el-input
-                placeholder="短信验证码"
-                v-model="smsCode"
-                @input="smsCode = smsCode.slice(0, 6)"
-                @keydown.enter.native="submitSmsCode"
-            />
-            <div class="buttons">
-                <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1">提交</el-button>
-                <el-button @click="sendSmsCode" type="primary" v-if="sendTime === -1">发送验证码</el-button>
-                <el-button @click="sendSmsCode" :disabled="sendTime !== 0" v-else>
-                    重发{{ sendTime !== 0 ? ` (${sendTime}s)` : '' }}
-                </el-button>
-                <el-button v-if="verifyUrl" @click="QRCodeVerify">扫码验证</el-button>
-            </div>
+            <template v-if="isNtLogin">
+                <p>请使用手机 QQ 扫描二维码并进行验证</p>
+                <canvas ref="ntQrCode" class="nt-verify-qrcode" role="img" aria-label="NT 登录验证二维码"></canvas>
+                <div class="buttons">
+                    <el-button @click="reLoginAfterNtVerify" type="primary">已验证，重新登录</el-button>
+                </div>
+            </template>
+            <template v-else>
+                <p v-if="phone">{{ sendTime !== -1 ? '已' : '' }}向 {{ phone }} 发送验证码</p>
+                <el-input
+                    placeholder="短信验证码"
+                    v-model="smsCode"
+                    @input="smsCode = smsCode.slice(0, 6)"
+                    @keydown.enter.native="submitSmsCode"
+                />
+                <div class="buttons">
+                    <el-button @click="submitSmsCode" type="primary" v-if="sendTime !== -1">提交</el-button>
+                    <el-button @click="sendSmsCode" type="primary" v-if="sendTime === -1">发送验证码</el-button>
+                    <el-button @click="sendSmsCode" :disabled="sendTime !== 0" v-else>
+                        重发{{ sendTime !== 0 ? ` (${sendTime}s)` : '' }}
+                    </el-button>
+                    <el-button v-if="verifyUrl" @click="QRCodeVerify">扫码验证</el-button>
+                </div>
+            </template>
         </el-drawer>
     </div>
 </template>
@@ -174,10 +187,13 @@ import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import md5 from 'md5'
+import QRCode from 'qrcode-terminal/vendor/QRCode'
+import QRErrorCorrectLevel from 'qrcode-terminal/vendor/QRCode/QRErrorCorrectLevel'
 import QrcodeDrawer from '../components/QrcodeDrawer'
 
 let loginTimeout = null
 let qrLoginInterval = null
+let smsCodeInterval = null
 
 export default {
     name: 'LoginView',
@@ -307,6 +323,9 @@ export default {
             const category = this.protocolCategories.find((c) => c.name === this.selectedProtocolCategory)
             return category ? category.protocols : []
         },
+        isNtLogin() {
+            return typeof this.verifyUrl === 'string' && this.verifyUrl.includes('&is_nt=1')
+        },
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
@@ -314,6 +333,7 @@ export default {
         this.dbUpgrade = await ipc.getDbUpgradeProgress()
         const _form = await ipc.getAccount()
         if (!_form.signAPIAddress) _form.signAPIAddress = ''
+        if (_form.forceWt == null) _form.forceWt = false
         this.apkInfoStr = _form.apkInfo || ''
 
         if (_form.protocol != null) _form.protocol = String(_form.protocol)
@@ -332,9 +352,14 @@ export default {
         this.lifecycleScope.onIpc('error', (_, msg) => {
             this.clearLoginTimeout()
             this.clearQrLoginInterval()
+            this.clearSmsCodeInterval()
             this.errmsg = msg
             this.disabled = false
             this.shouldSubmitSmsCode = false
+            this.smsCode = ''
+            this.verifyUrl = ''
+            this.phone = ''
+            this.sendTime = -1
             this.dbUpgrade = { active: false, step: 0, total: 0, message: '' }
 
             const tmp = String(msg).split(' ')
@@ -362,11 +387,16 @@ export default {
         })
         this.lifecycleScope.onIpc('smsCodeVerify', (_, data) => {
             this.clearLoginTimeout()
+            this.clearSmsCodeInterval()
             const parsed = JSON.parse(data)
-            console.log(parsed.url)
+            this.smsCode = ''
+            this.sendTime = -1
+            this.verifyUrl = parsed.url || ''
+            this.phone = parsed.phone || ''
             this.shouldSubmitSmsCode = true
-            this.verifyUrl = parsed.url
-            this.phone = parsed.phone
+            if (this.isNtLogin) {
+                this.$nextTick(() => this.renderNtVerifyQrCode())
+            }
         })
         this.lifecycleScope.onIpc('qrcodeLogin', async (_, url) => {
             this.clearQrLoginInterval()
@@ -381,9 +411,11 @@ export default {
         })
     },
     beforeDestroy() {
+        this.clearSmsCodeInterval()
         this.lifecycleScope?.dispose()
         loginTimeout = null
         qrLoginInterval = null
+        smsCodeInterval = null
     },
     methods: {
         clearLoginTimeout() {
@@ -395,6 +427,51 @@ export default {
             if (!qrLoginInterval) return
             this.lifecycleScope.cancelInterval(qrLoginInterval)
             qrLoginInterval = null
+        },
+        clearSmsCodeInterval() {
+            if (!smsCodeInterval) return
+            this.lifecycleScope.cancelInterval(smsCodeInterval)
+            smsCodeInterval = null
+        },
+        renderNtVerifyQrCode() {
+            const canvas = this.$refs.ntQrCode
+            if (!canvas || !this.isNtLogin) return
+
+            try {
+                const qrCode = new QRCode(-1, QRErrorCorrectLevel.M)
+                qrCode.addData(this.verifyUrl)
+                qrCode.make()
+
+                const quietZone = 4
+                const moduleCount = qrCode.getModuleCount()
+                const moduleSize = Math.max(2, Math.floor(320 / (moduleCount + quietZone * 2)))
+                const canvasSize = (moduleCount + quietZone * 2) * moduleSize
+                const context = canvas.getContext('2d')
+                if (!context) throw new Error('当前环境不支持 Canvas')
+
+                canvas.width = canvasSize
+                canvas.height = canvasSize
+                context.imageSmoothingEnabled = false
+                context.fillStyle = '#fff'
+                context.fillRect(0, 0, canvasSize, canvasSize)
+                context.fillStyle = '#000'
+                qrCode.modules.forEach((row, rowIndex) => {
+                    row.forEach((dark, columnIndex) => {
+                        if (dark) {
+                            context.fillRect(
+                                (columnIndex + quietZone) * moduleSize,
+                                (rowIndex + quietZone) * moduleSize,
+                                moduleSize,
+                                moduleSize,
+                            )
+                        }
+                    })
+                })
+            } catch (e) {
+                canvas.width = 0
+                canvas.height = 0
+                this.$message.error('无法生成 NT 登录二维码：' + (e.message || e))
+            }
         },
         onCategoryChange() {
             // 切换设备类型时，自动选择该类型的第一个协议版本
@@ -445,20 +522,32 @@ export default {
             })
         },
         submitSmsCode() {
+            if (this.isNtLogin) return
             ipcRenderer.send('submitSmsCode', this.smsCode)
         },
         sendSmsCode() {
+            if (this.isNtLogin) return
+            this.clearSmsCodeInterval()
             ipcRenderer.send('submitSmsCode', 'sendSmsCode')
             this.sendTime = 60
-            const timer = this.lifecycleScope.interval(() => {
+            smsCodeInterval = this.lifecycleScope.interval(() => {
                 if (this.sendTime === 0) {
-                    this.lifecycleScope.cancelInterval(timer)
+                    this.clearSmsCodeInterval()
                     return
                 }
                 this.sendTime--
             }, 1000)
         },
+        reLoginAfterNtVerify() {
+            if (!this.isNtLogin) return
+            this.clearLoginTimeout()
+            this.clearSmsCodeInterval()
+            this.shouldSubmitSmsCode = false
+            this.disabled = true
+            ipcRenderer.send('reLogin')
+        },
         QRCodeVerify() {
+            if (this.isNtLogin) return
             this.clearLoginTimeout()
             ipcRenderer.send('QRCodeVerify', this.verifyUrl)
         },
@@ -562,5 +651,14 @@ export default {
 .sms-drawer p,
 .sms-drawer .el-input {
     margin: 0 0 15px;
+}
+
+.nt-verify-qrcode {
+    display: block;
+    width: min(80vw, 320px);
+    height: auto;
+    margin: 0 auto 15px;
+    image-rendering: pixelated;
+    background: #fff;
 }
 </style>
