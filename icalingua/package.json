@@ -16,7 +16,7 @@
         "build": "ts-node .electron-vue/build.ts && electron-builder",
         "build:win": "electron-builder --win",
         "build:win32": "cross-env npm_config_arch=ia32 electron-builder --win --ia32",
-        "build:woa": "cross-env npm_config_arch=arm64 electron-builder --win --arm64",
+        "build:woa": "cross-env npm_config_arch=arm64 ELECTRON_BUILDER_7Z_FILTER=BCJ2 electron-builder --win --arm64",
         "build:arm": "electron-builder --arm",
         "build:electron": "electron-builder",
         "build:ci": "ts-node .electron-vue/build.ts",
