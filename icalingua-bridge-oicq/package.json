@@ -1,6 +1,6 @@
 {
     "name": "icalingua-bridge-oicq",
-    "version": "2.26.7",
+    "version": "2.26.8",
     "protocolVersion": "2.26.7",
     "main": "index.ts",
     "repository": "https://github.com/Icalingua-plus-plus/Icalingua-plus-plus.git",
