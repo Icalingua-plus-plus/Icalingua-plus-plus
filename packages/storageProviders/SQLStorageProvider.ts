@@ -538,6 +538,36 @@ export default class SQLStorageProvider implements StorageProvider {
     }
 
     private async countSearchMessages(): Promise<number> {
+        // 这个值只用作搜索索引的进度分母（SQLiteMessageSearchIndex 只把它塞进 report()），
+        // 不参与任何校验判断，所以不值得为它扫全表：
+        // 一张 6780 万行的 messages 上，下面的精确 count 实测要 11~46 秒。
+        // MongoStorageProvider 的 estimatedDocumentCount() 是同样的取舍。
+        try {
+            if (this.type === 'pg') {
+                // reltuples 由 VACUUM/ANALYZE 维护，读 catalogs 即可，代价可忽略。
+                // 表从未被 analyze 时它是 -1，会被下面的 estimate > 0 挡掉。
+                // to_regclass 按 search_path 解析（连接里是 [eqq<id>, 'public']），
+                // 找不到表时返回 NULL 而不是抛错。
+                const row: any = await this.db('pg_class')
+                    .select(this.db.raw('reltuples::bigint as n'))
+                    .where('oid', '=', this.db.raw("to_regclass('messages')"))
+                    .first()
+                const estimate = Number(row?.n)
+                if (Number.isFinite(estimate) && estimate > 0) return estimate
+            } else if (this.type === 'mysql') {
+                // information_schema 的 TABLE_ROWS 是 InnoDB 的估算值，误差可能不小，
+                // 但这里只需要一个进度条分母。
+                const row: any = await this.db('information_schema.TABLES')
+                    .select('TABLE_ROWS as n')
+                    .whereRaw('TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?', ['messages'])
+                    .first()
+                const estimate = Number(row?.n)
+                if (Number.isFinite(estimate) && estimate > 0) return estimate
+            }
+        } catch {
+            // 权限不足、方言不支持、表还没建出来……任何问题都退回精确 count（即原来的行为）
+        }
+        // sqlite3 会走到这里：本地文件，精确 count 很快，行为保持不变
         const result: any = await this.db('messages').where('time', '>', 0).count({ count: '*' }).first()
         return Number(result?.count || Object.values(result || {})[0] || 0)
     }
