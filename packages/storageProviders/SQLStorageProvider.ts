@@ -212,7 +212,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     client: 'mysql',
                     connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
-                    pool: { min: 2, max: 2 },
+                    pool: { min: 2, max: 4 },
                 })
                 break
             case 'pg':
@@ -221,7 +221,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     connection: { ...connectOption, charset: 'utf8mb4' },
                     useNullAsDefault: true,
                     searchPath: [this.qid, 'public'],
-                    pool: { min: 2, max: 2 },
+                    pool: { min: 2, max: 4 },
                 })
                 break
             default:
