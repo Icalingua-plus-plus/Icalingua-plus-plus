@@ -1350,6 +1350,7 @@ Chromium ${process.versions.chrome}`
                 421: 6,
                 431: 6,
                 487: 6,
+                502: 6,
             }
             const getRandomInt = (max) => {
                 return Math.floor(Math.random() * Math.floor(max)) + 1
