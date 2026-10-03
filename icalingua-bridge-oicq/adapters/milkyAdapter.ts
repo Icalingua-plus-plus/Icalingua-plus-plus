@@ -60,6 +60,7 @@ let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
 }
+const isOwnRoomName = (roomName: string | null): boolean => roomName === nickname || roomName === String(uin)
 
 // 群成员信息缓存
 const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
@@ -308,10 +309,14 @@ const initStorage = async () => {
         const rooms = await storage.getAllRooms()
         await Promise.all(
             rooms
-                .filter((room) => room.roomId > 0 && !room.roomName)
+                .filter(
+                    (room) =>
+                        room.roomId > 0 &&
+                        room.roomId !== uin &&
+                        (!room.roomName || (isOwnRoomName(room.roomName) && Number(room.lastMessage?.userId) === uin)),
+                )
                 .map(async (room) => {
-                    const info = await adapter.getFriendInfo(room.roomId)
-                    await storage.updateRoom(room.roomId, { roomName: info.remark || info.nickname })
+                    await storage.updateRoom(room.roomId, { roomName: await getPrivateRoomName(room.roomId) })
                 }),
         )
         rooms.forEach(async (room) => {
@@ -331,6 +336,11 @@ const initStorage = async () => {
         broadcast('fatal', '无法连接数据库')
         process.exit(2)
     }
+}
+
+async function getPrivateRoomName(roomId: number): Promise<string> {
+    const info = await adapter.getFriendInfo(roomId)
+    return info.remark || info.nickname || String(roomId)
 }
 
 const attachEventHandler = () => {
@@ -363,9 +373,12 @@ const attachEventHandler = () => {
             senderName = String(senderId)
         }
 
-        const roomName = isGroup
-            ? data.group?.group_name || String(data.peer_id)
-            : data.friend?.remark || data.friend?.nickname || String(roomId)
+        let roomName: string | undefined
+        if (isGroup) {
+            roomName = data.group?.group_name || String(data.peer_id)
+        } else if (!isSelfMsg) {
+            roomName = data.friend?.remark || data.friend?.nickname || String(roomId)
+        }
 
         const message: Message = {
             senderId: senderId,
@@ -381,10 +394,14 @@ const attachEventHandler = () => {
 
         let room = await storage.getRoom(roomId)
         if (!room) {
-            room = createRoom(roomId, roomName)
+            room = createRoom(roomId, roomName || (isGroup ? String(data.peer_id) : await getPrivateRoomName(roomId)))
             await storage.addRoom(room)
+        } else if (!room.roomName) {
+            room.roomName = roomName || (isGroup ? String(data.peer_id) : await getPrivateRoomName(roomId))
+        } else if (isSelfMsg && !isGroup && roomId !== uin && isOwnRoomName(room.roomName)) {
+            room.roomName = await getPrivateRoomName(roomId)
         } else {
-            if (!room.roomName?.startsWith(roomName)) {
+            if (roomName && !room.roomName.startsWith(roomName)) {
                 room.roomName = roomName
             }
         }

@@ -11,3 +11,4 @@
 - 在项目外用 `ts-node/register/transpile-only` 加载 Bridge 源码时，需要设置 `TS_NODE_PROJECT=<repo>/icalingua-bridge-oicq/tsconfig.json`，否则会因默认 `NodeNext` 配置不匹配而报 TS5109。
 - 只验证 Milky adapter 的在线 API 时，`createBot` 仍会初始化数据库并在失败时调用 `process.exit(2)`。可在隔离驱动中临时拦截该退出，待 Milky 建连并设置 `bot` 后直接调用目标方法；配置和数据路径必须放在独立临时目录，避免污染现有账号数据。
 - 在临时驱动中验证 Milky adapter 事件逻辑时，直接使用 SQLite storage 会启动 DB worker；临时 cwd 下 worker 可能无法解析 `ts-node`，也可能加载 `packages/storageProviders/build` 的旧产物。可用 `createRequire` 找到 `SQLStorageProvider` 模块路径后写入 `require.cache`，注入实现 `StorageProvider` 接口的内存 fake，避免启动数据库 worker。
+- Milky 实时 SSE 的自发私聊消息中 `friend` 可能指向发送者本人，而 `get_history_messages` 的 `friend` 指向对端；验证 roomName 逻辑时必须使用实时事件形状，不能拿历史接口替代。
