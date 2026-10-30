@@ -79,6 +79,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import formatDuration from '../utils/formatDuration'
 import { deleteUploadedFile, getUploadedFilePath, getUploadedFileName } from '../utils/uploadFileManager'
+import md5 from 'md5'
 
 let bot: Client
 let storage: StorageProvider
@@ -1711,6 +1712,7 @@ const adapter = {
                 })
                 return data
             }
+            bot['euin'] = md5(md5(String(form.username) + 'icalingua') + 'icalingua++')
             bot.setMaxListeners(233)
             attachLoginHandler()
             if (config.custom) {

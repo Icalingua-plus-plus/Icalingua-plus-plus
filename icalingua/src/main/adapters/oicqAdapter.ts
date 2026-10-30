@@ -104,6 +104,7 @@ import { SliderEventData } from 'oicq-icalingua-plus-plus'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
 import formatDuration from '../../utils/formatDuration'
+import md5 from 'md5'
 
 let bot: Client
 let storage: StorageProvider
@@ -1991,6 +1992,7 @@ const adapter: OicqAdapter = {
                 })
                 return data
             }
+            bot['euin'] = md5(md5(String(form.username) + 'icalingua') + 'icalingua++')
             bot.setMaxListeners(233)
             attachLoginHandler()
             if (getConfig().custom) {
