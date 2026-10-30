@@ -1488,13 +1488,20 @@ export default {
             }
             this.focusTextarea()
         },
-        editLastOwnMessage() {
+        async editLastOwnMessage() {
             const ownMessages = this.messages.filter((message) => message.senderId === this.currentUserId)
             if (!ownMessages.length) return
 
             const lastMessage = ownMessages[ownMessages.length - 1]
-            if (lastMessage.file && isImageFile(lastMessage.file)) {
-                this.onPasteGif(lastMessage.file.url)
+            const orderedParts = getOrderedMessageParts(lastMessage)
+            const imageFiles = orderedParts
+                ? orderedParts.filter((part) => part.type === 'image').map((part) => part.file)
+                : (lastMessage.files || [lastMessage.file]).filter((file) => file && isImageFile(file))
+
+            if (imageFiles.length) {
+                for (const file of imageFiles) {
+                    await this.onPasteGif(file.url)
+                }
             } else if (lastMessage.file) {
                 return
             }
