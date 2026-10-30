@@ -60,6 +60,7 @@ let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
 }
+const isOwnRoomName = (roomName: string | null): boolean => roomName === nickname || roomName === String(uin)
 
 // 群成员信息缓存
 const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
@@ -305,18 +306,29 @@ const initStorage = async () => {
             renewMessage: (roomId, messageId, message) => clients.renewMessage(roomId, messageId, message),
             getMessage: (roomId, messageId) => storage.getMessage(roomId, messageId),
         })
-        storage.getAllRooms().then((e) => {
-            e.forEach(async (e) => {
-                if (e.roomId > -1) return
-                try {
-                    const group = await bot.getGroupInfo(-e.roomId)
-                    if (group && group.group.group_name !== e.roomName) {
-                        await storage.updateRoom(e.roomId, { roomName: group.group.group_name })
-                    }
-                } catch (e) {
-                    console.error(e)
+        const rooms = await storage.getAllRooms()
+        await Promise.all(
+            rooms
+                .filter(
+                    (room) =>
+                        room.roomId > 0 &&
+                        room.roomId !== uin &&
+                        (!room.roomName || (isOwnRoomName(room.roomName) && Number(room.lastMessage?.userId) === uin)),
+                )
+                .map(async (room) => {
+                    await storage.updateRoom(room.roomId, { roomName: await getPrivateRoomName(room.roomId) })
+                }),
+        )
+        rooms.forEach(async (room) => {
+            if (room.roomId > -1) return
+            try {
+                const group = await bot.getGroupInfo(-room.roomId)
+                if (group && group.group.group_name !== room.roomName) {
+                    await storage.updateRoom(room.roomId, { roomName: group.group.group_name })
                 }
-            })
+            } catch (error) {
+                console.error(error)
+            }
         })
     } catch (err) {
         console.log(err)
@@ -324,6 +336,11 @@ const initStorage = async () => {
         broadcast('fatal', '无法连接数据库')
         process.exit(2)
     }
+}
+
+async function getPrivateRoomName(roomId: number): Promise<string> {
+    const info = await adapter.getFriendInfo(roomId)
+    return info.remark || info.nickname || String(roomId)
 }
 
 const attachEventHandler = () => {
@@ -349,18 +366,18 @@ const attachEventHandler = () => {
         if (isGroup && isSelfMsg) {
             senderName = 'You'
         } else if (isGroup && data.group_member) {
-            senderName = data.group_member.card || data.group_member.nickname
+            senderName = data.group_member.card || data.group_member.nickname || String(senderId)
         } else if (data.friend) {
-            senderName = data.friend.remark || data.friend.nickname
+            senderName = data.friend.remark || data.friend.nickname || String(senderId)
         } else {
             senderName = String(senderId)
         }
 
-        let roomName: string
-        if (isGroup && data.group) {
-            roomName = data.group.group_name
-        } else if (!isGroup && !isSelfMsg) {
-            roomName = senderName
+        let roomName: string | undefined
+        if (isGroup) {
+            roomName = data.group?.group_name || String(data.peer_id)
+        } else if (!isSelfMsg) {
+            roomName = data.friend?.remark || data.friend?.nickname || String(roomId)
         }
 
         const message: Message = {
@@ -377,8 +394,12 @@ const attachEventHandler = () => {
 
         let room = await storage.getRoom(roomId)
         if (!room) {
-            room = createRoom(roomId, roomName)
+            room = createRoom(roomId, roomName || (isGroup ? String(data.peer_id) : await getPrivateRoomName(roomId)))
             await storage.addRoom(room)
+        } else if (!room.roomName) {
+            room.roomName = roomName || (isGroup ? String(data.peer_id) : await getPrivateRoomName(roomId))
+        } else if (isSelfMsg && !isGroup && roomId !== uin && isOwnRoomName(room.roomName)) {
+            room.roomName = await getPrivateRoomName(roomId)
         } else {
             if (roomName && !room.roomName.startsWith(roomName)) {
                 room.roomName = roomName
@@ -1454,9 +1475,9 @@ const adapter: typeof oicqAdapter = {
                         : encodePrivateMessageId(peerId, Number(msg.message_seq), 0, isSelfMsg)
                     let senderName: string
                     if (isGroup && msg.group_member) {
-                        senderName = msg.group_member.card || msg.group_member.nickname
+                        senderName = msg.group_member.card || msg.group_member.nickname || String(senderId)
                     } else if (msg.friend) {
-                        senderName = msg.friend.remark || msg.friend.nickname
+                        senderName = msg.friend.remark || msg.friend.nickname || String(senderId)
                     } else {
                         senderName = String(senderId)
                     }
