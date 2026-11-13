@@ -51,6 +51,8 @@
 </template>
 
 <script>
+import ipc from '../../../utils/ipc'
+import { isFlashTransferLink } from '../../../../utils/flashTransferLink'
 import SvgIcon from './SvgIcon'
 import ForwardMessageCard from './ForwardMessageCard'
 
@@ -125,6 +127,13 @@ export default {
             if (!message.href) return
             if (this.showForwardPanel) {
                 event.preventDefault()
+                return
+            }
+
+            if (isFlashTransferLink(message.href)) {
+                event.preventDefault()
+                event.stopPropagation()
+                ipc.openFlashTransferDetail(message.href)
                 return
             }
 

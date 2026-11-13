@@ -1,3 +1,4 @@
+import type { FlashTransferRequest, FlashTransferResponse } from './FlashTransfer'
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
 import Message from './Message'
@@ -200,6 +201,11 @@ export default interface Adapter {
     requestGfsToken(gin: number): Promise<string>
 
     getDisabledFeatures(): Promise<SpecialFeature[]>
+
+    flashTransferRequest?(
+        request: FlashTransferRequest,
+        progress?: (value: number) => void,
+    ): Promise<FlashTransferResponse>
 
     favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse>
 

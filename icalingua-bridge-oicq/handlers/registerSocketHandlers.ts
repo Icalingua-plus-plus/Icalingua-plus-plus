@@ -1,3 +1,10 @@
+import { FlashTransfer, type FlashTransferMetadata } from 'oicq-icalingua-plus-plus'
+import crypto from 'crypto'
+import type {
+    FlashTransferRequest,
+    FlashTransferResponse,
+    FlashTransferUploadTicket,
+} from '@icalingua/types/FlashTransfer'
 import Message from '@icalingua/types/Message'
 import MessagePageOptions from '@icalingua/types/MessagePage'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
@@ -176,6 +183,104 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             }
         },
     )
+    const flashUploadTasks = new Map<
+        string,
+        { metadata: FlashTransferMetadata[]; total: number; registered: boolean }
+    >()
+    const flashUploadTickets = new Map<string, { task_id: string; ticket: FlashTransferUploadTicket }>()
+    let flashUploadsClosed = false
+    const releaseFlashUpload = (task_id: string) => {
+        flashUploadTasks.delete(task_id)
+        for (const [id, item] of flashUploadTickets) if (item.task_id === task_id) flashUploadTickets.delete(id)
+    }
+    socket.on('disconnect', () => {
+        flashUploadsClosed = true
+        flashUploadTasks.clear()
+        flashUploadTickets.clear()
+    })
+    socket.on(
+        'flashTransferRequest',
+        async (request: FlashTransferRequest, resolve?: (value: FlashTransferResponse) => void) => {
+            if (typeof resolve !== 'function') return
+            try {
+                if (flashUploadsClosed) throw new Error('Bridge 连接已关闭，请重新上传')
+                if (request?.action === 'upload') throw new Error('请更新客户端，闪传文件应由客户端直接上传至 QQ')
+                if (request?.action === 'release_upload') {
+                    releaseFlashUpload(request.task_id)
+                    resolve({ ok: true })
+                    return
+                }
+                let task_id = request.task?.task_id || request.task_id
+                let state = flashUploadTasks.get(task_id)
+                let payload = request
+                if (request.action === 'add_files') {
+                    const { metadata, metadata_offset: offset, metadata_total: total } = request
+                    if (
+                        !request.task?.task_id ||
+                        !request.task.fileset_id ||
+                        !Array.isArray(metadata) ||
+                        !metadata.length ||
+                        metadata.length > 100 ||
+                        !Number.isSafeInteger(offset) ||
+                        offset < 0 ||
+                        !Number.isSafeInteger(total) ||
+                        total < 1 ||
+                        total > 10000 ||
+                        offset + metadata.length > total
+                    )
+                        throw new Error('上传元数据批次无效，请更新客户端')
+                    if (!state) {
+                        if (offset !== 0) throw new Error('上传元数据批次不连续，请重新上传')
+                        state = { metadata: [], total, registered: false }
+                        flashUploadTasks.set(task_id, state)
+                    }
+                    if (state.registered || state.total !== total || state.metadata.length !== offset)
+                        throw new Error('上传元数据批次不连续，请重新上传')
+                    state.metadata.push(...metadata)
+                    if (state.metadata.length < total) {
+                        resolve({ ok: true, data: [] })
+                        return
+                    }
+                    payload = { action: 'add_files', task: request.task, metadata: state.metadata }
+                }
+                if (request.action === 'apply_upload' || request.action === 'submit') {
+                    if (!state?.registered) throw new Error('上传任务已释放或文件尚未登记完成，请重新上传')
+                }
+                if (request.action === 'complete_file') {
+                    const item = flashUploadTickets.get(request.upload_id)
+                    if (!item) throw new Error('上传凭证已失效，请重新上传')
+                    task_id = item.task_id
+                    state = flashUploadTasks.get(task_id)
+                    if (!state?.registered) throw new Error('上传任务已释放，请重新上传')
+                    payload = { action: 'complete_file', ticket: item.ticket }
+                }
+                const result = await adapter.flashTransferRequest(payload)
+                if (flashUploadsClosed || (state && flashUploadTasks.get(task_id) !== state))
+                    throw new Error('上传任务已释放或连接已断开，请重新上传')
+                if (result.ok && request.action === 'capabilities')
+                    result.data = {
+                        ...result.data,
+                        client_upload_version: typeof FlashTransfer?.upload === 'function' ? 2 : 0,
+                    }
+                if (result.ok && request.action === 'add_files') {
+                    state.registered = true
+                    state.metadata = []
+                }
+                if (result.ok && request.action === 'apply_upload') {
+                    const ticket = result.data as FlashTransferUploadTicket
+                    const upload_id = crypto.randomBytes(16).toString('hex')
+                    flashUploadTickets.set(upload_id, { task_id, ticket })
+                    result.data = { upload_id, ukey: ticket.ukey, appid: ticket.appid, file_id: ticket.file_id }
+                }
+                if (result.ok && request.action === 'complete_file') flashUploadTickets.delete(request.upload_id)
+                if (result.ok && request.action === 'submit') releaseFlashUpload(task_id)
+                resolve(result)
+            } catch (error) {
+                resolve({ ok: false, error: error instanceof Error ? error.message : String(error) })
+            }
+        },
+    )
+
     socket.on('favoritesRequest', async (request: FavoriteRequest, resolve?: (value: FavoriteResponse) => void) => {
         if (typeof resolve !== 'function') return
         try {

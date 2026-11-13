@@ -151,7 +151,7 @@ export default {
     },
     created() {
         ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
-            this.friendsAll = friends ? Object.freeze(friends) : null
+            this.friendsAll = Object.freeze(friends || [])
             this.groupsAll = Object.freeze(groups)
             friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
         })
@@ -160,7 +160,7 @@ export default {
         refresh() {
             this.friendsAll = this.groupsAll = this.friendsFallback = []
             ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
-                this.friendsAll = friends ? Object.freeze(friends) : null
+                this.friendsAll = Object.freeze(friends || [])
                 this.groupsAll = Object.freeze(groups)
                 friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
                 this.$message.success('已刷新')

@@ -1,3 +1,4 @@
+import { isFlashTransferLink, flashTransferInput } from '../../utils/flashTransferLink'
 import { BrowserWindow, globalShortcut, nativeTheme, shell, screen, ipcMain, Menu, MenuItem } from 'electron'
 import { clearCurrentRoomUnread, getCookies, sendButtonCallback, sendOnlineData } from '../ipc/botAndStorage'
 import { getConfig, saveConfigFile, MAIN_WINDOW_MIN_SIZE } from './configManager'
@@ -20,6 +21,8 @@ let mainWindow: BrowserWindow
 let requestWindow: BrowserWindow
 let favoritesWindow: BrowserWindow
 let deviceManagerWindow: BrowserWindow
+let flashTransferWindow: BrowserWindow
+const flashTransferDetailWindows = new Map<string, BrowserWindow>()
 let unlockWindow: BrowserWindow
 let setLockPasswordWindow: BrowserWindow
 let settingsWindow: BrowserWindow
@@ -290,6 +293,10 @@ export const sendToWindow = (targetWindow: BrowserWindow | undefined, channel: s
 /** 为主窗口和独立窗口注册统一的链接处理器。 */
 function registerWindowOpenHandler(targetWindow: BrowserWindow) {
     targetWindow.webContents.setWindowOpenHandler((details) => {
+        if (isFlashTransferLink(details.url)) {
+            showFlashTransferDetailWindow(details.url)
+            return { action: 'deny' }
+        }
         const url1 = new URL(details.url)
         const action = (url1.hostname + url1.pathname).replace(/^\/\//, '')
         if (url1.hostname == 'qun.qq.com') {
@@ -566,6 +573,10 @@ export const lockMainWindow = () => {
     } else {
         mainWindow.hide()
         if (favoritesWindow && !favoritesWindow.isDestroyed()) favoritesWindow.hide()
+        if (flashTransferWindow && !flashTransferWindow.isDestroyed()) flashTransferWindow.hide()
+        flashTransferDetailWindows.forEach((win) => {
+            if (!win.isDestroyed()) win.hide()
+        })
         isLocked = true
         updateTrayMenu()
     }
@@ -644,6 +655,11 @@ export const tryToShowAllWindows = () => {
     })
 }
 export const destroyWindow = () => {
+    if (flashTransferWindow && !flashTransferWindow.isDestroyed()) flashTransferWindow.destroy()
+    flashTransferDetailWindows.forEach((win) => {
+        if (!win.isDestroyed()) win.destroy()
+    })
+    flashTransferDetailWindows.clear()
     if (favoritesWindow && !favoritesWindow.isDestroyed()) favoritesWindow.destroy()
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
     if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
@@ -953,4 +969,64 @@ export const closeChatWindow = (roomId: number) => {
     if (win && !win.isDestroyed()) {
         win.close()
     }
+}
+
+function createFlashTransferWindow(route: string, detail: boolean) {
+    const area = screen.getPrimaryDisplay().workAreaSize
+    const win = newIcalinguaWindow(
+        {
+            width: Math.min(detail ? 1160 : 1320, area.width),
+            height: Math.min(850, area.height),
+            minWidth: detail ? 680 : 760,
+            minHeight: 540,
+            backgroundColor: themes.getThemeBackgroundColor(),
+            autoHideMenuBar: true,
+            webPreferences: { nodeIntegration: true, contextIsolation: false },
+        },
+        { stableTitle: detail ? 'Icalingua++ 闪传详情' : 'Icalingua++ QQ 闪传' },
+    )
+    registerWindowOpenHandler(win)
+    win.webContents.on('will-navigate', (event) => event.preventDefault())
+    win.webContents.on('did-finish-load', () => {
+        if (win.isDestroyed()) return
+        win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+        const data = themes.getThemeData()
+        if (Object.keys(data || {}).length) win.webContents.send('theme:sync-theme-data', data)
+    })
+    win.loadURL(getWinUrl() + route)
+    return win
+}
+
+export const showFlashTransferWindow = () => {
+    judgeLocked(() => {
+        if (flashTransferWindow && !flashTransferWindow.isDestroyed()) {
+            if (flashTransferWindow.isMinimized()) flashTransferWindow.restore()
+            flashTransferWindow.show()
+            flashTransferWindow.focus()
+            return
+        }
+        const win = createFlashTransferWindow('#/flashTransfer', false)
+        flashTransferWindow = win
+        win.on('closed', () => {
+            if (flashTransferWindow === win) flashTransferWindow = null
+        })
+    })
+}
+
+export const showFlashTransferDetailWindow = (value = '') => {
+    const input = flashTransferInput(value)
+    judgeLocked(() => {
+        const previous = flashTransferDetailWindows.get(input)
+        if (previous && !previous.isDestroyed()) {
+            if (previous.isMinimized()) previous.restore()
+            previous.show()
+            previous.focus()
+            return
+        }
+        const win = createFlashTransferWindow('#/flashTransfer/detail?input=' + encodeURIComponent(input), true)
+        flashTransferDetailWindows.set(input, win)
+        win.on('closed', () => {
+            if (flashTransferDetailWindows.get(input) === win) flashTransferDetailWindows.delete(input)
+        })
+    })
 }

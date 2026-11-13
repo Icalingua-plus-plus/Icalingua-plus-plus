@@ -1,3 +1,4 @@
+import { registerFlashTransferIpc } from './flashTransfer'
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
 import Cookies from '@icalingua/types/cookies'
@@ -562,3 +563,5 @@ ipcMain.handle('getRoomInfo', async (_, roomId: number) => {
 ipcMain.on('clearChatWindowUnread', async (_, roomId: number) => {
     await clearRoomUnread(roomId)
 })
+
+registerFlashTransferIpc(adapter)

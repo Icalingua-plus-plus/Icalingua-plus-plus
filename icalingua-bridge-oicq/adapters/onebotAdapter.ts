@@ -1806,6 +1806,10 @@ const adapter: typeof oicqAdapter = {
     setOnlineStatus(status: number) {
         return null
     },
+    async flashTransferRequest() {
+        return { ok: false, error: '当前适配器不支持 QQ 闪传，请使用 oicq' }
+    },
+
     async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
         return { ok: false, error: '当前上游协议不支持 QQ 收藏管理，请使用 oicq 模式' }
     },

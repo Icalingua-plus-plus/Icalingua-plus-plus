@@ -30,6 +30,7 @@ import {
     lockMainWindow,
     showAria2SettingsWindow,
     showDeviceManagerWindow,
+    showFlashTransferWindow,
     showFavoritesWindow,
     showIgnoreManageWindow,
     showRequestWindow,
@@ -1101,6 +1102,10 @@ export const updateAppMenu = async () => {
             new MenuItem({
                 label: '收藏管理',
                 click: () => showFavoritesWindow(),
+            }),
+            new MenuItem({
+                label: 'QQ 闪传',
+                click: () => showFlashTransferWindow(),
             }),
             new MenuItem({
                 label: '登录设备管理',

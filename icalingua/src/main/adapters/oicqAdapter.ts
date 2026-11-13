@@ -1,3 +1,9 @@
+import type {
+    FlashTransferProtocolClient,
+    FlashTransferRequest,
+    FlashTransferResponse,
+} from '@icalingua/types/FlashTransfer'
+import { flashTransferRequest as runFlashTransferRequest } from '../utils/flashTransfer'
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
@@ -2730,6 +2736,13 @@ const adapter: OicqAdapter = {
         const ret = await bot.preloadImages(urls)
         if (ret.error) return false
         else return true
+    },
+
+    flashTransferRequest(
+        request: FlashTransferRequest,
+        progress?: (value: number) => void,
+    ): Promise<FlashTransferResponse> {
+        return runFlashTransferRequest(bot as unknown as FlashTransferProtocolClient, request, progress)
     },
 
     /** 透传收藏管理动作，并将协议错误转换为可跨 IPC / Bridge 传输的结果。 */

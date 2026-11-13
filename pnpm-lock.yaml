@@ -71,8 +71,8 @@ importers:
         specifier: 2.7.0
         version: 2.7.0
       oicq-icalingua-plus-plus:
-        specifier: ^1.26.28
-        version: 1.26.28
+        specifier: ^1.26.30
+        version: 1.26.30
       pangu:
         specifier: ^4.0.7
         version: 4.0.7
@@ -306,8 +306,8 @@ importers:
         specifier: ^2.18.1
         version: 2.18.1
       oicq-icalingua-plus-plus:
-        specifier: ^1.26.28
-        version: 1.26.28
+        specifier: ^1.26.30
+        version: 1.26.30
       pg:
         specifier: ^8.22.0
         version: 8.22.0
@@ -3218,8 +3218,8 @@ packages:
     resolution: {integrity: sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==}
     engines: {node: '>= 0.4'}
 
-  oicq-icalingua-plus-plus@1.26.28:
-    resolution: {integrity: sha512-EA7f5lr5bpXW24SvVymV4nMj3UCD+XYtl9zGvm4fLA+iCo93tzaK7LmOoh4eb7IBMQvY0ToKck8+8tkqQUeDkg==}
+  oicq-icalingua-plus-plus@1.26.30:
+    resolution: {integrity: sha512-zT2R/iioYbHIB6YTpx8KgjcwFIJubmU5dNv/8xf2aCoD8E3CeqwSFhPBCTo+19+Wlf3f8kLGdaEZbvb9dT7Ssg==}
     engines: {node: '>= v14'}
     hasBin: true
 
@@ -7752,7 +7752,7 @@ snapshots:
   object-keys@1.1.1:
     optional: true
 
-  oicq-icalingua-plus-plus@1.26.28:
+  oicq-icalingua-plus-plus@1.26.30:
     dependencies:
       axios: 1.18.1
       jsqr: 1.4.0

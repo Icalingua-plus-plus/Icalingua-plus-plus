@@ -1,3 +1,10 @@
+import { FlashTransfer } from 'oicq-icalingua-plus-plus'
+import { buildFlashTransferFiles } from '../utils/flashTransfer'
+import type {
+    FlashTransferRequest,
+    FlashTransferResponse,
+    FlashTransferRemoteUpload,
+} from '@icalingua/types/FlashTransfer'
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
 import BridgeVersionInfo from '@icalingua/types/BridgeVersionInfo'
@@ -1255,6 +1262,86 @@ const adapter: Adapter = {
             })
         })
     },
+    async flashTransferRequest(
+        request: FlashTransferRequest,
+        onProgress?: (progress: number) => void,
+    ): Promise<FlashTransferResponse> {
+        const connection = socket
+        if (!connection?.connected) return { ok: false, error: 'Bridge 未连接，请连接后重试' }
+        const send = (payload: FlashTransferRequest): Promise<FlashTransferResponse> => {
+            if (!connection.connected) return Promise.resolve({ ok: false, error: 'Bridge 已断开连接，请重新上传' })
+            return new Promise((resolve) => {
+                connection
+                    .timeout(120000)
+                    .emit('flashTransferRequest', payload, (error: Error, response: FlashTransferResponse) => {
+                        if (error) resolve({ ok: false, error: 'Bridge 闪传请求超时，请检查连接及 Bridge 版本' })
+                        else resolve(response || { ok: false, error: 'Bridge 返回了无效的闪传响应' })
+                    })
+            })
+        }
+        if (request.action !== 'upload') return send(request)
+        if (typeof FlashTransfer?.upload !== 'function')
+            return { ok: false, error: '当前 oicq 不支持闪传客户端直传，请更新 oicq' }
+        try {
+            const capability = await send({ action: 'capabilities' })
+            if (!capability.ok) return capability
+            if (capability.data?.client_upload_version !== 2)
+                return { ok: false, error: 'Bridge 不支持闪传客户端直传，请更新 Bridge 及其 oicq' }
+            const call = async (payload: FlashTransferRequest) => {
+                const response = await send(payload)
+                if (!response.ok)
+                    throw Object.assign(new Error(response.error || '闪传控制操作失败'), { code: response.code })
+                return response.data
+            }
+            const data = await FlashTransfer.upload<FlashTransferRemoteUpload>(
+                buildFlashTransferFiles(request.entries),
+                {
+                    create: (name, options) => call({ action: 'create', name, options }),
+                    async addFiles(task, files) {
+                        const added = []
+                        for (let index = 0; index < files.length; index += 100)
+                            added.push(
+                                ...(await call({
+                                    action: 'add_files',
+                                    task,
+                                    metadata: files.slice(index, index + 100),
+                                    metadata_offset: index,
+                                    metadata_total: files.length,
+                                })),
+                            )
+                        return added
+                    },
+                    applyUpload: (task, file, source) =>
+                        call({
+                            action: 'apply_upload',
+                            task,
+                            file,
+                            source: {
+                                name: source.name,
+                                size: source.size,
+                                md5: Buffer.isBuffer(source.md5) ? source.md5.toString('hex') : source.md5,
+                                sha1: Buffer.isBuffer(source.sha1) ? source.sha1.toString('hex') : source.sha1,
+                            },
+                        }),
+                    completeFile: (ticket) => call({ action: 'complete_file', upload_id: ticket.upload_id }),
+                    submit: (task_id) => call({ action: 'submit', task_id }),
+                },
+                request.name?.trim() || undefined,
+                (value) => onProgress?.(Number(value)),
+                { timeout: 120000 },
+            )
+            return { ok: true, data }
+        } catch (error) {
+            if (error.task?.task_id && connection.connected)
+                connection.emit(
+                    'flashTransferRequest',
+                    { action: 'release_upload', task_id: error.task.task_id },
+                    () => {},
+                )
+            return { ok: false, error: error instanceof Error ? error.message : String(error), code: error?.code }
+        }
+    },
+
     favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse> {
         if (!socket?.connected) return Promise.resolve({ ok: false, error: 'Bridge 未连接，请连接后重试' })
         return new Promise((resolve) => {

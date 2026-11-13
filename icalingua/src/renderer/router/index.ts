@@ -1,3 +1,5 @@
+import FlashTransferManager from '../views/FlashTransferManager.vue'
+import FlashTransferDetail from '../views/FlashTransferDetail.vue'
 import Vue from 'vue'
 import Router from 'vue-router'
 import ChatView from '../views/ChatView.vue'
@@ -27,6 +29,8 @@ Vue.use(Router)
 
 export default new Router({
     routes: [
+        { path: '/flashTransfer', name: 'flash-transfer-manager', component: FlashTransferManager },
+        { path: '/flashTransfer/detail', name: 'flash-transfer-detail', component: FlashTransferDetail },
         {
             path: '/main',
             name: 'chat-page',

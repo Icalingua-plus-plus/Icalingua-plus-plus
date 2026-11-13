@@ -1,3 +1,9 @@
+import type {
+    FlashTransferDownload,
+    FlashTransferEntry,
+    FlashTransferRequest,
+    FlashTransferResponse,
+} from '@icalingua/types/FlashTransfer'
 import Aria2Config from '@icalingua/types/Aria2Config'
 import AllConfig from '@icalingua/types/AllConfig'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
@@ -10,7 +16,7 @@ import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
-import { ipcRenderer } from 'electron'
+import { ipcRenderer, webUtils } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
@@ -21,6 +27,34 @@ type SettingsPatch = Omit<Partial<AllConfig>, 'account'> & {
 }
 
 const ipc = {
+    openFlashTransfer() {
+        ipcRenderer.send('OpenFlashTransfer')
+    },
+    openFlashTransferDetail(input = '') {
+        ipcRenderer.send('OpenFlashTransferDetail', input)
+    },
+    async selectFlashTransferFiles(directory = false): Promise<FlashTransferEntry[]> {
+        return ipcRenderer.invoke('SelectFlashTransferFiles', directory)
+    },
+    async collectFlashTransferFiles(files: File[]): Promise<FlashTransferEntry[]> {
+        const paths = files.map((file) => webUtils.getPathForFile(file))
+        if (paths.some((file) => !file)) throw new Error('请拖入本机文件或目录')
+        return ipcRenderer.invoke('CollectFlashTransferFiles', paths)
+    },
+    async flashTransferRequest<T = any>(request: FlashTransferRequest): Promise<FlashTransferResponse<T>> {
+        return ipcRenderer.invoke('FlashTransferRequest', request)
+    },
+    async copyFlashTransferText(text: string): Promise<void> {
+        return ipcRenderer.invoke('CopyFlashTransferText', text)
+    },
+    async openFlashTransferWebsite(url: string): Promise<void> {
+        return ipcRenderer.invoke('OpenFlashTransferWebsite', url)
+    },
+    async downloadFlashTransferFiles(
+        files: FlashTransferDownload[],
+    ): Promise<{ canceled: boolean; queued: number; failed: { path: string; error: string }[] }> {
+        return ipcRenderer.invoke('DownloadFlashTransferFiles', files)
+    },
     sendMessage(data) {
         return ipcRenderer.send('sendMessage', data)
     },

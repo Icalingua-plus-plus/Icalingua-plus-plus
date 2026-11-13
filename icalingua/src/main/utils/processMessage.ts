@@ -672,6 +672,8 @@ const processMessage = async (
                     errorHandler(e, true)
                 }
                 break
+            case 'qfile':
+                break
             default:
                 console.log('[无法解析的消息]', m)
                 if (!getConfig().debugmode) break

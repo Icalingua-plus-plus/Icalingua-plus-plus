@@ -810,6 +810,8 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             }
                         }
                         break
+                    case 'qfile':
+                        break
                     default:
                         console.log('[无法解析的消息]', m)
                         break
