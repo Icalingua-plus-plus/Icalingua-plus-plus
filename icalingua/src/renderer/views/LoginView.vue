@@ -269,7 +269,9 @@ export default {
                         { label: '9.0.95', value: '55' },
                         { label: '9.1.0', value: '57' },
                         { label: '9.1.20', value: '59' },
+                        { label: '9.2.0', value: '63' },
                         { label: '9.2.80', value: '61' },
+                        { label: '9.3.50', value: '65' },
                     ],
                 },
                 {
@@ -302,7 +304,9 @@ export default {
                         { label: '9.0.95', value: '56' },
                         { label: '9.1.0', value: '58' },
                         { label: '9.1.20', value: '60' },
+                        { label: '9.2.0', value: '64' },
                         { label: '9.2.80', value: '62' },
+                        { label: '9.3.50', value: '66' },
                     ],
                 },
                 {
@@ -421,7 +425,7 @@ export default {
         this.lifecycleScope.onIpc('qrcodeLogin', async (_, url) => {
             this.clearQrLoginInterval()
             qrLoginInterval = this.lifecycleScope.interval(() => {
-                const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
+                const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 64 }
                 ipcRenderer.send('createBot', submitForm)
             }, 5 * 1000)
         })
@@ -518,7 +522,7 @@ export default {
                     this.dbUpgrade = { active: false, step: 0, total: 0, message: '' }
                     if (this.form.password && !/^([a-f\d]{32}|[A-F\d]{32})$/.test(this.form.password))
                         this.form.password = md5(this.form.password)
-                    if (!this.form.signAPIAddress) {
+                    if (!this.form.signAPIAddress && ![64, 63].includes(Number(this.form.protocol))) {
                         this.$message.warning('未配置签名 API，可能禁止登录或无法发送消息')
                     }
                     if (!this.form.useNT) {
@@ -532,7 +536,7 @@ export default {
                             )
                         }, 60 * 1000)
                     }
-                    const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 2 }
+                    const submitForm = { ...this.form, protocol: Number(this.form.protocol) || 64 }
                     if (this.form.protocol === '-1') {
                         const apkStr = this.apkInfoStr.trim()
                         if (apkStr) {
