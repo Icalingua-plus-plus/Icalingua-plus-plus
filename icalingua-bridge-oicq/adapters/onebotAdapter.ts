@@ -9,6 +9,7 @@ import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socket
 import OnebotClient, { GroupMessage } from '../clients/OnebotClient'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import clients from '../utils/clients'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import getSysInfo from '../utils/getSysInfo'
@@ -1804,6 +1805,9 @@ const adapter: typeof oicqAdapter = {
     },
     setOnlineStatus(status: number) {
         return null
+    },
+    async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
+        return { ok: false, error: '当前上游协议不支持 QQ 收藏管理，请使用 oicq 模式' }
     },
     async getLoginDevices(cb) {
         cb([])

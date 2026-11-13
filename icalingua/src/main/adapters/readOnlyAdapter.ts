@@ -13,6 +13,7 @@ import SendMessageParams from '@icalingua/types/SendMessageParams'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { app, dialog } from 'electron'
 import path from 'path'
 import axios from 'axios'
@@ -627,6 +628,10 @@ const adapter: Adapter = {
     getDisabledFeatures(): Promise<SpecialFeature[]> {
         // 只读模式禁用所有特殊功能
         return Promise.resolve([])
+    },
+
+    async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
+        return { ok: false, error: '只读模式不支持 QQ 收藏管理，请连接 oicq 或 Bridge' }
     },
 
     getLoginDevices(): any {

@@ -5,6 +5,7 @@ import StorageProvider from '@icalingua/types/StorageProvider'
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { broadcast, broadcastDatabaseUpgradeProgress } from '../providers/socketIoProvider'
 import MilkyClient, { IncomingMessage } from '../clients/MilkyClient'
 import Room from '@icalingua/types/Room'
@@ -2354,6 +2355,9 @@ const adapter: typeof oicqAdapter = {
     },
     setOnlineStatus(status) {
         return null
+    },
+    async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
+        return { ok: false, error: '当前上游协议不支持 QQ 收藏管理，请使用 oicq 模式' }
     },
     async getLoginDevices(cb) {
         cb([])

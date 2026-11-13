@@ -30,6 +30,7 @@ import {
     lockMainWindow,
     showAria2SettingsWindow,
     showDeviceManagerWindow,
+    showFavoritesWindow,
     showIgnoreManageWindow,
     showRequestWindow,
     showSetLockPasswordWindow,
@@ -1096,6 +1097,10 @@ export const updateAppMenu = async () => {
                         click: () => exportContacts('group'),
                     },
                 ],
+            }),
+            new MenuItem({
+                label: '收藏管理',
+                click: () => showFavoritesWindow(),
             }),
             new MenuItem({
                 label: '登录设备管理',

@@ -11,6 +11,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import axios from 'axios'
 import { app, dialog, Notification as ElectronNotification } from 'electron'
 import { fileTypeFromBuffer } from 'file-type'
@@ -1251,6 +1252,15 @@ const adapter: Adapter = {
             socket.emit('getDisabledFeatures', (features) => {
                 disabledFeatures = features
                 resolve(features)
+            })
+        })
+    },
+    favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse> {
+        if (!socket?.connected) return Promise.resolve({ ok: false, error: 'Bridge 未连接，请连接后重试' })
+        return new Promise((resolve) => {
+            socket.timeout(20000).emit('favoritesRequest', request, (error: Error, response: FavoriteResponse) => {
+                if (error) resolve({ ok: false, error: 'Bridge 收藏请求超时，请确认 Bridge 已更新且连接正常' })
+                else resolve(response || { ok: false, error: 'Bridge 返回了无效的收藏响应' })
             })
         })
     },

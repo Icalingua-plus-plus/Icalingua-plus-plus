@@ -6,6 +6,7 @@ import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import MessagePageOptions from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcMain, screen, shell } from 'electron'
 import getCharCount from '../../utils/getCharCount'
 import getWinUrl from '../../utils/getWinUrl'
@@ -29,6 +30,7 @@ import { openChatWindow, isRoomInChatWindow, focusChatWindow } from '../utils/wi
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { loadForwardMessages } from '../utils/forwardMessages'
 import type { ForwardResId } from '../utils/forwardMessages'
+import { safeFavoriteUrl } from '../../utils/favoriteImageLink'
 
 let adapter: Adapter
 if (getConfig().adapter === 'oicq') adapter = oicqAdapter
@@ -513,6 +515,15 @@ ipcMain.handle('migrateLegacyAtMessages', async () => {
 })
 ipcMain.on('ignoreChat', (_, data: IgnoreChatInfo) => adapter.ignoreChat(data))
 ipcMain.on('requestOnlineData', adapter.sendOnlineData)
+ipcMain.on('OpenFavoriteLink', (_, value: string) => {
+    const url = safeFavoriteUrl(value)
+    if (url) shell.openExternal(url)
+})
+
+ipcMain.handle('FavoritesRequest', async (_, request: FavoriteRequest): Promise<FavoriteResponse> => {
+    return adapter.favoritesRequest(request)
+})
+
 ipcMain.handle('getLoginDevices', async () => await adapter.getLoginDevices())
 ipcMain.on('deleteLoginDevice', async (_, flag) => await adapter.deleteLoginDevice(flag))
 

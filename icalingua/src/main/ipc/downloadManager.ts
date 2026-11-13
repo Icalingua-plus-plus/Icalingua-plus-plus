@@ -6,6 +6,7 @@ import { BrowserWindow, DownloadItem, app, dialog, ipcMain, shell } from 'electr
 import edl from 'electron-dl'
 import path from 'path'
 import { getConfig, saveConfigFile } from '../utils/configManager'
+import formatFileSize from '../../utils/formatFileSize'
 import ui from '../utils/ui'
 import { getMainWindow, sendToSettingsWindow } from '../utils/windowManager'
 import { getGroupFileMeta, getPrivateFileUrl } from './botAndStorage'
@@ -98,14 +99,6 @@ export const ensureDownloadDirectory = (dir?: string) => {
     const resolved = resolveDownloadDirectory(dir)
     fs.mkdirSync(resolved, { recursive: true })
     return resolved
-}
-
-const formatFileSize = (size: number) => {
-    if (size < 1024) return size + 'B'
-    else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + 'KB'
-    else if (size < 1024 * 1024 * 1024) return (size / 1024 / 1024).toFixed(2) + 'MB'
-    else if (size < 1024 * 1024 * 1024 * 1024) return (size / 1024 / 1024 / 1024).toFixed(2) + 'GB'
-    else return (size / 1024 / 1024 / 1024 / 1024).toFixed(2) + 'TB'
 }
 
 const registerDownload = (item: DownloadItem, url: string, fileName: string) => {

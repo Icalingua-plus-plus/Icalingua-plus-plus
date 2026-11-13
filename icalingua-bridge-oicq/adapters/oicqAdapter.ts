@@ -13,6 +13,7 @@ import SendMessageParams from '@icalingua/types/SendMessageParams'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
+import { FavoriteRequest, FavoriteResponse, FavoriteProtocolClient } from '@icalingua/types/Favorites'
 import fs from 'fs'
 import crypto from 'crypto'
 import {
@@ -2441,6 +2442,37 @@ const adapter = {
         const ret = await bot.preloadImages(urls)
         if (ret.error) return false
         else return true
+    },
+
+    /** 透传收藏管理动作，并将协议错误转换为可跨 IPC / Bridge 传输的结果。 */
+    async favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse> {
+        const client = bot as unknown as FavoriteProtocolClient
+        const operations = {
+            list: ['getFavoriteList', [request?.options || {}]],
+            get: ['getFavorite', [request?.cid]],
+            add: ['addFavorite', [request?.favorite]],
+            edit: ['editFavorite', [request?.cid, request?.changes]],
+            delete: ['deleteFavorite', [request?.cid]],
+            groups: ['getFavoriteGroups', []],
+            addGroup: ['addFavoriteGroup', [request?.name]],
+            editGroup: ['editFavoriteGroup', [request?.groupId, request?.name]],
+            deleteGroup: ['deleteFavoriteGroup', [request?.groupId]],
+            move: ['setFavoriteGroup', [request?.cid, request?.groupId]],
+            space: ['getFavoriteSpace', []],
+        } as const
+        if (!request || !Object.prototype.hasOwnProperty.call(operations, request.action))
+            return { ok: false, error: '无效的收藏操作' }
+        const [method, args] = operations[request.action]
+        if (!client || typeof client[method] !== 'function')
+            return { ok: false, error: '当前协议库不支持收藏管理，请更新 oicq 后重新登录' }
+        try {
+            const result = await client[method].apply(client, args)
+            if (result.retcode !== 0)
+                return { ok: false, error: result.error?.message || '收藏操作失败', code: result.error?.code }
+            return { ok: true, data: result.data }
+        } catch (error) {
+            return { ok: false, error: error instanceof Error ? error.message : '收藏操作失败' }
+        }
     },
 
     async getLoginDevices(cb) {

@@ -9,6 +9,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcRenderer } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import SpecialFeature from '@icalingua/types/SpecialFeature'
@@ -191,6 +192,9 @@ const ipc = {
     download(url: string, out: string, dir?: string) {
         ipcRenderer.send('download', url, out, dir)
     },
+    openImage(url: string, external = false, urlList: string[] = []) {
+        ipcRenderer.send('openImage', url, external, urlList)
+    },
     downloadImage(url: string) {
         ipcRenderer.send('downloadImage', url)
     },
@@ -358,6 +362,12 @@ const ipc = {
     },
     requestOnlineData() {
         ipcRenderer.send('requestOnlineData')
+    },
+    openFavoriteLink(url: string) {
+        ipcRenderer.send('OpenFavoriteLink', url)
+    },
+    async favoritesRequest<T = unknown>(request: FavoriteRequest): Promise<FavoriteResponse<T>> {
+        return await ipcRenderer.invoke('FavoritesRequest', request)
     },
     async getLoginDevices() {
         return await ipcRenderer.invoke('getLoginDevices')

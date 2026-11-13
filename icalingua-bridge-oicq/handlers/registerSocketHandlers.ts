@@ -1,5 +1,6 @@
 import Message from '@icalingua/types/Message'
 import MessagePageOptions from '@icalingua/types/MessagePage'
+import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
@@ -175,6 +176,14 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             }
         },
     )
+    socket.on('favoritesRequest', async (request: FavoriteRequest, resolve?: (value: FavoriteResponse) => void) => {
+        if (typeof resolve !== 'function') return
+        try {
+            resolve(await adapter.favoritesRequest(request))
+        } catch (error) {
+            resolve({ ok: false, error: error instanceof Error ? error.message : '收藏操作失败' })
+        }
+    })
     socket.on('getLoginDevices', adapter.getLoginDevices)
     socket.on('deleteLoginDevice', adapter.deleteLoginDevice)
     socket.on('getPrivateFileUrl', adapter.getPrivateFileUrl)

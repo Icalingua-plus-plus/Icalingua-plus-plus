@@ -8,6 +8,7 @@ import ui from './ui'
 import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
+import { FAVORITE_IMAGE_LINK, readFavoriteImageLink, safeFavoriteUrl } from '../../utils/favoriteImageLink'
 import md5 from 'md5'
 import crypto from 'crypto'
 import atCache from './atCache'
@@ -17,6 +18,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 let loginWindow: BrowserWindow
 let mainWindow: BrowserWindow
 let requestWindow: BrowserWindow
+let favoritesWindow: BrowserWindow
 let deviceManagerWindow: BrowserWindow
 let unlockWindow: BrowserWindow
 let setLockPasswordWindow: BrowserWindow
@@ -563,6 +565,7 @@ export const lockMainWindow = () => {
         showSetLockPasswordWindow()
     } else {
         mainWindow.hide()
+        if (favoritesWindow && !favoritesWindow.isDestroyed()) favoritesWindow.hide()
         isLocked = true
         updateTrayMenu()
     }
@@ -633,12 +636,15 @@ export const tryToShowAllWindows = () => {
             bringWindowToFront(loginWindow)
         } else if (requestWindow && !requestWindow.isDestroyed()) {
             bringWindowToFront(requestWindow)
+        } else if (favoritesWindow && !favoritesWindow.isDestroyed()) {
+            bringWindowToFront(favoritesWindow)
         } else if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) {
             bringWindowToFront(deviceManagerWindow)
         }
     })
 }
 export const destroyWindow = () => {
+    if (favoritesWindow && !favoritesWindow.isDestroyed()) favoritesWindow.destroy()
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
     if (loginWindow && !loginWindow.isDestroyed()) loginWindow.destroy()
     if (requestWindow && !requestWindow.isDestroyed()) requestWindow.destroy()
@@ -686,6 +692,58 @@ ipcMain.on('unlock', (_, password: string) => {
         unlockWindow.webContents.send('unlock-fail')
     }
 })
+
+/** 打开独立收藏管理窗口；重复打开时聚焦已有窗口。 */
+export const showFavoritesWindow = () => {
+    judgeLocked(() => {
+        if (favoritesWindow && !favoritesWindow.isDestroyed()) {
+            if (favoritesWindow.isMinimized()) favoritesWindow.restore()
+            favoritesWindow.show()
+            favoritesWindow.focus()
+            return
+        }
+        const workArea = screen.getPrimaryDisplay().workAreaSize
+        favoritesWindow = newIcalinguaWindow(
+            {
+                width: Math.min(1280, workArea.width),
+                height: Math.min(820, workArea.height),
+                minWidth: 860,
+                minHeight: 580,
+                backgroundColor: themes.getThemeBackgroundColor(),
+                autoHideMenuBar: true,
+                webPreferences: { nodeIntegration: true, contextIsolation: false },
+            },
+            { stableTitle: 'Icalingua++ Favorites' },
+        )
+        const win = favoritesWindow
+        win.on('closed', () => {
+            if (favoritesWindow === win) favoritesWindow = null
+        })
+        win.webContents.on('did-finish-load', () => {
+            if (win.isDestroyed()) return
+            win.webContents.setZoomFactor(getConfig().zoomFactor / 100)
+            const themeData = themes.getThemeData()
+            if (Object.keys(themeData || {}).length) win.webContents.send('theme:sync-theme-data', themeData)
+        })
+        win.webContents.setWindowOpenHandler(({ url }) => {
+            if (url.startsWith(FAVORITE_IMAGE_LINK)) {
+                const image = readFavoriteImageLink(url)
+                if (image) win.webContents.send('OpenFavoriteImage', image)
+            } else {
+                const link = safeFavoriteUrl(url)
+                if (link) shell.openExternal(link)
+            }
+            return { action: 'deny' }
+        })
+        win.webContents.on('will-navigate', (event) => event.preventDefault())
+        win.loadURL(getWinUrl() + '#/favorites')
+        if (process.env.NODE_ENV === 'development') loadDevtools(win)
+    })
+}
+
+export const sendToFavoritesWindow = (channel: string, payload?: unknown) => {
+    if (favoritesWindow && !favoritesWindow.isDestroyed()) favoritesWindow.webContents.send(channel, payload)
+}
 
 export const showDeviceManagerWindow = () => {
     if (deviceManagerWindow && !deviceManagerWindow.isDestroyed()) {

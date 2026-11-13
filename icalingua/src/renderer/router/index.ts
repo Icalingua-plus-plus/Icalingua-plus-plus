@@ -16,6 +16,7 @@ import UnlockView from '../views/UnlockView.vue'
 import SetLockPasswordView from '../views/SetLockPasswordView.vue'
 import CardSourceView from '../views/CardSourceView.vue'
 import DeviceManager from '../views/DeviceManager.vue'
+import FavoritesManager from '../views/FavoritesManager.vue'
 import ChatWindowView from '../views/ChatWindowView.vue'
 import ImageGalleryView from '../views/ImageGalleryView.vue'
 import MemberHistoryView from '../views/MemberHistoryView.vue'
@@ -110,6 +111,11 @@ export default new Router({
             path: '/deviceManager',
             name: 'device-manager-page',
             component: DeviceManager,
+        },
+        {
+            path: '/favorites',
+            name: 'favorites-manager-page',
+            component: FavoritesManager,
         },
         {
             path: '/chatWindow/:roomId',

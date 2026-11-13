@@ -10,6 +10,7 @@ import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
 import SpecialFeature from './SpecialFeature'
 import MessagePageOptions from './MessagePage'
+import { FavoriteRequest, FavoriteResponse } from './Favorites'
 
 type CookiesDomain =
     | 'tenpay.com'
@@ -199,6 +200,8 @@ export default interface Adapter {
     requestGfsToken(gin: number): Promise<string>
 
     getDisabledFeatures(): Promise<SpecialFeature[]>
+
+    favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse>
 
     getLoginDevices(): any
 
