@@ -1542,17 +1542,6 @@ export default {
     border-top: 1px solid var(--settings-border);
 }
 
-.path-icon {
-    width: 34px;
-    height: 34px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 9px;
-    color: #b17a0b;
-    background: rgba(177, 122, 11, 0.14);
-}
-
 .path-copy {
     min-width: 0;
     flex: 1;

@@ -460,8 +460,7 @@ export default {
     margin-top: 3px;
 }
 
-.category-count,
-.new-category-hint {
+.category-count {
     color: var(--chat-color-placeholder, #909399);
     font-size: 12px;
 }

@@ -145,7 +145,7 @@ export default {
     .vac-forward-box {
         width: 100%;
         overflow: hidden;
-        background: var(--chat-footer-bg-color-forward);
+        background: var(--chat-footer-bg-color-forward, transparent);
         border-radius: 4px;
         padding: 8px 10px;
         display: flex;
@@ -166,7 +166,7 @@ export default {
     }
 
     .vac-forward-username {
-        color: var(--chat-message-color-forward-username);
+        color: var(--chat-message-color-forward-username, inherit);
         font-size: 12px;
         line-height: 15px;
         margin-bottom: 2px;
@@ -174,7 +174,7 @@ export default {
 
     .vac-forward-content {
         font-size: 12px;
-        color: var(--chat-message-color-forward-content);
+        color: var(--chat-message-color-forward-content, inherit);
         white-space: pre-line;
     }
 
