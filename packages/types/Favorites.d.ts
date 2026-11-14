@@ -48,6 +48,7 @@ export interface FavoriteSummary {
 
 export interface FavoriteCollection {
     cid: string
+    /** 服务端原始类型：1 文本、2 链接、3 图片、4 语音、5 视频、6 文件、7 位置、8 富媒体、9 高清音频。 */
     type?: number
     /** 原始同步状态：1 为正常；2/3 等非正常记录不应作为收藏展示。 */
     status?: number

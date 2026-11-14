@@ -16,10 +16,11 @@ export { safeFavoriteUrl }
 export const favoriteTypes = [
     { value: 1, label: '文本', icon: 'el-icon-document' },
     { value: 8, label: '笔记', icon: 'el-icon-edit-outline' },
-    { value: 6, label: '链接', icon: 'el-icon-link' },
-    { value: 2, label: '图片', icon: 'el-icon-picture-outline' },
-    { value: 3, label: '文件', icon: 'el-icon-folder-opened' },
+    { value: 2, label: '链接', icon: 'el-icon-link' },
+    { value: 3, label: '图片', icon: 'el-icon-picture-outline' },
+    { value: 6, label: '文件', icon: 'el-icon-folder-opened' },
     { value: 4, label: '语音', icon: 'el-icon-microphone' },
+    { value: 9, label: '高清音频', icon: 'el-icon-headset' },
     { value: 5, label: '视频', icon: 'el-icon-video-camera' },
     { value: 7, label: '位置', icon: 'el-icon-location-outline' },
 ]
@@ -44,7 +45,32 @@ export function favoritePageSignature(records: FavoriteCollection[]): string {
     return JSON.stringify(records.map((item) => [item.cid, item.status, item.modify_time, item.sequence]))
 }
 
-export function favoriteType(type?: number) {
+export function favoriteLink(item: FavoriteCollection): string {
+    const summary = item?.summary
+    return (
+        safeFavoriteUrl(summary?.link_summary?.uri || '') ||
+        safeFavoriteUrl(summary?.rich_media_summary?.original_uri || '')
+    )
+}
+
+/** 富媒体是协议容器；展示时链接优先于缩略图，无链接的带图内容归入图片。 */
+export function favoriteDisplayType(item: FavoriteCollection): number | undefined {
+    if (item?.type !== 8) return item?.type
+    if (favoriteLink(item)) return 2
+    const summary = item.summary
+    if (
+        [
+            summary?.gallery_summary?.pic_list,
+            summary?.rich_media_summary?.pic_list,
+            summary?.link_summary?.pic_list,
+        ].some((pictures) => pictures?.length)
+    )
+        return 3
+    return 8
+}
+
+export function favoriteType(value?: FavoriteCollection | number) {
+    const type = typeof value === 'number' ? value : favoriteDisplayType(value)
     return (
         favoriteTypes.find((item) => item.value === type) || { value: type, label: '收藏', icon: 'el-icon-collection' }
     )
@@ -62,7 +88,7 @@ export function favoriteTitle(item: FavoriteCollection): string {
         summary.gallery_summary?.notes ||
         summary.audio_summary?.note ||
         summary.rich_media_summary?.brief?.split('\n')[0] ||
-        `未命名${favoriteType(item?.type).label}`
+        `未命名${favoriteType(item).label}`
     )
 }
 
@@ -73,6 +99,7 @@ export function favoriteExcerpt(item: FavoriteCollection): string {
         summary.link_summary?.brief ||
         summary.text_summary?.brief ||
         summary.link_summary?.uri ||
+        summary.rich_media_summary?.original_uri ||
         summary.gallery_summary?.notes ||
         summary.audio_summary?.stt ||
         summary.location_summary?.address ||

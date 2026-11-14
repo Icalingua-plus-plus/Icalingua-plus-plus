@@ -192,12 +192,12 @@
                                 :aria-pressed="selectedCid === item.cid"
                                 @click="selectItem(item.cid)"
                             >
-                                <div class="favorite-row-icon"><i :class="typeInfo(item.type).icon"></i></div>
+                                <div class="favorite-row-icon"><i :class="typeInfo(item).icon"></i></div>
                                 <div class="favorite-row-content">
                                     <div class="favorite-row-title">{{ title(item) }}</div>
-                                    <p>{{ excerpt(item) || typeInfo(item.type).label + '收藏' }}</p>
+                                    <p>{{ excerpt(item) || typeInfo(item).label + '收藏' }}</p>
                                     <div class="favorite-row-meta">
-                                        <span>{{ typeInfo(item.type).label }}</span
+                                        <span>{{ typeInfo(item).label }}</span
                                         ><span v-if="groupName(item.custom_group_id)">{{
                                             groupName(item.custom_group_id)
                                         }}</span
@@ -348,6 +348,7 @@ import {
     favoriteTitle,
     favoriteExcerpt,
     favoriteType,
+    favoriteDisplayType,
     favoriteTime,
     favoriteSize,
     favoriteRequest,
@@ -441,7 +442,7 @@ export default {
             return this.items
                 .filter((item) => {
                     if (!isFavoriteVisible(item)) return false
-                    if (this.typeFilter && item.type !== this.typeFilter) return false
+                    if (this.typeFilter && favoriteDisplayType(item) !== this.typeFilter) return false
                     if (this.activeGroup === 'starred' && !item.star_mark) return false
                     if (this.activeGroup === 'ungrouped' && item.custom_group_id) return false
                     if (this.currentGroupId && item.custom_group_id !== this.currentGroupId) return false
@@ -756,7 +757,24 @@ export default {
                     if (existed) this.total = Math.max(this.items.length, this.total - 1)
                     throw new Error('这条收藏已删除或不可用，请刷新列表')
                 }
+                const pictures = detail.content?.rich_media_content?.pic_list
+                if (
+                    detail.collection.type === 8 &&
+                    pictures?.length &&
+                    !detail.collection.summary?.rich_media_summary?.pic_list?.length
+                ) {
+                    const summary = detail.collection.summary || {}
+                    detail.collection = {
+                        ...detail.collection,
+                        summary: {
+                            ...summary,
+                            rich_media_summary: { ...summary.rich_media_summary, pic_list: pictures },
+                        },
+                    }
+                }
                 this.detail = detail
+                const index = this.items.findIndex((item) => item.cid === cid)
+                if (index !== -1) this.$set(this.items, index, detail.collection)
             } catch (error) {
                 if (this.alive && epoch === this.detailEpoch) this.detailError = error.message || '收藏详情读取失败'
             } finally {

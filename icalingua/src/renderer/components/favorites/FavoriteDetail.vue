@@ -17,6 +17,13 @@
                     <span><i class="el-icon-folder-opened"></i>{{ groupName || '未分组' }}</span>
                 </div>
                 <div class="favorite-detail-actions">
+                    <el-button
+                        v-if="link && detail.html !== undefined"
+                        size="small"
+                        icon="el-icon-link"
+                        @click="openLink(link)"
+                        >打开链接</el-button
+                    >
                     <el-button v-if="editable" size="small" icon="el-icon-edit" :disabled="busy" @click="$emit('edit')"
                         >编辑</el-button
                     >
@@ -155,6 +162,7 @@ import {
     favoriteTitle,
     favoriteExcerpt,
     favoriteType,
+    favoriteLink,
     favoriteTime,
     favoriteSize,
     favoritePictures,
@@ -184,10 +192,10 @@ export default {
             return favoriteExcerpt(this.collection)
         },
         typeInfo() {
-            return favoriteType(this.collection.type)
+            return favoriteType(this.collection)
         },
         editable() {
-            return [1, 6, 8].includes(this.collection.type)
+            return [1, 2, 8].includes(this.collection.type)
         },
         pictures() {
             return favoritePictures(this.detail)
@@ -209,7 +217,7 @@ export default {
             return favoritePreviewDocument(this.detail.html, this.colors)
         },
         link() {
-            return safeFavoriteUrl(this.collection.summary?.link_summary?.uri || '')
+            return favoriteLink(this.collection)
         },
         location() {
             return this.collection.summary?.location_summary

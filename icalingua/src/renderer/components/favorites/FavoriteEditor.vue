@@ -168,7 +168,7 @@ export default {
                 const link = item.summary?.link_summary || {}
                 const rich = item.summary?.rich_media_summary || {}
                 this.form = {
-                    type: item.type === 8 ? 'rich' : item.type === 6 ? 'link' : 'text',
+                    type: item.type === 8 ? 'rich' : item.type === 2 ? 'link' : 'text',
                     text: this.detail.content?.text_content?.data || '',
                     html: this.detail.html || '',
                     url: link.uri || '',
