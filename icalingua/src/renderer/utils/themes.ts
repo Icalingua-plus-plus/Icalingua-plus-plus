@@ -62,6 +62,10 @@ ${Object.entries(style)
     ipcRenderer.send('theme:set-complete')
 }
 
+export function applyLightTheme() {
+    setupThemeStyles(cssThemeVars(defaultThemeStyles.light))
+}
+
 export function updateThemes() {
     let style = recalcTheme()
     ipcRenderer.send('theme:theme-data', style)
