@@ -15,7 +15,11 @@
             </button>
         </aside>
         <main class="flash-main">
-            <div v-if="dragDepth && !busy" class="flash-drop-overlay"><i class="el-icon-upload" />添加文件或目录</div>
+            <div v-if="dragDepth && !busy" class="flash-drop-overlay">
+                <i class="el-icon-upload" />松开鼠标，添加到{{
+                    tab === 'create' && folder ? '“' + folder + '”' : '新闪传'
+                }}
+            </div>
             <header class="flash-header">
                 <h1>{{ tab === 'library' ? '我的闪传' : '新建闪传' }}</h1>
                 <template v-if="tab === 'library'">
@@ -56,15 +60,22 @@
                         clearable
                         @keyup.enter.native="openDetail(openInput)"
                     />
-                    <el-button size="small" :disabled="!openInput.trim()" @click="openDetail(openInput)"
+                    <el-button
+                        size="small"
+                        type="primary"
+                        plain
+                        :disabled="!openInput.trim()"
+                        title="在新窗口中查看文件并下载"
+                        @click="openDetail(openInput)"
                         >打开</el-button
                     >
                     <el-button
                         size="small"
                         :disabled="!openInput.trim() || importing"
                         :loading="importing"
+                        title="仅保存到本机列表，稍后再查看"
                         @click="importRecord"
-                        >保存</el-button
+                        >保存到列表</el-button
                     >
                 </div>
                 <div class="flash-library-table">
@@ -93,15 +104,15 @@
                         <el-table-column label="大小" width="100"
                             ><template slot-scope="scope">{{ size(scope.row.total_size) }}</template></el-table-column
                         >
-                        <el-table-column label="有效期" width="160"
+                        <el-table-column label="有效期" width="120"
                             ><template slot-scope="scope"
-                                ><span :class="{ 'flash-muted': expired(scope.row) }">{{
-                                    expired(scope.row)
-                                        ? '已过期'
-                                        : scope.row.expire_time
-                                          ? time(scope.row.expire_time)
-                                          : '未知'
-                                }}</span></template
+                                ><el-tag v-if="expired(scope.row)" type="info" size="mini" effect="plain">已过期</el-tag
+                                ><span
+                                    v-else
+                                    :title="scope.row.expire_time ? time(scope.row.expire_time) : ''"
+                                    :class="{ 'flash-expiring': expiringSoon(scope.row) }"
+                                    >{{ expiry(scope.row.expire_time) }}</span
+                                ></template
                             ></el-table-column
                         >
                         <el-table-column width="175" fixed="right" align="right">
@@ -126,9 +137,16 @@
                                 </el-dropdown>
                             </template>
                         </el-table-column>
-                        <div slot="empty" class="flash-table-empty">
-                            <span>{{ search ? '没有匹配的闪传' : '暂无闪传' }}</span
-                            ><el-button v-if="!search" size="small" type="text" @click="tab = 'create'"
+                        <div slot="empty" class="flash-empty-state">
+                            <i :class="search ? 'el-icon-search' : 'el-icon-files'" />
+                            <strong>{{ search ? '没有匹配的闪传' : '还没有闪传' }}</strong>
+                            <span>{{
+                                search
+                                    ? '换个关键词试试，或清除搜索查看全部记录'
+                                    : '把文件拖到窗口任意位置即可开始，也可以在上方粘贴别人的分享链接'
+                            }}</span>
+                            <el-button v-if="search" size="small" @click="search = ''">清除搜索</el-button>
+                            <el-button v-else size="small" type="primary" icon="el-icon-plus" @click="tab = 'create'"
                                 >新建闪传</el-button
                             >
                         </div>
@@ -136,10 +154,26 @@
                 </div>
             </div>
             <div v-else class="flash-create-body">
-                <div v-if="created" class="flash-created">
-                    <i class="el-icon-circle-check" /><span :title="created.name">已创建：{{ created.name }}</span>
-                    <el-button size="small" type="text" @click="openDetail(created.fileset_id)">详情</el-button>
-                    <el-button size="small" type="text" @click="share(created)">发送</el-button>
+                <div v-if="created" class="flash-created" role="status">
+                    <i class="el-icon-circle-check" />
+                    <div class="flash-created-text">
+                        <strong :title="created.name">闪传“{{ created.name }}”已创建</strong>
+                        <span>{{ expiry(created.expire_time) }} · 已保存到“我的闪传”</span>
+                    </div>
+                    <el-button
+                        v-if="created.share_link"
+                        size="small"
+                        icon="el-icon-document-copy"
+                        @click="copyText(created.share_link)"
+                        >复制链接</el-button
+                    >
+                    <el-button size="small" @click="openDetail(created.fileset_id)">查看详情</el-button>
+                    <el-button size="small" type="primary" icon="el-icon-position" @click="share(created)"
+                        >发送给好友 / 群</el-button
+                    >
+                    <button class="flash-created-close" aria-label="关闭提示" @click="created = null">
+                        <i class="el-icon-close" />
+                    </button>
                 </div>
                 <section class="flash-compose">
                     <div class="flash-compose-title">
@@ -150,7 +184,8 @@
                             size="small"
                             :disabled="busy"
                             maxlength="100"
-                            placeholder="文件集名称"
+                            :placeholder="defaultTitle ? '留空将使用“' + defaultTitle + '”' : '文件集名称（选填）'"
+                            @keyup.enter.native="create"
                         />
                         <el-button
                             size="small"
@@ -193,7 +228,19 @@
                             >移除</el-button
                         >
                     </div>
-                    <div class="flash-editor">
+                    <div
+                        v-if="!entries.length"
+                        class="flash-dropzone"
+                        role="button"
+                        tabindex="0"
+                        @click="addFiles(false)"
+                        @keyup.enter="addFiles(false)"
+                    >
+                        <i :class="collecting ? 'el-icon-loading' : 'el-icon-upload'" />
+                        <strong>{{ collecting ? '正在读取文件…' : '把文件或文件夹拖到这里' }}</strong>
+                        <span>也可以使用上方的“添加文件”或“导入目录”，添加后可整理目录结构再创建</span>
+                    </div>
+                    <div v-else class="flash-editor">
                         <aside class="flash-folder-pane">
                             <el-tree
                                 :data="folderTree"
@@ -230,8 +277,11 @@
                                     row-key="relative_path"
                                     height="100%"
                                     size="small"
+                                    tabindex="0"
                                     @selection-change="selection = $event"
                                     @row-dblclick="enterEntry"
+                                    @keydown.native.delete="removeSelected"
+                                    @keydown.native.backspace="goUp"
                                 >
                                     <el-table-column type="selection" width="44" :selectable="() => !busy" />
                                     <el-table-column label="名称" min-width="140"
@@ -261,14 +311,20 @@
                                             ></template
                                         ></el-table-column
                                     >
-                                    <div slot="empty" class="flash-table-empty">暂无文件</div>
+                                    <div slot="empty" class="flash-table-empty">
+                                        这个文件夹是空的，可以拖入文件到这里
+                                    </div>
                                 </el-table>
                             </div>
                         </div>
                     </div>
                     <footer class="flash-upload-footer">
                         <span class="flash-muted">{{
-                            collecting ? '正在读取文件…' : fileCount + ' 个文件 · ' + size(totalSize)
+                            collecting
+                                ? '正在读取文件…'
+                                : selection.length
+                                  ? '已选择 ' + selection.length + ' 项（Delete 键移除）'
+                                  : fileCount + ' 个文件 · ' + size(totalSize)
                         }}</span>
                         <div v-if="uploading" class="flash-upload-progress">
                             <span>{{
@@ -338,6 +394,7 @@ import {
     flashTransferFolderTree,
     flashTransferSize,
     flashTransferTime,
+    flashTransferExpiry,
 } from '../utils/flashTransfer'
 import '../assets/flashTransfer.css'
 
@@ -390,6 +447,9 @@ export default {
         folderTree() {
             return flashTransferFolderTree(this.entries)
         },
+        defaultTitle() {
+            return this.entries.length ? this.basename(this.entries[0].relative_path) : ''
+        },
         folderParts() {
             return this.folder ? this.folder.split('/') : []
         },
@@ -441,8 +501,20 @@ export default {
         basename(value) {
             return value.split('/').pop()
         },
+        expiry: flashTransferExpiry,
         expired(record) {
             return record.expire_time > 0 && record.expire_time * 1000 < Date.now()
+        },
+        expiringSoon(record) {
+            return record.expire_time > 0 && record.expire_time * 1000 - Date.now() < 86400000
+        },
+        async copyText(value) {
+            try {
+                await ipc.copyFlashTransferText(value)
+                if (this.alive) this.$message.success('已复制')
+            } catch (error) {
+                if (this.alive) this.$message.error(error.message)
+            }
         },
         loadRecords() {
             try {
@@ -493,9 +565,7 @@ export default {
                     this.$message.info('该记录没有分享链接，可从详情中查看')
                     return
                 }
-                await ipc.copyFlashTransferText(action === 'id' ? record.fileset_id : record.share_link)
-                this.$message.success('已复制')
-                return
+                return this.copyText(action === 'id' ? record.fileset_id : record.share_link)
             }
             try {
                 await this.$confirm('仅移除本机保存的记录，不会删除云端文件。', '移除本地记录', {
@@ -525,6 +595,11 @@ export default {
                 this.folder = entry.relative_path
                 this.selection = []
             }
+        },
+        goUp() {
+            if (this.busy || !this.folder) return
+            this.folder = this.folderParts.slice(0, -1).join('/')
+            this.selection = []
         },
         async addFiles(directory, files) {
             if (this.busy) return
@@ -611,6 +686,7 @@ export default {
             }
         },
         removeSelected() {
+            if (this.busy || !this.selection.length) return
             const paths = this.selection.map((item) => item.relative_path)
             this.entries = this.entries.filter(
                 (item) =>

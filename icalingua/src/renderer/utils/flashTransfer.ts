@@ -147,3 +147,13 @@ export function flashTransferTime(value: number | string): string {
     const time = Number(value)
     return time > 0 ? new Date(time < 1e12 ? time * 1000 : time).toLocaleString() : '—'
 }
+
+export function flashTransferExpiry(value: number | string): string {
+    const time = Number(value)
+    if (!(time > 0)) return '有效期未知'
+    const left = (time < 1e12 ? time * 1000 : time) - Date.now()
+    if (left <= 0) return '已过期'
+    const hours = Math.floor(left / 3600000)
+    if (hours >= 24) return Math.floor(hours / 24) + ' 天后到期'
+    return hours ? hours + ' 小时后到期' : '即将到期'
+}
