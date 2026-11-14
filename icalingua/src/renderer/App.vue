@@ -31,7 +31,9 @@ export default {
     name: 'app',
     async created() {
         const STORE_PATH = await ipc.getStorePath()
-        themes.$$DON_CALL$$fetchThemes(STORE_PATH)
+        if (this.$route.path !== '/login') {
+            themes.$$DON_CALL$$fetchThemes(STORE_PATH)
+        }
         if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
             console.log('custom CSS applied')
             dynamicLoadCss('file://' + path.join(STORE_PATH, 'style.css'))

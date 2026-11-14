@@ -30,13 +30,13 @@ export function getThemeBackgroundColor() {
     return isDark ? '#131415' : '#FFFFFF'
 }
 
-/** 向应用自己的页面广播主题，覆盖辅助窗口并排除 QQ 网页等外部内容。 */
+/** 向支持主题的应用页面广播，排除固定浅色的登录页和外部网页。 */
 function sendThemeToWindows(channel: string, theme?: string) {
     const appUrl = new URL(getWinUrl()).href.split('#')[0]
     for (const win of BrowserWindow.getAllWindows()) {
         if (win.isDestroyed()) continue
-        const url = win.webContents.getURL().split('#')[0]
-        if (url === appUrl) win.webContents.send(channel, theme)
+        const [url, route] = win.webContents.getURL().split('#')
+        if (url === appUrl && route?.split('?')[0] !== '/login') win.webContents.send(channel, theme)
     }
 }
 

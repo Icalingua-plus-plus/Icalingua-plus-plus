@@ -191,6 +191,7 @@ export const showMainWindow = () => {
     }
 }
 export const refreshMainWindowColor = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
     const color =
         getConfig().theme === 'auto'
             ? nativeTheme.shouldUseDarkColors
