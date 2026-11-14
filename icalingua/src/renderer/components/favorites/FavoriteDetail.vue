@@ -49,6 +49,45 @@
                 </div>
             </header>
             <div class="favorite-detail-body">
+                <section v-if="collection.type === 5" class="favorite-video-panel">
+                    <div class="favorite-section-heading"><h3>视频</h3></div>
+                    <MessageVideo v-if="videoUrl" :url="videoUrl" :is-hidden="false" :autoplay="true" />
+                    <button
+                        v-else
+                        type="button"
+                        class="favorite-video-placeholder"
+                        :class="{ 'has-cover': videoCover }"
+                        :disabled="!videoFile || !videoFile.fid || videoLoading"
+                        :aria-busy="videoLoading"
+                        @click="fileAction('play', videoFile)"
+                    >
+                        <img
+                            v-if="videoCover"
+                            :key="videoCover"
+                            class="favorite-video-cover"
+                            :src="videoCover"
+                            alt=""
+                            referrerpolicy="no-referrer"
+                            @error="failedVideoCover = $event.target.getAttribute('src')"
+                        />
+                        <i :class="videoLoading ? 'el-icon-loading' : 'el-icon-video-play'"></i>
+                        <span>{{
+                            videoLoading
+                                ? '正在加载视频…'
+                                : videoFile && videoFile.fid
+                                  ? '点击播放视频'
+                                  : '暂无可用的视频资源'
+                        }}</span>
+                    </button>
+                </section>
+                <div v-if="isAudio" class="favorite-file-card">
+                    <div class="favorite-attachment-icon"><i :class="typeInfo.icon"></i></div>
+                    <div class="favorite-file-info">
+                        <strong>{{ typeInfo.label }}</strong
+                        ><span>语音播放待实现：AMR / SILK 需要先转码。</span>
+                    </div>
+                </div>
+                <div v-if="mediaError" class="favorite-inline-error" role="alert">{{ mediaError }}</div>
                 <div
                     v-if="detail.content && detail.content.text_content"
                     class="favorite-text-body"
@@ -131,9 +170,17 @@
                             <span>{{ formatSize(file.size) }}</span>
                             <span v-if="file.fid" class="favorite-resource-id" :title="file.fid">{{ file.fid }}</span>
                         </div>
+                        <el-button
+                            v-if="file.fid"
+                            type="primary"
+                            size="small"
+                            icon="el-icon-download"
+                            :loading="fileLoading('download', file)"
+                            @click="fileAction('download', file)"
+                            >下载</el-button
+                        >
                         <el-button v-if="file.fid" type="text" size="small" @click="copy(file.fid)">复制 ID</el-button>
                     </div>
-                    <p class="favorite-helper">文件附件提供信息查看，暂不支持下载。</p>
                 </section>
                 <div v-if="!hasBody && !pictures.length && !files.length" class="favorite-empty favorite-empty-inline">
                     <i :class="typeInfo.icon"></i>
@@ -158,6 +205,7 @@
 
 <script>
 import ipc from '../../utils/ipc'
+import MessageVideo from '../vac-mod/ChatWindow/Message/MessageVideo.vue'
 import {
     favoriteTitle,
     favoriteExcerpt,
@@ -173,6 +221,10 @@ import {
 
 export default {
     name: 'FavoriteDetail',
+    components: { MessageVideo },
+    data() {
+        return { videoUrl: '', failedVideoCover: '', mediaError: '', mediaLoading: {} }
+    },
     props: {
         detail: { type: Object, default: null },
         loading: Boolean,
@@ -193,6 +245,19 @@ export default {
         },
         typeInfo() {
             return favoriteType(this.collection)
+        },
+        isAudio() {
+            return [4, 9].includes(this.collection.type)
+        },
+        videoFile() {
+            return this.collection.summary?.video_summary?.store_file_info
+        },
+        videoCover() {
+            const url = safeFavoriteUrl(this.collection.summary?.video_summary?.preview_pic_info?.uri)
+            return url === this.failedVideoCover ? '' : url
+        },
+        videoLoading() {
+            return Boolean(this.videoFile && this.fileLoading('play', this.videoFile))
         },
         editable() {
             return [1, 2, 8].includes(this.collection.type)
@@ -224,6 +289,8 @@ export default {
         },
         hasBody() {
             return Boolean(
+                this.isAudio ||
+                this.collection.type === 5 ||
                 this.detail.content?.text_content ||
                 this.detail.html !== undefined ||
                 this.link ||
@@ -235,6 +302,10 @@ export default {
     watch: {
         detail(value, previous) {
             if (value?.collection.cid !== previous?.collection.cid) {
+                this.videoUrl = ''
+                this.failedVideoCover = ''
+                this.mediaError = ''
+                this.mediaLoading = {}
                 this.$nextTick(() => {
                     if (!this._isDestroyed) this.$el.scrollTop = 0
                 })
@@ -254,6 +325,30 @@ export default {
         openImageUrl(value) {
             const url = safeFavoriteUrl(value)
             if (url && this.imageUrls.includes(url)) ipc.openImage(url, false, this.imageUrls)
+        },
+        fileLoading(action, file) {
+            return Boolean(this.mediaLoading[this.collection.cid + ':' + action + ':' + file.fid])
+        },
+        async fileAction(action, file) {
+            const cid = this.collection.cid
+            const key = cid + ':' + action + ':' + file.fid
+            if (!file.fid || this.mediaLoading[key]) return
+            this.$set(this.mediaLoading, key, true)
+            this.mediaError = ''
+            try {
+                const result =
+                    action === 'download'
+                        ? await ipc.downloadFavoriteFile(cid, file.fid)
+                        : await ipc.getFavoriteVideoUrl(cid, file.fid)
+                if (this._isDestroyed || this.detail?.collection.cid !== cid) return
+                if (!result || result.ok !== true) throw new Error(result?.error || '收藏资源请求失败')
+                if (action === 'play') this.videoUrl = result.data.url
+            } catch (error) {
+                if (!this._isDestroyed && this.detail?.collection.cid === cid)
+                    this.mediaError = error.message || '收藏资源加载失败'
+            } finally {
+                if (!this._isDestroyed) this.$delete(this.mediaLoading, key)
+            }
         },
         async copy(value) {
             try {

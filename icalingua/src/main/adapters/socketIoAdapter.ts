@@ -1345,10 +1345,12 @@ const adapter: Adapter = {
     favoritesRequest(request: FavoriteRequest): Promise<FavoriteResponse> {
         if (!socket?.connected) return Promise.resolve({ ok: false, error: 'Bridge 未连接，请连接后重试' })
         return new Promise((resolve) => {
-            socket.timeout(20000).emit('favoritesRequest', request, (error: Error, response: FavoriteResponse) => {
-                if (error) resolve({ ok: false, error: 'Bridge 收藏请求超时，请确认 Bridge 已更新且连接正常' })
-                else resolve(response || { ok: false, error: 'Bridge 返回了无效的收藏响应' })
-            })
+            socket
+                .timeout(request.action === 'fileUrl' ? 35000 : 20000)
+                .emit('favoritesRequest', request, (error: Error, response: FavoriteResponse) => {
+                    if (error) resolve({ ok: false, error: 'Bridge 收藏请求超时，请确认 Bridge 已更新且连接正常' })
+                    else resolve(response || { ok: false, error: 'Bridge 返回了无效的收藏响应' })
+                })
         })
     },
     getLoginDevices(): any {

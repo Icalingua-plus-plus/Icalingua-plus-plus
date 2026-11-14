@@ -1,3 +1,4 @@
+import { registerFavoriteMediaIpc } from './favoriteMedia'
 import { registerFlashTransferIpc } from './flashTransfer'
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
@@ -565,3 +566,4 @@ ipcMain.on('clearChatWindowUnread', async (_, roomId: number) => {
 })
 
 registerFlashTransferIpc(adapter)
+registerFavoriteMediaIpc(adapter)

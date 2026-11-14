@@ -127,13 +127,25 @@ export interface FavoriteItemResults {
 }
 
 export type FavoriteAction =
-    'list' | 'get' | 'add' | 'edit' | 'delete' | 'groups' | 'addGroup' | 'editGroup' | 'deleteGroup' | 'move' | 'space'
+    | 'list'
+    | 'get'
+    | 'add'
+    | 'edit'
+    | 'delete'
+    | 'groups'
+    | 'addGroup'
+    | 'editGroup'
+    | 'deleteGroup'
+    | 'move'
+    | 'space'
+    | 'fileUrl'
 
 /** 收藏请求仅允许上述动作，由直连和 Bridge 共用。 */
 export interface FavoriteRequest {
     action: FavoriteAction
     options?: FavoriteListOptions
     cid?: string | string[]
+    fid?: string
     favorite?: FavoriteInput
     changes?: FavoriteChanges
     groupId?: number | number[]
@@ -156,9 +168,23 @@ export type FavoriteProtocolClient = Partial<
         | 'editFavoriteGroup'
         | 'deleteFavoriteGroup'
         | 'setFavoriteGroup'
-        | 'getFavoriteSpace',
+        | 'getFavoriteSpace'
+        | 'getFavoriteFileUrl',
         (
             ...args: unknown[]
         ) => Promise<{ retcode: number; data?: unknown; error?: { message?: string; code?: number } }>
     >
 >
+
+/** 收藏文件/视频的临时下载凭据，headers 只用于该资源请求。 */
+export interface FavoriteDownload {
+    cid: string
+    fid: string
+    type: number
+    name: string
+    size: FavoriteInteger
+    url: string
+    headers: Record<string, string>
+    rename_file: boolean
+    risk_tips: string
+}

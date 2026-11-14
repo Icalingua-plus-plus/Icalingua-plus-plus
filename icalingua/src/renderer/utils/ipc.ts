@@ -400,6 +400,12 @@ const ipc = {
     openFavoriteLink(url: string) {
         ipcRenderer.send('OpenFavoriteLink', url)
     },
+    async downloadFavoriteFile(cid: string, fid?: string): Promise<FavoriteResponse> {
+        return await ipcRenderer.invoke('DownloadFavoriteFile', cid, fid)
+    },
+    async getFavoriteVideoUrl(cid: string, fid?: string): Promise<FavoriteResponse<{ url: string }>> {
+        return await ipcRenderer.invoke('GetFavoriteVideoUrl', cid, fid)
+    },
     async favoritesRequest<T = unknown>(request: FavoriteRequest): Promise<FavoriteResponse<T>> {
         return await ipcRenderer.invoke('FavoritesRequest', request)
     },

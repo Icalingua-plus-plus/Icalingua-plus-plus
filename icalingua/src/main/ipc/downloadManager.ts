@@ -80,6 +80,7 @@ export const loadConfig = (config: Aria2Config) => {
 }
 
 const downloads = new Map<string, DownloadItem>()
+const pendingDownloads = new Set<string>()
 
 export const getDefaultDownloadPath = () => getConfig().downloadPath || app.getPath('downloads')
 
@@ -128,7 +129,13 @@ const registerDownload = (item: DownloadItem, url: string, fileName: string) => 
     })
 }
 
-export const download = async (url: string, out: string, dir?: string, saveAs = false) => {
+export const download = async (
+    url: string,
+    out: string,
+    dir?: string,
+    saveAs = false,
+    options: { headers?: Record<string, string> } = {},
+): Promise<string | undefined> => {
     url = new URL(url).href
     dir = resolveDownloadDirectory(dir)
     if (saveAs) {
@@ -147,7 +154,9 @@ export const download = async (url: string, out: string, dir?: string, saveAs = 
         out = base + ' (' + i + ')' + ext
         i++
     }
-    if (aria2) {
+    const headers = options.headers || {}
+    const authenticated = Object.keys(headers).length > 0
+    if (aria2 && !authenticated) {
         try {
             await aria2.call('aria2.addUri', [url], { out, dir })
             if (!getConfig().aria2.slient) {
@@ -161,8 +170,40 @@ export const download = async (url: string, out: string, dir?: string, saveAs = 
             // Aria2 出错时回退到默认下载器
         }
     }
-    if (!downloads.has(url)) {
-        await edl.download(getMainWindow(), url, {
+    if (downloads.has(url) || pendingDownloads.has(url)) {
+        return
+    }
+    pendingDownloads.add(url)
+    try {
+        if (authenticated) {
+            const window = getMainWindow()
+            const session = window.webContents.session
+            return await new Promise<string>((resolve, reject) => {
+                const onDownload = (_, item: DownloadItem) => {
+                    if (item.getURL() !== url && !item.getURLChain().includes(url)) return
+                    session.removeListener('will-download', onDownload)
+                    try {
+                        item.setSavePath(path.join(dir, out))
+                        registerDownload(item, url, out)
+                        item.once('done', (_, state) => {
+                            if (state === 'completed') resolve(item.getSavePath())
+                            else reject(new Error(state === 'cancelled' ? '下载已取消' : '下载中断，请重试'))
+                        })
+                    } catch (error) {
+                        item.cancel()
+                        reject(error)
+                    }
+                }
+                session.on('will-download', onDownload)
+                try {
+                    window.webContents.downloadURL(url, { headers })
+                } catch (error) {
+                    session.removeListener('will-download', onDownload)
+                    reject(error)
+                }
+            })
+        }
+        const item = await edl.download(getMainWindow(), url, {
             directory: dir,
             filename: out,
             onStarted(item) {
@@ -172,6 +213,9 @@ export const download = async (url: string, out: string, dir?: string, saveAs = 
                 }
             },
         })
+        return item.getSavePath()
+    } finally {
+        pendingDownloads.delete(url)
     }
 }
 

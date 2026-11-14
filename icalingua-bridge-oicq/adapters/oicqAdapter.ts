@@ -2472,6 +2472,7 @@ const adapter = {
             deleteGroup: ['deleteFavoriteGroup', [request?.groupId]],
             move: ['setFavoriteGroup', [request?.cid, request?.groupId]],
             space: ['getFavoriteSpace', []],
+            fileUrl: ['getFavoriteFileUrl', [request?.cid, request?.fid]],
         } as const
         if (!request || !Object.prototype.hasOwnProperty.call(operations, request.action))
             return { ok: false, error: '无效的收藏操作' }
