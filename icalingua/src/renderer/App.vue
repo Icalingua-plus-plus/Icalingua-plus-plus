@@ -8,6 +8,7 @@
 import fs from 'fs'
 import path from 'path'
 import ipc from './utils/ipc'
+import * as themes from './utils/themes'
 
 function dynamicLoadCss(url) {
     const head = document.getElementsByTagName('head')[0]
@@ -30,6 +31,7 @@ export default {
     name: 'app',
     async created() {
         const STORE_PATH = await ipc.getStorePath()
+        themes.$$DON_CALL$$fetchThemes(STORE_PATH)
         if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
             console.log('custom CSS applied')
             dynamicLoadCss('file://' + path.join(STORE_PATH, 'style.css'))
@@ -45,6 +47,7 @@ export default {
 <style>
 @import url('./assets/stylesheet.css');
 @import url('./assets/scrollbar.css');
+@import url('./assets/element-theme.css');
 
 @font-face {
     font-family: 'msyh';

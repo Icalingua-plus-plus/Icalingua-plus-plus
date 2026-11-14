@@ -4,7 +4,10 @@
             <i class="el-icon-loading" style="font-size: 24px"></i>
             <p style="margin-top: 10px">正在查找共同群聊...</p>
         </div>
-        <div v-else-if="commonGroups.length === 0" style="text-align: center; padding: 20px; color: #909399">
+        <div
+            v-else-if="commonGroups.length === 0"
+            style="text-align: center; padding: 20px; color: var(--panel-color-desc)"
+        >
             <i class="el-icon-warning" style="font-size: 48px"></i>
             <p style="margin-top: 10px">未找到共同群聊</p>
             <p style="font-size: 12px">可能是因为群成员列表尚未缓存，请先打开一些群聊后再试</p>
@@ -34,7 +37,7 @@
             </div>
         </div>
         <div slot="footer" class="dialog-footer">
-            <div style="float: left; font-size: 12px; color: #909399">
+            <div style="float: left; font-size: 12px; color: var(--panel-color-desc)">
                 找到 {{ commonGroups.length }} 个共同群聊
                 <span v-if="cacheStats">(已缓存 {{ cacheStats.cachedGroups }} 个群)</span>
             </div>
@@ -124,7 +127,7 @@ export default {
     display: flex;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid var(--chat-border-color, #e4e7ed);
+    border-bottom: 1px solid var(--panel-color-navi-bottom-bar);
     cursor: pointer;
     transition: background-color 0.3s;
 

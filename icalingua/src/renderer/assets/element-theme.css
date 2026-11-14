@@ -1,0 +1,369 @@
+/* Element UI 公共主题配色；页面保留布局和专用变体。 */
+.el-message-box__wrapper .el-message-box {
+    border: var(--chat-border-style, 1px solid #e1e4e8);
+}
+.el-notification {
+    border: var(--chat-border-style);
+}
+
+:root {
+    color-scheme: var(--chat-color-scheme, light);
+}
+
+[data-color-scheme='dark'] body {
+    background-color: var(--panel-background);
+    color: var(--panel-color-name);
+}
+
+:root :is(.el-dialog, .el-drawer, .el-message-box, .el-card, .el-notification) {
+    background-color: var(--panel-background);
+    border-color: var(--panel-color-navi-bottom-bar);
+    color: var(--panel-color-name);
+}
+:root :is(.el-dialog__title, .el-message-box__title, .el-notification__title) {
+    color: var(--panel-color-name);
+}
+:root
+    :is(
+        .el-dialog__body,
+        .el-drawer__header,
+        .el-message-box__content,
+        .el-notification__content,
+        .el-form-item__label
+    ) {
+    color: var(--panel-color-desc);
+}
+:root .el-card__header {
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+
+:root :is(.el-input__inner, .el-textarea__inner, .el-range-input) {
+    background-color: var(--chat-bg-color-input);
+    color: var(--panel-color-name);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root :is(.el-input__inner, .el-textarea__inner, .el-range-input)::placeholder {
+    color: var(--chat-color-placeholder);
+}
+:root :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner) {
+    background-color: var(--chat-content-bg-color);
+    color: var(--chat-color-placeholder);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner)::placeholder {
+    color: var(--chat-color-placeholder);
+}
+:root :is(.el-input-group__append, .el-input-group__prepend, .el-input-number__increase, .el-input-number__decrease) {
+    background-color: var(--chat-bg-color-input);
+    color: var(--panel-color-desc);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root :is(.el-input .el-input__count .el-input__count-inner, .el-textarea .el-input__count) {
+    background-color: transparent;
+    color: var(--chat-color-placeholder);
+}
+:root .el-date-editor .el-range-separator {
+    color: var(--panel-color-desc);
+}
+
+/* 按钮仅替换普通按钮的白底，保留主按钮及成功、警告、危险等语义色。 */
+[data-color-scheme='dark']
+    .el-button--default:not(
+        .el-button--primary,
+        .el-button--success,
+        .el-button--warning,
+        .el-button--danger,
+        .el-button--info,
+        .el-button--text
+    ) {
+    background-color: var(--chat-bg-color-input);
+    border-color: var(--panel-color-navi-bottom-bar);
+    color: var(--panel-color-name);
+}
+[data-color-scheme='dark']
+    .el-button--default:not(
+        .el-button--primary,
+        .el-button--success,
+        .el-button--warning,
+        .el-button--danger,
+        .el-button--info,
+        .el-button--text
+    ):is(:hover, :focus, :active):not(.is-disabled) {
+    background-color: var(--panel-item-bg);
+    border-color: var(--panel-color-sticker-type-selected);
+    color: var(--panel-color-sticker-type-selected);
+}
+[data-color-scheme='dark']
+    .el-button--default.is-disabled:not(
+        .el-button--primary,
+        .el-button--success,
+        .el-button--warning,
+        .el-button--danger,
+        .el-button--info,
+        .el-button--text
+    ) {
+    background-color: var(--chat-content-bg-color);
+    border-color: var(--panel-color-navi-bottom-bar);
+    color: var(--chat-color-placeholder);
+}
+[data-color-scheme='dark'] .el-button.is-plain:not(:hover, :focus) {
+    background-color: var(--chat-bg-color-input);
+}
+[data-color-scheme='dark'] .el-button.is-plain.is-disabled {
+    background-color: var(--chat-content-bg-color);
+}
+[data-color-scheme='dark'] .el-button.is-loading::before {
+    background-color: color-mix(in srgb, var(--panel-background) 35%, transparent);
+}
+
+:root
+    :is(.el-select-dropdown, .el-dropdown-menu, .el-popover, .el-picker-panel, .el-time-panel, .el-time-range-picker) {
+    background-color: var(--chat-dropdown-bg-color);
+    border-color: var(--panel-color-navi-bottom-bar);
+    color: var(--panel-color-name);
+}
+:root :is(.el-select-dropdown__item, .el-dropdown-menu__item) {
+    color: var(--panel-color-name);
+}
+:root :is(.el-select-dropdown__item, .el-dropdown-menu__item):not(.is-disabled):is(:hover, :focus, .hover) {
+    background-color: var(--chat-dropdown-bg-color-hover);
+}
+:root .el-select-dropdown__item.selected {
+    color: var(--panel-color-sticker-type-selected);
+}
+:root :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled, .el-select-dropdown__empty) {
+    color: var(--chat-color-placeholder);
+}
+:root :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled):is(:hover, .hover) {
+    background-color: var(--chat-dropdown-bg-color);
+}
+:root .el-dropdown-menu__item--divided {
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-dropdown-menu__item--divided::before {
+    background-color: var(--chat-dropdown-bg-color);
+}
+:root .el-popover__title {
+    color: var(--panel-color-name);
+}
+:root .el-popper[x-placement^='bottom'] .popper__arrow {
+    border-bottom-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-popper[x-placement^='bottom'] .popper__arrow::after {
+    border-bottom-color: var(--chat-dropdown-bg-color);
+}
+:root .el-popper[x-placement^='top'] .popper__arrow {
+    border-top-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-popper[x-placement^='top'] .popper__arrow::after {
+    border-top-color: var(--chat-dropdown-bg-color);
+}
+:root .el-popper[x-placement^='left'] .popper__arrow {
+    border-left-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-popper[x-placement^='left'] .popper__arrow::after {
+    border-left-color: var(--chat-dropdown-bg-color);
+}
+:root .el-popper[x-placement^='right'] .popper__arrow {
+    border-right-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-popper[x-placement^='right'] .popper__arrow::after {
+    border-right-color: var(--chat-dropdown-bg-color);
+}
+
+:root .el-checkbox__input:not(.is-checked, .is-indeterminate) .el-checkbox__inner,
+:root .el-radio__input:not(.is-checked) .el-radio__inner,
+:root .el-radio-button__orig-radio:not(:checked) + .el-radio-button__inner {
+    background-color: var(--chat-bg-color-input);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root :is(.el-checkbox, .el-radio, .el-radio-button__inner) {
+    color: var(--panel-color-name);
+}
+:root .el-radio-button__orig-radio:disabled + .el-radio-button__inner {
+    background-color: var(--chat-content-bg-color);
+    border-color: var(--panel-color-navi-bottom-bar);
+    color: var(--chat-color-placeholder);
+}
+:where(:root) .el-tabs__item {
+    color: var(--panel-color-name);
+}
+:root .el-checkbox__input.is-disabled .el-checkbox__inner {
+    background-color: var(--chat-content-bg-color);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-checkbox__input.is-disabled .el-checkbox__inner::after {
+    border-color: var(--chat-color-placeholder);
+}
+:root :is(.el-checkbox__input.is-disabled + .el-checkbox__label, .el-radio.is-disabled .el-radio__label) {
+    color: var(--chat-color-placeholder);
+}
+
+:root :is(.el-table, .el-table tr, .el-table th.el-table__cell, .el-table .el-table__expanded-cell) {
+    background-color: var(--panel-background);
+    color: var(--panel-color-name);
+}
+:root :is(.el-table td.el-table__cell, .el-table th.el-table__cell, .el-table--border, .el-table--group) {
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-table::before,
+:root .el-table--border::after,
+:root .el-table__fixed::before,
+:root .el-table__fixed-right::before {
+    background-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+    background-color: var(--chat-content-bg-color);
+}
+:root .el-table__body tr:hover > td.el-table__cell,
+:root .el-table__body tr.hover-row > td.el-table__cell {
+    background-color: var(--panel-item-bg-hover);
+}
+:root .el-table__body tr.current-row > td.el-table__cell {
+    background-color: var(--panel-item-bg);
+}
+:root .el-table__fixed-right-patch {
+    background-color: var(--panel-background);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-tree {
+    background-color: var(--panel-background);
+    color: var(--panel-color-name);
+}
+:root .el-tree-node__content:is(:hover, :focus),
+:root .el-tree-node:focus > .el-tree-node__content {
+    background-color: var(--panel-item-bg-hover);
+}
+:root .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+    background-color: var(--panel-item-bg);
+}
+
+:root
+    :is(
+        .el-date-range-picker__content,
+        .el-date-range-picker__time-header,
+        .el-picker-panel__footer,
+        .el-picker-panel__sidebar,
+        .el-time-panel__footer,
+        .el-date-table th
+    ) {
+    background-color: var(--chat-dropdown-bg-color);
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root :is(.el-date-picker__header-label, .el-picker-panel__icon-btn, .el-picker-panel__shortcut) {
+    color: var(--panel-color-desc);
+}
+:root .el-date-table td.in-range div {
+    background-color: var(--panel-item-bg);
+}
+:root .el-date-table td.disabled div {
+    background-color: var(--chat-content-bg-color);
+    color: var(--chat-color-placeholder);
+}
+[data-color-scheme='dark'] .el-pagination :is(.btn-prev, .btn-next, .el-pager li) {
+    background-color: var(--chat-bg-color-input);
+    color: var(--panel-color-name);
+}
+[data-color-scheme='dark'] .el-pagination .el-pager li.active {
+    color: var(--panel-color-sticker-type-selected);
+}
+[data-color-scheme='dark'] :is(.el-pagination button:disabled, .el-pager li.disabled) {
+    background-color: var(--chat-content-bg-color);
+    color: var(--chat-color-placeholder);
+}
+[data-color-scheme='dark']
+    :is(.el-pagination__total, .el-pagination__jump, .el-breadcrumb__inner, .el-breadcrumb__separator) {
+    color: var(--panel-color-desc);
+}
+[data-color-scheme='dark'] :is(.el-image__placeholder, .el-image__error) {
+    background-color: var(--chat-content-bg-color);
+    color: var(--chat-color-placeholder);
+}
+:root .el-tabs__nav-wrap::after {
+    background-color: var(--panel-color-navi-bottom-bar);
+}
+/* 当前 Element UI 版本为进度条轨道和文字写入内联默认色。 */
+[data-color-scheme='dark'] .el-progress-bar__outer {
+    background-color: var(--panel-color-navi-bottom-bar) !important;
+}
+[data-color-scheme='dark'] .el-progress__text {
+    color: var(--panel-color-desc) !important;
+}
+[data-color-scheme='dark'] .el-progress-bar__innerText {
+    color: var(--chat-header-color-name) !important;
+}
+:root .el-loading-mask {
+    background-color: color-mix(in srgb, var(--panel-background) 90%, transparent);
+}
+[data-color-scheme='dark'] :is(.el-alert.is-light, .el-message, .el-tag:not(.el-tag--dark)) {
+    background-color: color-mix(in srgb, currentColor 12%, var(--panel-background));
+    border-color: color-mix(in srgb, currentColor 30%, var(--panel-background));
+}
+:where(:root) :is(.el-input__inner, .el-textarea__inner):not(.invalid):focus {
+    border-color: var(--panel-color-sticker-type-selected);
+}
+:root .el-select .el-input.is-disabled .el-input__inner:hover {
+    border-color: var(--panel-color-navi-bottom-bar);
+}
+:root .el-checkbox__input:not(.is-disabled) .el-checkbox__inner:hover,
+:root .el-checkbox__input.is-focus:not(.is-disabled) .el-checkbox__inner {
+    border-color: var(--panel-color-sticker-type-selected);
+}
+:root .el-checkbox__input.is-checked:not(.is-disabled) .el-checkbox__inner,
+:root .el-checkbox__input.is-indeterminate:not(.is-disabled) .el-checkbox__inner {
+    background-color: var(--panel-color-sticker-type-selected);
+    border-color: var(--panel-color-sticker-type-selected);
+}
+:root .el-checkbox__input.is-checked:not(.is-disabled) + .el-checkbox__label {
+    color: var(--panel-color-sticker-type-selected);
+}
+:root .el-checkbox__input.is-disabled .el-checkbox__inner::before {
+    background-color: var(--chat-color-placeholder);
+}
+:root .el-radio-button__orig-radio:not(:disabled) + .el-radio-button__inner:hover {
+    color: var(--panel-color-sticker-type-selected);
+}
+:where(:root) .el-tabs__item:not(.is-disabled):hover,
+:where(:root) .el-tabs__item.is-active {
+    color: var(--panel-color-sticker-type-selected);
+}
+:where(:root) .el-tabs__item.is-disabled {
+    color: var(--chat-color-placeholder);
+}
+:root .el-tabs__active-bar {
+    background-color: var(--panel-color-sticker-type-selected);
+}
+:root .el-table th.el-table__cell {
+    color: var(--panel-color-desc);
+}
+:root .el-loading-spinner .el-loading-text,
+:root .el-loading-spinner i {
+    color: var(--panel-color-sticker-type-selected);
+}
+:root .el-loading-spinner .path {
+    stroke: var(--panel-color-sticker-type-selected);
+}
+
+.el-collapse {
+    border: none;
+}
+.el-collapse-item__header {
+    padding-left: 12px;
+    border-bottom: var(--chat-border-style);
+    background-color: var(--panel-background);
+    color: var(--panel-color-name);
+}
+
+.el-collapse-item__content {
+    padding-bottom: 0;
+    background-color: var(--panel-background);
+}
+
+.el-collapse-item__wrap {
+    background: unset;
+    border-bottom: var(--chat-border-style);
+}
+
+.el-collapse-item__wrap > div > div:last-child > div > div {
+    border-bottom: unset !important;
+}

@@ -53,6 +53,7 @@ function setupThemeStyles(style: any) {
         document.head.appendChild(themeStyle)
     }
 
+    document.documentElement.dataset.colorScheme = style['--chat-color-scheme'] === 'dark' ? 'dark' : 'light'
     themeStyle.textContent = `:root {
 ${Object.entries(style)
     .map(([key, value]) => `    ${key}: ${value};`)

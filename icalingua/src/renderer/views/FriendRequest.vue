@@ -93,7 +93,7 @@ span {
     align-items: center;
 
     &:not(:last-child) {
-        border-bottom: 1px solid #e4e7ed;
+        border-bottom: 1px solid var(--panel-color-navi-bottom-bar);
     }
 }
 

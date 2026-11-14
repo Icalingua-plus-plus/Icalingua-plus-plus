@@ -2,6 +2,7 @@ export const defaultThemeStyles = {
     light: {
         general: {
             color: '#0a0a0a',
+            colorScheme: 'light',
             backgroundInput: '#fff',
             colorPlaceholder: '#9ca6af',
             colorCaret: '#1976d2',
@@ -154,6 +155,7 @@ export const defaultThemeStyles = {
     dark: {
         general: {
             color: '#fff',
+            colorScheme: 'dark',
             backgroundInput: '#202223',
             colorPlaceholder: '#596269',
             colorCaret: '#fff',
@@ -323,6 +325,7 @@ export const cssThemeVars = ({
     return {
         // general
         '--chat-color': general.color,
+        '--chat-color-scheme': general.colorScheme,
         '--chat-bg-color-input': general.backgroundInput,
         '--chat-color-spinner': general.colorSpinner,
         '--chat-color-placeholder': general.colorPlaceholder,

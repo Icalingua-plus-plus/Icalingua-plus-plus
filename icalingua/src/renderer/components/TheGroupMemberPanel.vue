@@ -107,26 +107,6 @@ export default {
 </script>
 
 <style>
-.el-collapse-item__header {
-    padding-left: 12px;
-    border-bottom: var(--chat-border-style);
-    background-color: var(--panel-background);
-    color: var(--panel-color-name);
-}
-
-.el-collapse-item__content {
-    padding-bottom: 0;
-    background-color: var(--panel-background);
-}
-
-.el-collapse-item__wrap {
-    border-bottom: var(--chat-border-style);
-}
-
-.el-collapse-item__wrap > div > div:last-child > div > div {
-    border-bottom: unset !important;
-}
-
 .groupmember-root {
     height: 75vh;
     display: flex;

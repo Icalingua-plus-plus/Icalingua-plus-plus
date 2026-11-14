@@ -2140,7 +2140,6 @@ main div {
 }
 
 ::v-deep .el-input__inner {
-    background-color: var(--chat-bg-color-input);
     border: var(--chat-border-style);
 }
 
@@ -2283,40 +2282,6 @@ main div {
             -webkit-appearance: none;
         }
     }
-}
-
-.el-dialog__wrapper .el-dialog .el-dialog__body,
-.el-dialog__header,
-.el-dialog__footer {
-    background-color: var(--panel-background);
-}
-
-.el-dialog__wrapper .el-dialog .el-dialog__title {
-    color: var(--panel-color-name);
-}
-
-.el-message-box__wrapper .el-message-box {
-    background-color: var(--panel-background, #ffffff);
-    border: var(--chat-border-style, 1px solid #e1e4e8);
-}
-
-.el-message-box__wrapper .el-message-box .el-message-box__title {
-    color: var(--panel-color-name, #303133);
-}
-.el-message-box__wrapper .el-message-box .el-message-box__content {
-    color: var(--panel-color-desc, #606266);
-}
-
-.el-notification {
-    background-color: var(--panel-background);
-    border: var(--chat-border-style);
-}
-
-.el-notification .el-notification__group .el-notification__title {
-    color: var(--panel-color-name);
-}
-.el-notification .el-notification__group .el-notification__content {
-    color: var(--panel-color-desc);
 }
 
 .el-notification-progress .el-notification__group {

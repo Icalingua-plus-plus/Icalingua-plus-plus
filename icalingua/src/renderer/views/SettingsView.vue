@@ -1777,24 +1777,6 @@ export default {
     background-color: var(--settings-accent);
 }
 
-.settings-page :deep(.el-select .el-input__inner),
-.settings-page :deep(.el-input__inner),
-.settings-page :deep(.el-textarea__inner) {
-    border-color: var(--settings-border);
-    color: var(--settings-text);
-    background: var(--settings-panel);
-}
-
-.settings-page :deep(.el-radio-button__inner) {
-    border-color: var(--settings-border);
-    color: var(--settings-muted);
-    background: var(--settings-panel);
-}
-
-.settings-page :deep(.el-radio-button:first-child .el-radio-button__inner) {
-    border-left-color: var(--settings-border);
-}
-
 .settings-page :deep(.el-radio-button__orig-radio:checked + .el-radio-button__inner) {
     border-color: var(--settings-accent);
     color: #ffffff;

@@ -1,6 +1,7 @@
 import * as windowMgr from './windowManager'
 import * as menuMgr from '../ipc/menuManager'
-import { ipcMain, nativeTheme } from 'electron'
+import { BrowserWindow, ipcMain, nativeTheme } from 'electron'
+import getWinUrl from '../../utils/getWinUrl'
 import * as configMgr from './configManager'
 
 var themeList = ['light', 'dark']
@@ -29,19 +30,23 @@ export function getThemeBackgroundColor() {
     return isDark ? '#131415' : '#FFFFFF'
 }
 
+/** 向应用自己的页面广播主题，覆盖辅助窗口并排除 QQ 网页等外部内容。 */
+function sendThemeToWindows(channel: string, theme?: string) {
+    const appUrl = new URL(getWinUrl()).href.split('#')[0]
+    for (const win of BrowserWindow.getAllWindows()) {
+        if (win.isDestroyed()) continue
+        const url = win.webContents.getURL().split('#')[0]
+        if (url === appUrl) win.webContents.send(channel, theme)
+    }
+}
+
 export function refreshTheme() {
-    windowMgr.sendToMainWindow('theme:refresh')
-    windowMgr.sendToAllChatWindows('theme:refresh')
-    windowMgr.sendToSettingsWindow('theme:refresh')
-    windowMgr.sendToFavoritesWindow('theme:refresh')
+    sendThemeToWindows('theme:refresh')
 }
 
 export function useTheme(theme: string) {
     syncNativeThemeSource()
-    windowMgr.sendToMainWindow('theme:use', theme)
-    windowMgr.sendToAllChatWindows('theme:use', theme)
-    windowMgr.sendToSettingsWindow('theme:use', theme)
-    windowMgr.sendToFavoritesWindow('theme:use', theme)
+    sendThemeToWindows('theme:use', theme)
 }
 
 ipcMain.on('theme:list-complete', (_, list) => {

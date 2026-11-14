@@ -256,23 +256,23 @@ export default {
     gap: 8px;
     padding: 10px 12px;
     margin-bottom: 16px;
-    color: #606266;
+    color: var(--panel-color-desc);
     font-size: 12px;
     line-height: 1.6;
     background-color: var(--panel-header-bg, #f5f7fa);
-    border: 1px solid var(--chat-border-color, #ebeef5);
+    border: 1px solid var(--panel-color-navi-bottom-bar);
     border-radius: 4px;
 
     > i {
         flex-shrink: 0;
         margin-top: 3px;
-        color: #409eff;
+        color: var(--panel-color-sticker-type-selected);
     }
 }
 
 .group-help-title {
     margin-bottom: 2px;
-    color: #303133;
+    color: var(--panel-color-name);
     font-weight: 600;
 }
 
@@ -281,7 +281,7 @@ export default {
     align-items: center;
     justify-content: space-between;
     padding: 8px 12px;
-    border-bottom: 1px solid var(--chat-border-color, #ebeef5);
+    border-bottom: 1px solid var(--panel-color-navi-bottom-bar);
     transition: background-color 0.2s;
 
     &:hover {
@@ -301,7 +301,7 @@ export default {
 
     i {
         margin-right: 8px;
-        color: #909399;
+        color: var(--panel-color-icon);
     }
 
     .group-name {
@@ -339,7 +339,7 @@ export default {
 
 .empty-tip {
     text-align: center;
-    color: #909399;
+    color: var(--panel-color-icon);
     padding: 20px;
 }
 
@@ -349,12 +349,12 @@ export default {
 
 .drag-handle {
     cursor: grab;
-    color: #c0c4cc;
+    color: var(--panel-color-icon);
     margin-right: 8px;
     font-size: 14px;
 
     &:hover {
-        color: #409eff;
+        color: var(--panel-color-sticker-type-selected);
     }
 
     &:active {

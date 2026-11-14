@@ -1031,7 +1031,7 @@ export default {
     }
 
     div {
-        background: rgba(255, 255, 255, 0.7);
+        background: color-mix(in srgb, var(--chat-message-bg-color) 70%, transparent);
         border-radius: 4px;
         width: 28px;
         height: 28px;

@@ -191,30 +191,6 @@ export default {
 </script>
 
 <style>
-.el-collapse {
-    border: none;
-}
-.el-collapse-item__header {
-    padding-left: 12px;
-    border-bottom: var(--chat-border-style);
-    background-color: var(--panel-background);
-    color: var(--panel-color-name);
-}
-
-.el-collapse-item__content {
-    padding-bottom: 0;
-    background-color: var(--panel-background);
-}
-
-.el-collapse-item__wrap {
-    background: unset;
-    border-bottom: var(--chat-border-style);
-}
-
-.el-collapse-item__wrap > div > div:last-child > div > div {
-    border-bottom: unset !important;
-}
-
 .contacts-root .el-tabs__header {
     margin: unset !important;
     position: sticky;
@@ -225,11 +201,6 @@ export default {
 
 :where(.contacts-root) .el-tabs__item {
     padding: 0;
-    color: var(--panel-color-name);
-}
-
-.contacts-root .el-tabs__nav-wrap::after {
-    background-color: var(--panel-color-navi-bottom-bar);
 }
 
 .contacts-root {

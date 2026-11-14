@@ -49,12 +49,12 @@ a {
 
 .desc {
     margin-top: 10px;
-    color: #606266;
+    color: var(--panel-color-desc);
 }
 
 .name {
     font-weight: bold;
-    color: #303133;
+    color: var(--panel-color-name);
 }
 
 .withoutdesc {

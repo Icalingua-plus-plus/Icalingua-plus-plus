@@ -431,19 +431,8 @@
     text-overflow: ellipsis;
     font-size: 12px;
 }
-.flash-theme .el-table,
-.flash-dialog .el-table,
-.flash-theme .el-table th,
-.flash-dialog .el-table th,
-.flash-theme .el-table tr,
-.flash-dialog .el-table tr,
-.flash-theme .el-table__fixed-right-patch {
-    background: var(--flash-surface);
-    color: var(--flash-text);
-}
 .flash-theme .el-table th,
 .flash-dialog .el-table th {
-    color: var(--flash-muted);
     font-weight: 500;
 }
 .flash-theme .el-table td,
@@ -459,32 +448,22 @@
     border-top: var(--flash-border);
     height: 0;
 }
-.flash-theme .el-table--enable-row-hover .el-table__body tr:hover > td,
-.flash-theme .el-table__body tr.hover-row > td,
-.flash-dialog .el-table--enable-row-hover .el-table__body tr:hover > td {
-    background: var(--panel-item-bg-hover, #f2f6fc);
-}
 .flash-theme .el-input__inner,
 .flash-dialog .el-input__inner,
 .flash-message-box .el-input__inner {
-    background: var(--chat-bg-color-input, var(--flash-surface));
-    color: var(--flash-text);
     border: var(--flash-border);
 }
 .flash-theme .el-tree {
     background: transparent;
-    color: var(--flash-text);
 }
 .flash-theme .el-tree-node__content:hover,
 .flash-theme .el-tree-node:focus > .el-tree-node__content,
 .flash-theme .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
-    background: var(--flash-soft);
     border-radius: 5px;
 }
 .flash-dialog,
 .flash-message-box,
 .flash-popover {
-    background: var(--flash-surface);
     border: var(--flash-border);
     border-radius: 6px;
 }
@@ -495,12 +474,6 @@
     margin-top: 20px !important;
     display: flex;
     flex-direction: column;
-}
-.flash-dialog .el-dialog__title,
-.flash-dialog .el-dialog__body,
-.flash-message-box .el-message-box__title,
-.flash-message-box .el-message-box__content {
-    color: var(--flash-text);
 }
 .flash-dialog .el-dialog__header {
     border-bottom: var(--flash-border);
@@ -518,15 +491,6 @@
 .flash-dialog .el-dialog__header,
 .flash-dialog .el-dialog__footer {
     flex-shrink: 0;
-}
-.flash-popover .el-select-dropdown__item,
-.flash-popover .el-dropdown-menu__item {
-    color: var(--flash-text);
-}
-.flash-popover .el-select-dropdown__item.hover,
-.flash-popover .el-select-dropdown__item:hover,
-.flash-popover .el-dropdown-menu__item:hover {
-    background: var(--flash-soft);
 }
 .flash-theme button:focus-visible {
     outline: 2px solid var(--flash-accent);
