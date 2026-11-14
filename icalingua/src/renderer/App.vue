@@ -30,11 +30,12 @@ function dynamicLoadJs(url) {
 export default {
     name: 'app',
     async created() {
+        const isLogin = this.$route.path === '/login'
+        if (isLogin) themes.applyLightTheme()
+
         const STORE_PATH = await ipc.getStorePath()
-        if (this.$route.path !== '/login') {
+        if (!isLogin) {
             themes.$$DON_CALL$$fetchThemes(STORE_PATH)
-        } else {
-            themes.applyLightTheme()
         }
         if (fs.existsSync(path.join(STORE_PATH, 'style.css'))) {
             console.log('custom CSS applied')

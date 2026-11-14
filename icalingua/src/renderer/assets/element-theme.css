@@ -1,8 +1,8 @@
-/* Element UI 公共主题配色；页面保留布局和专用变体。 */
-.el-message-box__wrapper .el-message-box {
+/* 主题变量写入后才覆盖 Element UI 配色，避免首帧使用无效的颜色值。 */
+:where([data-color-scheme]) .el-message-box__wrapper .el-message-box {
     border: var(--chat-border-style, 1px solid #e1e4e8);
 }
-.el-notification {
+:where([data-color-scheme]) .el-notification {
     border: var(--chat-border-style);
 }
 
@@ -15,15 +15,15 @@
     color: var(--panel-color-name);
 }
 
-:root :is(.el-dialog, .el-drawer, .el-message-box, .el-card, .el-notification) {
+[data-color-scheme] :is(.el-dialog, .el-drawer, .el-message-box, .el-card, .el-notification) {
     background-color: var(--panel-background);
     border-color: var(--panel-color-navi-bottom-bar);
     color: var(--panel-color-name);
 }
-:root :is(.el-dialog__title, .el-message-box__title, .el-notification__title) {
+[data-color-scheme] :is(.el-dialog__title, .el-message-box__title, .el-notification__title) {
     color: var(--panel-color-name);
 }
-:root
+[data-color-scheme]
     :is(
         .el-dialog__body,
         .el-drawer__header,
@@ -33,36 +33,38 @@
     ) {
     color: var(--panel-color-desc);
 }
-:root .el-card__header {
+[data-color-scheme] .el-card__header {
     border-color: var(--panel-color-navi-bottom-bar);
 }
 
-:root :is(.el-input__inner, .el-textarea__inner, .el-range-input) {
-    background-color: var(--chat-bg-color-input);
-    color: var(--panel-color-name);
-    border-color: var(--panel-color-navi-bottom-bar);
+[data-color-scheme] :is(.el-input__inner, .el-textarea__inner, .el-range-input) {
+    background-color: var(--chat-bg-color-input, #fff);
+    color: var(--panel-color-name, #606266);
+    border-color: var(--panel-color-navi-bottom-bar, #dcdfe6);
 }
-:root :is(.el-input__inner, .el-textarea__inner, .el-range-input)::placeholder {
-    color: var(--chat-color-placeholder);
+[data-color-scheme] :is(.el-input__inner, .el-textarea__inner, .el-range-input)::placeholder {
+    color: var(--chat-color-placeholder, #c0c4cc);
 }
-:root :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner) {
-    background-color: var(--chat-content-bg-color);
-    color: var(--chat-color-placeholder);
-    border-color: var(--panel-color-navi-bottom-bar);
+[data-color-scheme] :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner) {
+    background-color: var(--chat-content-bg-color, #f5f7fa);
+    color: var(--chat-color-placeholder, #c0c4cc);
+    border-color: var(--panel-color-navi-bottom-bar, #e4e7ed);
 }
-:root :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner)::placeholder {
-    color: var(--chat-color-placeholder);
+[data-color-scheme]
+    :is(.el-input.is-disabled .el-input__inner, .el-textarea.is-disabled .el-textarea__inner)::placeholder {
+    color: var(--chat-color-placeholder, #c0c4cc);
 }
-:root :is(.el-input-group__append, .el-input-group__prepend, .el-input-number__increase, .el-input-number__decrease) {
-    background-color: var(--chat-bg-color-input);
-    color: var(--panel-color-desc);
-    border-color: var(--panel-color-navi-bottom-bar);
+[data-color-scheme]
+    :is(.el-input-group__append, .el-input-group__prepend, .el-input-number__increase, .el-input-number__decrease) {
+    background-color: var(--chat-bg-color-input, #f5f7fa);
+    color: var(--panel-color-desc, #909399);
+    border-color: var(--panel-color-navi-bottom-bar, #dcdfe6);
 }
-:root :is(.el-input .el-input__count .el-input__count-inner, .el-textarea .el-input__count) {
+[data-color-scheme] :is(.el-input .el-input__count .el-input__count-inner, .el-textarea .el-input__count) {
     background-color: transparent;
     color: var(--chat-color-placeholder);
 }
-:root .el-date-editor .el-range-separator {
+[data-color-scheme] .el-date-editor .el-range-separator {
     color: var(--panel-color-desc);
 }
 
@@ -116,129 +118,131 @@
     background-color: color-mix(in srgb, var(--panel-background) 35%, transparent);
 }
 
-:root
+[data-color-scheme]
     :is(.el-select-dropdown, .el-dropdown-menu, .el-popover, .el-picker-panel, .el-time-panel, .el-time-range-picker) {
     background-color: var(--chat-dropdown-bg-color);
     border-color: var(--panel-color-navi-bottom-bar);
     color: var(--panel-color-name);
 }
-:root :is(.el-select-dropdown__item, .el-dropdown-menu__item) {
+[data-color-scheme] :is(.el-select-dropdown__item, .el-dropdown-menu__item) {
     color: var(--panel-color-name);
 }
-:root :is(.el-select-dropdown__item, .el-dropdown-menu__item):not(.is-disabled):is(:hover, :focus, .hover) {
+[data-color-scheme]
+    :is(.el-select-dropdown__item, .el-dropdown-menu__item):not(.is-disabled):is(:hover, :focus, .hover) {
     background-color: var(--chat-dropdown-bg-color-hover);
 }
-:root .el-select-dropdown__item.selected {
+[data-color-scheme] .el-select-dropdown__item.selected {
     color: var(--panel-color-sticker-type-selected);
 }
-:root :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled, .el-select-dropdown__empty) {
+[data-color-scheme]
+    :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled, .el-select-dropdown__empty) {
     color: var(--chat-color-placeholder);
 }
-:root :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled):is(:hover, .hover) {
+[data-color-scheme] :is(.el-select-dropdown__item.is-disabled, .el-dropdown-menu__item.is-disabled):is(:hover, .hover) {
     background-color: var(--chat-dropdown-bg-color);
 }
-:root .el-dropdown-menu__item--divided {
+[data-color-scheme] .el-dropdown-menu__item--divided {
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-dropdown-menu__item--divided::before {
+[data-color-scheme] .el-dropdown-menu__item--divided::before {
     background-color: var(--chat-dropdown-bg-color);
 }
-:root .el-popover__title {
+[data-color-scheme] .el-popover__title {
     color: var(--panel-color-name);
 }
-:root .el-popper[x-placement^='bottom'] .popper__arrow {
+[data-color-scheme] .el-popper[x-placement^='bottom'] .popper__arrow {
     border-bottom-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-popper[x-placement^='bottom'] .popper__arrow::after {
+[data-color-scheme] .el-popper[x-placement^='bottom'] .popper__arrow::after {
     border-bottom-color: var(--chat-dropdown-bg-color);
 }
-:root .el-popper[x-placement^='top'] .popper__arrow {
+[data-color-scheme] .el-popper[x-placement^='top'] .popper__arrow {
     border-top-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-popper[x-placement^='top'] .popper__arrow::after {
+[data-color-scheme] .el-popper[x-placement^='top'] .popper__arrow::after {
     border-top-color: var(--chat-dropdown-bg-color);
 }
-:root .el-popper[x-placement^='left'] .popper__arrow {
+[data-color-scheme] .el-popper[x-placement^='left'] .popper__arrow {
     border-left-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-popper[x-placement^='left'] .popper__arrow::after {
+[data-color-scheme] .el-popper[x-placement^='left'] .popper__arrow::after {
     border-left-color: var(--chat-dropdown-bg-color);
 }
-:root .el-popper[x-placement^='right'] .popper__arrow {
+[data-color-scheme] .el-popper[x-placement^='right'] .popper__arrow {
     border-right-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-popper[x-placement^='right'] .popper__arrow::after {
+[data-color-scheme] .el-popper[x-placement^='right'] .popper__arrow::after {
     border-right-color: var(--chat-dropdown-bg-color);
 }
 
-:root .el-checkbox__input:not(.is-checked, .is-indeterminate) .el-checkbox__inner,
-:root .el-radio__input:not(.is-checked) .el-radio__inner,
-:root .el-radio-button__orig-radio:not(:checked) + .el-radio-button__inner {
+[data-color-scheme] .el-checkbox__input:not(.is-checked, .is-indeterminate) .el-checkbox__inner,
+[data-color-scheme] .el-radio__input:not(.is-checked) .el-radio__inner,
+[data-color-scheme] .el-radio-button__orig-radio:not(:checked) + .el-radio-button__inner {
     background-color: var(--chat-bg-color-input);
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root :is(.el-checkbox, .el-radio, .el-radio-button__inner) {
+[data-color-scheme] :is(.el-checkbox, .el-radio, .el-radio-button__inner) {
     color: var(--panel-color-name);
 }
-:root .el-radio-button__orig-radio:disabled + .el-radio-button__inner {
+[data-color-scheme] .el-radio-button__orig-radio:disabled + .el-radio-button__inner {
     background-color: var(--chat-content-bg-color);
     border-color: var(--panel-color-navi-bottom-bar);
     color: var(--chat-color-placeholder);
 }
-:where(:root) .el-tabs__item {
+:where([data-color-scheme]) .el-tabs__item {
     color: var(--panel-color-name);
 }
-:root .el-checkbox__input.is-disabled .el-checkbox__inner {
+[data-color-scheme] .el-checkbox__input.is-disabled .el-checkbox__inner {
     background-color: var(--chat-content-bg-color);
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-checkbox__input.is-disabled .el-checkbox__inner::after {
+[data-color-scheme] .el-checkbox__input.is-disabled .el-checkbox__inner::after {
     border-color: var(--chat-color-placeholder);
 }
-:root :is(.el-checkbox__input.is-disabled + .el-checkbox__label, .el-radio.is-disabled .el-radio__label) {
+[data-color-scheme] :is(.el-checkbox__input.is-disabled + .el-checkbox__label, .el-radio.is-disabled .el-radio__label) {
     color: var(--chat-color-placeholder);
 }
 
-:root :is(.el-table, .el-table tr, .el-table th.el-table__cell, .el-table .el-table__expanded-cell) {
+[data-color-scheme] :is(.el-table, .el-table tr, .el-table th.el-table__cell, .el-table .el-table__expanded-cell) {
     background-color: var(--panel-background);
     color: var(--panel-color-name);
 }
-:root :is(.el-table td.el-table__cell, .el-table th.el-table__cell, .el-table--border, .el-table--group) {
+[data-color-scheme] :is(.el-table td.el-table__cell, .el-table th.el-table__cell, .el-table--border, .el-table--group) {
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-table::before,
-:root .el-table--border::after,
-:root .el-table__fixed::before,
-:root .el-table__fixed-right::before {
+[data-color-scheme] .el-table::before,
+[data-color-scheme] .el-table--border::after,
+[data-color-scheme] .el-table__fixed::before,
+[data-color-scheme] .el-table__fixed-right::before {
     background-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+[data-color-scheme] .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
     background-color: var(--chat-content-bg-color);
 }
-:root .el-table__body tr:hover > td.el-table__cell,
-:root .el-table__body tr.hover-row > td.el-table__cell {
+[data-color-scheme] .el-table__body tr:hover > td.el-table__cell,
+[data-color-scheme] .el-table__body tr.hover-row > td.el-table__cell {
     background-color: var(--panel-item-bg-hover);
 }
-:root .el-table__body tr.current-row > td.el-table__cell {
+[data-color-scheme] .el-table__body tr.current-row > td.el-table__cell {
     background-color: var(--panel-item-bg);
 }
-:root .el-table__fixed-right-patch {
+[data-color-scheme] .el-table__fixed-right-patch {
     background-color: var(--panel-background);
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root .el-tree {
+[data-color-scheme] .el-tree {
     background-color: var(--panel-background);
     color: var(--panel-color-name);
 }
-:root .el-tree-node__content:is(:hover, :focus),
-:root .el-tree-node:focus > .el-tree-node__content {
+[data-color-scheme] .el-tree-node__content:is(:hover, :focus),
+[data-color-scheme] .el-tree-node:focus > .el-tree-node__content {
     background-color: var(--panel-item-bg-hover);
 }
-:root .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+[data-color-scheme] .el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
     background-color: var(--panel-item-bg);
 }
 
-:root
+[data-color-scheme]
     :is(
         .el-date-range-picker__content,
         .el-date-range-picker__time-header,
@@ -250,13 +254,13 @@
     background-color: var(--chat-dropdown-bg-color);
     border-color: var(--panel-color-navi-bottom-bar);
 }
-:root :is(.el-date-picker__header-label, .el-picker-panel__icon-btn, .el-picker-panel__shortcut) {
+[data-color-scheme] :is(.el-date-picker__header-label, .el-picker-panel__icon-btn, .el-picker-panel__shortcut) {
     color: var(--panel-color-desc);
 }
-:root .el-date-table td.in-range div {
+[data-color-scheme] .el-date-table td.in-range div {
     background-color: var(--panel-item-bg);
 }
-:root .el-date-table td.disabled div {
+[data-color-scheme] .el-date-table td.disabled div {
     background-color: var(--chat-content-bg-color);
     color: var(--chat-color-placeholder);
 }
@@ -279,7 +283,7 @@
     background-color: var(--chat-content-bg-color);
     color: var(--chat-color-placeholder);
 }
-:root .el-tabs__nav-wrap::after {
+[data-color-scheme] .el-tabs__nav-wrap::after {
     background-color: var(--panel-color-navi-bottom-bar);
 }
 /* 当前 Element UI 版本为进度条轨道和文字写入内联默认色。 */
@@ -292,55 +296,55 @@
 [data-color-scheme='dark'] .el-progress-bar__innerText {
     color: var(--chat-header-color-name) !important;
 }
-:root .el-loading-mask {
+[data-color-scheme] .el-loading-mask {
     background-color: color-mix(in srgb, var(--panel-background) 90%, transparent);
 }
 [data-color-scheme='dark'] :is(.el-alert.is-light, .el-message, .el-tag:not(.el-tag--dark)) {
     background-color: color-mix(in srgb, currentColor 12%, var(--panel-background));
     border-color: color-mix(in srgb, currentColor 30%, var(--panel-background));
 }
-:where(:root) :is(.el-input__inner, .el-textarea__inner):not(.invalid):focus {
+:where([data-color-scheme]) :is(.el-input__inner, .el-textarea__inner):not(.invalid):focus {
+    border-color: var(--panel-color-sticker-type-selected, #409eff);
+}
+[data-color-scheme] .el-select .el-input.is-disabled .el-input__inner:hover {
+    border-color: var(--panel-color-navi-bottom-bar, #e4e7ed);
+}
+[data-color-scheme] .el-checkbox__input:not(.is-disabled) .el-checkbox__inner:hover,
+[data-color-scheme] .el-checkbox__input.is-focus:not(.is-disabled) .el-checkbox__inner {
     border-color: var(--panel-color-sticker-type-selected);
 }
-:root .el-select .el-input.is-disabled .el-input__inner:hover {
-    border-color: var(--panel-color-navi-bottom-bar);
-}
-:root .el-checkbox__input:not(.is-disabled) .el-checkbox__inner:hover,
-:root .el-checkbox__input.is-focus:not(.is-disabled) .el-checkbox__inner {
-    border-color: var(--panel-color-sticker-type-selected);
-}
-:root .el-checkbox__input.is-checked:not(.is-disabled) .el-checkbox__inner,
-:root .el-checkbox__input.is-indeterminate:not(.is-disabled) .el-checkbox__inner {
+[data-color-scheme] .el-checkbox__input.is-checked:not(.is-disabled) .el-checkbox__inner,
+[data-color-scheme] .el-checkbox__input.is-indeterminate:not(.is-disabled) .el-checkbox__inner {
     background-color: var(--panel-color-sticker-type-selected);
     border-color: var(--panel-color-sticker-type-selected);
 }
-:root .el-checkbox__input.is-checked:not(.is-disabled) + .el-checkbox__label {
+[data-color-scheme] .el-checkbox__input.is-checked:not(.is-disabled) + .el-checkbox__label {
     color: var(--panel-color-sticker-type-selected);
 }
-:root .el-checkbox__input.is-disabled .el-checkbox__inner::before {
+[data-color-scheme] .el-checkbox__input.is-disabled .el-checkbox__inner::before {
     background-color: var(--chat-color-placeholder);
 }
-:root .el-radio-button__orig-radio:not(:disabled) + .el-radio-button__inner:hover {
+[data-color-scheme] .el-radio-button__orig-radio:not(:disabled) + .el-radio-button__inner:hover {
     color: var(--panel-color-sticker-type-selected);
 }
-:where(:root) .el-tabs__item:not(.is-disabled):hover,
-:where(:root) .el-tabs__item.is-active {
+:where([data-color-scheme]) .el-tabs__item:not(.is-disabled):hover,
+:where([data-color-scheme]) .el-tabs__item.is-active {
     color: var(--panel-color-sticker-type-selected);
 }
-:where(:root) .el-tabs__item.is-disabled {
+:where([data-color-scheme]) .el-tabs__item.is-disabled {
     color: var(--chat-color-placeholder);
 }
-:root .el-tabs__active-bar {
+[data-color-scheme] .el-tabs__active-bar {
     background-color: var(--panel-color-sticker-type-selected);
 }
-:root .el-table th.el-table__cell {
+[data-color-scheme] .el-table th.el-table__cell {
     color: var(--panel-color-desc);
 }
-:root .el-loading-spinner .el-loading-text,
-:root .el-loading-spinner i {
+[data-color-scheme] .el-loading-spinner .el-loading-text,
+[data-color-scheme] .el-loading-spinner i {
     color: var(--panel-color-sticker-type-selected);
 }
-:root .el-loading-spinner .path {
+[data-color-scheme] .el-loading-spinner .path {
     stroke: var(--panel-color-sticker-type-selected);
 }
 
@@ -349,6 +353,8 @@
 }
 .el-collapse-item__header {
     padding-left: 12px;
+}
+:where([data-color-scheme]) .el-collapse-item__header {
     border-bottom: var(--chat-border-style);
     background-color: var(--panel-background);
     color: var(--panel-color-name);
@@ -356,11 +362,15 @@
 
 .el-collapse-item__content {
     padding-bottom: 0;
+}
+:where([data-color-scheme]) .el-collapse-item__content {
     background-color: var(--panel-background);
 }
 
 .el-collapse-item__wrap {
     background: unset;
+}
+:where([data-color-scheme]) .el-collapse-item__wrap {
     border-bottom: var(--chat-border-style);
 }
 

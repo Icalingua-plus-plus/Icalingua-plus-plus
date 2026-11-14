@@ -53,12 +53,12 @@ function setupThemeStyles(style: any) {
         document.head.appendChild(themeStyle)
     }
 
-    document.documentElement.dataset.colorScheme = style['--chat-color-scheme'] === 'dark' ? 'dark' : 'light'
     themeStyle.textContent = `:root {
 ${Object.entries(style)
     .map(([key, value]) => `    ${key}: ${value};`)
     .join('\n')}
 }`
+    document.documentElement.dataset.colorScheme = style['--chat-color-scheme'] === 'dark' ? 'dark' : 'light'
     ipcRenderer.send('theme:set-complete')
 }
 
@@ -116,6 +116,7 @@ export function recalcTheme() {
 }
 
 ipcRenderer.on('theme:sync-theme-data', (_, msg) => {
+    if (!msg || !Object.keys(msg).length) return
     console.log('sync theme data', msg)
     setupThemeStyles(msg)
 })
