@@ -313,20 +313,95 @@
 .flash-created {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    padding: 4px 16px;
+    padding: 10px 16px;
     flex-shrink: 0;
     border-bottom: var(--flash-border);
+    background: color-mix(in srgb, #67c23a 10%, var(--flash-surface));
     font-size: 12px;
 }
 .flash-created > i {
     color: #67c23a;
+    font-size: 22px;
 }
-.flash-created > span {
+.flash-created-text {
+    display: flex;
     flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 160px;
+}
+.flash-created-text strong {
+    font-size: 13px;
+    font-weight: 500;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+.flash-created-text span {
+    color: var(--flash-muted);
+}
+.flash-created .el-button + .el-button {
+    margin-left: 0;
+}
+.flash-created-close {
+    border: 0;
+    background: none;
+    color: var(--flash-muted);
+    cursor: pointer;
+    padding: 4px;
+}
+.flash-dropzone,
+.flash-empty-state {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    text-align: center;
+    color: var(--flash-muted);
+    line-height: 1.6;
+}
+.flash-dropzone {
+    margin: 16px;
+    border: 2px dashed color-mix(in srgb, var(--flash-muted) 35%, transparent);
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
+}
+.flash-dropzone:hover,
+.flash-dropzone:focus-visible {
+    outline: none;
+    border-color: var(--flash-accent);
+    background: color-mix(in srgb, var(--flash-accent) 5%, transparent);
+}
+.flash-dropzone > i,
+.flash-empty-state > i {
+    font-size: 40px;
+    color: var(--flash-accent);
+    opacity: 0.8;
+}
+.flash-dropzone > strong,
+.flash-empty-state > strong {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--flash-text);
+}
+.flash-dropzone > span,
+.flash-empty-state > span {
+    max-width: 360px;
+    font-size: 12px;
+}
+.flash-empty-state > .el-button {
+    margin-top: 4px;
+}
+.flash-expiring {
+    color: #e6a23c;
 }
 .flash-muted {
     color: var(--flash-muted);
@@ -552,4 +627,8 @@
     .flash-upload-progress > span {
         display: none;
     }
+}
+.flash-library-table .el-table__empty-text {
+    width: 100%;
+    line-height: 1.6;
 }

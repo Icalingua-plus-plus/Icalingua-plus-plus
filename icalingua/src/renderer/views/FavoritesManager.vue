@@ -16,7 +16,7 @@
                         :class="['favorites-nav', { active: activeGroup === 'ungrouped' }]"
                         @click="changeGroup('ungrouped')"
                     >
-                        <i class="el-icon-folder-opened"></i><span>未分组</span>
+                        <i class="el-icon-folder-opened"></i><span>未分组</span><em>{{ ungroupedCount }}</em>
                     </button>
                 </div>
                 <div class="favorites-sidebar-label">
@@ -71,11 +71,14 @@
                     <div class="favorites-list-toolbar">
                         <div class="favorites-search-row">
                             <el-input
+                                ref="search"
                                 v-model="keyword"
                                 size="small"
                                 clearable
                                 prefix-icon="el-icon-search"
-                                placeholder="搜索标题、摘要或文件名"
+                                :placeholder="'搜索标题、摘要或文件名（' + modKey + '+F）'"
+                                @keydown.native.esc="keyword ? (keyword = '') : $event.target.blur()"
+                                @keydown.native.down.prevent="moveCursor(1, true)"
                                 aria-label="搜索收藏"
                             />
                             <el-button
@@ -93,6 +96,7 @@
                                 size="small"
                                 icon="el-icon-plus"
                                 :disabled="busy"
+                                :title="'新建收藏（' + modKey + '+N）'"
                                 @click="openEditor()"
                                 >新建</el-button
                             >
@@ -161,10 +165,17 @@
                         <i class="el-icon-warning-outline"></i><span>{{ listError }}</span
                         ><el-button type="text" size="mini" @click="refresh()">重试</el-button>
                     </div>
-                    <div class="favorites-list" v-loading="loading" aria-live="polite">
+                    <div
+                        ref="list"
+                        class="favorites-list"
+                        v-loading="loading"
+                        aria-live="polite"
+                        title="↑↓ 切换收藏 · Delete 删除 · Esc 取消选择"
+                    >
                         <div
                             v-for="item in visibleItems"
                             :key="item.cid"
+                            :data-cid="item.cid"
                             :class="[
                                 'favorite-row',
                                 { selected: selectedCid === item.cid, checked: selectedIds.includes(item.cid) },
@@ -198,7 +209,7 @@
                                 :class="['favorites-icon-button', 'favorite-row-star', { starred: item.star_mark }]"
                                 :title="item.star_mark ? '取消星标' : '设为星标'"
                                 :aria-label="item.star_mark ? '取消星标' : '设为星标'"
-                                :disabled="busy"
+                                :disabled="busy || starring.includes(item.cid)"
                                 @click="toggleStar(item)"
                             >
                                 <i :class="item.star_mark ? 'el-icon-star-on' : 'el-icon-star-off'"></i>
@@ -213,6 +224,7 @@
                             <el-button v-if="!isFiltered" type="primary" size="small" @click="openEditor()"
                                 >创建第一条收藏</el-button
                             >
+                            <el-button v-else size="small" @click="clearFilters">清除筛选条件</el-button>
                         </div>
                         <div v-if="items.length && !hasMore" class="favorites-list-end">
                             已加载全部 {{ items.length }} 条收藏
@@ -395,6 +407,8 @@ export default {
             detailEpoch: 0,
             alive: true,
             previewColors: {},
+            starring: [],
+            modKey: navigator.platform.includes('Mac') ? '⌘' : 'Ctrl',
         }
     },
     computed: {
@@ -406,6 +420,12 @@ export default {
         },
         starredCount() {
             return this.items.filter((item) => item.star_mark).length + (this.hasMore ? '+' : '')
+        },
+        ungroupedCount() {
+            return (
+                this.items.filter((item) => isFavoriteVisible(item) && !item.custom_group_id).length +
+                (this.hasMore ? '+' : '')
+            )
         },
         isFiltered() {
             return Boolean(this.keyword.trim() || this.typeFilter || this.activeGroup !== 'all')
@@ -456,6 +476,7 @@ export default {
         },
         typeFilter() {
             this.selectedIds = []
+            this.syncDetailWithList()
         },
     },
     async created() {
@@ -473,6 +494,7 @@ export default {
             }
         })
         this.lifecycleScope.onEvent(window, 'resize', () => this.applyListWidth(this.listWidth))
+        this.lifecycleScope.onEvent(window, 'keydown', this.onKeydown)
         this.refresh()
         const storePath = await ipc.getStorePath()
         if (!this.alive) return
@@ -547,6 +569,64 @@ export default {
         changeGroup(group) {
             this.activeGroup = group
             this.selectedIds = []
+            this.syncDetailWithList()
+        },
+        clearFilters() {
+            this.keyword = ''
+            this.typeFilter = 0
+            this.changeGroup('all')
+        },
+        syncDetailWithList() {
+            // 切换分组或类型后，详情若已不在列表中，则自动显示列表第一项
+            if (this.loading || this.visibleItems.some((item) => item.cid === this.selectedCid)) return
+            if (this.visibleItems.length) this.selectItem(this.visibleItems[0].cid)
+        },
+        moveCursor(step, focusList = false) {
+            const items = this.visibleItems
+            if (!items.length) return
+            const index = items.findIndex((item) => item.cid === this.selectedCid)
+            const next = items[index === -1 ? 0 : Math.max(0, Math.min(items.length - 1, index + step))]
+            this.selectItem(next.cid)
+            this.$nextTick(() => {
+                const row = this.$refs.list?.querySelector(`[data-cid="${CSS.escape(next.cid)}"]`)
+                row?.scrollIntoView({ block: 'nearest' })
+                if (focusList) row?.querySelector('.favorite-row-open')?.focus()
+            })
+        },
+        onKeydown(event) {
+            const mod = event.metaKey || event.ctrlKey
+            const dialogOpen =
+                this.editorVisible ||
+                this.moveDialog ||
+                this.groupDialog ||
+                document.body.classList.contains('el-popup-parent--hidden') ||
+                document.querySelector('.el-message-box__wrapper:not([style*="display: none"])')
+            if (dialogOpen) return
+            if (mod && !event.shiftKey && !event.altKey) {
+                const key = event.key.toLowerCase()
+                if (key === 'f') {
+                    event.preventDefault()
+                    this.$refs.search?.focus()
+                } else if (key === 'n' && !this.busy) {
+                    event.preventDefault()
+                    this.openEditor()
+                }
+                return
+            }
+            const target = event.target
+            if (target.closest?.('input:not([type="checkbox"]), textarea, select, [contenteditable="true"]')) return
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                if (target.closest?.('.favorite-detail, .favorites-pane-resizer')) return
+                event.preventDefault()
+                this.moveCursor(event.key === 'ArrowDown' ? 1 : -1, true)
+            } else if (event.key === 'Delete' || (event.key === 'Backspace' && event.metaKey)) {
+                event.preventDefault()
+                this.deleteItems(
+                    this.selectedIds.length ? this.selectedIds : this.selectedCid ? [this.selectedCid] : [],
+                )
+            } else if (event.key === 'Escape' && this.selectedIds.length) {
+                this.selectedIds = []
+            }
         },
         toggleSelection(cid, selected) {
             this.selectedIds = selected
@@ -694,20 +774,26 @@ export default {
             if (index === -1) this.items.unshift(this.detail.collection)
             else this.$set(this.items, index, this.detail.collection)
         },
+        setStar(cid, value) {
+            const stored = this.items.find((entry) => entry.cid === cid)
+            if (stored) this.$set(stored, 'star_mark', value)
+            if (this.detail?.collection.cid === cid) this.$set(this.detail.collection, 'star_mark', value)
+        },
         async toggleStar(item) {
-            if (!item || this.busy) return
-            this.mutationBusy = true
+            if (!item || this.busy || this.starring.includes(item.cid)) return
+            // 乐观更新：先切换界面状态，失败时回滚，避免整页进入忙碌状态
+            const cid = item.cid
+            const value = !item.star_mark
+            this.starring.push(cid)
+            this.setStar(cid, value)
             try {
-                const value = !item.star_mark
-                await favoriteRequest({ action: 'edit', cid: item.cid, changes: { star_mark: value } })
-                if (!this.alive) return
-                const stored = this.items.find((entry) => entry.cid === item.cid)
-                if (stored) this.$set(stored, 'star_mark', value)
-                if (this.detail?.collection.cid === item.cid) this.$set(this.detail.collection, 'star_mark', value)
+                await favoriteRequest({ action: 'edit', cid, changes: { star_mark: value } })
             } catch (error) {
-                if (this.alive) this.$message.error(error.message)
+                if (!this.alive) return
+                this.setStar(cid, !value)
+                this.$message.error(error.message)
             } finally {
-                if (this.alive) this.mutationBusy = false
+                if (this.alive) this.starring = this.starring.filter((id) => id !== cid)
             }
         },
         openMove(ids) {

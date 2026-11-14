@@ -1,6 +1,6 @@
 <template>
     <el-dialog
-        title="分享闪传"
+        :title="record ? '发送“' + record.name + '”' : '发送闪传'"
         :visible="visible"
         top="5vh"
         class="dialog"
@@ -9,6 +9,7 @@
         :show-close="!sending"
         @close="close"
     >
+        <p class="flash-share-hint">点击联系人或群聊即可立即发送</p>
         <TheContactsPanel
             v-if="visible"
             v-loading="sending"
@@ -68,3 +69,11 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+.flash-share-hint {
+    margin: -10px 0 10px;
+    font-size: 12px;
+    color: var(--panel-color-desc, #909399);
+}
+</style>

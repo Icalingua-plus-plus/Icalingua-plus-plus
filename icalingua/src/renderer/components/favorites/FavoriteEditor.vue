@@ -9,7 +9,16 @@
         :show-close="!saving"
         :before-close="requestClose"
     >
-        <el-form ref="form" :model="form" :rules="rules" label-position="top" size="small" @submit.native.prevent>
+        <el-form
+            ref="form"
+            :model="form"
+            :rules="rules"
+            label-position="top"
+            size="small"
+            @submit.native.prevent
+            @keydown.native.ctrl.enter.prevent="save"
+            @keydown.native.meta.enter.prevent="save"
+        >
             <el-form-item key="favorite-type" label="收藏类型">
                 <el-radio-group v-model="form.type" :disabled="Boolean(detail) || saving" size="small">
                     <el-radio-button label="text"><i class="el-icon-document"></i> 文本</el-radio-button>
@@ -89,7 +98,7 @@
         </div>
         <span slot="footer">
             <el-button size="small" :disabled="saving" @click="requestClose">取消</el-button>
-            <el-button size="small" type="primary" :loading="saving" @click="save">{{
+            <el-button size="small" type="primary" :loading="saving" title="Ctrl / ⌘ + Enter" @click="save">{{
                 detail ? '保存修改' : '创建收藏'
             }}</el-button>
         </span>

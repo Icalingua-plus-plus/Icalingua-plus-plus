@@ -48,12 +48,18 @@
                         </div>
                         <p>
                             {{ record.file_count }} 个文件 <span>·</span> {{ size(record.total_size) }} <span>·</span>
-                            {{ record.expire_time ? time(record.expire_time) + ' 到期' : '有效期未知' }}
+                            <span :title="record.expire_time ? time(record.expire_time) : ''">{{
+                                expiry(record.expire_time)
+                            }}</span>
                         </p>
                     </div>
                     <div class="flash-summary-actions">
-                        <el-button size="small" icon="el-icon-star-off" :disabled="loading" @click="save"
-                            >保存到我的闪传</el-button
+                        <el-button
+                            size="small"
+                            :icon="saved ? 'el-icon-star-on' : 'el-icon-star-off'"
+                            :disabled="loading || saved"
+                            @click="save"
+                            >{{ saved ? '已在我的闪传' : '保存到我的闪传' }}</el-button
                         ><el-button
                             size="small"
                             type="primary"
@@ -65,7 +71,15 @@
                     </div>
                 </section>
                 <div class="flash-detail-toolbar">
-                    <el-breadcrumb separator="/"
+                    <el-button
+                        v-if="breadcrumbs.length"
+                        size="mini"
+                        icon="el-icon-back"
+                        title="返回上一级（Backspace）"
+                        aria-label="返回上一级"
+                        :disabled="busy"
+                        @click="goUp"
+                    /><el-breadcrumb separator="/"
                         ><el-breadcrumb-item
                             ><button :disabled="busy" @click="browseRoot">文件集</button></el-breadcrumb-item
                         ><el-breadcrumb-item v-for="(part, index) in breadcrumbs" :key="part.id"
@@ -95,6 +109,8 @@
                         v-loading="loading"
                         height="100%"
                         row-key="cli_fileid"
+                        tabindex="0"
+                        @keydown.native.backspace="goUp"
                         @selection-change="selected = $event"
                         @row-dblclick="openFolder"
                         ><el-table-column
@@ -165,7 +181,14 @@
                     >
                 </footer>
             </template>
-            <div v-if="!record && !loading" class="flash-empty">输入链接或文件集 ID 查看闪传</div>
+            <div v-if="!record && !loading" class="flash-empty-state">
+                <i class="el-icon-link" />
+                <strong>打开别人分享的闪传</strong>
+                <span>粘贴分享链接、分享码或文件集 ID，即可浏览文件并批量下载</span>
+                <el-button size="small" type="primary" icon="el-icon-document-copy" @click="pasteAndLoad"
+                    >从剪贴板粘贴并打开</el-button
+                >
+            </div>
         </div>
         <flash-transfer-share-dialog :visible.sync="shareVisible" :record="record" @sent="shared" />
         <el-dialog
@@ -229,6 +252,7 @@ import {
     flashTransferRecord,
     flashTransferSize,
     flashTransferTime,
+    flashTransferExpiry,
 } from '../utils/flashTransfer'
 import '../assets/flashTransfer.css'
 
@@ -285,6 +309,7 @@ export default {
     methods: {
         size: flashTransferSize,
         time: flashTransferTime,
+        expiry: flashTransferExpiry,
         openManager() {
             ipc.openFlashTransfer()
         },
@@ -365,6 +390,22 @@ export default {
         },
         browseCrumb(index) {
             this.browse(this.breadcrumbs.slice(0, index + 1))
+        },
+        goUp() {
+            if (this.breadcrumbs.length) this.browse(this.breadcrumbs.slice(0, -1))
+        },
+        async pasteAndLoad() {
+            let text = ''
+            try {
+                text = (await navigator.clipboard.readText()).trim()
+            } catch {}
+            if (!this.alive) return
+            if (!text) {
+                this.$message.info('剪贴板中没有文本，请手动粘贴到输入框')
+                return
+            }
+            this.input = text
+            this.load()
         },
         refreshDirectory() {
             this.browse(this.breadcrumbs.slice())
