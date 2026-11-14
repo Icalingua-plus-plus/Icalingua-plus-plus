@@ -33,7 +33,7 @@
                 />
             </el-form-item>
             <el-form-item v-if="form.type === 'rich'" label="正文" key="favorite-html" prop="html">
-                <el-tabs v-model="editorTab" class="favorite-editor-tabs">
+                <el-tabs v-model="editorTab" class="favorite-editor-tabs" stretch>
                     <el-tab-pane label="HTML 源码" name="source">
                         <el-input
                             v-model="form.html"

@@ -127,19 +127,6 @@ export default {
     border-bottom: unset !important;
 }
 
-.el-tabs__header {
-    margin: unset !important;
-}
-
-.el-tabs__item {
-    padding: 0;
-    color: var(--panel-color-name);
-}
-
-.el-tabs__nav-wrap::after {
-    background-color: var(--panel-color-navi-bottom-bar);
-}
-
 .groupmember-root {
     height: 75vh;
     display: flex;

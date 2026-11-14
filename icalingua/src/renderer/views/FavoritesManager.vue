@@ -210,7 +210,7 @@
                             <p>
                                 {{ isFiltered ? '试试其他关键词、分组或类型。' : '保存一段文字、一份灵感或一个链接。' }}
                             </p>
-                            <el-button v-if="!isFiltered" type="primary" plain size="small" @click="openEditor()"
+                            <el-button v-if="!isFiltered" type="primary" size="small" @click="openEditor()"
                                 >创建第一条收藏</el-button
                             >
                         </div>
@@ -308,7 +308,7 @@
         >
             <div class="favorites-group-dialog-header">
                 <span class="favorite-helper">{{ groups.length }} 个分组</span
-                ><el-button type="primary" plain size="small" icon="el-icon-plus" :disabled="busy" @click="createGroup"
+                ><el-button type="primary" size="small" icon="el-icon-plus" :disabled="busy" @click="createGroup"
                     >新建分组</el-button
                 >
             </div>
@@ -498,8 +498,12 @@ export default {
             const theme = themes.recalcTheme()
             this.previewColors = {
                 foreground: theme['--chat-color'],
-                background: theme['--chat-header-bg-color'],
-                accent: theme['--chat-icon-color-file'],
+                background: theme['--chat-content-bg-color'],
+                accent: theme['--panel-color-sticker-type-selected'],
+                border: theme['--chat-markdown-border'],
+                codeBackground: theme['--chat-markdown-bg'],
+                codeForeground: theme['--chat-markdown-color-multi'],
+                inlineCodeForeground: theme['--chat-markdown-color'],
             }
         },
         applyListWidth(width) {

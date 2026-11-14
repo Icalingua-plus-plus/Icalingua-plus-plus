@@ -148,6 +148,10 @@ export function favoritePreviewDocument(html: string, colors: Record<string, str
     const foreground = color(colors.foreground, 'CanvasText')
     const background = color(colors.background, 'Canvas')
     const accent = color(colors.accent, 'LinkText')
+    const border = color(colors.border, foreground)
+    const codeBackground = color(colors.codeBackground, background)
+    const codeForeground = color(colors.codeForeground, foreground)
+    const inlineCodeForeground = color(colors.inlineCodeForeground, foreground)
     const source = new DOMParser().parseFromString(html || '', 'text/html')
     const output = document.implementation.createHTMLDocument('收藏预览')
     const allowed = new Set([
@@ -243,8 +247,10 @@ export function favoritePreviewDocument(html: string, colors: Record<string, str
         :root { color-scheme: light dark; } body { margin:0; padding:4px; font:14px/1.8 system-ui,sans-serif; color:${foreground}; background:${background}; overflow-wrap:anywhere; }
         .favorite-inline-image { display:inline-block; max-width:100%; cursor:zoom-in; }
         img { max-width:100%; height:auto; border-radius:6px; } p { margin:0 0 12px; } a { color:${accent}; }
-        pre { white-space:pre-wrap; padding:12px; background:color-mix(in srgb,${foreground} 6%,${background}); border-radius:6px; }
-        blockquote { margin:12px 0; padding-left:12px; border-left:3px solid GrayText; } table { width:100%; border-collapse:collapse; } td,th { border:1px solid GrayText; padding:6px; }
+        code { color:${inlineCodeForeground}; background:${codeBackground}; }
+        pre { white-space:pre-wrap; padding:12px; color:${codeForeground}; background:${codeBackground}; border-radius:6px; }
+        pre code { color:inherit; background:transparent; }
+        blockquote { margin:12px 0; padding-left:12px; border-left:3px solid ${border}; } table { width:100%; border-collapse:collapse; } td,th { border:1px solid ${border}; padding:6px; }
         h1,h2,h3 { line-height:1.4; } ul,ol { padding-left:24px; }
         </style></head><body>${output.body.innerHTML}</body></html>`
 }

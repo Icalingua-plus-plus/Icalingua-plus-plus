@@ -61,7 +61,7 @@
                         <strong>{{ title }}</strong
                         ><span>{{ link }}</span>
                     </div>
-                    <el-button size="small" type="primary" plain @click="openLink(link)">打开链接</el-button>
+                    <el-button size="small" type="primary" @click="openLink(link)">打开链接</el-button>
                     <p v-if="excerpt">{{ excerpt }}</p>
                 </div>
                 <div v-else-if="excerpt" class="favorite-text-body" v-text="excerpt"></div>
