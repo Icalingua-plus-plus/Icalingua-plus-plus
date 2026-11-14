@@ -705,10 +705,6 @@ export default {
     text-align: center;
 }
 
-.sms-drawer :deep(.el-drawer__body) {
-    padding: 0 20px 20px;
-}
-
 .sms-drawer p,
 .sms-drawer .el-input {
     margin: 0 0 15px;

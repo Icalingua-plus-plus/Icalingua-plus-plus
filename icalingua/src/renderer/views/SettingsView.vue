@@ -1536,16 +1536,6 @@ export default {
     min-height: 72px;
 }
 
-.priority-row :deep(.el-radio-group) {
-    display: flex;
-    flex: 0 0 auto;
-}
-
-.priority-row :deep(.el-radio-button__inner) {
-    min-width: 27px;
-    padding: 7px 8px;
-}
-
 .path-row {
     min-height: 72px;
     gap: 12px;
@@ -1743,48 +1733,24 @@ export default {
     font-size: 14px;
 }
 
-.settings-page :deep(.setting-row > .el-switch) {
-    width: 40px;
-    height: 20px;
-    flex: 0 0 40px;
-}
-
-.settings-page :deep(.setting-row > .el-switch .el-switch__core) {
-    width: 40px !important;
-    height: 20px;
-    border: 0;
-    border-radius: 10px;
+.settings-page ::v-deep .setting-row > .el-switch .el-switch__core {
+    border-color: transparent;
     background-color: rgba(127, 127, 127, 0.22);
-    transition: background-color 0.3s;
 }
 
-.settings-page :deep(.setting-row > .el-switch .el-switch__core::after) {
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    margin-left: 0;
+.settings-page ::v-deep .setting-row > .el-switch .el-switch__core::after {
     background-color: var(--settings-panel);
-    transition: left 0.3s;
 }
 
-.settings-page :deep(.setting-row > .el-switch.is-checked .el-switch__core::after) {
-    left: 22px;
-    margin-left: 0;
-}
-
-.settings-page :deep(.el-switch.is-checked .el-switch__core) {
+.settings-page ::v-deep .el-switch.is-checked .el-switch__core {
+    border-color: var(--settings-accent);
     background-color: var(--settings-accent);
 }
 
-.settings-page :deep(.el-radio-button__orig-radio:checked + .el-radio-button__inner) {
+.settings-page ::v-deep .el-radio-button__orig-radio:checked + .el-radio-button__inner {
     border-color: var(--settings-accent);
     color: #ffffff;
     background: var(--settings-accent);
     box-shadow: -1px 0 0 0 var(--settings-accent);
-}
-
-.settings-page :deep(.el-button--mini) {
-    padding: 7px 10px;
 }
 </style>

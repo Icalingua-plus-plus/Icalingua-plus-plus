@@ -49,10 +49,6 @@ export default {
     text-align: center;
 }
 
-.qrcode-drawer :deep(.el-drawer__body) {
-    padding: 0 20px 20px;
-}
-
 .qrcode-drawer p {
     margin: 0 0 15px;
 }
