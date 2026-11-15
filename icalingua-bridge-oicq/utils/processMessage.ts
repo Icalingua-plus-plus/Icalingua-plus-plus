@@ -238,7 +238,7 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                         url = `https://gxh.vip.qq.com/club/item/parcel/item/${m.data.file.slice(
                             0,
                             2,
-                        )}/${m.data.file.slice(0, 32)}/raw${m.data.width || m.data.height || 300}.gif`
+                        )}/${m.data.file.slice(0, 32)}/raw${m.data.width || m.data.height || 300}.${m.data.type || 'gif'}`
                         message.file = {
                             type: 'image/webp',
                             url,
