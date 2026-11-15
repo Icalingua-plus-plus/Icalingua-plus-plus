@@ -2,6 +2,10 @@ const assert = require('node:assert/strict')
 
 const { milkyToOicqSegment } = require('../utils/milkySegmentConverter')
 const createProcessMessage = require('../utils/processMessage').default
+const {
+    parseForwardCard,
+    stripForwardPreview,
+} = require('../../icalingua/src/renderer/components/vac-mod/utils/forwardMessage')
 
 async function run() {
     const segment = {
@@ -34,8 +38,48 @@ async function run() {
 
     await processMessage([elem], message, lastMessage)
 
-    assert.equal(lastMessage.content, '[Custom forward]')
-    assert.equal(message.content, 'Group forward title\nAlice: hello\nBob: world\n[Forward: res-123]')
+    assert.equal(lastMessage.content, '[Forward multiple messages]')
+    assert.equal(message.content, '[Forward: res-123]')
+    assert.equal(message.code, elem.data.data)
+    const card = parseForwardCard(message.code)
+    assert.deepEqual(card, {
+        title: 'Group forward title',
+        messages: ['Alice: hello', 'Bob: world'],
+        footer: 'View 2 forwarded messages',
+    })
+    assert.equal(stripForwardPreview(message.content, card), '[Forward: res-123]')
+
+    // Direct JSON cards use the same parser as Milky-converted forward segments.
+    for (const [resource, marker] of [
+        [{ resid: 'json-res-123' }, '[Forward: json-res-123]'],
+        [{ uniseq: 'nested-file' }, '[NestedForward: nested-file]'],
+    ]) {
+        const code = JSON.stringify({
+            app: 'com.tencent.multimsg',
+            desc: '[Custom description]',
+            meta: {
+                detail: {
+                    ...resource,
+                    title: 'JSON forward title',
+                    news: [{ text: 'Alice: hello' }, { text: '[聊天记录]' }],
+                    summary: 'View 2 forwarded messages',
+                },
+            },
+        })
+        const forwarded = { content: '', files: [] }
+        const lastForwarded = { content: 'Previous text' }
+        await processMessage([{ type: 'json', data: { data: code } }], forwarded, lastForwarded)
+
+        assert.equal(lastForwarded.content, 'Previous text[Forward multiple messages]')
+        assert.equal(forwarded.content, marker)
+        assert.equal(forwarded.code, code)
+        assert.deepEqual(parseForwardCard(forwarded.code), {
+            title: 'JSON forward title',
+            messages: ['Alice: hello', '[聊天记录]'],
+            footer: 'View 2 forwarded messages',
+        })
+        assert.equal(stripForwardPreview(forwarded.content, parseForwardCard(forwarded.code)), marker)
+    }
 }
 
 run().catch((error) => {

@@ -28,20 +28,10 @@ type ForwardPayload = {
     readonly prompt: string
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
-
 const nonEmptyString = (value: unknown): string | undefined => {
     if (typeof value !== 'string') return undefined
     const trimmed = value.trim()
     return trimmed ? trimmed : undefined
-}
-
-const getForwardDetail = (payload: unknown): Record<string, unknown> | undefined => {
-    if (!isRecord(payload)) return undefined
-    const meta = payload['meta']
-    if (!isRecord(meta)) return undefined
-    const detail = meta['detail']
-    return isRecord(detail) ? detail : undefined
 }
 
 export const buildMilkyForwardJson = (data: MilkyForwardSegmentData): string => {
@@ -69,28 +59,4 @@ export const buildMilkyForwardJson = (data: MilkyForwardSegmentData): string => 
         prompt,
     }
     return JSON.stringify(payload)
-}
-
-export const getForwardMessagePrompt = (payload: unknown): string | undefined => {
-    if (!isRecord(payload)) return undefined
-    return nonEmptyString(payload['prompt']) ?? nonEmptyString(payload['desc'])
-}
-
-export const formatForwardMessageBodyPrefix = (payload: unknown): string => {
-    const detail = getForwardDetail(payload)
-    if (!detail) return ''
-
-    const lines: string[] = []
-    const title = nonEmptyString(detail['source']) ?? nonEmptyString(detail['title'])
-    const news = detail['news']
-
-    if (title) lines.push(title)
-    if (Array.isArray(news)) {
-        for (const item of news) {
-            const text = isRecord(item) ? nonEmptyString(item['text']) : nonEmptyString(item)
-            if (text) lines.push(text)
-        }
-    }
-
-    return lines.length ? `${lines.join('\n')}\n` : ''
 }

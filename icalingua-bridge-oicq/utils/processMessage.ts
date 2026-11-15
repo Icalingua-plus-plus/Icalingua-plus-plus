@@ -9,7 +9,6 @@ import mime from './mime'
 import silkDecode from './silkDecode'
 import formatDate from './formatDate'
 import { ImgPttElemPlus, MessageElemPlus } from '../types/MessageElemPlus'
-import { formatForwardMessageBodyPrefix, getForwardMessagePrompt } from './forwardMessageMeta'
 import sleep from './sleep'
 import { encodeIcalinguaAt } from './icalinguaAt'
 
@@ -455,15 +454,13 @@ const createProcessMessage = (adapter: typeof oicqAdapter) => {
                             try {
                                 const resId = jsonObj.meta?.detail?.resid
                                 const fileName = jsonObj.meta?.detail?.uniseq
-                                const forwardSummary = getForwardMessagePrompt(jsonObj) || '[Forward multiple messages]'
-                                const forwardPrefix = formatForwardMessageBodyPrefix(jsonObj)
                                 if (resId) {
-                                    lastMessage.content += forwardSummary
-                                    message.content = `${forwardPrefix}[Forward: ${resId}]`
+                                    lastMessage.content += '[Forward multiple messages]'
+                                    message.content = `[Forward: ${resId}]`
                                     break
                                 } else if (fileName) {
-                                    lastMessage.content += forwardSummary
-                                    message.content = `${forwardPrefix}[NestedForward: ${fileName}]`
+                                    lastMessage.content += '[Forward multiple messages]'
+                                    message.content = `[NestedForward: ${fileName}]`
                                     break
                                 }
                             } catch (err) {}
