@@ -68,14 +68,6 @@ export function parseForwardPreview(code: string | undefined): string {
     return formatForwardPreview(parseForwardCard(code))
 }
 
-export function stripForwardPreview(content: string, card: ForwardCardPreview): string {
-    const preview = formatForwardPreview(card)
-    if (!preview || !content.startsWith(preview)) return content
-
-    const remainder = content.slice(preview.length).trimStart()
-    return /^\[(?:Forward|NestedForward): [^\r\n]+\]/.test(remainder) ? content.slice(preview.length) : content
-}
-
 function parseJsonCard(code: string): ForwardCardPreview | null {
     try {
         const payload = JSON.parse(code)

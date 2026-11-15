@@ -1,10 +1,16 @@
 <template>
     <div :class="{ 'vac-text-ellipsis': singleLine }" @dblclick.stop>
-        <div v-if="textFormatting" :class="{ 'vac-text-ellipsis': singleLine }">
+        <forward-message-card
+            v-if="forwardMessage"
+            :preview="forwardCard"
+            :clickable="!showForwardPanel"
+            @open="openForwardCard(forwardMessage)"
+        />
+        <div v-else-if="textFormatting" :class="{ 'vac-text-ellipsis': singleLine }">
             <template v-for="(message, i) in linkifiedMessage">
                 <component
                     :is="message.href ? 'a' : 'span'"
-                    v-if="message.type !== 'face' && (!isForwardMessage(message) || !hasForwardCard)"
+                    v-if="message.type !== 'face'"
                     :key="i"
                     :class="{
                         'vac-text-ellipsis': singleLine,
@@ -35,13 +41,6 @@
                         :alt="message.value"
                     />
                 </span>
-                <forward-message-card
-                    v-if="hasForwardCard && isForwardMessage(message)"
-                    :key="i"
-                    :preview="forwardCard"
-                    :clickable="!showForwardPanel"
-                    @open="openForwardCard(message)"
-                />
             </template>
         </div>
         <div v-else class="vac-message-content">
@@ -58,12 +57,7 @@ import ForwardMessageCard from './ForwardMessageCard'
 
 const path = require('path')
 
-import {
-    createForwardOpenEvent,
-    parseForwardCard,
-    parseForwardResource,
-    stripForwardPreview,
-} from '../utils/forwardMessage'
+import { createForwardOpenEvent, parseForwardCard, parseForwardResource } from '../utils/forwardMessage'
 import { formatMessageParts, padFaceId } from '../utils/messageFormatting'
 import { isExternalMessageUrl } from '../utils/messageMarkdown'
 
@@ -93,15 +87,12 @@ export default {
 
     computed: {
         linkifiedMessage() {
-            return formatMessageParts(this.displayContent, {
+            return formatMessageParts(String(this.content), {
                 linkify: this.linkify,
                 disableQLottie: this.disableQLottie,
                 usePanguJs: this.usePanguJs,
                 legacyAtCompat: this.legacyAtCompat,
             })
-        },
-        displayContent() {
-            return stripForwardPreview(String(this.content), this.forwardCard)
         },
         forwardCard() {
             return parseForwardCard(this.code)
@@ -109,8 +100,9 @@ export default {
         forwardResource() {
             return parseForwardResource(this.code)
         },
-        hasForwardCard() {
-            return Boolean(this.code && this.code.trim())
+        forwardMessage() {
+            if (!this.code || !this.code.trim()) return undefined
+            return this.linkifiedMessage.find(this.isForwardMessage)
         },
     },
 

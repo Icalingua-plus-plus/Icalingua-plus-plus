@@ -1,13 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {
-    createForwardOpenEvent,
-    parseForwardCard,
-    parseForwardPreview,
-    parseForwardResource,
-    stripForwardPreview,
-} from './forwardMessage'
+import { createForwardOpenEvent, parseForwardCard, parseForwardPreview, parseForwardResource } from './forwardMessage'
 import { formatMessageParts, padFaceId, parseMessageText } from './messageFormatting'
 import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, encodeIcalinguaAt } from '../../../../utils/icalinguaAt'
 
@@ -170,11 +164,6 @@ test('handles forwarded-message resource IDs and JSON previews', () => {
         messages: ['First', 'Second'],
         footer: 'Chat record',
     })
-    assert.equal(
-        stripForwardPreview(`Group chat\nFirst\nSecond\n[Forward: res-123]`, parseForwardCard(code)),
-        '[Forward: res-123]',
-    )
-    assert.equal(stripForwardPreview('[Forward: res-123]', parseForwardCard(undefined)), '[Forward: res-123]')
     assert.deepEqual(
         parseForwardCard(
             '<msg action="viewMultiMsg" brief="[Chat record]"><item><title>Group chat</title><title>Alice: hello</title><title>Bob: world</title><summary>View 2 forwarded messages</summary></item></msg>',

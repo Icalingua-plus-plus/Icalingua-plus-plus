@@ -2,10 +2,7 @@ const assert = require('node:assert/strict')
 
 const { milkyToOicqSegment } = require('../utils/milkySegmentConverter')
 const createProcessMessage = require('../utils/processMessage').default
-const {
-    parseForwardCard,
-    stripForwardPreview,
-} = require('../../icalingua/src/renderer/components/vac-mod/utils/forwardMessage')
+const { parseForwardCard } = require('../../icalingua/src/renderer/components/vac-mod/utils/forwardMessage')
 
 async function run() {
     const segment = {
@@ -47,7 +44,6 @@ async function run() {
         messages: ['Alice: hello', 'Bob: world'],
         footer: 'View 2 forwarded messages',
     })
-    assert.equal(stripForwardPreview(message.content, card), '[Forward: res-123]')
 
     // Direct JSON cards use the same parser as Milky-converted forward segments.
     for (const [resource, marker] of [
@@ -78,7 +74,6 @@ async function run() {
             messages: ['Alice: hello', '[聊天记录]'],
             footer: 'View 2 forwarded messages',
         })
-        assert.equal(stripForwardPreview(forwarded.content, parseForwardCard(forwarded.code)), marker)
     }
 }
 
