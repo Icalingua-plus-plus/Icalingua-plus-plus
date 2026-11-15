@@ -442,7 +442,6 @@ export default {
                     action: 'urls',
                     fileset_id: this.record.fileset_id,
                     files: selected,
-                    prefix: this.breadcrumbs.map((item) => item.name).join('/'),
                 })
                 if (!this.alive) return
                 if (!links.length) {
