@@ -119,6 +119,7 @@ const defaultConfig: AllConfig = {
     silentFetchHistory: false,
     hideChatImageByDefault: false,
     hideChatVideoByDefault: false,
+    playChatVideoInNewWindow: true,
     disableChatGroups: false,
     singleImageMode: false,
     disableChatGroupsRedPoint: false,

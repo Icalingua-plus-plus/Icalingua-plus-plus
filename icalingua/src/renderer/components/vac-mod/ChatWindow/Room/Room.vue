@@ -150,6 +150,7 @@
                                 @inline-command="useMessageInlineCommand(m, $event)"
                                 :hide-chat-image-by-default="hideChatImageByDefault"
                                 :hide-chat-video-by-default="hideChatVideoByDefault"
+                                :play-chat-video-in-new-window="playChatVideoInNewWindow"
                                 :local-image-viewer-by-default="localImageViewerByDefault"
                                 :disableQLottie="disableQLottie"
                                 :record-path="recordPath"
@@ -710,6 +711,7 @@ export default {
             optimizeMethod: 'infinite-loading',
             hideChatImageByDefault: false,
             hideChatVideoByDefault: false,
+            playChatVideoInNewWindow: null,
             localImageViewerByDefault: false,
             disableQLottie: false,
             recordPath: '',
@@ -1070,9 +1072,14 @@ export default {
         this.lifecycleScope.onIpc('setHideChatImageByDefault', (_, hideChatImageByDefault) => {
             this.hideChatImageByDefault = hideChatImageByDefault
         })
-        this.hideChatVideoByDefault = await ipc.getHideChatVideoByDefault()
-        this.lifecycleScope.onIpc('setHideChatVideoByDefault', (_, hideChatVideoByDefault) => {
-            this.hideChatVideoByDefault = hideChatVideoByDefault
+        const { hideChatVideoByDefault, playChatVideoInNewWindow } = await ipc.getSettings()
+        this.hideChatVideoByDefault = hideChatVideoByDefault
+        this.playChatVideoInNewWindow = playChatVideoInNewWindow
+        this.lifecycleScope.onIpc('setHideChatVideoByDefault', (_, enabled) => {
+            this.hideChatVideoByDefault = enabled
+        })
+        this.lifecycleScope.onIpc('setPlayChatVideoInNewWindow', (_, enabled) => {
+            this.playChatVideoInNewWindow = enabled
         })
         this.localImageViewerByDefault = (await ipc.getSettings()).localImageViewerByDefault
         this.lifecycleScope.onIpc('setLocalImageViewerByDefault', (_, localImageViewerByDefault) => {

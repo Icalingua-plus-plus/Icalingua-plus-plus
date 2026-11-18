@@ -229,6 +229,9 @@ const ipc = {
     openImage(url: string, external = false, urlList: string[] = []) {
         ipcRenderer.send('openImage', url, external, urlList)
     },
+    openVideo(url: string | undefined, messageId?: string | number): Promise<boolean | 'expired'> {
+        return ipcRenderer.invoke('openVideo', url, messageId)
+    },
     downloadImage(url: string) {
         ipcRenderer.send('downloadImage', url)
     },
@@ -381,9 +384,6 @@ const ipc = {
     },
     async getHideChatImageByDefault(): Promise<boolean> {
         return (await this.getSettings()).hideChatImageByDefault
-    },
-    async getHideChatVideoByDefault(): Promise<boolean> {
-        return (await this.getSettings()).hideChatVideoByDefault
     },
     lock() {
         ipcRenderer.send('lock')

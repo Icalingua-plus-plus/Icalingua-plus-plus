@@ -196,6 +196,16 @@
                         </div>
                         <div class="setting-row">
                             <div class="setting-copy">
+                                <strong>在新窗口播放聊天视频</strong>
+                                <span>点击聊天消息里的播放按钮，在独立窗口观看视频</span>
+                            </div>
+                            <el-switch
+                                :value="settings.playChatVideoInNewWindow"
+                                @change="updateSetting('playChatVideoInNewWindow', $event)"
+                            />
+                        </div>
+                        <div class="setting-row">
+                            <div class="setting-copy">
                                 <strong>启用 URL 高亮</strong>
                                 <span>将聊天中的链接识别为可点击内容，重新加载后生效</span>
                             </div>

@@ -1701,7 +1701,7 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                             label: '刷新视频地址',
                             visible: !history,
                             click: async () => {
-                                const newUrl = await getMsgNewURL(String(message._id))
+                                const newUrl = await getMsgNewURL(String(message._id)).catch(() => 'error')
                                 if (newUrl !== 'error') {
                                     renewMessageURL(room.roomId, message._id, newUrl)
                                 } else {

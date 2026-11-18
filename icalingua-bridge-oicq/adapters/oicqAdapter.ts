@@ -1083,12 +1083,10 @@ const adapter = {
         const history = await adapter.getMsg(id)
         if (history.error) {
             console.log(history.error)
-            if (history.error.message !== 'msg not exists') clients.messageError('错误：' + history.error.message)
             resolve('error')
             return
         }
         const data = history.data
-        console.log(data)
         if (data) {
             const message: Message = {
                 senderId: data.sender.user_id,

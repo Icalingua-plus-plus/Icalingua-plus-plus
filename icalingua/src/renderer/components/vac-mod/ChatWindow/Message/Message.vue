@@ -213,11 +213,15 @@
                             @open-image="$emit('open-image', $event)"
                         />
 
-                        <message-video
-                            v-else-if="isVideo"
-                            :isHidden="hideChatVideoByDefault"
-                            :url="message.file.url"
-                        ></message-video>
+                        <template v-else-if="isVideo">
+                            <message-video
+                                v-if="playChatVideoInNewWindow !== null"
+                                :is-hidden="hideChatVideoByDefault"
+                                :play-in-new-window="playChatVideoInNewWindow"
+                                :message-id="$route.name === 'history-page' ? undefined : message._id"
+                                :url="message.file.url"
+                            />
+                        </template>
 
                         <div v-else-if="isAudio" class="vac-audio-message">
                             <div v-if="isAudioDecoding" class="vac-audio-decoding" title="语音解码中">
@@ -387,6 +391,7 @@ export default {
         forwardResId: { type: String, required: false },
         hideChatImageByDefault: { type: Boolean, required: true },
         hideChatVideoByDefault: { type: Boolean, required: true },
+        playChatVideoInNewWindow: { type: Boolean, default: null },
         localImageViewerByDefault: { type: Boolean, required: true },
         disableQLottie: { type: Boolean, required: true },
         recordPath: { type: String, required: true },

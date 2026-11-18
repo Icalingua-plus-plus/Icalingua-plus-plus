@@ -1336,11 +1336,9 @@ const adapter: OicqAdapter = {
         const history = await adapter.getMsg(id)
         if (history.error) {
             errorHandler(history.error, true)
-            if (history.error.message !== 'msg not exists') ui.messageError('错误：' + history.error.message)
             return 'error'
         }
         const data = history.data
-        console.log(data)
         if (data) {
             const message: Message = {
                 senderId: data.sender.user_id,

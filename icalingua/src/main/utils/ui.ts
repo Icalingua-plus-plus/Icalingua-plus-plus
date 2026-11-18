@@ -3,7 +3,7 @@ import Message from '@icalingua/types/Message'
 import OnlineData from '@icalingua/types/OnlineData'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
-import { ipcMain } from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
 import { updateAppMenu } from '../ipc/menuManager'
 import { getConfig } from './configManager'
 import { updateTrayIcon } from './trayManager'
@@ -13,6 +13,7 @@ import {
     sendToChatWindow,
     isRoomInChatWindow,
     sendToAllChatWindows,
+    sendToWindow,
 } from './windowManager'
 import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
@@ -215,7 +216,9 @@ export default {
         sendToMainWindow('setHideChatImageByDefault', enabled)
     },
     setHideChatVideoByDefault(enabled: boolean) {
-        sendToMainWindow('setHideChatVideoByDefault', enabled)
+        for (const win of BrowserWindow.getAllWindows()) {
+            sendToWindow(win, 'setHideChatVideoByDefault', enabled)
+        }
     },
     setDisableChatGroupsSeeting(a: boolean) {
         sendToMainWindow('setDisableChatGroupsSeeting', a)

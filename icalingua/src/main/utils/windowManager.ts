@@ -6,6 +6,7 @@ import getWinUrl from '../../utils/getWinUrl'
 import { updateTrayIcon, updateTrayMenu } from './trayManager'
 import path from 'path'
 import ui from './ui'
+import { closeVideoWindows } from './videoWindows'
 import argv from './argv'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import getStaticPath from '../../utils/getStaticPath'
@@ -579,6 +580,7 @@ export const lockMainWindow = () => {
             if (!win.isDestroyed()) win.hide()
         })
         isLocked = true
+        closeVideoWindows()
         updateTrayMenu()
     }
 }
@@ -656,6 +658,7 @@ export const tryToShowAllWindows = () => {
     })
 }
 export const destroyWindow = () => {
+    closeVideoWindows()
     if (flashTransferWindow && !flashTransferWindow.isDestroyed()) flashTransferWindow.destroy()
     flashTransferDetailWindows.forEach((win) => {
         if (!win.isDestroyed()) win.destroy()

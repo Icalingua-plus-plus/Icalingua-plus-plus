@@ -671,8 +671,12 @@ const adapter: Adapter = {
         }
         return localStorage?.migrateLegacyAtMessages?.() || Promise.resolve()
     },
-    getMsgNewURL(id: string): Promise<string> {
-        return new Promise((resolve) => socket.emit('getMsgNewURL', id, resolve))
+    async getMsgNewURL(id: string): Promise<string> {
+        if (!socket?.connected) return 'error'
+        return socket
+            .timeout(5000)
+            .emitWithAck('getMsgNewURL', id)
+            .catch(() => 'error')
     },
     getNTPicURLbyFileid(fileId: string, appid: string): Promise<string> {
         return new Promise((resolve) => socket.emit('getNTPicURLbyFileid', fileId, appid, resolve))

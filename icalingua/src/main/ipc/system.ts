@@ -10,6 +10,7 @@ import getStaticPath from '../../utils/getStaticPath'
 import {
     getDatabaseUpgradeProgress,
     getMainWindow,
+    isAppLocked,
     setMainWindowTitleBarHidden,
     setZoomFactorForAllWindows,
     showAria2SettingsWindow,
@@ -17,16 +18,42 @@ import {
     showSetLockPasswordWindow,
     showSettingsWindow,
     sendToSettingsWindow,
+    sendToWindow,
 } from '../utils/windowManager'
 import { updateTrayIcon, updateTrayMenu } from '../utils/trayManager'
 import { showMakeForwardDebugWindow, updateAppMenu } from './menuManager'
 import { getDefaultDownloadPath } from './downloadManager'
 import openImage from './openImage'
+import { openVideo } from '../utils/videoWindows'
+import { getMsgNewURL } from './botAndStorage'
 
 ipcMain.handle('getVersion', () => version.version)
 ipcMain.handle('getBuildInfo', () => ({ version: version.version, isProduction: version.isProduction }))
 ipcMain.handle('getDbUpgradeProgress', () => getDatabaseUpgradeProgress())
 ipcMain.handle('getSettings', () => getConfig())
+ipcMain.handle('openVideo', async (event, url: unknown, messageId: unknown) => {
+    if (isAppLocked()) return false
+
+    let freshUrl: string | undefined
+    if ((typeof messageId === 'string' && messageId.length) || typeof messageId === 'number') {
+        let timeout: NodeJS.Timeout
+        try {
+            freshUrl = await Promise.race([
+                getMsgNewURL(String(messageId)),
+                new Promise<undefined>((resolve) => {
+                    timeout = setTimeout(() => resolve(undefined), 5000)
+                }),
+            ])
+        } catch {
+            // The stored URL may still work if refreshing fails.
+        } finally {
+            clearTimeout(timeout)
+        }
+    }
+
+    if (isAppLocked() || event.sender.isDestroyed()) return false
+    return openVideo(freshUrl, url)
+})
 
 const chooseDefaultDownloadPath = (parentWindow?: BrowserWindow | null) => {
     const dialogParent = parentWindow && !parentWindow.isDestroyed() ? parentWindow : getMainWindow()
@@ -66,6 +93,7 @@ const SETTINGS_BOOLEAN_KEYS = new Set([
     'linkify',
     'hideChatImageByDefault',
     'hideChatVideoByDefault',
+    'playChatVideoInNewWindow',
     'disableQLottie',
     'singleImageMode',
     'disableChatGroups',
@@ -176,6 +204,11 @@ ipcMain.handle('updateSettings', async (event, patch: Record<string, any>) => {
     if (changed.has('optimizeMethod')) ui.setOptimizeMethodSetting(config.optimizeMethod)
     if (changed.has('hideChatImageByDefault')) ui.setHideChatImageByDefault(config.hideChatImageByDefault)
     if (changed.has('hideChatVideoByDefault')) ui.setHideChatVideoByDefault(config.hideChatVideoByDefault)
+    if (changed.has('playChatVideoInNewWindow')) {
+        for (const win of BrowserWindow.getAllWindows()) {
+            sendToWindow(win, 'setPlayChatVideoInNewWindow', config.playChatVideoInNewWindow)
+        }
+    }
     if (changed.has('disableChatGroups')) ui.setDisableChatGroupsSeeting(config.disableChatGroups)
     if (changed.has('disableChatGroupsRedPoint'))
         ui.setDisableChatGroupsRedPointSeeting(config.disableChatGroupsRedPoint)

@@ -34,6 +34,7 @@ type AllConfig = {
     silentFetchHistory: boolean
     hideChatImageByDefault: boolean
     hideChatVideoByDefault: boolean
+    playChatVideoInNewWindow: boolean
     disableChatGroups: boolean
     singleImageMode: boolean
     disableChatGroupsRedPoint: boolean

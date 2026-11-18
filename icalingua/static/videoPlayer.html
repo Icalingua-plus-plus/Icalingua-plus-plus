@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; media-src http: https: file:"
+        />
+        <title>视频播放</title>
+        <style>
+            body {
+                margin: 0;
+                height: 100vh;
+                display: grid;
+                place-items: center;
+                background: #101010;
+                color: white;
+                font:
+                    16px system-ui,
+                    sans-serif;
+            }
+
+            video {
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+            }
+        </style>
+        <script src="./videoPlayer.js" defer></script>
+    </head>
+    <body>
+        <video controls autoplay></video>
+        <p id="error" role="alert" hidden>无法播放此视频，请检查视频地址或文件格式。</p>
+    </body>
+</html>

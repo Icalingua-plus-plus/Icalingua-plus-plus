@@ -153,7 +153,14 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('login-slider-ticket', adapter.sliderLogin)
     socket.on('getFriend', adapter.getFriend)
     socket.on('getGroup', adapter.getGroup)
-    socket.on('getMsgNewURL', adapter.getMsgNewURL)
+    socket.on('getMsgNewURL', async (id: string, resolve: (url: string) => void) => {
+        if (typeof resolve !== 'function') return
+        try {
+            await adapter.getMsgNewURL(id, resolve)
+        } catch {
+            resolve('error')
+        }
+    })
     socket.on('sendPacket', adapter.sendPacket)
     socket.on('getDisabledFeatures', (cb) => cb(adapter.disabledFeatures))
     socket.on('requestUpload', requestUpload)
