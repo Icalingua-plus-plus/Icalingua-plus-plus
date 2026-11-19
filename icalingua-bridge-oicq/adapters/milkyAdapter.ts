@@ -57,6 +57,11 @@ let storage: StorageProvider
 let uin: number
 let bkn: number = 0
 let nickname: string
+let backendInfo = ''
+let loadingBackendInfo = false
+
+const sendOnlineState = (target?: Socket) =>
+    clients.sendOnlineData({ online: true, nick: nickname, uin, sysInfo: getSysInfo() + backendInfo, bkn: 0 }, target)
 let lastReceivedMessageInfo = {
     timestamp: 0,
     id: 0,
@@ -1072,7 +1077,6 @@ const adapter: typeof oicqAdapter = {
             await bot.connect()
             uin = bot.uin
             nickname = bot.nickname
-            adapter.loggedIn = true
         } catch (e) {
             console.error('连接 Milky 服务端失败:', e)
             broadcast('fatal', '连接 Milky 服务端失败: ' + e.message)
@@ -1085,10 +1089,9 @@ const adapter: typeof oicqAdapter = {
         saveUserConfig()
         await initStorage()
         attachEventHandler()
-        setInterval(adapter.sendOnlineData, 1000 * 60)
-        clients.setAllRooms(await storage.getAllRooms())
-        clients.setAllChatGroups(await storage.getAllChatGroups())
-        adapter.sendOnlineData()
+        adapter.loggedIn = true
+        setInterval(() => void adapter.sendOnlineData().catch(console.error), 1000 * 60)
+        await adapter.sendOnlineData()
         // 初始化 rkey 并定时刷新
         await refreshRkeyIfNeeded()
         setInterval(refreshRkeyIfNeeded, 1000 * 60 * 10)
@@ -1780,7 +1783,7 @@ const adapter: typeof oicqAdapter = {
     ) {
         const initialPage = !options?.before && !options?.after
         if (initialPage) {
-            storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
+            void clients.clearRoomUnread(storage, roomId).catch(console.error)
             if (roomId < 0) {
                 try {
                     await bot.getGroupInfo(-roomId)
@@ -1844,8 +1847,12 @@ const adapter: typeof oicqAdapter = {
             if (!room) return callback(0)
             const unreadCount = await storage.countUnreadMessagesFrom(roomId, messageId)
             if (!unreadCount) return callback(0)
-            await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
-            callback(unreadCount)
+            const updated = await clients.updateRoomSettings(storage, roomId, {
+                unreadCount,
+                at: false,
+                atMessageId: null,
+            })
+            callback(updated?.unreadCount || 0)
         } catch (error) {
             console.error('Failed to mark message unread', error)
             callback(0)
@@ -1902,12 +1909,12 @@ const adapter: typeof oicqAdapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    addChatGroup(chatGroup: ChatGroup) {
-        return storage.addChatGroup(chatGroup)
+    async addChatGroup(chatGroup: ChatGroup) {
+        await storage.addChatGroup(chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, { priority })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { priority })
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         await storage.updateRoom(roomId, { autoDownload })
@@ -1916,8 +1923,7 @@ const adapter: typeof oicqAdapter = {
         await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { index: pin ? 1 : 0 })
     },
     async ignoreChat(data: IgnoreChatInfo) {
         await storage.addIgnoredChat(data)
@@ -1925,11 +1931,11 @@ const adapter: typeof oicqAdapter = {
     },
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.refreshRooms(storage)
     },
     async removeChatGroup(name: string) {
         await storage.removeChatGroup(name)
-        clients.setAllChatGroups(await storage.getAllChatGroups())
+        await clients.refreshChatGroups(storage)
     },
     async hideMessage(roomId: number, messageId: string) {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
@@ -1959,12 +1965,12 @@ const adapter: typeof oicqAdapter = {
     removeIgnoredChat(roomId: number) {
         return storage.removeIgnoredChat(roomId)
     },
-    updateRoom(roomId: number, room: object) {
-        if (!storage) return
-        return storage.updateRoom(roomId, room)
+    updateRoom(roomId: number, room: Partial<Room>) {
+        return clients.applyRoomUpdate(storage, roomId, room)
     },
-    updateChatGroup(name: string, chatGroup: ChatGroup) {
-        return storage.updateChatGroup(name, chatGroup)
+    async updateChatGroup(name: string, chatGroup: ChatGroup) {
+        await storage.updateChatGroup(name, chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
@@ -2051,25 +2057,24 @@ const adapter: typeof oicqAdapter = {
         debug('getPrivateFileUrl done')
     },
 
-    async sendOnlineData() {
-        try {
-            const implInfo = await bot.getImplInfo()
-            clients.sendOnlineData({
-                online: true,
-                nick: nickname,
-                uin,
-                sysInfo:
-                    getSysInfo() +
-                    '\n\n' +
-                    `Milky Backend: ${implInfo.impl_name} ${implInfo.impl_version}` +
-                    `\nProtocol: ${implInfo.qq_protocol_type} ${implInfo.qq_protocol_version}`,
-                bkn: 0,
-            })
-            clients.setAllRooms(await storage.getAllRooms())
-            clients.setAllChatGroups(await storage.getAllChatGroups())
-        } catch (e) {
-            console.error('sendOnlineData error:', e)
+    async sendOnlineData(target?: Socket) {
+        sendOnlineState(target)
+        if (!target && !backendInfo && !loadingBackendInfo) {
+            loadingBackendInfo = true
+            void bot
+                .getImplInfo()
+                .then((info) => {
+                    backendInfo =
+                        `\n\nMilky Backend: ${info.impl_name} ${info.impl_version}` +
+                        `\nProtocol: ${info.qq_protocol_type} ${info.qq_protocol_version}`
+                    sendOnlineState()
+                })
+                .catch(console.error)
+                .finally(() => {
+                    loadingBackendInfo = false
+                })
         }
+        await clients.sendRoomSnapshot(storage, target)
     },
 
     // 未实现/不支持的功能

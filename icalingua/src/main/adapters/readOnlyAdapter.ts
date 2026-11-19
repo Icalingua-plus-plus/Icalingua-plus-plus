@@ -276,7 +276,7 @@ const adapter: Adapter = {
         ui.setShutUp(true)
 
         // 加载所有房间和分组
-        ui.setAllRooms(await storage.getAllRooms())
+        await ui.loadAllRooms(() => storage.getAllRooms())
         ui.setAllChatGroups(await storage.getAllChatGroups())
 
         if (!updateInfo) {
@@ -537,7 +537,6 @@ const adapter: Adapter = {
         room.atMessageId = null
         await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
         ui.updateRoom(room)
-        await updateTrayIcon()
     },
 
     async markMessageUnread(roomId: number, messageId: string): Promise<void> {
@@ -550,7 +549,6 @@ const adapter: Adapter = {
         room.atMessageId = null
         await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
         ui.updateRoom(room)
-        await updateTrayIcon()
     },
 
     setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5): any {

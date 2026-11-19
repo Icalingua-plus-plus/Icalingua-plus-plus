@@ -56,6 +56,13 @@ let storage: StorageProvider
 let uin: number
 let bkn: number = 0
 let nickname: string
+let online = true
+let backendInfo = ''
+let loadingOnlineStatus = false
+let loadingBackendInfo = false
+
+const sendOnlineState = (target?: Socket) =>
+    clients.sendOnlineData({ online, nick: nickname, uin, sysInfo: getSysInfo() + backendInfo, bkn: 0 }, target)
 
 // 群成员信息缓存
 const MEMBER_CACHE_TTL = 5 * 60 * 1000 // 5分钟
@@ -697,7 +704,6 @@ const adapter: typeof oicqAdapter = {
     async createBot(form: LoginForm) {
         bot = new OnebotClient(config.onebot)
         await bot.connect()
-        adapter.loggedIn = true
         const loginInfo = await bot.getLoginInfo()
         uin = loginInfo.user_id
         nickname = loginInfo.nickname
@@ -705,30 +711,47 @@ const adapter: typeof oicqAdapter = {
         loginForm.username = loginInfo.user_id
         await initStorage()
         attachEventHandler()
-        setInterval(adapter.sendOnlineData, 1000 * 60)
+        adapter.loggedIn = true
+        setInterval(() => void adapter.sendOnlineData().catch(console.error), 1000 * 60)
         userConfig.account = loginForm
         saveUserConfig()
-        adapter.sendOnlineData()
+        await adapter.sendOnlineData()
         refreshRkey()
         setInterval(refreshRkey, 1000 * 60 * 10)
     },
-    async sendOnlineData() {
-        const versionInfo = await bot.getVersionInfo()
-        clients.sendOnlineData({
-            online: (await bot.getStatus()).online,
-            nick: nickname,
-            uin,
-            sysInfo:
-                getSysInfo() +
-                '\n\n' +
-                `OneBot Backend: ${versionInfo.app_name} ${versionInfo.app_version}` +
-                (versionInfo.runtime_os && versionInfo.runtime_version
-                    ? `\n${versionInfo.runtime_os} ${versionInfo.runtime_version}`
-                    : ''),
-            bkn: 0,
-        })
-        clients.setAllRooms(await storage.getAllRooms())
-        clients.setAllChatGroups(await storage.getAllChatGroups())
+    async sendOnlineData(target?: Socket) {
+        sendOnlineState(target)
+        if (!target && !loadingOnlineStatus) {
+            loadingOnlineStatus = true
+            void bot
+                .getStatus()
+                .then((status) => {
+                    if (online === status.online) return
+                    online = status.online
+                    sendOnlineState()
+                })
+                .catch(console.error)
+                .finally(() => {
+                    loadingOnlineStatus = false
+                })
+        }
+        if (!target && !backendInfo && !loadingBackendInfo) {
+            loadingBackendInfo = true
+            void bot
+                .getVersionInfo()
+                .then((info) => {
+                    backendInfo = `\n\nOneBot Backend: ${info.app_name} ${info.app_version}`
+                    if (info.runtime_os && info.runtime_version) {
+                        backendInfo += `\n${info.runtime_os} ${info.runtime_version}`
+                    }
+                    sendOnlineState()
+                })
+                .catch(console.error)
+                .finally(() => {
+                    loadingBackendInfo = false
+                })
+        }
+        await clients.sendRoomSnapshot(storage, target)
     },
     async getMsg(id: string) {
         const message = await bot.getMessage(Number(id))
@@ -1488,11 +1511,7 @@ const adapter: typeof oicqAdapter = {
     ) {
         const initialPage = !options?.before && !options?.after
         if (initialPage) {
-            storage.updateRoom(roomId, {
-                unreadCount: 0,
-                at: false,
-                atMessageId: null,
-            })
+            void clients.clearRoomUnread(storage, roomId).catch(console.error)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = await bot.getGroupInfo(gid)
@@ -1576,8 +1595,12 @@ const adapter: typeof oicqAdapter = {
             if (!room) return callback(0)
             const unreadCount = await storage.countUnreadMessagesFrom(roomId, messageId)
             if (!unreadCount) return callback(0)
-            await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
-            callback(unreadCount)
+            const updated = await clients.updateRoomSettings(storage, roomId, {
+                unreadCount,
+                at: false,
+                atMessageId: null,
+            })
+            callback(updated?.unreadCount || 0)
         } catch (error) {
             console.error('Failed to mark message unread', error)
             callback(0)
@@ -1650,12 +1673,12 @@ const adapter: typeof oicqAdapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    addChatGroup(chatGroup: ChatGroup) {
-        return storage.addChatGroup(chatGroup)
+    async addChatGroup(chatGroup: ChatGroup) {
+        await storage.addChatGroup(chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, { priority })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { priority })
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         await storage.updateRoom(roomId, { autoDownload })
@@ -1664,8 +1687,7 @@ const adapter: typeof oicqAdapter = {
         await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { index: pin ? 1 : 0 })
     },
     async ignoreChat(data: IgnoreChatInfo) {
         await storage.addIgnoredChat(data)
@@ -1673,11 +1695,11 @@ const adapter: typeof oicqAdapter = {
     },
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.refreshRooms(storage)
     },
     async removeChatGroup(name: string) {
         await storage.removeChatGroup(name)
-        clients.setAllChatGroups(await storage.getAllChatGroups())
+        await clients.refreshChatGroups(storage)
     },
     async hideMessage(roomId: number, messageId: string) {
         await storage.updateMessage(roomId, messageId, { hide: true, reveal: false })
@@ -1696,12 +1718,12 @@ const adapter: typeof oicqAdapter = {
     removeIgnoredChat(roomId: number): any {
         return storage.removeIgnoredChat(roomId)
     },
-    updateRoom(roomId: number, room: object) {
-        if (!storage) return
-        return storage.updateRoom(roomId, room)
+    updateRoom(roomId: number, room: Partial<Room>) {
+        return clients.applyRoomUpdate(storage, roomId, room)
     },
-    updateChatGroup(name: string, chatGroup: ChatGroup) {
-        return storage.updateChatGroup(name, chatGroup)
+    async updateChatGroup(name: string, chatGroup: ChatGroup) {
+        await storage.updateChatGroup(name, chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)

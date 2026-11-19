@@ -801,10 +801,9 @@ const eventHandlers = {
         //console.log(data)
         clients.sendAddRequest(data)
     },
-    syncRead(data: SyncReadedEventData) {
+    async syncRead(data: SyncReadedEventData) {
         const roomId = data.sub_type === 'group' ? -data.group_id : data.user_id
-        clients.syncRead(roomId)
-        storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
+        await clients.clearRoomUnread(storage, roomId)
     },
     async syncRemark(data: SyncRemarkEventData) {
         if (data.sub_type === 'group') {
@@ -897,21 +896,25 @@ const eventHandlers = {
         storage.addMessage(roomId, message)
     },
 }
+let initializingStorage = false
 const loginHandlers = {
     async onSucceed() {
+        if (initializingStorage) return
         if (!adapter.loggedIn) {
-            adapter.loggedIn = true
+            initializingStorage = true
             await initStorage()
             attachEventHandler()
-            setInterval(adapter.sendOnlineData, 1000 * 60)
+            adapter.loggedIn = true
+            initializingStorage = false
+            setInterval(() => void adapter.sendOnlineData().catch(console.error), 1000 * 60)
             userConfig.account = loginForm
             saveUserConfig()
         }
-        if (loginForm.onlineStatus) {
-            await bot.setOnlineStatus(loginForm.onlineStatus)
-        }
         console.log('上线成功')
-        adapter.sendOnlineData()
+        void adapter.sendOnlineData().catch((error) => console.error('发送上线数据失败:', error))
+        if (loginForm.onlineStatus) {
+            void bot.setOnlineStatus(loginForm.onlineStatus).catch((error) => console.error('设置在线状态失败:', error))
+        }
 
         await sleep(3000)
         await adapter.fetch7DaysHistory()
@@ -1751,11 +1754,7 @@ const adapter = {
     ) {
         const initialPage = !options?.before && !options?.after
         if (initialPage) {
-            storage.updateRoom(roomId, {
-                unreadCount: 0,
-                at: false,
-                atMessageId: null,
-            })
+            void clients.clearRoomUnread(storage, roomId).catch(console.error)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
@@ -1814,8 +1813,12 @@ const adapter = {
             if (!room) return callback(0)
             const unreadCount = await storage.countUnreadMessagesFrom(roomId, messageId)
             if (!unreadCount) return callback(0)
-            await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
-            callback(unreadCount)
+            const updated = await clients.updateRoomSettings(storage, roomId, {
+                unreadCount,
+                at: false,
+                atMessageId: null,
+            })
+            callback(updated?.unreadCount || 0)
         } catch (error) {
             console.error('Failed to mark message unread', error)
             callback(0)
@@ -1872,12 +1875,12 @@ const adapter = {
     reLogin() {
         bot.login()
     },
-    updateRoom(roomId: number, room: object) {
-        if (!storage) return
-        return storage.updateRoom(roomId, room)
+    updateRoom(roomId: number, room: Partial<Room>) {
+        return clients.applyRoomUpdate(storage, roomId, room)
     },
-    updateChatGroup(name: string, chatGroup: ChatGroup) {
-        return storage.updateChatGroup(name, chatGroup)
+    async updateChatGroup(name: string, chatGroup: ChatGroup) {
+        await storage.updateChatGroup(name, chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
@@ -1892,8 +1895,9 @@ const adapter = {
     addRoom(room: Room) {
         return storage.addRoom(room)
     },
-    addChatGroup(chatGroup: ChatGroup) {
-        return storage.addChatGroup(chatGroup)
+    async addChatGroup(chatGroup: ChatGroup) {
+        await storage.addChatGroup(chatGroup)
+        await clients.refreshChatGroups(storage)
     },
     async getForwardMsg(resId: string, fileName: string, resolve) {
         const history = await bot.getForwardMsg(resId, fileName || 'MultiMsg')
@@ -1980,8 +1984,7 @@ const adapter = {
     getMsg: (id: string) => bot.getMsg(id),
 
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
-        await storage.updateRoom(roomId, { priority })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { priority })
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         await storage.updateRoom(roomId, { autoDownload })
@@ -1990,8 +1993,7 @@ const adapter = {
         await storage.updateRoom(roomId, { downloadPath })
     },
     async pinRoom(roomId: number, pin: boolean) {
-        await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.updateRoomSettings(storage, roomId, { index: pin ? 1 : 0 })
     },
     async ignoreChat(data: IgnoreChatInfo) {
         await storage.addIgnoredChat(data)
@@ -1999,11 +2001,11 @@ const adapter = {
     },
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
-        clients.setAllRooms(await storage.getAllRooms())
+        await clients.refreshRooms(storage)
     },
     async removeChatGroup(name: string) {
         await storage.removeChatGroup(name)
-        clients.setAllChatGroups(await storage.getAllChatGroups())
+        await clients.refreshChatGroups(storage)
     },
     async deleteMessage(roomId: number, messageId: string) {
         const res = await bot.deleteMsg(messageId)
@@ -2327,16 +2329,18 @@ const adapter = {
         clients.messageSuccess('历史消息获取完成')
         console.log('历史消息获取完成')
     },
-    async sendOnlineData() {
-        clients.sendOnlineData({
-            online: bot.getStatus().data.online,
-            nick: bot.nickname,
-            uin: bot.uin,
-            sysInfo: getSysInfo(),
-            bkn: bot.bkn,
-        })
-        clients.setAllRooms(await storage.getAllRooms())
-        clients.setAllChatGroups(await storage.getAllChatGroups())
+    async sendOnlineData(target?: Socket) {
+        clients.sendOnlineData(
+            {
+                online: bot.isOnline(),
+                nick: bot.nickname,
+                uin: bot.uin,
+                sysInfo: getSysInfo(),
+                bkn: bot.bkn,
+            },
+            target,
+        )
+        await clients.sendRoomSnapshot(storage, target)
     },
     async getRoamingStamp(no_cache: boolean | undefined, cb) {
         const roaming_stamp = (await bot.getRoamingStamp(no_cache)).data || []

@@ -97,16 +97,6 @@ export function updateNoctaliaRooms(rooms: Room[]) {
     debouncedBroadcast()
 }
 
-export function updateNoctaliaRoom(room: Room) {
-    const idx = currentRooms.findIndex((r) => r.roomId === room.roomId)
-    if (idx >= 0) {
-        Object.assign(currentRooms[idx], room)
-    } else {
-        currentRooms.push(room)
-    }
-    debouncedBroadcast()
-}
-
 function debouncedBroadcast() {
     if (debounceTimer) clearTimeout(debounceTimer)
     debounceTimer = setTimeout(broadcast, 100)

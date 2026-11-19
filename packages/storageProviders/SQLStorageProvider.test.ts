@@ -3,8 +3,59 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
+import Room from '@icalingua/types/Room'
 import SQLStorageProvider, { MessageSearchIndexFactory } from './SQLStorageProvider'
 import { SQLiteSearchMessage, SQLiteMessageSearchTimesOptions } from './SQLiteMessageSearchIndex'
+
+test('synchronizes Bridge snapshots in batches and skips unchanged rows', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-bridge-snapshot-'))
+    const provider = new SQLStorageProvider(
+        'bridge-snapshot-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        () => ({ open: async () => {}, close: async () => {} }) as ReturnType<MessageSearchIndexFactory>,
+    )
+    try {
+        await provider.connect()
+        const rooms = Array.from({ length: 51 }, (_, index) => ({
+            roomId: -(index + 1),
+            roomName: `群 ${index}`,
+            index: 0,
+            unreadCount: 1,
+            priority: 3,
+            utime: index,
+            users: [],
+            lastMessage: { content: 'last message' },
+            _id: 'MongoDB metadata',
+        })) as unknown as Room[]
+        const chatGroup = { name: 'group', index: 0, rooms: [-1], includeAllPersonal: true }
+        await provider.syncBridgeSnapshot({ rooms, chatGroups: [chatGroup] })
+        assert.equal((await provider.getAllRooms()).length, rooms.length)
+        assert.deepEqual(await provider.getAllChatGroups(), [chatGroup])
+
+        await provider.updateRoom(-1, { downloadPath: 'local path' })
+        await provider.db.raw('CREATE TABLE roomUpdates (roomId TEXT)')
+        await provider.db.raw(
+            'CREATE TRIGGER countRoomUpdates AFTER UPDATE ON rooms BEGIN INSERT INTO roomUpdates VALUES (NEW.roomId); END',
+        )
+        await provider.syncBridgeSnapshot({ rooms, chatGroups: [chatGroup] })
+        assert.deepEqual(await provider.db('roomUpdates'), [])
+
+        await provider.syncBridgeSnapshot({ rooms: [{ ...rooms[0], unreadCount: 0, at: false, atMessageId: null }] })
+        const updated = await provider.getRoom(-1)
+        assert.equal(updated.unreadCount, 0)
+        assert.equal(updated.at, false)
+        assert.equal(updated.downloadPath, 'local path')
+        assert.deepEqual(await provider.db('roomUpdates'), [{ roomId: '-1' }])
+        assert.equal((await provider.getAllRooms()).length, rooms.length)
+    } finally {
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
 
 test('does not auto-migrate legacy At messages and supports manual migration', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-legacy-at-'))

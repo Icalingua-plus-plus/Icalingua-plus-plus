@@ -133,6 +133,10 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         return this.enqueueWrite('updateRoom', [roomId, room])
     }
 
+    async syncBridgeSnapshot(snapshot: { rooms?: Room[]; chatGroups?: ChatGroup[] }): Promise<void> {
+        await this.enqueueWrite<void>('syncBridgeSnapshot', [snapshot])
+    }
+
     async removeRoom(roomId: number): Promise<any> {
         return this.enqueueWrite('removeRoom', [roomId])
     }

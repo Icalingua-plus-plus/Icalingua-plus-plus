@@ -12,6 +12,7 @@ import gfsTokenManager from '../utils/gfsTokenManager'
 import fs from 'fs'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
+import Room from '@icalingua/types/Room'
 
 type ClientRoles = 'main' | 'fileMgr'
 
@@ -25,6 +26,7 @@ const io = new Server(httpServer, {
 
 const port = config.port || 6789
 const host = config.host || '0.0.0.0'
+const roomSettingsClients = 'room-settings'
 let latestDatabaseUpgradeProgress: DatabaseUpgradeProgress = {
     active: false,
     step: 0,
@@ -50,19 +52,22 @@ export const init = (adapter: typeof oicqAdapter) => {
             socket.disconnect()
         }, 30 * 1000)
         socket.once('disconnect', () => clearTimeout(authTimeout))
-        socket.once('auth', async (sign: string, role: ClientRoles = 'main') => {
+        socket.once('auth', async (sign: string, role: ClientRoles = 'main', supportsRoomSettings = false) => {
             try {
                 clearTimeout(authTimeout)
                 switch (role) {
                     case 'main':
                         if (await verify(sign, salt, config.pubKey)) {
                             console.log('客户端验证成功')
-                            socket.emit('authSucceed')
-                            socket.join('authed')
-                            socket.emit('dbUpgradeProgress', latestDatabaseUpgradeProgress)
+                            socket.join(supportsRoomSettings === true ? ['authed', roomSettingsClients] : 'authed')
                             registerSocketHandlers(io, socket, adapter)
-                            if (adapter.loggedIn) adapter.sendOnlineData()
-                            else socket.emit('requestSetup', userConfig.account)
+                            socket.emit('authSucceed')
+                            socket.emit('dbUpgradeProgress', latestDatabaseUpgradeProgress)
+                            if (adapter.loggedIn) {
+                                void adapter
+                                    .sendOnlineData(socket)
+                                    .catch((error) => console.error('sendOnlineData:', error))
+                            } else socket.emit('requestSetup', userConfig.account)
                         } else {
                             console.log('客户端验证失败')
                             socket.emit('authFailed')
@@ -102,7 +107,14 @@ export const init = (adapter: typeof oicqAdapter) => {
     }
 }
 
-export const broadcast = (channel: string, data?: any) => io.to('authed').emit(channel, data)
+export const broadcast = (channel: string, ...args: unknown[]) => io.to('authed').emit(channel, ...args)
+export const broadcastRoomSettings = (room: Room) => io.to(roomSettingsClients).emit('updateRoom', room, false)
+export const getLegacyRoomSettingsTarget = () => {
+    const rooms = io.sockets.adapter.rooms
+    if ((rooms.get('authed')?.size || 0) > (rooms.get(roomSettingsClients)?.size || 0)) {
+        return io.to('authed').except(roomSettingsClients)
+    }
+}
 export const broadcastDatabaseUpgradeProgress = (progress: DatabaseUpgradeProgress) => {
     latestDatabaseUpgradeProgress = { ...progress }
     io.to('authed').emit('dbUpgradeProgress', latestDatabaseUpgradeProgress)

@@ -376,7 +376,6 @@ const eventHandlers = {
         ui.updateRoom(room)
         storage.addMessage(roomId, message)
         await storage.updateRoom(roomId, room)
-        updateTrayIcon()
         if (getConfig().custom && data.post_type === 'message') {
             const custom_path = path.join(app.getPath('userData'), 'custom')
             const requireFunc = eval('require')
@@ -1515,7 +1514,7 @@ const adapter: OicqAdapter = {
             sysInfo,
             updateCheck: getConfig().updateCheck,
         })
-        ui.setAllRooms(await storage.getAllRooms())
+        await ui.loadAllRooms(() => storage.getAllRooms())
         ui.setAllChatGroups(await storage.getAllChatGroups())
         if (!updateInfo) {
             checkUpdate().then(adapter.sendOnlineData)
@@ -2028,7 +2027,7 @@ const adapter: OicqAdapter = {
     async fetchMessages(roomId: number, options: MessagePageOptions) {
         const initialPage = !options?.before && !options?.after
         if (initialPage) {
-            adapter.clearRoomUnread(roomId).then(updateTrayIcon)
+            void adapter.clearRoomUnread(roomId)
             if (roomId < 0) {
                 const gid = -roomId
                 const group = bot.gl.get(gid)
@@ -2136,8 +2135,10 @@ const adapter: OicqAdapter = {
             ui.message('操作成功')
         }
     },
-    addRoom(room: Room) {
-        return storage.addRoom(room)
+    async addRoom(room: Room) {
+        const result = await storage.addRoom(room)
+        ui.updateRoom(room)
+        return result
     },
     addChatGroup(chatGroup: ChatGroup) {
         return storage.addChatGroup(chatGroup)
@@ -2235,7 +2236,6 @@ const adapter: OicqAdapter = {
     async clearRoomUnread(roomId: number) {
         ui.clearRoomUnread(roomId)
         await storage.updateRoom(roomId, { unreadCount: 0, at: false, atMessageId: null })
-        await updateTrayIcon()
     },
     async markRoomUnread(roomId: number) {
         const room = await storage.getRoom(roomId)
@@ -2245,7 +2245,6 @@ const adapter: OicqAdapter = {
         room.atMessageId = null
         ui.updateRoom(room)
         await storage.updateRoom(roomId, { unreadCount: room.unreadCount, at: false, atMessageId: null })
-        await updateTrayIcon()
     },
     async markMessageUnread(roomId: number, messageId: string) {
         const room = await storage.getRoom(roomId)
@@ -2257,11 +2256,10 @@ const adapter: OicqAdapter = {
         room.atMessageId = null
         ui.updateRoom(room)
         await storage.updateRoom(roomId, { unreadCount, at: false, atMessageId: null })
-        await updateTrayIcon()
     },
     async setRoomPriority(roomId: number, priority: 1 | 2 | 3 | 4 | 5) {
         await storage.updateRoom(roomId, { priority })
-        ui.setAllRooms(await storage.getAllRooms())
+        await ui.loadAllRooms(() => storage.getAllRooms())
     },
     async setRoomAutoDownload(roomId: number, autoDownload: boolean) {
         await storage.updateRoom(roomId, { autoDownload })
@@ -2271,7 +2269,7 @@ const adapter: OicqAdapter = {
     },
     async pinRoom(roomId: number, pin: boolean) {
         await storage.updateRoom(roomId, { index: pin ? 1 : 0 })
-        ui.setAllRooms(await storage.getAllRooms())
+        await ui.loadAllRooms(() => storage.getAllRooms())
     },
     async ignoreChat(data: IgnoreChatInfo) {
         await storage.addIgnoredChat(data)
@@ -2279,7 +2277,7 @@ const adapter: OicqAdapter = {
     },
     async removeChat(roomId: number) {
         await storage.removeRoom(roomId)
-        ui.setAllRooms(await storage.getAllRooms())
+        await ui.loadAllRooms(() => storage.getAllRooms())
         ui.chroom(0)
     },
     async removeChatGroup(name: string) {
@@ -2508,7 +2506,8 @@ const adapter: OicqAdapter = {
             }
         }
 
-        //刷新未读数量
+        let unreadUpdated = false
+        // 刷新未读数量
         if (!isAutoFetching && roomId < 0) {
             try {
                 const body = pb.encode({
@@ -2525,15 +2524,20 @@ const adapter: OicqAdapter = {
                 const o = pb.decode(blob)[4][1][3]
                 const unread = parseInt(o[22]) - parseInt(o[53])
                 await storage.updateRoom(roomId, { unreadCount: unread })
+                unreadUpdated = true
             } catch (e) {
                 errorHandler(e, true)
             }
         }
 
         // 更新最近消息
-        if (!messages.length) return
+        if (!messages.length && !unreadUpdated) return
         room = await storage.getRoom(roomId)
-        if (room.utime >= lastMessageTime) return
+        if (!room) return
+        if (!messages.length || room.utime >= lastMessageTime) {
+            if (unreadUpdated) ui.updateRoom(room)
+            return
+        }
         room.lastMessage = lastMessage
         room.utime = lastMessageTime
         ui.updateRoom(room)

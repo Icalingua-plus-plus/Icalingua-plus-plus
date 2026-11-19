@@ -19,14 +19,18 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 
 let selectedRoomId = 0
 let selectedRoomName = ''
+const unreadRooms = new Map<number, Room>()
+const readState = { unreadCount: 0, at: false, atMessageId: null }
+let roomChangesDuringLoad: Map<number, Room | typeof readState>
+
 ipcMain.on('setSelectedRoom', (_, id: number, name: string) => {
     selectedRoomId = id
     selectedRoomName = name
     updateAppMenu()
-    if (id === 0) updateTrayIcon()
+    void updateTrayIcon()
 })
 
-export default {
+const ui = {
     openGroupMemberPanel(shown: boolean, gin: number = 0) {
         sendToMainWindow('openGroupMemberPanel', { shown, gin })
     },
@@ -89,6 +93,14 @@ export default {
         sendToMainWindow('messageSuccess', string)
     },
     updateRoom(room: Room) {
+        const snapshot = { ...room }
+        roomChangesDuringLoad?.set(room.roomId, snapshot)
+        if (room.unreadCount > 0) {
+            unreadRooms.set(room.roomId, snapshot)
+            void updateTrayIcon()
+        } else if (unreadRooms.delete(room.roomId)) {
+            void updateTrayIcon()
+        }
         sendToMainWindow('updateRoom', room)
     },
     setShutUp(isShutUp: boolean, roomId?: number) {
@@ -153,10 +165,43 @@ export default {
         sendToMainWindow('clearCurrentRoomUnread')
     },
     clearRoomUnread(roomId: number) {
+        if (roomChangesDuringLoad) {
+            const previous = roomChangesDuringLoad.get(roomId)
+            roomChangesDuringLoad.set(roomId, { ...previous, ...readState })
+        }
+        if (unreadRooms.delete(roomId)) void updateTrayIcon()
         sendToMainWindow('clearRoomUnread', roomId)
     },
     setAllRooms(rooms: Room[]) {
+        unreadRooms.clear()
+        for (const room of rooms) {
+            if (room.unreadCount > 0) unreadRooms.set(room.roomId, { ...room })
+        }
         sendToMainWindow('setAllRooms', rooms)
+        void updateTrayIcon()
+    },
+    async loadAllRooms(load: () => Promise<Room[]>): Promise<void> {
+        const changes = new Map<number, Room | typeof readState>()
+        roomChangesDuringLoad = changes
+        try {
+            const rooms = await load()
+            if (roomChangesDuringLoad !== changes) return
+            if (!changes.size) return ui.setAllRooms(rooms)
+            // A storage snapshot can finish after a room update or a read event has reached the UI.
+            const byId = new Map(rooms.map((room) => [room.roomId, room]))
+            for (const [roomId, change] of changes) {
+                const room = byId.get(roomId)
+                if ('roomId' in change) byId.set(roomId, change)
+                else if (room) byId.set(roomId, { ...room, ...change })
+            }
+            ui.setAllRooms([...byId.values()].sort((a, b) => b.utime - a.utime))
+        } finally {
+            if (roomChangesDuringLoad === changes) roomChangesDuringLoad = undefined
+        }
+    },
+    getUnreadRooms(): Room[] {
+        const { priority } = getConfig()
+        return [...unreadRooms.values()].filter((room) => room.priority >= priority)
     },
     setAllChatGroups(chatGroups: ChatGroup[]) {
         sendToMainWindow('setAllChatGroups', chatGroups)
@@ -260,3 +305,5 @@ export default {
         sendToMainWindow('gotoMessage', { roomId, messageId })
     },
 }
+
+export default ui

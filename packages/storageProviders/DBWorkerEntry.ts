@@ -39,6 +39,7 @@ const sqlMethods = new Set([
     'searchMessageTimes',
     'addRoom',
     'updateRoom',
+    'syncBridgeSnapshot',
     'removeRoom',
     'getAllRooms',
     'getRoom',

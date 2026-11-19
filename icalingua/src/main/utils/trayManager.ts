@@ -2,14 +2,7 @@ import Room from '@icalingua/types/Room'
 import { app, Menu, MenuItem, nativeImage, nativeTheme, Tray } from 'electron'
 import path from 'path'
 import getStaticPath from '../../utils/getStaticPath'
-import {
-    clearRoomUnread,
-    getFirstUnreadRoom,
-    getNickname,
-    getUin,
-    getUnreadCount,
-    getUnreadRooms,
-} from '../ipc/botAndStorage'
+import { clearRoomUnread, getNickname, getUin } from '../ipc/botAndStorage'
 import { getConfig, saveConfigFile } from './configManager'
 import exit from './exit'
 import setPriority from './setPriority'
@@ -30,8 +23,9 @@ import removeGroupNameEmotes from '../../utils/removeGroupNameEmotes'
 import { spacingNotification } from '../../utils/panguSpacing'
 
 let tray: Tray
-let menuUpdatePromise: Promise<void> | null = null
-let menuUpdatePending = false
+let trayUpdate: Promise<void> | null = null
+let forceTrayUpdate = false
+let currentTrayImage: Electron.NativeImage
 
 let darknewmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'darknewmsg.png'))
 let newmsgIcon = nativeImage.createFromPath(path.join(getStaticPath(), 'newmsg.png'))
@@ -43,34 +37,11 @@ export const createTray = () => {
     tray = new Tray(path.join(getStaticPath(), 'trayTemplate.png'))
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
     tray.on('click', () => tryToShowMainWindow())
-    return updateTrayMenu()
-}
-export const updateTrayMenu = async () => {
-    if (!tray) return
-    if (menuUpdatePromise) {
-        menuUpdatePending = true
-        return menuUpdatePromise
-    }
-    do {
-        menuUpdatePending = false
-        menuUpdatePromise = _updateTrayMenu()
-        try {
-            await menuUpdatePromise
-        } finally {
-            menuUpdatePromise = null
-        }
-    } while (menuUpdatePending)
+    return updateTrayIcon(true)
 }
 
-const _updateTrayMenu = async () => {
-    if (!tray) return
+const updateTrayContextMenu = (unreadRooms: Room[]) => {
     tray.setToolTip(`Icalingua++: ${getNickname()} (${getUin()})\n通知优先级: ${getConfig().priority.toString()}`)
-    let unreadRooms: Room[]
-    try {
-        unreadRooms = await getUnreadRooms()
-    } catch {
-        unreadRooms = []
-    }
     const menu = Menu.buildFromTemplate([
         {
             label: `${getNickname()} (${getUin()})`,
@@ -110,9 +81,8 @@ const _updateTrayMenu = async () => {
                         }),
                 }),
             )
-            const lastMessage = getConfig().usePanguJsRecv
-                ? spacingNotification(unreadRoom.lastMessage.content.slice(0, 25))
-                : unreadRoom.lastMessage.content
+            const content = unreadRoom.lastMessage?.content || ''
+            const lastMessage = getConfig().usePanguJsRecv ? spacingNotification(content.slice(0, 25)) : content
             menu.append(
                 new MenuItem({
                     label: lastMessage.length > 25 ? `${lastMessage.slice(0, 25)}...` : lastMessage,
@@ -315,42 +285,47 @@ const getTrayIconColor = () => {
     if (getConfig().darkTaskIcon === 'auto') return !nativeTheme.shouldUseDarkColors
     else return getConfig().darkTaskIcon === 'true'
 }
-let currentIconUnread = false
-export const updateTrayIcon = async (force = false) => {
-    if (!tray) return
-    let p: Electron.NativeImage
-    const unread = await getUnreadCount()
-    let selectedRoomId = ui.getSelectedRoomId()
-    let selectedRoomName = ui.getSelectedRoomName()
-    if (selectedRoomId < 0 && getConfig().removeGroupNameEmotes) {
-        selectedRoomName = removeGroupNameEmotes(selectedRoomName)
-    }
+const refreshTray = (force: boolean) => {
+    const window = getMainWindow()
+    if (!window || window.isDestroyed()) return
+
+    const unreadRooms = ui.getUnreadRooms().sort((a, b) => b.utime - a.utime)
+    const unread = unreadRooms.length
+    const roomName = (roomId: number, name: string) =>
+        roomId < 0 && getConfig().removeGroupNameEmotes ? removeGroupNameEmotes(name) : name
+    const selectedRoomName = roomName(ui.getSelectedRoomId(), ui.getSelectedRoomName())
     const title = selectedRoomName ? selectedRoomName + ' — Icalingua++' : 'Icalingua++'
-    const previousIconUnread = currentIconUnread
-    if (unread > 0) {
-        p = getTrayIconColor() ? darknewmsgIcon : newmsgIcon
-        const newMsgRoom = await getFirstUnreadRoom()
-        let extra = ''
-        if (newMsgRoom) {
-            let newMsgRoomName = newMsgRoom.roomName
-            if (newMsgRoom.roomId < 0 && getConfig().removeGroupNameEmotes) {
-                newMsgRoomName = removeGroupNameEmotes(newMsgRoomName)
-            }
-            extra = ' : ' + newMsgRoomName
-        }
-        getMainWindow().title = `(${unread}${extra}) ${title}`
-    } else {
-        p = getTrayIconColor() ? darkIcon : lightIcon
-        getMainWindow().title = title
-    }
+    const latest = unreadRooms[0]
+    window.title = latest ? `(${unread} : ${roomName(latest.roomId, latest.roomName)}) ${title}` : title
     app.setBadgeCount(unread)
     pushUnreadCount(unread)
-    if (tray) {
-        tray.setTitle(unread === 0 ? '' : `${unread}`)
-        if (process.platform !== 'darwin' && (force || unread > 0 !== previousIconUnread)) {
-            currentIconUnread = unread > 0
-            tray.setImage(p)
+    if (!tray) return
+
+    tray.setTitle(unread ? String(unread) : '')
+    if (process.platform !== 'darwin') {
+        const dark = getTrayIconColor()
+        const image = unread ? (dark ? darknewmsgIcon : newmsgIcon) : dark ? darkIcon : lightIcon
+        if (force || image !== currentTrayImage) {
+            tray.setImage(image)
+            currentTrayImage = image
         }
-        updateTrayMenu()
     }
+    updateTrayContextMenu(unreadRooms)
 }
+
+export const updateTrayIcon = (force = false): Promise<void> => {
+    forceTrayUpdate ||= force
+    trayUpdate ??= Promise.resolve().then(() => {
+        const force = forceTrayUpdate
+        forceTrayUpdate = false
+        trayUpdate = null
+        try {
+            refreshTray(force)
+        } catch (error) {
+            console.error('Failed to refresh tray', error)
+        }
+    })
+    return trayUpdate
+}
+
+export const updateTrayMenu = () => updateTrayIcon()

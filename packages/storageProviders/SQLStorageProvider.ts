@@ -886,6 +886,66 @@ export default class SQLStorageProvider implements StorageProvider {
         }
     }
 
+    async syncBridgeSnapshot(snapshot: { rooms?: Room[]; chatGroups?: ChatGroup[] }): Promise<void> {
+        if (this.type !== 'sqlite3') throw new Error('Bridge local snapshots require SQLite')
+
+        const tables = [
+            {
+                table: 'rooms',
+                key: 'roomId',
+                columns: [
+                    'roomId',
+                    'roomName',
+                    'index',
+                    'unreadCount',
+                    'priority',
+                    'utime',
+                    'users',
+                    'lastMessage',
+                    'at',
+                    'atMessageId',
+                    'autoDownload',
+                    'downloadPath',
+                ],
+                rows: snapshot.rooms?.map((room) => this.roomConToDB(room)),
+            },
+            {
+                table: 'chatGroups',
+                key: 'name',
+                columns: ['name', 'index', 'rooms', 'includeAllPersonal'],
+                rows: snapshot.chatGroups?.map((group) => this.chatGroupConToDB(group)),
+            },
+        ]
+        if (!tables.some(({ rows }) => rows?.length)) return
+
+        await this.db.transaction(async (transaction) => {
+            for (const { table, key, columns, rows } of tables) {
+                // Group by supplied columns so an omitted field keeps its local value on conflict.
+                const byColumns = lodash.groupBy(rows?.filter(Boolean), (row) =>
+                    columns.filter((column) => row[column] !== undefined).join(','),
+                )
+                for (const [columnList, group] of Object.entries(byColumns)) {
+                    const supplied = columnList.split(',')
+                    const updated = supplied.filter((column) => column !== key)
+                    const difference = updated.map(() => '?? IS NOT ??').join(' OR ')
+                    const bindings = updated.flatMap((column) => [`${table}.${column}`, `excluded.${column}`])
+                    for (const batch of lodash.chunk(group, 50)) {
+                        const insert = transaction(table)
+                            .insert(batch.map((row) => lodash.pick(row, supplied)))
+                            .onConflict(key)
+                        if (!updated.length) {
+                            await insert.ignore()
+                            continue
+                        }
+                        // Knex's SQLite compiler omits the conflict WHERE clause for multi-row INSERTs.
+                        const query = insert.merge(updated).toSQL()
+                        await transaction.raw(`${query.sql} WHERE ${difference}`, [...query.bindings, ...bindings])
+                    }
+                }
+            }
+        })
+    }
+
     /** 实现 {@link StorageProvider} 类的 `removeRoom` 方法，
      * 对应 room 的“删”操作。
      *
