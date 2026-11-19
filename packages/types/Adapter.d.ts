@@ -10,7 +10,7 @@ import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
 import SpecialFeature from './SpecialFeature'
-import MessagePageOptions, { MessageSearchPagination } from './MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from './MessagePage'
 import { FavoriteRequest, FavoriteResponse } from './Favorites'
 
 type CookiesDomain =
@@ -68,13 +68,18 @@ export default interface Adapter {
 
     fetchMessages(roomId: number, options: MessagePageOptions): Promise<Message[]>
 
-    fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]>
+    fetchImageMessages(roomId: number, pagination: MessagePagination, endTime?: number): Promise<Message[]>
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
     resolveUnreadTargetMessageId(roomId: number, unreadCount: number): Promise<string | null>
 
-    fetchMessagesBySender(roomId: number, senderId: number, offset: number, snapshotTime?: number): Promise<Message[]>
+    fetchMessagesBySender(
+        roomId: number,
+        senderId: number,
+        pagination: MessagePagination,
+        snapshotTime?: number,
+    ): Promise<Message[]>
 
     /** Use roomId 0 to search all conversations. Pass senderId to restrict results to one sender. */
     searchMessages(

@@ -11,7 +11,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -1780,12 +1780,12 @@ const adapter = {
     },
     async fetchImageMessages(
         roomId: number,
-        offset: number,
+        pagination: MessagePagination,
         endTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        const messages = (await storage.fetchImageMessages(roomId, pagination, 30, endTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -1834,12 +1834,13 @@ const adapter = {
     async fetchMessagesBySender(
         roomId: number,
         senderId: number,
-        offset: number,
+        pagination: MessagePagination,
         snapshotTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
+        const messages =
+            (await storage.fetchMessagesBySender(roomId, String(senderId), pagination, 20, snapshotTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)

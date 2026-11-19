@@ -29,7 +29,7 @@ import {
     PrivateMessageEventData,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
 import {
@@ -1810,14 +1810,14 @@ const adapter: typeof oicqAdapter = {
     },
     async fetchImageMessages(
         roomId: number,
-        offset: number,
+        pagination: MessagePagination,
         endTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
         // 刷新 rkey（如果需要）
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchImageMessages(roomId, offset, 30, endTime)) || []
+        const messages = (await storage.fetchImageMessages(roomId, pagination, 30, endTime)) || []
         // 替换消息中的 rkey
         for (const message of messages) {
             await processMessageRkey(message)
@@ -1868,13 +1868,14 @@ const adapter: typeof oicqAdapter = {
     async fetchMessagesBySender(
         roomId: number,
         senderId: number,
-        offset: number,
+        pagination: MessagePagination,
         snapshotTime: number | undefined,
         client: Socket,
         callback: (arg0: Message[]) => void,
     ) {
         await refreshRkeyIfNeeded()
-        const messages = (await storage.fetchMessagesBySender(roomId, String(senderId), offset, 20, snapshotTime)) || []
+        const messages =
+            (await storage.fetchMessagesBySender(roomId, String(senderId), pagination, 20, snapshotTime)) || []
         for (const message of messages) {
             await processMessageRkey(message)
         }

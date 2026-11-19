@@ -1,5 +1,5 @@
 import Message from '@icalingua/types/Message'
-import { MessageCursor } from '@icalingua/types/MessagePage'
+import { MessageCursor, MessagePagination } from '@icalingua/types/MessagePage'
 
 export const messageIdKey = (id: Message['_id']): string => String(id)
 
@@ -15,6 +15,22 @@ export const getMessageCursor = (message: Message): MessageCursor => ({
     time: Number(message.time || 0),
     id: message._id,
 })
+
+export const getNextMessagePage = (
+    previous: MessagePagination,
+    count: number,
+    oldest: Message | undefined,
+    roomId: number,
+): MessagePagination => {
+    const offset = (typeof previous === 'number' ? previous : previous.offset) + count
+    const time = Number(oldest?.time)
+    const cursorRoomId = roomId || Number(oldest?.roomId)
+    const id = oldest?._id
+    // SQL returns a missing stored timestamp as zero.
+    if (!time || !Number.isFinite(time) || !Number.isSafeInteger(cursorRoomId)) return offset
+    if (typeof id !== 'string' && !Number.isFinite(id)) return offset
+    return { time, id, roomId: cursorRoomId, offset }
+}
 
 export const normalizeMessageList = (messages: Message[]): Message[] => {
     const unique = new Map<string, Message>()

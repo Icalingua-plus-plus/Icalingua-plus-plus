@@ -53,6 +53,7 @@
 <script>
 import { ipcRenderer } from 'electron'
 import ipc from '../utils/ipc'
+import { getNextMessagePage } from '../utils/messageOrder'
 import '../utils/themes'
 
 export default {
@@ -64,7 +65,8 @@ export default {
             images: [],
             loading: false,
             noMore: false,
-            offset: 0,
+            nextPage: 0,
+            loadGeneration: 0,
             endTime: null, // 用于从指定月份开始加载
             selectedMonth: null,
             pickerOptions: {
@@ -98,20 +100,31 @@ export default {
         document.title = `${this.roomName} 的聊天图片`
         await this.loadImages()
     },
+    beforeDestroy() {
+        this.loadGeneration++
+    },
     methods: {
         async loadImages() {
             if (this.loading || this.noMore) return
+            const generation = this.loadGeneration
             this.loading = true
             try {
-                const messages = await ipc.fetchImageMessages(this.roomId, this.offset, this.endTime)
+                const messages = await ipc.fetchImageMessages(this.roomId, this.nextPage, this.endTime)
+                if (generation !== this.loadGeneration) return
                 if (messages.length === 0) {
                     this.noMore = true
                 } else {
                     const newImages = this.extractImages(messages)
                     this.images.push(...newImages)
-                    this.offset += messages.length
+                    this.nextPage = getNextMessagePage(
+                        this.nextPage,
+                        messages.length,
+                        messages[messages.length - 1],
+                        this.roomId,
+                    )
                     // 如果加载的图片不够填满屏幕，继续加载
                     this.$nextTick(() => {
+                        if (generation !== this.loadGeneration) return
                         const content = this.$refs.galleryContent
                         if (content && content.scrollHeight <= content.clientHeight && !this.noMore) {
                             this.loadImages()
@@ -121,7 +134,7 @@ export default {
             } catch (e) {
                 console.error('Failed to load images:', e)
             } finally {
-                this.loading = false
+                if (generation === this.loadGeneration) this.loading = false
             }
         },
         extractImages(messages) {
@@ -135,7 +148,7 @@ export default {
                 for (const file of msg.files) {
                     if (file.type && file.type.startsWith('image/')) {
                         images.push({
-                            id: `${msg._id}-${imgIndex}`,
+                            id: `${typeof msg._id}:${msg._id}-${imgIndex}`,
                             url: file.url,
                             type: file.type,
                             flash: msg.flash || false,
@@ -167,8 +180,10 @@ export default {
             const endOfMonth = new Date(targetYear, targetMonth, 1, 0, 0, 0, 0).getTime() - 1
 
             // 重置状态，从指定月份开始加载
+            this.loadGeneration++
             this.images = []
-            this.offset = 0
+            this.nextPage = 0
+            this.loading = false
             this.noMore = false
             this.endTime = endOfMonth
 

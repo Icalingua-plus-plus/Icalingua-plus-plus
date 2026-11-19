@@ -6,7 +6,12 @@ import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageCursor, MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, {
+    MessageCursor,
+    MessagePageCursor,
+    MessagePagination,
+    MessageSearchPagination,
+} from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import {
     legacyAtMetadataName,
@@ -699,70 +704,78 @@ export default class RedisStorageProvider implements StorageProvider {
      * @param senderId 发送者 ID（字符串）
      * @param snapshotTime 可选，只返回此时间及之前的消息
      */
+    private async scanRoomMessagePage(
+        roomId: number,
+        limit: number,
+        matches: (message: Message) => boolean,
+        { before, startTime, endTime }: { before?: MessagePageCursor; startTime?: number; endTime?: number },
+    ): Promise<Message[]> {
+        const boundary = before && { time: before.time, _id: before.id, roomId: before.roomId }
+        const maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
+        const batchSize = Math.min(redisMessageReadBatchSize, Math.max(64, limit))
+        const key = this.roomMessageListKey(roomId)
+        const matched: Message[] = []
+        for (let offset = 0; matched.length < limit; offset += batchSize) {
+            const ids = await this.redis.zrevrangebyscore(
+                key,
+                maxTime ?? '+inf',
+                startTime ?? '-inf',
+                'LIMIT',
+                offset,
+                batchSize,
+            )
+            for (const message of await this.getMessages(roomId, ids)) {
+                if (!matches(message)) continue
+                const time = Number(message.time || 0)
+                if (startTime !== undefined && time < startTime) continue
+                if (endTime !== undefined && time > endTime) continue
+                if (boundary && compareSearchPositions({ time, _id: message._id, roomId }, boundary) >= 0) continue
+                matched.push(message)
+                if (matched.length === limit) break
+            }
+            if (ids.length < batchSize) break
+        }
+        return matched
+    }
+
     async fetchMessagesBySender(
         roomId: number,
         senderId: string,
-        skip: number,
+        pagination: MessagePagination,
         limit: number,
         snapshotTime?: number,
     ): Promise<Message[]> {
-        const normalizedSkip = Number.isFinite(skip) ? Math.max(0, Math.trunc(skip)) : 0
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const skip =
+            typeof pagination === 'number' && Number.isFinite(pagination) ? Math.max(0, Math.trunc(pagination)) : 0
         const normalizedLimit = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : 0
         const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
         if (!normalizedLimit) return []
 
         const senderIdNum = Number(senderId)
-        const scanLimit = normalizedSkip + normalizedLimit
+        const scanLimit = skip + normalizedLimit
         if (!Number.isSafeInteger(scanLimit)) return []
 
-        const scanRoom = async (rid: number): Promise<Message[]> => {
-            const listKey = this.roomMessageListKey(rid)
-            const matched: Message[] = []
-            let offset = 0
-            while (matched.length < scanLimit) {
-                const ids =
-                    normalizedSnapshotTime === undefined
-                        ? await this.redis.zrevrange(listKey, offset, offset + redisMessageReadBatchSize - 1)
-                        : await this.redis.zrevrangebyscore(
-                              listKey,
-                              normalizedSnapshotTime,
-                              '-inf',
-                              'LIMIT',
-                              offset,
-                              redisMessageReadBatchSize,
-                          )
-                if (!ids.length) break
-
-                const messages = await this.getMessages(rid, ids)
-                for (const message of messages) {
-                    if (normalizedSnapshotTime !== undefined && Number(message.time || 0) > normalizedSnapshotTime)
-                        continue
-                    if (message.senderId !== senderIdNum) continue
-                    if (roomId === 0) (message as any).roomId = rid
-                    matched.push(message)
-                    if (matched.length >= scanLimit) break
-                }
-
-                offset += ids.length
-                if (ids.length < redisMessageReadBatchSize) break
-            }
-            return matched
-        }
+        const scanRoom = (rid: number) =>
+            this.scanRoomMessagePage(rid, scanLimit, (message) => message.senderId === senderIdNum, {
+                before,
+                endTime: normalizedSnapshotTime,
+            })
 
         if (roomId === 0) {
             // 所有群模式
             const rooms = await this.getAllRooms()
             const groupRooms = rooms.filter((r) => r.roomId < 0)
-            const roomMessages = await mapWithConcurrencyAndYield(groupRooms, redisMigrationRoomConcurrency, (room) =>
-                scanRoom(room.roomId),
+            const roomMessages = await mapWithConcurrencyAndYield(
+                groupRooms,
+                redisMigrationRoomConcurrency,
+                async (room) => (await scanRoom(room.roomId)).map((message) => ({ ...message, roomId: room.roomId })),
             )
             const allMessages = roomMessages.flat()
-            allMessages.sort((a, b) => b.time - a.time)
-            return allMessages.slice(normalizedSkip, normalizedSkip + normalizedLimit).reverse()
+            allMessages.sort((left, right) => compareSearchPositions(right, left))
+            return allMessages.slice(skip, scanLimit).reverse()
         } else {
-            const allMatched = await scanRoom(roomId)
-            allMatched.sort((a, b) => b.time - a.time)
-            return allMatched.slice(normalizedSkip, normalizedSkip + normalizedLimit).reverse()
+            return (await scanRoom(roomId)).slice(skip, scanLimit).reverse()
         }
     }
 
@@ -861,46 +874,23 @@ export default class RedisStorageProvider implements StorageProvider {
         }
 
         const before = typeof pagination === 'number' ? undefined : pagination
-        const boundary = before && { time: before.time, _id: before.id, roomId: before.roomId }
         const skip = typeof pagination === 'number' ? pagination : 0
         const perRoomLimit = skip + limit
-        const batchSize = Math.min(redisMessageReadBatchSize, Math.max(64, perRoomLimit))
-        const maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
-        const scanRoom = async (targetRoomId: number): Promise<Message[]> => {
-            const key = this.roomMessageListKey(targetRoomId)
-            const matched: Message[] = []
-            for (let offset = 0; matched.length < perRoomLimit; offset += batchSize) {
-                const ids = await this.redis.zrevrangebyscore(
-                    key,
-                    maxTime ?? '+inf',
-                    startTime ?? '-inf',
-                    'LIMIT',
-                    offset,
-                    batchSize,
-                )
-                for (const message of await this.getMessages(targetRoomId, ids)) {
-                    if (!messageMatchesKeyword(message, lowerKeyword)) continue
-                    if (senderId !== undefined && message.senderId !== Number(senderId)) continue
-                    const time = Number(message.time || 0)
-                    if (startTime !== undefined && time < startTime) continue
-                    if (endTime !== undefined && time > endTime) continue
-                    if (
-                        boundary &&
-                        compareSearchPositions({ time, _id: message._id, roomId: targetRoomId }, boundary) >= 0
-                    ) {
-                        continue
-                    }
-                    matched.push(roomId === 0 ? { ...message, roomId: targetRoomId } : message)
-                    if (matched.length === perRoomLimit) break
-                }
-                if (ids.length < batchSize) break
-            }
-            return matched
-        }
+        const scanRoom = (rid: number) =>
+            this.scanRoomMessagePage(
+                rid,
+                perRoomLimit,
+                (message) =>
+                    messageMatchesKeyword(message, lowerKeyword) &&
+                    (senderId === undefined || message.senderId === Number(senderId)),
+                { before, startTime, endTime },
+            )
 
         if (roomId !== 0) return (await scanRoom(roomId)).slice(skip, perRoomLimit)
         const roomIds = (await this.getSearchRooms()).map((room) => Number(room.roomId))
-        const pages = await mapWithConcurrencyAndYield(roomIds, redisMigrationRoomConcurrency, scanRoom)
+        const pages = await mapWithConcurrencyAndYield(roomIds, redisMigrationRoomConcurrency, async (rid) =>
+            (await scanRoom(rid)).map((message) => ({ ...message, roomId: rid })),
+        )
         return pages
             .flat()
             .sort((left, right) => compareSearchPositions(right, left))
@@ -913,29 +903,25 @@ export default class RedisStorageProvider implements StorageProvider {
      * 在浏览聊天图片时，该方法被调用。
      * @param endTime 可选，只返回时间小于等于此值的消息（用于从指定月份开始加载）
      */
-    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
-        const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${roomId}:msgIdList`, 0, -1)
-        const imageMessages: Message[] = []
-        let skipped = 0
-
-        for (const key of allMsgKeys) {
-            if (imageMessages.length >= limit) break
-            const msg = await this.redis.hget(`${this.qid}:msg${roomId}:messages`, key)
-            const message = JSON.parse(msg) as Message
-            // 如果指定了 endTime，跳过时间大于 endTime 的消息
-            if (endTime && message.time > endTime) continue
-            // 检查 files 数组中是否有图片类型
-            const hasImage = message.files?.some((file) => file.type?.startsWith('image/'))
-            if (hasImage) {
-                if (skipped < skip) {
-                    skipped++
-                } else {
-                    imageMessages.push(message)
-                }
-            }
-        }
-
-        return imageMessages
+    async fetchImageMessages(
+        roomId: number,
+        pagination: MessagePagination,
+        limit: number,
+        endTime?: number,
+    ): Promise<Message[]> {
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const skip = typeof pagination === 'number' ? pagination : 0
+        // Legacy image browsing includes missing timestamps even before the Unix epoch.
+        const beforeEpoch = endTime < 0
+        const messages = await this.scanRoomMessagePage(
+            roomId,
+            skip + limit,
+            (message) =>
+                (!beforeEpoch || !(message.time > endTime)) &&
+                message.files?.some((file) => file.type?.startsWith('image/')),
+            { before, endTime: beforeEpoch ? 0 : endTime || undefined },
+        )
+        return messages.slice(skip, skip + limit)
     }
 
     /** 实现 {@link StorageProvider} 类的 `getMessage` 方法，

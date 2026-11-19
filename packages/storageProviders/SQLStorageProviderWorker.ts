@@ -2,7 +2,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import Room from '@icalingua/types/Room'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import DBWorkerClient from './DBWorkerClient'
@@ -208,7 +208,7 @@ export default class SQLStorageProviderWorker implements StorageProvider {
     async fetchMessagesBySender(
         roomId: number,
         senderId: string,
-        skip: number,
+        pagination: MessagePagination,
         limit: number,
         snapshotTime?: number,
     ): Promise<Message[]> {
@@ -216,7 +216,7 @@ export default class SQLStorageProviderWorker implements StorageProvider {
             (await this.enqueueRead<Message[]>('fetchMessagesBySender', [
                 roomId,
                 senderId,
-                skip,
+                pagination,
                 limit,
                 snapshotTime,
             ])) || []
@@ -245,8 +245,13 @@ export default class SQLStorageProviderWorker implements StorageProvider {
         )
     }
 
-    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
-        return (await this.enqueueRead<Message[]>('fetchImageMessages', [roomId, skip, limit, endTime])) || []
+    async fetchImageMessages(
+        roomId: number,
+        pagination: MessagePagination,
+        limit: number,
+        endTime?: number,
+    ): Promise<Message[]> {
+        return (await this.enqueueRead<Message[]>('fetchImageMessages', [roomId, pagination, limit, endTime])) || []
     }
 
     async getMessage(roomId: number, messageId: string): Promise<Message> {

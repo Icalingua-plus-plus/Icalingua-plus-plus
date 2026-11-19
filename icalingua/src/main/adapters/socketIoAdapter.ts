@@ -12,7 +12,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import OnlineData from '@icalingua/types/OnlineData'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -90,6 +90,7 @@ let localStorageWriteQueue = Promise.resolve()
 let localStorageClosePromise: Promise<void>
 let remoteMessageSearchIndexReady = false
 let remoteSupportsSearchCursor = false
+let remoteSupportsHistoryCursor = false
 const FETCH_MESSAGES_BY_SENDER_TIMEOUT = 30_000
 const readRoomState = { unreadCount: 0, at: false, atMessageId: null }
 
@@ -895,8 +896,9 @@ const adapter: Adapter = {
                 socket.emit('auth', signature, 'main', true)
                 console.log('已向服务端提交身份验证')
             })
-            socket.on('authSucceed', (capabilities?: { searchCursor?: boolean }) => {
+            socket.on('authSucceed', (capabilities?: { searchCursor?: boolean; historyCursor?: boolean }) => {
                 remoteSupportsSearchCursor = capabilities?.searchCursor === true
+                remoteSupportsHistoryCursor = capabilities?.historyCursor === true
             })
             socket.once('authSucceed', () => {
                 retryAuthAfterVersionPrompt = false
@@ -918,6 +920,7 @@ const adapter: Adapter = {
             })
             socket.on('disconnect', () => {
                 remoteSupportsSearchCursor = false
+                remoteSupportsHistoryCursor = false
                 if (versionPromptActive) authFailedDuringVersionPrompt = true
             })
         }
@@ -969,9 +972,10 @@ const adapter: Adapter = {
             })
         })
     },
-    fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Message[]> {
+    fetchImageMessages(roomId: number, pagination: MessagePagination, endTime?: number): Promise<Message[]> {
         return new Promise((resolve, reject) => {
-            socket.emit('fetchImageMessages', roomId, offset, endTime, (messages: Message[]) => {
+            const page = typeof pagination === 'number' || remoteSupportsHistoryCursor ? pagination : pagination.offset
+            socket.emit('fetchImageMessages', roomId, page, endTime, (messages: Message[]) => {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             })
@@ -990,14 +994,20 @@ const adapter: Adapter = {
             socket.emit('resolveUnreadTargetMessageId', roomId, unreadCount, resolve)
         })
     },
-    fetchMessagesBySender(roomId: number, senderId: number, offset: number, snapshotTime?: number): Promise<Message[]> {
+    fetchMessagesBySender(
+        roomId: number,
+        senderId: number,
+        pagination: MessagePagination,
+        snapshotTime?: number,
+    ): Promise<Message[]> {
         return new Promise((resolve, reject) => {
             let settled = false
             const timer = setTimeout(() => {
                 settled = true
                 reject(new Error('fetchMessagesBySender 响应超时'))
             }, FETCH_MESSAGES_BY_SENDER_TIMEOUT)
-            socket.emit('fetchMessagesBySender', roomId, senderId, offset, snapshotTime, (messages: Message[]) => {
+            const page = typeof pagination === 'number' || remoteSupportsHistoryCursor ? pagination : pagination.offset
+            socket.emit('fetchMessagesBySender', roomId, senderId, page, snapshotTime, (messages: Message[]) => {
                 if (settled) return
                 settled = true
                 clearTimeout(timer)

@@ -4,6 +4,8 @@ import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import Room from '@icalingua/types/Room'
+import Message from '@icalingua/types/Message'
+import { MessagePagination } from '@icalingua/types/MessagePage'
 import SQLStorageProvider, { MessageSearchIndexFactory } from './SQLStorageProvider'
 import { SQLiteSearchMessage, SQLiteMessageSearchTimesOptions } from './SQLiteMessageSearchIndex'
 
@@ -135,6 +137,119 @@ test('search fallback preserves undated legacy rows at the end of a cursor page'
         assert.deepEqual(
             dated.map(({ _id }) => _id),
             ['older', 'zero'],
+        )
+    } finally {
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
+test('filtered histories preserve the full results with cursor and legacy offset pagination', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-history-cursor-'))
+    const provider = new SQLStorageProvider(
+        'history-cursor-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        () =>
+            ({
+                open: async () => {},
+                close: async () => {},
+                requestRebuild: async () => {},
+            }) as ReturnType<MessageSearchIndexFactory>,
+    )
+    const monthEnd = Date.UTC(2026, 10, 1) - 1
+    const attachment = { type: 'image/png', url: 'image.png' }
+    const message = (_id: string, time?: number, senderId = 7, files = [attachment]): Message => ({
+        _id,
+        time,
+        senderId,
+        files,
+        content: 'message',
+        username: 'sender',
+    })
+
+    const readAll = async (
+        roomId: number,
+        pageSize: number,
+        fetch: (page: MessagePagination) => Promise<Message[]>,
+        ascending = false,
+        useCursor = false,
+    ) => {
+        let count = 0
+        let page: MessagePagination = 0
+        const messages: Message[] = []
+        for (let i = 0; i < 10; i++) {
+            const next = await fetch(page)
+            count += next.length
+            const oldest = ascending ? next[0] : next[next.length - 1]
+            if (ascending) messages.unshift(...next)
+            else messages.push(...next)
+            if (next.length < pageSize) return messages
+            page =
+                useCursor && oldest.time
+                    ? { time: oldest.time, id: oldest._id, roomId: roomId || oldest.roomId, offset: count }
+                    : count
+        }
+        assert.fail('pagination did not terminate')
+    }
+
+    try {
+        await provider.connect()
+        const ties = (prefix: string) =>
+            Array.from({ length: 43 }, (_, i) => message(`${prefix}-${String(i).padStart(2, '0')}`, monthEnd))
+        await provider.addMessages(-1, [
+            ...ties('group-one'),
+            message('after-month', monthEnd + 1),
+            message('two-pictures', monthEnd - 1, 7, [attachment, attachment]),
+            message('other-sender', monthEnd - 2, 9),
+            { ...message('legacy-file-only', monthEnd - 3, 7, []), file: attachment },
+            message('undated'),
+        ])
+        await provider.addMessages(-2, ties('group-two'))
+        await provider.addMessages(
+            3,
+            Array.from({ length: 1100 }, (_, i) => message(`private-${i}`, monthEnd)),
+        )
+
+        for (const roomId of [0, -1]) {
+            const fetch = (page: MessagePagination) => provider.fetchMessagesBySender(roomId, '7', page, 20, monthEnd)
+            const offsetRows = await readAll(roomId, 20, fetch, true)
+            const cursorRows = await readAll(roomId, 20, fetch, true, true)
+            assert.deepEqual(cursorRows, offsetRows)
+            assert.equal(cursorRows.length, roomId === 0 ? 88 : 45)
+            assert.equal(new Set(cursorRows.map((row) => row._id)).size, cursorRows.length)
+            assert.equal(cursorRows[0]._id, 'legacy-file-only')
+            if (roomId === 0) assert.equal(Number(cursorRows[0].roomId), -1)
+        }
+        const sparse = await provider.fetchMessagesBySender(0, '9', 0, 20, monthEnd)
+        assert.deepEqual(
+            sparse.map((row) => row._id),
+            ['other-sender'],
+        )
+
+        for (const endTime of [monthEnd, undefined]) {
+            const fetch = (page: MessagePagination) => provider.fetchImageMessages(-1, page, 30, endTime)
+            const offsetRows = await readAll(-1, 30, fetch)
+            const cursorRows = await readAll(-1, 30, fetch, false, true)
+            assert.deepEqual(cursorRows, offsetRows)
+            assert.equal(cursorRows.length, endTime === undefined ? 47 : 45)
+            assert.equal(cursorRows.find((row) => row._id === 'two-pictures').files.length, 2)
+            assert.equal(
+                cursorRows.some((row) => row._id === 'legacy-file-only'),
+                false,
+            )
+            assert.equal(
+                cursorRows.some((row) => row._id === 'undated'),
+                endTime === undefined,
+            )
+        }
+        const cursorAfterMonth = { time: monthEnd + 1, id: 'after-month', roomId: -1, offset: 1 }
+        assert.deepEqual(
+            await provider.fetchImageMessages(-1, cursorAfterMonth, 30, monthEnd),
+            await provider.fetchImageMessages(-1, 0, 30, monthEnd),
         )
     } finally {
         await provider.close()

@@ -103,9 +103,10 @@
                     <transition-group :key="roomId" name="vac-fade-message">
                         <div
                             v-for="(m, i) in messages.slice(visibleViewport.head, visibleViewport.tail)"
-                            :key="m._id"
+                            :key="messageKey ? messageKey(m) : m._id"
                             class="vac-message-item"
                             :data-message-index="i + visibleViewport.head"
+                            :data-message-key="messageKey ? messageKey(m) : null"
                             @dblclick="replyMessage(m, $event)"
                         >
                             <message
@@ -634,6 +635,7 @@ export default {
         roomId: { type: [String, Number], required: true },
         loadFirstRoom: { type: Boolean, required: true },
         messages: { type: Array, required: true },
+        messageKey: { type: Function, default: null },
         messagesLoaded: { type: Boolean, required: true },
         menuActions: { type: Array, required: true },
         messageActions: { type: Array, required: true },

@@ -10,7 +10,7 @@ import AtCacheItem from '@icalingua/types/AtCacheElem'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
@@ -124,8 +124,8 @@ const ipc = {
     async fetchMessage(roomId: number, options: MessagePageOptions = {}): Promise<Array<Message>> {
         return await ipcRenderer.invoke('fetchMessage', { roomId, options })
     },
-    async fetchImageMessages(roomId: number, offset: number, endTime?: number): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchImageMessages', { roomId, offset, endTime })
+    async fetchImageMessages(roomId: number, pagination: MessagePagination, endTime?: number): Promise<Array<Message>> {
+        return await ipcRenderer.invoke('fetchImageMessages', { roomId, pagination, endTime })
     },
     async fetchMessagesAround(
         roomId: number,
@@ -141,10 +141,10 @@ const ipc = {
     async fetchMessagesBySender(
         roomId: number,
         senderId: number,
-        offset: number,
+        pagination: MessagePagination,
         snapshotTime?: number,
     ): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, offset, snapshotTime })
+        return await ipcRenderer.invoke('fetchMessagesBySender', { roomId, senderId, pagination, snapshotTime })
     },
     async searchMessages(
         roomId: number,

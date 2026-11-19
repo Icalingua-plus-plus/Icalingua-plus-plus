@@ -6,7 +6,7 @@ import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcMain, screen, shell } from 'electron'
@@ -307,8 +307,8 @@ ipcMain.handle('fetchMessage', (_, { roomId, options }: { roomId: number; option
 })
 ipcMain.handle(
     'fetchImageMessages',
-    (_, { roomId, offset, endTime }: { roomId: number; offset: number; endTime?: number }) => {
-        return adapter.fetchImageMessages(roomId, offset, endTime)
+    (_, { roomId, pagination, endTime }: { roomId: number; pagination: MessagePagination; endTime?: number }) => {
+        return adapter.fetchImageMessages(roomId, pagination, endTime)
     },
 )
 ipcMain.handle(
@@ -330,11 +330,11 @@ ipcMain.handle(
         {
             roomId,
             senderId,
-            offset,
+            pagination,
             snapshotTime,
-        }: { roomId: number; senderId: number; offset: number; snapshotTime?: number },
+        }: { roomId: number; senderId: number; pagination: MessagePagination; snapshotTime?: number },
     ) => {
-        const messages = await adapter.fetchMessagesBySender(roomId, senderId, offset, snapshotTime)
+        const messages = await adapter.fetchMessagesBySender(roomId, senderId, pagination, snapshotTime)
         if (roomId === 0) {
             // 所有群模式：为每条消息附加群头像和群名
             for (const msg of messages) {

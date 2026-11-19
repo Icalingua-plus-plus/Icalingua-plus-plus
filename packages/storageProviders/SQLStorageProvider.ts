@@ -8,7 +8,11 @@ import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageCursor, MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, {
+    MessageCursor,
+    MessagePagination,
+    MessageSearchPagination,
+} from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
 import {
@@ -113,6 +117,7 @@ const sqlSearchReadBatchSize = 800
 const sqlSearchBuildBatchSize = 200
 const sqlSearchValidationBatchSize = 4000
 const sqlMessageWriteBatchSize = 200
+const sqliteHistoryLookbackSize = 1024
 const messageMetadataTable = 'dbMetadata'
 
 const parseMessageJsonField = (value: unknown): unknown => {
@@ -140,6 +145,7 @@ export default class SQLStorageProvider implements StorageProvider {
     onUpgradeProgress?: (progress: DatabaseUpgradeProgress) => void
     private qid: string
     private searchIndex: MessageSearchIndex
+    private sqliteMessageIndexes?: Promise<Set<string>>
     private legacyAtMigrationPromise: Promise<void> | null = null
     private closed = false
 
@@ -1183,6 +1189,75 @@ export default class SQLStorageProvider implements StorageProvider {
         return query.orderBy('time', direction).orderBy('_id', direction)
     }
 
+    private async fetchDescendingMessagePage(
+        query: Knex.QueryBuilder<MessageInSQLDB, MessageInSQLDB[]>,
+        pagination: MessagePagination,
+        limit: number,
+        includeUndated: boolean,
+    ): Promise<MessageInSQLDB[]> {
+        const page =
+            typeof pagination === 'number'
+                ? query.offset(pagination)
+                : this.applyMessageCursor(query.clone(), { before: pagination })
+        const messages = await this.orderMessagePage(page, {}).limit(limit).select('*')
+        // SQLite and MySQL sort undated rows last. PostgreSQL covers them on the first pages.
+        if (typeof pagination !== 'number' && this.type !== 'pg' && includeUndated && messages.length < limit) {
+            const undated = await query
+                .whereNull('time')
+                .orderBy('_id', 'desc')
+                .limit(limit - messages.length)
+                .select('*')
+            return messages.concat(undated)
+        }
+        return messages
+    }
+
+    private async fetchFilteredHistoryPage(
+        query: Knex.QueryBuilder<MessageInSQLDB, MessageInSQLDB[]>,
+        pagination: MessagePagination,
+        limit: number,
+        upperTime: number | undefined,
+        sqliteIndex: string,
+    ): Promise<MessageInSQLDB[]> {
+        const before = typeof pagination === 'number' ? undefined : pagination
+        // The stricter bound covers the other one. Supplying both makes SQLite consider a skip-scan.
+        if (upperTime !== undefined && (!before || before.time > upperTime)) {
+            query.where('time', '<=', upperTime)
+            if (before) pagination = 0
+        }
+        const includeUndated = upperTime === undefined
+
+        if (this.type === 'sqlite3') {
+            this.sqliteMessageIndexes ??= this.db('sqlite_master')
+                .where({ type: 'index', tbl_name: 'messages' })
+                .pluck<string[]>('name')
+                .then((names) => new Set(names))
+            if ((await this.sqliteMessageIndexes).has(sqliteIndex)) {
+                const indexedMessages = this.db.raw('?? INDEXED BY ??', ['messages', sqliteIndex])
+                if (sqliteIndex === 'messages_time_index') {
+                    // Try a bounded time scan for active senders. Let the planner use the sender
+                    // index for sparse results anywhere in the remaining history.
+                    const cutoffQuery = this.db<MessageInSQLDB>(indexedMessages)
+                        .whereNotNull('time')
+                        .orderBy('time', 'desc')
+                        .offset(sqliteHistoryLookbackSize - 1)
+                        .first('time')
+                    const maxTime = before ? Math.min(before.time, upperTime ?? Infinity) : upperTime
+                    if (maxTime !== undefined) cutoffQuery.where('time', '<=', maxTime)
+                    const cutoff = await cutoffQuery
+                    if (cutoff) {
+                        const recent = query.clone().from(indexedMessages).where('time', '>=', cutoff.time)
+                        const page = await this.fetchDescendingMessagePage(recent, pagination, limit, false)
+                        if (page.length === limit) return page
+                    }
+                } else {
+                    query.from(indexedMessages)
+                }
+            }
+        }
+        return this.fetchDescendingMessagePage(query, pagination, limit, includeUndated)
+    }
+
     async fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]> {
         try {
             let query = this.db<MessageInSQLDB>('messages').where('roomId', roomId)
@@ -1248,7 +1323,7 @@ export default class SQLStorageProvider implements StorageProvider {
     async fetchMessagesBySender(
         roomId: number,
         senderId: string,
-        skip: number,
+        pagination: MessagePagination,
         limit: number,
         snapshotTime?: number,
     ): Promise<Message[]> {
@@ -1261,8 +1336,13 @@ export default class SQLStorageProvider implements StorageProvider {
                 query = query.where('roomId', roomId)
             }
             const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
-            if (normalizedSnapshotTime !== undefined) query = query.where('time', '<=', normalizedSnapshotTime)
-            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            const messages = await this.fetchFilteredHistoryPage(
+                query,
+                pagination,
+                limit,
+                normalizedSnapshotTime,
+                roomId === 0 ? 'messages_time_index' : 'messages_senderid_roomid_time_index',
+            )
             if (roomId === 0) {
                 // 所有群模式：保留 roomId 信息
                 return messages.reverse().map((message) => {
@@ -1375,27 +1455,12 @@ export default class SQLStorageProvider implements StorageProvider {
             if (senderId !== undefined) query = query.where('senderId', senderId)
             if (startTime !== undefined) query = query.where('time', '>=', startTime)
             if (endTime !== undefined) query = query.where('time', '<=', endTime)
-            const page =
-                typeof pagination === 'number'
-                    ? query.offset(pagination)
-                    : this.applyMessageCursor(query.clone(), { before: pagination })
-            const messages = await this.orderMessagePage(page, {}).limit(limit).select('*')
-            // SQLite and MySQL sort undated rows after dated rows in descending order.
-            // PostgreSQL sorts them first, so they have already been covered by the first pages.
-            if (
-                typeof pagination !== 'number' &&
-                this.type !== 'pg' &&
-                startTime === undefined &&
-                endTime === undefined &&
-                messages.length < limit
-            ) {
-                const undated = await query
-                    .whereNull('time')
-                    .orderBy('_id', 'desc')
-                    .limit(limit - messages.length)
-                    .select('*')
-                messages.push(...undated)
-            }
+            const messages = await this.fetchDescendingMessagePage(
+                query,
+                pagination,
+                limit,
+                startTime === undefined && endTime === undefined,
+            )
             return messages.map((message) => {
                 const messageRoomId = Number(message.roomId)
                 const converted = this.msgConFromDB(message)
@@ -1413,15 +1478,23 @@ export default class SQLStorageProvider implements StorageProvider {
      * 在浏览聊天图片时，该方法被调用。
      * @param endTime 可选，只返回时间小于等于此值的消息（用于从指定月份开始加载）
      */
-    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+    async fetchImageMessages(
+        roomId: number,
+        pagination: MessagePagination,
+        limit: number,
+        endTime?: number,
+    ): Promise<Message[]> {
         try {
-            let query = this.db<MessageInSQLDB>('messages')
+            const query = this.db<MessageInSQLDB>('messages')
                 .where('roomId', roomId)
                 .where('files', 'like', '%"type":"image/%')
-            if (endTime) {
-                query = query.where('time', '<=', endTime)
-            }
-            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            const messages = await this.fetchFilteredHistoryPage(
+                query,
+                pagination,
+                limit,
+                endTime || undefined,
+                'messages_roomid_time_index',
+            )
             return messages.map((message) => this.msgConFromDB(message))
         } catch (e) {
             this.errorHandle(e)

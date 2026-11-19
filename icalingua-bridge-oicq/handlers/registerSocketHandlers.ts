@@ -6,13 +6,20 @@ import type {
     FlashTransferUploadTicket,
 } from '@icalingua/types/FlashTransfer'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
 import { deleteUploadedFile, getUploadedFilePath, requestUpload, uploadFile } from '../utils/uploadFileManager'
+
+const isMessagePaginationValid = (page: MessagePagination): boolean =>
+    typeof page === 'number' ||
+    (!!page &&
+        Number.isFinite(page.time) &&
+        Number.isSafeInteger(page.roomId) &&
+        (typeof page.id === 'string' || Number.isFinite(page.id)))
 
 export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('validateMessageSearchIndex', async (resolve?: (value: { ok: boolean; error?: string }) => void) => {
@@ -48,10 +55,14 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
         'fetchImageMessages',
         (
             roomId: number,
-            offset: number,
+            pagination: MessagePagination,
             endTime: number | undefined,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.fetchImageMessages(roomId, offset, endTime, socket, resolve),
+        ) => {
+            if (typeof resolve !== 'function') return
+            if (!isMessagePaginationValid(pagination)) return resolve([])
+            return adapter.fetchImageMessages(roomId, pagination, endTime, socket, resolve)
+        },
     )
     socket.on(
         'fetchMessagesAround',
@@ -76,10 +87,14 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
         (
             roomId: number,
             senderId: number,
-            offset: number,
+            pagination: MessagePagination,
             snapshotTime: number | undefined,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
-        ) => adapter.fetchMessagesBySender(roomId, senderId, offset, snapshotTime, socket, resolve),
+        ) => {
+            if (typeof resolve !== 'function') return
+            if (!isMessagePaginationValid(pagination)) return resolve([])
+            return adapter.fetchMessagesBySender(roomId, senderId, pagination, snapshotTime, socket, resolve)
+        },
     )
     socket.on(
         'searchMessages',
@@ -93,13 +108,7 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
         ) => {
             if (typeof resolve !== 'function') return
-            if (
-                typeof pagination !== 'number' &&
-                (!pagination ||
-                    !Number.isFinite(pagination.time) ||
-                    !Number.isSafeInteger(pagination.roomId) ||
-                    (typeof pagination.id !== 'string' && !Number.isFinite(pagination.id)))
-            ) {
+            if (!isMessagePaginationValid(pagination)) {
                 resolve([])
                 return
             }

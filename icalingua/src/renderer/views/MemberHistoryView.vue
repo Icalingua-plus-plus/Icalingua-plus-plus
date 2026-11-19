@@ -9,6 +9,7 @@
             :current-user-id="0"
             :rooms="[room]"
             :messages="messages"
+            :message-key="getHistoryMessageKey"
             height="100vh"
             :rooms-loaded="true"
             :messages-loaded="messagesLoaded"
@@ -46,7 +47,7 @@
 import Room from '../components/vac-mod/ChatWindow/Room/Room'
 import ipc from '../utils/ipc'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
-import { messageIdKey } from '../utils/messageOrder'
+import { getNextMessagePage } from '../utils/messageOrder'
 import '../utils/themes'
 
 const MEMBER_HISTORY_PAGE_SIZE = 20
@@ -76,6 +77,8 @@ export default {
             account: 0,
             username: '',
             historyRequestId: 0,
+            nextPage: 0,
+            historyMessageKeys: new Set(),
             snapshotTime: null,
             memberHistorySetupReady: false,
             pendingMemberHistory: null,
@@ -134,6 +137,8 @@ export default {
             this.snapshotTime = Date.now()
             this.room.roomId = senderId
             this.messages = []
+            this.nextPage = 0
+            this.historyMessageKeys.clear()
             this.messagesLoaded = false
             this.ready = false
 
@@ -188,7 +193,7 @@ export default {
                 if (messageRect.bottom > containerRect.top && messageRect.top < containerRect.bottom) {
                     return {
                         element,
-                        messageId: messageElement.id,
+                        messageKey: messageElement.closest('.vac-message-item')?.dataset.messageKey,
                         top: messageRect.top,
                         scrollTop: element.scrollTop,
                         scrollHeight: element.scrollHeight,
@@ -198,7 +203,7 @@ export default {
 
             return {
                 element,
-                messageId: null,
+                messageKey: null,
                 top: 0,
                 scrollTop: element.scrollTop,
                 scrollHeight: element.scrollHeight,
@@ -211,7 +216,9 @@ export default {
                 const element = this.getScrollContainer()
                 if (!element) return
 
-                const messageElement = anchor.messageId ? document.getElementById(anchor.messageId) : null
+                const messageElement = anchor.messageKey
+                    ? element.querySelector(`[data-message-key="${CSS.escape(anchor.messageKey)}"] .vac-message-box`)
+                    : null
                 if (messageElement) {
                     element.scrollTop += messageElement.getBoundingClientRect().top - anchor.top
                 } else if (attempt === 0) {
@@ -233,6 +240,7 @@ export default {
             }
 
             if (!this.isCurrentHistoryRequest(requestId)) return
+            this.nextPage = getNextMessagePage(0, msgs.length, msgs[0], this.roomId)
             this.messagesLoaded = msgs.length < MEMBER_HISTORY_PAGE_SIZE
             this.loading = false
             // 先显示 Room 组件（messages 为空），让 watcher 以空数组初始化
@@ -245,26 +253,24 @@ export default {
             this.scheduleScrollToBottom(requestId)
         },
         async loadMoreMessages() {
-            if (this.loading) return
+            if (this.loading || this.messagesLoaded) return
             this.loading = true
             const requestId = this.historyRequestId
             try {
-                const result = await ipc.fetchMessagesBySender(
-                    this.roomId,
-                    this.senderId,
-                    this.messages.length,
-                    this.snapshotTime,
-                )
-                const msgs = Array.isArray(result) ? result : []
-                if (!this.isCurrentHistoryRequest(requestId)) return
-
-                const existingMessageIds = new Set(this.messages.map((message) => messageIdKey(message._id)))
-                const olderMessages = this.processMessages(msgs).filter((message) => {
-                    const key = messageIdKey(message._id)
-                    if (existingMessageIds.has(key)) return false
-                    existingMessageIds.add(key)
-                    return true
-                })
+                let olderMessages
+                do {
+                    const result = await ipc.fetchMessagesBySender(
+                        this.roomId,
+                        this.senderId,
+                        this.nextPage,
+                        this.snapshotTime,
+                    )
+                    const msgs = Array.isArray(result) ? result : []
+                    if (!this.isCurrentHistoryRequest(requestId)) return
+                    this.nextPage = getNextMessagePage(this.nextPage, msgs.length, msgs[0], this.roomId)
+                    this.messagesLoaded = msgs.length < MEMBER_HISTORY_PAGE_SIZE
+                    olderMessages = this.processMessages(msgs)
+                } while (!olderMessages.length && !this.messagesLoaded)
 
                 if (olderMessages.length) {
                     const anchor = this.captureScrollAnchor()
@@ -272,7 +278,6 @@ export default {
                     await this.$nextTick()
                     this.restoreScrollAnchor(anchor, requestId)
                 }
-                if (msgs.length < MEMBER_HISTORY_PAGE_SIZE || !olderMessages.length) this.messagesLoaded = true
             } catch (e) {
                 console.error('Failed to fetch more messages:', e)
                 if (this.isCurrentHistoryRequest(requestId)) this.messagesLoaded = true
@@ -280,10 +285,19 @@ export default {
                 if (this.isCurrentHistoryRequest(requestId)) this.loading = false
             }
         },
+        getHistoryMessageKey(msg) {
+            return `${msg.roomId ?? this.roomId}:${typeof msg._id}:${msg._id}`
+        },
         processMessages(msgs) {
+            const fresh = msgs.filter((msg) => {
+                const key = this.getHistoryMessageKey(msg)
+                if (this.historyMessageKeys.has(key)) return false
+                this.historyMessageKeys.add(key)
+                return true
+            })
             // 所有群模式：修改头像和用户名以显示群信息
             if (this.roomId === 0) {
-                return msgs.map((msg) => {
+                return fresh.map((msg) => {
                     const processed = { ...msg }
                     if (msg._roomAvatar) {
                         processed.head_img = msg._roomAvatar
@@ -294,7 +308,7 @@ export default {
                     return processed
                 })
             }
-            return msgs
+            return fresh
         },
         openForward(e) {
             ipc.openForward(e.resId, e.fileName, e.fallbackResId)

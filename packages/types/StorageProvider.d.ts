@@ -3,7 +3,7 @@ import Message from './Message'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import ChatGroup from './ChatGroup'
 import DatabaseUpgradeProgress from './DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageSearchPagination } from './MessagePage'
+import MessagePageOptions, { MessagePagination, MessageSearchPagination } from './MessagePage'
 
 export default interface StorageProvider {
     connect(): Promise<void>
@@ -30,7 +30,12 @@ export default interface StorageProvider {
 
     fetchMessages(roomId: number, options: MessagePageOptions, limit: number): Promise<Message[]>
 
-    fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]>
+    fetchImageMessages(
+        roomId: number,
+        pagination: MessagePagination,
+        limit: number,
+        endTime?: number,
+    ): Promise<Message[]>
 
     fetchMessagesAround(roomId: number, messageId: string, before: number, after: number): Promise<Message[]>
 
@@ -70,7 +75,7 @@ export default interface StorageProvider {
     fetchMessagesBySender(
         roomId: number,
         senderId: string,
-        skip: number,
+        pagination: MessagePagination,
         limit: number,
         snapshotTime?: number,
     ): Promise<Message[]>

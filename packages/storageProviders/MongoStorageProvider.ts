@@ -5,7 +5,8 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import MessagePageOptions, {
     MessageCursor,
-    MessageSearchCursor,
+    MessagePageCursor,
+    MessagePagination,
     MessageSearchPagination,
 } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
@@ -30,6 +31,7 @@ const mongoSearchTimePageSize = 512
 const mongoSearchMetadataCollection = '__icalingua_storage_metadata'
 const mongoSearchTimeIndexMetadataId = 'message-search-time-index'
 const mongoSearchTimeIndexVersion = 1
+const newestMessageSort = { time: -1, _id: -1 } as const
 
 const compareMongoSearchIds = (left: Message['_id'], right: Message['_id']): number => {
     if (typeof left !== typeof right) return typeof left === 'number' ? -1 : 1
@@ -37,7 +39,7 @@ const compareMongoSearchIds = (left: Message['_id'], right: Message['_id']): num
     return compareSearchIdsAsStrings(left, right)
 }
 
-const mongoSearchBefore = (roomId: number, before?: MessageSearchCursor, includeUndated = false) => {
+const mongoMessagePageBefore = (roomId: number, before?: MessagePageCursor, includeUndated = false) => {
     if (!before) return {}
     const compareId = roomId < before.roomId ? '$lte' : '$lt'
     const sameTime = [{ time: before.time, _id: { [compareId]: before.id } }]
@@ -857,11 +859,13 @@ export default class MongoStorageProvider implements StorageProvider {
     async fetchMessagesBySender(
         roomId: number,
         senderId: string,
-        skip: number,
+        pagination: MessagePagination,
         limit: number,
         snapshotTime?: number,
     ): Promise<Message[]> {
-        const normalizedSkip = Number.isFinite(skip) ? Math.max(0, Math.trunc(skip)) : 0
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const skip =
+            typeof pagination === 'number' && Number.isFinite(pagination) ? Math.max(0, Math.trunc(pagination)) : 0
         const normalizedLimit = Number.isFinite(limit) ? Math.max(0, Math.trunc(limit)) : 0
         const normalizedSnapshotTime = Number.isFinite(snapshotTime) ? Math.trunc(snapshotTime) : undefined
         if (!normalizedLimit) return []
@@ -869,17 +873,22 @@ export default class MongoStorageProvider implements StorageProvider {
         try {
             const senderQuery: Record<string, any> = { senderId: Number(senderId) }
             if (normalizedSnapshotTime !== undefined) senderQuery.time = { $lte: normalizedSnapshotTime }
+            const roomQuery = (rid: number) => ({
+                ...senderQuery,
+                ...mongoMessagePageBefore(rid, before, normalizedSnapshotTime === undefined),
+            })
             if (roomId === 0) {
                 // 所有群模式：每个群只读取当前全局分页所需的前置结果，避免拉取该发送者的全部历史
                 const rooms = await this.getSearchRooms()
                 const groupRooms = rooms.filter((r) => r.roomId < 0)
-                const roomLimit = normalizedSkip + normalizedLimit
+                const roomLimit = skip + normalizedLimit
                 if (!Number.isSafeInteger(roomLimit)) return []
                 const roomMessages = await mapWithConcurrency(groupRooms, mongoSearchReadConcurrency, async (room) => {
                     const msgs = await this.mdb
                         .collection<any>('msg' + room.roomId)
-                        .find(senderQuery, {
-                            sort: [['time', -1]],
+                        .find(roomQuery(room.roomId), {
+                            collation: { locale: 'simple' },
+                            sort: newestMessageSort,
                             limit: roomLimit,
                         })
                         .toArray()
@@ -889,14 +898,15 @@ export default class MongoStorageProvider implements StorageProvider {
                     return msgs as Message[]
                 })
                 const allMessages = roomMessages.flat()
-                allMessages.sort((a, b) => b.time - a.time)
-                return allMessages.slice(normalizedSkip, normalizedSkip + normalizedLimit).reverse()
+                allMessages.sort((left, right) => compareSearchPositions(right, left, compareMongoSearchIds))
+                return allMessages.slice(skip, roomLimit).reverse()
             } else {
                 const arr = await this.mdb
                     .collection<any>('msg' + roomId)
-                    .find(senderQuery, {
-                        sort: [['time', -1]],
-                        skip: normalizedSkip,
+                    .find(roomQuery(roomId), {
+                        collation: { locale: 'simple' },
+                        sort: newestMessageSort,
+                        skip,
                         limit: normalizedLimit,
                     })
                     .toArray()
@@ -950,7 +960,7 @@ export default class MongoStorageProvider implements StorageProvider {
                                     time: { $in: times },
                                     content: { $regex: escapedKeyword, $options: 'i' },
                                     ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
-                                    ...mongoSearchBefore(rid, before),
+                                    ...mongoMessagePageBefore(rid, before),
                                 },
                                 { collation: { locale: 'simple' } },
                             )
@@ -1022,10 +1032,10 @@ export default class MongoStorageProvider implements StorageProvider {
                 return await this.mdb
                     .collection<any>('msg' + roomId)
                     .find(
-                        { ...query, ...mongoSearchBefore(roomId, before, includeUndated) },
+                        { ...query, ...mongoMessagePageBefore(roomId, before, includeUndated) },
                         {
                             collation: { locale: 'simple' },
-                            sort: { time: -1, _id: -1 },
+                            sort: newestMessageSort,
                             skip,
                             limit,
                         },
@@ -1039,10 +1049,10 @@ export default class MongoStorageProvider implements StorageProvider {
                 const messages = await this.mdb
                     .collection<any>('msg' + room.roomId)
                     .find(
-                        { ...query, ...mongoSearchBefore(room.roomId, before, includeUndated) },
+                        { ...query, ...mongoMessagePageBefore(room.roomId, before, includeUndated) },
                         {
                             collation: { locale: 'simple' },
-                            sort: { time: -1, _id: -1 },
+                            sort: newestMessageSort,
                             limit: perRoomLimit,
                         },
                     )
@@ -1058,9 +1068,17 @@ export default class MongoStorageProvider implements StorageProvider {
         }
     }
 
-    async fetchImageMessages(roomId: number, skip: number, limit: number, endTime?: number): Promise<Message[]> {
+    async fetchImageMessages(
+        roomId: number,
+        pagination: MessagePagination,
+        limit: number,
+        endTime?: number,
+    ): Promise<Message[]> {
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const skip = typeof pagination === 'number' ? pagination : 0
         const query: any = {
             'files.type': { $regex: /^image\// },
+            ...mongoMessagePageBefore(roomId, before, !endTime),
         }
         if (endTime) {
             query.time = { $lte: endTime }
@@ -1068,7 +1086,8 @@ export default class MongoStorageProvider implements StorageProvider {
         const arr = await this.mdb
             .collection<any>('msg' + roomId)
             .find(query, {
-                sort: [['time', -1]],
+                collation: { locale: 'simple' },
+                sort: newestMessageSort,
                 skip,
                 limit,
             })
