@@ -61,7 +61,7 @@ export const init = (adapter: typeof oicqAdapter) => {
                             console.log('客户端验证成功')
                             socket.join(supportsRoomSettings === true ? ['authed', roomSettingsClients] : 'authed')
                             registerSocketHandlers(io, socket, adapter)
-                            socket.emit('authSucceed')
+                            socket.emit('authSucceed', { searchCursor: true })
                             socket.emit('dbUpgradeProgress', latestDatabaseUpgradeProgress)
                             if (adapter.loggedIn) {
                                 void adapter

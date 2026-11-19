@@ -6,7 +6,7 @@ import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcMain, screen, shell } from 'electron'
@@ -362,13 +362,20 @@ ipcMain.handle(
         {
             roomId,
             keyword,
-            offset,
+            pagination,
             senderId,
             startTime,
             endTime,
-        }: { roomId: number; keyword: string; offset: number; senderId?: number; startTime?: number; endTime?: number },
+        }: {
+            roomId: number
+            keyword: string
+            pagination: MessageSearchPagination
+            senderId?: number
+            startTime?: number
+            endTime?: number
+        },
     ) => {
-        const messages = await adapter.searchMessages(roomId, keyword, offset, senderId, startTime, endTime)
+        const messages = await adapter.searchMessages(roomId, keyword, pagination, senderId, startTime, endTime)
         if (roomId === 0) {
             const roomIds = Array.from(
                 new Set(

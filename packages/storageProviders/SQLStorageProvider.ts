@@ -8,7 +8,7 @@ import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import { DBVersion, MessageInSQLDB } from '@icalingua/types/SQLTableTypes'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageCursor, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { escapeSearchLikePattern, normalizeSearchText } from './MessageSearchIndex'
 import {
@@ -1281,7 +1281,7 @@ export default class SQLStorageProvider implements StorageProvider {
     private async searchMessagesFromSearchIndex(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -1292,8 +1292,10 @@ export default class SQLStorageProvider implements StorageProvider {
         if (!normalized) return null
 
         const result: Message[] = []
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const skip = typeof pagination === 'number' ? pagination : 0
         let skipped = 0
-        let maxTime: number | undefined = endTime
+        let maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
         while (result.length < limit) {
             const times = await this.searchIndex.searchTimes(normalized, {
                 maxTime,
@@ -1312,7 +1314,8 @@ export default class SQLStorageProvider implements StorageProvider {
             if (endTime !== undefined) query = query.where('time', '<=', endTime)
             const escapedKeyword = escapeSearchLikePattern(normalized)
             query = query.whereRaw("LOWER(COALESCE(content, '')) LIKE ? ESCAPE '!'", [`%${escapedKeyword}%`])
-            const messages = await query.orderBy('time', 'desc').select('*')
+            query = this.applyMessageCursor(query, { before })
+            const messages = await this.orderMessagePage(query, {}).select('*')
             for (const message of messages) {
                 if (skipped < skip) {
                     skipped++
@@ -1336,13 +1339,13 @@ export default class SQLStorageProvider implements StorageProvider {
      *
      * @param roomId 房间 ID
      * @param keyword 搜索关键字
-     * @param skip 跳过条数
+     * @param pagination 上一页末尾的游标，或旧客户端传入的偏移量
      * @param limit 返回条数
      */
     async searchMessages(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -1354,7 +1357,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 const indexed = await this.searchMessagesFromSearchIndex(
                     roomId,
                     normalized,
-                    skip,
+                    pagination,
                     limit,
                     senderId,
                     startTime,
@@ -1372,7 +1375,27 @@ export default class SQLStorageProvider implements StorageProvider {
             if (senderId !== undefined) query = query.where('senderId', senderId)
             if (startTime !== undefined) query = query.where('time', '>=', startTime)
             if (endTime !== undefined) query = query.where('time', '<=', endTime)
-            const messages = await query.orderBy('time', 'desc').limit(limit).offset(skip).select('*')
+            const page =
+                typeof pagination === 'number'
+                    ? query.offset(pagination)
+                    : this.applyMessageCursor(query.clone(), { before: pagination })
+            const messages = await this.orderMessagePage(page, {}).limit(limit).select('*')
+            // SQLite and MySQL sort undated rows after dated rows in descending order.
+            // PostgreSQL sorts them first, so they have already been covered by the first pages.
+            if (
+                typeof pagination !== 'number' &&
+                this.type !== 'pg' &&
+                startTime === undefined &&
+                endTime === undefined &&
+                messages.length < limit
+            ) {
+                const undated = await query
+                    .whereNull('time')
+                    .orderBy('_id', 'desc')
+                    .limit(limit - messages.length)
+                    .select('*')
+                messages.push(...undated)
+            }
             return messages.map((message) => {
                 const messageRoomId = Number(message.roomId)
                 const converted = this.msgConFromDB(message)

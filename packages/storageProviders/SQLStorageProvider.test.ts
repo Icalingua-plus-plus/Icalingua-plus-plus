@@ -7,6 +7,141 @@ import Room from '@icalingua/types/Room'
 import SQLStorageProvider, { MessageSearchIndexFactory } from './SQLStorageProvider'
 import { SQLiteSearchMessage, SQLiteMessageSearchTimesOptions } from './SQLiteMessageSearchIndex'
 
+test('search cursors preserve equal-time matches and skip newly inserted results above the cursor', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-search-cursor-'))
+    let indexReady = false
+    const searchedMaxTimes: Array<number | undefined> = []
+    const searchIndex = {
+        get isReady() {
+            return indexReady
+        },
+        async open() {},
+        async close() {},
+        async requestRebuild() {},
+        async searchTimes(_keyword: string, { maxTime, minTime }: SQLiteMessageSearchTimesOptions) {
+            searchedMaxTimes.push(maxTime)
+            return [190, 180, 150, 100, 90].filter(
+                (time) => time <= (maxTime ?? Infinity) && time >= (minTime ?? -Infinity),
+            )
+        },
+    }
+    const provider = new SQLStorageProvider(
+        'search-cursor-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        () => searchIndex as ReturnType<MessageSearchIndexFactory>,
+    )
+    const message = (_id: string, time: number, senderId = 7) => ({
+        _id,
+        time,
+        senderId,
+        content: 'needle',
+        username: 'sender',
+    })
+
+    try {
+        await provider.connect()
+        await provider.addMessages(-1, [
+            message('newest', 180),
+            message('outside date range', 90),
+            message('different sender', 170, 8),
+        ])
+        const equalTimeMessages = Array.from({ length: 25 }, (_, i) =>
+            message(`tie-${String(i).padStart(2, '0')}`, 150),
+        )
+        await provider.addMessages(-1, equalTimeMessages.slice(0, 12))
+        await provider.addMessages(-2, [...equalTimeMessages.slice(12), message('oldest', 100)])
+
+        const first = await provider.searchMessages(0, 'needle', 0, 20, '7', 100, 200)
+        const last = first[first.length - 1]
+        const cursor = { time: last.time, id: last._id, roomId: last.roomId, offset: first.length }
+        const expected = [
+            ...equalTimeMessages
+                .slice(0, 6)
+                .reverse()
+                .map(({ _id }) => _id),
+            'oldest',
+        ]
+        assert.equal(first.length, 20)
+        assert.equal(cursor.time, 150)
+        const legacySecond = await provider.searchMessages(0, 'needle', 20, 20, '7', 100, 200)
+        assert.deepEqual(
+            legacySecond.map(({ _id }) => _id),
+            expected,
+        )
+
+        await provider.addMessage(-1, message('arrived after first page', 190))
+        for (const useIndex of [false, true]) {
+            indexReady = useIndex
+            const second = await provider.searchMessages(0, 'needle', cursor, 20, '7', 100, 200)
+            assert.deepEqual(
+                second.map(({ _id }) => _id),
+                expected,
+            )
+            assert.deepEqual(
+                second.map(({ roomId }) => roomId),
+                [-1, -1, -1, -1, -1, -1, -2],
+            )
+        }
+        assert.equal(searchedMaxTimes[0], 150)
+        const dateOnly = await provider.searchMessages(0, '', cursor, 20, '7', 100, 200)
+        assert.deepEqual(
+            dateOnly.map(({ _id }) => _id),
+            expected,
+        )
+    } finally {
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
+test('search fallback preserves undated legacy rows at the end of a cursor page', async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-search-undated-'))
+    const provider = new SQLStorageProvider(
+        'search-undated-test',
+        'sqlite3',
+        { dataPath: directory },
+        (error) => {
+            throw error
+        },
+        () =>
+            ({
+                open: async () => {},
+                close: async () => {},
+                requestRebuild: async () => {},
+            }) as ReturnType<MessageSearchIndexFactory>,
+    )
+    const message = (_id: string, time?: number) => ({ _id, time, senderId: 7, content: 'needle', username: 'sender' })
+    try {
+        await provider.connect()
+        await provider.addMessages(-1, [message('newest', 200), message('older', 100), message('zero', 0)])
+        await provider.addMessages(-2, [message('undated-1'), message('undated-2')])
+
+        const cursor = { time: 200, id: 'newest', roomId: -1, offset: 1 }
+        const page = await provider.searchMessages(0, 'needle', cursor, 3, '7')
+        const legacy = await provider.searchMessages(0, 'needle', 1, 3, '7')
+        assert.deepEqual(page, legacy)
+        assert.deepEqual(
+            page.map(({ _id }) => _id),
+            ['older', 'zero', 'undated-2'],
+        )
+        const next = await provider.searchMessages(0, 'needle', 4, 3, '7')
+        assert.equal(next[0]._id, 'undated-1')
+
+        const dated = await provider.searchMessages(0, 'needle', cursor, 3, '7', 0)
+        assert.deepEqual(
+            dated.map(({ _id }) => _id),
+            ['older', 'zero'],
+        )
+    } finally {
+        await provider.close()
+        fs.rmSync(directory, { recursive: true, force: true })
+    }
+})
+
 test('synchronizes Bridge snapshots in batches and skips unchanged rows', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-bridge-snapshot-'))
     const provider = new SQLStorageProvider(

@@ -6,7 +6,7 @@ import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageCursor, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import {
     legacyAtMetadataName,
@@ -14,7 +14,7 @@ import {
     runLegacyAtMigration,
     tryMigrateLegacyAtMessage,
 } from './LegacyAtMigration'
-import { messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
+import { compareSearchPositions, messageMatchesKeyword, normalizeSearchText } from './MessageSearchIndex'
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, { SQLiteSearchMessage } from './SQLiteMessageSearchIndexWorker'
 
@@ -773,7 +773,7 @@ export default class RedisStorageProvider implements StorageProvider {
     private async searchMessagesFromSearchIndex(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -784,8 +784,11 @@ export default class RedisStorageProvider implements StorageProvider {
         if (!normalized) return null
         try {
             const result: Message[] = []
+            const before = typeof pagination === 'number' ? undefined : pagination
+            const boundary = before && { time: before.time, _id: before.id, roomId: before.roomId }
+            const skip = typeof pagination === 'number' ? pagination : 0
             let skipped = 0
-            let maxTime: number | undefined = endTime
+            let maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
             const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
             while (result.length < limit) {
                 const times = await this.searchIndex.searchTimes(normalized, {
@@ -811,13 +814,11 @@ export default class RedisStorageProvider implements StorageProvider {
                             messageMatchesKeyword(message, normalized) &&
                             (senderId === undefined || message.senderId === Number(senderId)) &&
                             (startTime === undefined || Number(message.time || 0) >= startTime) &&
-                            (endTime === undefined || Number(message.time || 0) <= endTime),
+                            (endTime === undefined || Number(message.time || 0) <= endTime) &&
+                            (!boundary ||
+                                compareSearchPositions({ ...message, roomId: roomId || message.roomId }, boundary) < 0),
                     )
-                messages.sort((left, right) => {
-                    const timeDifference = Number(right.time || 0) - Number(left.time || 0)
-                    if (timeDifference) return timeDifference
-                    return String(right._id).localeCompare(String(left._id))
-                })
+                messages.sort((left, right) => compareSearchPositions(right, left))
                 for (const message of messages) {
                     if (skipped < skip) {
                         skipped++
@@ -839,7 +840,7 @@ export default class RedisStorageProvider implements StorageProvider {
     async searchMessages(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -850,7 +851,7 @@ export default class RedisStorageProvider implements StorageProvider {
             const indexed = await this.searchMessagesFromSearchIndex(
                 roomId,
                 lowerKeyword,
-                skip,
+                pagination,
                 limit,
                 senderId,
                 startTime,
@@ -859,25 +860,51 @@ export default class RedisStorageProvider implements StorageProvider {
             if (indexed !== null) return indexed
         }
 
-        const scanRoom = async (targetRoomId: number, includeRoomId: boolean): Promise<Message[]> => {
-            const allMsgKeys = await this.redis.zrevrange(`${this.qid}:msg${targetRoomId}:msgIdList`, 0, -1)
-            const messages = await this.getMessages(targetRoomId, allMsgKeys)
-            return messages.filter((message) => {
-                if (!messageMatchesKeyword(message, lowerKeyword)) return false
-                if (senderId !== undefined && message.senderId !== Number(senderId)) return false
-                if (startTime !== undefined && Number(message.time || 0) < startTime) return false
-                if (endTime !== undefined && Number(message.time || 0) > endTime) return false
-                if (includeRoomId) message.roomId = targetRoomId
-                return true
-            })
+        const before = typeof pagination === 'number' ? undefined : pagination
+        const boundary = before && { time: before.time, _id: before.id, roomId: before.roomId }
+        const skip = typeof pagination === 'number' ? pagination : 0
+        const perRoomLimit = skip + limit
+        const batchSize = Math.min(redisMessageReadBatchSize, Math.max(64, perRoomLimit))
+        const maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
+        const scanRoom = async (targetRoomId: number): Promise<Message[]> => {
+            const key = this.roomMessageListKey(targetRoomId)
+            const matched: Message[] = []
+            for (let offset = 0; matched.length < perRoomLimit; offset += batchSize) {
+                const ids = await this.redis.zrevrangebyscore(
+                    key,
+                    maxTime ?? '+inf',
+                    startTime ?? '-inf',
+                    'LIMIT',
+                    offset,
+                    batchSize,
+                )
+                for (const message of await this.getMessages(targetRoomId, ids)) {
+                    if (!messageMatchesKeyword(message, lowerKeyword)) continue
+                    if (senderId !== undefined && message.senderId !== Number(senderId)) continue
+                    const time = Number(message.time || 0)
+                    if (startTime !== undefined && time < startTime) continue
+                    if (endTime !== undefined && time > endTime) continue
+                    if (
+                        boundary &&
+                        compareSearchPositions({ time, _id: message._id, roomId: targetRoomId }, boundary) >= 0
+                    ) {
+                        continue
+                    }
+                    matched.push(roomId === 0 ? { ...message, roomId: targetRoomId } : message)
+                    if (matched.length === perRoomLimit) break
+                }
+                if (ids.length < batchSize) break
+            }
+            return matched
         }
 
-        const matched =
-            roomId === 0
-                ? (await Promise.all((await this.getAllRooms()).map((room) => scanRoom(room.roomId, true)))).flat()
-                : await scanRoom(roomId, false)
-        matched.sort((a, b) => b.time - a.time)
-        return matched.slice(skip, skip + limit)
+        if (roomId !== 0) return (await scanRoom(roomId)).slice(skip, perRoomLimit)
+        const roomIds = (await this.getSearchRooms()).map((room) => Number(room.roomId))
+        const pages = await mapWithConcurrencyAndYield(roomIds, redisMigrationRoomConcurrency, scanRoom)
+        return pages
+            .flat()
+            .sort((left, right) => compareSearchPositions(right, left))
+            .slice(skip, perRoomLimit)
     }
 
     /** 实现 {@link StorageProvider} 类的 `fetchImageMessages` 方法，

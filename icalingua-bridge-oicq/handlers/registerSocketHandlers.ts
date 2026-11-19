@@ -6,7 +6,7 @@ import type {
     FlashTransferUploadTicket,
 } from '@icalingua/types/FlashTransfer'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { Server, Socket } from 'socket.io'
 import type oicqAdapter from '../adapters/oicqAdapter'
@@ -86,16 +86,27 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
         (
             roomId: number,
             keyword: string,
-            offset: number,
+            pagination: MessageSearchPagination,
             senderId: number | undefined,
             startTime: number | undefined,
             endTime: number | undefined,
             resolve: (value: Message[] | PromiseLike<Message[]>) => void,
         ) => {
+            if (typeof resolve !== 'function') return
+            if (
+                typeof pagination !== 'number' &&
+                (!pagination ||
+                    !Number.isFinite(pagination.time) ||
+                    !Number.isSafeInteger(pagination.roomId) ||
+                    (typeof pagination.id !== 'string' && !Number.isFinite(pagination.id)))
+            ) {
+                resolve([])
+                return
+            }
             adapter.searchMessages(
                 roomId,
                 keyword,
-                offset,
+                pagination,
                 senderId ?? undefined,
                 startTime ?? undefined,
                 endTime ?? undefined,

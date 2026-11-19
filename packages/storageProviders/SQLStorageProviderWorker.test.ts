@@ -225,15 +225,16 @@ test('FTS source callbacks use the dedicated read worker', async () => {
     await provider.close()
 })
 
-test('message search forwards sender and time bounds to a read worker', async () => {
+test('message search forwards the cursor, sender, and time bounds to a read worker', async () => {
     const { provider, readers, errors } = createHarness()
     await provider.connect()
+    const cursor = { time: 1500, id: 'message-id', roomId: 123, offset: 40 }
     readers[0].behaviors.set('searchMessages', (args) => {
-        assert.deepEqual(args, [123, 'keyword', 40, 20, '7', 1000, 2000])
+        assert.deepEqual(args, [123, 'keyword', cursor, 20, '7', 1000, 2000])
         return []
     })
 
-    assert.deepEqual(await provider.searchMessages(123, 'keyword', 40, 20, '7', 1000, 2000), [])
+    assert.deepEqual(await provider.searchMessages(123, 'keyword', cursor, 20, '7', 1000, 2000), [])
     assert.deepEqual(readers[0].calls, ['searchMessages'])
     assert.deepEqual(errors, [])
     await provider.close()

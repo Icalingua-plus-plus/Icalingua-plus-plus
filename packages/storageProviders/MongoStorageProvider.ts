@@ -3,7 +3,11 @@ import Message from '@icalingua/types/Message'
 import Room from '@icalingua/types/Room'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
-import MessagePageOptions, { MessageCursor } from '@icalingua/types/MessagePage'
+import MessagePageOptions, {
+    MessageCursor,
+    MessageSearchCursor,
+    MessageSearchPagination,
+} from '@icalingua/types/MessagePage'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import { Db, MongoClient } from 'mongodb'
 import path from 'path'
@@ -13,7 +17,7 @@ import {
     runLegacyAtMigration,
     tryMigrateLegacyAtMessage,
 } from './LegacyAtMigration'
-import { normalizeSearchText } from './MessageSearchIndex'
+import { compareSearchIdsAsStrings, compareSearchPositions, normalizeSearchText } from './MessageSearchIndex'
 import { messageIdTime, messageIdsEquivalent } from './MessageId'
 import SQLiteMessageSearchIndexWorker, {
     SQLiteSearchMessage,
@@ -26,6 +30,21 @@ const mongoSearchTimePageSize = 512
 const mongoSearchMetadataCollection = '__icalingua_storage_metadata'
 const mongoSearchTimeIndexMetadataId = 'message-search-time-index'
 const mongoSearchTimeIndexVersion = 1
+
+const compareMongoSearchIds = (left: Message['_id'], right: Message['_id']): number => {
+    if (typeof left !== typeof right) return typeof left === 'number' ? -1 : 1
+    if (typeof left === 'number' && typeof right === 'number') return left - right
+    return compareSearchIdsAsStrings(left, right)
+}
+
+const mongoSearchBefore = (roomId: number, before?: MessageSearchCursor, includeUndated = false) => {
+    if (!before) return {}
+    const compareId = roomId < before.roomId ? '$lte' : '$lt'
+    const sameTime = [{ time: before.time, _id: { [compareId]: before.id } }]
+    // MongoDB orders numbers before strings, but range predicates only compare matching BSON types.
+    if (typeof before.id === 'string') sameTime.push({ time: before.time, _id: { $type: 'number' } })
+    return { $or: [{ time: { $lt: before.time } }, ...sameTime, ...(includeUndated ? [{ time: null }] : [])] }
+}
 
 interface MongoRoomTimeScanState {
     roomId: number
@@ -895,7 +914,7 @@ export default class MongoStorageProvider implements StorageProvider {
     private async searchMessagesFromSearchIndex(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -906,8 +925,10 @@ export default class MongoStorageProvider implements StorageProvider {
         if (!normalized) return null
         try {
             const result: Message[] = []
+            const before = typeof pagination === 'number' ? undefined : pagination
+            const skip = typeof pagination === 'number' ? pagination : 0
             let skipped = 0
-            let maxTime: number | undefined = endTime
+            let maxTime = before ? Math.min(before.time, endTime ?? Infinity) : endTime
             const roomIds = roomId === 0 ? (await this.getSearchRooms()).map((room) => Number(room.roomId)) : [roomId]
             const escapedKeyword = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             while (result.length < limit) {
@@ -924,22 +945,22 @@ export default class MongoStorageProvider implements StorageProvider {
                     await mapWithConcurrency(roomIds, mongoSearchReadConcurrency, async (rid) =>
                         this.mdb
                             .collection<any>('msg' + rid)
-                            .find({
-                                time: { $in: times },
-                                content: { $regex: escapedKeyword, $options: 'i' },
-                                ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
-                            })
+                            .find(
+                                {
+                                    time: { $in: times },
+                                    content: { $regex: escapedKeyword, $options: 'i' },
+                                    ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
+                                    ...mongoSearchBefore(rid, before),
+                                },
+                                { collation: { locale: 'simple' } },
+                            )
                             .toArray()
                             .then((values) =>
                                 values.map((message) => (roomId === 0 ? { ...message, roomId: rid } : message)),
                             ),
                     )
                 ).flat()
-                messages.sort((left, right) => {
-                    const timeDifference = Number(right.time || 0) - Number(left.time || 0)
-                    if (timeDifference) return timeDifference
-                    return String(right._id).localeCompare(String(left._id))
-                })
+                messages.sort((left, right) => compareSearchPositions(right, left, compareMongoSearchIds))
                 for (const message of messages) {
                     if (skipped < skip) {
                         skipped++
@@ -961,7 +982,7 @@ export default class MongoStorageProvider implements StorageProvider {
     async searchMessages(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -973,7 +994,7 @@ export default class MongoStorageProvider implements StorageProvider {
                 const indexed = await this.searchMessagesFromSearchIndex(
                     roomId,
                     normalized,
-                    skip,
+                    pagination,
                     limit,
                     senderId,
                     startTime,
@@ -982,6 +1003,9 @@ export default class MongoStorageProvider implements StorageProvider {
                 if (indexed !== null) return indexed
             }
             const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const before = typeof pagination === 'number' ? undefined : pagination
+            const skip = typeof pagination === 'number' ? pagination : 0
+            const includeUndated = startTime === undefined && endTime === undefined
             const query = {
                 ...(normalized ? { content: { $regex: escapedKeyword, $options: 'i' } } : {}),
                 ...(senderId === undefined ? {} : { senderId: Number(senderId) }),
@@ -997,11 +1021,15 @@ export default class MongoStorageProvider implements StorageProvider {
             if (roomId !== 0) {
                 return await this.mdb
                     .collection<any>('msg' + roomId)
-                    .find(query, {
-                        sort: [['time', -1]],
-                        skip,
-                        limit,
-                    })
+                    .find(
+                        { ...query, ...mongoSearchBefore(roomId, before, includeUndated) },
+                        {
+                            collation: { locale: 'simple' },
+                            sort: { time: -1, _id: -1 },
+                            skip,
+                            limit,
+                        },
+                    )
                     .toArray()
             }
 
@@ -1010,16 +1038,20 @@ export default class MongoStorageProvider implements StorageProvider {
             const results = await mapWithConcurrency(rooms, mongoSearchReadConcurrency, async (room) => {
                 const messages = await this.mdb
                     .collection<any>('msg' + room.roomId)
-                    .find(query, {
-                        sort: [['time', -1]],
-                        limit: perRoomLimit,
-                    })
+                    .find(
+                        { ...query, ...mongoSearchBefore(room.roomId, before, includeUndated) },
+                        {
+                            collation: { locale: 'simple' },
+                            sort: { time: -1, _id: -1 },
+                            limit: perRoomLimit,
+                        },
+                    )
                     .toArray()
                 return messages.map((message) => ({ ...message, roomId: room.roomId })) as Message[]
             })
             return results
                 .flat()
-                .sort((a, b) => (b.time || 0) - (a.time || 0))
+                .sort((left, right) => compareSearchPositions(right, left, compareMongoSearchIds))
                 .slice(skip, skip + limit)
         } catch (e) {
             return []

@@ -82,6 +82,7 @@ export default {
             keyword: '',
             dateRange: null,
             messages: [],
+            activeSearch: null,
             loading: false,
             noMore: false,
             searched: false,
@@ -116,6 +117,7 @@ export default {
         this.lifecycleScope = createRendererLifecycleScope()
         document.title = '搜索聊天记录'
         this.lifecycleScope.onIpc('initMessageSearch', (event, { roomId, roomName, senderId, senderName }) => {
+            this.clearResults()
             this.roomId = roomId
             this.roomName = roomName
             this.senderId = senderId ?? null
@@ -130,28 +132,37 @@ export default {
         async doSearch() {
             if (this.loading) return
             const keyword = this.keyword.trim()
-            if (!keyword && !this.hasSearchTimeRange()) return
-            this.messages = []
-            this.noMore = false
+            const { startTime, endTime } = this.getSearchTimeRange()
+            if (!keyword && startTime === undefined) return
+            this.clearResults()
+            this.activeSearch = { roomId: this.roomId, keyword, senderId: this.senderId, startTime, endTime }
             this.searched = true
-            this.searchError = ''
             await this.fetchResults()
         },
         async fetchResults() {
-            if (this.loading || this.noMore) return
-            const keyword = this.keyword.trim()
-            if (!keyword && !this.hasSearchTimeRange()) return
+            const search = this.activeSearch
+            if (!search || this.loading || this.noMore) return
+            const { roomId, keyword, senderId, startTime, endTime } = search
+            const offset = this.messages.length
+            const last = this.messages[offset - 1]
+            const cursorRoomId = roomId || Number(last?.roomId)
+            const cursorTime = Number(last?.time)
+            // SQL renders a missing stored timestamp as zero.
+            const pagination =
+                cursorTime !== 0 && Number.isFinite(cursorTime) && Number.isSafeInteger(cursorRoomId)
+                    ? { time: cursorTime, id: last._id, roomId: cursorRoomId, offset }
+                    : offset
             this.loading = true
             try {
-                const { startTime, endTime } = this.getSearchTimeRange()
                 const msgs = await ipc.searchMessages(
-                    this.roomId,
+                    roomId,
                     keyword,
-                    this.messages.length,
-                    this.hasSenderFilter ? this.senderId : undefined,
+                    pagination,
+                    senderId ?? undefined,
                     startTime,
                     endTime,
                 )
+                if (this.activeSearch !== search) return
                 if (msgs && msgs.length) {
                     this.messages = [...this.messages, ...msgs]
                 }
@@ -159,14 +170,18 @@ export default {
                     this.noMore = true
                 }
             } catch (e) {
+                if (this.activeSearch !== search) return
                 console.error('Search failed:', e)
                 this.searchError = '搜索失败，请稍后重试'
                 this.noMore = true
+            } finally {
+                if (this.activeSearch === search) this.loading = false
             }
-            this.loading = false
         },
         clearResults() {
+            this.activeSearch = null
             this.messages = []
+            this.loading = false
             this.noMore = false
             this.searched = false
             this.searchError = ''
@@ -183,10 +198,6 @@ export default {
             end.setHours(23, 59, 59, 999)
             return { startTime: start.getTime(), endTime: end.getTime() }
         },
-        hasSearchTimeRange() {
-            const { startTime, endTime } = this.getSearchTimeRange()
-            return startTime !== undefined && endTime !== undefined
-        },
         handleScroll(e) {
             const { scrollTop, scrollHeight, clientHeight } = e.target
             if (scrollHeight - scrollTop - clientHeight < 200) {
@@ -202,7 +213,7 @@ export default {
             ipc.gotoMessage(targetRoomId, String(msg._id))
         },
         resultKey(msg) {
-            return `${msg.roomId === undefined ? this.roomId : msg.roomId}:${msg._id}`
+            return `${msg.roomId ?? this.roomId}:${typeof msg._id}:${msg._id}`
         },
         getRoomName(msg) {
             if (msg._roomName) return msg._roomName
@@ -229,8 +240,8 @@ export default {
         },
         highlightKeyword(content) {
             const escapedContent = this.escapeHtml(content || '')
-            if (!this.keyword.trim()) return escapedContent
-            const escapedKeyword = this.escapeHtml(this.keyword.trim())
+            if (!this.activeSearch?.keyword) return escapedContent
+            const escapedKeyword = this.escapeHtml(this.activeSearch.keyword)
             const pattern = escapedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
             return escapedContent.replace(
                 new RegExp(pattern, 'gi'),

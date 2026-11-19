@@ -10,7 +10,7 @@ import RoamingStamp from './RoamingStamp'
 import SearchableFriend from './SearchableFriend'
 import ChatGroup from './ChatGroup'
 import SpecialFeature from './SpecialFeature'
-import MessagePageOptions from './MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from './MessagePage'
 import { FavoriteRequest, FavoriteResponse } from './Favorites'
 
 type CookiesDomain =
@@ -80,7 +80,7 @@ export default interface Adapter {
     searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        pagination: MessageSearchPagination,
         senderId?: number,
         startTime?: number,
         endTime?: number,

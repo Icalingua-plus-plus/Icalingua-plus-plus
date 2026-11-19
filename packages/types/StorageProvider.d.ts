@@ -3,7 +3,7 @@ import Message from './Message'
 import IgnoreChatInfo from './IgnoreChatInfo'
 import ChatGroup from './ChatGroup'
 import DatabaseUpgradeProgress from './DatabaseUpgradeProgress'
-import MessagePageOptions from './MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from './MessagePage'
 
 export default interface StorageProvider {
     connect(): Promise<void>
@@ -79,7 +79,7 @@ export default interface StorageProvider {
     searchMessages(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,

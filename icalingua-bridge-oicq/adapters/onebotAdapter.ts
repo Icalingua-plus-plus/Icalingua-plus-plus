@@ -30,7 +30,7 @@ import {
     Ret,
 } from 'oicq-icalingua-plus-plus'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import createProcessMessage, { registerSilkDecodeCompleter } from '../utils/processMessage'
 import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../utils/icalinguaAt'
 import {
@@ -1639,7 +1639,7 @@ const adapter: typeof oicqAdapter = {
     async searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        pagination: MessageSearchPagination,
         senderId: number | undefined,
         startTime: number | undefined,
         endTime: number | undefined,
@@ -1650,7 +1650,7 @@ const adapter: typeof oicqAdapter = {
             (await storage.searchMessages(
                 roomId,
                 keyword,
-                offset,
+                pagination,
                 20,
                 senderId === undefined ? undefined : String(senderId),
                 startTime,

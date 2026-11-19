@@ -2,7 +2,7 @@ import ChatGroup from '@icalingua/types/ChatGroup'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import Room from '@icalingua/types/Room'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import DBWorkerClient from './DBWorkerClient'
@@ -226,7 +226,7 @@ export default class SQLStorageProviderWorker implements StorageProvider {
     async searchMessages(
         roomId: number,
         keyword: string,
-        skip: number,
+        pagination: MessageSearchPagination,
         limit: number,
         senderId?: string,
         startTime?: number,
@@ -236,7 +236,7 @@ export default class SQLStorageProviderWorker implements StorageProvider {
             (await this.enqueueRead<Message[]>('searchMessages', [
                 roomId,
                 keyword,
-                skip,
+                pagination,
                 limit,
                 senderId,
                 startTime,

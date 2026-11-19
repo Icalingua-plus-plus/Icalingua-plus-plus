@@ -10,7 +10,7 @@ import AtCacheItem from '@icalingua/types/AtCacheElem'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
@@ -149,12 +149,12 @@ const ipc = {
     async searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        pagination: MessageSearchPagination,
         senderId?: number,
         startTime?: number,
         endTime?: number,
     ): Promise<Array<Message>> {
-        return await ipcRenderer.invoke('searchMessages', { roomId, keyword, offset, senderId, startTime, endTime })
+        return await ipcRenderer.invoke('searchMessages', { roomId, keyword, pagination, senderId, startTime, endTime })
     },
     openGlobalMessageSearch() {
         ipcRenderer.send('openGlobalMessageSearch')

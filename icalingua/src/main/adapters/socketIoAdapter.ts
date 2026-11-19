@@ -12,7 +12,7 @@ import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import OnlineData from '@icalingua/types/OnlineData'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -89,6 +89,7 @@ let localStorageInit: Promise<SQLStorageProvider | null>
 let localStorageWriteQueue = Promise.resolve()
 let localStorageClosePromise: Promise<void>
 let remoteMessageSearchIndexReady = false
+let remoteSupportsSearchCursor = false
 const FETCH_MESSAGES_BY_SENDER_TIMEOUT = 30_000
 const readRoomState = { unreadCount: 0, at: false, atMessageId: null }
 
@@ -894,6 +895,9 @@ const adapter: Adapter = {
                 socket.emit('auth', signature, 'main', true)
                 console.log('已向服务端提交身份验证')
             })
+            socket.on('authSucceed', (capabilities?: { searchCursor?: boolean }) => {
+                remoteSupportsSearchCursor = capabilities?.searchCursor === true
+            })
             socket.once('authSucceed', () => {
                 retryAuthAfterVersionPrompt = false
                 authFailedDuringVersionPrompt = false
@@ -913,6 +917,7 @@ const adapter: Adapter = {
                 app.quit()
             })
             socket.on('disconnect', () => {
+                remoteSupportsSearchCursor = false
                 if (versionPromptActive) authFailedDuringVersionPrompt = true
             })
         }
@@ -1004,7 +1009,7 @@ const adapter: Adapter = {
     searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        pagination: MessageSearchPagination,
         senderId?: number,
         startTime?: number,
         endTime?: number,
@@ -1014,7 +1019,8 @@ const adapter: Adapter = {
                 queueLocalStorageWrite((storage) => persistLocalMessages(storage, roomId, messages))
                 resolve(messages)
             }
-            socket.emit('searchMessages', roomId, keyword, offset, senderId, startTime, endTime, handleMessages)
+            const page = typeof pagination === 'number' || remoteSupportsSearchCursor ? pagination : pagination.offset
+            socket.emit('searchMessages', roomId, keyword, page, senderId, startTime, endTime, handleMessages)
         })
     },
     async getFirstUnreadRoom(): Promise<Room> {

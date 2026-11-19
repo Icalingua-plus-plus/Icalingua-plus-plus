@@ -12,7 +12,7 @@ import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
 import Message from '@icalingua/types/Message'
-import MessagePageOptions from '@icalingua/types/MessagePage'
+import MessagePageOptions, { MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
@@ -2082,7 +2082,7 @@ const adapter: OicqAdapter = {
     async searchMessages(
         roomId: number,
         keyword: string,
-        offset: number,
+        pagination: MessageSearchPagination,
         senderId?: number,
         startTime?: number,
         endTime?: number,
@@ -2091,7 +2091,7 @@ const adapter: OicqAdapter = {
             (await storage.searchMessages(
                 roomId,
                 keyword,
-                offset,
+                pagination,
                 20,
                 senderId === undefined ? undefined : String(senderId),
                 startTime,
