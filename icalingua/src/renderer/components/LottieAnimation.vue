@@ -1,42 +1,34 @@
 <template>
-    <video
-        v-if="videoUrl"
-        ref="videoEl"
-        :src="videoUrl"
-        :style="style"
-        :autoplay="autoPlay"
-        muted
-        playsinline
-        @loadeddata="onVideoLoaded"
-        @ended="onVideoEnded"
-        @timeupdate="onVideoTimeUpdate"
-    />
-    <div v-else-if="style" :style="style" ref="lavContainer" />
+    <div :style="style">
+        <div v-if="!videoReady" ref="lavContainer" style="width: 100%; height: 100%" />
+        <video
+            v-if="videoUrl"
+            ref="videoEl"
+            :src="videoUrl"
+            :style="{ visibility: videoReady ? 'visible' : 'hidden' }"
+            style="position: absolute; inset: 0; width: 100%; height: 100%"
+            muted
+            playsinline
+            preload="auto"
+            @loadeddata="onVideoLoaded"
+            @error="onVideoError"
+            @ended="replayVideo"
+            @timeupdate="onVideoTimeUpdate"
+            @seeked="onVideoSeeked"
+        />
+    </div>
 </template>
 
 <script>
 import lottie from 'lottie-web'
-import fs from 'fs'
-import path from 'path'
 import {
-    hasCache,
+    getCacheKey,
     getCacheUrl,
     isSupported as isWebmSupported,
+    loadLottieJsonData,
     queueRender,
-    onRenderComplete,
 } from '../utils/lottieWebmCache'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
-
-const lottieJsonCache = new Map()
-
-function loadLottieJsonData(filePath) {
-    if (lottieJsonCache.has(filePath)) {
-        return lottieJsonCache.get(filePath)
-    }
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
-    lottieJsonCache.set(filePath, data)
-    return data
-}
 
 export default {
     props: {
@@ -84,119 +76,177 @@ export default {
         },
     },
     data: () => ({
-        name: 'lottie-animation',
         rendererSettings: {
             scaleMode: 'centerCrop',
             progressiveLoad: true,
             hideOnTransparent: true,
         },
-        anim: null,
-        style: null,
         isVisible: false,
-        observer: null,
         videoUrl: null,
+        videoReady: false,
         isReplaying: false,
     }),
     created() {
         this.lifecycleScope = createRendererLifecycleScope()
-        this.lifecycleScope.addCleanup(() => this.cancelRenderComplete())
+        this._animationGeneration = 0
+        this._loadingGeneration = null
+        this._animation = null
+        this._loopTimer = null
+        this._previewTimer = null
+        this._cancelWebmRender = null
+        this._skipVideoCache = false
+        this.lifecycleScope.addCleanup(() => this.cancelWebmRender())
+        this.lifecycleScope.addCleanup(() => this.destroyAnimation())
     },
     computed: {
-        isTwoSegment() {
-            return this.pathResult && this.pathResult !== this.path
-        },
-    },
-    mounted() {
-        this.init()
-        this.setupObserver()
-        // 如果已有 WebM 缓存，直接切换到视频模式
-        this.tryUseVideoCache()
-        // 没有缓存则立即排队后台渲染（离屏渲染，不依赖组件可见性）
-        if (!this.videoUrl) {
-            this.$nextTick(() => this.queueWebmRender())
-        }
-    },
-    beforeDestroy() {
-        this.lifecycleScope?.dispose()
-    },
-    destroyed() {
-        if (this.observer) {
-            this.observer.disconnect()
-            this.observer = null
-        }
-        if (this.loopTimer) {
-            clearTimeout(this.loopTimer)
-            this.loopTimer = null
-        }
-        if (this.anim) {
-            this.anim.destroy()
-            this.anim = null
-        }
-    },
-    methods: {
-        cancelRenderComplete() {
-            if (!this._cancelRenderComplete) return
-            this._cancelRenderComplete()
-            this._cancelRenderComplete = null
-        },
-        init() {
-            this.style = {
+        style() {
+            return {
+                position: 'relative',
                 width: this.width !== -1 ? `${this.width}px` : '100%',
                 height: this.height !== -1 ? `${this.height}px` : '100%',
                 overflow: 'hidden',
                 margin: '0 auto',
             }
         },
-        initAnimation() {
-            const jsonData = loadLottieJsonData(this.path)
-            let jsonResultData = null
-            if (this.pathResult && this.pathResult !== this.path) {
-                try {
-                    jsonResultData = loadLottieJsonData(this.pathResult)
-                } catch (error) {
-                    console.error(error)
+        animationPaths() {
+            return [this.path, this.pathResult]
+        },
+        isTwoSegment() {
+            return this.pathResult && this.pathResult !== this.path
+        },
+    },
+    mounted() {
+        const observer = new IntersectionObserver((entries) => {
+            const entry = entries.at(-1)
+            if (!entry || this._isBeingDestroyed || this._isDestroyed) return
+            if (entry.isIntersecting) this.onEnterViewport()
+            else this.onLeaveViewport()
+        })
+        observer.observe(this.$el)
+        this.lifecycleScope.addCleanup(() => observer.disconnect())
+    },
+    beforeDestroy() {
+        this._animationGeneration++
+        this.lifecycleScope.dispose()
+    },
+    methods: {
+        cancelWebmRender() {
+            this._cancelWebmRender?.()
+            this._cancelWebmRender = null
+        },
+        cancelPreview() {
+            this.lifecycleScope.cancelTimeout(this._previewTimer)
+            this._previewTimer = null
+        },
+        cancelLoop() {
+            this.lifecycleScope.cancelTimeout(this._loopTimer)
+            this._loopTimer = null
+            this.isReplaying = false
+        },
+        destroyAnimation() {
+            this._animation?.destroy()
+            this._animation = null
+        },
+        async loadAnimation() {
+            if (!this.isVisible || this.videoReady || !this.path || this._isBeingDestroyed || this._isDestroyed) return
+            const generation = this._animationGeneration
+            if (this._loadingGeneration === generation) return
+            this._loadingGeneration = generation
+            try {
+                const [jsonData, resultData] = await Promise.all([
+                    loadLottieJsonData(this.path),
+                    this.isTwoSegment ? loadLottieJsonData(this.pathResult).catch(() => null) : null,
+                ])
+                if (generation !== this._animationGeneration || !this.isVisible) return
+
+                const showPreview = () => {
+                    if (
+                        generation !== this._animationGeneration ||
+                        !this.isVisible ||
+                        this.videoReady ||
+                        this._animation
+                    )
+                        return
+                    this.initAnimation(jsonData, resultData)
                 }
-            }
+                if (!this._animation) {
+                    this.cancelPreview()
+                    // 给缓存视频一次直接显示的机会，等待过久时先显示 SVG。
+                    this._previewTimer = this.lifecycleScope.timeout(() => {
+                        this._previewTimer = null
+                        try {
+                            showPreview()
+                        } catch (error) {
+                            console.error('Failed to load Lottie preview:', error)
+                        }
+                    }, 100)
+                }
+                if (this.videoUrl) return
 
-            if (this.anim) {
-                this.anim.destroy() // Releases resources. The DOM element will be emptied.
-            }
+                const key = !this._skipVideoCache && isWebmSupported() ? getCacheKey(jsonData, resultData) : null
+                const url = key && (await getCacheUrl(key))
+                if (generation !== this._animationGeneration || !this.isVisible) return
+                if (url) {
+                    this.videoUrl = url
+                    return
+                }
 
+                this.cancelPreview()
+                showPreview()
+                if (!key) return
+
+                this._cancelWebmRender = queueRender(key, jsonData, resultData, (cacheUrl) => {
+                    this._cancelWebmRender = null
+                    if (generation !== this._animationGeneration || !this.isVisible) return
+                    this.videoUrl = cacheUrl
+                })
+            } catch (error) {
+                if (generation === this._animationGeneration) console.error('Failed to load Lottie animation:', error)
+            } finally {
+                if (this._loadingGeneration === generation) this._loadingGeneration = null
+            }
+        },
+        initAnimation(jsonData, resultData) {
+            this._videoFrameRate = jsonData.fr || 30
+            this._videoFrameOffset = 0
+            this._animationCompleted = false
             lottie.setQuality('medium')
-            this.anim = lottie.loadAnimation({
+            const animation = lottie.loadAnimation({
                 container: this.$refs.lavContainer,
                 renderer: 'svg',
-                loop: jsonResultData ? false : this.loop,
+                loop: !resultData && this.loop && this.loopDelayMin <= 0,
                 autoplay: this.autoPlay,
-                animationData: jsonData,
+                animationData: structuredClone(jsonData),
                 rendererSettings: this.rendererSettings,
             })
-
-            this.$emit('AnimControl', this.anim)
-
-            this.anim.setSpeed(this.speed)
-            if (this.loopDelayMin > 0) {
-                this.anim.loop = false
-                this.anim.autoplay = false
+            this._animation = animation
+            animation.setSpeed(this.speed)
+            this.$emit('AnimControl', animation)
+            animation.addEventListener('complete', () => {
+                if (this._animation !== animation) return
+                if (!resultData) {
+                    this._animationCompleted = !this.loop || this.isTwoSegment
+                    return
+                }
+                this.destroyAnimation()
+                this._videoFrameOffset = jsonData.op - jsonData.ip || jsonData.op
+                const result = lottie.loadAnimation({
+                    container: this.$refs.lavContainer,
+                    renderer: 'svg',
+                    loop: false,
+                    autoplay: this.isVisible,
+                    animationData: structuredClone(resultData),
+                    rendererSettings: this.rendererSettings,
+                })
+                this._animation = result
+                result.setSpeed(this.speed)
+                result.addEventListener('complete', () => {
+                    if (this._animation === result) this._animationCompleted = true
+                })
+            })
+            if (!resultData && this.autoPlay && this.loop && this.loopDelayMin > 0) {
                 this.executeLoop()
             }
-            // 如果有第二个动画，就等第一个动画播放完毕后再播放第二个动画
-            if (jsonResultData) {
-                this.anim.addEventListener('complete', () => {
-                    this.anim.destroy() // Releases resources. The DOM element will be emptied.
-                    this.anim = lottie.loadAnimation({
-                        container: this.$refs.lavContainer,
-                        renderer: 'svg',
-                        loop: false,
-                        autoplay: true,
-                        animationData: jsonResultData,
-                        rendererSettings: this.rendererSettings,
-                    })
-                    this.anim.setSpeed(this.speed)
-                })
-            }
-
-            this.isVisible = true
         },
         getRandomInt(min, max) {
             min = Math.ceil(min)
@@ -205,144 +255,86 @@ export default {
             return Math.floor(Math.random() * (max - min)) + min
         },
         executeLoop() {
-            if (!this.anim || !this.isVisible) return
-            this.anim.play()
-            this.loopTimer = setTimeout(
+            if (!this._animation || !this.isVisible) return
+            this._animation.play()
+            this._loopTimer = this.lifecycleScope.timeout(
                 () => {
-                    if (!this.anim || !this.isVisible) return
-                    this.anim.stop()
+                    this._loopTimer = null
+                    if (!this._animation || !this.isVisible) return
+                    this._animation.stop()
                     this.executeLoop()
                 },
                 this.getRandomInt(this.loopDelayMin, this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax),
             )
         },
-        tryUseVideoCache() {
-            if (!isWebmSupported()) return
-            const jsonData = loadLottieJsonData(this.path)
-            let resultData = null
-            if (this.pathResult && this.pathResult !== this.path) {
-                try {
-                    resultData = loadLottieJsonData(this.pathResult)
-                } catch {
-                    /* ignore */
-                }
-            }
-            if (hasCache(jsonData, resultData)) {
-                this.videoUrl = getCacheUrl(jsonData, resultData)
-            }
-        },
-        setupObserver() {
-            this.observer = new IntersectionObserver(
-                (entries) => {
-                    for (const entry of entries) {
-                        if (entry.target !== this.$el) continue
-                        if (entry.isIntersecting) {
-                            this.onEnterViewport()
-                        } else {
-                            this.onLeaveViewport()
-                        }
-                    }
-                },
-                { rootMargin: '100px' },
-            )
-            this.$nextTick(() => {
-                if (this.$el) this.observer.observe(this.$el)
-            })
-        },
         onEnterViewport() {
-            if (!this.path) return
+            if (this.isVisible) return
             this.isVisible = true
-            if (this.videoUrl && this.$refs.videoEl) {
-                // 视频模式：直接恢复播放
-                this.$refs.videoEl.play()
-            } else if (!this.anim) {
-                // 首次进入视口：创建 lottie 动画
-                this.initAnimation()
-            } else {
-                // 再次进入视口：恢复播放（而非重建）
-                this.anim.play()
-                if (this.loopDelayMin > 0) {
-                    this.executeLoop()
-                }
+            const video = this.$refs.videoEl
+            if (this.videoReady && video) {
+                if (video.ended) this.replayVideo()
+                else this.playVideo(video)
+                return
             }
+            if (this._animation) {
+                if (!this.isTwoSegment && this.loop && this.loopDelayMin > 0) this.executeLoop()
+                else this._animation.play()
+            }
+            void this.loadAnimation()
         },
         onLeaveViewport() {
             this.isVisible = false
-            if (this.loopTimer) {
-                clearTimeout(this.loopTimer)
-                this.loopTimer = null
-            }
-            if (this.videoUrl && this.$refs.videoEl) {
-                // 视频模式：暂停
-                this.$refs.videoEl.pause()
-            } else if (this.anim) {
-                // lottie 模式：暂停而非销毁，下次进入时直接恢复
-                this.anim.pause()
-            }
+            this._animationGeneration++
+            this.cancelWebmRender()
+            this.cancelPreview()
+            this.cancelLoop()
+            this.$refs.videoEl?.pause()
+            this._animation?.pause()
         },
-        /**
-         * 将当前动画加入后台 WebM 渲染队列
-         * 由 lottieWebmCache 串行执行，不阻塞前台
-         */
-        queueWebmRender() {
-            if (this._isBeingDestroyed || this._isDestroyed) return
-            this.cancelRenderComplete()
-            if (!isWebmSupported() || !this.path) {
-                console.log('[LottieAnim]', 'WebM not supported or no path')
-                return
-            }
-            const jsonData = loadLottieJsonData(this.path)
-            let resultData = null
-            if (this.pathResult && this.pathResult !== this.path) {
-                try {
-                    resultData = loadLottieJsonData(this.pathResult)
-                } catch {
-                    /* result JSON 不存在，忽略 */
-                }
-            }
-            if (hasCache(jsonData, resultData)) return
-            console.log('[LottieAnim]', 'Queuing render for', this.path)
-            queueRender(this.path, this.pathResult || undefined, jsonData, resultData)
-            // 如果渲染已完成（缓存命中），queueRender 内部会 skip
-            // 这里注册监听，下次渲染完成后自动切换到视频模式
-            this._cancelRenderComplete = onRenderComplete(
-                this.path,
-                this.pathResult || undefined,
-                jsonData,
-                resultData,
-                () => {
-                    this.videoUrl = getCacheUrl(jsonData, resultData)
-                    if (this.anim) {
-                        this.anim.destroy()
-                        this.anim = null
-                    }
-                    // v-if 切换后 DOM 重建，需要重新观察新元素
-                    this.$nextTick(() => {
-                        if (this.observer && this.$el) {
-                            this.observer.disconnect()
-                            this.observer.observe(this.$el)
-                        }
-                        // 根据当前可见性决定播放或暂停
-                        if (this.$refs.videoEl) {
-                            if (this.isVisible) {
-                                this.$refs.videoEl.play()
-                            } else {
-                                this.$refs.videoEl.pause()
-                            }
-                        }
-                    })
-                },
-            )
+        playVideo(video) {
+            void video.play().catch(() => undefined)
         },
         onVideoLoaded() {
-            if (this.$refs.videoEl) {
-                this.$refs.videoEl.playbackRate = this.speed
+            const video = this.$refs.videoEl
+            if (!video || this.videoReady || video.seeking) return
+            const animation = this._animation
+            if (animation && Number.isFinite(video.duration)) {
+                // 两段合成的 WebM 共用第一段的帧率，第二段从其帧偏移开始。
+                const time = this._animationCompleted
+                    ? video.duration
+                    : (this._videoFrameOffset + animation.currentFrame) / this._videoFrameRate
+                if (time > 0) {
+                    video.currentTime = Math.min(time, video.duration)
+                    if (video.seeking) return
+                }
             }
-            this.$emit('AnimControl', this.$refs.videoEl)
+            this.showVideo(video)
         },
-        onVideoEnded() {
-            if (!this.loop || this.isTwoSegment) return
-            this.replayVideo()
+        onVideoSeeked() {
+            this.isReplaying = false
+            const video = this.$refs.videoEl
+            if (video && !this.videoReady) this.showVideo(video)
+        },
+        showVideo(video) {
+            const playing = this._animation ? !this._animation.isPaused : this.autoPlay
+            const waitingForLoop = this._animation && this._loopTimer !== null
+            this.cancelPreview()
+            this.cancelLoop()
+            this.destroyAnimation()
+            this.videoReady = true
+            video.playbackRate = this.speed
+            if (this.isVisible) {
+                if (playing) this.playVideo(video)
+                else if (waitingForLoop) this.replayVideo()
+            }
+            this.$emit('AnimControl', video)
+        },
+        onVideoError() {
+            this._skipVideoCache = true
+            this.videoUrl = null
+            if (this.videoReady) this.cancelLoop()
+            this.videoReady = false
+            if (!this._animation) this.$nextTick(() => this.loadAnimation())
         },
         onVideoTimeUpdate() {
             const el = this.$refs.videoEl
@@ -352,60 +344,37 @@ export default {
             }
         },
         replayVideo() {
-            // 两段式动画（先播A再播B）不该循环，单段 pathResult===path 的可以循环
-            if (!this.loop || this.isTwoSegment || this.isReplaying) return
+            if (!this.videoReady || !this.isVisible || !this.loop || this.isTwoSegment || this.isReplaying) return
             const el = this.$refs.videoEl
             if (!el) return
             this.isReplaying = true
+            const restart = () => {
+                this._loopTimer = null
+                el.currentTime = 0
+                this.playVideo(el)
+            }
             if (this.loopDelayMin > 0) {
                 const delay = this.getRandomInt(
                     this.loopDelayMin,
                     this.loopDelayMax === 0 ? this.loopDelayMin : this.loopDelayMax,
                 )
-                this.loopTimer = setTimeout(() => {
-                    el.currentTime = 0
-                    el.play()
-                    // seek 完成后才解除防重入
-                    el.addEventListener(
-                        'seeked',
-                        () => {
-                            this.isReplaying = false
-                        },
-                        { once: true },
-                    )
-                }, delay)
+                this._loopTimer = this.lifecycleScope.timeout(restart, delay)
             } else {
-                el.currentTime = 0
-                el.play()
-                el.addEventListener(
-                    'seeked',
-                    () => {
-                        this.isReplaying = false
-                    },
-                    { once: true },
-                )
+                restart()
             }
         },
     },
     watch: {
-        path() {
-            // 完整清理旧状态
-            this.cancelRenderComplete()
+        animationPaths() {
+            this._animationGeneration++
+            this.cancelWebmRender()
+            this.cancelPreview()
+            this.cancelLoop()
+            this.destroyAnimation()
+            this._skipVideoCache = false
             this.videoUrl = null
-            if (this.anim) {
-                this.anim.destroy()
-                this.anim = null
-            }
-            if (this.observer) {
-                this.observer.disconnect()
-                this.observer = null
-            }
-            if (this.loopTimer) {
-                clearTimeout(this.loopTimer)
-                this.loopTimer = null
-            }
-            this.init()
-            this.setupObserver()
+            this.videoReady = false
+            this.$nextTick(() => this.loadAnimation())
         },
     },
 }

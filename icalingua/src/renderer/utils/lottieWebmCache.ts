@@ -7,6 +7,7 @@ import lottie, { AnimationItem } from 'lottie-web'
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
+import { pathToFileURL } from 'url'
 import { Output, WebMOutputFormat, BufferTarget, CanvasSource } from 'mediabunny'
 
 const LOG_TAG = '[LottieWebmCache]'
@@ -15,7 +16,7 @@ const LOG_TAG = '[LottieWebmCache]'
 // Types
 // ---------------------------------------------------------------------------
 
-interface LottieJsonData {
+export interface LottieJsonData {
     fr: number
     ip: number
     op: number
@@ -24,7 +25,24 @@ interface LottieJsonData {
     [key: string]: unknown
 }
 
-type RenderCompleteCallback = () => void
+type RenderCompleteCallback = (url: string) => void
+
+const jsonCache = new Map<string, Promise<LottieJsonData>>()
+
+export function loadLottieJsonData(filePath: string): Promise<LottieJsonData> {
+    let data = jsonCache.get(filePath)
+    if (!data) {
+        data = fs.promises
+            .readFile(filePath, 'utf-8')
+            .then((content) => JSON.parse(content))
+            .catch((error) => {
+                jsonCache.delete(filePath)
+                throw error
+            })
+        jsonCache.set(filePath, data)
+    }
+    return data
+}
 
 // ---------------------------------------------------------------------------
 // Cache directory
@@ -32,7 +50,7 @@ type RenderCompleteCallback = () => void
 
 let cacheDir: string | null = null
 
-function ensureCacheDir(): string {
+function getCacheDir(): string {
     if (cacheDir) return cacheDir
     try {
         const electron = require('electron')
@@ -46,11 +64,6 @@ function ensureCacheDir(): string {
     if (!cacheDir) {
         cacheDir = path.join(require('os').tmpdir(), 'icalingua-lottie-cache')
     }
-    try {
-        fs.mkdirSync(cacheDir, { recursive: true })
-    } catch {
-        /* ignore */
-    }
     return cacheDir
 }
 
@@ -58,45 +71,45 @@ function ensureCacheDir(): string {
 // Cache key & path
 // ---------------------------------------------------------------------------
 
-function getCacheKey(jsonData: LottieJsonData, resultData?: LottieJsonData | null): string {
-    // 用 JSON 内容哈希作为缓存 key，文件更新后自动失效
-    const raw = resultData ? `${JSON.stringify(jsonData)}\0${JSON.stringify(resultData)}` : JSON.stringify(jsonData)
-    return crypto.createHash('md5').update(raw).digest('hex')
+const cacheKeys = new WeakMap<LottieJsonData, Map<LottieJsonData | null, string>>()
+
+export function getCacheKey(jsonData: LottieJsonData, resultData: LottieJsonData | null): string {
+    let variants = cacheKeys.get(jsonData)
+    if (!variants) {
+        variants = new Map()
+        cacheKeys.set(jsonData, variants)
+    }
+    let key = variants.get(resultData)
+    if (!key) {
+        // 保留原有磁盘缓存键。播放和转码都只把副本交给会修改数据的 lottie-web。
+        const hash = crypto.createHash('md5').update(JSON.stringify(jsonData))
+        if (resultData) hash.update('\0').update(JSON.stringify(resultData))
+        key = hash.digest('hex')
+        variants.set(resultData, key)
+    }
+    return key
 }
 
 function getWebmPath(cacheKey: string): string {
-    return path.join(ensureCacheDir(), cacheKey + '.webm')
+    return path.join(getCacheDir(), cacheKey + '.webm')
 }
 
 // ---------------------------------------------------------------------------
 // Public: cache query
 // ---------------------------------------------------------------------------
 
-export function hasCache(jsonData: LottieJsonData, resultData?: LottieJsonData | null): boolean {
+export async function getCacheUrl(key: string): Promise<string | null> {
+    const filePath = getWebmPath(key)
     try {
-        return fs.existsSync(getWebmPath(getCacheKey(jsonData, resultData)))
+        const entry = await fs.promises.stat(filePath)
+        return entry.isFile() && entry.size > 0 ? pathToFileURL(filePath).href : null
     } catch {
-        return false
+        return null
     }
-}
-
-export function getCacheUrl(jsonData: LottieJsonData, resultData?: LottieJsonData | null): string | null {
-    const p = getWebmPath(getCacheKey(jsonData, resultData))
-    if (fs.existsSync(p)) {
-        return 'file:///' + p.replace(/\\/g, '/')
-    }
-    return null
 }
 
 export function isSupported(): boolean {
-    // Mediabunny 需要 VideoEncoder (WebCodecs API)
-    try {
-        const supported = typeof VideoEncoder !== 'undefined'
-        console.log(LOG_TAG, 'isSupported:', supported)
-        return supported
-    } catch {
-        return false
-    }
+    return typeof VideoEncoder !== 'undefined'
 }
 
 // ---------------------------------------------------------------------------
@@ -104,51 +117,11 @@ export function isSupported(): boolean {
 // ---------------------------------------------------------------------------
 
 let renderChain: Promise<void> = Promise.resolve()
-const pendingKeys = new Set<string>() // cacheKey 正在渲染
-const listeners = new Map<string, Set<RenderCompleteCallback>>() // cacheKey → callbacks
+const renderListeners = new Map<string, Set<RenderCompleteCallback>>()
 
-export function onRenderComplete(
-    jsonPath: string,
-    resultPath: string | undefined,
-    jsonData: LottieJsonData,
-    resultData: LottieJsonData | null | undefined,
-    cb: RenderCompleteCallback,
-): () => void {
-    const key = getCacheKey(jsonData, resultData)
-    // 渲染已完成且缓存存在 → 立即回调
-    if (!pendingKeys.has(key) && hasCache(jsonData, resultData)) {
-        cb()
-        return () => {}
-    }
-    // 渲染中 → 注册监听，完成后回调
-    const listener: RenderCompleteCallback = () => cb()
-    if (!listeners.has(key)) listeners.set(key, new Set())
-    listeners.get(key)!.add(listener)
-
-    let cancelled = false
-    return () => {
-        if (cancelled) return
-        cancelled = true
-
-        const callbacks = listeners.get(key)
-        if (!callbacks) return
-        callbacks.delete(listener)
-        if (!callbacks.size) listeners.delete(key)
-    }
-}
-
-function notifyByCacheKey(key: string): void {
-    const cbs = listeners.get(key)
-    if (cbs) {
-        for (const cb of cbs) {
-            try {
-                cb()
-            } catch {
-                /* ignore */
-            }
-        }
-        listeners.delete(key)
-    }
+function waitForIdle(): Promise<void> {
+    // 前台持续播放动画时也让转码按批推进。
+    return new Promise((resolve) => requestIdleCallback(() => resolve(), { timeout: 250 }))
 }
 
 // ---------------------------------------------------------------------------
@@ -161,10 +134,15 @@ function svgToCanvas(svgEl: SVGSVGElement, ctx: CanvasRenderingContext2D, w: num
         const url = URL.createObjectURL(new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' }))
         const img = new Image()
         img.onload = () => {
-            ctx.clearRect(0, 0, w, h)
-            ctx.drawImage(img, 0, 0, w, h)
-            URL.revokeObjectURL(url)
-            resolve()
+            try {
+                ctx.clearRect(0, 0, w, h)
+                ctx.drawImage(img, 0, 0, w, h)
+                resolve()
+            } catch (error) {
+                reject(error)
+            } finally {
+                URL.revokeObjectURL(url)
+            }
         }
         img.onerror = () => {
             URL.revokeObjectURL(url)
@@ -180,17 +158,16 @@ function svgToCanvas(svgEl: SVGSVGElement, ctx: CanvasRenderingContext2D, w: num
 
 async function renderToWebm(
     jsonData: LottieJsonData,
-    resultJsonData: LottieJsonData | null | undefined,
+    resultJsonData: LottieJsonData | null,
     w: number,
     h: number,
-): Promise<Blob> {
+): Promise<ArrayBuffer> {
     const fps = jsonData.fr || 30
     const durationPerFrame = 1 / fps // 秒
 
     // 离屏 lottie 容器
     const container = document.createElement('div')
     container.style.cssText = `position:fixed;left:-9999px;top:-9999px;width:${w}px;height:${h}px;overflow:hidden`
-    document.body.appendChild(container)
 
     // 渲染 canvas — 同时用作 lottie 渲染目标和 CanvasSource 输入
     const canvas = document.createElement('canvas')
@@ -199,9 +176,10 @@ async function renderToWebm(
     const ctx = canvas.getContext('2d')!
 
     // Mediabunny Output → BufferTarget (内存)
+    const target = new BufferTarget()
     const output = new Output({
         format: new WebMOutputFormat(),
-        target: new BufferTarget(),
+        target,
     })
 
     // CanvasSource — VP9 编码，保留 alpha 透明通道
@@ -212,7 +190,6 @@ async function renderToWebm(
     })
 
     output.addVideoTrack(videoSource, { frameRate: fps })
-    await output.start()
 
     // 渲染一个 lottie 片段的全部帧
     function renderSegment(animData: LottieJsonData, frameOffset: number): Promise<void> {
@@ -222,7 +199,7 @@ async function renderToWebm(
                 renderer: 'svg',
                 loop: false,
                 autoplay: false,
-                animationData: animData,
+                animationData: structuredClone(animData),
             })
 
             anim.addEventListener('data_failed', () => {
@@ -251,7 +228,7 @@ async function renderToWebm(
                         await videoSource.add(timestamp, durationPerFrame)
 
                         if (f % 8 === 7) {
-                            await new Promise<void>((r) => setTimeout(r, 0))
+                            await waitForIdle()
                         }
                     }
 
@@ -266,6 +243,8 @@ async function renderToWebm(
     }
 
     try {
+        await output.start()
+        document.body.appendChild(container)
         const frames1Count = jsonData.op - jsonData.ip || jsonData.op
         await renderSegment(jsonData, 0)
 
@@ -276,13 +255,8 @@ async function renderToWebm(
         videoSource.close()
         await output.finalize()
 
-        try {
-            document.body.removeChild(container)
-        } catch {
-            /* already removed */
-        }
-
-        return new Blob([(output.target as BufferTarget).buffer!], { type: 'video/webm' })
+        if (!target.buffer?.byteLength) throw new Error('Empty Lottie WebM')
+        return target.buffer
     } catch (e) {
         try {
             videoSource.close()
@@ -294,12 +268,9 @@ async function renderToWebm(
         } catch {
             /* ignore */
         }
-        try {
-            document.body.removeChild(container)
-        } catch {
-            /* ignore */
-        }
         throw e
+    } finally {
+        container.remove()
     }
 }
 
@@ -307,40 +278,67 @@ async function renderToWebm(
 // Public: queue a background render
 // ---------------------------------------------------------------------------
 
-export function queueRender(
-    jsonPath: string,
-    resultPath: string | undefined,
+async function writeWebm(key: string, data: ArrayBuffer): Promise<string> {
+    const filePath = getWebmPath(key)
+    const tempPath = `${filePath}.${crypto.randomUUID()}.tmp`
+    await fs.promises.mkdir(getCacheDir(), { recursive: true })
+    try {
+        await fs.promises.writeFile(tempPath, new Uint8Array(data))
+        await fs.promises.rename(tempPath, filePath)
+    } catch (error) {
+        await fs.promises.unlink(tempPath).catch(() => undefined)
+        throw error
+    }
+    return pathToFileURL(filePath).href
+}
+
+async function runRender(
+    key: string,
     jsonData: LottieJsonData,
-    resultJsonData?: LottieJsonData | null,
-): void {
-    const key = getCacheKey(jsonData, resultJsonData)
-    if (pendingKeys.has(key) || hasCache(jsonData, resultJsonData)) {
-        console.log(LOG_TAG, 'Skip (already pending or cached):', path.basename(jsonPath))
-        return
+    resultJsonData: LottieJsonData | null,
+    callbacks: Set<RenderCompleteCallback>,
+): Promise<void> {
+    let url: string | null = null
+    try {
+        if (!callbacks.size) return
+        await waitForIdle()
+        if (!callbacks.size) return
+        url = await getCacheUrl(key)
+        if (!url && callbacks.size) {
+            const data = await renderToWebm(jsonData, resultJsonData, jsonData.w || 250, jsonData.h || 250)
+            url = await writeWebm(key, data)
+        }
+    } catch (error) {
+        console.error(LOG_TAG, 'Render failed:', key, error)
+    } finally {
+        renderListeners.delete(key)
     }
 
-    console.log(
-        LOG_TAG,
-        'Queued:',
-        path.basename(jsonPath),
-        `(${jsonData.w}x${jsonData.h}, ${jsonData.op - jsonData.ip} frames, ${jsonData.fr}fps)`,
-    )
-    pendingKeys.add(key)
-
-    renderChain = renderChain.then(async () => {
-        try {
-            const w = jsonData.w || 250
-            const h = jsonData.h || 250
-            const blob = await renderToWebm(jsonData, resultJsonData, w, h)
-            const buf = Buffer.from(await blob.arrayBuffer())
-            fs.writeFileSync(getWebmPath(key), buf)
-            console.log(LOG_TAG, 'Cached:', path.basename(jsonPath), `(${(buf.length / 1024).toFixed(1)} KB)`)
-            notifyByCacheKey(key)
-        } catch (err) {
-            console.error(LOG_TAG, 'Render failed:', path.basename(jsonPath), err)
-            notifyByCacheKey(key) // 清理 listeners，防止泄漏
-        } finally {
-            pendingKeys.delete(key)
+    if (url) {
+        for (const callback of callbacks) {
+            try {
+                callback(url)
+            } catch (error) {
+                console.error(LOG_TAG, 'Render callback failed:', error)
+            }
         }
-    })
+    }
+    callbacks.clear()
+}
+
+export function queueRender(
+    key: string,
+    jsonData: LottieJsonData,
+    resultJsonData: LottieJsonData | null,
+    onComplete: RenderCompleteCallback,
+): () => void {
+    const callbacks = renderListeners.get(key) || new Set<RenderCompleteCallback>()
+    if (!renderListeners.has(key)) {
+        renderListeners.set(key, callbacks)
+        renderChain = renderChain.then(() => runRender(key, jsonData, resultJsonData, callbacks))
+    }
+    callbacks.add(onComplete)
+    return () => {
+        callbacks.delete(onComplete)
+    }
 }
