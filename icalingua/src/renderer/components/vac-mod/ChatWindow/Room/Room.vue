@@ -859,21 +859,15 @@ export default {
                 this.scrollMessagesCount = 0
             }
         },
-        messages(newVal, oldVal) {
+        messages(newVal) {
             if (this.mouseSelecting) this.mouseSelectBounds = null
             const currentSnapshot = {
                 length: newVal ? newVal.length : 0,
                 firstId: newVal && newVal.length ? newVal[0]._id : null,
                 lastId: newVal && newVal.length ? newVal[newVal.length - 1]._id : null,
             }
-            const previousSnapshot =
-                oldVal === newVal
-                    ? this.messageListSnapshot
-                    : {
-                          length: oldVal ? oldVal.length : 0,
-                          firstId: oldVal && oldVal.length ? oldVal[0]._id : null,
-                          lastId: oldVal && oldVal.length ? oldVal[oldVal.length - 1]._id : null,
-                      }
+            // Vue can batch in-place appends and array replacements in the same update.
+            const previousSnapshot = this.messageListSnapshot
             this.messageListSnapshot = currentSnapshot
 
             const element = this.$refs.scrollContainer

@@ -181,6 +181,7 @@ import {
 import '../utils/themes'
 
 const NEARBY_MESSAGE_LOAD_LIMIT = 100
+const MAX_IN_PLACE_APPEND = 10_000
 
 export default {
     name: 'ChatWindowView',
@@ -202,6 +203,7 @@ export default {
             },
             storePath: '',
             messages: [],
+            messageIndex: new Map(),
             deferredIncomingMessages: [],
             deferredIncomingIds: new Set(),
             messageLoadGeneration: 0,
@@ -438,13 +440,21 @@ export default {
                 if (generation === this.messageLoadGeneration) this.loading = false
             }
         },
+        rebuildMessageIndex(messages = this.messages) {
+            const index = new Map()
+            for (let i = 0; i < messages.length; i++) {
+                const key = messageIdKey(messages[i]._id)
+                if (!index.has(key)) index.set(key, i)
+            }
+            this.messageIndex = index
+        },
         getMessageIndex(messageId) {
-            const key = messageIdKey(messageId)
-            return this.messages.findIndex((message) => messageIdKey(message._id) === key)
+            return this.messageIndex.get(messageIdKey(messageId)) ?? -1
         },
         setMessageList(messages) {
             const normalized = normalizeMessageList(messages || [])
             for (const message of normalized) message.__v_skip = true
+            this.rebuildMessageIndex(normalized)
             this.messages = normalized
         },
         mergeMessages(messages) {
@@ -455,8 +465,15 @@ export default {
             if (!newMessages.length) return
             const lastMessage = this.messages[this.messages.length - 1]
             if (!lastMessage || compareMessageOrder(lastMessage, newMessages[0]) <= 0) {
-                for (const message of newMessages) message.__v_skip = true
-                this.messages = [...this.messages, ...newMessages]
+                const start = this.messages.length
+                for (let i = 0; i < newMessages.length; i++) {
+                    const message = newMessages[i]
+                    message.__v_skip = true
+                    this.messageIndex.set(messageIdKey(message._id), start + i)
+                }
+                // A long backlog of deferred messages can exceed the argument limit for push.
+                if (newMessages.length > MAX_IN_PLACE_APPEND) this.messages = this.messages.concat(newMessages)
+                else this.messages.push(...newMessages)
                 return
             }
             this.setMessageList(mergeMessageLists(this.messages, messages))
@@ -580,7 +597,9 @@ export default {
                 if (roomId === this.roomId) {
                     const index = this.getMessageIndex(messageId)
                     if (index !== -1) {
-                        this.$set(this.messages, index, { ...this.messages[index], ...message })
+                        const updated = { ...this.messages[index], ...message }
+                        this.$set(this.messages, index, updated)
+                        if (messageIdKey(updated._id) !== messageIdKey(messageId)) this.rebuildMessageIndex()
                     } else if (message) {
                         this.updateDeferredIncomingMessage(messageId, (current) => ({ ...current, ...message }))
                     }
