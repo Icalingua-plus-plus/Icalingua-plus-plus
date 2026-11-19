@@ -590,36 +590,8 @@ export default class SQLStorageProvider implements StorageProvider {
         await this.searchIndex.open()
     }
 
-    private reportBackgroundSearchError(error: unknown): void {
-        try {
-            this.errorHandle(error)
-        } catch {
-            // A background FTS update must not reject the primary database write.
-        }
-    }
-
-    private runSearchIndexInBackground(operation: () => Promise<void>): void {
-        void Promise.resolve()
-            .then(operation)
-            .catch((error) => this.reportBackgroundSearchError(error))
-    }
-
-    private async syncSearchIndexAfterWrite(messages: SQLiteSearchMessage[]): Promise<void> {
-        if (this.legacyAtMigrationPromise) {
-            // The migration owns the expensive FTS work. Do not make an incoming
-            // message hold the primary writer queue until that work completes.
-            this.runSearchIndexInBackground(() => this.searchIndex.syncMessages(messages))
-            return
-        }
-        await this.searchIndex.syncMessages(messages)
-    }
-
-    private async requestSearchIndexRebuildAfterWrite(times: number[]): Promise<void> {
-        if (this.legacyAtMigrationPromise) {
-            this.runSearchIndexInBackground(() => this.searchIndex.requestRebuild(times))
-            return
-        }
-        await this.searchIndex.requestRebuild(times)
+    private async queueSearchIndex(messages: Message[]): Promise<void> {
+        if (messages.length) await this.searchIndex.requestRebuild(messages.map(({ time }) => Number(time || 0)))
     }
 
     private async migrateLegacyAtBatch(times: number[]): Promise<void> {
@@ -1141,7 +1113,7 @@ export default class SQLStorageProvider implements StorageProvider {
             const newMessages = await this.filterNewMessages([message])
             if (!newMessages.length) return
             await this.db<Message>('messages').insert(this.msgConToDB(newMessages[0], roomId)).onConflict().ignore()
-            await this.syncSearchIndexAfterWrite(newMessages)
+            await this.queueSearchIndex(newMessages)
         } catch (e) {
             this.errorHandle(e)
         }
@@ -1162,7 +1134,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 Number(current?.time || 0) !== Number(nextTime || 0)
             await this.db<Message>('messages').where('_id', '=', `${messageId}`).update(this.msgConToDB(message))
             if (searchContentChanged) {
-                await this.requestSearchIndexRebuildAfterWrite([Number(current?.time || 0), Number(nextTime || 0)])
+                await this.searchIndex.requestRebuild([Number(current?.time || 0), Number(nextTime || 0)])
             }
         } catch (e) {
             this.errorHandle(e)
@@ -1186,7 +1158,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 .where('_id', '=', `${messageId}`)
                 .update(this.msgConToDB(message, roomId))
             if (searchContentChanged) {
-                await this.requestSearchIndexRebuildAfterWrite([Number(current?.time || 0), Number(nextTime || 0)])
+                await this.searchIndex.requestRebuild([Number(current?.time || 0), Number(nextTime || 0)])
             }
         } catch (e) {
             this.errorHandle(e)
@@ -1501,7 +1473,7 @@ export default class SQLStorageProvider implements StorageProvider {
                 }
                 return candidates
             })
-            await this.syncSearchIndexAfterWrite(newMessages)
+            await this.queueSearchIndex(newMessages)
         } catch (e) {
             return e
         }

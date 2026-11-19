@@ -283,8 +283,8 @@ export default class RedisStorageProvider implements StorageProvider {
         return counts.reduce((total, count) => total + Number(count || 0), 0)
     }
 
-    private async syncSearchIndex(messages: Message[]): Promise<void> {
-        await this.searchIndex.syncMessages(messages)
+    private async queueSearchIndex(messages: Message[]): Promise<void> {
+        if (messages.length) await this.searchIndex.requestRebuild(messages.map(({ time }) => Number(time || 0)))
     }
 
     private async migrateLegacyAtBatch(times: number[]): Promise<boolean> {
@@ -383,7 +383,7 @@ export default class RedisStorageProvider implements StorageProvider {
         const insertedMessages = messages.filter(
             (_message, index) => !results[index]?.[0] && Number(results[index]?.[1]) === 1,
         )
-        await this.syncSearchIndex(insertedMessages)
+        await this.queueSearchIndex(insertedMessages)
         const failed = results.find(([error]) => Boolean(error))
         if (failed?.[0]) throw failed[0]
         return insertedMessages

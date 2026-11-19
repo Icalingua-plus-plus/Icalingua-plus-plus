@@ -400,7 +400,7 @@ test('complete time groups reuse syncMessages and fall back after a concurrent F
     }
 })
 
-test('content/time rebuilds keep the existing FTS snapshot searchable', async () => {
+test('FTS accepts later queue writes while rebuilding and keeps the existing snapshot searchable', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-search-online-rebuild-'))
     const filePath = path.join(directory, 'search.db')
     const messages: SQLiteSearchMessage[] = [
@@ -415,11 +415,16 @@ test('content/time rebuilds keep the existing FTS snapshot searchable', async ()
     const index = new SQLiteMessageSearchIndex(filePath, {
         loadTimes: async (afterTime, limit) => (afterTime < 600 ? [600].slice(0, limit) : []),
         loadMessagesByTimes: async (times) => {
+            const snapshot = messages
+                .filter((message) => times.includes(Number(message.time)))
+                .map((message) => ({
+                    ...message,
+                }))
             if (blockRebuild) {
                 rebuildStarted = true
                 await rebuildGate
             }
-            return messages.filter((message) => times.includes(Number(message.time)))
+            return snapshot
         },
         countMessages: async () => messages.length,
     })
@@ -440,17 +445,33 @@ test('content/time rebuilds keep the existing FTS snapshot searchable', async ()
         assert.equal(index.isRebuilding, false)
         assert.deepEqual(await index.searchTimes('old searchable', { limit: 20 }), [600])
 
+        messages[0].content = 'latest searchable content'
+        messages.push({ time: 700, content: 'latest searchable message', roomId: -1001, senderId: 2001 })
+        let enqueueTimeout: NodeJS.Timeout
+        try {
+            await Promise.race([
+                index.requestRebuild([600, 700]),
+                new Promise<never>((_, reject) => {
+                    enqueueTimeout = setTimeout(() => reject(new Error('FTS queue write waited for indexing')), 1000)
+                }),
+            ])
+        } finally {
+            clearTimeout(enqueueTimeout)
+        }
+
         releaseRebuild()
         for (let attempt = 0; attempt < 100; attempt++) {
-            const matches = await index.searchTimes('new searchable', { limit: 20 })
-            if (matches?.length === 1 && matches[0] === 600) break
+            const matches = await index.searchTimes('latest searchable', { limit: 20 })
+            if (matches?.length === 2) break
             await new Promise((resolve) => setTimeout(resolve, 5))
         }
-        assert.deepEqual(await index.searchTimes('new searchable', { limit: 20 }), [600])
+        assert.deepEqual(await index.searchTimes('latest searchable', { limit: 20 }), [700, 600])
+        assert.deepEqual(await index.searchTimes('new searchable', { limit: 20 }), [])
         assert.deepEqual(await index.searchTimes('old searchable', { limit: 20 }), [])
         assert.equal(index.isReady, true)
         assert.equal(index.isRebuilding, false)
     } finally {
+        releaseRebuild()
         await index.close()
         fs.rmSync(directory, { recursive: true, force: true })
     }

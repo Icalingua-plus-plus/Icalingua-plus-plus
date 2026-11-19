@@ -212,14 +212,9 @@ test('does not rebuild FTS when replacing a message only changes recall metadata
     }
 })
 
-test('does not wait for FTS synchronization while legacy At migration is active', async () => {
+test('ordinary SQLite writes only register pending FTS times, including during legacy At migration', async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'icalingua-sql-legacy-at-write-'))
-    let releaseSync: () => void = () => undefined
-    let syncStarted = false
-    let syncFinished = false
-    const syncBlock = new Promise<void>((resolve) => {
-        releaseSync = resolve
-    })
+    const queued: number[][] = []
     const factory: MessageSearchIndexFactory = (_filePath, _callbacks, _errorHandle) => {
         const index = {
             isReady: false,
@@ -229,11 +224,11 @@ test('does not wait for FTS synchronization while legacy At migration is active'
             async close() {},
             async validate() {},
             async syncMessages() {
-                syncStarted = true
-                await syncBlock
-                syncFinished = true
+                assert.fail('ordinary writes must use the pending queue')
             },
-            async requestRebuild() {},
+            async requestRebuild(times: number[]) {
+                queued.push(times)
+            },
             async searchTimes() {
                 return []
             },
@@ -263,16 +258,9 @@ test('does not wait for FTS synchronization while legacy At migration is active'
             content: 'message received during migration',
             files: [],
         } as any)
-        await new Promise<void>((resolve) => setImmediate(resolve))
-        assert.equal(syncStarted, true)
-        assert.equal(syncFinished, false)
+        assert.deepEqual(queued, [[100]])
         assert.ok(await provider.db('messages').where('_id', 'incoming-during-legacy-at-migration').first())
-
-        releaseSync()
-        await new Promise<void>((resolve) => setImmediate(resolve))
-        assert.equal(syncFinished, true)
     } finally {
-        releaseSync()
         await provider.close()
         fs.rmSync(directory, { recursive: true, force: true })
     }

@@ -558,8 +558,8 @@ export default class MongoStorageProvider implements StorageProvider {
         return counts.reduce((total, count) => total + Number(count || 0), 0)
     }
 
-    private async syncSearchIndex(messages: Message[]): Promise<void> {
-        await this.searchIndex.syncMessages(messages)
+    private async queueSearchIndex(messages: Message[]): Promise<void> {
+        if (messages.length) await this.searchIndex.requestRebuild(messages.map(({ time }) => Number(time || 0)))
     }
 
     private async migrateLegacyAtBatch(times: number[]): Promise<boolean> {
@@ -664,7 +664,7 @@ export default class MongoStorageProvider implements StorageProvider {
                 .collection('msg' + roomId)
                 .updateOne({ _id: message._id }, { $setOnInsert: fields }, { upsert: true })
             if (!result.upsertedCount) return
-            await this.syncSearchIndex([message])
+            await this.queueSearchIndex([message])
             return result
         } catch (error) {}
     }
@@ -1142,7 +1142,7 @@ export default class MongoStorageProvider implements StorageProvider {
             result = (error as any)?.result
         }
         const insertedMessages = Object.keys(result?.upsertedIds || {}).map((index) => messagesToInsert[Number(index)])
-        await this.syncSearchIndex(insertedMessages.filter(Boolean))
+        await this.queueSearchIndex(insertedMessages.filter(Boolean))
         return writeError || result
     }
 
