@@ -11,7 +11,7 @@ import BridgeVersionInfo from '@icalingua/types/BridgeVersionInfo'
 import DatabaseUpgradeProgress from '@icalingua/types/DatabaseUpgradeProgress'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
-import Message from '@icalingua/types/Message'
+import Message, { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import OnlineData from '@icalingua/types/OnlineData'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
@@ -268,31 +268,28 @@ const attachSocketEvents = () => {
     })
     socket.on('setOnline', ui.setOnline)
     socket.on('setOffline', ui.setOffline)
-    socket.on(
-        'onlineData',
-        async (data: { online: boolean; nick: string; uin: number; sysInfo: string; bkn: number }) => {
-            uin = data.uin
-            bkn = data.bkn
-            nickname = data.nick
-            cachedOnlineData = {
-                ...data,
-                priority: getConfig().priority,
-                serverInfo: data.sysInfo,
-                updateCheck: getConfig().updateCheck,
-            }
-            if (getConfig().bridgeLocalDatabaseSync) ensureLocalStorage(data.uin)
-            if (!loggedIn) {
-                loggedIn = true
-                await loadMainWindow()
-                await createTray()
-            }
-            if (getLoginWindow()) getLoginWindow().close()
-            adapter.sendOnlineData()
-            updateNoctaliaOnlineData(data.uin, data.nick)
-            await updateTrayIcon(true)
-            await updateAppMenu()
-        },
-    )
+    socket.on('onlineData', async (data: OnlineData & { sysInfo: string }) => {
+        uin = data.uin
+        bkn = data.bkn
+        nickname = data.nick
+        cachedOnlineData = {
+            ...data,
+            priority: getConfig().priority,
+            serverInfo: data.sysInfo,
+            updateCheck: getConfig().updateCheck,
+        }
+        if (getConfig().bridgeLocalDatabaseSync) ensureLocalStorage(data.uin)
+        if (!loggedIn) {
+            loggedIn = true
+            await loadMainWindow()
+            await createTray()
+        }
+        if (getLoginWindow()) getLoginWindow().close()
+        adapter.sendOnlineData()
+        updateNoctaliaOnlineData(data.uin, data.nick)
+        await updateTrayIcon(true)
+        await updateAppMenu()
+    })
     socket.on('setShutUp', ui.setShutUp)
     socket.on('message', ui.message)
     socket.on('messageError', ui.messageError)
@@ -1108,6 +1105,12 @@ const adapter: Adapter = {
     },
     renewMessageURL(roomId: number, messageId: string | number, URL: string) {
         socket.emit('renewMessageURL', roomId, messageId, URL)
+    },
+    canSetMessageReaction: () => cachedOnlineData?.canSetMessageReaction === true,
+    async setMessageReaction(request: MessageReactionRequest) {
+        if (!socket?.connected) throw new Error('Bridge 未连接')
+        const error: string | null = await socket.timeout(10000).emitWithAck('setMessageReaction', request)
+        if (error) throw new Error(error)
     },
     sendGroupPoke(gin: number, uin: number) {
         socket.emit('sendGroupPoke', gin, uin)

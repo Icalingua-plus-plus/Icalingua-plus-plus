@@ -1,5 +1,20 @@
 import type Message from '@icalingua/types/Message'
+import type { MessageReactionRequest } from '@icalingua/types/Message'
 import type StorageProvider from '@icalingua/types/StorageProvider'
+import type { Client } from 'oicq-icalingua-plus-plus'
+import { decodeMessageId } from './MessageId'
+
+export async function sendGroupReaction(bot: Pick<Client, 'setEmojiReaction'>, request: MessageReactionRequest) {
+    const { roomId, messageId, id, type, set } = request
+    const message = decodeMessageId(messageId)
+    if (message?.type !== 'group' || message.groupId !== -roomId || !message.messageSeq)
+        throw new Error('无法定位群消息')
+    if (typeof id !== 'string' || !id || (type !== 1 && type !== 2) || typeof set !== 'boolean')
+        throw new Error('无效的表情回应')
+
+    const result = await bot.setEmojiReaction(message.groupId, message.messageSeq, id, type, set)
+    if (result.error) throw new Error(result.error.message || '表情回应发送失败')
+}
 
 interface GroupReactionNotice {
     group_id: number

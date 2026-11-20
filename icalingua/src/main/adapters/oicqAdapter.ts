@@ -11,12 +11,13 @@ import {
     applyGroupReaction,
     enqueueGroupMessageUpdate,
     readGroupReactions,
+    sendGroupReaction,
 } from '@icalingua/storage-providers/MessageReactions'
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
 import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
-import Message from '@icalingua/types/Message'
+import Message, { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -1527,6 +1528,7 @@ const adapter: OicqAdapter = {
         }
         ui.sendOnlineData({
             online: bot.isOnline(),
+            canSetMessageReaction: true,
             nick: bot.nickname,
             uin: bot.uin,
             priority: getConfig().priority,
@@ -2143,6 +2145,9 @@ const adapter: OicqAdapter = {
     },
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
+    },
+    setMessageReaction(request: MessageReactionRequest) {
+        return sendGroupReaction(bot, request)
     },
     async sendGroupPoke(gin: number, uin: number) {
         const res = await bot.sendGroupPoke(gin, uin)

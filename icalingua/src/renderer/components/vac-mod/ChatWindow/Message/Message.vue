@@ -316,6 +316,8 @@
                         "
                         :reactions="message.emoji_reactions"
                         :align-end="message.senderId === currentUserId"
+                        :interactive="canReact"
+                        @toggle="$emit('toggle-reaction', $event)"
                     />
                     <div :class="{ vrButtons: true, self: message.senderId === currentUserId }" v-if="isSteamVrRunning">
                         <div v-if="message.content" @click="copy">
@@ -390,6 +392,7 @@ export default {
         currentUserId: { type: [String, Number], required: true },
         textMessages: { type: Object, required: true },
         message: { type: Object, required: true },
+        canReact: { type: Boolean, default: false },
         showDate: { type: Boolean, default: false },
         messageOffset: { type: Boolean, default: false },
         audioSession: { type: Object, default: null },

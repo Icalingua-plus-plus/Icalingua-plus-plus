@@ -1,7 +1,7 @@
 import type { FlashTransferRequest, FlashTransferResponse } from './FlashTransfer'
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
-import Message from './Message'
+import Message, { MessageReactionRequest } from './Message'
 import { FakeMessage, FileElem, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
 import Room from './Room'
 import IgnoreChatInfo from './IgnoreChatInfo'
@@ -106,6 +106,9 @@ export default interface Adapter {
     updateChatGroup(name: string, chatGroup: ChatGroup): any
 
     updateMessage(roomId: number, messageId: string, message: object): any
+
+    canSetMessageReaction?(): boolean
+    setMessageReaction?(request: MessageReactionRequest): Promise<void>
 
     sendGroupPoke(gin: number, uin: number): any
 

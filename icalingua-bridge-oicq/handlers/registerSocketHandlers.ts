@@ -9,6 +9,7 @@ import Message from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { Server, Socket } from 'socket.io'
+import type { MessageReactionRequest } from '@icalingua/types/Message'
 import type oicqAdapter from '../adapters/oicqAdapter'
 import gfsTokenManager from '../utils/gfsTokenManager'
 import sendImgTokenManager from '../utils/sendImgTokenManager'
@@ -137,6 +138,16 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('revealMessage', adapter.revealMessage)
     socket.on('renewMessage', adapter.renewMessage)
     socket.on('renewMessageURL', adapter.renewMessageURL)
+    socket.on('setMessageReaction', async (request: MessageReactionRequest, reply: (error: string | null) => void) => {
+        if (typeof reply !== 'function') return
+        try {
+            if (!adapter.setMessageReaction) throw new Error('当前 Bridge 适配器不支持表情回应')
+            await adapter.setMessageReaction(request)
+            reply(null)
+        } catch (error) {
+            reply(error instanceof Error ? error.message : String(error))
+        }
+    })
     socket.on('sendGroupPoke', adapter.sendGroupPoke)
     socket.on('sendGroupSign', adapter.sendGroupSign)
     socket.on('sendMessage', adapter.sendMessage)

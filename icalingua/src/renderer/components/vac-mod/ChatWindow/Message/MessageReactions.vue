@@ -1,10 +1,15 @@
 <template>
     <div class="vac-message-reactions" :class="{ 'vac-reactions-end': alignEnd }" aria-label="表情回应">
-        <span
+        <component
             v-for="reaction in visibleReactions"
+            :is="interactive ? 'button' : 'span'"
             :key="reaction.type + ':' + reaction.id"
             class="vac-reaction"
-            :class="{ 'vac-reaction-selected': reaction.is_clicked }"
+            :class="{ 'vac-reaction-selected': reaction.is_clicked, 'vac-reaction-button': interactive }"
+            :type="interactive ? 'button' : null"
+            :aria-pressed="interactive ? String(reaction.is_clicked) : null"
+            @click="interactive && $emit('toggle', reaction)"
+            @dblclick.stop
             :title="reaction.label + ' · ' + reaction.count + ' 人' + (reaction.is_clicked ? '（你也贴了）' : '')"
         >
             <img
@@ -16,48 +21,25 @@
             />
             <span v-else class="vac-reaction-emoji">{{ reaction.label }}</span>
             <span class="vac-reaction-count">{{ reaction.count }}</span>
-        </span>
+        </component>
     </div>
 </template>
 
 <script>
-import faceNames from '../../../../../../static/faceNames'
-
-const path = require('path')
-const faceLabels = new Map(faceNames.map(([name, id]) => [id, name]))
+import { describeReaction } from '@/utils/reactionEmoji'
 
 export default {
     name: 'MessageReactions',
     props: {
         reactions: { type: Array, required: true },
         alignEnd: { type: Boolean, default: false },
+        interactive: { type: Boolean, default: false },
     },
     computed: {
         visibleReactions() {
             return this.reactions
                 .filter(({ type, count }) => count > 0 && (type === 1 || type === 2))
-                .map((reaction) => {
-                    const { id, type } = reaction
-                    if (type === 1 && /^\d+$/.test(id)) {
-                        const face = String(Number(id)).padStart(3, '0')
-                        return {
-                            ...reaction,
-                            label: faceLabels.get(face) || 'QQ 表情 ' + id,
-                            url: 'file://' + path.join(__static, 'face', face),
-                        }
-                    }
-
-                    const code = Number(id)
-                    const label =
-                        type === 2 &&
-                        /^\d+$/.test(id) &&
-                        code > 0 &&
-                        code <= 0x10ffff &&
-                        (code < 0xd800 || code > 0xdfff)
-                            ? String.fromCodePoint(code)
-                            : id
-                    return { ...reaction, label }
-                })
+                .map((reaction) => ({ ...reaction, ...describeReaction(reaction.id, reaction.type) }))
         },
     },
 }
@@ -90,10 +72,27 @@ export default {
     user-select: none;
 }
 
+.vac-reaction-button {
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.vac-reaction-button:hover,
+.vac-reaction-button:focus-visible {
+    background: var(--chat-message-bg-color-reaction-hover, var(--chat-message-bg-color-reaction));
+    border: var(--chat-message-border-style-reaction-hover, var(--chat-message-border-style-reaction));
+}
+
 .vac-reaction-selected {
     border: var(--chat-message-border-style-reaction-me, 1px solid #409eff);
     background: var(--chat-message-bg-color-reaction-me, var(--chat-message-bg-color-me));
     color: var(--chat-message-color-reaction-counter-me, var(--chat-message-color));
+}
+
+.vac-reaction-button.vac-reaction-selected:hover,
+.vac-reaction-button.vac-reaction-selected:focus-visible {
+    background: var(--chat-message-bg-color-reaction-hover-me, var(--chat-message-bg-color-reaction-me));
+    border: var(--chat-message-border-style-reaction-hover-me, var(--chat-message-border-style-reaction-me));
 }
 
 .vac-reaction-face {
@@ -108,5 +107,6 @@ export default {
 
 .vac-reaction-count {
     font-variant-numeric: tabular-nums;
+    text-box: trim-both cap alphabetic;
 }
 </style>

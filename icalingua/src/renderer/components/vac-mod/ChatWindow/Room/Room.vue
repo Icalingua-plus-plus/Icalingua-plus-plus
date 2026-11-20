@@ -42,6 +42,16 @@
             </template>
         </room-header>
 
+        <MessageReactionPicker
+            v-if="reactionPickerMessage"
+            :key="reactionPicker.messageId + ':' + reactionPicker.x + ':' + reactionPicker.y"
+            :x="reactionPicker.x"
+            :y="reactionPicker.y"
+            :reactions="reactionPickerMessage.emoji_reactions"
+            @pick="pickMessageReaction"
+            @close="reactionPicker = null"
+        />
+
         <div ref="scrollContainer" class="vac-container-scroll" @scroll="containerScroll">
             <slot name="messages-top" />
             <loader :show="loadingMessages" />
@@ -138,6 +148,8 @@
                                 :usePanguJs="usePanguJsRecv"
                                 @open-file="openFile"
                                 @ctx="msgctx($event, m)"
+                                :can-react="canReactToMessage(m)"
+                                @toggle-reaction="toggleMessageReaction(m, $event)"
                                 @avatar-ctx="avatarCtx(m, $event)"
                                 @download-image="$emit('download-image', $event)"
                                 @open-image="openMessageImage"
@@ -581,6 +593,7 @@ import RoomMessageReply from './RoomMessageReply'
 import RoomForwardMessage from './RoomForwardMessage'
 import Message from '../Message/Message'
 import MessageAudio from '../Message/MessageAudio'
+import MessageReactionPicker from '../Message/MessageReactionPicker'
 import SearchInput from '../../../SearchInput'
 
 import faceNames from '../../../../../../static/faceNames'
@@ -621,6 +634,7 @@ export default {
         RoomForwardMessage,
         Message,
         MessageAudio,
+        MessageReactionPicker,
         SearchInput,
     },
     directives: {
@@ -673,6 +687,9 @@ export default {
         return {
             editedMessage: {},
             messageReply: null,
+            messageReactionsEnabled: false,
+            reactionPicker: null,
+            sendingReactions: new Set(),
             loadingMessages: false,
             loadingHeadMessages: false,
             loadingTailMessages: false,
@@ -761,6 +778,20 @@ export default {
         room() {
             return this.rooms.find((room) => room.roomId === this.roomId) || {}
         },
+        canReactInRoom() {
+            return (
+                this.messageReactionsEnabled &&
+                this.room.roomId < 0 &&
+                !this.forwardResId &&
+                this.$route.name !== 'history-page' &&
+                this.$route.name !== 'member-history-page'
+            )
+        },
+        reactionPickerMessage() {
+            if (!this.reactionPicker || this.reactionPicker.roomId !== this.room.roomId) return null
+            const message = this.findMessageById(this.reactionPicker.messageId)
+            return this.canReactToMessage(message) ? message : null
+        },
         hasValidRoom() {
             const roomId = Number(this.room.roomId)
             return Number.isFinite(roomId) && roomId !== 0 && Object.keys(this.room).length
@@ -845,6 +876,7 @@ export default {
             },
         },
         async room(newVal, oldVal) {
+            if (newVal.roomId !== oldVal.roomId) this.reactionPicker = null
             if (newVal.roomId && newVal.roomId !== oldVal.roomId) {
                 this.clearAudioSessions()
                 this.loadingMessages = true
@@ -1035,6 +1067,17 @@ export default {
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
         this.scheduleDateRefresh()
+        this.lifecycleScope.onIpc('openMessageReactionPicker', (_, target) => {
+            if (target.roomId === this.room.roomId && this.canReactToMessage(this.findMessageById(target.messageId))) {
+                this.reactionPicker = target
+            }
+        })
+        this.lifecycleScope.onIpc('gotOnlineData', (_, data) => {
+            this.messageReactionsEnabled = data.canSetMessageReaction === true
+        })
+        ipc.canSetMessageReaction().then((enabled) => {
+            this.messageReactionsEnabled = enabled
+        })
         const routeOptimizeMethod = this.$route.name === 'history-page' ? 'none' : null
         this.optimizeMethod = routeOptimizeMethod || (await ipc.getOptimizeMethodSetting())
         keyToSendMessage = await ipc.getKeyToSendMessage()
@@ -2486,6 +2529,31 @@ export default {
         textareaActionHandler() {
             this.$emit('textarea-action-handler', this.getMessageText())
         },
+        canReactToMessage(message) {
+            return this.canReactInRoom && !!message && !message.deleted && !message.hide && !message.system
+        },
+        pickMessageReaction(option) {
+            const message = this.reactionPickerMessage
+            this.reactionPicker = null
+            if (message) this.toggleMessageReaction(message, option)
+        },
+        async toggleMessageReaction(message, { id, type }) {
+            if (!this.canReactToMessage(message)) return
+            const roomId = this.room.roomId
+            const messageId = String(message._id)
+            const key = JSON.stringify([roomId, messageId, type, id])
+            if (this.sendingReactions.has(key)) return
+
+            const reaction = message.emoji_reactions?.find((item) => item.type === type && item.id === id)
+            this.sendingReactions.add(key)
+            try {
+                await ipc.setMessageReaction({ roomId, messageId, id, type, set: !reaction?.is_clicked })
+            } catch (error) {
+                this.$message.error(error.message)
+            } finally {
+                this.sendingReactions.delete(key)
+            }
+        },
         msgctx(e, message) {
             const _message = Object.assign({}, message)
             delete _message.__v_skip
@@ -2496,6 +2564,7 @@ export default {
                 _message,
                 sect,
                 this.$route.name === 'history-page' || this.$route.name === 'member-history-page',
+                this.canReactToMessage(message),
             )
         },
         avatarCtx(message, e) {

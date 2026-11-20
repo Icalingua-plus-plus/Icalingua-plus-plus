@@ -19,7 +19,7 @@ interface PrivateMessageIdParts {
 
 type MessageIdParts = GroupMessageIdParts | PrivateMessageIdParts
 
-const decodeMessageId = (messageId: unknown): MessageIdParts | null => {
+export const decodeMessageId = (messageId: unknown): MessageIdParts | null => {
     if (typeof messageId !== 'string') return null
     try {
         const buffer = Buffer.from(messageId, 'base64')

@@ -31,6 +31,14 @@ export interface MessageReaction {
     is_clicked: boolean
 }
 
+export interface MessageReactionRequest {
+    roomId: number
+    messageId: string
+    id: string
+    type: number
+    set: boolean
+}
+
 export default interface Message {
     _id: string | number
     /** Present when a message is returned from a cross-room query. */

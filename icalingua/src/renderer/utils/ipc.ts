@@ -9,7 +9,7 @@ import AllConfig from '@icalingua/types/AllConfig'
 import AtCacheItem from '@icalingua/types/AtCacheElem'
 import ChatGroup from '@icalingua/types/ChatGroup'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
-import Message from '@icalingua/types/Message'
+import Message, { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -244,6 +244,12 @@ const ipc = {
     openDownloadedFile(filePath: string) {
         ipcRenderer.send('openDownloadedFile', filePath)
     },
+    canSetMessageReaction(): Promise<boolean> {
+        return ipcRenderer.invoke('CanSetMessageReaction')
+    },
+    setMessageReaction(request: MessageReactionRequest): Promise<void> {
+        return ipcRenderer.invoke('SetMessageReaction', request)
+    },
     sendGroupPoke(gin: number, uin: number) {
         ipcRenderer.send('sendGroupPoke', gin, uin)
     },
@@ -292,8 +298,9 @@ const ipc = {
     popupGroupMemberMenu(e, remark?: string, name?: string, displayId?: number, groupContext?: GroupMenuContext) {
         ipcRenderer.send('popupGroupMemberMenu', { x: e.screenX, y: e.screenY }, remark, name, displayId, groupContext)
     },
-    popupMessageMenu(e, room: Room, message: Message, sect?: string, history?: boolean) {
-        ipcRenderer.send('popupMessageMenu', { x: e.screenX, y: e.screenY }, room, message, sect, history)
+    popupMessageMenu(e, room: Room, message: Message, sect?: string, history?: boolean, canReact?: boolean) {
+        const point = { x: e.screenX, y: e.screenY, clientX: e.clientX, clientY: e.clientY, canReact }
+        ipcRenderer.send('popupMessageMenu', point, room, message, sect, history)
     },
     addRoom(room: Room) {
         ipcRenderer.send('addRoom', room)

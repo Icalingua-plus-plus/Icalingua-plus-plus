@@ -6,6 +6,7 @@ import Cookies from '@icalingua/types/cookies'
 import GroupOfFriend from '@icalingua/types/GroupOfFriend'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
+import type { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
@@ -443,6 +444,13 @@ ipcMain.on('updateChatGroup', (_, name: string, chatGroup: ChatGroup) => adapter
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     adapter.updateMessage(roomId, messageId, message),
 )
+export const canSetMessageReaction = () => adapter.canSetMessageReaction?.() ?? !!adapter.setMessageReaction
+
+ipcMain.handle('CanSetMessageReaction', canSetMessageReaction)
+ipcMain.handle('SetMessageReaction', (_, request: MessageReactionRequest) => {
+    if (!canSetMessageReaction()) throw new Error('当前适配器不支持表情回应')
+    return adapter.setMessageReaction(request)
+})
 ipcMain.on('sendGroupPoke', (_, gin, uin) => adapter.sendGroupPoke(gin, uin))
 ipcMain.on('addRoom', (_, room) => adapter.addRoom(room))
 ipcMain.on('addChatGroup', (_, chatGroup) => adapter.addChatGroup(chatGroup))

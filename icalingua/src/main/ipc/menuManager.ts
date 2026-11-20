@@ -1,4 +1,5 @@
 import Message from '@icalingua/types/Message'
+import { decodeMessageId } from '@icalingua/storage-providers/MessageId'
 import OnlineStatusType from '@icalingua/types/OnlineStatusType'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
@@ -40,6 +41,7 @@ import {
     tryToShowMainWindow,
 } from '../utils/windowManager'
 import {
+    canSetMessageReaction,
     deleteMessage,
     fetchHistory,
     fetchLatestHistory,
@@ -1918,6 +1920,23 @@ ipcMain.on('popupMessageMenu', async (event, e, room: Room, message: Message, se
                     },
                 }),
             )
+        }
+        if (e.canReact && !history && canSetMessageReaction()) {
+            const target = decodeMessageId(message._id)
+            if (target?.type === 'group' && target.groupId === -room.roomId && target.messageSeq) {
+                menu.append(
+                    new MenuItem({
+                        label: '表情回应',
+                        click: () =>
+                            sendToWindow(win, 'openMessageReactionPicker', {
+                                roomId: room.roomId,
+                                messageId: message._id,
+                                x: e.clientX,
+                                y: e.clientY,
+                            }),
+                    }),
+                )
+            }
         }
         if (!history && !message.flash) {
             menu.append(

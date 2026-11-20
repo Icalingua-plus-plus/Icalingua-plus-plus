@@ -11,11 +11,13 @@ import {
     applyGroupReaction,
     enqueueGroupMessageUpdate,
     readGroupReactions,
+    sendGroupReaction,
 } from '@icalingua/storage-providers/MessageReactions'
 import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
-import Message from '@icalingua/types/Message'
+import type Adapter from '@icalingua/types/Adapter'
+import Message, { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
@@ -1905,6 +1907,9 @@ const adapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
+    setMessageReaction(request: MessageReactionRequest) {
+        return sendGroupReaction(bot, request)
+    },
     async sendGroupPoke(gin: number, uin: number) {
         const res = await bot.sendGroupPoke(gin, uin)
         if (res.error?.code === 1002) clients.messageError('对方已关闭头像双击功能')
@@ -2355,6 +2360,7 @@ const adapter = {
         clients.sendOnlineData(
             {
                 online: bot.isOnline(),
+                canSetMessageReaction: true,
                 nick: bot.nickname,
                 uin: bot.uin,
                 sysInfo: getSysInfo(),
@@ -2532,4 +2538,4 @@ const adapter = {
 
 const processMessage = createProcessMessage(adapter)
 
-export default adapter
+export default adapter as Omit<typeof adapter, 'setMessageReaction'> & Pick<Adapter, 'setMessageReaction'>

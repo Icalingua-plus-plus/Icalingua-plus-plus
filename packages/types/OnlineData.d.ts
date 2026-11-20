@@ -6,5 +6,6 @@ type OnlineData = {
     sysInfo?: string
     updateCheck?: 'ask' | boolean
     bkn?: number
+    canSetMessageReaction?: boolean
 }
 export default OnlineData
