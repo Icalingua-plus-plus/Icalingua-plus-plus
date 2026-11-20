@@ -9,6 +9,8 @@ import LoginForm from '@icalingua/types/LoginForm'
 import type { MessageReactionRequest } from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
+import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
+import { safeFavoriteUrl as safeImageUrl } from '../../utils/favoriteImageLink'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcMain, screen, shell } from 'electron'
 import getCharCount from '../../utils/getCharCount'
@@ -444,6 +446,21 @@ ipcMain.on('updateChatGroup', (_, name: string, chatGroup: ChatGroup) => adapter
 ipcMain.on('updateMessage', (_, roomId: number, messageId: string, message: object) =>
     adapter.updateMessage(roomId, messageId, message),
 )
+export const canSearchEmoticons = () => adapter.canSearchEmoticons()
+
+ipcMain.handle('SearchEmoticons', async (_, keyword: string, cursor = ''): Promise<StickerSearchPage> => {
+    if (!canSearchEmoticons()) throw new Error('当前适配器不支持表情搜索')
+    const page = await adapter.searchEmoticons(keyword, cursor)
+    return {
+        nextCursor: page.nextCursor,
+        items: page.items.flatMap(({ url, thumbnail }) => {
+            const preview = safeImageUrl(thumbnail)
+            const original = safeImageUrl(url) || preview
+            return original ? [{ url: original, thumbnail: preview || original }] : []
+        }),
+    }
+})
+
 export const canSetMessageReaction = () => adapter.canSetMessageReaction?.() ?? !!adapter.setMessageReaction
 
 ipcMain.handle('CanSetMessageReaction', canSetMessageReaction)

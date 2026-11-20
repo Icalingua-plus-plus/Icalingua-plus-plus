@@ -629,6 +629,10 @@ const adapter: Adapter = {
         return Promise.resolve([])
     },
 
+    canSearchEmoticons: () => false,
+    async searchEmoticons() {
+        throw new Error('只读模式不支持表情搜索')
+    },
     async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
         return { ok: false, error: '只读模式不支持 QQ 收藏管理，请连接 oicq 或 Bridge' }
     },

@@ -174,10 +174,12 @@
         <div class="emoji-panel" v-show="panel === 'emojis'">
             <VEmojiPicker @select="$emit('selectEmoji', $event)" />
         </div>
+        <StickerSearchDialog ref="stickerSearch" @send="$emit('send', $event)" />
     </div>
 </template>
 
 <script>
+import StickerSearchDialog from './StickerSearchDialog.vue'
 import { VEmojiPicker } from 'v-emoji-picker'
 import { shell } from 'electron'
 import ipc from '../utils/ipc'
@@ -230,7 +232,7 @@ const RECENTS = {
 
 export default {
     name: 'Stickers',
-    components: { VEmojiPicker },
+    components: { VEmojiPicker, StickerSearchDialog },
     computed: {
         stickerGridRows() {
             return this.stickerGridColumns > 0 ? Math.ceil(this.pics.length / this.stickerGridColumns) : 0
@@ -369,6 +371,9 @@ export default {
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
+        this.lifecycleScope.onIpc('openStickerSearch', () => {
+            this.$refs.stickerSearch?.open()
+        })
         this.DEFAULT_CATEGORY = DEFAULT_CATEGORY
         this.RECENT_CATEGORY = RECENT_CATEGORY
         this.face_dir = path.join(getStaticPath(), 'face/')

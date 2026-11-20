@@ -18,6 +18,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import SearchableFriend from '@icalingua/types/SearchableFriend'
 import SendMessageParams from '@icalingua/types/SendMessageParams'
+import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import axios from 'axios'
 import { app, dialog, Notification as ElectronNotification } from 'electron'
@@ -1105,6 +1106,16 @@ const adapter: Adapter = {
     },
     renewMessageURL(roomId: number, messageId: string | number, URL: string) {
         socket.emit('renewMessageURL', roomId, messageId, URL)
+    },
+    canSearchEmoticons: () => cachedOnlineData?.canSearchEmoticons === true,
+    async searchEmoticons(keyword: string, cursor = ''): Promise<StickerSearchPage> {
+        if (!socket?.connected) throw new Error('Bridge 未连接')
+        const page: StickerSearchPage | { error: string } = await socket
+            .timeout(10000)
+            .emitWithAck('searchEmoticons', keyword, cursor)
+        if (!page) throw new Error('Bridge 返回了无效的表情搜索结果')
+        if ('error' in page) throw new Error(page.error)
+        return page
     },
     canSetMessageReaction: () => cachedOnlineData?.canSetMessageReaction === true,
     async setMessageReaction(request: MessageReactionRequest) {

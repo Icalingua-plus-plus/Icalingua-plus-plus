@@ -41,6 +41,7 @@ import {
     tryToShowMainWindow,
 } from '../utils/windowManager'
 import {
+    canSearchEmoticons,
     canSetMessageReaction,
     deleteMessage,
     fetchHistory,
@@ -2131,6 +2132,9 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
             },
         },
     ]
+    if (canSearchEmoticons()) {
+        menu.unshift({ label: '搜索 QQ 在线表情', click: () => sendToWindow(win, 'openStickerSearch') })
+    }
     if (closePanel) {
         menu.push({
             label: '关闭面板',

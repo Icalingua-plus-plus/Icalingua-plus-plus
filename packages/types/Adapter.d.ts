@@ -1,3 +1,4 @@
+import type { StickerSearchPage } from './StickerSearch'
 import type { FlashTransferRequest, FlashTransferResponse } from './FlashTransfer'
 import SendMessageParams from './SendMessageParams'
 import LoginForm from './LoginForm'
@@ -106,6 +107,10 @@ export default interface Adapter {
     updateChatGroup(name: string, chatGroup: ChatGroup): any
 
     updateMessage(roomId: number, messageId: string, message: object): any
+
+    canSearchEmoticons(): boolean
+
+    searchEmoticons(keyword: string, cursor: string): Promise<StickerSearchPage>
 
     canSetMessageReaction?(): boolean
     setMessageReaction?(request: MessageReactionRequest): Promise<void>

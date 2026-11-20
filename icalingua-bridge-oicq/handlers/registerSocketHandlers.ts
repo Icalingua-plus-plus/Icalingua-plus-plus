@@ -7,6 +7,7 @@ import type {
 } from '@icalingua/types/FlashTransfer'
 import Message from '@icalingua/types/Message'
 import MessagePageOptions, { MessagePagination, MessageSearchPagination } from '@icalingua/types/MessagePage'
+import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { Server, Socket } from 'socket.io'
 import type { MessageReactionRequest } from '@icalingua/types/Message'
@@ -138,6 +139,17 @@ export default (io: Server, socket: Socket, adapter: typeof oicqAdapter) => {
     socket.on('revealMessage', adapter.revealMessage)
     socket.on('renewMessage', adapter.renewMessage)
     socket.on('renewMessageURL', adapter.renewMessageURL)
+    socket.on(
+        'searchEmoticons',
+        async (keyword: string, cursor: string, reply: (value: StickerSearchPage | { error: string }) => void) => {
+            if (typeof reply !== 'function') return
+            try {
+                reply(await adapter.searchEmoticons(keyword, cursor))
+            } catch (error) {
+                reply({ error: error instanceof Error ? error.message : String(error) })
+            }
+        },
+    )
     socket.on('setMessageReaction', async (request: MessageReactionRequest, reply: (error: string | null) => void) => {
         if (typeof reply !== 'function') return
         try {

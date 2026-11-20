@@ -2366,6 +2366,9 @@ const adapter: typeof oicqAdapter = {
         return { ok: false, error: '当前适配器不支持 QQ 闪传，请使用 oicq' }
     },
 
+    async searchEmoticons() {
+        throw new Error('当前 Bridge 适配器不支持表情搜索')
+    },
     async favoritesRequest(_request: FavoriteRequest): Promise<FavoriteResponse> {
         return { ok: false, error: '当前上游协议不支持 QQ 收藏管理，请使用 oicq 模式' }
     },

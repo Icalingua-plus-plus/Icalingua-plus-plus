@@ -26,6 +26,7 @@ import SendMessageParams from '@icalingua/types/SendMessageParams'
 import StorageProvider from '@icalingua/types/StorageProvider'
 import StructMessageCard from '@icalingua/types/StructMessageCard'
 import { faceIdToLottie } from '@icalingua/types/LottieFaceType'
+import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
 import { FavoriteRequest, FavoriteResponse, FavoriteProtocolClient } from '@icalingua/types/Favorites'
 import fs from 'fs'
 import crypto from 'crypto'
@@ -1933,6 +1934,17 @@ const adapter = {
     updateMessage(roomId: number, messageId: string, message: object) {
         return storage.updateMessage(roomId, messageId, message)
     },
+    async searchEmoticons(keyword: string, cursor: string): Promise<StickerSearchPage> {
+        const response = await bot.searchEmoticons(keyword, {
+            session_info: cursor ? Buffer.from(cursor, 'base64') : undefined,
+        })
+        if (response.status !== 'ok') throw new Error(response.error?.message || '搜索表情失败')
+        const page = response.data
+        return {
+            items: page.items.map(({ image, thumbnail }) => ({ url: image.url, thumbnail: thumbnail.url })),
+            nextCursor: page.has_more ? page.session_info.toString('base64') : '',
+        }
+    },
     setMessageReaction(request: MessageReactionRequest) {
         return sendGroupReaction(bot, request)
     },
@@ -2386,6 +2398,7 @@ const adapter = {
         clients.sendOnlineData(
             {
                 online: bot.isOnline(),
+                canSearchEmoticons: typeof bot.searchEmoticons === 'function',
                 canSetMessageReaction: true,
                 nick: bot.nickname,
                 uin: bot.uin,

@@ -15,6 +15,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
+import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcRenderer, webUtils } from 'electron'
 import { FakeMessage, FriendInfo, GroupInfo, MemberInfo } from 'oicq-icalingua-plus-plus'
@@ -243,6 +244,12 @@ const ipc = {
     },
     openDownloadedFile(filePath: string) {
         ipcRenderer.send('openDownloadedFile', filePath)
+    },
+    searchEmoticons(keyword: string, cursor?: string): Promise<StickerSearchPage> {
+        return ipcRenderer.invoke('SearchEmoticons', keyword, cursor)
+    },
+    saveSticker(url: string) {
+        ipcRenderer.send('saveSticker', url)
     },
     canSetMessageReaction(): Promise<boolean> {
         return ipcRenderer.invoke('CanSetMessageReaction')
