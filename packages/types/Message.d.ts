@@ -24,6 +24,13 @@ export interface MessageButton {
 
 export type MessageButtonRow = MessageButton[]
 
+export interface MessageReaction {
+    id: string
+    type: number
+    count: number
+    is_clicked: boolean
+}
+
 export default interface Message {
     _id: string | number
     /** Present when a message is returned from a cross-room query. */
@@ -37,6 +44,7 @@ export default interface Message {
     markdown?: boolean
     /** Parsed QQ Markdown button rows. */
     button_rows?: MessageButtonRow[]
+    emoji_reactions?: MessageReaction[]
     code?: string
     timestamp?: string
     date?: string

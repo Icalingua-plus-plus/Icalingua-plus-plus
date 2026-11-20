@@ -7,6 +7,11 @@ import { flashTransferRequest as runFlashTransferRequest } from '../utils/flashT
 import MongoStorageProvider from '@icalingua/storage-providers/MongoStorageProvider'
 import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvider'
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
+import {
+    applyGroupReaction,
+    enqueueGroupMessageUpdate,
+    readGroupReactions,
+} from '@icalingua/storage-providers/MessageReactions'
 import BilibiliMiniApp from '@icalingua/types/BilibiliMiniApp'
 import IgnoreChatInfo from '@icalingua/types/IgnoreChatInfo'
 import LoginForm from '@icalingua/types/LoginForm'
@@ -151,6 +156,7 @@ const eventHandlers = {
             timestamp: formatDate('hh:mm:ss', now),
             date: formatDate('yyyy/MM/dd', now),
             _id: data.message_id,
+            ...readGroupReactions(data),
             role: (data.sender as MemberBaseInfo).role,
             title: groupId && (<GroupMessageEventData>data).anonymous ? '匿名' : (data.sender as MemberBaseInfo).title,
             files: [],
@@ -199,6 +205,7 @@ const eventHandlers = {
             const regetMsg = await adapter.getMsg(data.message_id)
             if (!regetMsg.error && regetMsg.data) {
                 message.content = ''
+                Object.assign(message, readGroupReactions(regetMsg.data))
                 await processMessage(regetMsg.data.message, message, lastMessage, roomId)
             }
         }
@@ -250,7 +257,8 @@ const eventHandlers = {
         clients.addMessage(room.roomId, message)
         await storage.updateRoom(roomId, room)
         clients.updateRoom(room)
-        storage.addMessage(roomId, message)
+        const saveMessage = storage.addMessage(roomId, message)
+        if ('group_id' in data) await saveMessage
         if (config.custom && data.post_type === 'message') {
             try {
                 require('../custom').onMessage(data, bot, { storage, ui: clients })
@@ -999,10 +1007,21 @@ const initStorage = async () => {
     }
 }
 const attachEventHandler = () => {
-    bot.on('message', eventHandlers.onQQMessage)
+    bot.on('message', (data) => {
+        const work =
+            'group_id' in data && data.group_id && data.seqid
+                ? enqueueGroupMessageUpdate(storage, data.group_id, data.seqid, () => eventHandlers.onQQMessage(data))
+                : eventHandlers.onQQMessage(data)
+        work.catch((error) => console.error(error))
+    })
     bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
     bot.on('notice.group.recall', eventHandlers.groupRecall)
+    bot.on('notice.group.reaction', (event) => {
+        applyGroupReaction(storage, bot.uin, event, clients.renewMessage, (id) => bot.getMsg(id)).catch((error) =>
+            console.error(error),
+        )
+    })
     bot.on('system.online', eventHandlers.online)
     bot.on('system.offline', eventHandlers.onOffline)
     bot.on('notice.friend.poke', eventHandlers.friendPoke)
@@ -2044,6 +2063,7 @@ const adapter = {
                 timestamp: message.timestamp,
                 date: message.date,
                 _id: messageId,
+                ...readGroupReactions(data),
                 time: message.time,
                 role: message.role,
                 title: message.title,
@@ -2126,6 +2146,7 @@ const adapter = {
                     timestamp: formatDate('hh:mm:ss', new Date(data.time * 1000)),
                     date: formatDate('yyyy/MM/dd', new Date(data.time * 1000)),
                     _id: data.message_id,
+                    ...readGroupReactions(data),
                     time: data.time * 1000,
                     role: (data.sender as MemberBaseInfo).role,
                     title:

@@ -307,6 +307,16 @@
                             <span>{{ formattedTimestamp }}</span>
                         </div>
                     </div>
+                    <MessageReactions
+                        v-if="
+                            !message.deleted &&
+                            !message.hide &&
+                            message.emoji_reactions &&
+                            message.emoji_reactions.length
+                        "
+                        :reactions="message.emoji_reactions"
+                        :align-end="message.senderId === currentUserId"
+                    />
                     <div :class="{ vrButtons: true, self: message.senderId === currentUserId }" v-if="isSteamVrRunning">
                         <div v-if="message.content" @click="copy">
                             <img
@@ -341,6 +351,7 @@ import SvgIcon from '../../components/SvgIcon'
 import FormatMessage from '../../components/FormatMessage'
 
 import MessageReply from './MessageReply'
+import MessageReactions from './MessageReactions'
 import MessageImage from './MessageImage'
 import MessageVideo from './MessageVideo'
 import MessageAudio from './MessageAudio'
@@ -366,6 +377,7 @@ export default {
         SvgIcon,
         FormatMessage,
         MessageReply,
+        MessageReactions,
         MessageImage,
         MessageAudio,
         MessageVideo,

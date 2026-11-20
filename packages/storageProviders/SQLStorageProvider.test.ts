@@ -374,7 +374,7 @@ test('does not auto-migrate legacy At messages and supports manual migration', a
         const metadata = await provider.db('dbMetadata').where('name', 'messageAtMarkupVersion').first()
 
         const version = await provider.db('dbVersion').first()
-        assert.equal(Number(version?.dbVersion), 25)
+        assert.equal(Number(version?.dbVersion), 26)
         assert.equal(metadata?.value, '1')
         const migratedMessageCount = await provider.db('messages').where('time', 100).count({ count: '*' }).first()
         assert.equal(Number(migratedMessageCount?.count), 601)

@@ -60,8 +60,10 @@ import upg21to22 from './SQLUpgradeScript/21to22'
 import upg22to23 from './SQLUpgradeScript/22to23'
 import upg23to24 from './SQLUpgradeScript/23to24'
 import upg24to25 from './SQLUpgradeScript/24to25'
+import upg25to26 from './SQLUpgradeScript/25to26'
 
-const dbVersionLatest = 25
+const dbVersionLatest = 26
+const messageJsonFields = ['file', 'files', 'replyMessage', 'at', 'mirai', 'button_rows', 'emoji_reactions'] as const
 
 const normalizeRoomId = (roomId: unknown): string => {
     const value = String(roomId || 0) || '0'
@@ -299,7 +301,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     converted.senderId = `${message.senderId}`
                 }
                 if (message._id !== undefined && message._id !== null) converted._id = `${message._id}`
-                for (const field of ['file', 'files', 'replyMessage', 'at', 'mirai', 'button_rows'] as const) {
+                for (const field of messageJsonFields) {
                     if (!Object.prototype.hasOwnProperty.call(message, field)) continue
                     if (message[field] === undefined) delete converted[field]
                     else converted[field] = JSON.stringify(message[field])
@@ -348,6 +350,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     at: JSON.parse(message.at),
                     mirai: JSON.parse(message.mirai),
                     button_rows: JSON.parse(message.button_rows),
+                    emoji_reactions: message.emoji_reactions == null ? undefined : JSON.parse(message.emoji_reactions),
                     markdown: !!message.markdown,
                 } as Message
             }
@@ -497,6 +500,9 @@ export default class SQLStorageProvider implements StorageProvider {
                 case 24:
                     report('升级数据库 v24 → v25')
                     await upg24to25(this.db)
+                case 25:
+                    report('升级数据库 v25 → v26')
+                    await upg25to26(this.db)
                 default:
                     break
             }
@@ -773,6 +779,7 @@ export default class SQLStorageProvider implements StorageProvider {
                     table.string('recallInfo').nullable()
                     table.boolean('markdown').nullable()
                     table.text('button_rows').nullable()
+                    table.text('emoji_reactions').nullable()
                     table.index(['roomId', 'time'])
                     table.index(['senderId', 'roomId', 'time'])
                     //table.index(['subid', 'time'])

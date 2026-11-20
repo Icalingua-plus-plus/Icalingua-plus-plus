@@ -715,7 +715,7 @@ export default class MongoStorageProvider implements StorageProvider {
             const searchContentChanged =
                 String(current.content || '') !== String(merged.content || '') ||
                 Number(current.time || 0) !== Number(merged.time || 0)
-            const { _id, ...fields } = merged as any
+            const { _id, ...fields } = message
             const result = await collection.updateOne({ _id: current._id }, { $set: fields })
             if (searchContentChanged) {
                 await this.searchIndex.requestRebuild([Number(current.time || 0), Number(merged.time || 0)])
