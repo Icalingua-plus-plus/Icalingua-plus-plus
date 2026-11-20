@@ -270,6 +270,27 @@ const eventHandlers = {
             }
         }
     },
+    async onQQMessageRefresh(data: Omit<PrivateMessageEventData, 'reply'>) {
+        const roomId = data.user_id
+        if (await storage.isChatIgnored(roomId)) return
+        const existing = await storage.getMessage(roomId, data.message_id)
+        if (!existing) return
+
+        const messageId = String(existing._id)
+        const message: Message = {
+            ...existing,
+            content: '',
+            markdown: false,
+            files: [],
+            file: null,
+            button_rows: [],
+        }
+        await processMessage(data.message, message, {}, roomId)
+        const { content, markdown, files, file, button_rows } = message
+        const patch = { content, markdown, files, file, button_rows }
+        await storage.updateMessage(roomId, messageId, patch)
+        clients.renewMessage(roomId, messageId, patch)
+    },
     friendRecall(data: FriendRecallEventData) {
         const recallInfo = {
             time: Date.now(),
@@ -1015,6 +1036,9 @@ const attachEventHandler = () => {
                 ? enqueueGroupMessageUpdate(storage, data.group_id, data.seqid, () => eventHandlers.onQQMessage(data))
                 : eventHandlers.onQQMessage(data)
         work.catch((error) => console.error(error))
+    })
+    bot.on('notice.friend.message_refresh', ({ message }: { message: Omit<PrivateMessageEventData, 'reply'> }) => {
+        eventHandlers.onQQMessageRefresh(message).catch((error) => console.error(error))
     })
     bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
