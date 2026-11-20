@@ -28,6 +28,8 @@ interface GroupReactionNotice {
 }
 
 const pendingUpdates = new WeakMap<StorageProvider, Map<string, Promise<void>>>()
+const messageSaveWaiters = new WeakMap<StorageProvider, Map<string, () => void>>()
+const reactionMessageWaitMs = 30000
 
 export function readGroupReactions(data: object): Pick<Message, 'emoji_reactions'> {
     const group = data as { group_id?: number; emoji_reactions?: Message['emoji_reactions'] }
@@ -37,19 +39,55 @@ export function readGroupReactions(data: object): Pick<Message, 'emoji_reactions
     }
 }
 
-export function enqueueGroupMessageUpdate(
+export function notifyGroupMessageSave(
     storage: StorageProvider,
     groupId: number,
     seq: number,
-    update: () => Promise<void>,
-): Promise<void> {
+    write: Promise<unknown>,
+) {
+    return write.finally(() => messageSaveWaiters.get(storage)?.get(`${groupId}:${seq}`)?.())
+}
+
+async function getReactionMessage(
+    storage: StorageProvider,
+    roomId: number,
+    key: string,
+    messageId: string,
+    deadline: number,
+) {
+    let waiters = messageSaveWaiters.get(storage)
+    if (!waiters) {
+        waiters = new Map()
+        messageSaveWaiters.set(storage, waiters)
+    }
+    let wake: () => void
+    const saved = new Promise<void>((resolve) => {
+        wake = resolve
+    })
+    // Register before reading so a save that finishes during the lookup still wakes this reaction.
+    waiters.set(key, wake)
+    let timer: NodeJS.Timeout
+    try {
+        const message = await storage.getMessage(roomId, messageId)
+        const remaining = deadline - Date.now()
+        if (message || remaining <= 0) return message
+
+        timer = setTimeout(wake, remaining).unref()
+        await saved
+        return await storage.getMessage(roomId, messageId)
+    } finally {
+        clearTimeout(timer)
+        waiters.delete(key)
+    }
+}
+
+function enqueueReactionUpdate(storage: StorageProvider, key: string, update: () => Promise<void>): Promise<void> {
     let updates = pendingUpdates.get(storage)
     if (!updates) {
         updates = new Map()
         pendingUpdates.set(storage, updates)
     }
 
-    const key = `${groupId}:${seq}`
     const previous = updates.get(key) ?? Promise.resolve()
     const next = previous
         .catch(() => {})
@@ -70,7 +108,9 @@ export function applyGroupReaction(
 ): Promise<void> {
     if (event.type !== 1 && event.type !== 2) return Promise.resolve()
 
-    return enqueueGroupMessageUpdate(storage, event.group_id, event.seq, async () => {
+    const key = `${event.group_id}:${event.seq}`
+    const deadline = Date.now() + reactionMessageWaitMs
+    return enqueueReactionUpdate(storage, key, async () => {
         const roomId = -event.group_id
         let messageId = event.message_id
         if (!messageId) {
@@ -83,7 +123,7 @@ export function applyGroupReaction(
             if (data?.group_id !== event.group_id || data.seqid !== event.seq) return
             messageId = data.message_id
         }
-        const message = await storage.getMessage(roomId, messageId)
+        const message = await getReactionMessage(storage, roomId, key, messageId, deadline)
         if (!message || message.deleted) return
 
         const reactions = [...(message.emoji_reactions ?? [])]

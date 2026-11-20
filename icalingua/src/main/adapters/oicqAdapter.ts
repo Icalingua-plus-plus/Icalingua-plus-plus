@@ -9,7 +9,7 @@ import RedisStorageProvider from '@icalingua/storage-providers/RedisStorageProvi
 import SQLStorageProvider from '@icalingua/storage-providers/SQLStorageProvider'
 import {
     applyGroupReaction,
-    enqueueGroupMessageUpdate,
+    notifyGroupMessageSave,
     readGroupReactions,
     sendGroupReaction,
 } from '@icalingua/storage-providers/MessageReactions'
@@ -383,7 +383,10 @@ const eventHandlers = {
         ui.addMessage(room.roomId, message)
         ui.updateRoom(room)
         const saveMessage = storage.addMessage(roomId, message)
-        if ('group_id' in data) await saveMessage
+        if ('group_id' in data && data.group_id && data.seqid)
+            notifyGroupMessageSave(storage, data.group_id, data.seqid, saveMessage).catch((error) =>
+                errorHandler(error, true),
+            )
         await storage.updateRoom(roomId, room)
         if (getConfig().custom && data.post_type === 'message') {
             const custom_path = path.join(app.getPath('userData'), 'custom')
@@ -1262,13 +1265,7 @@ const initStorage = async () => {
     }
 }
 const attachEventHandler = () => {
-    bot.on('message', (data) => {
-        const work =
-            'group_id' in data && data.group_id && data.seqid
-                ? enqueueGroupMessageUpdate(storage, data.group_id, data.seqid, () => eventHandlers.onQQMessage(data))
-                : eventHandlers.onQQMessage(data)
-        work.catch((error) => errorHandler(error, true))
-    })
+    bot.on('message', eventHandlers.onQQMessage)
     bot.on('notice.friend.message_refresh', ({ message }: { message: Omit<PrivateMessageEventData, 'reply'> }) => {
         eventHandlers.onQQMessageRefresh(message).catch((error) => errorHandler(error, true))
     })
