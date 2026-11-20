@@ -2077,6 +2077,21 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
     const pos = { x: e.x - bounds.x, y: e.y - bounds.y }
     const menu: Electron.MenuItemConstructorOptions[] = [
         {
+            label: 'QQ 商城表情包',
+            type: 'normal',
+            click() {
+                sendToWindow(win, 'openMarketEmoticons')
+            },
+        },
+        {
+            label: '搜索 QQ 在线表情',
+            type: 'normal',
+            visible: canSearchEmoticons(),
+            click() {
+                sendToWindow(win, 'openStickerSearch')
+            },
+        },
+        {
             label: '打开 Stickers 目录',
             type: 'normal',
             click() {
@@ -2132,9 +2147,6 @@ ipcMain.on('popupStickerMenu', (event, closePanel, e) => {
             },
         },
     ]
-    if (canSearchEmoticons()) {
-        menu.unshift({ label: '搜索 QQ 在线表情', click: () => sendToWindow(win, 'openStickerSearch') })
-    }
     if (closePanel) {
         menu.push({
             label: '关闭面板',

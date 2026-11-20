@@ -5,6 +5,7 @@ import path from 'path'
 import querystring from 'querystring'
 import getStaticPath from '../../utils/getStaticPath'
 import ui from '../utils/ui'
+import { getStickerGroups, getStickersDir } from '../utils/stickerGroups'
 import md5 from 'md5'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
 import { getMainWindowScreen } from '../utils/windowManager'
@@ -136,21 +137,8 @@ ipcMain.on('openImage', (e, url: string, external: boolean = false, urlList: Arr
 )
 ipcMain.on('saveSticker', async (e, url: string) => {
     const { Menu } = require('electron') as typeof import('electron')
-    const fs = require('fs') as typeof import('fs')
-    const stickersDir = path.join(app.getPath('userData'), 'stickers')
-    let subdirs: string[] = []
-    try {
-        subdirs = fs
-            .readdirSync(stickersDir)
-            .filter((i: string) => {
-                try {
-                    return fs.statSync(path.join(stickersDir, i)).isDirectory()
-                } catch {
-                    return false
-                }
-            })
-            .sort()
-    } catch {}
+    const stickersDir = getStickersDir()
+    const subdirs = getStickerGroups()
     const items: Electron.MenuItemConstructorOptions[] = [
         {
             label: '默认',

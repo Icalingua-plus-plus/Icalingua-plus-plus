@@ -1,3 +1,4 @@
+import { registerMarketEmoticonIpc } from './marketEmoticons'
 import { registerFavoriteMediaIpc } from './favoriteMedia'
 import { registerFlashTransferIpc } from './flashTransfer'
 import Adapter, { CookiesDomain } from '@icalingua/types/Adapter'
@@ -599,3 +600,4 @@ ipcMain.on('clearChatWindowUnread', async (_, roomId: number) => {
 
 registerFlashTransferIpc(adapter)
 registerFavoriteMediaIpc(adapter)
+registerMarketEmoticonIpc(adapter)

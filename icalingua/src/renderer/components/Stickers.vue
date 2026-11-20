@@ -174,11 +174,13 @@
         <div class="emoji-panel" v-show="panel === 'emojis'">
             <VEmojiPicker @select="$emit('selectEmoji', $event)" />
         </div>
+        <MarketEmoticonDialog ref="marketEmoticons" @send="$emit('send', $event)" />
         <StickerSearchDialog ref="stickerSearch" @send="$emit('send', $event)" />
     </div>
 </template>
 
 <script>
+import MarketEmoticonDialog from './MarketEmoticonDialog.vue'
 import StickerSearchDialog from './StickerSearchDialog.vue'
 import { VEmojiPicker } from 'v-emoji-picker'
 import { shell } from 'electron'
@@ -232,7 +234,7 @@ const RECENTS = {
 
 export default {
     name: 'Stickers',
-    components: { VEmojiPicker, StickerSearchDialog },
+    components: { VEmojiPicker, StickerSearchDialog, MarketEmoticonDialog },
     computed: {
         stickerGridRows() {
             return this.stickerGridColumns > 0 ? Math.ceil(this.pics.length / this.stickerGridColumns) : 0
@@ -371,6 +373,9 @@ export default {
     },
     async created() {
         this.lifecycleScope = createRendererLifecycleScope()
+        this.lifecycleScope.onIpc('openMarketEmoticons', () => {
+            this.$refs.marketEmoticons?.open()
+        })
         this.lifecycleScope.onIpc('openStickerSearch', () => {
             this.$refs.stickerSearch?.open()
         })

@@ -15,6 +15,7 @@ import RoamingStamp from '@icalingua/types/RoamingStamp'
 import Room from '@icalingua/types/Room'
 import GroupMenuContext from '@icalingua/types/GroupMenuContext'
 import SearchableGroup from '@icalingua/types/SearchableGroup'
+import type { MarketEmoticonPack, MarketEmoticonSearchPage } from '@icalingua/types/MarketEmoticon'
 import type { StickerSearchPage } from '@icalingua/types/StickerSearch'
 import { FavoriteRequest, FavoriteResponse } from '@icalingua/types/Favorites'
 import { ipcRenderer, webUtils } from 'electron'
@@ -244,6 +245,18 @@ const ipc = {
     },
     openDownloadedFile(filePath: string) {
         ipcRenderer.send('openDownloadedFile', filePath)
+    },
+    searchMarketEmoticons(keyword: string, cursor: string): Promise<MarketEmoticonSearchPage> {
+        return ipcRenderer.invoke('SearchMarketEmoticons', keyword, cursor)
+    },
+    getMarketEmoticonPack(id: number, type = 3): Promise<MarketEmoticonPack | null> {
+        return ipcRenderer.invoke('GetMarketEmoticonPack', id, type)
+    },
+    getStickerGroups(): Promise<string[]> {
+        return ipcRenderer.invoke('GetStickerGroups')
+    },
+    saveMarketEmoticonPack(id: number, type: number, group: string): Promise<{ total: number; failed: number }> {
+        return ipcRenderer.invoke('SaveMarketEmoticonPack', id, type, group)
     },
     searchEmoticons(keyword: string, cursor?: string): Promise<StickerSearchPage> {
         return ipcRenderer.invoke('SearchEmoticons', keyword, cursor)

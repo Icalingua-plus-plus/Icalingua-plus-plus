@@ -22,7 +22,7 @@
         <div v-show="keyword" ref="results" class="search-results" @scroll.passive="onScroll">
             <div v-if="items.length" class="search-grid">
                 <div v-for="(item, index) in items" :key="index" class="search-item">
-                    <img :src="item.thumbnail" :alt="keyword" loading="lazy" />
+                    <img :src="item.thumbnail" :alt="keyword" loading="lazy" @click="preview(item.url)" />
                     <div class="search-actions">
                         <el-button type="text" size="mini" @click="save(item.url)">保存</el-button>
                         <el-button type="text" size="mini" @click="send(item.url)">发送</el-button>
@@ -112,6 +112,13 @@ export default Vue.extend({
             if (this.cursor && !this.error && results.scrollHeight - results.scrollTop - results.clientHeight < 32)
                 void this.loadPage()
         },
+        preview(url: string) {
+            ipc.openImage(
+                url,
+                false,
+                this.items.map((item) => item.url),
+            )
+        },
         save: ipc.saveSticker,
         send(url: string) {
             if (!this.visible) return
@@ -145,6 +152,7 @@ export default Vue.extend({
         display: block;
         width: 100%;
         height: 80px;
+        cursor: pointer;
         object-fit: contain;
     }
 }
