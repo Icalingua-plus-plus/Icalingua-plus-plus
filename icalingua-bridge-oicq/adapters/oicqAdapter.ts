@@ -39,6 +39,7 @@ import {
     FriendIncreaseEventData,
     FriendInfo,
     FriendPokeEventData,
+    FriendMessageRefreshEventData,
     FriendRecallEventData,
     GroupAddEventData,
     GroupAdminEventData,
@@ -48,6 +49,7 @@ import {
     GroupMessageEventData,
     GroupMuteEventData,
     GroupPokeEventData,
+    GroupReactionEventData,
     GroupRecallEventData,
     GroupSettingEventData,
     GroupSignEventData,
@@ -273,26 +275,30 @@ const eventHandlers = {
             }
         }
     },
-    async onQQMessageRefresh(data: Omit<PrivateMessageEventData, 'reply'>) {
-        const roomId = data.user_id
-        if (await storage.isChatIgnored(roomId)) return
-        const existing = await storage.getMessage(roomId, data.message_id)
-        if (!existing) return
+    async onQQMessageRefresh({ message: data }: FriendMessageRefreshEventData) {
+        try {
+            const roomId = data.user_id
+            if (await storage.isChatIgnored(roomId)) return
+            const existing = await storage.getMessage(roomId, data.message_id)
+            if (!existing) return
 
-        const messageId = String(existing._id)
-        const message: Message = {
-            ...existing,
-            content: '',
-            markdown: false,
-            files: [],
-            file: null,
-            button_rows: [],
+            const messageId = String(existing._id)
+            const message: Message = {
+                ...existing,
+                content: '',
+                markdown: false,
+                files: [],
+                file: null,
+                button_rows: [],
+            }
+            await processMessage(data.message, message, {}, roomId)
+            const { content, markdown, files, file, button_rows } = message
+            const patch = { content, markdown, files, file, button_rows }
+            await storage.updateMessage(roomId, messageId, patch)
+            clients.renewMessage(roomId, messageId, patch)
+        } catch (error) {
+            console.error(error)
         }
-        await processMessage(data.message, message, {}, roomId)
-        const { content, markdown, files, file, button_rows } = message
-        const patch = { content, markdown, files, file, button_rows }
-        await storage.updateMessage(roomId, messageId, patch)
-        clients.renewMessage(roomId, messageId, patch)
     },
     friendRecall(data: FriendRecallEventData) {
         const recallInfo = {
@@ -331,6 +337,11 @@ const eventHandlers = {
             reveal: false,
             recallInfo: JSON.stringify(recallInfo),
         })
+    },
+    groupReaction(data: GroupReactionEventData) {
+        applyGroupReaction(storage, bot.uin, data, clients.renewMessage, (id) => bot.getMsg(id)).catch((error) =>
+            console.error(error),
+        )
     },
     online() {
         clients.setOnline()
@@ -1034,17 +1045,11 @@ const initStorage = async () => {
 }
 const attachEventHandler = () => {
     bot.on('message', eventHandlers.onQQMessage)
-    bot.on('notice.friend.message_refresh', ({ message }: { message: Omit<PrivateMessageEventData, 'reply'> }) => {
-        eventHandlers.onQQMessageRefresh(message).catch((error) => console.error(error))
-    })
+    bot.on('notice.friend.message_refresh', eventHandlers.onQQMessageRefresh)
     bot.on('sync.message', eventHandlers.onQQMessage)
     bot.on('notice.friend.recall', eventHandlers.friendRecall)
     bot.on('notice.group.recall', eventHandlers.groupRecall)
-    bot.on('notice.group.reaction', (event) => {
-        applyGroupReaction(storage, bot.uin, event, clients.renewMessage, (id) => bot.getMsg(id)).catch((error) =>
-            console.error(error),
-        )
-    })
+    bot.on('notice.group.reaction', eventHandlers.groupReaction)
     bot.on('system.online', eventHandlers.online)
     bot.on('system.offline', eventHandlers.onOffline)
     bot.on('notice.friend.poke', eventHandlers.friendPoke)

@@ -1,7 +1,7 @@
 import type Message from '@icalingua/types/Message'
 import type { MessageReactionRequest } from '@icalingua/types/Message'
 import type StorageProvider from '@icalingua/types/StorageProvider'
-import type { Client } from 'oicq-icalingua-plus-plus'
+import type { Client, GroupReactionEventData } from 'oicq-icalingua-plus-plus'
 import { decodeMessageId } from './MessageId'
 
 export async function sendGroupReaction(bot: Pick<Client, 'setEmojiReaction'>, request: MessageReactionRequest) {
@@ -14,17 +14,6 @@ export async function sendGroupReaction(bot: Pick<Client, 'setEmojiReaction'>, r
 
     const result = await bot.setEmojiReaction(message.groupId, message.messageSeq, id, type, set)
     if (result.error) throw new Error(result.error.message || '表情回应发送失败')
-}
-
-interface GroupReactionNotice {
-    group_id: number
-    seq: number
-    message_id?: string
-    user_id: number
-    id: string
-    type: number
-    count?: number
-    set: boolean
 }
 
 const pendingUpdates = new WeakMap<StorageProvider, Map<string, Promise<void>>>()
@@ -102,7 +91,7 @@ function enqueueReactionUpdate(storage: StorageProvider, key: string, update: ()
 export function applyGroupReaction(
     storage: StorageProvider,
     selfId: number,
-    event: GroupReactionNotice,
+    event: GroupReactionEventData,
     publish: (roomId: number, messageId: string, patch: Partial<Message>) => void,
     fetchMessage: (messageId: string) => Promise<{ data?: { group_id?: number; seqid?: number; message_id: string } }>,
 ): Promise<void> {
