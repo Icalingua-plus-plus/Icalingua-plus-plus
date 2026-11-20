@@ -49,19 +49,17 @@ async function getReactionMessage(
         waiters = new Map()
         messageSaveWaiters.set(storage, waiters)
     }
-    let wake: () => void
-    const saved = new Promise<void>((resolve) => {
-        wake = resolve
-    })
     // Register before reading so a save that finishes during the lookup still wakes this reaction.
-    waiters.set(key, wake)
-    let timer: NodeJS.Timeout
+    const saved = new Promise<void>((resolve) => {
+        waiters.set(key, resolve)
+    })
+    let timer: NodeJS.Timeout | undefined
     try {
         const message = await storage.getMessage(roomId, messageId)
         const remaining = deadline - Date.now()
         if (message || remaining <= 0) return message
 
-        timer = setTimeout(wake, remaining).unref()
+        timer = setTimeout(() => waiters.get(key)?.(), remaining).unref()
         await saved
         return await storage.getMessage(roomId, messageId)
     } finally {
