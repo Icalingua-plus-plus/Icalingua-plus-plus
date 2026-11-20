@@ -18,6 +18,8 @@ type ClientRoles = 'main' | 'fileMgr'
 
 const httpServer = createServer(app)
 const io = new Server(httpServer, {
+    // 512 KiB 的上传分片以 JSON 字节数组发送时最多约 2 MiB，预留参数及封包余量。
+    maxHttpBufferSize: 4 * 1024 * 1024,
     cors: {
         allowedHeaders: ['GET', 'POST'],
         origin: '*',
