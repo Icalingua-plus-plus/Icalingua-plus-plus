@@ -9,76 +9,41 @@
 
         <div class="contacts-content">
             <el-tabs v-model="activeName" :stretch="true">
-                <el-tab-pane label="Friends" name="friends">
-                    <el-collapse v-model="activeFriendGroup">
-                        <el-collapse-item
-                            v-for="(v, i) in friendsAll"
-                            :title="`${v.name} ` + `(${searchFriendResults[i]})`"
-                            :name="i"
-                            :key="i"
-                            ref="friendItems"
-                            v-show="searchFriendResults[i] > 0"
-                        >
-                            <ContactEntry
-                                v-for="i in v.friends"
-                                :key="i.uin"
-                                :id="i.uin"
-                                :remark="i.remark"
-                                :name="i.nick"
-                                v-show="i.sc.includes(searchContext)"
-                                @click="$emit('click', i.uin, i.remark)"
-                                @dblclick="$emit('dblclick', i.uin, i.remark)"
-                            />
-                        </el-collapse-item>
-                        <ContactEntry
-                            v-for="i in friendsFallback"
-                            :key="i.uin"
-                            :id="i.uin"
-                            :remark="i.remark"
-                            :name="i.nick"
-                            v-show="i.sc.includes(searchContext)"
-                            @click="$emit('click', i.uin, i.remark)"
-                            @dblclick="$emit('dblclick', i.uin, i.remark)"
-                        />
-                    </el-collapse>
-                </el-tab-pane>
-                <el-tab-pane label="Groups" name="groups">
-                    <ContactEntry
-                        v-for="i in groupsAll"
-                        :key="i.group_id"
-                        :id="-i.group_id"
-                        :name="i.group_name"
-                        :remark="i.group_remark || i.group_name"
-                        :group-context="{ groupId: i.group_id, ownerId: i.owner_id }"
-                        :removeEmotes="removeGroupNameEmotes"
-                        v-show="i.sc.includes(searchContext) || PinyinMatch(i.sc, searchContext)"
-                        @click="$emit('click', -i.group_id, i.group_name)"
-                        @dblclick="$emit('dblclick', -i.group_id, i.group_name)"
-                    />
-                </el-tab-pane>
-                <el-tab-pane label="Categories" name="categories" v-if="chatGroups != null">
-                    <el-collapse v-model="activeChatGroups">
-                        <el-collapse-item
-                            v-for="(v, i) in chatGroups"
-                            :title="v.name"
-                            :name="i"
-                            :key="i"
-                            ref="chat-groups"
-                        >
-                            <ContactEntry
-                                v-for="i in v.rooms"
-                                :key="i"
-                                :id="i"
-                                :name="`${getName(i)}`"
-                                :remark="`${getRemark(i)}`"
-                                v-show="i != -1"
-                                @click="$emit('click', i, getRemark(i))"
-                                @dblclick="$emit('dblclick', i, getRemark(i))"
-                            />
-                        </el-collapse-item>
-                    </el-collapse>
-                </el-tab-pane>
+                <el-tab-pane label="Friends" name="friends" />
+                <el-tab-pane label="Groups" name="groups" />
+                <el-tab-pane label="Categories" name="categories" v-if="chatGroups != null" />
             </el-tabs>
+            <VirtualList
+                ref="list"
+                :items="contactRows"
+                item-key="key"
+                :estimated-item-height="estimateRowHeight"
+                :reset-key="activeName + ':' + searchContext"
+            >
+                <template #default="{ item, viewport }">
+                    <VirtualContactGroup
+                        v-if="item.members"
+                        :title="item.title"
+                        :items="item.members"
+                        :expanded="item.expanded"
+                        :contact="item.category ? categoryContact : friendContact"
+                        :viewport="viewport"
+                        @toggle="toggleGroup(item.index)"
+                        @click="(id, name) => $emit('click', id, name)"
+                        @dblclick="(id, name) => $emit('dblclick', id, name)"
+                    />
+                    <ContactEntry
+                        v-else
+                        :id="item.id"
+                        :remark="item.remark"
+                        :name="item.name"
+                        :group-context="item.groupContext"
+                        :removeEmotes="item.removeEmotes"
+                        @click="$emit('click', item.id, item.chatName)"
+                        @dblclick="$emit('dblclick', item.id, item.chatName)"
+                    />
+                </template>
+            </VirtualList>
         </div>
     </div>
 </template>
@@ -86,10 +51,12 @@
 <script>
 import { ipcRenderer } from 'electron'
 import ContactEntry from './ContactEntry.vue'
+import VirtualList from './VirtualList.vue'
+import VirtualContactGroup from './VirtualContactGroup.vue'
 import PinyinMatch from 'pinyin-match'
 
 export default {
-    components: { ContactEntry },
+    components: { ContactEntry, VirtualList, VirtualContactGroup },
     props: {
         removeGroupNameEmotes: Boolean,
         chatGroups: Array,
@@ -117,72 +84,133 @@ export default {
                 this.searchContextEdit = val.toUpperCase()
             },
         },
-        searchFriendResults() {
-            if (!this.searchContextEdit) return this.friendsAll.map((friendGroup) => friendGroup.friends.length)
-            return this.friendsAll.map(
-                (friendGroup) => friendGroup.friends.filter((f) => f.sc.includes(this.searchContextEdit)).length,
-            )
+        filteredFriendGroups() {
+            return this.friendsAll.map((group, index) => ({
+                ...group,
+                index,
+                friends: this.searchContext
+                    ? group.friends.filter((friend) => friend.sc.includes(this.searchContext))
+                    : group.friends,
+            }))
         },
-        flatAllFriends() {
-            return this.friendsAll.reduce((s, p) => (s = [...s, ...p.friends]), [])
+        contactInfo() {
+            const info = new Map()
+            for (const group of this.friendsAll) {
+                for (const friend of group.friends) info.set(friend.uin, friend)
+            }
+            for (const friend of this.friendsFallback) info.set(friend.uin, friend)
+            for (const group of this.groupsAll) info.set(-group.group_id, group)
+            return info
+        },
+        contactRows() {
+            const rows = []
+            if (this.activeName === 'friends') {
+                for (const group of this.filteredFriendGroups) {
+                    if (!group.friends.length) continue
+                    const expanded = this.activeFriendGroup.includes(group.index)
+                    rows.push({
+                        key: `friend-group:${group.index}`,
+                        index: group.index,
+                        title: `${group.name} (${group.friends.length})`,
+                        expanded,
+                        members: group.friends,
+                    })
+                }
+                for (const friend of this.friendsFallback) {
+                    if (friend.sc.includes(this.searchContext)) rows.push(this.friendRow(friend, 'fallback'))
+                }
+            } else if (this.activeName === 'groups') {
+                for (const group of this.groupsAll) {
+                    if (
+                        this.searchContext &&
+                        !group.sc.includes(this.searchContext) &&
+                        !PinyinMatch.match(group.sc, this.searchContext)
+                    )
+                        continue
+                    rows.push({
+                        key: `group:${group.group_id}`,
+                        id: -group.group_id,
+                        name: group.group_name,
+                        remark: group.group_remark || group.group_name,
+                        chatName: group.group_name,
+                        groupContext: { groupId: group.group_id, ownerId: group.owner_id },
+                        removeEmotes: this.removeGroupNameEmotes,
+                    })
+                }
+            } else {
+                for (const [index, group] of (this.chatGroups || []).entries()) {
+                    const expanded = this.activeChatGroups.includes(index)
+                    rows.push({
+                        key: `category:${index}`,
+                        index,
+                        title: group.name,
+                        expanded,
+                        category: true,
+                        members: group.rooms.filter((id) => id !== -1),
+                    })
+                }
+            }
+            return rows
         },
     },
     watch: {
-        searchContext(newResults, oldResults) {
-            let self = this
-            let resultIndexArray = new Array(this.searchFriendResults.length)
-                .fill(1)
-                .map((e, i) => i)
-                .filter((e) => this.searchFriendResults[e] > 0)
-            if (resultIndexArray.length > 3) {
-                self.$refs.friendItems
-                    .filter((item) => item.$el.className.includes('is-active'))
-                    .forEach((item) => {
-                        item.dispatch('ElCollapse', 'item-click', item)
-                    })
-                return
-            }
-            resultIndexArray
-                .filter((i) => !self.$refs.friendItems[i].$el.className.includes('is-active'))
-                .forEach((i) => {
-                    self.$refs.friendItems[i].dispatch('ElCollapse', 'item-click', self.$refs.friendItems[i])
-                })
+        searchContext() {
+            const matches = this.filteredFriendGroups
+                .filter((group) => group.friends.length)
+                .map((group) => group.index)
+            this.activeFriendGroup = matches.length > 3 ? [] : [...new Set([...this.activeFriendGroup, ...matches])]
         },
     },
     created() {
-        ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
-            this.friendsAll = Object.freeze(friends || [])
-            this.groupsAll = Object.freeze(groups)
-            friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-        })
+        this.loadContacts()
     },
     methods: {
-        refresh() {
-            this.friendsAll = this.groupsAll = this.friendsFallback = []
-            ipcRenderer.invoke('getFriendsAndGroups').then(({ friends, groups, friendsFallback }) => {
-                this.friendsAll = Object.freeze(friends || [])
-                this.groupsAll = Object.freeze(groups)
-                friendsFallback && (this.friendsFallback = Object.freeze(friendsFallback))
-                this.$message.success('已刷新')
-            })
+        async loadContacts() {
+            const { friends, groups, friendsFallback } = await ipcRenderer.invoke('getFriendsAndGroups')
+            if (this._isDestroyed) return
+            this.friendsAll = Object.freeze(friends || [])
+            this.groupsAll = Object.freeze(groups || [])
+            this.friendsFallback = Object.freeze(friendsFallback || [])
         },
-        PinyinMatch: PinyinMatch.match,
-        getTargetInfo(uin) {
-            if (uin > 0) {
-                return this.flatAllFriends.find((friend) => friend.uin === uin)
-            } else {
-                return this.groupsAll.find((group) => group.group_id === -uin)
+        async refresh() {
+            this.friendsAll = this.groupsAll = this.friendsFallback = []
+            this.$refs.list.resetScroll()
+            await this.loadContacts()
+            if (!this._isDestroyed) this.$message.success('已刷新')
+        },
+        estimateRowHeight(item) {
+            return item.members ? 49 + (item.expanded ? item.members.length * 71 : 0) : 71
+        },
+        friendContact(friend) {
+            return { id: friend.uin, name: friend.nick, remark: friend.remark, chatName: friend.remark }
+        },
+        categoryContact(id) {
+            const remark = this.getRemark(id)
+            return { id, name: this.getName(id), remark, chatName: remark }
+        },
+        friendRow(friend, group) {
+            return {
+                key: `friend:${group}:${friend.uin}`,
+                id: friend.uin,
+                name: friend.nick,
+                remark: friend.remark,
+                chatName: friend.remark,
             }
+        },
+        toggleGroup(index) {
+            const field = this.activeName === 'friends' ? 'activeFriendGroup' : 'activeChatGroups'
+            const expanded = this[field]
+            this[field] = expanded.includes(index) ? expanded.filter((value) => value !== index) : [...expanded, index]
         },
         getRemark(uin) {
             if (uin == -1) return ''
-            const target = this.getTargetInfo(uin)
+            const target = this.contactInfo.get(uin)
             if (!target) return 'null'
             return target.remark || target.name || target.group_remark || target.group_name
         },
         getName(uin) {
             if (uin == -1) return ''
-            const target = this.getTargetInfo(uin)
+            const target = this.contactInfo.get(uin)
             if (!target) return 'null'
             return target.nick || target.name || target.group_name
         },
@@ -220,8 +248,10 @@ export default {
 }
 
 .contacts-content {
-    overflow: auto;
-    scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .icon-button {

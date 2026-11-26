@@ -7,30 +7,37 @@
             </div>
         </div>
 
-        <div class="groupmember-content">
-            <ContactEntry
-                v-for="i in groupmembers"
-                :key="i.user_id"
-                :id="i.user_id"
-                :remark="i.card"
-                :group-context="i.group_id ? { groupId: i.group_id } : undefined"
-                :role="i.role"
-                type="groupmember"
-                :name="i.name"
-                v-show="PinyinMatch(i.sc, searchContext) || !searchContext"
-                @dblclick="$emit('dblclick', i.user_id, i.card)"
-            />
-        </div>
+        <VirtualList
+            ref="list"
+            class="groupmember-content"
+            :items="filteredMembers"
+            item-key="user_id"
+            :estimated-item-height="71"
+            :reset-key="searchContext"
+        >
+            <template #default="{ item }">
+                <ContactEntry
+                    :id="item.user_id"
+                    :remark="item.card"
+                    :group-context="item.group_id ? { groupId: item.group_id } : undefined"
+                    :role="item.role"
+                    type="groupmember"
+                    :name="item.name"
+                    @dblclick="$emit('dblclick', item.user_id, item.card)"
+                />
+            </template>
+        </VirtualList>
     </div>
 </template>
 
 <script>
 import { ipcRenderer } from 'electron'
 import ContactEntry from './ContactEntry.vue'
+import VirtualList from './VirtualList.vue'
 import PinyinMatch from 'pinyin-match'
 
 export default {
-    components: { ContactEntry },
+    components: { ContactEntry, VirtualList },
     props: {
         groupmemberShown: { type: Boolean, required: true },
         gin: { type: Number, required: true },
@@ -50,13 +57,17 @@ export default {
                 this.searchContextEdit = val.toUpperCase()
             },
         },
+        filteredMembers() {
+            if (!this.searchContext) return this.groupmembers
+            return this.groupmembers.filter((member) => PinyinMatch.match(member.sc, this.searchContext))
+        },
     },
     async created() {
         const ownerMembers = []
         const adminMembers = []
         const normalMembers = []
         const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
-        console.log(memberinfo)
+        if (this._isDestroyed) return
         if (memberinfo) {
             for (const element of memberinfo) {
                 const member = {
@@ -71,16 +82,18 @@ export default {
                 else if (member.role === 'admin') adminMembers.push(member)
                 else normalMembers.push(member)
             }
-            this.groupmembers = [...ownerMembers, ...adminMembers, ...normalMembers]
+            this.groupmembers = Object.freeze([...ownerMembers, ...adminMembers, ...normalMembers])
         }
     },
     methods: {
         async refresh() {
             this.groupmembers = []
+            this.$refs.list.resetScroll()
             const ownerMembers = []
             const adminMembers = []
             const normalMembers = []
             const memberinfo = await ipcRenderer.invoke('getGroupMembers', this.gin)
+            if (this._isDestroyed) return
             if (memberinfo) {
                 for (const element of memberinfo) {
                     const member = {
@@ -95,12 +108,9 @@ export default {
                     else if (member.role === 'admin') adminMembers.push(member)
                     else normalMembers.push(member)
                 }
-                this.groupmembers = [...ownerMembers, ...adminMembers, ...normalMembers]
+                this.groupmembers = Object.freeze([...ownerMembers, ...adminMembers, ...normalMembers])
             }
             this.$message.success('已刷新')
-        },
-        PinyinMatch(str, search) {
-            return PinyinMatch.match(str, search)
         },
     },
 }

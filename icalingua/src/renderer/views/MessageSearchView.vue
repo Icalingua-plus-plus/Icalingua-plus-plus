@@ -31,48 +31,63 @@
             />
             <el-button type="primary" size="medium" @click="doSearch" :loading="loading">搜索</el-button>
         </div>
-        <div class="search-results" ref="resultsContainer" @scroll="handleScroll">
-            <div v-if="messages.length === 0 && searched && !loading && !searchError" class="empty-state">
-                <i class="el-icon-search"></i>
-                <p>未找到相关消息</p>
-            </div>
-            <div v-for="msg in messages" :key="resultKey(msg)" class="result-item">
-                <div class="result-avatar">
-                    <img :src="getAvatar(msg)" @error="handleAvatarError" />
-                </div>
-                <div class="result-content">
-                    <div class="result-header">
-                        <div class="result-identity">
-                            <span class="result-sender">{{ msg.username }}</span>
-                            <span v-if="isGlobalSearch" class="result-room" :title="getRoomName(msg)">
-                                <i :class="msg.roomId < 0 ? 'el-icon-chat-dot-square' : 'el-icon-user'"></i>
-                                {{ getRoomName(msg) }}
-                            </span>
-                        </div>
-                        <span class="result-time">{{ formatTime(msg.time) }}</span>
+        <VirtualList
+            class="search-results"
+            :items="messages"
+            :item-key="resultKey"
+            :estimated-item-height="100"
+            :reset-key="activeSearch"
+            :has-more="Boolean(activeSearch) && !noMore"
+            :loading="loading"
+            @end-reached="fetchResults"
+        >
+            <template #default="{ item: msg }">
+                <div class="result-item">
+                    <div class="result-avatar">
+                        <img :src="getAvatar(msg)" @error="handleAvatarError" />
                     </div>
-                    <div class="result-text" v-html="highlightKeyword(msg.content)"></div>
+                    <div class="result-content">
+                        <div class="result-header">
+                            <div class="result-identity">
+                                <span class="result-sender">{{ msg.username }}</span>
+                                <span v-if="isGlobalSearch" class="result-room" :title="getRoomName(msg)">
+                                    <i :class="msg.roomId < 0 ? 'el-icon-chat-dot-square' : 'el-icon-user'"></i>
+                                    {{ getRoomName(msg) }}
+                                </span>
+                            </div>
+                            <span class="result-time">{{ formatTime(msg.time) }}</span>
+                        </div>
+                        <div class="result-text" v-html="highlightKeyword(msg.content)"></div>
+                    </div>
+                    <div class="result-action">
+                        <el-button type="text" size="small" @click="jumpToMessage(msg)">
+                            <i class="el-icon-position"></i> 跳转
+                        </el-button>
+                    </div>
                 </div>
-                <div class="result-action">
-                    <el-button type="text" size="small" @click="jumpToMessage(msg)">
-                        <i class="el-icon-position"></i> 跳转
-                    </el-button>
+            </template>
+            <template #footer>
+                <div v-if="messages.length === 0 && searched && !loading && !searchError" class="empty-state">
+                    <i class="el-icon-search"></i>
+                    <p>未找到相关消息</p>
                 </div>
-            </div>
-            <div v-if="searchError" class="search-error">{{ searchError }}</div>
-            <div v-if="loading" class="loading-indicator"><i class="el-icon-loading"></i> 搜索中...</div>
-            <div v-if="noMore && messages.length > 0" class="no-more">没有更多结果了</div>
-        </div>
+                <div v-if="searchError" class="search-error">{{ searchError }}</div>
+                <div v-if="loading" class="loading-indicator"><i class="el-icon-loading"></i> 搜索中...</div>
+                <div v-if="noMore && messages.length > 0" class="no-more">没有更多结果了</div>
+            </template>
+        </VirtualList>
     </div>
 </template>
 
 <script>
 import ipc from '../utils/ipc'
+import VirtualList from '../components/VirtualList.vue'
 import { createRendererLifecycleScope } from '../utils/rendererLifecycleScope'
 import '../utils/themes'
 
 export default {
     name: 'MessageSearchView',
+    components: { VirtualList },
     data() {
         return {
             roomId: 0,
@@ -95,6 +110,11 @@ export default {
         }
     },
     computed: {
+        highlightPattern() {
+            if (!this.activeSearch?.keyword) return null
+            const escapedKeyword = this.escapeHtml(this.activeSearch.keyword)
+            return new RegExp(escapedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+        },
         isGlobalSearch() {
             return this.roomId === 0
         },
@@ -164,7 +184,7 @@ export default {
                 )
                 if (this.activeSearch !== search) return
                 if (msgs && msgs.length) {
-                    this.messages = [...this.messages, ...msgs]
+                    this.messages.push(...msgs)
                 }
                 if (!msgs || msgs.length < 20) {
                     this.noMore = true
@@ -197,12 +217,6 @@ export default {
             start.setHours(0, 0, 0, 0)
             end.setHours(23, 59, 59, 999)
             return { startTime: start.getTime(), endTime: end.getTime() }
-        },
-        handleScroll(e) {
-            const { scrollTop, scrollHeight, clientHeight } = e.target
-            if (scrollHeight - scrollTop - clientHeight < 200) {
-                this.fetchResults()
-            }
         },
         jumpToMessage(msg) {
             const targetRoomId = this.isGlobalSearch ? Number(msg.roomId) : this.roomId
@@ -240,13 +254,8 @@ export default {
         },
         highlightKeyword(content) {
             const escapedContent = this.escapeHtml(content || '')
-            if (!this.activeSearch?.keyword) return escapedContent
-            const escapedKeyword = this.escapeHtml(this.activeSearch.keyword)
-            const pattern = escapedKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            return escapedContent.replace(
-                new RegExp(pattern, 'gi'),
-                (match) => `<span class="highlight">${match}</span>`,
-            )
+            if (!this.highlightPattern) return escapedContent
+            return escapedContent.replace(this.highlightPattern, (match) => `<span class="highlight">${match}</span>`)
         },
         escapeHtml(value) {
             const entities = {
@@ -308,8 +317,8 @@ export default {
 
 .search-results {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    padding: 8px 0;
 }
 
 .result-item {
