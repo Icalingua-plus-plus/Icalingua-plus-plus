@@ -47,8 +47,8 @@ importers:
         specifier: ^4.22.2
         version: 4.22.2
       fast-xml-parser:
-        specifier: ^5.10.1
-        version: 5.10.1
+        specifier: ^5.12.0
+        version: 5.12.0
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
@@ -802,8 +802,8 @@ packages:
     resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
     engines: {node: '>= 20.19.0'}
 
-  '@nodable/entities@3.0.0':
-    resolution: {integrity: sha512-8L9xFeTYKhm49xfIypoe2W5wV1m/3Z58kT+7kR9A8OyFxcPduI4VmxaUMQyKYrRjUoLLSXv6EKKID5Tvj9cUVw==}
+  '@nodable/entities@3.1.0':
+    resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1166,6 +1166,9 @@ packages:
   '@smithy/smithy-client@4.10.2':
     resolution: {integrity: sha512-D5z79xQWpgrGpAHb054Fn2CCTQZpog7JELbVQ6XAvXs5MNKWf28U9gzSBlJkOyMl9LA1TZEjRtwvGXfP0Sl90g==}
     engines: {node: '>=18.0.0'}
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with
+        this version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/types@4.11.0':
     resolution: {integrity: sha512-mlrmL0DRDVe3mNrjTcVcZEgkFmufITfUAPBEA+AHYiIeYyJebso/He1qLbP3PssRe22KUzLRpQSdBPbXdgZ2VA==}
@@ -2416,11 +2419,11 @@ packages:
   fast-uri@3.1.2:
     resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
-  fast-xml-builder@1.3.0:
-    resolution: {integrity: sha512-F74cZEdCvuw9P41GAC3rod4X04jjWGM1JPEv/GWSqFTWLsdyMSBMBMlm9Hk3GLBgLBbdBNY8yee0pQh2RBVESQ==}
+  fast-xml-builder@1.3.2:
+    resolution: {integrity: sha512-OX91VSlShLPDgRZV7tk/YQ4l8tT75QziF5Ixg8g4PFbCVPjuTWwN+yQfAxLJ0dufJpprdOd6HlM74Jhd39TcBQ==}
 
-  fast-xml-parser@5.10.1:
-    resolution: {integrity: sha512-IEMIf7298kXuZSRFoGfMYrl7is8LpavODgbNz1cwIudv7KwVFnuU+UsMporfq6PD6aXSlawZlARiA3UywCTfMw==}
+  fast-xml-parser@5.12.0:
+    resolution: {integrity: sha512-/pXxRBtwxY9w8z7YbgsvIPPcPvFDsTbIkWwTQJhzNJPokj+TbN6ftmcv4j/pEQDvOCNnKGDzuk5Bo2oogIOiFg==}
     hasBin: true
 
   fast-xml-parser@5.2.5:
@@ -2790,8 +2793,8 @@ packages:
     resolution: {integrity: sha512-LnQR4bZ9IADDRSkvpqMGvt/tEJWclzklNgSw48V5EAaAeDd6qGvN8ei6k5p0tvxSR171VmGyHuTiAOfxAbr8kA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  is-unsafe@2.0.0:
-    resolution: {integrity: sha512-2LdV822R+wmI86unXA93WCFpL6g+av8ynWk0nrHyJqGop5VoocYsSLFgN8jrfalT6iGeLNM4KXuVSsULP53kEA==}
+  is-unsafe@2.0.3:
+    resolution: {integrity: sha512-ZBllczCCO267vgdFb6Tq3pv+LhHaCiGMdr+ZsuL+OopruAg7S+3ZDs1vD0RPC0uSrkjzbraxaGjtX1YBxjPeFQ==}
 
   isarray@1.0.0:
     resolution: {integrity: sha512-VLghIWNM6ELQzo7zwmcg0NmTVyWKYjvIeM83yjp0wRDTmUnrM678fQbcKBo6n2CJEF0szoG//ytg+TKla89ALQ==}
@@ -3908,8 +3911,8 @@ packages:
     resolution: {integrity: sha512-dOESqjYr96iWYylGObzd39EuNTa5VJxyvVAEm5Jnh7KGo75V43Hk1odPQkNDyXNmUR6k+gEiDVXnjB8HJ3crXw==}
     engines: {node: '>=12'}
 
-  strnum@2.4.1:
-    resolution: {integrity: sha512-M9eUSMT2dCB2cTNPG7UYj6KuK7RJR2SN2+yCV/fTW3xzTCS6EaGZ5pSMgDIjB7r8zSfTGk+dvvn9rTjpVS9Mwg==}
+  strnum@2.5.1:
+    resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
 
   strtok3@10.3.5:
     resolution: {integrity: sha512-ki4hZQfh5rX0QDLLkOCj+h+CVNkqmp/CMf8v8kZpkNVK6jGQooMytqzLZYUVYIZcFZ6yDB70EfD8POcFXiF5oA==}
@@ -5161,7 +5164,7 @@ snapshots:
 
   '@noble/hashes@2.2.0': {}
 
-  '@nodable/entities@3.0.0': {}
+  '@nodable/entities@3.1.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -6955,23 +6958,23 @@ snapshots:
 
   fast-uri@3.1.2: {}
 
-  fast-xml-builder@1.3.0:
+  fast-xml-builder@1.3.2:
     dependencies:
       path-expression-matcher: 1.6.2
       xml-naming: 0.3.0
 
-  fast-xml-parser@5.10.1:
+  fast-xml-parser@5.12.0:
     dependencies:
-      '@nodable/entities': 3.0.0
-      fast-xml-builder: 1.3.0
-      is-unsafe: 2.0.0
+      '@nodable/entities': 3.1.0
+      fast-xml-builder: 1.3.2
+      is-unsafe: 2.0.3
       path-expression-matcher: 1.6.2
-      strnum: 2.4.1
+      strnum: 2.5.1
       xml-naming: 0.3.0
 
   fast-xml-parser@5.2.5:
     dependencies:
-      strnum: 2.4.1
+      strnum: 2.5.1
     optional: true
 
   fastq@1.20.1:
@@ -7356,7 +7359,7 @@ snapshots:
 
   is-stream@3.0.0: {}
 
-  is-unsafe@2.0.0: {}
+  is-unsafe@2.0.3: {}
 
   isarray@1.0.0: {}
 
@@ -8442,7 +8445,7 @@ snapshots:
 
   strip-final-newline@3.0.0: {}
 
-  strnum@2.4.1:
+  strnum@2.5.1:
     dependencies:
       anynum: 1.0.1
 
