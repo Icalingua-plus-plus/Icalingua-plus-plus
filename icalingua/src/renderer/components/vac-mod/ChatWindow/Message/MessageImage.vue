@@ -29,10 +29,15 @@
             </el-image>
         </div>
 
-        <details v-if="isHidden">
+        <details v-if="isHidden" @toggle="onHiddenImageToggle">
             <summary style="cursor: pointer">Hidden image</summary>
-            <loader :style="{ top: `${imageResponsive.loaderTop}px` }" :show="isImageLoading" />
+            <loader
+                v-if="hiddenImageRevealed"
+                :style="{ top: `${imageResponsive.loaderTop}px` }"
+                :show="isImageLoading"
+            />
             <div
+                v-if="hiddenImageRevealed"
                 class="vac-message-image-mod"
                 :class="{
                     'vac-image-loading': isImageLoading,
@@ -87,6 +92,7 @@ export default {
     data() {
         return {
             imageLoading: true,
+            hiddenImageRevealed: false,
             imageResponsive: '',
             err: false,
             retried: false,
@@ -111,6 +117,10 @@ export default {
     },
 
     methods: {
+        onHiddenImageToggle(event) {
+            // Keep the image mounted after its first reveal to avoid reloading on every toggle.
+            if (event.target.open) this.hiddenImageRevealed = true
+        },
         async onImageError() {
             this.imageLoading = false
             this.err = true
