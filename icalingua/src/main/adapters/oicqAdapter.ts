@@ -81,8 +81,8 @@ import createRoom from '../../utils/createRoom'
 import formatDate from '../../utils/formatDate'
 import getAvatarUrl from '../../utils/getAvatarUrl'
 import getImageUrlByMd5 from '../../utils/getImageUrlByMd5'
-import getStaticPath from '../../utils/getStaticPath'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import { openSliderCaptcha } from '../utils/sliderCaptcha'
 import sleep from '../../utils/sleep'
 import { convertLegacyIcalinguaAt, decodeIcalinguaAtName, findIcalinguaAtMarkup } from '../../utils/icalinguaAt'
 import { getUin } from '../ipc/botAndStorage'
@@ -1103,24 +1103,7 @@ const eventHandlers = {
 }
 const loginHandlers = {
     slider(data: SliderEventData) {
-        console.log(data)
-        const veriWin = newIcalinguaWindow({
-            height: 500,
-            width: 500,
-            webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: false,
-                preload: path.join(getStaticPath(), '/sliderPreload.js'),
-            },
-        })
-        const inject = fs.readFileSync(path.join(getStaticPath(), '/sliderinj.js'), 'utf-8')
-        veriWin.webContents.on('did-finish-load', function () {
-            veriWin.webContents.executeJavaScript(inject)
-        })
-        veriWin.loadURL(data.url, {
-            userAgent:
-                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/98.0.4758.102 MQQBrowser/6.2 TBS/046403 Mobile Safari/537.36 V1_AND_SQ_8.9.50_3898_YYB_D QQ/8.9.50.10650 NetType/WIFI WebP/0.3.0 AppId/537155599 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1000 StudyMode/0 CurrentMode/0 CurrentFontScale/1.0 GlobalDensityScale/1.0285714 AllowLandscape/false InMagicWin/0',
-        })
+        openSliderCaptcha(data.url, (ticket) => bot.sliderLogin(ticket)).catch((error) => errorHandler(error, true))
     },
     onErr(data: LoginErrorEventData) {
         console.log(data)

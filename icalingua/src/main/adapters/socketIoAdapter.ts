@@ -39,8 +39,8 @@ import path from 'path'
 import { io, Socket } from 'socket.io-client'
 import formatDate from '../../utils/formatDate'
 import getAvatarUrl from '../../utils/getAvatarUrl'
-import getStaticPath from '../../utils/getStaticPath'
 import { newIcalinguaWindow } from '../../utils/IcalinguaWindow'
+import { openSliderCaptcha } from '../utils/sliderCaptcha'
 import { updateAppMenu } from '../ipc/menuManager'
 import avatarCache from '../utils/avatarCache'
 import { getConfig } from '../utils/configManager'
@@ -511,23 +511,9 @@ const attachSocketEvents = () => {
         sendToLoginWindow('error', message)
     })
     socket.on('login-slider', (url: string) => {
-        const veriWin = newIcalinguaWindow({
-            height: 500,
-            width: 500,
-            webPreferences: {
-                nodeIntegration: false,
-                contextIsolation: false,
-                preload: path.join(getStaticPath(), '/sliderPreload.js'),
-            },
-        })
-        const inject = fs.readFileSync(path.join(getStaticPath(), '/sliderinj.js'), 'utf-8')
-        veriWin.webContents.on('did-finish-load', function () {
-            veriWin.webContents.executeJavaScript(inject)
-        })
-        veriWin.loadURL(url, {
-            userAgent:
-                'Mozilla/5.0 (Linux; Android 7.1.1; MIUI ONEPLUS/A5000_23_17; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/98.0.4758.102 MQQBrowser/6.2 TBS/046403 Mobile Safari/537.36 V1_AND_SQ_8.9.50_3898_YYB_D QQ/8.9.50.10650 NetType/WIFI WebP/0.3.0 AppId/537155599 Pixel/720 StatusBarHeight/36 SimpleUISwitch/0 QQTheme/1000 StudyMode/0 CurrentMode/0 CurrentFontScale/1.0 GlobalDensityScale/1.0285714 AllowLandscape/false InMagicWin/0',
-        })
+        openSliderCaptcha(url, (ticket) => socket.emit('login-slider-ticket', ticket)).catch((error) =>
+            errorHandler(error, true),
+        )
     })
 }
 
